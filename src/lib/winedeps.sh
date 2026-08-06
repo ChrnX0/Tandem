@@ -1,4 +1,4 @@
-#!/bin/bash
+# shellcheck shell=bash
 # Tandem - traducao de DLL faltando -> verbo do winetricks.
 #
 # Como funciona: quando um programa Windows nao acha uma biblioteca, o Wine

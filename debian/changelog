@@ -1,0 +1,26 @@
+tandem (2.2) unstable; urgency=medium
+
+  * Mensagens nunca mais se perdem: t_erro, t_ok e t_aviso agora escrevem
+    sempre no log e caem para o terminal quando nao ha sessao grafica.
+    Antes, com zenity instalado e sem display, todo caminho de erro
+    terminava em silencio absoluto.
+  * tandem doctor, tandem logs e tandem repair caem para a saida padrao
+    quando a janela nao pode ser aberta, em vez de sumirem.
+  * O painel mostra a ajuda quando nao ha sessao grafica.
+  * tandem protect passa a valer tambem para o prefixo padrao do Tandem:
+    a lista do usuario e consultada antes da marca de propriedade.
+  * Corrigido o formato de printf no diagnostico, que quebrava se algum
+    caminho ou versao contivesse %.
+  * Pacote passa a instalar copyright, changelog e paginas de manual;
+    removidas dependencias em pacotes essenciais.
+  * Suite de testes reproduzivel em tests/.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Thu, 06 Aug 2026 00:00:00 +0000
+
+tandem (2.1) unstable; urgency=medium
+
+  * Deteccao automatica de dependencias a partir do log do Wine.
+  * Inspecao previa de APK/XAPK: ABI, SDK minimo e pacotes divididos.
+  * Prefixos Wine que o Tandem nao criou sao tratados como somente leitura.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Wed, 01 Jan 2025 00:00:00 +0000

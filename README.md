@@ -83,7 +83,7 @@ tandem protect ~/.wine-something
 Download the `.deb` from [Releases](../../releases) and double-click it, or:
 
 ```bash
-sudo apt install ./tandem_2.1_all.deb
+sudo apt install ./tandem_2.2_all.deb
 ```
 
 Then check your environment:
@@ -132,6 +132,20 @@ directly:
 ```bash
 python3 build.py --check
 ```
+
+## Tests
+
+The suite runs without Wine, without Waydroid and without installing the
+package: the shell libraries are sourced straight from `src/lib`, and the
+Android packages are synthesised — including a real binary `AndroidManifest.xml`,
+so the manifest parser is exercised on the same code path a real APK takes.
+
+```bash
+bash tests/run.sh
+```
+
+Optional tools (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) are used when
+present and skipped when absent, so the suite passes on a bare machine.
 
 ## What will never work
 

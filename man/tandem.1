@@ -1,0 +1,109 @@
+.TH TANDEM 1 "2025-01-01" "tandem 2.2" "Comandos do usuário"
+.SH NOME
+tandem \- roda programas Windows e aplicativos Android no Linux
+.SH SINOPSE
+.B tandem
+.RI [ comando ]
+.RI [ argumento ]
+.br
+.B tandem-exe
+.I arquivo.exe
+.br
+.B tandem-apk
+.I arquivo.apk
+.br
+.B tandem-android
+.br
+.B tandem-repair
+.SH DESCRIÇÃO
+O
+.B Tandem
+faz arquivos
+.IR .exe ,
+.IR .msi ,
+.I .apk
+e
+.I .xapk
+abrirem com dois cliques no Linux. Ele não substitui o Wine nem o Waydroid:
+é uma camada de decisão, tradução e diagnóstico por cima dos dois.
+.PP
+Para programas Windows, o Tandem executa o arquivo, lê a saída de erro do
+Wine à procura de bibliotecas faltando, traduz cada uma para o pacote do
+.BR winetricks (1)
+que a fornece, instala e tenta de novo. É o laço que uma pessoa experiente
+faria à mão.
+.PP
+Para aplicativos Android, o Tandem inspeciona o pacote antes de instalar
+(arquitetura, versão mínima do sistema e divisão em partes) e relata
+incompatibilidades em português, em vez de falhar sem explicação.
+.SH COMANDOS
+.TP
+.B tandem
+Abre o painel gráfico. Sem sessão gráfica, mostra esta ajuda.
+.TP
+.BI "tandem install " arquivo
+Instala ou executa o arquivo, escolhendo Wine ou Android pelo tipo.
+.TP
+.B tandem android
+Abre a tela do Android.
+.TP
+.B tandem doctor
+Mostra o diagnóstico do ambiente: versão do Wine, suporte a 32 bits,
+estado do Waydroid e perfis protegidos.
+.TP
+.B tandem repair
+Reaplica as associações de arquivo. Use quando o duplo clique abrir o
+diálogo "Abrir com…" em vez do Tandem.
+.TP
+.B tandem backup
+Salva o ambiente Windows do Tandem em um arquivo na pasta pessoal.
+.TP
+.B tandem restore
+Restaura o ambiente Windows a partir do backup mais recente.
+.TP
+.BI "tandem protect " caminho
+Marca um perfil Wine como intocável. O Tandem nunca instala nem altera
+nada dentro de um perfil protegido.
+.TP
+.B tandem logs
+Mostra o registro técnico mais recente.
+.SH PREFIXOS PROTEGIDOS
+Um prefixo Wine que o Tandem não criou é sempre tratado como somente
+leitura pela automação: o programa é executado lá dentro, o que falta é
+informado, e nada é instalado. Isso existe para que um sistema em produção
+que já funciona nunca seja alterado por engano.
+.PP
+Prefixos criados pelo Tandem trazem o arquivo
+.I .tandem-prefixo
+na raiz. A lista explícita de
+.B tandem protect
+tem precedência sobre essa marca.
+.SH ARQUIVOS
+.TP
+.I ~/.local/share/tandem/wine
+Prefixo Wine padrão, criado no primeiro uso.
+.TP
+.I ~/.config/tandem/protegidos.txt
+Perfis Wine que a automação nunca pode modificar, um por linha.
+.TP
+.I ~/.local/state/tandem/*.log
+Registros técnicos de cada comando.
+.TP
+.I ~/.config/mimeapps.list
+Associações de arquivo aplicadas por
+.BR "tandem repair" .
+.SH DIAGNÓSTICO
+Nenhum caminho de erro termina em silêncio. Quando há sessão gráfica, os
+erros aparecem em janela e notificação; sem ela, saem no terminal. Em
+qualquer caso, ficam registrados no log, acessível por
+.BR "tandem logs" .
+.SH VEJA TAMBÉM
+.BR wine (1),
+.BR winetricks (1),
+.BR waydroid (1),
+.BR adb (1)
+.SH AUTOR
+Paulo Eduardo.
+Código e relatórios de problema em
+.UR https://github.com/ChrnX0/Tandem
+.UE .

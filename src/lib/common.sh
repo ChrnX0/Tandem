@@ -1,4 +1,4 @@
-#!/bin/bash
+# shellcheck shell=bash
 # Tandem - biblioteca comum.
 # Carregada por todos os executaveis. Nunca use "set -e" aqui:
 # os lacos de espera dependem de comandos que falham de proposito.
@@ -29,42 +29,123 @@ t_log_init() {
 t_diz() { printf '%s\n' "$*" >> "${LOG:-/dev/null}" 2>/dev/null; }
 
 # ------------------------------------------------------------- mensagens
+#
+# Regra desta secao: nenhuma mensagem pode se perder. Toda mensagem vai
+# SEMPRE para o log; a tela e o terminal sao apenas os destinos visiveis.
+# Se a janela nao pode ser mostrada, o texto sai no terminal - nunca some.
+#
+# O zenity e o notify-send falham quando nao ha sessao grafica (terminal
+# puro, SSH, TTY). Sem esta checagem eles falham em silencio e o usuario
+# fica com "nao aconteceu nada", que este projeto trata como defeito.
+
+t_tem_gui() {
+    [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
+}
+
+# ------------------------------------------------------------------ locale
+#
+# O zenity (via glib) recusa QUALQUER argumento com caractere nao-ASCII
+# quando o locale em vigor nao foi gerado no sistema: o glib cai para
+# ANSI_X3.4-1968 e responde "This option is not available", codigo 255.
+# Como toda mensagem deste programa tem acento, um locale ausente faz todas
+# as janelas sumirem sem deixar rastro. Por isso nunca definimos um locale
+# sem antes confirmar que ele existe.
+
+# locale -a imprime "pt_BR.utf8": sem hifen e em minusculas. Normalize os dois
+# lados antes de comparar, senao "pt_BR.UTF-8" nunca casa com nada.
+t_locale_existe() {
+    local alvo
+    alvo="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d '-')"
+    [ -n "$alvo" ] || return 1
+    locale -a 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr -d '-' |
+        grep -qx -- "$alvo"
+}
+
+# Primeiro candidato que exista de fato. C.UTF-8 fecha a lista porque vem
+# embutido na glibc: esta presente mesmo sem nenhum locale gerado.
+t_locale_utf8() {
+    local c
+    for c in "$@" C.UTF-8; do
+        [ -n "$c" ] || continue
+        t_locale_existe "$c" && { printf '%s' "$c"; return 0; }
+    done
+    printf 'C.UTF-8'
+}
+
+if [ "$(locale charmap 2>/dev/null)" != "UTF-8" ]; then
+    TANDEM_LOCALE="$(t_locale_utf8 pt_BR.UTF-8)"
+    export LC_ALL="$TANDEM_LOCALE"
+fi
 
 t_aviso() {
-    command -v notify-send >/dev/null 2>&1 &&
-        notify-send -i "${2:-dialog-information}" -a Tandem "Tandem" "$1" 2>/dev/null && return 0
+    t_diz "aviso: $1"
+    if t_tem_gui && command -v notify-send >/dev/null 2>&1 &&
+       notify-send -i "${2:-dialog-information}" -a Tandem "Tandem" "$1" 2>/dev/null; then
+        return 0
+    fi
+    printf 'Tandem: %s\n' "$1" >&2
     command -v logger >/dev/null 2>&1 && logger -t tandem "$1"
     return 0
 }
 
 t_ok() {
-    command -v notify-send >/dev/null 2>&1 &&
-        notify-send -i emblem-ok -t 10000 -a Tandem "Tandem" "$1" 2>/dev/null
+    t_diz "ok: $1"
+    if t_tem_gui && command -v notify-send >/dev/null 2>&1 &&
+       notify-send -i emblem-ok -t 10000 -a Tandem "Tandem" "$1" 2>/dev/null; then
+        return 0
+    fi
+    printf 'Tandem: %s\n' "$1" >&2
     command -v logger >/dev/null 2>&1 && logger -t tandem "OK: $1"
     return 0
 }
 
-# Erro que o usuario PRECISA ver: notificacao + janela.
+# Erro que o usuario PRECISA ver: notificacao + janela; terminal se nao houver
+# nem uma nem outra. O log recebe sempre, para o pos-morte de "nao funcionou".
 t_erro() {
-    command -v notify-send >/dev/null 2>&1 &&
-        notify-send -u critical -i dialog-error -a Tandem "Tandem" "$1" 2>/dev/null
-    if command -v zenity >/dev/null 2>&1; then
-        zenity --error --no-wrap --title="Tandem" \
-               --text="$1${LOG:+$'\n\n'Detalhes técnicos:$'\n'$LOG}" 2>/dev/null
+    local mostrou=0
+    t_diz "ERRO: $1"
+    if t_tem_gui; then
+        command -v notify-send >/dev/null 2>&1 &&
+            notify-send -u critical -i dialog-error -a Tandem "Tandem" "$1" 2>/dev/null &&
+            mostrou=1
+        if command -v zenity >/dev/null 2>&1 &&
+           zenity --error --no-wrap --title="Tandem" \
+                  --text="$1${LOG:+$'\n\n'Detalhes técnicos:$'\n'$LOG}" 2>/dev/null; then
+            mostrou=1
+        fi
     fi
+    [ "$mostrou" = 1 ] || printf 'Tandem: %s\n' "$1" >&2
     command -v logger >/dev/null 2>&1 && logger -t tandem "ERRO: $1"
     return 0
 }
 
+# Pergunta sim/nao. Sem interface grafica nao ha como perguntar: devolve
+# 1 (= "nao"), que todos os chamadores tratam como desistencia segura.
 t_pergunta() {
+    t_tem_gui || return 1
     command -v zenity >/dev/null 2>&1 || return 1
     zenity --question --no-wrap --title="Tandem" --text="$1" \
            --ok-label="${2:-Sim}" --cancel-label="${3:-Não}" 2>/dev/null
 }
 
+# Mostra um texto longo lido da entrada padrao. Terminal tem preferencia
+# (quem digitou o comando quer a resposta ali); sem terminal tenta a janela;
+# se a janela nao abrir, cai de volta para a saida padrao em vez de sumir.
+t_texto() {
+    local titulo="${1:-Tandem}" conteudo
+    conteudo="$(cat)"
+    if [ ! -t 1 ] && t_tem_gui && command -v zenity >/dev/null 2>&1 &&
+       printf '%s\n' "$conteudo" | zenity --text-info --title="$titulo" \
+            --width=720 --height=540 --font=monospace 2>/dev/null; then
+        return 0
+    fi
+    printf '%s\n' "$conteudo"
+}
+
 # Barra de progresso indeterminada. Uso:
 #   t_progresso_abre "Instalando..." ; ... ; t_progresso_fecha
 t_progresso_abre() {
+    t_tem_gui || return 0
     command -v zenity >/dev/null 2>&1 || return 0
     [ -n "$TANDEM_ESTADO" ] || return 0
     TANDEM_FIFO="$TANDEM_ESTADO/prog.$$"
@@ -106,13 +187,17 @@ t_prefixo_do_arquivo() {
 
 # Um prefixo esta protegido se o usuario listou, ou se nao e o nosso padrao
 # e nao foi criado pelo Tandem (marca .tandem-prefixo).
+#
+# A lista do usuario e consultada PRIMEIRO, de proposito: quem roda
+# "tandem protect" no proprio prefixo padrao esta pedindo que nem o Tandem
+# mexa nele, e essa decisao tem que valer mais que a marca de propriedade.
 t_prefixo_protegido() {
     local p="$1"
-    [ "$p" = "$TANDEM_PREFIXO_PADRAO" ] && return 1
-    [ -f "$p/.tandem-prefixo" ] && return 1
     if [ -f "$TANDEM_PROTEGIDOS" ] && grep -qxF -- "$p" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
         return 0
     fi
+    [ "$p" = "$TANDEM_PREFIXO_PADRAO" ] && return 1
+    [ -f "$p/.tandem-prefixo" ] && return 1
     return 0   # desconhecido = trate como protegido
 }
 

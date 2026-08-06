@@ -51,8 +51,13 @@ Build e verificação:
 
 ```bash
 python3 build.py --check
-for f in src/bin/* src/lib/*.sh debian/post*; do bash -n "$f" || echo "FALHOU $f"; done
+bash tests/run.sh          # 83 testes, roda sem Wine, sem Waydroid, sem instalar
 ```
+
+A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
+sintéticos com `AndroidManifest.xml` binário de verdade (`tests/mkapk.py`), então
+o leitor de manifesto é exercitado no mesmo caminho de código de um APK real.
+Ferramenta opcional ausente é pulada, não reprovada. **Rode antes de commitar.**
 
 ## Como o detector de dependências funciona
 
@@ -95,18 +100,41 @@ t_verbos_do_log /tmp/w.log     # espera: vcrun2022
   Wine se recusar a iniciar.
 - **`.msi` não é PE.** `wine arquivo.msi` falha sempre; tem que ser
   `wine msiexec /i`.
+- **O zenity recusa acento se o locale não existir.** Definir um locale que o
+  sistema não gerou (`LC_ALL=pt_BR.UTF-8` num Zorin instalado em inglês) faz o
+  glib cair para `ANSI_X3.4-1968`; a partir daí qualquer argumento não-ASCII
+  devolve `This option is not available`, código 255, e **nenhuma janela
+  aparece**. Como toda mensagem daqui tem acento, isso apagava a interface
+  inteira em silêncio. Detector confiável: `locale charmap` tem que dizer
+  `UTF-8`. Use `t_locale_utf8`, nunca escreva um locale fixo.
+- **`zenity --error` bloqueia até o clique** e devolve 0. Se devolver diferente
+  de 0, a janela não foi mostrada — é esse o sinal que o `t_erro` usa para
+  decidir se precisa repetir a mensagem no terminal.
 
 ## Estado
 
-Verificado: sintaxe dos 9 scripts; estrutura do `.deb` (ar, tar, modos,
-root:root); `apkinfo.py` contra APK e XAPK sintéticos (ABIs, splits, OBB,
-degradação em arquivo inválido); detector de dependências contra log real do
-Wine (agrupou `MSVCP140`+`VCRUNTIME140` em um `vcrun2022`, ignorou
-`kernel32.dll`, separou DLL própria do programa).
+Verificado **em Linux real** (Ubuntu 24.04 noble, mesma base do Zorin 18, com
+root), não mais só por leitura:
 
-**Não verificado — precisa de máquina real:** duplo clique vencendo a disputa
-de associação, `pkexec`, janelas do zenity, criação do prefixo, instalação de
-XAPK de verdade, regra polkit. Nada disso rodou em Linux ainda.
+- O `.deb` escrito à mão pelo `build.py` é aceito pelo `dpkg` de verdade:
+  `dpkg-deb --info/--contents`, `dpkg -i`, `dpkg --configure`. Instala,
+  configura e desinstala. Construção reproduzível (duas builds, mesmo cksum).
+- `lintian` limpo: zero erros, zero avisos.
+- O `postinst` no caminho por-usuário: protegeu sozinho os três prefixos Wine
+  pré-existentes (`~/.wine`, `~/.wine-pdv`, `wineprefixes/*`). **Regra nº 1
+  confirmada ponta a ponta.**
+- `tandem-repair` contra um `gnome-mimeapps.list` concorrente: removeu as
+  entradas em disputa, preservou o `text/plain` alheio, gravou no
+  `mimeapps.list`, deixou backup.
+- `tandem doctor`, `version`, `--help`, painel sem GUI: todos com saída.
+- Janelas do zenity abrem de fato (verificado sob Xvfb), inclusive com acento.
+- 83 testes automatizados em `tests/run.sh`.
+
+**Ainda não verificado — precisa da máquina de verdade:** o duplo clique
+vencendo a disputa de associação no GNOME/Zorin, `pkexec` e a regra polkit,
+criação de prefixo com Wine instalado, o laço roda→detecta→instala com
+`winetricks` real, e instalação de XAPK num Waydroid real. Wine e Waydroid não
+existem neste ambiente de teste.
 
 Ambiente de referência onde o projeto nasceu: Zorin OS 18.1 (base Ubuntu
 noble), kernel 7.0, x86_64, Wayland/GNOME, 15 GB RAM, Wine 10.0 do repositório
@@ -115,10 +143,14 @@ da distro, Waydroid 1.6.2 MAINLINE com GAPPS e libhoudini, `binderfs` com nós
 
 ## Próximos passos
 
-1. Instalar o `.deb` no Zorin e rodar `tandem doctor`. É o primeiro teste real.
-2. Publicar release no GitHub com o `.deb` anexado.
-3. Suporte a `.apkm` foi declarado mas só `.xapk`/`.apks` foram testados.
-4. Considerar clonar um prefixo com .NET pronto em vez de rodar `dotnet48` do
+1. Instalar o `.deb` no Zorin e rodar `tandem doctor` **numa sessão gráfica**.
+   O que falta testar agora é só o que depende de Wine, Waydroid e do GNOME
+   real — o resto já roda verde na suíte.
+2. Confirmar o duplo clique. Se abrir o diálogo "Abrir com…", rodar
+   `tandem repair` e comparar o antes/depois que ele imprime.
+3. Publicar release no GitHub com o `.deb` anexado.
+4. Suporte a `.apkm` foi declarado mas só `.xapk`/`.apks` foram testados.
+5. Considerar clonar um prefixo com .NET pronto em vez de rodar `dotnet48` do
    zero (30 min, alta taxa de falha) — ideia levantada, não implementada,
    requer cuidado para nunca ler de prefixo protegido em uso.
 

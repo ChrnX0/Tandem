@@ -6,6 +6,6 @@ Comment[pt_BR]=Rode programas Windows e apps Android
 Exec=/usr/bin/tandem
 Icon=tandem
 Terminal=false
-Categories=System;Utility;
+Categories=Utility;
 Keywords=wine;windows;android;waydroid;exe;apk;xapk;
 StartupNotify=true

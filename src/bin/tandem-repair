@@ -64,15 +64,17 @@ RES="  .exe   antes: ${ANTES_EXE:-nenhum}
          agora: ${DEPOIS_APK:-nenhum}"
 t_diz "$RES"
 
+RELATORIO="Associações reaplicadas.
+
+$RES"
+
+# Terminal primeiro; senao a janela; se a janela nao abrir, a saida padrao.
+# Antes, com zenity instalado e sem display, este relatorio sumia calado.
 if [ -t 1 ]; then
-    printf 'Associações reaplicadas.\n%s\n' "$RES"
-elif command -v zenity >/dev/null 2>&1; then
-    zenity --info --no-wrap --title="Tandem" \
-        --text="Associações reaplicadas.
+    printf '%s\n' "$RELATORIO"
+elif ! { t_tem_gui && command -v zenity >/dev/null 2>&1 &&
+         zenity --info --no-wrap --title="Tandem" --text="$RELATORIO
 
-$RES
-
-Se ainda não funcionar com dois cliques, saia e entre novamente na sua conta." 2>/dev/null
-else
-    t_ok "Associações reaplicadas."
+Se ainda não funcionar com dois cliques, saia e entre novamente na sua conta." 2>/dev/null; }; then
+    printf '%s\n' "$RELATORIO"
 fi

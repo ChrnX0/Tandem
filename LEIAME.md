@@ -87,7 +87,7 @@ tandem protect ~/.wine-alguma-coisa
 Baixe o `.deb` em [Releases](../../releases) e clique duas vezes, ou:
 
 ```bash
-sudo apt install ./tandem_2.1_all.deb
+sudo apt install ./tandem_2.2_all.deb
 ```
 
 Depois verifique o ambiente:
@@ -137,6 +137,21 @@ arquivo `ar` diretamente:
 ```bash
 python3 build.py --check
 ```
+
+## Testes
+
+A suíte roda sem Wine, sem Waydroid e sem instalar o pacote: as bibliotecas de
+shell são carregadas direto de `src/lib` e os pacotes Android são sintéticos —
+inclusive com um `AndroidManifest.xml` binário de verdade, para que o leitor de
+manifesto seja exercitado no mesmo caminho de código de um APK real.
+
+```bash
+bash tests/run.sh
+```
+
+As ferramentas opcionais (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) são
+usadas quando existem e puladas quando não existem, então a suíte passa numa
+máquina sem nada instalado.
 
 ## O que nunca vai funcionar
 

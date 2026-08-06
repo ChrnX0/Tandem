@@ -16,7 +16,10 @@ import tarfile
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, "src")
 DEB = os.path.join(ROOT, "debian")
+MAN = os.path.join(ROOT, "man")
 MTIME = 1735689600  # fixed, for reproducible builds
+
+MANPAGES = ["tandem", "tandem-exe", "tandem-apk", "tandem-android", "tandem-repair"]
 
 # path in package  <-  path in repo, mode
 LAYOUT = [
@@ -34,6 +37,16 @@ LAYOUT = [
     ("usr/share/applications/tandem-android.desktop", "applications/tandem-android.desktop", 0o644),
     ("usr/share/icons/hicolor/scalable/apps/tandem.svg", "icons/tandem.svg", 0o644),
     ("usr/share/polkit-1/rules.d/49-tandem.rules", "polkit/49-tandem.rules", 0o644),
+]
+
+# Files that Debian policy requires but that live outside src/. The gzipped
+# ones must be deterministic, so gzip_bytes() pins the timestamp too.
+DOCS = [
+    ("usr/share/doc/tandem/copyright", os.path.join(DEB, "copyright"), False),
+    ("usr/share/doc/tandem/changelog.gz", os.path.join(DEB, "changelog"), True),
+] + [
+    ("usr/share/man/man1/%s.1.gz" % n, os.path.join(MAN, "%s.1" % n), True)
+    for n in MANPAGES
 ]
 
 
@@ -66,6 +79,14 @@ def read(path):
         return f.read().replace(b"\r\n", b"\n")
 
 
+def gzip_bytes(data):
+    """gzip with a fixed mtime, so two builds of the same tree match."""
+    out = io.BytesIO()
+    with gzip.GzipFile(fileobj=out, mode="wb", mtime=MTIME) as gz:
+        gz.write(data)
+    return out.getvalue()
+
+
 def dirs_for(paths):
     seen = set()
     for p in paths:
@@ -96,13 +117,17 @@ def build_control(tar):
 
 def build_data(tar):
     tar.addfile(_info("./", directory=True))
-    for d in dirs_for([dst for dst, _, _ in LAYOUT]):
+    todo = [(dst, os.path.join(SRC, src), mode, False)
+            for dst, src, mode in LAYOUT]
+    todo += [(dst, path, 0o644, gz) for dst, path, gz in DOCS]
+
+    for d in dirs_for([dst for dst, _, _, _ in todo]):
         tar.addfile(_info("./" + d, directory=True))
-    for dst, src, mode in LAYOUT:
-        path = os.path.join(SRC, src)
+    for dst, path, mode, gz in todo:
         if not os.path.exists(path):
             raise SystemExit("missing source file: %s" % path)
-        add_bytes(tar, "./" + dst, read(path), mode)
+        data = read(path)
+        add_bytes(tar, "./" + dst, gzip_bytes(data) if gz else data, mode)
 
 
 def ar_entry(name, data):

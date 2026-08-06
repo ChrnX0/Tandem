@@ -39,7 +39,13 @@ fi
 t_prefixo_protegido "$WINEPREFIX" && PROTEGIDO=1 || PROTEGIDO=0
 
 export WINEDEBUG=fixme-all
-[ -z "${LC_ALL:-}" ] && export LC_ALL=pt_BR.UTF-8
+# O Wine usa o locale para escolher o idioma do programa Windows. Definir
+# pt_BR.UTF-8 sem checar era perigoso: num sistema onde esse locale nao foi
+# gerado (Zorin instalado em ingles, por exemplo) o glib cai para ASCII e o
+# zenity passa a recusar todo texto acentuado - ou seja, todas as janelas de
+# erro deste programa deixavam de aparecer, em silencio.
+TANDEM_LOCALE="$(t_locale_utf8 "${LC_ALL:-}" pt_BR.UTF-8 "${LANG:-}")"
+export LC_ALL="$TANDEM_LOCALE"
 # winemenubuilder LIGADO: e ele que cria o atalho no menu do Linux quando um
 # instalador Windows cria atalho no Menu Iniciar.
 unset WINEDLLOVERRIDES
