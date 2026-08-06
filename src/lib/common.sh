@@ -128,13 +128,26 @@ t_pergunta() {
            --ok-label="${2:-Sim}" --cancel-label="${3:-Não}" 2>/dev/null
 }
 
-# Mostra um texto longo lido da entrada padrao. Terminal tem preferencia
-# (quem digitou o comando quer a resposta ali); sem terminal tenta a janela;
-# se a janela nao abrir, cai de volta para a saida padrao em vez de sumir.
+# Mostra um texto longo lido da entrada padrao.
+#
+# A janela so faz sentido quando ninguem esta esperando o texto na saida
+# padrao. Terminal, cano e arquivo sao pedidos EXPLICITOS por texto:
+#   tandem doctor                  -> terminal
+#   tandem doctor | grep wine      -> o cano recebe o texto
+#   tandem doctor > relatorio.txt  -> o arquivo recebe o texto
+# Testar so "[ -t 1 ]" confundia os dois ultimos com duplo clique e mandava
+# o diagnostico para uma janela, gravando um arquivo vazio - justamente
+# quando o usuario esta tentando enviar o diagnostico para alguem.
+# Sobra o duplo clique, onde a saida vai para /dev/null ou para o journal:
+# ai sim a janela e o unico jeito de a pessoa ver alguma coisa.
 t_texto() {
     local titulo="${1:-Tandem}" conteudo
     conteudo="$(cat)"
-    if [ ! -t 1 ] && t_tem_gui && command -v zenity >/dev/null 2>&1 &&
+    if [ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]; then
+        printf '%s\n' "$conteudo"
+        return 0
+    fi
+    if t_tem_gui && command -v zenity >/dev/null 2>&1 &&
        printf '%s\n' "$conteudo" | zenity --text-info --title="$titulo" \
             --width=720 --height=540 --font=monospace 2>/dev/null; then
         return 0
@@ -269,6 +282,38 @@ t_primeira_vez() {
         TANDEM_SILENCIOSO=1 /usr/bin/tandem-repair >>"${LOG:-/dev/null}" 2>&1
     fi
     : > "$marca" 2>/dev/null
+    return 0
+}
+
+# ------------------------------------------------------- atalhos de menu
+#
+# Quando um instalador Windows cria atalho no Menu Iniciar, o winemenubuilder
+# cria o .desktop correspondente em ~/.local/share/applications/wine/Programs.
+# Duas coisas precisam acontecer depois disso, e nenhuma acontecia:
+#
+# 1. Atualizar o cache do ambiente grafico. O Tandem ja fazia isso, mas ANTES
+#    de executar o programa - cedo demais para ver um atalho que ainda nao
+#    existia. O menu entao ignora uma subpasta que acabou de nascer.
+# 2. Dizer ao usuario onde o programa foi parar. Sem isso o desfecho e
+#    "instalei e sumiu": o programa entra na maquina e a pessoa nao tem
+#    caminho de volta. Sucesso silencioso e tao ruim quanto erro silencioso.
+
+t_atalhos_wine() {
+    find "$HOME/.local/share/applications/wine" -name '*.desktop' 2>/dev/null | LC_ALL=C sort
+}
+
+# Compara com a lista de antes e anuncia o que apareceu.
+t_anuncia_atalhos() {
+    local antes="$1" novos nomes
+    novos="$(printf '%s\n' "$(t_atalhos_wine)" | grep -vxF -- "${antes:-__nada__}" 2>/dev/null)"
+    [ -n "$novos" ] || return 0
+    command -v update-desktop-database >/dev/null 2>&1 &&
+        update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
+    nomes="$(printf '%s\n' "$novos" | sed 's|.*/||; s|\.desktop$||' | sed 's/^/• /')"
+    t_diz "atalhos novos: $(printf '%s' "$novos" | tr '\n' ' ')"
+    t_ok "Pronto. Procure no menu de aplicativos por:
+
+$nomes"
     return 0
 }
 

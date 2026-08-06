@@ -233,9 +233,41 @@ igual "pergunta sem interface grafica devolve nao" "1" "$?"
 igual "texto longo cai na saida padrao sem interface grafica" \
       "linha um" "$(printf 'linha um\n' | t_texto 'titulo')"
 
+# Com interface grafica, cano e arquivo continuam recebendo o texto: quem
+# escreve "tandem doctor > relatorio.txt" quer o relatorio, nao uma janela.
+igual "com display, o cano ainda recebe o texto" \
+      "conteudo" \
+      "$(DISPLAY=:0 bash -c '. "'"$RAIZ"'/src/lib/common.sh"; printf "conteudo\n" | t_texto t' | cat)"
+DISPLAY=:0 bash -c '. "'"$RAIZ"'/src/lib/common.sh"; printf "conteudo\n" | t_texto t' > "$TMPRAIZ/redir.txt"
+igual "com display, o arquivo ainda recebe o texto" \
+      "conteudo" "$(cat "$TMPRAIZ/redir.txt")"
+
 # printf do diagnostico nao pode interpretar % vindo de um caminho
 igual "porcento em texto nao quebra a saida" \
       "50% pronto" "$(printf '%b' "50% pronto")"
+
+secao "atalhos de menu depois de um instalador"
+
+APPS="$HOME/.local/share/applications/wine/Programs/Coisa"
+mkdir -p "$APPS"
+ANTES_AT="$(t_atalhos_wine)"
+igual "sem atalho nenhum, a lista vem vazia" "" "$ANTES_AT"
+
+igual "nada novo, nada anunciado" \
+      "" "$(t_anuncia_atalhos "$ANTES_AT" 2>&1 1>/dev/null)"
+
+: > "$APPS/Coisa Legal.desktop"
+saida_at="$(t_anuncia_atalhos "$ANTES_AT" 2>&1 1>/dev/null)"
+case "$saida_at" in
+    *"Coisa Legal"*) passou "atalho novo é anunciado pelo nome" ;;
+    *) falhou "atalho novo é anunciado pelo nome" "cita 'Coisa Legal'" "$saida_at" ;;
+esac
+
+# Depois de anunciado, a mesma lista de antes nao pode anunciar de novo:
+# a comparacao tem que ser contra o estado corrente.
+DEPOIS_AT="$(t_atalhos_wine)"
+igual "atalho ja conhecido nao e reanunciado" \
+      "" "$(t_anuncia_atalhos "$DEPOIS_AT" 2>&1 1>/dev/null)"
 
 secao "locale (o zenity recusa acento em locale inexistente)"
 

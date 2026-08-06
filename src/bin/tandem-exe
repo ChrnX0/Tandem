@@ -127,12 +127,18 @@ executar() {
 # ---------------------------------------- 5. Rodar, detectar, instalar, repetir
 MAX=3
 tentativa=1
+ATALHOS_ANTES="$(t_atalhos_wine)"
 while :; do
     MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
     t_aviso "Abrindo $(basename -- "$PROG")..."
     executar
     CODIGO=$?
-    [ "$CODIGO" -eq 0 ] && exit 0
+    if [ "$CODIGO" -eq 0 ]; then
+        # Se era um instalador, apareceram atalhos: diga onde o programa foi
+        # parar. Se era so um programa rodando, nada aparece e nada e dito.
+        t_anuncia_atalhos "$ATALHOS_ANTES"
+        exit 0
+    fi
 
     # Olha apenas o trecho do log gerado nesta tentativa.
     PARCIAL="${TANDEM_ESTADO:-/tmp}/parcial.$$"
