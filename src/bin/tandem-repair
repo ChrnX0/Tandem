@@ -1,0 +1,78 @@
+#!/bin/bash
+# Tandem - reaplica as associacoes de arquivo.
+#
+# Por que isso e necessario: o GNOME le varios arquivos de associacao em ordem
+# de precedencia. O ~/.config/mimeapps.list e o normal, mas gnome-mimeapps.list
+# e zorin-mimeapps.list tem precedencia MAIOR e sobrescrevem em silencio.
+# Aqui gravamos no lugar certo e limpamos os concorrentes, com backup.
+. /usr/lib/tandem/common.sh
+t_log_init repair
+
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
+mkdir -p "$CFG"
+ALVO="$CFG/mimeapps.list"
+
+TIPOS_APK="application/vnd.android.package-archive"
+TIPOS_EXE="application/x-ms-dos-executable
+application/x-msdownload
+application/vnd.microsoft.portable-executable
+application/x-msi
+application/x-msdos-program
+application/x-ms-shortcut"
+
+# Quem detinha os tipos antes? O Zorin ja instala "Windows App Support" e o
+# Waydroid instala waydroid.app.install.desktop - os dois disputam com o Tandem.
+ANTES_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
+ANTES_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
+t_diz "antes: exe=$ANTES_EXE apk=$ANTES_APK"
+
+for f in "$CFG"/*-mimeapps.list; do
+    [ -f "$f" ] || continue
+    cp -f "$f" "$f.bak-tandem" 2>/dev/null || true
+    for t in $TIPOS_APK $TIPOS_EXE; do
+        sed -i "\|^${t}=|d" "$f" 2>/dev/null || true
+    done
+    t_diz "limpou conflitos em $f"
+done
+
+[ -f "$ALVO" ] || printf '[Default Applications]\n' > "$ALVO"
+grep -q '^\[Default Applications\]' "$ALVO" || printf '\n[Default Applications]\n' >> "$ALVO"
+
+aplicar() {
+    local tipo="$1" app="$2"
+    if grep -q "^${tipo}=" "$ALVO"; then
+        sed -i "s|^${tipo}=.*|${tipo}=${app}|" "$ALVO"
+    else
+        sed -i "0,/^\[Default Applications\]/s||[Default Applications]\n${tipo}=${app}|" "$ALVO"
+    fi
+    command -v gio >/dev/null 2>&1 && gio mime "$tipo" "$app" >/dev/null 2>&1
+    command -v xdg-mime >/dev/null 2>&1 && xdg-mime default "$app" "$tipo" >/dev/null 2>&1
+    return 0
+}
+
+aplicar "$TIPOS_APK" tandem-apk.desktop
+for t in $TIPOS_EXE; do aplicar "$t" tandem-exe.desktop; done
+
+update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+
+DEPOIS_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
+DEPOIS_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
+RES="  .exe   antes: ${ANTES_EXE:-nenhum}
+         agora: ${DEPOIS_EXE:-nenhum}
+
+  .apk   antes: ${ANTES_APK:-nenhum}
+         agora: ${DEPOIS_APK:-nenhum}"
+t_diz "$RES"
+
+if [ -t 1 ]; then
+    printf 'Associações reaplicadas.\n%s\n' "$RES"
+elif command -v zenity >/dev/null 2>&1; then
+    zenity --info --no-wrap --title="Tandem" \
+        --text="Associações reaplicadas.
+
+$RES
+
+Se ainda não funcionar com dois cliques, saia e entre novamente na sua conta." 2>/dev/null
+else
+    t_ok "Associações reaplicadas."
+fi

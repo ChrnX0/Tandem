@@ -1,0 +1,10 @@
+#!/bin/bash
+# Tandem - abre a tela do Android.
+. /usr/lib/tandem/common.sh
+t_log_init android
+
+t_progresso_abre "Abrindo o Android..."
+t_wd_garantir || exit 1
+t_progresso_fecha
+
+exec waydroid show-full-ui

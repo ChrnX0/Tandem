@@ -1,0 +1,175 @@
+#!/bin/bash
+# Tandem - instala um app Android (.apk, .xapk, .apks, .apkm) no Waydroid.
+. /usr/lib/tandem/common.sh
+
+t_log_init apk "$*"
+
+BRUTO="${1:-}"
+[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+APK="$(readlink -f -- "$BRUTO" 2>/dev/null)"
+[ -n "$APK" ] && [ -f "$APK" ] || { t_erro "Arquivo não encontrado:
+$BRUTO"; exit 1; }
+
+TMP=""
+limpar() {
+    t_progresso_fecha
+    [ -n "$TMP" ] && [ -d "$TMP" ] && rm -rf -- "$TMP"
+}
+trap limpar EXIT INT TERM
+
+exec 9> "${TANDEM_ESTADO:-/tmp}/apk.lock"
+flock -w 900 9 || { t_erro "Outra instalação já está em andamento."; exit 1; }
+
+# ------------------------------------------------- 1. Inspecao previa
+INFO="$(python3 /usr/lib/tandem/apkinfo.py "$APK" 2>>"$LOG")"
+t_diz "$INFO"
+FORMATO=""; PACOTE=""; MINSDK=""; ABIS=""; SPLITS=1; OBB=0; ERRO=""
+while IFS='=' read -r k v; do
+    case "$k" in
+        FORMATO) FORMATO="$v" ;; PACOTE) PACOTE="$v" ;; MINSDK) MINSDK="$v" ;;
+        ABIS) ABIS="$v" ;; SPLITS) SPLITS="$v" ;; OBB) OBB="$v" ;; ERRO) ERRO="$v" ;;
+    esac
+done <<< "$INFO"
+
+if [ -n "$ERRO" ]; then
+    t_erro "Não consegui ler este arquivo.
+
+$ERRO"; exit 1
+fi
+if [ "$FORMATO" = "desconhecido" ]; then
+    t_erro "Este arquivo não parece ser um aplicativo Android."; exit 1
+fi
+
+t_progresso_abre "Preparando o Android..."
+t_wd_garantir || exit 1
+
+# ------------------------------------------- 2. Compatibilidade, antes de tentar
+SDK="$(t_wd_sdk)"
+if [ -n "$MINSDK" ] && [ -n "$SDK" ] && [ "$MINSDK" -gt "$SDK" ] 2>/dev/null; then
+    t_progresso_fecha
+    t_erro "Este app exige uma versão do Android mais nova do que a instalada.
+
+Ele pede a versão $MINSDK e o Android daqui é a $SDK.
+
+Procure uma versão mais antiga do app."
+    exit 1
+fi
+
+# So tem biblioteca ARM? Precisa do tradutor.
+if [ -n "$ABIS" ] && ! printf '%s' "$ABIS" | grep -q 'x86'; then
+    if ! t_wd_tem_arm; then
+        t_progresso_fecha
+        t_erro "Este app é feito só para celular (ARM) e falta o tradutor neste Android.
+
+Para instalar o tradutor:
+
+git clone https://github.com/casualsnek/waydroid_script
+cd waydroid_script && python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+sudo venv/bin/python3 main.py install houdini"
+        exit 1
+    fi
+    t_diz "app ARM-only, tradutor presente"
+fi
+
+# ------------------------------------------------------- 3. Instalar
+resultado() {
+    local saida="$1"
+    case "$saida" in
+        *NO_MATCHING_ABIS*)
+            t_erro "Este app é feito só para celular (ARM) e não roda aqui." ;;
+        *INSTALL_FAILED_OLDER_SDK*)
+            t_erro "Este app exige uma versão do Android mais nova que a instalada." ;;
+        *INSTALL_FAILED_ALREADY_EXISTS*)
+            t_erro "Este app já está instalado.
+
+Desinstale primeiro pelo próprio Android." ;;
+        *INSTALL_FAILED_VERSION_DOWNGRADE*)
+            t_erro "Já existe uma versão mais nova deste app instalada." ;;
+        *INSTALL_FAILED_INSUFFICIENT_STORAGE*)
+            t_erro "Não há espaço suficiente dentro do Android." ;;
+        *INSTALL_PARSE_FAILED_NO_CERTIFICATES*)
+            t_erro "O app não está assinado corretamente. Baixe de outra fonte." ;;
+        *INSTALL_PARSE_FAILED*)
+            t_erro "O arquivo parece corrompido ou incompleto." ;;
+        *INSTALL_FAILED_MISSING_SPLIT*)
+            t_erro "Faltam partes deste app.
+
+Baixe o arquivo .xapk completo, em vez do .apk avulso." ;;
+        *Success*)
+            t_ok "Instalado com sucesso.${PACOTE:+ ($PACOTE)}
+
+Procure no menu de aplicativos."
+            return 0 ;;
+        *Failure*|*INSTALL_FAILED*|*Exception*|*error:*|*Error:*)
+            t_erro "Não deu para instalar este app." ;;
+        *)
+            # Sem palavra-chave: confirma consultando o proprio Android.
+            if [ -n "$PACOTE" ] && waydroid shell -- pm list packages 2>/dev/null |
+                 grep -q "package:$PACOTE"; then
+                t_ok "Instalado com sucesso. Procure no menu de aplicativos."
+                return 0
+            fi
+            t_erro "Não consegui confirmar a instalação." ;;
+    esac
+    return 1
+}
+
+if [ "$FORMATO" = "apk" ]; then
+    t_progresso_texto "Instalando $(basename -- "$APK")..."
+    SAIDA="$(timeout 300 waydroid app install "$APK" 2>&1)"
+    t_diz "$SAIDA"
+    t_progresso_fecha
+    resultado "$SAIDA"; exit $?
+fi
+
+# ---------------------------- 4. Pacote dividido (xapk/apks/apkm) via ADB
+t_progresso_texto "Extraindo as $SPLITS partes do aplicativo..."
+TMP="$(mktemp -d)"
+if ! unzip -q -o "$APK" -d "$TMP" 2>>"$LOG"; then
+    t_progresso_fecha
+    t_erro "Não consegui abrir este pacote. O arquivo pode estar corrompido."
+    exit 1
+fi
+
+mapfile -t PARTES < <(find "$TMP" -maxdepth 2 -type f -iname '*.apk' | sort)
+[ "${#PARTES[@]}" -gt 0 ] || {
+    t_progresso_fecha; t_erro "Não encontrei nenhum aplicativo dentro deste pacote."; exit 1; }
+
+command -v adb >/dev/null 2>&1 || {
+    t_progresso_fecha
+    t_erro "Para instalar pacotes divididos é preciso o adb.
+
+sudo apt install adb"; exit 1; }
+
+IP="$(t_wd_ip)"
+[ -n "$IP" ] || { t_progresso_fecha; t_erro "Não descobri o endereço do Android."; exit 1; }
+
+t_progresso_texto "Conectando ao Android ($IP)..."
+adb connect "$IP:5555" >>"$LOG" 2>&1
+for _ in $(seq 1 10); do
+    adb -s "$IP:5555" get-state 2>/dev/null | grep -q device && break
+    sleep 1
+done
+adb -s "$IP:5555" get-state 2>/dev/null | grep -q device || {
+    t_progresso_fecha
+    t_erro "Não consegui conectar ao Android para instalar as partes."; exit 1; }
+
+t_progresso_texto "Instalando ${#PARTES[@]} partes..."
+SAIDA="$(timeout 900 adb -s "$IP:5555" install-multiple -r "${PARTES[@]}" 2>&1)"
+t_diz "$SAIDA"
+
+# Arquivos de dados extras (OBB), quando houver.
+if [ "$OBB" = 1 ] && [ -d "$TMP/Android/obb" ]; then
+    t_progresso_texto "Copiando arquivos de dados do app..."
+    adb -s "$IP:5555" shell mkdir -p /sdcard/Android/obb >>"$LOG" 2>&1
+    for d in "$TMP"/Android/obb/*/; do
+        [ -d "$d" ] || continue
+        adb -s "$IP:5555" push "$d" /sdcard/Android/obb/ >>"$LOG" 2>&1
+    done
+fi
+
+adb disconnect "$IP:5555" >>"$LOG" 2>&1
+t_progresso_fecha
+resultado "$SAIDA"
+exit $?

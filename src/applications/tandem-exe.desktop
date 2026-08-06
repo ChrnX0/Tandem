@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Run with Tandem (Windows)
+Name[pt_BR]=Executar com Tandem (Windows)
+Comment=Open this Windows program using Wine
+Comment[pt_BR]=Abre este programa do Windows usando o Wine
+Exec=/usr/bin/tandem-exe %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+MimeType=application/x-ms-dos-executable;application/x-msdownload;application/vnd.microsoft.portable-executable;application/x-msi;application/x-msdos-program;application/x-ms-shortcut;
+Categories=System;

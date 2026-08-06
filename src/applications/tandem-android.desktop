@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Android
+Comment=Open the Android screen
+Comment[pt_BR]=Abre a tela do Android
+Exec=/usr/bin/tandem-android
+Icon=tandem
+Terminal=false
+Categories=System;Utility;
+Keywords=android;waydroid;apk;
+StartupNotify=true

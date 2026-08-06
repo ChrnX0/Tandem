@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+
+update-desktop-database /usr/share/applications 2>/dev/null || true
+gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+
+# Descobre quem instalou, para aplicar as associacoes no perfil certo.
+USUARIO="${SUDO_USER:-}"
+if [ -z "$USUARIO" ] && [ -n "${PKEXEC_UID:-}" ]; then
+    USUARIO="$(getent passwd "$PKEXEC_UID" | cut -d: -f1 || true)"
+fi
+[ -z "$USUARIO" ] && USUARIO="$(logname 2>/dev/null || true)"
+
+if [ -n "$USUARIO" ] && [ "$USUARIO" != "root" ]; then
+    LAR="$(getent passwd "$USUARIO" | cut -d: -f6 || true)"
+    if [ -n "$LAR" ] && [ -d "$LAR" ]; then
+        runuser -u "$USUARIO" -- /usr/bin/tandem-repair >/dev/null 2>&1 || true
+        # Protege automaticamente prefixos Wine ja existentes do usuario.
+        for p in "$LAR"/.wine*/ "$LAR"/.local/share/wineprefixes/*/; do
+            [ -f "${p}system.reg" ] || continue
+            [ -f "${p}.tandem-prefixo" ] && continue
+            runuser -u "$USUARIO" -- /usr/bin/tandem protect "${p%/}" >/dev/null 2>&1 || true
+        done
+    fi
+fi
+
+cat <<'FIM'
+
+  Tandem instalado.
+
+    Clique duas vezes num .exe ou .msi   -> roda no Windows (Wine)
+    Clique duas vezes num .apk ou .xapk  -> instala no Android
+    Menu de aplicativos -> Tandem        -> painel com tudo
+
+  Verifique o ambiente com:  tandem doctor
+
+FIM
+exit 0

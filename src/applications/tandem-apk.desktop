@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Install with Tandem (Android)
+Name[pt_BR]=Instalar com Tandem (Android)
+Comment=Install this Android app
+Comment[pt_BR]=Instala este aplicativo Android
+Exec=/usr/bin/tandem-apk %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+MimeType=application/vnd.android.package-archive;
+Categories=System;

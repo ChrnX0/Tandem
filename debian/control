@@ -1,0 +1,24 @@
+Package: tandem
+Version: 2.1
+Section: utils
+Priority: optional
+Architecture: all
+Depends: python3 (>= 3.8), zenity, desktop-file-utils, xdg-utils, coreutils, util-linux, unzip, libglib2.0-bin
+Recommends: libnotify-bin, wine, winetricks, waydroid, adb
+Maintainer: Tandem <noreply@users.noreply.github.com>
+Homepage: https://github.com/OWNER/tandem
+Description: Run Windows programs and Android apps by double-clicking
+ Tandem makes .exe, .msi, .apk and .xapk files behave like native
+ applications on Linux. Double-click a file and it runs.
+ .
+ For Windows programs it detects missing runtime libraries from Wine's
+ own error output, maps them to winetricks packages, installs them and
+ retries - the loop an experienced user would do by hand.
+ .
+ For Android apps it inspects the package before installing: ABI,
+ minimum SDK and split-package layout, so incompatibilities are
+ reported in plain language instead of failing silently. Split
+ packages (.xapk/.apks/.apkm) are installed through ADB.
+ .
+ Wine prefixes that Tandem did not create are treated as read-only,
+ so production systems are never modified by the automation.

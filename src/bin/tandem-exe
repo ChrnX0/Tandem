@@ -1,0 +1,224 @@
+#!/bin/bash
+# Tandem - executa um programa Windows, resolvendo dependencias sozinho.
+. /usr/lib/tandem/common.sh
+. /usr/lib/tandem/winedeps.sh
+
+t_log_init exe "$*"
+
+BRUTO="${1:-}"
+[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
+[ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "Arquivo não encontrado:
+$BRUTO"; exit 1; }
+
+command -v wine >/dev/null 2>&1 || {
+    t_erro "O Wine não está instalado.
+
+Instale pela Central de Programas, ou com:
+sudo apt install wine"; exit 1; }
+
+# Dois cliques rapidos disparam dois processos. Sem isso, duas instalacoes
+# de dependencia concorrentes corrompem o prefixo. Trava por arquivo, para
+# nao impedir abrir dois programas diferentes ao mesmo tempo.
+CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
+exec 7> "${TANDEM_ESTADO:-/tmp}/exe-$CHAVE.lock"
+flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
+
+# --------------------------------------------------- 1. Qual prefixo usar
+# Se o arquivo mora dentro de um prefixo existente, respeite-o.
+# E o que impede o Tandem de rodar o atualizador de um sistema em producao
+# num ambiente vazio, sem as dependencias que aquele sistema instalou.
+if PREF="$(t_prefixo_do_arquivo "$PROG")"; then
+    export WINEPREFIX="$PREF"
+    NOSSO=0
+    t_diz "prefixo detectado pelo caminho do arquivo: $PREF"
+else
+    export WINEPREFIX="$TANDEM_PREFIXO_PADRAO"
+    NOSSO=1
+fi
+t_prefixo_protegido "$WINEPREFIX" && PROTEGIDO=1 || PROTEGIDO=0
+
+export WINEDEBUG=fixme-all
+[ -z "${LC_ALL:-}" ] && export LC_ALL=pt_BR.UTF-8
+# winemenubuilder LIGADO: e ele que cria o atalho no menu do Linux quando um
+# instalador Windows cria atalho no Menu Iniciar.
+unset WINEDLLOVERRIDES
+
+# ------------------------------------------------- 2. Criar prefixo padrao
+if [ "$NOSSO" = 1 ] && [ ! -f "$WINEPREFIX/system.reg" ]; then
+    [ -d "$WINEPREFIX" ] && { t_diz "prefixo incompleto, refazendo"; rm -rf -- "$WINEPREFIX"; }
+    mkdir -p "$(dirname -- "$WINEPREFIX")"
+    t_progresso_abre "Primeira vez: preparando o ambiente Windows..."
+    (
+      flock -w 1200 9 || exit 1
+      # Sem os dialogos de Mono/Gecko em ingles, que travam usuario leigo.
+      WINEARCH=win64 WINEDLLOVERRIDES="mscoree=d;mshtml=d;winemenubuilder.exe=d" \
+          wineboot -u >>"$LOG" 2>&1
+      wineserver -w
+    ) 9> "${TANDEM_ESTADO:-/tmp}/prefixo.lock"
+    t_progresso_fecha
+    if [ ! -f "$WINEPREFIX/system.reg" ]; then
+        t_erro "Não consegui preparar o ambiente Windows."; exit 1
+    fi
+    : > "$WINEPREFIX/.tandem-prefixo"
+    PROTEGIDO=0
+    t_ok "Ambiente Windows pronto."
+fi
+# Em prefixo ja existente, definir WINEARCH faz o Wine se recusar a iniciar.
+unset WINEARCH
+
+# O winemenubuilder faz duas coisas: cria atalhos no menu do Linux para os
+# programas Windows instalados (queremos) e sequestra as associacoes de
+# arquivo do sistema, roubando .txt, .jpg e .pdf (nao queremos). Desligar o
+# binario inteiro mata as duas. Esta chave desliga so o sequestro - e o que
+# esta por tras da opcao "Manage File Associations" do winecfg.
+# Somente em prefixo nosso: em prefixo de terceiro nada e alterado.
+if [ "$PROTEGIDO" = 0 ] && [ ! -f "$WINEPREFIX/.tandem-assoc" ]; then
+    wine reg add 'HKCU\Software\Wine\FileOpenAssociations' /v Enable /t REG_SZ /d N /f \
+        >>"$LOG" 2>&1 && : > "$WINEPREFIX/.tandem-assoc"
+    # Limpa o que o Wine ja tenha espalhado antes desta trava.
+    rm -f "$HOME/.local/share/applications/wine-extension-"*.desktop 2>/dev/null
+    rm -f "$HOME/.local/share/mime/packages/x-wine"* 2>/dev/null
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
+    update-mime-database "$HOME/.local/share/mime" 2>/dev/null
+fi
+
+# ------------------------------------------------ 3. Checagem de 32 bits
+ARCH="$(t_pe_arch "$PROG" 2>/dev/null || true)"
+t_diz "arquitetura do PE: ${ARCH:-nao identificada}"
+if [ "$ARCH" = 32 ] && ! t_tem_wine32; then
+    t_erro "Este programa é de 32 bits e falta esse suporte no Wine.
+
+Abra o Terminal e execute:
+
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install wine32"
+    exit 1
+fi
+if [ "$ARCH" = arm64 ]; then
+    t_erro "Este programa é para Windows ARM e não roda neste computador."
+    exit 1
+fi
+
+# ------------------------------------------------------- 4. Como executar
+executar() {
+    cd -- "$(dirname -- "$PROG")" || return 1
+    case "${PROG,,}" in
+        *.msi|*.msp)
+            local wp; wp="$(wine winepath -w -- "$PROG" 2>/dev/null || printf '%s' "$PROG")"
+            wine msiexec /i "$wp" >>"$LOG" 2>&1 ;;
+        *.lnk|*.url|*.bat|*.cmd)
+            wine start /unix -- "$PROG" >>"$LOG" 2>&1 ;;
+        *)
+            wine "$PROG" >>"$LOG" 2>&1 ;;
+    esac
+}
+
+# ---------------------------------------- 5. Rodar, detectar, instalar, repetir
+MAX=3
+tentativa=1
+while :; do
+    MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+    t_aviso "Abrindo $(basename -- "$PROG")..."
+    executar
+    CODIGO=$?
+    [ "$CODIGO" -eq 0 ] && exit 0
+
+    # Olha apenas o trecho do log gerado nesta tentativa.
+    PARCIAL="${TANDEM_ESTADO:-/tmp}/parcial.$$"
+    tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+
+    VERBOS="$(t_verbos_do_log "$PARCIAL")"
+    ORFAS="$(t_dlls_sem_traducao "$PARCIAL")"
+    rm -f "$PARCIAL"
+
+    # Recibo: nunca repetir uma instalacao ja paga. O dotnet48 leva meia hora;
+    # reinstalar por engano e o pior desperdicio possivel do tempo do usuario.
+    RECIBO="$WINEPREFIX/.tandem-verbos"
+    NOVOS=""; REPETIDOS=""
+    for v in $VERBOS; do
+        if [ -f "$RECIBO" ] && grep -qxF -- "$v" "$RECIBO" 2>/dev/null; then
+            REPETIDOS="$REPETIDOS $v"
+        else
+            NOVOS="$NOVOS $v"
+        fi
+    done
+    VERBOS="$(printf '%s\n' $NOVOS)"
+
+    if [ -z "$VERBOS" ] && [ -n "$REPETIDOS" ]; then
+        t_erro "Já instalei o que este programa pedia:$REPETIDOS
+
+E ele continua não abrindo. Provavelmente depende de algo que o Wine ainda não suporta, ou de um arquivo que deveria vir junto com ele."
+        exit "$CODIGO"
+    fi
+
+    if [ -z "$VERBOS" ]; then
+        if [ -n "$ORFAS" ]; then
+            t_erro "O programa não abriu porque faltam arquivos que ele deveria trazer junto:
+
+$(printf '%s\n' "$ORFAS" | tr '\n' ' ')
+
+Isso costuma acontecer quando só o executável foi copiado, sem a pasta completa do programa."
+        elif grep -qi 'Bad EXE format\|not a valid Win32' "$LOG" 2>/dev/null; then
+            t_erro "Este arquivo não é um programa do Windows compatível."
+        elif grep -qi '32-bit installation\|64-bit installation\|WINEARCH' "$LOG" 2>/dev/null; then
+            t_erro "Conflito de ambiente Windows (32 x 64 bits) neste perfil."
+        else
+            t_erro "O programa fechou com erro (código $CODIGO)."
+        fi
+        exit "$CODIGO"
+    fi
+
+    if [ "$PROTEGIDO" = 1 ]; then
+        t_erro "Faltam componentes do Windows para este programa:
+
+$(for v in $VERBOS; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)
+
+O Tandem não instala nada automaticamente neste perfil, porque ele pertence a outro sistema e a alteração poderia quebrá-lo."
+        exit "$CODIGO"
+    fi
+
+    if [ "$tentativa" -gt "$MAX" ]; then
+        t_erro "Instalei as dependências mas o programa continua não abrindo."
+        exit "$CODIGO"
+    fi
+
+    LISTA="$(for v in $VERBOS; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)"
+    if ! t_pergunta "O programa precisa destes componentes do Windows:
+
+$LISTA
+
+Posso instalar agora?" "Instalar" "Cancelar"; then
+        exit "$CODIGO"
+    fi
+
+    command -v winetricks >/dev/null 2>&1 || {
+        t_erro "Falta o winetricks para instalar as dependências.
+
+sudo apt install winetricks"; exit 1; }
+
+    # systemd-inhibit impede a maquina de suspender no meio: uma instalacao de
+    # .NET pode levar 30 minutos, e suspender no meio corrompe o prefixo.
+    if command -v systemd-inhibit >/dev/null 2>&1; then
+        INIBIR="systemd-inhibit --what=idle:sleep:shutdown --who=Tandem \
+                --why=Instalando_componentes_do_Windows --mode=block"
+    else
+        INIBIR=""
+    fi
+
+    t_progresso_abre "Instalando componentes do Windows. Pode demorar. Não feche esta janela."
+    for v in $VERBOS; do
+        t_progresso_texto "Instalando $(t_verbo_amigavel "$v")..."
+        t_diz ">>> winetricks -q $v"
+        if $INIBIR winetricks -q "$v" >>"$LOG" 2>&1; then
+            printf '%s\n' "$v" >> "$RECIBO"
+        else
+            t_diz "!!! winetricks falhou em $v"
+        fi
+    done
+    wineserver -w
+    t_progresso_fecha
+
+    tentativa=$((tentativa+1))
+done

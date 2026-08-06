@@ -1,0 +1,193 @@
+#!/bin/bash
+# Tandem - comando principal e painel.
+. /usr/lib/tandem/common.sh
+t_log_init tandem "$*"
+
+VERSAO="2.1"
+
+uso() {
+    cat <<'AJUDA'
+Tandem - roda programas Windows e apps Android no Linux.
+
+  tandem                      abre o painel
+  tandem install <arquivo>    instala/executa (.exe .msi .apk .xapk .apks)
+  tandem android              abre a tela do Android
+  tandem doctor               diagnostico do ambiente
+  tandem repair               reaplica as associacoes de arquivo
+  tandem backup               salva o ambiente Windows
+  tandem restore              restaura o ambiente Windows
+  tandem protect <caminho>    protege um perfil Wine contra alteracoes
+  tandem logs                 mostra o log mais recente
+  tandem version
+AJUDA
+}
+
+# ------------------------------------------------------------------ acoes
+
+acao_install() {
+    local f="$1"
+    [ -n "$f" ] || { t_erro "Informe o arquivo."; return 1; }
+    case "${f,,}" in
+        *.apk|*.xapk|*.apks|*.apkm) exec /usr/bin/tandem-apk "$f" ;;
+        *.exe|*.msi|*.msp|*.lnk|*.bat|*.cmd|*.url) exec /usr/bin/tandem-exe "$f" ;;
+        *)
+            if head -c2 -- "$f" 2>/dev/null | grep -q MZ; then exec /usr/bin/tandem-exe "$f"
+            elif head -c2 -- "$f" 2>/dev/null | grep -q PK; then exec /usr/bin/tandem-apk "$f"
+            else t_erro "Não reconheci o tipo deste arquivo."; return 1
+            fi ;;
+    esac
+}
+
+acao_doctor() {
+    local out="" ip sdk
+    out+="Tandem $VERSAO\n\n"
+    out+="SISTEMA\n"
+    out+="  $( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-desconhecido}" )\n"
+    out+="  kernel $(uname -r)   sessão: ${XDG_SESSION_TYPE:-?}\n\n"
+
+    out+="PROGRAMAS WINDOWS\n"
+    if command -v wine >/dev/null 2>&1; then
+        out+="  wine: $(wine --version 2>/dev/null)\n"
+        t_tem_wine32 && out+="  32 bits: sim\n" || out+="  32 bits: NÃO (programas antigos não abrem)\n"
+        command -v winetricks >/dev/null 2>&1 &&
+            out+="  winetricks: sim\n" || out+="  winetricks: NÃO (não instala dependências)\n"
+        [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] &&
+            out+="  ambiente: pronto\n" || out+="  ambiente: será criado no primeiro uso\n"
+    else
+        out+="  wine: NÃO INSTALADO\n"
+    fi
+    out+="\nAPPS ANDROID\n"
+    if command -v waydroid >/dev/null 2>&1; then
+        out+="  waydroid: instalado\n"
+        out+="  serviço: $(systemctl is-active waydroid-container 2>/dev/null)\n"
+        t_wd_sessao_ok && out+="  sessão: ativa\n" || out+="  sessão: parada\n"
+        if t_wd_pronto; then
+            sdk="$(t_wd_sdk)"; ip="$(t_wd_ip)"
+            out+="  Android: pronto (API ${sdk:-?}, IP ${ip:-?})\n"
+            t_wd_tem_arm && out+="  tradutor ARM: sim\n" || out+="  tradutor ARM: NÃO (apps de celular não instalam)\n"
+        else
+            out+="  Android: não iniciado\n"
+        fi
+        command -v adb >/dev/null 2>&1 &&
+            out+="  adb: sim\n" || out+="  adb: NÃO (pacotes .xapk não instalam)\n"
+    else
+        out+="  waydroid: NÃO INSTALADO\n"
+    fi
+    out+="\nPERFIS PROTEGIDOS\n"
+    if [ -s "$TANDEM_PROTEGIDOS" ]; then
+        while read -r l; do [ -n "$l" ] && out+="  $l\n"; done < "$TANDEM_PROTEGIDOS"
+    else
+        out+="  (nenhum listado; perfis de terceiros são protegidos automaticamente)\n"
+    fi
+
+    if [ -t 1 ] || ! command -v zenity >/dev/null 2>&1; then
+        printf "$out"
+    else
+        printf "$out" | zenity --text-info --title="Tandem - Diagnóstico" \
+            --width=560 --height=520 --font=monospace 2>/dev/null
+    fi
+}
+
+acao_backup() {
+    local p="$TANDEM_PREFIXO_PADRAO"
+    [ -f "$p/system.reg" ] || { t_erro "Não há ambiente Windows para salvar ainda."; return 1; }
+    local dest="$HOME/tandem-backup-$(date +%F-%H%M).tar.gz"
+    t_progresso_abre "Salvando o ambiente Windows. Pode demorar."
+    tar -C "$(dirname -- "$p")" -czf "$dest" "$(basename -- "$p")" 2>>"$LOG"
+    local c=$?
+    t_progresso_fecha
+    [ $c -eq 0 ] && t_ok "Backup salvo em:
+$dest" || t_erro "Não consegui salvar o backup."
+    return $c
+}
+
+acao_restore() {
+    local arq
+    arq="$(ls -1t "$HOME"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
+    [ -n "$arq" ] || { t_erro "Nenhum backup encontrado na sua pasta pessoal."; return 1; }
+    t_pergunta "Restaurar o ambiente Windows a partir de:
+
+$(basename -- "$arq")
+
+O ambiente atual será substituído." "Restaurar" "Cancelar" || return 1
+    t_progresso_abre "Restaurando..."
+    rm -rf -- "$TANDEM_PREFIXO_PADRAO"
+    mkdir -p "$(dirname -- "$TANDEM_PREFIXO_PADRAO")"
+    tar -C "$(dirname -- "$TANDEM_PREFIXO_PADRAO")" -xzf "$arq" 2>>"$LOG"
+    local c=$?
+    t_progresso_fecha
+    [ $c -eq 0 ] && t_ok "Ambiente restaurado." || t_erro "Não consegui restaurar."
+    return $c
+}
+
+acao_protect() {
+    local p; p="$(readlink -f -- "${1:-}" 2>/dev/null)"
+    [ -n "$p" ] && [ -d "$p" ] || { t_erro "Caminho inválido."; return 1; }
+    mkdir -p "$(dirname -- "$TANDEM_PROTEGIDOS")"
+    grep -qxF -- "$p" "$TANDEM_PROTEGIDOS" 2>/dev/null ||
+        printf '%s\n' "$p" >> "$TANDEM_PROTEGIDOS"
+    t_ok "Perfil protegido:
+$p
+
+O Tandem nunca vai instalar nem alterar nada aí dentro."
+}
+
+acao_logs() {
+    local l; l="$(ls -1t "$TANDEM_ESTADO"/*.log 2>/dev/null | head -1)"
+    [ -n "$l" ] || { t_erro "Ainda não há registros."; return 1; }
+    if [ -t 1 ] || ! command -v zenity >/dev/null 2>&1; then
+        tail -n 200 "$l"
+    else
+        tail -n 400 "$l" | zenity --text-info --title="Tandem - $(basename "$l")" \
+            --width=760 --height=560 --font=monospace 2>/dev/null
+    fi
+}
+
+acao_painel() {
+    command -v zenity >/dev/null 2>&1 || { uso; return 0; }
+    local esc
+    while :; do
+        esc="$(zenity --list --title="Tandem" --width=520 --height=400 \
+            --text="O que você quer fazer?" \
+            --column="Ação" --column="Descrição" --hide-header \
+            "instalar"  "Instalar ou abrir um arquivo (.exe .msi .apk .xapk)" \
+            "android"   "Abrir a tela do Android" \
+            "doctor"    "Ver o diagnóstico do ambiente" \
+            "backup"    "Salvar o ambiente Windows" \
+            "restore"   "Restaurar o ambiente Windows" \
+            "repair"    "Consertar a abertura de arquivos com dois cliques" \
+            "logs"      "Ver o registro técnico" \
+            2>/dev/null)" || return 0
+        case "$esc" in
+            instalar)
+                local f
+                f="$(zenity --file-selection --title="Escolha o arquivo" \
+                     --file-filter="Programas e apps | *.exe *.msi *.apk *.xapk *.apks *.apkm" \
+                     --file-filter="Todos | *" 2>/dev/null)" || continue
+                acao_install "$f" ;;
+            android)  setsid /usr/bin/tandem-android >/dev/null 2>&1 & ;;
+            doctor)   acao_doctor ;;
+            backup)   acao_backup ;;
+            restore)  acao_restore ;;
+            repair)   /usr/bin/tandem-repair ;;
+            logs)     acao_logs ;;
+            *)        return 0 ;;
+        esac
+    done
+}
+
+# ------------------------------------------------------------------ main
+case "${1:-}" in
+    ""|painel|panel)      acao_painel ;;
+    install|instalar|abrir) shift; acao_install "$@" ;;
+    android)              exec /usr/bin/tandem-android ;;
+    doctor|diagnostico)   acao_doctor ;;
+    repair|consertar)     exec /usr/bin/tandem-repair ;;
+    backup)               acao_backup ;;
+    restore|restaurar)    acao_restore ;;
+    protect|proteger)     shift; acao_protect "$@" ;;
+    logs|log)             acao_logs ;;
+    version|--version|-v) echo "Tandem $VERSAO" ;;
+    help|--help|-h)       uso ;;
+    *)                    acao_install "$1" ;;
+esac
