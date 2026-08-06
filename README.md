@@ -83,7 +83,7 @@ tandem protect ~/.wine-something
 Download the `.deb` from [Releases](../../releases) and double-click it, or:
 
 ```bash
-sudo apt install ./tandem_2.2_all.deb
+sudo apt install ./tandem_2.3_all.deb
 ```
 
 Then check your environment:

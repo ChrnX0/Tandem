@@ -1,3 +1,20 @@
+tandem (2.3) unstable; urgency=medium
+
+  * A protecao de prefixos Wine existentes e a aplicacao das associacoes de
+    arquivo passam do postinst para a primeira execucao do programa. No
+    postinst esse trabalho dependia de adivinhar quem instalou (SUDO_USER,
+    PKEXEC_UID, logname) e as tres vias falham juntas quando o .deb e
+    instalado pelo instalador grafico, deixando o usuario sem protecao
+    visivel e sem associacao, em silencio.
+  * A varredura de prefixos cobre agora Bottles (nativo e Flatpak) e
+    PlayOnLinux, e faz uma busca rasa por system.reg na pasta pessoal, com
+    limite de profundidade e tempo, para achar prefixo posto em lugar
+    incomum por instalador de terceiro.
+  * tandem-repair nao abre mais janela quando chamado de dentro do postinst:
+    um dialogo esperando clique travava o dpkg.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Thu, 06 Aug 2026 23:45:00 +0000
+
 tandem (2.2) unstable; urgency=medium
 
   * Mensagens nunca mais se perdem: t_erro, t_ok e t_aviso agora escrevem
