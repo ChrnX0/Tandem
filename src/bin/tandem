@@ -3,7 +3,7 @@
 . /usr/lib/tandem/common.sh
 t_log_init tandem "$*"
 
-VERSAO="2.1"
+VERSAO="2.2"
 
 uso() {
     cat <<'AJUDA'

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  O freedesktop conhece .apk (application/vnd.android.package-archive), mas nao
+  conhece os formatos de pacote dividido. Sem estes tipos, um .xapk e detectado
+  como ZIP generico e o duplo clique nunca chega ao Tandem.
+
+  Sao declarados como subclasse de application/zip: e o que faz o casamento por
+  extensao vencer a deteccao por conteudo, que veria apenas um ZIP.
+-->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+
+  <mime-type type="application/vnd.android.xapk">
+    <comment>Android app bundle (XAPK)</comment>
+    <comment xml:lang="pt_BR">Pacote de aplicativo Android (XAPK)</comment>
+    <sub-class-of type="application/zip"/>
+    <glob pattern="*.xapk" weight="60"/>
+    <generic-icon name="package-x-generic"/>
+  </mime-type>
+
+  <mime-type type="application/vnd.android.apks">
+    <comment>Android split package (APKS)</comment>
+    <comment xml:lang="pt_BR">Pacote Android dividido (APKS)</comment>
+    <sub-class-of type="application/zip"/>
+    <glob pattern="*.apks" weight="60"/>
+    <generic-icon name="package-x-generic"/>
+  </mime-type>
+
+  <mime-type type="application/vnd.android.apkm">
+    <comment>Android split package (APKM)</comment>
+    <comment xml:lang="pt_BR">Pacote Android dividido (APKM)</comment>
+    <sub-class-of type="application/zip"/>
+    <glob pattern="*.apkm" weight="60"/>
+    <generic-icon name="package-x-generic"/>
+  </mime-type>
+
+</mime-info>

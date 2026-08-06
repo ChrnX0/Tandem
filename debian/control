@@ -1,12 +1,12 @@
 Package: tandem
-Version: 2.1
+Version: 2.2
 Section: utils
 Priority: optional
 Architecture: all
 Depends: python3 (>= 3.8), zenity, desktop-file-utils, xdg-utils, coreutils, util-linux, unzip, libglib2.0-bin
 Recommends: libnotify-bin, wine, winetricks, waydroid, adb
 Maintainer: Tandem <noreply@users.noreply.github.com>
-Homepage: https://github.com/OWNER/tandem
+Homepage: https://github.com/ChrnX0/Tandem
 Description: Run Windows programs and Android apps by double-clicking
  Tandem makes .exe, .msi, .apk and .xapk files behave like native
  applications on Linux. Double-click a file and it runs.
