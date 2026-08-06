@@ -4,6 +4,9 @@
 . /usr/lib/tandem/winedeps.sh
 
 t_log_init exe "$*"
+# Antes de qualquer decisao sobre prefixo: garante que os prefixos que ja
+# existiam estejam registrados como intocaveis.
+t_primeira_vez
 
 BRUTO="${1:-}"
 [ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }

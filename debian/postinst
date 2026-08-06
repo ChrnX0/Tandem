@@ -11,16 +11,16 @@ if [ -z "$USUARIO" ] && [ -n "${PKEXEC_UID:-}" ]; then
 fi
 [ -z "$USUARIO" ] && USUARIO="$(logname 2>/dev/null || true)"
 
+# Adiantar o trabalho por-usuario e so um atalho: quando as tres vias acima
+# falham - e todas falham juntas se o .deb for instalado pelo instalador
+# grafico, que roda num daemon sem sudo e sem terminal - o proprio programa
+# faz isso na primeira execucao, ja rodando como o dono do HOME.
+# TANDEM_SILENCIOSO impede que um dialogo abra no meio do apt e trave o dpkg.
 if [ -n "$USUARIO" ] && [ "$USUARIO" != "root" ]; then
     LAR="$(getent passwd "$USUARIO" | cut -d: -f6 || true)"
     if [ -n "$LAR" ] && [ -d "$LAR" ]; then
-        runuser -u "$USUARIO" -- /usr/bin/tandem-repair >/dev/null 2>&1 || true
-        # Protege automaticamente prefixos Wine ja existentes do usuario.
-        for p in "$LAR"/.wine*/ "$LAR"/.local/share/wineprefixes/*/; do
-            [ -f "${p}system.reg" ] || continue
-            [ -f "${p}.tandem-prefixo" ] && continue
-            runuser -u "$USUARIO" -- /usr/bin/tandem protect "${p%/}" >/dev/null 2>&1 || true
-        done
+        runuser -u "$USUARIO" -- env TANDEM_SILENCIOSO=1 PATH=/usr/bin:/bin \
+            tandem --primeira-vez >/dev/null 2>&1 || true
     fi
 fi
 

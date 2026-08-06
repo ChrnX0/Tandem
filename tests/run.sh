@@ -147,6 +147,62 @@ igual "acha a raiz do prefixo pelo caminho do arquivo" \
 t_prefixo_do_arquivo "$TMPRAIZ/solto.exe" >/dev/null 2>&1
 igual "arquivo fora de qualquer prefixo falha" "1" "$?"
 
+secao "varredura da primeira execucao"
+
+# O cenario que falhou na maquina real: dois prefixos em ~/.wine* e a lista
+# de protegidos vazia porque o postinst nao descobriu quem tinha instalado.
+: > "$TANDEM_PROTEGIDOS"
+PREF_FUNDO="$HOME/Programas/PDV/prefixo"
+mkdir -p "$PREF_FUNDO/drive_c"
+touch "$PREF_FUNDO/system.reg"
+
+t_procura_prefixos
+
+for esperado in "$PREF_ALHEIO" "$PREF_FUNDO"; do
+    if grep -qxF -- "$esperado" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
+        passou "a varredura achou $esperado"
+    else
+        falhou "a varredura achou $esperado" "na lista" "ausente"
+    fi
+done
+
+if grep -qxF -- "$PREF_NOSSO" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
+    falhou "a varredura ignora o prefixo padrao do Tandem" "ausente" "na lista"
+else
+    passou "a varredura ignora o prefixo padrao do Tandem"
+fi
+if grep -qxF -- "$PREF_MARCADO" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
+    falhou "a varredura ignora prefixo com a marca do Tandem" "ausente" "na lista"
+else
+    passou "a varredura ignora prefixo com a marca do Tandem"
+fi
+
+# Diretorio com system.reg mas sem drive_c nao e prefixo Wine.
+mkdir -p "$HOME/naoprefixo"; touch "$HOME/naoprefixo/system.reg"
+t_procura_prefixos
+if grep -qxF -- "$HOME/naoprefixo" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
+    falhou "system.reg sem drive_c nao conta como prefixo" "ausente" "na lista"
+else
+    passou "system.reg sem drive_c nao conta como prefixo"
+fi
+
+t_procura_prefixos
+igual "rodar duas vezes nao duplica a lista" \
+      "0" "$(sort "$TANDEM_PROTEGIDOS" | uniq -d | wc -l)"
+
+t_protege "$PREF_ALHEIO"; igual "t_protege e idempotente" "0" "$?"
+t_protege "/caminho/que/nao/existe"; igual "t_protege recusa caminho invalido" "1" "$?"
+
+# A marca de primeira vez tem que impedir a repeticao.
+MARCA_PV="$(dirname -- "$TANDEM_PROTEGIDOS")/.primeira-vez"
+rm -f "$MARCA_PV"
+t_primeira_vez
+igual "a primeira execucao deixa a marca" "0" "$([ -f "$MARCA_PV" ]; echo $?)"
+: > "$TANDEM_PROTEGIDOS"
+t_primeira_vez
+igual "a segunda execucao nao varre de novo" "0" "$(wc -l < "$TANDEM_PROTEGIDOS")"
+rm -f "$MARCA_PV"; : > "$TANDEM_PROTEGIDOS"
+
 # ------------------------------------------------------------ mensagens
 
 secao "nenhuma mensagem se perde"

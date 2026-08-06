@@ -201,6 +201,77 @@ t_prefixo_protegido() {
     return 0   # desconhecido = trate como protegido
 }
 
+# Registra um prefixo na lista de intocaveis. Idempotente.
+t_protege() {
+    local p="$1" dir
+    [ -n "$p" ] && [ -d "$p" ] || return 1
+    dir="$(dirname -- "$TANDEM_PROTEGIDOS")"
+    mkdir -p "$dir" 2>/dev/null || return 1
+    grep -qxF -- "$p" "$TANDEM_PROTEGIDOS" 2>/dev/null && return 0
+    printf '%s\n' "$p" >> "$TANDEM_PROTEGIDOS" 2>/dev/null || return 1
+    t_diz "protegido: $p"
+    return 0
+}
+
+# Procura prefixos Wine que ja existiam e registra todos como protegidos.
+#
+# Os lugares conhecidos primeiro, depois uma varredura rasa da pasta pessoal:
+# um instalador de terceiro (um sistema de frente de caixa, por exemplo) pode
+# ter posto o prefixo em qualquer canto. O -maxdepth limita o custo e o
+# timeout garante que uma pasta pessoal enorme nao trave a primeira execucao;
+# se a varredura for cortada, os lugares conhecidos ja foram cobertos.
+t_procura_prefixos() {
+    local p reg
+    for p in "$HOME"/.wine*/ \
+             "$HOME"/.local/share/wineprefixes/*/ \
+             "$HOME"/.local/share/bottles/bottles/*/ \
+             "$HOME"/.var/app/com.usebottles.bottles/data/bottles/bottles/*/ \
+             "$HOME"/.PlayOnLinux/wineprefix/*/ \
+             "$HOME"/Games/*/; do
+        [ -f "${p}system.reg" ] || continue
+        [ -f "${p}.tandem-prefixo" ] && continue
+        t_protege "${p%/}"
+    done
+
+    timeout 20 find "$HOME" -maxdepth 4 -name system.reg -type f 2>/dev/null |
+    while read -r reg; do
+        p="$(dirname -- "$reg")"
+        [ -d "$p/drive_c" ] || continue
+        [ -f "$p/.tandem-prefixo" ] && continue
+        [ "$p" = "$TANDEM_PREFIXO_PADRAO" ] && continue
+        t_protege "$p"
+    done
+    return 0
+}
+
+# Trabalho que precisa acontecer uma vez por usuario, na primeira execucao.
+#
+# Isto vive aqui, e nao no postinst do pacote, porque la o trabalho
+# por-usuario depende de adivinhar quem instalou - SUDO_USER, PKEXEC_UID e
+# logname. As tres vias falham juntas quando o .deb e instalado pelo
+# instalador grafico, que roda num daemon sem sudo e sem terminal de
+# controle: o bloco inteiro e pulado e o usuario fica sem protecao visivel e
+# sem associacao de arquivo, sem nenhum aviso. Aqui nao ha o que adivinhar,
+# ja estamos rodando como o dono do HOME - funcione o pacote instalado por
+# apt, por dpkg, pelo instalador grafico, ou por um usuario criado depois.
+#
+# A marca evita repetir: quem mudar a associacao de proposito depois nao
+# quer o Tandem reescrevendo a escolha dele a cada duplo clique.
+t_primeira_vez() {
+    local dir marca
+    dir="$(dirname -- "$TANDEM_PROTEGIDOS")"
+    marca="$dir/.primeira-vez"
+    [ -f "$marca" ] && return 0
+    mkdir -p "$dir" 2>/dev/null || return 0
+    t_diz "primeira execucao deste usuario: procurando prefixos e aplicando associacoes"
+    t_procura_prefixos
+    if [ -x /usr/bin/tandem-repair ]; then
+        TANDEM_SILENCIOSO=1 /usr/bin/tandem-repair >>"${LOG:-/dev/null}" 2>&1
+    fi
+    : > "$marca" 2>/dev/null
+    return 0
+}
+
 # Arquitetura de um executavel PE: 32, 64, arm64 ou "?"; falha se nao for PE.
 t_pe_arch() {
     local f="$1" off mach

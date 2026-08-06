@@ -2,6 +2,7 @@
 # Tandem - comando principal e painel.
 . /usr/lib/tandem/common.sh
 t_log_init tandem "$*"
+t_primeira_vez
 
 VERSAO="2.2"
 
@@ -121,9 +122,7 @@ O ambiente atual será substituído." "Restaurar" "Cancelar" || return 1
 acao_protect() {
     local p; p="$(readlink -f -- "${1:-}" 2>/dev/null)"
     [ -n "$p" ] && [ -d "$p" ] || { t_erro "Caminho inválido."; return 1; }
-    mkdir -p "$(dirname -- "$TANDEM_PROTEGIDOS")"
-    grep -qxF -- "$p" "$TANDEM_PROTEGIDOS" 2>/dev/null ||
-        printf '%s\n' "$p" >> "$TANDEM_PROTEGIDOS"
+    t_protege "$p" || { t_erro "Não consegui gravar a lista de perfis protegidos."; return 1; }
     t_ok "Perfil protegido:
 $p
 
@@ -182,6 +181,9 @@ case "${1:-}" in
     restore|restaurar)    acao_restore ;;
     protect|proteger)     shift; acao_protect "$@" ;;
     logs|log)             acao_logs ;;
+    # Uso interno do postinst: ja foi feito na chamada a t_primeira_vez
+    # la em cima. Fica fora da ajuda de proposito.
+    --primeira-vez)       : ;;
     version|--version|-v) echo "Tandem $VERSAO" ;;
     help|--help|-h)       uso ;;
     *)                    acao_install "$1" ;;

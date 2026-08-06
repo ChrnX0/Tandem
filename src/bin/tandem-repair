@@ -68,6 +68,14 @@ RELATORIO="Associações reaplicadas.
 
 $RES"
 
+# Chamado de dentro do postinst ou da primeira execucao: nao pode abrir
+# janela nenhuma. O zenity --info espera o clique, e um dialogo aberto no
+# meio de um "apt install" travaria o gerenciador de pacotes ate alguem
+# perceber e clicar.
+if [ -n "${TANDEM_SILENCIOSO:-}" ]; then
+    exit 0
+fi
+
 # Terminal primeiro; senao a janela; se a janela nao abrir, a saida padrao.
 # Antes, com zenity instalado e sem display, este relatorio sumia calado.
 if [ -t 1 ]; then
