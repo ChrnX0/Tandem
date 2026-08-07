@@ -17,8 +17,14 @@ limpar() {
 }
 trap limpar EXIT INT TERM
 
-exec 9> "${TANDEM_ESTADO:-/tmp}/apk.lock"
-flock -w 900 9 || { t_erro "Outra instalação já está em andamento."; exit 1; }
+# Mesma distincao do tandem-exe: trava tomada por outro processo e um caso,
+# trava que nao pode ser criada e outro. Confundir os dois transformava
+# "pasta pessoal cheia" na mensagem errada "outra instalacao em andamento".
+if exec 9> "$TANDEM_TRAVAS/apk.lock" 2>/dev/null; then
+    flock -w 900 9 || { t_erro "Outra instalação já está em andamento."; exit 1; }
+else
+    t_diz "nao consegui criar a trava de instalacao; seguindo sem ela"
+fi
 
 # ------------------------------------------------- 1. Inspecao previa
 INFO="$(python3 /usr/lib/tandem/apkinfo.py "$APK" 2>>"$LOG")"

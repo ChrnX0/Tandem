@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="2.5"
+VERSAO="2.6"
 
 uso() {
     cat <<'AJUDA'
@@ -12,6 +12,7 @@ Tandem - roda programas Windows e apps Android no Linux.
 
   tandem                      abre o painel
   tandem install <arquivo>    instala/executa (.exe .msi .apk .xapk .apks)
+  tandem preparar             instala o que falta (Wine, Android, ...)
   tandem programas [nome]     lista e abre os programas Windows instalados
   tandem desinstalar [nome]   remove um programa Windows instalado
   tandem android              abre a tela do Android
@@ -134,6 +135,65 @@ $p
 O Tandem nunca vai instalar nem alterar nada aí dentro."
 }
 
+# ----------------------------------------------------------------- preparar
+#
+# "Ao instalar o Tandem ele tambem instala o Wine e o Waydroid e tudo o que
+# precisa" - pedido do usuario, e a resposta tecnica honesta: durante a
+# instalacao do .deb e impossivel (trava do dpkg), mas um comando depois
+# resolve tudo de uma vez. E o clique num .exe sem Wine tambem oferece.
+acao_preparar() {
+    local faltas linha codigos=() descricoes=() plano="" script c
+
+    faltas="$(t_pecas_faltando)"
+    if [ -z "$faltas" ]; then
+        t_ok "Nada falta: esta máquina já tem tudo que o Tandem usa."
+        return 0
+    fi
+
+    while IFS='|' read -r c linha; do
+        [ -n "$c" ] || continue
+        codigos+=("$c"); descricoes+=("$linha")
+        plano="$plano
+• $linha"
+    done <<< "$faltas"
+
+    if ! t_pergunta "O Tandem pode instalar o que está faltando:
+$plano
+
+Precisa de internet e da sua senha. Posso continuar?" "Instalar tudo" "Agora não"; then
+        if [ -t 0 ]; then
+            printf 'O Tandem pode instalar o que está faltando:\n%s\n\nPrecisa de internet e da sua senha. Continuar? [s/N] ' "$plano"
+            read -r r
+            case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; return 1 ;; esac
+        else
+            t_erro "Não instalei nada: preciso de uma confirmação e não há janela nem terminal para perguntar."
+            return 1
+        fi
+    fi
+
+    script="$(t_script_instalacao "${codigos[@]}")"
+    t_diz "preparar: instalando ${codigos[*]}"
+    t_progresso_abre "Instalando o que falta. Pode demorar bastante - não desligue o computador."
+    t_como_root "$script" >>"$LOG" 2>&1
+    c=$?
+    t_progresso_fecha
+
+    if [ "$c" -eq 127 ]; then
+        t_erro "Não consegui pedir a sua senha para instalar.
+
+Abra o Terminal e execute:  sudo tandem preparar"
+        return 1
+    fi
+    if [ "$c" -ne 0 ]; then
+        t_erro "A instalação não terminou bem. Veja o que faltou com:
+
+tandem doctor"
+        return 1
+    fi
+    t_ok "Tudo pronto. Confira com: tandem doctor"
+    return 0
+}
+
 # Escolhe um item de uma lista de nomes. Devolve o nome escolhido.
 # Uma coluna so, de proposito: as opcoes de coluna escondida mudaram entre
 # as versoes do zenity, e nao vale a pena depender delas.
@@ -201,16 +261,15 @@ Programas que não criam atalho no Menu Iniciar não aparecem aqui."
 # tipo de coisa que este projeto existe para nao exigir de ninguem.
 acao_uninstall() {
     local filtro="${1:-}" pref="$TANDEM_PREFIXO_PADRAO" lista linha nome
-    local escolha achou="" nomes=()
+    local escolha achou="" nomes=() silencioso normal
 
-    command -v wine >/dev/null 2>&1 || { t_erro "O Wine não está instalado."; return 1; }
     [ -f "$pref/system.reg" ] || {
         t_erro "Nenhum programa do Windows foi instalado pelo Tandem ainda."; return 1; }
 
     # Desinstalar altera o prefixo, entao so vale para o nosso. Prefixo de
     # terceiro - o do sistema de frente de caixa, por exemplo - e intocavel.
     export WINEPREFIX="$pref"
-    lista="$(t_programas_instalados)"
+    lista="$(t_uninstall_dump "$pref")"
     if [ -z "$lista" ]; then
         t_erro "Não encontrei nenhum programa do Windows para remover.
 
@@ -220,7 +279,7 @@ Programas que não trazem desinstalador próprio não aparecem nesta lista."
 
     while IFS= read -r linha; do
         [ -n "$linha" ] || continue
-        nomes+=("${linha#*|||}")
+        nome="${linha#*|||}"; nomes+=("${nome%%|||*}")
     done <<< "$lista"
 
     if [ -z "$filtro" ]; then
@@ -237,10 +296,17 @@ Programas que não trazem desinstalador próprio não aparecem nesta lista."
 
     while IFS= read -r linha; do
         [ -n "$linha" ] || continue
-        nome="${linha#*|||}"
-        case "${nome,,}" in *"${filtro,,}"*) achou="${linha%%|||*}"; break ;; esac
+        nome="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $2}')"
+        case "${nome,,}" in
+            *"${filtro,,}"*)
+                achou="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $1}')"
+                silencioso="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $3}')"
+                normal="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $4}')"
+                break ;;
+        esac
     done <<< "$lista"
     [ -n "$achou" ] || { t_erro "Não achei nenhum programa com \"$filtro\" no nome."; return 1; }
+    command -v wine >/dev/null 2>&1 || { t_erro "O Wine não está instalado."; return 1; }
 
     # Confirmacao: janela; senao o terminal; sem nenhum dos dois, recusa
     # DIZENDO por que - remover programa sem ninguem confirmando e risco,
@@ -260,19 +326,33 @@ Os arquivos dele serão apagados." "Remover" "Cancelar"; then
         fi
     fi
 
-    t_progresso_abre "Removendo $nome..."
-    wine uninstaller --remove "$achou" >>"$LOG" 2>&1
-    local c=$?
-    wineserver -w 2>/dev/null
-    t_progresso_fecha
+    # Preferimos o desinstalador silencioso, que o proprio programa declara
+    # no registro. Sem ele, rodamos o desinstalador normal: abre a janela do
+    # proprio programa e o usuario confirma la - honesto, ainda que em ingles.
+    local c
+    if [ -n "$silencioso" ]; then
+        t_progresso_abre "Removendo $nome..."
+        t_diz ">>> $silencioso"
+        t_executa_comando_windows "$silencioso" >>"$LOG" 2>&1
+        c=$?
+        wineserver -w 2>/dev/null
+        t_progresso_fecha
+    else
+        t_aviso "Vai abrir a janela de remoção do próprio $nome. Confirme por lá."
+        t_diz ">>> $normal"
+        t_executa_comando_windows "$normal" >>"$LOG" 2>&1
+        c=$?
+        wineserver -w 2>/dev/null
+    fi
 
     local orfaos; orfaos="$(t_limpa_atalhos_orfaos)"
     t_diz "desinstalar $nome: codigo $c, $orfaos atalho(s) orfao(s) removido(s)"
 
-    if t_programas_instalados | grep -qF -- "$achou"; then
+    # A prova dos nove e o registro: a chave sumiu?
+    if t_uninstall_dump "$pref" | grep -qF -- "$achou|||"; then
         t_erro "Não consegui remover $nome.
 
-Alguns programas só saem pelo desinstalador deles. Abra o Tandem, escolha o programa e procure por \"Uninstall\"."
+O desinstalador do programa não completou. Tente de novo, ou remova pela janela do próprio programa."
         return 1
     fi
     t_ok "$nome foi removido."
@@ -295,6 +375,7 @@ acao_painel() {
             --text="O que você quer fazer?" \
             --column="Ação" --column="Descrição" --hide-header \
             "instalar"  "Instalar ou abrir um arquivo (.exe .msi .apk .xapk)" \
+            "preparar"  "Instalar o que falta (Wine, Android...)" \
             "programas" "Abrir um programa do Windows já instalado" \
             "remover"   "Desinstalar um programa do Windows" \
             "android"   "Abrir a tela do Android" \
@@ -311,6 +392,7 @@ acao_painel() {
                      --file-filter="Programas e apps | *.exe *.msi *.apk *.xapk *.apks *.apkm" \
                      --file-filter="Todos | *" 2>/dev/null)" || continue
                 acao_install "$f" ;;
+            preparar)  acao_preparar ;;
             programas) acao_programas ;;
             remover)   acao_uninstall ;;
             android)  setsid /usr/bin/tandem-android >/dev/null 2>&1 & ;;
@@ -328,6 +410,7 @@ acao_painel() {
 case "${1:-}" in
     ""|painel|panel)      acao_painel ;;
     install|instalar|abrir) shift; acao_install "$@" ;;
+    preparar|setup)       acao_preparar ;;
     programas|apps)       shift; acao_programas "$@" ;;
     desinstalar|uninstall|remover) shift; acao_uninstall "$@" ;;
     android)              exec /usr/bin/tandem-android ;;

@@ -14,18 +14,43 @@ PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 [ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "Arquivo não encontrado:
 $BRUTO"; exit 1; }
 
-command -v wine >/dev/null 2>&1 || {
-    t_erro "O Wine não está instalado.
+# Sem Wine, o clique nao pode morrer num aviso: oferecemos instalar na hora.
+if ! command -v wine >/dev/null 2>&1; then
+    if t_pergunta "O Wine, que roda os programas do Windows, não está instalado.
+
+Posso instalar agora? Precisa de internet e da sua senha." "Instalar" "Agora não"; then
+        t_progresso_abre "Instalando o Wine. Pode demorar alguns minutos..."
+        t_como_root "$(t_script_instalacao wine)" >>"$LOG" 2>&1
+        t_progresso_fecha
+    fi
+    command -v wine >/dev/null 2>&1 || {
+        t_erro "O Wine não está instalado.
 
 Instale pela Central de Programas, ou com:
-sudo apt install wine"; exit 1; }
+sudo apt install wine
+
+Ou deixe o Tandem instalar tudo:  tandem preparar"; exit 1; }
+    t_ok "Wine instalado."
+fi
 
 # Dois cliques rapidos disparam dois processos. Sem isso, duas instalacoes
 # de dependencia concorrentes corrompem o prefixo. Trava por arquivo, para
 # nao impedir abrir dois programas diferentes ao mesmo tempo.
 CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
-exec 7> "${TANDEM_ESTADO:-/tmp}/exe-$CHAVE.lock"
-flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
+TRAVA="$TANDEM_TRAVAS/exe-$CHAVE.lock"
+# Duas situacoes que pareciam uma so. Se OUTRO processo ja tem a trava, sair
+# esta certo. Mas se a trava nao pode nem ser criada - pasta pessoal cheia,
+# somente leitura, em rede - o "exec" falha, o bash segue vivo, o flock
+# responde "Bad file descriptor" e o codigo antigo saia com 0 dizendo "este
+# programa ja esta abrindo". Mentira, e invisivel no duplo clique: o
+# resultado era o duplo clique nao fazer nada, para sempre. Sem trava a
+# protecao contra clique duplo se perde, o que e ruim; recusar-se a abrir o
+# programa e pior.
+if exec 7> "$TRAVA" 2>/dev/null; then
+    flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
+else
+    t_diz "nao consegui criar a trava em $TRAVA; seguindo sem ela"
+fi
 
 # --------------------------------------------------- 1. Qual prefixo usar
 # Se o arquivo mora dentro de um prefixo existente, respeite-o.
@@ -64,7 +89,7 @@ if [ "$NOSSO" = 1 ] && [ ! -f "$WINEPREFIX/system.reg" ]; then
       WINEARCH=win64 WINEDLLOVERRIDES="mscoree=d;mshtml=d;winemenubuilder.exe=d" \
           wineboot -u >>"$LOG" 2>&1
       wineserver -w
-    ) 9> "${TANDEM_ESTADO:-/tmp}/prefixo.lock"
+    ) 9> "$TANDEM_TRAVAS/prefixo.lock"
     t_progresso_fecha
     if [ ! -f "$WINEPREFIX/system.reg" ]; then
         t_erro "Não consegui preparar o ambiente Windows."; exit 1
@@ -96,14 +121,26 @@ fi
 ARCH="$(t_pe_arch "$PROG" 2>/dev/null || true)"
 t_diz "arquitetura do PE: ${ARCH:-nao identificada}"
 if [ "$ARCH" = 32 ] && ! t_tem_wine32; then
-    t_erro "Este programa é de 32 bits e falta esse suporte no Wine.
+    if t_pergunta "Este programa é de 32 bits e falta esse suporte no Wine.
+
+Posso instalar agora? Precisa de internet e da sua senha." "Instalar" "Agora não"; then
+        t_progresso_abre "Instalando o suporte a 32 bits..."
+        t_como_root "$(t_script_instalacao wine32)" >>"$LOG" 2>&1
+        t_progresso_fecha
+    fi
+    if ! t_tem_wine32; then
+        t_erro "Este programa é de 32 bits e falta esse suporte no Wine.
 
 Abra o Terminal e execute:
 
 sudo dpkg --add-architecture i386
 sudo apt update
-sudo apt install wine32"
-    exit 1
+sudo apt install wine32
+
+Ou deixe o Tandem instalar:  tandem preparar"
+        exit 1
+    fi
+    t_ok "Suporte a 32 bits instalado."
 fi
 if [ "$ARCH" = arm64 ]; then
     t_erro "Este programa é para Windows ARM e não roda neste computador."
@@ -141,7 +178,7 @@ while :; do
     fi
 
     # Olha apenas o trecho do log gerado nesta tentativa.
-    PARCIAL="${TANDEM_ESTADO:-/tmp}/parcial.$$"
+    PARCIAL="$TANDEM_TRAVAS/parcial.$$"
     tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
 
     VERBOS="$(t_verbos_do_log "$PARCIAL")"
@@ -205,6 +242,17 @@ O Tandem não instala nada automaticamente neste perfil, porque ele pertence a o
 $LISTA
 
 Posso instalar agora?" "Instalar" "Cancelar"; then
+        # Sem sessao grafica o t_pergunta devolve "nao" sem ter perguntado
+        # nada. Sair calado aqui era um caminho de erro em silencio: quem
+        # roda pelo terminal nao ficava sabendo nem o que faltava.
+        if ! t_tem_gui; then
+            t_erro "O programa precisa destes componentes do Windows:
+
+$LISTA
+
+Não há como perguntar sem uma janela. Instale com:
+$(for v in $VERBOS; do printf 'winetricks -q %s\n' "$v"; done)"
+        fi
         exit "$CODIGO"
     fi
 
@@ -223,17 +271,48 @@ sudo apt install winetricks"; exit 1; }
     fi
 
     t_progresso_abre "Instalando componentes do Windows. Pode demorar. Não feche esta janela."
+    FALHARAM=""
     for v in $VERBOS; do
         t_progresso_texto "Instalando $(t_verbo_amigavel "$v")..."
         t_diz ">>> winetricks -q $v"
+        MARCA_WT=$(wc -l < "$LOG" 2>/dev/null || echo 0)
         if $INIBIR winetricks -q "$v" >>"$LOG" 2>&1; then
             printf '%s\n' "$v" >> "$RECIBO"
         else
             t_diz "!!! winetricks falhou em $v"
+            FALHARAM="$FALHARAM $v"
         fi
     done
     wineserver -w
     t_progresso_fecha
+
+    # Se o winetricks nao conseguiu baixar, dizer "instalei as dependencias e
+    # ainda nao abre" seria mentira - e mandaria o dono procurar o defeito no
+    # lugar errado. Lemos as proprias palavras do winetricks para explicar a
+    # causa provavel em vez de despejar o log na cara dele.
+    if [ -n "$FALHARAM" ]; then
+        RESTO="$TANDEM_TRAVAS/wt.$$"
+        tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO" 2>/dev/null || : > "$RESTO"
+        PORQUE="Verifique se o computador está conectado à internet."
+        if grep -qi 'No space left on device' "$RESTO" 2>/dev/null; then
+            PORQUE="O disco está cheio."
+        elif grep -qi 'certificate\|SSL\|not yet valid\|has expired' "$RESTO" 2>/dev/null; then
+            PORQUE="A data do computador parece errada, e isso derruba os downloads.
+Hoje o computador acha que é $(date '+%d/%m/%Y')."
+        elif grep -qi 'Could not resolve host\|Network is unreachable\|Connection timed out' "$RESTO" 2>/dev/null; then
+            PORQUE="O computador não conseguiu acessar a internet."
+        elif grep -qi 'sha256sum mismatch\|checksum' "$RESTO" 2>/dev/null; then
+            PORQUE="O arquivo baixado veio corrompido. Tente de novo mais tarde."
+        elif grep -qi 'cabextract' "$RESTO" 2>/dev/null; then
+            PORQUE="Falta o programa cabextract. Instale com: sudo apt install cabextract"
+        fi
+        rm -f "$RESTO"
+        t_erro "Não consegui instalar:
+$(for v in $FALHARAM; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)
+
+$PORQUE"
+        exit "$CODIGO"
+    fi
 
     tentativa=$((tentativa+1))
 done

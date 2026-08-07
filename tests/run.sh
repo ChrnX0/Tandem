@@ -246,6 +246,53 @@ igual "com display, o arquivo ainda recebe o texto" \
 igual "porcento em texto nao quebra a saida" \
       "50% pronto" "$(printf '%b' "50% pronto")"
 
+secao "a barra de progresso nao pode matar o Tandem"
+
+# Achado do painel, confirmado: com o cano aberto so para escrita, fechar a
+# janela de progresso mandava SIGPIPE e matava o processo inteiro - saida
+# 141, nada no log, nenhuma janela. Dentro do laco do winetricks isso cortava
+# uma instalacao de dependencia pela metade.
+FZ="$TMPRAIZ/fz"; mkdir -p "$FZ"
+printf '#!/bin/sh\nhead -c1 >/dev/null 2>&1\nexit 0\n' > "$FZ/zenity"
+chmod +x "$FZ/zenity"
+cat > "$TMPRAIZ/prog.sh" <<FIM
+export HOME="$HOME"
+export PATH="$FZ:\$PATH"
+export DISPLAY=:0
+. "$RAIZ/src/lib/common.sh"
+t_log_init progteste x
+t_progresso_abre "instalando"
+sleep 0.4
+t_progresso_texto "primeiro"
+sleep 0.2
+t_progresso_texto "segundo"
+t_progresso_fecha
+echo VIVO
+FIM
+saida_prog="$(bash "$TMPRAIZ/prog.sh" 2>/dev/null)"; rc_prog=$?
+igual "o script sobrevive a janela de progresso fechada" "0" "$rc_prog"
+igual "  e chega ate o fim" "VIVO" "$saida_prog"
+if grep -q 'janela de progresso fechada' "$TANDEM_ESTADO/progteste.log" 2>/dev/null; then
+    passou "  e registra no log que a janela sumiu"
+else
+    falhou "  e registra no log que a janela sumiu" "linha no log" "ausente"
+fi
+
+secao "travas: nao poder criar nao e o mesmo que estar tomada"
+
+igual "as travas ficam no diretorio de execucao quando ele existe" \
+      "$TMPRAIZ/run/tandem" \
+      "$(XDG_RUNTIME_DIR="$TMPRAIZ/run" bash -c '. "'"$RAIZ"'/src/lib/common.sh"; printf %s "$TANDEM_TRAVAS"')"
+igual "sem diretorio de execucao, cai para a pasta de estado" \
+      "$TANDEM_ESTADO" \
+      "$(env -u XDG_RUNTIME_DIR bash -c '. "'"$RAIZ"'/src/lib/common.sh"; printf %s "$TANDEM_TRAVAS"')"
+
+# O bash NAO aborta quando um "exec N>" falha: sem distinguir os dois casos,
+# uma pasta pessoal cheia virava "este programa ja esta abrindo" e exit 0.
+igual "exec com caminho invalido falha sem derrubar o script" \
+      "seguiu" \
+      "$(bash -c 'if exec 7> /nao/existe/x.lock; then echo travou; else echo seguiu; fi' 2>/dev/null)"
+
 secao "atalhos de menu depois de um instalador"
 
 APPS="$HOME/.local/share/applications/wine/Programs/Coisa"
@@ -271,25 +318,106 @@ igual "atalho ja conhecido nao e reanunciado" \
 
 secao "programas instalados e desinstalacao"
 
-# "wine uninstaller --list" imita a lista do Adicionar/Remover Programas.
+# O registro de um prefixo real, resumido: uma entrada na visao nativa, uma
+# na visao de 32 bits (Wow6432Node - o caso do 7-Zip da maquina real), um
+# componente de sistema que nao pode aparecer, e lixo sem desinstalador.
+cat > "$PREF_NOSSO/system.reg" <<'FIM'
+WINE REGISTRY Version 2
+;; All keys relative to \\Machine
+
+[Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{GUID-MSI}] 1786062085
+"DisplayName"="Programa MSI 1.0"
+"UninstallString"="MsiExec.exe /X{GUID-MSI}"
+
+[Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\SoRuntime] 1786062085
+"DisplayName"="Runtime Oculto"
+"SystemComponent"=dword:00000001
+"UninstallString"="C:\\x.exe"
+
+[Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\SemNada] 1786062085
+"DisplayName"="Sem Desinstalador"
+
+[Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\7-Zip] 1786062085
+"DisplayName"="7-Zip 24.09 (x64)"
+"QuietUninstallString"="\"C:\\Program Files\\7-Zip\\Uninstall.exe\" /S"
+"UninstallString"="\"C:\\Program Files\\7-Zip\\Uninstall.exe\""
+FIM
+
+igual "le as DUAS visoes do registro (nativa e 32 bits)" \
+      "7-Zip 24.09 (x64) Programa MSI 1.0" \
+      "$(t_uninstall_dump "$PREF_NOSSO" | awk -F'\\|\\|\\|' '{print $2}' | sort | tr '\n' ' ' | sed 's/ $//')"
+
+igual "componente de sistema fica de fora" \
+      "" "$(t_uninstall_dump "$PREF_NOSSO" | grep -c Oculto | sed 's/^0$//')"
+
+igual "entrada sem desinstalador fica de fora" \
+      "" "$(t_uninstall_dump "$PREF_NOSSO" | grep -c SemNada | sed 's/^0$//')"
+
+igual "extrai o desinstalador silencioso com aspas e caminho real" \
+      '"C:\Program Files\7-Zip\Uninstall.exe" /S' \
+      "$(t_uninstall_dump "$PREF_NOSSO" | awk -F'\\|\\|\\|' '$1=="7-Zip"{print $3}')"
+
+igual "extrai a chave que identifica o programa" \
+      "{GUID-MSI}" \
+      "$(t_uninstall_dump "$PREF_NOSSO" | awk -F'\\|\\|\\|' '$2=="Programa MSI 1.0"{print $1}')"
+
+igual "t_programas_instalados mantem o formato chave|||nome" \
+      "7-Zip|||7-Zip 24.09 (x64)" \
+      "$(t_programas_instalados "$PREF_NOSSO" | grep '^7-Zip')"
+
+# O separador de comando do Windows: caminho entre aspas + argumento.
 FALSO="$TMPRAIZ/bin"; mkdir -p "$FALSO"
 cat > "$FALSO/wine" <<'FIM'
 #!/bin/sh
-if [ "$1" = uninstaller ] && [ "$2" = --list ]; then
-    printf '7-Zip|||7-Zip 24.08 (x64)\n{GUID-1}|||Programa de Teste\n'
-    exit 0
-fi
-exit 0
+printf '%s\n' "exe=$1" "args=$*"
 FIM
 chmod +x "$FALSO/wine"
 PATH="$FALSO:$PATH"
 
-igual "le a lista de programas do Wine" \
-      "7-Zip 24.08 (x64) Programa de Teste" \
-      "$(t_programas_instalados | sed 's/.*|||//' | tr '\n' ' ' | sed 's/ $//')"
+igual "executa desinstalador com caminho entre aspas" \
+      'exe=C:\Program Files\7-Zip\Uninstall.exe' \
+      "$(t_executa_comando_windows '"C:\Program Files\7-Zip\Uninstall.exe" /S' | head -1)"
+igual "  e repassa os argumentos" \
+      'args=C:\Program Files\7-Zip\Uninstall.exe /S' \
+      "$(t_executa_comando_windows '"C:\Program Files\7-Zip\Uninstall.exe" /S' | tail -1)"
+igual "executa comando sem aspas (MsiExec)" \
+      'exe=MsiExec.exe' \
+      "$(t_executa_comando_windows 'MsiExec.exe /X{GUID-MSI}' | head -1)"
 
-igual "extrai a chave que o desinstalador aceita" \
-      "7-Zip" "$(t_programas_instalados | head -1 | sed 's/|||.*//')"
+secao "preparar: o Tandem instala o que falta"
+
+# Numa PATH pelada, tudo falta.
+faltas="$(PATH=/usr/bin:/bin t_pecas_faltando | cut -d'|' -f1 | tr '\n' ' ' | sed 's/ $//')"
+case "$faltas" in
+    *wine*waydroid*) passou "detecta o que falta (achou: $faltas)" ;;
+    *) falhou "detecta o que falta" "wine ... waydroid" "$faltas" ;;
+esac
+
+script="$(t_script_instalacao wine wine32 waydroid)"
+case "$script" in
+    *"apt-get install -y wine winetricks"*) passou "o plano instala wine e winetricks juntos" ;;
+    *) falhou "o plano instala wine e winetricks juntos" "apt-get install -y wine winetricks" "$script" ;;
+esac
+case "$script" in
+    *"dpkg --add-architecture i386"*) passou "o plano habilita 32 bits antes do wine32" ;;
+    *) falhou "o plano habilita 32 bits antes do wine32" "dpkg --add-architecture i386" "(ausente)" ;;
+esac
+case "$script" in
+    *"repo.waydro.id"*signed-by*) passou "o waydroid vem do repositorio oficial com chave" ;;
+    *) falhou "o waydroid vem do repositorio oficial com chave" "repo.waydro.id + signed-by" "(ausente)" ;;
+esac
+case "$script" in
+    *"waydroid init"*) passou "o plano inicializa o Android depois de instalar" ;;
+    *) falhou "o plano inicializa o Android depois de instalar" "waydroid init" "(ausente)" ;;
+esac
+
+# t_como_root: somos root nos testes? entao executa direto.
+if [ "$(id -u)" = 0 ]; then
+    igual "como root, executa direto sem pedir senha" \
+          "funcionou" "$(t_como_root 'echo funcionou')"
+else
+    pulou "como root executa direto" "suite rodando sem root"
+fi
 
 # Atalhos: so os do nosso prefixo, e orfao e o que perdeu o .lnk.
 WP="$HOME/.local/share/applications/wine/Programs"

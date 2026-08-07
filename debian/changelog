@@ -1,19 +1,39 @@
-tandem (2.5) unstable; urgency=medium
+tandem (2.6) unstable; urgency=medium
 
-  * Novo: "tandem programas" lista e abre os programas Windows instalados,
-    sem depender do menu do sistema. Sob Wayland o GNOME so relê a lista de
-    aplicativos depois de sair e entrar na conta, entao um programa recem
-    instalado simplesmente nao existia para o usuario ate o proximo login.
-  * Novo: "tandem desinstalar" remove um programa Windows pelo nome, com
-    lista para escolher, e limpa os atalhos que ficaram apontando para nada.
-    Antes o unico caminho era "WINEPREFIX=... wine uninstaller", exatamente
-    o tipo de coisa que este projeto existe para nao exigir de ninguem.
-    So funciona no prefixo do Tandem: desinstalar altera o prefixo, e
-    prefixo de terceiro e intocavel.
-  * O diagnostico passa a afirmar que programas de 64 bits funcionam. Antes
-    so mencionava os 32 bits, que sao a excecao que exige pacote extra, e
-    quem lia concluia que 64 bits nao era suportado - o oposto da verdade.
-    README e LEIAME corrigidos pelo mesmo motivo.
+  * Novo: "tandem preparar" instala sozinho o que falta - Wine, winetricks,
+    suporte a 32 bits, adb e o Waydroid (do repositorio oficial do projeto,
+    com chave conferida) - e inicializa o Android. Nao da para fazer isso
+    durante a instalacao do .deb: o dpkg segura uma trava enquanto o
+    postinst roda e um apt-get la dentro morre em impasse. O clique num
+    .exe sem Wine, e num programa de 32 bits sem wine32, tambem passam a
+    oferecer a instalacao na hora em vez de so avisar.
+  * Corrigido: fechar a janela de progresso matava o Tandem inteiro. O cano
+    era aberto so para escrita; quando o zenity sumia, a mensagem seguinte
+    recebia SIGPIPE e derrubava o processo com codigo 141, sem nada no log
+    e sem janela. Dentro do laco do winetricks isso cortava uma instalacao
+    de dependencia pela metade, sem recibo.
+  * Corrigido: quando a trava do duplo clique nao podia ser criada - pasta
+    pessoal cheia, somente leitura ou em rede - o Tandem saia com 0 dizendo
+    "este programa ja esta abrindo". Era mentira e era invisivel no duplo
+    clique: o resultado pratico era o duplo clique nao fazer nada, nunca.
+    Agora trava tomada e trava impossivel sao casos distintos.
+  * Travas e canos passam a viver em XDG_RUNTIME_DIR: disco local, por boot,
+    so do dono. Pasta pessoal em rede pode nao suportar flock, e duas
+    maquinas compartilhando a mesma pasta colidiam no nome do cano.
+  * Corrigido: falha do winetricks era reportada como sucesso. O laco
+    perguntava tres vezes, nao instalava nada e terminava dizendo "instalei
+    as dependencias mas o programa continua nao abrindo". Agora ele para na
+    primeira falha e explica a causa provavel lendo a saida do proprio
+    winetricks: sem internet, disco cheio, data do computador errada,
+    arquivo corrompido ou cabextract ausente.
+  * Corrigido: sem sessao grafica, a pergunta sobre instalar dependencias
+    devolvia "nao" sem perguntar nada e o programa saia calado. Agora lista
+    o que falta e o comando exato.
+  * A lista de programas instalados passa a ser lida direto do registro do
+    prefixo, e nao do "wine uninstaller --list". Em maquina real, instalador
+    de 32 bits grava a chave numa visao do registro e o uninstaller enumera
+    a outra: o 7-Zip estava instalado, a chave estava la, e a lista voltava
+    vazia. Lendo system.reg e user.reg enxergamos as duas visoes.
 
- -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 01:00:00 +0000
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 02:00:00 +0000
 

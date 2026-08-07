@@ -7,6 +7,18 @@ TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 TANDEM_ESTADO="${XDG_STATE_HOME:-$HOME/.local/state}/tandem"
 mkdir -p "$TANDEM_ESTADO" 2>/dev/null || TANDEM_ESTADO=""
 
+# Travas e canos de progresso vao para o diretorio de execucao do usuario
+# quando ele existe: e disco local (numa pasta pessoal em rede o flock pode
+# simplesmente nao funcionar), e por sessao de boot, e ja nasce so do dono.
+# Duas maquinas compartilhando a mesma pasta pessoal tambem deixam de
+# colidir - o nome do cano usa o PID, que se repete entre maquinas.
+if [ -n "${XDG_RUNTIME_DIR:-}" ] && mkdir -p "$XDG_RUNTIME_DIR/tandem" 2>/dev/null; then
+    TANDEM_TRAVAS="$XDG_RUNTIME_DIR/tandem"
+    chmod 700 "$TANDEM_TRAVAS" 2>/dev/null
+else
+    TANDEM_TRAVAS="${TANDEM_ESTADO:-/tmp}"
+fi
+
 # Prefixo padrao para programas Windows avulsos.
 TANDEM_PREFIXO_PADRAO="${TANDEM_PREFIXO_PADRAO:-$HOME/.local/share/tandem/wine}"
 
@@ -160,17 +172,35 @@ t_texto() {
 t_progresso_abre() {
     t_tem_gui || return 0
     command -v zenity >/dev/null 2>&1 || return 0
-    [ -n "$TANDEM_ESTADO" ] || return 0
-    TANDEM_FIFO="$TANDEM_ESTADO/prog.$$"
+    [ -n "$TANDEM_TRAVAS" ] || return 0
+    TANDEM_FIFO="$TANDEM_TRAVAS/prog.$$"
     mkfifo "$TANDEM_FIFO" 2>/dev/null || { TANDEM_FIFO=""; return 0; }
     ( zenity --progress --pulsate --auto-close --no-cancel \
              --title="Tandem" --text="$1" --width=420 < "$TANDEM_FIFO" 2>/dev/null ) &
     TANDEM_PROG_PID=$!
-    exec 8> "$TANDEM_FIFO"
+    # Leitura E escrita, de proposito. Abrindo so para escrita, o cano fica
+    # com um unico leitor - o zenity. Quando esse leitor some (o usuario
+    # fecha a janela no X, o gnome-shell reinicia, o zenity recusa uma
+    # opcao), a proxima mensagem de progresso recebe SIGPIPE e MATA o Tandem
+    # inteiro: saida 141, nada no log, nenhuma janela. No tandem-exe isso
+    # acontece dentro do laco do winetricks, cortando uma instalacao pela
+    # metade sem recibo. Mantendo o descritor 8 tambem aberto para leitura,
+    # o cano nunca fica sem leitor e a escrita nunca gera o sinal.
+    exec 8<> "$TANDEM_FIFO"
 }
 
 t_progresso_texto() {
-    [ -n "${TANDEM_FIFO:-}" ] && printf '# %s\n' "$1" >&8 2>/dev/null
+    [ -n "${TANDEM_FIFO:-}" ] || return 0
+    # A janela ainda esta viva? Se o usuario fechou, registramos e paramos de
+    # escrever - o trabalho continua, so deixa de ter barra de progresso.
+    if [ -n "${TANDEM_PROG_PID:-}" ] && ! kill -0 "$TANDEM_PROG_PID" 2>/dev/null; then
+        t_diz "janela de progresso fechada pelo usuario; seguindo sem ela"
+        exec 8>&- 2>/dev/null
+        rm -f "$TANDEM_FIFO" 2>/dev/null
+        TANDEM_FIFO=""
+        return 0
+    fi
+    printf '# %s\n' "$1" >&8 2>/dev/null
     return 0
 }
 
@@ -338,17 +368,80 @@ $nomes"
 
 # --------------------------------------------- programas Windows instalados
 #
-# O Wine mantem a mesma lista do "Adicionar ou remover programas" do Windows,
-# e a expoe por "wine uninstaller --list", uma linha por programa no formato
-#     chave|||nome
-# A chave e o que "wine uninstaller --remove" aceita.
+# O Windows guarda a lista do "Adicionar ou remover programas" no registro,
+# em CurrentVersion\Uninstall. Nos lemos o system.reg e o user.reg do prefixo
+# DIRETAMENTE, em vez de perguntar ao "wine uninstaller", por um motivo
+# descoberto em maquina real: instalador de 32 bits grava a chave numa visao
+# do registro, e o uninstaller.exe - que vira processo de 32 bits quando o
+# wine32 esta presente - enumera a outra. Resultado: 7-Zip instalado, chave
+# no registro, e a lista vazia. Lendo o arquivo nos enxergamos as duas
+# visoes (nativa e Wow6432Node), nao dependemos da arquitetura do processo,
+# e nem precisamos do Wine para listar.
 #
-# Quem chama precisa exportar WINEPREFIX. Programas portateis, que nao trazem
-# desinstalador, nao aparecem aqui - e nao ha o que fazer quanto a isso, entao
-# a mensagem ao usuario tem que dizer isso em vez de deixar a lista muda.
+# Saida, uma linha por programa:
+#     chave|||nome|||desinstalador-silencioso|||desinstalador
+# Entradas sem nome ou sem desinstalador nao sao programas de verdade
+# (componentes, runtimes) e ficam de fora, como no proprio Windows.
+t_uninstall_dump() {
+    local pref="${1:-$TANDEM_PREFIXO_PADRAO}" f
+    for f in "$pref/system.reg" "$pref/user.reg"; do
+        [ -f "$f" ] || continue
+        awk '
+        function valor(s) {
+            sub(/^"[^"]*"="/, "", s); sub(/"$/, "", s)
+            gsub(/\\\\/, "\x01", s); gsub(/\\"/, "\"", s); gsub(/\x01/, "\\", s)
+            return s
+        }
+        function emite() {
+            if (chave != "" && nome != "" && (un != "" || qun != "") && !sysc)
+                printf "%s|||%s|||%s|||%s\n", chave, nome, qun, un
+            chave = ""
+        }
+        /^\[Software\\\\(Wow6432Node\\\\)?Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\/ {
+            emite()
+            sec = $0
+            sub(/^\[Software\\\\(Wow6432Node\\\\)?Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\/, "", sec)
+            sub(/\].*$/, "", sec)
+            chave = sec; nome = ""; un = ""; qun = ""; sysc = 0
+            gsub(/\\\\/, "\\", chave)
+            next
+        }
+        /^\[/ { emite(); next }
+        chave != "" && /^"DisplayName"=/          { nome = valor($0) }
+        chave != "" && /^"UninstallString"=/      { un = valor($0) }
+        chave != "" && /^"QuietUninstallString"=/ { qun = valor($0) }
+        chave != "" && /^"SystemComponent"=dword:00000001/ { sysc = 1 }
+        END { emite() }
+        ' "$f"
+    done | awk -F'\\|\\|\\|' '!vistos[$1]++'
+}
+
+# Compatibilidade com quem so quer "chave|||nome".
 t_programas_instalados() {
-    command -v wine >/dev/null 2>&1 || return 1
-    wine uninstaller --list 2>/dev/null | grep -- '|||'
+    t_uninstall_dump "$@" | awk -F'\\|\\|\\|' '{ printf "%s|||%s\n", $1, $2 }'
+}
+
+# Separa um comando do Windows ("C:\...\Uninstall.exe" /S) em executavel e
+# argumentos, e o executa no prefixo atual. O caminho pode vir entre aspas
+# (e quase sempre vem, por causa de "Program Files").
+t_executa_comando_windows() {
+    local cmd="$1" exe resto
+    case "$cmd" in
+        '"'*)
+            exe="${cmd#\"}"; exe="${exe%%\"*}"
+            # Corte por comprimento, nunca por padrao: as barras invertidas
+            # de um caminho Windows viram escape em ${var#padrao} e o corte
+            # falha em silencio, repetindo o caminho como argumento.
+            resto="${cmd:$(( ${#exe} + 2 ))}" ;;
+        *)
+            exe="${cmd%% *}"
+            resto="${cmd:${#exe}}" ;;
+    esac
+    resto="${resto# }"
+    [ -n "$exe" ] || return 1
+    # Os argumentos do desinstalador sao separados por espaco de proposito.
+    # shellcheck disable=SC2086
+    wine "$exe" $resto
 }
 
 # Remove atalhos de menu que apontam para programa que nao existe mais.
@@ -415,6 +508,84 @@ t_tem_wine64() {
     [ -d /opt/wine-stable/lib/wine/x86_64-unix ]
 }
 
+# ------------------------------------------------------- instalar o que falta
+#
+# O Tandem sabe diagnosticar o que falta (doctor); daqui ele tambem conserta.
+# Nao da para fazer isso durante a instalacao do proprio .deb: o dpkg segura
+# uma trava enquanto o postinst roda, e "apt-get install" la dentro morre em
+# deadlock. O momento certo e o primeiro uso - ou a hora exata do clique em
+# que a peca faltou.
+
+# Executa um script como root: direto se ja somos root, sudo se ha terminal,
+# pkexec se ha sessao grafica. A ordem poe o terminal na frente porque nele
+# o usuario VE o apt trabalhando; o pkexec mostra so o pedido de senha.
+t_como_root() {
+    local script="$1"
+    if [ "$(id -u)" = 0 ]; then
+        sh -c "$script"
+    elif [ -t 0 ] && command -v sudo >/dev/null 2>&1; then
+        sudo sh -c "$script"
+    elif t_tem_gui && command -v pkexec >/dev/null 2>&1; then
+        pkexec sh -c "$script"
+    else
+        return 127
+    fi
+}
+
+# O que falta nesta maquina, uma peca por linha. Cada linha e
+#     codigo|descricao para o usuario
+t_pecas_faltando() {
+    command -v wine >/dev/null 2>&1 ||
+        echo "wine|Wine (roda os programas do Windows)"
+    if command -v wine >/dev/null 2>&1 && ! t_tem_wine32; then
+        echo "wine32|Suporte a programas antigos de 32 bits"
+    fi
+    command -v winetricks >/dev/null 2>&1 ||
+        echo "winetricks|Instalador de componentes do Windows"
+    command -v adb >/dev/null 2>&1 ||
+        echo "adb|Instalador de pacotes Android divididos (.xapk)"
+    command -v waydroid >/dev/null 2>&1 ||
+        echo "waydroid|Android (Waydroid) - baixa cerca de 1 GB"
+    return 0
+}
+
+# Monta o script de instalacao para as pecas pedidas (uma por argumento).
+# Tudo em um script so: uma unica senha, uma unica execucao.
+t_script_instalacao() {
+    local peca
+    printf 'set -e\nexport DEBIAN_FRONTEND=noninteractive\n'
+    for peca in "$@"; do
+        case "$peca" in
+            wine)       printf 'apt-get update -q\napt-get install -y wine winetricks\n' ;;
+            wine32)     printf 'dpkg --add-architecture i386\napt-get update -q\napt-get install -y wine32:i386\n' ;;
+            winetricks) printf 'apt-get install -y winetricks\n' ;;
+            adb)        printf 'apt-get install -y adb\n' ;;
+            waydroid)
+                # O Waydroid nao esta nos repositorios do Ubuntu/Zorin: vem
+                # do repositorio oficial do projeto. Adicionamos a fonte com
+                # chave conferida, do jeito que o proprio projeto instrui.
+                cat <<'FIM'
+if ! command -v waydroid >/dev/null 2>&1; then
+    python3 - <<'PY'
+import urllib.request
+urllib.request.urlretrieve("https://repo.waydro.id/waydroid.gpg",
+                           "/usr/share/keyrings/waydroid.gpg")
+PY
+    . /etc/os-release
+    echo "deb [signed-by=/usr/share/keyrings/waydroid.gpg] https://repo.waydro.id/ ${UBUNTU_CODENAME:-$VERSION_CODENAME} main" \
+        > /etc/apt/sources.list.d/waydroid.list
+    apt-get update -q
+    apt-get install -y waydroid
+fi
+if [ ! -f /var/lib/waydroid/waydroid.cfg ]; then
+    waydroid init
+fi
+FIM
+                ;;
+        esac
+    done
+}
+
 # ---------------------------------------------------------------- waydroid
 
 t_wd_sessao_ok() {
@@ -441,13 +612,19 @@ t_wd_tem_arm() {
 # Garante container + sessao + boot completo. Devolve 1 e ja avisa em caso de falha.
 t_wd_garantir() {
     local estado
-    command -v waydroid >/dev/null 2>&1 || {
-        t_erro "O Android (Waydroid) não está instalado nesta máquina.
+    if ! command -v waydroid >/dev/null 2>&1; then
+        if t_pergunta "O Android (Waydroid) não está instalado nesta máquina.
 
-Instale com:
-curl -s https://repo.waydro.id | sudo bash
-sudo apt install waydroid"
-        return 1; }
+Posso instalar agora? Baixa cerca de 1 GB e precisa da sua senha." "Instalar" "Agora não"; then
+            t_progresso_texto "Instalando o Android. Vai demorar - não desligue o computador."
+            t_como_root "$(t_script_instalacao waydroid)" >>"${LOG:-/dev/null}" 2>&1
+        fi
+        command -v waydroid >/dev/null 2>&1 || {
+            t_erro "O Android (Waydroid) não está instalado nesta máquina.
+
+Deixe o Tandem instalar tudo:  tandem preparar"
+            return 1; }
+    fi
 
     estado="$(systemctl is-active waydroid-container 2>/dev/null)"
     if [ "$estado" = "activating" ]; then
