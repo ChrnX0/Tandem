@@ -12,7 +12,10 @@ CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
 mkdir -p "$CFG"
 ALVO="$CFG/mimeapps.list"
 
-TIPOS_APK="application/vnd.android.package-archive"
+TIPOS_APK="application/vnd.android.package-archive
+application/vnd.android.xapk
+application/vnd.android.apks
+application/vnd.android.apkm"
 TIPOS_EXE="application/x-ms-dos-executable
 application/x-msdownload
 application/vnd.microsoft.portable-executable
@@ -50,7 +53,7 @@ aplicar() {
     return 0
 }
 
-aplicar "$TIPOS_APK" tandem-apk.desktop
+for t in $TIPOS_APK; do aplicar "$t" tandem-apk.desktop; done
 for t in $TIPOS_EXE; do aplicar "$t" tandem-exe.desktop; done
 
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true

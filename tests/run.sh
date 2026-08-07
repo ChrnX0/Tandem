@@ -246,6 +246,40 @@ igual "com display, o arquivo ainda recebe o texto" \
 igual "porcento em texto nao quebra a saida" \
       "50% pronto" "$(printf '%b' "50% pronto")"
 
+secao "tipos MIME dos pacotes divididos"
+
+# Sem estes tipos o duplo clique num .xapk nunca chega ao Tandem: o
+# freedesktop nao conhece a extensao e o sistema ve so um ZIP generico.
+igual "o arquivo de tipos MIME e XML valido" "ok" \
+      "$(python3 -c 'import xml.dom.minidom,sys; xml.dom.minidom.parse(sys.argv[1]); print("ok")' \
+         src/mime/tandem.xml 2>&1 | tail -1)"
+
+for tipo in vnd.android.xapk vnd.android.apks vnd.android.apkm; do
+    if grep -q "application/$tipo" src/mime/tandem.xml; then
+        passou "declara application/$tipo"
+    else
+        falhou "declara application/$tipo" "presente" "ausente"
+    fi
+    if grep -q "application/$tipo" src/applications/tandem-apk.desktop; then
+        passou "  e o .desktop reivindica o tipo"
+    else
+        falhou "  e o .desktop reivindica o tipo" "presente" "ausente"
+    fi
+    if grep -q "application/$tipo" src/bin/tandem-repair; then
+        passou "  e o repair reaplica o tipo"
+    else
+        falhou "  e o repair reaplica o tipo" "presente" "ausente"
+    fi
+done
+
+# Subclasse de zip e o que faz o casamento por extensao vencer a deteccao
+# por conteudo: sem isso o sistema insiste que o arquivo e um ZIP.
+if grep -q 'sub-class-of.*application/zip' src/mime/tandem.xml; then
+    passou "os tipos sao subclasse de application/zip"
+else
+    falhou "os tipos sao subclasse de application/zip" "sub-class-of zip" "ausente"
+fi
+
 secao "a barra de progresso nao pode matar o Tandem"
 
 # Achado do painel, confirmado: com o cano aberto so para escrita, fechar a
@@ -550,7 +584,8 @@ if [ -f "$PACOTE_DEB" ]; then
                        usr/share/doc/tandem/copyright \
                        usr/share/doc/tandem/changelog.gz \
                        usr/share/man/man1/tandem.1.gz \
-                       usr/share/polkit-1/rules.d/49-tandem.rules; do
+                       usr/share/polkit-1/rules.d/49-tandem.rules \
+                       usr/share/mime/packages/tandem.xml; do
             if printf '%s' "$conteudo" | grep -q " ./$exigido\$"; then
                 passou "o pacote traz $exigido"
             else

@@ -3,6 +3,9 @@ set -e
 
 update-desktop-database /usr/share/applications 2>/dev/null || true
 gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+# Registra os tipos .xapk/.apks/.apkm. Sem isso o sistema ve so um ZIP e o
+# duplo clique nunca chega ao Tandem.
+update-mime-database /usr/share/mime 2>/dev/null || true
 
 # Descobre quem instalou, para aplicar as associacoes no perfil certo.
 USUARIO="${SUDO_USER:-}"

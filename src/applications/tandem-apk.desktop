@@ -8,5 +8,5 @@ Exec=/usr/bin/tandem-apk %f
 Icon=tandem
 Terminal=false
 NoDisplay=false
-MimeType=application/vnd.android.package-archive;
+MimeType=application/vnd.android.package-archive;application/vnd.android.xapk;application/vnd.android.apks;application/vnd.android.apkm;
 Categories=System;

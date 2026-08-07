@@ -37,6 +37,7 @@ LAYOUT = [
     ("usr/share/applications/tandem-android.desktop", "applications/tandem-android.desktop", 0o644),
     ("usr/share/icons/hicolor/scalable/apps/tandem.svg", "icons/tandem.svg", 0o644),
     ("usr/share/polkit-1/rules.d/49-tandem.rules", "polkit/49-tandem.rules", 0o644),
+    ("usr/share/mime/packages/tandem.xml", "mime/tandem.xml", 0o644),
 ]
 
 # Files that Debian policy requires but that live outside src/. The gzipped
