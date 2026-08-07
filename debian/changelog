@@ -1,30 +1,21 @@
-tandem (2.7) unstable; urgency=medium
+tandem (2.8) unstable; urgency=medium
 
-  * Novo: pre-voo do executavel. src/lib/peinfo.py le a tabela de
-    importacoes do proprio .exe, em Python puro, sem executar nada.
-    Validado contra o objdump em 37 binarios reais: saida identica.
-  * Novo: veredito de impossibilidade antes de perder tempo. Se o programa
-    importa DLL de chave de protecao (HASP, Sentinel, CodeMeter, Rockey),
-    de acesso direto a USB ou de driver de sistema, o Tandem reconhece a
-    assinatura ANTES de rodar e, se a execucao falhar, explica a causa em
-    vez de dizer "o programa fechou com erro (codigo N)". A tabela mora em
-    limites.tsv e cresce sem tocar em codigo. O pre-voo nunca bloqueia e
-    nunca instala nada por conta propria: so o Wine sabe quais DLLs ele
-    mesmo implementa, e agir por conta daria instalacao inutil.
-  * Novo: indice DLL -> verbo gerado do proprio winetricks instalado. Cada
-    load_<verbo>() declara com "w_override_dlls native,builtin ..." quais
-    arquivos entrega; tools/indice-winetricks.py inverte essa leitura e
-    grava verbos.tsv. 246 DLLs, contra ~60 da tabela escrita a mao - 124
-    delas sem nenhuma cobertura antes. Sem rede e sem servico. A tabela a
-    mao continua com precedencia, porque carrega decisoes que o indice nao
-    tem como saber.
-  * Corrigido: as atl*.dll apontavam para o verbo "atmlib", que instala o
-    Adobe Type Manager - uma biblioteca de FONTES, sem relacao nenhuma com
-    a ATL, que vem junto do runtime do Visual C++ do mesmo ano. O estrago
-    era duplo: a instalacao nao resolvia e o recibo era gravado assim
-    mesmo, entao na tentativa seguinte o Tandem dizia "ja instalei o que
-    este programa pedia" e desistia. Encontrado comparando a tabela a mao
-    com o indice gerado.
+  * Novo: memoria por programa. O Tandem passa a guardar o que aprendeu
+    sobre cada executavel - quais componentes resolveram, quais nao
+    resolveram, se abriu, quanto tempo levou, e o veredito do pre-voo. A
+    identidade e do ARQUIVO (tamanho + inicio + fim), nao do caminho, entao
+    a licao sobrevive a mover o programa de pasta e vale em outra maquina.
+  * A memoria SUGERE, nunca decide. Quando ha receita conhecida, o Tandem
+    pergunta se pode instalar de uma vez e pular a etapa de descobrir; se o
+    dono disser nao, roda como sempre rodou. Licao errada aprendida em
+    silencio se repetiria para sempre, e este programa mexe na maquina onde
+    o dono fatura.
+  * A memoria tambem aprende com a derrota: componente que foi instalado e
+    nao fez o programa abrir entra em NAO_RESOLVERAM, para nao ser
+    prometido como solucao na proxima vez.
+  * Novo: "tandem memoria" mostra tudo que foi aprendido, em texto legivel,
+    e "tandem esquecer <nome>" apaga. Nao existe memoria secreta: sem poder
+    VER o que foi guardado nao ha como confiar nem como corrigir.
 
- -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 06:00:00 +0000
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 07:00:00 +0000
 

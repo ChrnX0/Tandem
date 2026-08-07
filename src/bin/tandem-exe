@@ -152,6 +152,43 @@ fi
 LIMITE="$(t_limite_do_programa "$PROG" 2>/dev/null)"
 [ -n "$LIMITE" ] && t_diz "pre-voo: limite reconhecido -> $LIMITE"
 
+# ------------------------------------------------- memoria deste programa
+# O que o Tandem ja aprendeu sobre ESTE arquivo, aqui ou noutra maquina.
+SABIDOS="$(t_memoria_le "$PROG" RESOLVERAM 2>/dev/null)"
+LIMITE_LEMBRADO="$(t_memoria_le "$PROG" LIMITE 2>/dev/null)"
+[ -z "$LIMITE" ] && [ -n "$LIMITE_LEMBRADO" ] && LIMITE="$LIMITE_LEMBRADO"
+INICIO=$SECONDS
+t_memoria_grava "$PROG" ARQUITETURA "${ARCH:-?}" 2>/dev/null
+[ -n "$LIMITE" ] && t_memoria_grava "$PROG" LIMITE "$LIMITE" 2>/dev/null
+
+# A memoria SUGERE, nunca decide. Instalar sozinho com base numa licao
+# passada seria repetir um engano para sempre - e no prefixo de um dono de
+# loja isso custa caro. Entao ela so encurta o caminho se ele mandar.
+if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null 2>&1; then
+    PENDENTES=""
+    for v in $SABIDOS; do
+        grep -qxF -- "$v" "$WINEPREFIX/.tandem-verbos" 2>/dev/null || PENDENTES="$PENDENTES $v"
+    done
+    if [ -n "$PENDENTES" ]; then
+        t_diz "memoria: ja resolveram este programa ->$PENDENTES"
+        if t_pergunta "Da última vez, este programa precisou destes componentes do Windows:
+
+$(for v in $PENDENTES; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)
+
+Instalar agora e pular a etapa de descobrir?" "Instalar" "Tentar sem instalar"; then
+            t_progresso_abre "Instalando o que este programa já pediu antes..."
+            for v in $PENDENTES; do
+                t_progresso_texto "Instalando $(t_verbo_amigavel "$v")..."
+                t_diz ">>> winetricks -q $v (da memoria)"
+                winetricks -q "$v" >>"$LOG" 2>&1 &&
+                    printf '%s\n' "$v" >> "$WINEPREFIX/.tandem-verbos"
+            done
+            wineserver -w
+            t_progresso_fecha
+        fi
+    fi
+fi
+
 # ------------------------------------------------------- 4. Como executar
 executar() {
     cd -- "$(dirname -- "$PROG")" || return 1
@@ -170,12 +207,20 @@ executar() {
 MAX=3
 tentativa=1
 ATALHOS_ANTES="$(t_atalhos_wine)"
+INSTALADOS_AGORA=""
 while :; do
     MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
     t_aviso "Abrindo $(basename -- "$PROG")..."
     executar
     CODIGO=$?
     if [ "$CODIGO" -eq 0 ]; then
+        # Aprendeu: os verbos instalados NESTA execucao foram os que
+        # resolveram. Guardar so os que vieram agora evita creditar a receita
+        # com coisa que ja estava no prefixo por outro motivo.
+        for v in $INSTALADOS_AGORA; do t_memoria_junta "$PROG" RESOLVERAM "$v"; done
+        t_memoria_grava "$PROG" RESULTADO abriu
+        t_memoria_grava "$PROG" SEGUNDOS "$((SECONDS-INICIO))"
+        t_memoria_grava "$PROG" VISTO_EM "$(date +%F)"
         # Se era um instalador, apareceram atalhos: diga onde o programa foi
         # parar. Se era so um programa rodando, nada aparece e nada e dito.
         t_anuncia_atalhos "$ATALHOS_ANTES"
@@ -204,6 +249,10 @@ while :; do
     VERBOS="$(printf '%s\n' $NOVOS)"
 
     if [ -z "$VERBOS" ] && [ -n "$REPETIDOS" ]; then
+        # Licao negativa: estes foram instalados e o programa continua sem
+        # abrir. Registrar evita prometer na proxima vez que eles resolvem.
+        for v in $REPETIDOS; do t_memoria_junta "$PROG" NAO_RESOLVERAM "$v"; done
+        t_memoria_grava "$PROG" RESULTADO "nao abriu"
         t_erro "Já instalei o que este programa pedia:$REPETIDOS
 
 E ele continua não abrindo. Provavelmente depende de algo que o Wine ainda não suporta, ou de um arquivo que deveria vir junto com ele."
@@ -292,6 +341,7 @@ sudo apt install winetricks"; exit 1; }
         MARCA_WT=$(wc -l < "$LOG" 2>/dev/null || echo 0)
         if $INIBIR winetricks -q "$v" >>"$LOG" 2>&1; then
             printf '%s\n' "$v" >> "$RECIBO"
+            INSTALADOS_AGORA="$INSTALADOS_AGORA $v"
         else
             t_diz "!!! winetricks falhou em $v"
             FALHARAM="$FALHARAM $v"

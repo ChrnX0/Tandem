@@ -494,6 +494,88 @@ t_pe_arch() {
     esac
 }
 
+# ------------------------------------------------------------- memoria
+#
+# Toda vez que o Tandem roda ele descobre coisas - quais componentes o
+# programa pediu, qual resolveu, quanto tempo levou, se abriu no fim. Ate
+# aqui isso virava uma linha de log e morria. A memoria guarda o que foi
+# aprendido POR PROGRAMA, num arquivo de texto legivel que o dono pode abrir,
+# conferir e mandar para outra pessoa.
+#
+# Duas regras que a memoria nao pode quebrar:
+#
+# 1. Ela nunca age sozinha. Uma receita e sugestao, nao ordem: o Tandem
+#    mostra o que aprendeu e pergunta. Licao errada aprendida em silencio se
+#    repetiria para sempre, e este programa mexe na maquina onde o dono
+#    fatura.
+# 2. Ela e sempre legivel e apagavel. Se a memoria atrapalhar, "tandem
+#    esquecer" resolve, e o dono consegue LER o que estava guardado antes de
+#    decidir.
+
+TANDEM_MEMORIA="${TANDEM_MEMORIA:-$HOME/.local/share/tandem/memoria}"
+
+# Identidade estavel de um programa: tamanho + inicio + fim do arquivo.
+#
+# Nao usamos o caminho, que muda de pasta e de maquina, nem o nome, que se
+# repete ("setup.exe"). Ler o arquivo inteiro seria lento num instalador de
+# meio giga, e as pontas mais o tamanho ja separam versoes diferentes do
+# mesmo programa - que e a unica confusao que importa evitar aqui.
+t_memoria_id() {
+    local f="$1" tam
+    [ -f "$f" ] || return 1
+    tam="$(stat -c%s -- "$f" 2>/dev/null)" || return 1
+    command -v sha256sum >/dev/null 2>&1 || return 1
+    {
+        printf '%s\n' "$tam"
+        head -c 1048576 -- "$f" 2>/dev/null
+        tail -c 1048576 -- "$f" 2>/dev/null
+    } | sha256sum | cut -c1-32
+}
+
+t_memoria_arquivo() {
+    local id; id="$(t_memoria_id "$1")" || return 1
+    [ -n "$id" ] || return 1
+    printf '%s/%s.txt' "$TANDEM_MEMORIA" "$id"
+}
+
+t_memoria_le() {
+    local arq; arq="$(t_memoria_arquivo "$1")" || return 1
+    [ -f "$arq" ] || return 1
+    sed -n "s/^$2=//p" "$arq" | tail -1
+}
+
+# Grava uma chave, substituindo o valor anterior. Cria o arquivo na primeira
+# vez, com o nome do programa em cima para o dono saber do que se trata.
+t_memoria_grava() {
+    local prog="$1" chave="$2" valor="$3" arq tmp
+    arq="$(t_memoria_arquivo "$prog")" || return 1
+    mkdir -p "$TANDEM_MEMORIA" 2>/dev/null || return 1
+    if [ ! -f "$arq" ]; then
+        {
+            printf '# O que o Tandem aprendeu sobre este programa.\n'
+            printf '# Pode ler, apagar e mandar para outra pessoa.\n'
+            printf 'PROGRAMA=%s\n' "$(basename -- "$prog")"
+        } > "$arq" 2>/dev/null || return 1
+    fi
+    tmp="$arq.novo"
+    { grep -v "^$chave=" "$arq" 2>/dev/null; printf '%s=%s\n' "$chave" "$valor"; } > "$tmp" 2>/dev/null &&
+        mv -f "$tmp" "$arq" 2>/dev/null
+}
+
+# Acrescenta um item a uma lista separada por espaco, sem repetir.
+t_memoria_junta() {
+    local prog="$1" chave="$2" item="$3" atual
+    atual="$(t_memoria_le "$prog" "$chave" 2>/dev/null)"
+    case " $atual " in *" $item "*) return 0 ;; esac
+    t_memoria_grava "$prog" "$chave" "${atual:+$atual }$item"
+}
+
+t_memoria_esquece() {
+    local arq; arq="$(t_memoria_arquivo "$1" 2>/dev/null)" || return 1
+    [ -f "$arq" ] || return 1
+    rm -f -- "$arq"
+}
+
 # --------------------------------------------------------- pre-voo do PE
 #
 # Todo executavel Windows traz no proprio arquivo a lista de bibliotecas que

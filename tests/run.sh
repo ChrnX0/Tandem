@@ -144,6 +144,58 @@ else
     pulou "regerar o indice" "winetricks nao instalado"
 fi
 
+secao "memoria: o que o Tandem aprende"
+
+MEM_A="$ARTEFATOS/imports64.exe"
+MEM_B="$ARTEFATOS/importslimpo.exe"
+
+id_a="$(t_memoria_id "$MEM_A")"
+igual "a identidade tem tamanho fixo" "32" "${#id_a}"
+igual "o mesmo arquivo tem sempre a mesma identidade" \
+      "$id_a" "$(t_memoria_id "$MEM_A")"
+if [ "$id_a" = "$(t_memoria_id "$MEM_B")" ]; then
+    falhou "arquivos diferentes tem identidades diferentes" "diferentes" "iguais"
+else
+    passou "arquivos diferentes tem identidades diferentes"
+fi
+# A identidade segue o ARQUIVO, nao o caminho: uma receita aprendida aqui
+# tem que valer depois que o dono mover o programa de pasta.
+cp "$MEM_A" "$TMPRAIZ/mudou-de-pasta.exe"
+igual "a identidade sobrevive a mudanca de pasta e de nome" \
+      "$id_a" "$(t_memoria_id "$TMPRAIZ/mudou-de-pasta.exe")"
+t_memoria_id /nao/existe >/dev/null 2>&1
+igual "arquivo inexistente nao tem identidade" "1" "$?"
+
+t_memoria_grava "$MEM_A" RESULTADO abriu
+igual "grava e le de volta" "abriu" "$(t_memoria_le "$MEM_A" RESULTADO)"
+t_memoria_grava "$MEM_A" RESULTADO "nao abriu"
+igual "gravar de novo substitui, nao duplica" \
+      "nao abriu" "$(t_memoria_le "$MEM_A" RESULTADO)"
+igual "  e sobrou uma linha so" \
+      "1" "$(grep -c '^RESULTADO=' "$(t_memoria_arquivo "$MEM_A")")"
+
+t_memoria_junta "$MEM_A" RESOLVERAM vcrun2022
+t_memoria_junta "$MEM_A" RESOLVERAM d3dx9
+t_memoria_junta "$MEM_A" RESOLVERAM vcrun2022
+igual "a lista acumula sem repetir" \
+      "vcrun2022 d3dx9" "$(t_memoria_le "$MEM_A" RESOLVERAM)"
+
+igual "o arquivo guarda o nome do programa, para o dono reconhecer" \
+      "imports64.exe" "$(t_memoria_le "$MEM_A" PROGRAMA)"
+if grep -q '^#' "$(t_memoria_arquivo "$MEM_A")"; then
+    passou "o arquivo se explica em texto legivel"
+else
+    falhou "o arquivo se explica em texto legivel" "cabecalho com #" "ausente"
+fi
+
+# Memoria de um programa nao pode vazar para outro.
+igual "cada programa tem a sua memoria" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
+
+t_memoria_esquece "$MEM_A"
+igual "esquecer apaga de verdade" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
+t_memoria_esquece "$MEM_A" 2>/dev/null
+igual "esquecer o que nao existe falha sem quebrar" "1" "$?"
+
 # ------------------------------------------------------- pre-voo do PE
 
 secao "pre-voo: ler o .exe sem executar"

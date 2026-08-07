@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="2.7"
+VERSAO="2.8"
 
 uso() {
     cat <<'AJUDA'
@@ -21,6 +21,8 @@ Tandem - roda programas Windows e apps Android no Linux.
   tandem backup               salva o ambiente Windows
   tandem restore              restaura o ambiente Windows
   tandem protect <caminho>    protege um perfil Wine contra alteracoes
+  tandem memoria [nome]       o que o Tandem aprendeu sobre os programas
+  tandem esquecer <nome>      apaga o que ele aprendeu sobre um programa
   tandem logs                 mostra o log mais recente
   tandem version
 AJUDA
@@ -359,6 +361,49 @@ O desinstalador do programa não completou. Tente de novo, ou remova pela janela
     return 0
 }
 
+# ------------------------------------------------------------------ memoria
+#
+# O que o Tandem aprendeu, em texto que o dono consegue ler. Nao existe
+# memoria secreta: se ele nao conseguir VER o que foi guardado, nao tem como
+# confiar nem como corrigir.
+acao_memoria() {
+    local filtro="${1:-}" arq prog saida="" n=0
+    if [ ! -d "$TANDEM_MEMORIA" ] || [ -z "$(ls -A "$TANDEM_MEMORIA" 2>/dev/null)" ]; then
+        t_erro "O Tandem ainda não aprendeu nada.
+
+A memória se forma sozinha conforme você usa os programas."
+        return 1
+    fi
+    for arq in "$TANDEM_MEMORIA"/*.txt; do
+        [ -f "$arq" ] || continue
+        prog="$(sed -n 's/^PROGRAMA=//p' "$arq" | head -1)"
+        [ -n "$filtro" ] && case "${prog,,}" in *"${filtro,,}"*) ;; *) continue ;; esac
+        n=$((n+1))
+        saida="$saida$prog"$'\n'
+        saida="$saida$(sed -n 's/^RESULTADO=/  resultado:  /p;
+                              s/^ARQUITETURA=/  arquitetura: /p;
+                              s/^RESOLVERAM=/  resolveram: /p;
+                              s/^NAO_RESOLVERAM=/  não resolveram: /p;
+                              s/^SEGUNDOS=/  levou (s): /p;
+                              s/^VISTO_EM=/  visto em:   /p;
+                              s/^LIMITE=/  limite:     /p' "$arq")"$'\n\n'
+    done
+    [ "$n" -gt 0 ] || { t_erro "Não achei nada aprendido sobre \"$filtro\"."; return 1; }
+    printf '%s' "$saida" | t_texto "Tandem - O que eu aprendi"
+}
+
+acao_esquecer() {
+    local filtro="${1:-}" arq prog n=0
+    [ -n "$filtro" ] || { t_erro "Diga o nome do programa a esquecer."; return 1; }
+    for arq in "$TANDEM_MEMORIA"/*.txt; do
+        [ -f "$arq" ] || continue
+        prog="$(sed -n 's/^PROGRAMA=//p' "$arq" | head -1)"
+        case "${prog,,}" in *"${filtro,,}"*) rm -f -- "$arq"; n=$((n+1)) ;; esac
+    done
+    [ "$n" -gt 0 ] || { t_erro "Não achei nada aprendido sobre \"$filtro\"."; return 1; }
+    t_ok "Esqueci o que sabia sobre $n programa(s). Da próxima vez ele descobre de novo."
+}
+
 acao_logs() {
     local l; l="$(ls -1t "$TANDEM_ESTADO"/*.log 2>/dev/null | head -1)"
     [ -n "$l" ] || { t_erro "Ainda não há registros."; return 1; }
@@ -383,6 +428,7 @@ acao_painel() {
             "backup"    "Salvar o ambiente Windows" \
             "restore"   "Restaurar o ambiente Windows" \
             "repair"    "Consertar a abertura de arquivos com dois cliques" \
+            "memoria"   "Ver o que o Tandem aprendeu sobre os programas" \
             "logs"      "Ver o registro técnico" \
             2>/dev/null)" || return 0
         case "$esc" in
@@ -400,6 +446,7 @@ acao_painel() {
             backup)   acao_backup ;;
             restore)  acao_restore ;;
             repair)   /usr/bin/tandem-repair ;;
+            memoria)  acao_memoria ;;
             logs)     acao_logs ;;
             *)        return 0 ;;
         esac
@@ -419,6 +466,8 @@ case "${1:-}" in
     backup)               acao_backup ;;
     restore|restaurar)    acao_restore ;;
     protect|proteger)     shift; acao_protect "$@" ;;
+    memoria|memória)      shift; acao_memoria "$@" ;;
+    esquecer|esqueca)     shift; acao_esquecer "$@" ;;
     logs|log)             acao_logs ;;
     # Uso interno do postinst: ja foi feito na chamada a t_primeira_vez
     # la em cima. Fica fora da ajuda de proposito.
