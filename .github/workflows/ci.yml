@@ -64,9 +64,21 @@ jobs:
           # foi removido - foi exatamente assim que esta verificacao reprovou
           # um purge que tinha funcionado. Acreditar no cache e evidencia
           # fraca; conferir o arquivo e evidencia.
-          sobrou="$(find /usr/bin /usr/lib /usr/share -name '*tandem*' 2>/dev/null)"
-          [ -z "$sobrou" ] || { echo "sobrou depois do purge:"; echo "$sobrou"; exit 1; }
-          echo "purge limpo: nada de tandem em /usr"
+          # Conferir os caminhos EXATOS que o pacote instala. Um find por
+          # "*tandem*" e largo demais: ele encontra as definicoes de terminal
+          # da Tandem Computers (tandem653, tandem6510) que vem no ncurses, e
+          # reprovou um purge que estava perfeito.
+          sobrou=""
+          for caminho in /usr/bin/tandem /usr/bin/tandem-exe /usr/bin/tandem-apk \
+                         /usr/bin/tandem-android /usr/bin/tandem-repair \
+                         /usr/lib/tandem /usr/share/applications/tandem.desktop \
+                         /usr/share/mime/packages/tandem.xml \
+                         /usr/share/man/man1/tandem.1.gz; do
+              [ -e "$caminho" ] && sobrou="$sobrou $caminho"
+          done
+          [ -z "$sobrou" ] || { echo "sobrou depois do purge:$sobrou"; exit 1; }
+          dpkg -l tandem >/dev/null 2>&1 && { echo "o dpkg ainda conhece o pacote"; exit 1; }
+          echo "purge limpo"
 
       - name: ProofGate
         # O portao do proprio dono do projeto: guardas sobre o diff, estado da
