@@ -36,22 +36,34 @@ tratado como defeito, não como limitação.
 ```
 build.py                  empacotador (ar + tar.gz manuais)
 debian/control            versão do pacote vive aqui
-debian/postinst           aplica associações e protege prefixos já existentes
-src/lib/common.sh         log, notificação, progresso, prefixo, PE, waydroid
+debian/changelog          entrada nova a cada versão; lintian exige data nova
+debian/copyright          DEP-5; lintian exige
+debian/postinst           só atalho: o trabalho por-usuário é na 1ª execução
+man/tandem.1              manual; os outros quatro são stubs ".so"
+src/mime/tandem.xml       registra .xapk/.apks/.apkm como subclasse de zip
+src/lib/common.sh         log, mensagem, locale, progresso, prefixo, PE, waydroid
 src/lib/winedeps.sh       DLL -> verbo do winetricks; DLLs sem tradução
 src/lib/apkinfo.py        leitor de AndroidManifest binário, Python puro
-src/bin/tandem            CLI + painel zenity
+src/bin/tandem            CLI + painel zenity; preparar/programas/desinstalar
 src/bin/tandem-exe        loop roda->detecta->instala->repete
 src/bin/tandem-apk        pré-voo + install; xapk/apks via adb install-multiple
 src/bin/tandem-repair     disputa de associação MIME
 src/polkit/               regra estreita: só start/restart do waydroid-container
+tests/run.sh              suíte; tests/mkapk.py gera os pacotes sintéticos
+```
+
+Comandos (`tandem --help` é a fonte da verdade):
+
+```
+install    programas   desinstalar   preparar   android
+doctor     repair      backup        restore    protect    logs
 ```
 
 Build e verificação:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 83 testes, roda sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 141 testes, sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
@@ -110,6 +122,34 @@ t_verbos_do_log /tmp/w.log     # espera: vcrun2022
 - **`zenity --error` bloqueia até o clique** e devolve 0. Se devolver diferente
   de 0, a janela não foi mostrada — é esse o sinal que o `t_erro` usa para
   decidir se precisa repetir a mensagem no terminal.
+- **Cano de progresso aberto só para escrita mata o processo.** Quando o
+  zenity sumia, a mensagem seguinte levava SIGPIPE e derrubava o Tandem
+  inteiro: código 141, nada no log. Dentro do laço do `winetricks` isso cortava
+  uma instalação pela metade. Abrir o descritor com `exec 8<> fifo` resolve —
+  com leitura e escrita o cano nunca fica sem leitor.
+- **`exec N> arquivo` que falha não aborta o bash.** O script segue vivo, o
+  `flock` responde "Bad file descriptor", e confundir isso com "trava tomada"
+  fazia o duplo clique morrer em silêncio. Trava impossível e trava ocupada são
+  casos distintos: no primeiro, siga sem trava.
+- **`wine uninstaller --list` mente.** Instalador de 32 bits grava a chave em
+  `Wow6432Node\...\Uninstall`, e o `uninstaller.exe` — que vira processo de 32
+  bits quando há `wine32` — enumera a outra visão. Confirmado com Wine real: o
+  7-Zip instalado e a lista vazia. Leia `system.reg` e `user.reg` direto; as
+  duas visões aparecem, e nem precisa do Wine para listar.
+- **O GNOME sob Wayland não relê a lista de aplicativos.** Um `.desktop` novo
+  numa subpasta recém-criada (`applications/wine/Programs/X/`) só aparece no
+  menu depois de sair e entrar na conta. `update-desktop-database` **não**
+  resolve — testado na máquina real. Por isso existe `tandem programas`: o
+  Tandem não pode depender do menu do sistema para você achar o que instalou.
+- **Não dá para instalar dependências no `postinst`.** O `dpkg` segura uma
+  trava enquanto ele roda; um `apt-get` lá dentro espera para sempre. Daí
+  `tandem preparar` ser um comando separado.
+- **`[ -t 1 ]` sozinho não distingue duplo clique de redirecionamento.** Cano e
+  arquivo também não são terminal, e mandar o diagnóstico para uma janela fazia
+  `tandem doctor > relatorio.txt` gravar zero bytes. Teste os três:
+  `[ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]`.
+- **O Waydroid não está nos repositórios do Ubuntu/Zorin.** `apt-cache policy
+  waydroid` devolve `Candidate: (none)`. Vem de `repo.waydro.id`, com chave.
 
 ## Estado
 
@@ -128,13 +168,31 @@ root), não mais só por leitura:
   `mimeapps.list`, deixou backup.
 - `tandem doctor`, `version`, `--help`, painel sem GUI: todos com saída.
 - Janelas do zenity abrem de fato (verificado sob Xvfb), inclusive com acento.
-- 83 testes automatizados em `tests/run.sh`.
+- Wine 10.0 real instalado no container: prefixo `win64` criado do zero,
+  7-Zip x64 instalado por `.exe` e por `.msi`, registro inspecionado à mão.
+- 141 testes automatizados em `tests/run.sh`.
 
-**Ainda não verificado — precisa da máquina de verdade:** o duplo clique
-vencendo a disputa de associação no GNOME/Zorin, `pkexec` e a regra polkit,
-criação de prefixo com Wine instalado, o laço roda→detecta→instala com
-`winetricks` real, e instalação de XAPK num Waydroid real. Wine e Waydroid não
-existem neste ambiente de teste.
+Verificado **no Zorin 18.1 do usuário** (Wayland, Wine 10.0, Waydroid ativo):
+
+- `tandem doctor` completo, com o ambiente todo presente.
+- Os dois prefixos pré-existentes (`~/.wine` e `~/.wine-pdv`, o do PDV) foram
+  protegidos **sozinhos** na primeira execução, sem digitar nada.
+- Duplo clique roteando: `xdg-mime query default` responde `tandem-exe.desktop`
+  e `tandem-apk.desktop`.
+- 7-Zip x64 instalado pelo Tandem: prefixo criado, instalador executado,
+  `.lnk` no Menu Iniciar, `winemenubuilder` gerando o `.desktop`.
+- **As associações do usuário sobreviveram intactas** — `zip`, `txt`, `jpeg` e
+  `pdf` continuam com os apps do Zorin, nenhum `wine-extension`. É a prova da
+  decisão de desligar só o sequestro pela chave `FileOpenAssociations` em vez
+  do `winemenubuilder` inteiro.
+- A janela de erro acentuada aparece de verdade, com o texto certo.
+
+**Ainda não verificado — precisa da máquina de verdade:** `pkexec` e a regra
+polkit (o serviço do Waydroid já estava ativo, então a regra nunca foi
+exercitada), o laço roda→detecta→instala com `winetricks` real ponta a ponta
+(o 7-Zip não depende de nada, então o laço nunca precisou agir), instalação de
+XAPK num Waydroid real, e os comandos novos `preparar`, `programas` e
+`desinstalar` em campo.
 
 Ambiente de referência onde o projeto nasceu: Zorin OS 18.1 (base Ubuntu
 noble), kernel 7.0, x86_64, Wayland/GNOME, 15 GB RAM, Wine 10.0 do repositório
@@ -143,16 +201,23 @@ da distro, Waydroid 1.6.2 MAINLINE com GAPPS e libhoudini, `binderfs` com nós
 
 ## Próximos passos
 
-1. Instalar o `.deb` no Zorin e rodar `tandem doctor` **numa sessão gráfica**.
-   O que falta testar agora é só o que depende de Wine, Waydroid e do GNOME
-   real — o resto já roda verde na suíte.
-2. Confirmar o duplo clique. Se abrir o diálogo "Abrir com…", rodar
-   `tandem repair` e comparar o antes/depois que ele imprime.
-3. Publicar release no GitHub com o `.deb` anexado.
-4. Suporte a `.apkm` foi declarado mas só `.xapk`/`.apks` foram testados.
-5. Considerar clonar um prefixo com .NET pronto em vez de rodar `dotnet48` do
+1. Testar em campo os três comandos novos: `tandem desinstalar` (remover o
+   7-Zip), `tandem programas` (abrir sem passar pelo menu do sistema) e
+   `tandem preparar` numa máquina sem tudo instalado.
+2. Duplo clique num `.xapk` de verdade. Os tipos MIME agora estão registrados
+   (`src/mime/tandem.xml`); antes o sistema via só um ZIP genérico e o suporte
+   a pacotes divididos era inalcançável pelo duplo clique.
+3. Um `.exe` que **falte** alguma coisa, para o laço roda→detecta→instala
+   finalmente trabalhar. O 7-Zip foi fácil demais: não depende de nada.
+4. Publicar release no GitHub com o `.deb` anexado.
+5. Suporte a `.apkm` foi declarado mas só `.xapk`/`.apks` foram testados.
+6. Considerar clonar um prefixo com .NET pronto em vez de rodar `dotnet48` do
    zero (30 min, alta taxa de falha) — ideia levantada, não implementada,
    requer cuidado para nunca ler de prefixo protegido em uso.
+7. Um painel de ideação de seis lentes rodou e gerou 31 ideias julgadas; dois
+   agentes (roteiro e crítico de completude) morreram no limite de sessão. Os
+   achados que sobreviveram viraram os consertos de SIGPIPE, trava e
+   winetricks. Falta a síntese estratégica.
 
 ## Ambiente da máquina de desenvolvimento
 
