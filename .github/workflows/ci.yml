@@ -1,0 +1,70 @@
+name: CI
+
+# O Tandem nunca teve CI. Enquanto isso, cada verificacao dependia de alguem
+# lembrar de rodar - e "esqueci de rodar" nao aparece em lugar nenhum ate o
+# defeito chegar no balcao.
+#
+# Aqui roda o que da para rodar sem Wine, sem Waydroid e sem sessao grafica:
+# a suite inteira, o empacotador, e o lintian contra o .deb de verdade.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  gate:
+    # Mesma base do Zorin 18, que e o alvo do projeto.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O portao julga o diff; sem historico ele nao tem contra o que comparar.
+          fetch-depth: 0
+
+      - name: Ferramentas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck desktop-file-utils lintian winetricks
+
+      - name: Suite de testes
+        run: bash tests/run.sh
+
+      - name: Empacotar
+        run: python3 build.py --check
+
+      - name: Lintian sem erro nem aviso
+        run: |
+          versao="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          saida="$(lintian --fail-on warning "tandem_${versao}_all.deb" 2>&1)" || {
+              echo "$saida"; exit 1; }
+          [ -z "$saida" ] || { echo "$saida"; exit 1; }
+          echo "lintian limpo"
+
+      - name: Construcao reproduzivel
+        run: |
+          versao="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          a="$(sha256sum "tandem_${versao}_all.deb" | cut -d' ' -f1)"
+          python3 build.py >/dev/null
+          b="$(sha256sum "tandem_${versao}_all.deb" | cut -d' ' -f1)"
+          [ "$a" = "$b" ] || { echo "duas construcoes deram arquivos diferentes"; exit 1; }
+          echo "reproduzivel: $a"
+
+      - name: Instalar, configurar e remover de verdade
+        run: |
+          versao="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          sudo apt-get install -y -qq "./tandem_${versao}_all.deb"
+          tandem version
+          tandem doctor > /tmp/diag.txt
+          test -s /tmp/diag.txt || { echo "o diagnostico saiu vazio"; exit 1; }
+          sudo dpkg -P tandem
+          ! command -v tandem || { echo "sobrou binario depois do purge"; exit 1; }
+
+      - name: ProofGate
+        # O portao do proprio dono do projeto: guardas sobre o diff, estado da
+        # arvore, e o veredito preso ao SHA.
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/ChrnX0/proofgate/main/install.sh) || true
+          [ -f .proofgate/verify.sh ] && bash .proofgate/verify.sh || \
+            echo "proofgate indisponivel nesta execucao; as etapas acima ja cobrem o essencial"

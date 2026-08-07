@@ -1,4 +1,4 @@
-.TH TANDEM 1 "2025-01-01" "tandem 3.1" "Comandos do usuário"
+.TH TANDEM 1 "2025-01-01" "tandem 3.2" "Comandos do usuário"
 .SH NOME
 tandem \- roda programas Windows e aplicativos Android no Linux
 .SH SINOPSE
@@ -47,9 +47,64 @@ Instala ou executa o arquivo, escolhendo Wine ou Android pelo tipo.
 .B tandem android
 Abre a tela do Android.
 .TP
+.B "tandem preparar"
+Instala o que falta — Wine, winetricks, suporte a 32 bits, adb e o Android
+(Waydroid) — e inicializa o Android. Pede a senha uma vez só. Isso não pode
+acontecer durante a instalação do pacote: o
+.BR dpkg (1)
+segura uma trava enquanto o
+.I postinst
+roda, e um
+.BR apt-get (8)
+lá dentro esperaria para sempre.
+.TP
+.BI "tandem programas " [nome]
+Lista os programas Windows instalados e abre o escolhido, sem depender do
+menu do sistema. Sob Wayland o GNOME só relê a lista de aplicativos depois
+de sair e entrar na conta, então um programa recém-instalado não existe para
+o usuário até o próximo login.
+.TP
+.BI "tandem desinstalar " [nome]
+Remove um programa Windows e limpa os atalhos que ficaram apontando para
+nada. Só funciona no perfil do Tandem: desinstalar altera o perfil, e perfil
+de terceiro é intocável.
+.TP
 .B tandem doctor
-Mostra o diagnóstico do ambiente: versão do Wine, suporte a 32 bits,
-estado do Waydroid e perfis protegidos.
+Mostra o diagnóstico do ambiente: versão do Wine, suporte a 32 e 64 bits,
+estado do Waydroid e perfis protegidos. Diz o que EXISTE.
+.TP
+.B tandem autoteste
+Exercita o Tandem nesta máquina e diz o que FUNCIONA — que não é a mesma
+pergunta. Uma peça instalada pode não funcionar: já aconteceu de o
+.BR zenity (1)
+estar presente e mesmo assim recusar todo texto acentuado, apagando a
+interface inteira sem deixar rastro. O autoteste roda cada coisa de verdade
+e olha o resultado; onde não dá para exercitar, ele diz que pulou em vez de
+fingir que aprovou.
+.TP
+.BI "tandem alternativas " nome
+Procura um programa de Linux que faça o trabalho de um programa de Windows.
+Separa o que É o mesmo programa com versão oficial para Linux daquilo que
+apenas faz algo parecido, sempre dizendo o que muda.
+.TP
+.BI "tandem receita " programa
+Exporta o que o Tandem aprendeu sobre um programa, num arquivo de texto
+pequeno que pode ser conferido e enviado a outra pessoa.
+.TP
+.BI "tandem receita --importar " "receita programa"
+Usa a receita de outra pessoa. A receita é recusada se não se declarar como
+tal, se for de outro programa, ou se trouxer nome de componente com
+caractere fora do esperado — ela vira argumento do
+.BR winetricks (1),
+e entrada vinda de fora não pode carregar comando.
+.TP
+.BI "tandem memoria " [nome]
+Mostra o que o Tandem aprendeu sobre cada programa: quais componentes
+resolveram, quais não resolveram, se abriu e quanto tempo levou.
+.TP
+.BI "tandem esquecer " nome
+Apaga o que ele aprendeu sobre um programa. Da próxima vez ele descobre de
+novo.
 .TP
 .B tandem repair
 Reaplica as associações de arquivo. Use quando o duplo clique abrir o
@@ -78,6 +133,17 @@ Prefixos criados pelo Tandem trazem o arquivo
 na raiz. A lista explícita de
 .B tandem protect
 tem precedência sobre essa marca.
+.SH EVIDÊNCIA
+O
+.B doctor
+e o
+.B autoteste
+respondem perguntas diferentes, e a diferença já custou caro neste projeto.
+Listar que uma peça está instalada é evidência fraca: prova que ela existe,
+não que funciona. Cinco defeitos encontrados em campo eram invisíveis para
+uma lista e visíveis para um exercício — entre eles a janela de erro que
+nunca abria e a barra de progresso que derrubava o programa inteiro.
+Antes de confiar que algo funciona aqui, exercite.
 .SH ARQUIVOS
 .TP
 .I ~/.local/share/tandem/wine

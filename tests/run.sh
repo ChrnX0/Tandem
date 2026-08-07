@@ -269,6 +269,46 @@ fi
 # Memoria de um programa nao pode vazar para outro.
 igual "cada programa tem a sua memoria" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
 
+secao "portao de evidencia (proofgate)"
+
+if [ -f "$RAIZ/proofgate.json" ]; then
+    passou "o repositorio declara a propria stack para o portao"
+    # Sem isto o portao passa verde sem rodar teste nenhum: a deteccao
+    # automatica so conhece ecossistemas com manifesto, e shell nao tem.
+    if grep -q '"test": *"bash tests/run.sh"' "$RAIZ/proofgate.json"; then
+        passou "o portao sabe rodar a suite deste projeto"
+    else
+        falhou "o portao sabe rodar a suite deste projeto" "commands.test" "ausente"
+    fi
+    if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$RAIZ/proofgate.json" 2>/dev/null; then
+        passou "proofgate.json e JSON valido"
+    else
+        falhou "proofgate.json e JSON valido" "JSON" "malformado"
+    fi
+else
+    pulou "portao de evidencia" "proofgate.json ausente"
+fi
+
+# O acoplamento declarado no portao tem que ser verdade: todo comando que o
+# programa oferece precisa estar no manual, senao o pacote documenta uma
+# coisa e faz outra.
+faltando_no_manual=""
+for c in preparar programas desinstalar doctor autoteste repair backup \
+         restore protect alternativas receita memoria esquecer logs; do
+    grep -q "tandem $c" "$RAIZ/man/tandem.1" || faltando_no_manual="$faltando_no_manual $c"
+done
+igual "todo comando esta documentado no manual" "" "$faltando_no_manual"
+
+# E o contrario: o manual nao pode prometer comando que nao existe.
+promete_demais=""
+for c in $(grep -oE '^\.BI? "?tandem ([a-z]+)' "$RAIZ/man/tandem.1" |
+           awk '{print $NF}' | tr -d '"' | sort -u); do
+    grep -q "^  tandem $c\b\|^    $c|" "$RAIZ/src/bin/tandem" ||
+        grep -qE "^    $c\||^    $c\)" "$RAIZ/src/bin/tandem" ||
+        promete_demais="$promete_demais $c"
+done
+igual "o manual nao promete comando inexistente" "" "$promete_demais"
+
 secao "receitas: conhecimento coletivo sem servidor"
 
 t_memoria_grava "$MEM_A" RESULTADO abriu

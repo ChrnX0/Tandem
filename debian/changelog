@@ -1,26 +1,26 @@
-tandem (3.1) unstable; urgency=medium
+tandem (3.2) unstable; urgency=medium
 
-  * Novo: receitas. A memoria de um programa vira um arquivo de texto
-    pequeno e legivel que o dono confere e manda para outra pessoa -
-    "tandem receita <programa>" exporta, "tandem receita --importar
-    <receita> <programa>" usa a de outrem. E o conhecimento coletivo sem
-    servidor nenhum.
-  * A direcao e sempre de fora para dentro: o Tandem LE receitas e nunca
-    envia nada para lugar nenhum. Um programa que manda dados sozinho nao
-    teria lugar numa maquina de frente de caixa, e uma base escrita por
-    qualquer um seria superficie de ataque.
-  * Tres recusas, porque receita vinda de fora e entrada nao confiavel:
-    arquivo que nao se declara receita; receita de OUTRO programa (a
-    identidade e do arquivo, entao aplicar a errada ensinaria a licao
-    errada sem ninguem perceber); e nome de componente com qualquer
-    caractere fora de letras, numeros, ponto, hifen e sublinhado. Esta
-    ultima e a que importa: o verbo vira argumento de "winetricks -q", e
-    sem a peneira uma receita poderia carregar um comando junto do nome.
-  * Receita importada vira memoria, e memoria so SUGERE - o Tandem
-    continua perguntando antes de instalar qualquer coisa.
-  * Corrigido na suite: a secao de testes estava duplicada por um replace
-    que casou duas vezes, e as bibliotecas resolviam para o pacote
-    instalado em vez do repositorio.
+  * Novo: "tandem autoteste". O doctor LISTA o que existe; o autoteste
+    EXERCITA e diz o que funciona - e a diferenca ja custou caro aqui.
+    Cinco defeitos encontrados em campo eram invisiveis para uma lista:
+    zenity instalado mas recusando texto acentuado, o cano de progresso
+    matando o processo ao ser escrito, a trava impossivel de criar, o
+    diagnostico gravando zero byte em arquivo, e o erro "mostrado" numa
+    janela que nunca abriu. Onde nao da para exercitar, ele diz que pulou
+    em vez de fingir que aprovou.
+  * O repositorio ganha portao de evidencia (proofgate.json) e CI. O portao
+    nao enxergava a suite: e projeto de shell com runner proprio, e a
+    deteccao automatica so conhece ecossistemas com manifesto - passava
+    verde sem rodar um teste sequer. Agora roda os 206 testes, o shellcheck
+    e a checagem de sintaxe, e declara os arquivos que so fazem sentido
+    juntos (control com changelog, tandem com o manual, winedeps com os
+    testes).
+  * Primeiro CI do projeto: suite, empacotamento, lintian sem aviso,
+    construcao reproduzivel, e um ciclo real de instalar-configurar-remover
+    num Ubuntu 24.04, que e a base do Zorin 18.
+  * O manual documenta os comandos novos, e um teste confere os dois
+    sentidos: nenhum comando fica sem documentacao, e o manual nao promete
+    comando que nao existe.
 
- -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 10:00:00 +0000
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 11:00:00 +0000
 

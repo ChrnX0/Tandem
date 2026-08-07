@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="3.1"
+VERSAO="3.2"
 
 uso() {
     cat <<'AJUDA'
@@ -16,7 +16,8 @@ Tandem - roda programas Windows e apps Android no Linux.
   tandem programas [nome]     lista e abre os programas Windows instalados
   tandem desinstalar [nome]   remove um programa Windows instalado
   tandem android              abre a tela do Android
-  tandem doctor               diagnostico do ambiente
+  tandem doctor               diagnostico do ambiente (o que existe)
+  tandem autoteste            exercita de verdade (o que funciona)
   tandem repair               reaplica as associacoes de arquivo
   tandem backup               salva o ambiente Windows
   tandem restore              restaura o ambiente Windows
@@ -393,6 +394,126 @@ Se você encontrar uma, ela pode ser acrescentada em uma linha."
     return 1
 }
 
+# -------------------------------------------------------------- autoteste
+#
+# O "doctor" LISTA: diz que o zenity esta instalado, que o locale existe, que
+# o Wine responde. Isso e evidencia fraca - prova que a peca esta la, nao que
+# ela funciona.
+#
+# Cinco defeitos encontrados em campo eram invisiveis para uma lista e
+# visiveis para um exercicio:
+#   - zenity instalado, mas recusando todo texto acentuado (locale ausente)
+#   - o cano de progresso existindo, mas matando o processo ao ser escrito
+#   - a trava configurada, mas impossivel de criar
+#   - o doctor funcionando no terminal, mas gravando zero byte num arquivo
+#   - o erro sendo "mostrado" numa janela que nunca abriu
+#
+# O autoteste EXERCITA. Cada verificacao roda a coisa de verdade e olha o
+# resultado. Onde o exercicio nao e possivel sem o dono ver, ele pergunta.
+acao_autoteste() {
+    local ok=0 falhou=0 saida="" tmp
+    tmp="$(mktemp -d)"
+    trap 'rm -rf -- "$tmp"' RETURN
+
+    passa() { ok=$((ok+1));     saida="$saida  PASSA   $1"$'\n'; }
+    falha() { falhou=$((falhou+1)); saida="$saida  FALHA   $1"$'\n         '"$2"$'\n'; }
+
+    # 1. A mensagem de erro chega em ALGUM lugar? Sem isto, todo o resto do
+    #    diagnostico e inutil: o dono nunca saberia do problema.
+    if [ -n "$(t_erro "autoteste: ignore esta mensagem" 2>&1 1>/dev/null)" ] || t_tem_gui; then
+        passa "as mensagens de erro têm para onde ir"
+    else
+        falha "as mensagens de erro somem" "sem janela e sem terminal, um erro daqui não chega a ninguém"
+    fi
+
+    # 2. O texto acentuado sobrevive? E o defeito que apagou a interface
+    #    inteira numa maquina real, e nenhuma lista o pegaria.
+    if [ "$(locale charmap 2>/dev/null)" = "UTF-8" ]; then
+        passa "o sistema aceita texto com acento (charmap UTF-8)"
+    else
+        falha "o texto com acento não passa" "o locale em vigor não é UTF-8; as janelas do Tandem não vão abrir"
+    fi
+
+    # 3. O diagnostico consegue ser gravado num arquivo? Se nao, o dono nao
+    #    tem como mandar para ninguem.
+    if ( "$0" version > "$tmp/redir.txt" 2>/dev/null ) && [ -s "$tmp/redir.txt" ]; then
+        passa "o diagnóstico pode ser gravado e enviado"
+    else
+        falha "o diagnóstico não pode ser enviado" "gravar em arquivo produziu zero byte"
+    fi
+
+    # 4. A trava do duplo clique pode ser criada? Se nao, o duplo clique
+    #    para de funcionar - e em silencio, foi o que aconteceu.
+    if ( exec 7> "$TANDEM_TRAVAS/autoteste.lock" ) 2>/dev/null &&
+       rm -f "$TANDEM_TRAVAS/autoteste.lock" 2>/dev/null; then
+        passa "a trava do duplo clique pode ser criada ($TANDEM_TRAVAS)"
+    else
+        falha "a trava não pode ser criada" "em $TANDEM_TRAVAS — disco cheio, sem permissão, ou pasta em rede"
+    fi
+
+    # 5. A barra de progresso aguenta a janela sumir? Exercitado de verdade:
+    #    abre, fecha o leitor, escreve. Antes isso matava o Tandem com 141.
+    if t_tem_gui && command -v zenity >/dev/null 2>&1; then
+        ( t_progresso_abre "autoteste"; kill "${TANDEM_PROG_PID:-0}" 2>/dev/null
+          sleep 0.3; t_progresso_texto "depois de fechada"; t_progresso_fecha ) >/dev/null 2>&1
+        if [ $? -lt 128 ]; then
+            passa "fechar a janela de progresso não derruba o Tandem"
+        else
+            falha "fechar a janela de progresso derruba o Tandem" "o processo recebeu um sinal em vez de continuar"
+        fi
+    else
+        saida="$saida  --      barra de progresso (sem sessão gráfica para exercitar)"$'\n'
+    fi
+
+    # 6. O leitor de PE funciona nesta maquina? Exercitado contra um binario
+    #    Windows de verdade, se houver um a mao no prefixo.
+    local umexe
+    umexe="$(find "$TANDEM_PREFIXO_PADRAO/drive_c" -name '*.exe' -size -20M 2>/dev/null | head -1)"
+    if [ -n "$umexe" ]; then
+        if [ -n "$(python3 "$TANDEM_LIB/peinfo.py" "$umexe" 2>/dev/null | sed -n 's/^ARQUITETURA=//p')" ]; then
+            passa "o pré-voo lê um programa Windows de verdade"
+        else
+            falha "o pré-voo não conseguiu ler um programa" "$umexe"
+        fi
+    else
+        saida="$saida  --      pré-voo do PE (nenhum programa Windows instalado ainda)"$'\n'
+    fi
+
+    # 7. As associacoes apontam para o Tandem? E o que faz o duplo clique
+    #    chegar aqui; sem isso o resto nao importa.
+    if command -v xdg-mime >/dev/null 2>&1; then
+        local dono; dono="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
+        if [ "$dono" = "tandem-exe.desktop" ]; then
+            passa "o duplo clique num .exe vem para o Tandem"
+        else
+            falha "o duplo clique num .exe não vem para o Tandem" "quem responde é: ${dono:-ninguém} — rode: tandem repair"
+        fi
+    fi
+
+    # 8. A protecao dos prefixos alheios esta valendo? Exercita a decisao,
+    #    nao a lista: pergunta ao codigo o que ele faria.
+    local alheio protegidos=0 desprotegidos=""
+    while IFS= read -r alheio; do
+        [ -n "$alheio" ] || continue
+        if t_prefixo_protegido "$alheio"; then protegidos=$((protegidos+1))
+        else desprotegidos="$desprotegidos $alheio"; fi
+    done <<< "$(t_atalhos_wine >/dev/null 2>&1; grep -v '^$' "$TANDEM_PROTEGIDOS" 2>/dev/null)"
+    if [ -n "$desprotegidos" ]; then
+        falha "um perfil da lista não está sendo protegido" "$desprotegidos"
+    elif [ "$protegidos" -gt 0 ]; then
+        passa "os $protegidos perfil(is) da sua lista são recusados pela automação"
+    else
+        saida="$saida  --      proteção de perfis (nenhum perfil de terceiro nesta máquina)"$'\n'
+    fi
+
+    printf 'Tandem %s — autoteste nesta máquina\n\n%s\n%d passaram, %d falharam.\n%s\n' \
+        "$VERSAO" "$saida" "$ok" "$falhou" \
+        "$([ "$falhou" -gt 0 ] && printf 'Cada FALHA acima é uma coisa que não vai funcionar quando você precisar.' \
+                                || printf 'O Tandem exercitou o que dava para exercitar aqui, e tudo respondeu.')" |
+        t_texto "Tandem - Autoteste"
+    [ "$falhou" -eq 0 ]
+}
+
 # -------------------------------------------------------------- receitas
 #
 # O conhecimento coletivo sem servidor: a memoria de um programa vira um
@@ -501,6 +622,7 @@ acao_painel() {
             "remover"   "Desinstalar um programa do Windows" \
             "android"   "Abrir a tela do Android" \
             "doctor"    "Ver o diagnóstico do ambiente" \
+            "autoteste" "Testar de verdade se tudo funciona aqui" \
             "backup"    "Salvar o ambiente Windows" \
             "restore"   "Restaurar o ambiente Windows" \
             "repair"    "Consertar a abertura de arquivos com dois cliques" \
@@ -519,6 +641,7 @@ acao_painel() {
             remover)   acao_uninstall ;;
             android)  setsid /usr/bin/tandem-android >/dev/null 2>&1 & ;;
             doctor)   acao_doctor ;;
+            autoteste) acao_autoteste ;;
             backup)   acao_backup ;;
             restore)  acao_restore ;;
             repair)   /usr/bin/tandem-repair ;;
@@ -538,6 +661,7 @@ case "${1:-}" in
     desinstalar|uninstall|remover) shift; acao_uninstall "$@" ;;
     android)              exec /usr/bin/tandem-android ;;
     doctor|diagnostico)   acao_doctor ;;
+    autoteste|autotest)   acao_autoteste ;;
     repair|consertar)     exec /usr/bin/tandem-repair ;;
     backup)               acao_backup ;;
     restore|restaurar)    acao_restore ;;
