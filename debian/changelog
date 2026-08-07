@@ -1,14 +1,19 @@
-tandem (2.4) unstable; urgency=medium
+tandem (2.5) unstable; urgency=medium
 
-  * O diagnostico volta a poder ser redirecionado. "tandem doctor > arquivo"
-    e "tandem doctor | grep" abriam uma janela e gravavam nada, porque so
-    "[ -t 1 ]" era testado e cano e arquivo eram confundidos com duplo
-    clique. Agora a janela fica reservada ao caso em que ninguem espera o
-    texto na saida padrao.
-  * Sucesso deixa de ser silencioso. Depois de um instalador rodar, o Tandem
-    compara os atalhos de menu de antes e de depois, atualiza o cache do
-    ambiente grafico e diz por qual nome procurar no menu. Antes o programa
-    entrava na maquina e o usuario nao tinha caminho de volta.
+  * Novo: "tandem programas" lista e abre os programas Windows instalados,
+    sem depender do menu do sistema. Sob Wayland o GNOME so relê a lista de
+    aplicativos depois de sair e entrar na conta, entao um programa recem
+    instalado simplesmente nao existia para o usuario ate o proximo login.
+  * Novo: "tandem desinstalar" remove um programa Windows pelo nome, com
+    lista para escolher, e limpa os atalhos que ficaram apontando para nada.
+    Antes o unico caminho era "WINEPREFIX=... wine uninstaller", exatamente
+    o tipo de coisa que este projeto existe para nao exigir de ninguem.
+    So funciona no prefixo do Tandem: desinstalar altera o prefixo, e
+    prefixo de terceiro e intocavel.
+  * O diagnostico passa a afirmar que programas de 64 bits funcionam. Antes
+    so mencionava os 32 bits, que sao a excecao que exige pacote extra, e
+    quem lia concluia que 64 bits nao era suportado - o oposto da verdade.
+    README e LEIAME corrigidos pelo mesmo motivo.
 
- -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 00:15:00 +0000
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 01:00:00 +0000
 

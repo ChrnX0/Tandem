@@ -302,6 +302,25 @@ t_atalhos_wine() {
     find "$HOME/.local/share/applications/wine" -name '*.desktop' 2>/dev/null | LC_ALL=C sort
 }
 
+# So os atalhos do nosso prefixo. Atalho de prefixo alheio esta na mesma
+# pasta mas e do dono dele: nao listamos, nao abrimos, nao apagamos.
+t_atalhos_nossos() {
+    local d
+    while IFS= read -r d; do
+        [ -n "$d" ] || continue
+        grep -qF -- "$TANDEM_PREFIXO_PADRAO" "$d" 2>/dev/null && printf '%s\n' "$d"
+    done <<< "$(t_atalhos_wine)"
+    return 0
+}
+
+# Nome amigavel de um atalho, para mostrar ao usuario.
+t_nome_do_atalho() {
+    local n
+    n="$(sed -n 's/^Name=//p' "$1" 2>/dev/null | head -1)"
+    [ -n "$n" ] || n="$(basename -- "${1%.desktop}")"
+    printf '%s' "$n"
+}
+
 # Compara com a lista de antes e anuncia o que apareceu.
 t_anuncia_atalhos() {
     local antes="$1" novos nomes
@@ -314,6 +333,55 @@ t_anuncia_atalhos() {
     t_ok "Pronto. Procure no menu de aplicativos por:
 
 $nomes"
+    return 0
+}
+
+# --------------------------------------------- programas Windows instalados
+#
+# O Wine mantem a mesma lista do "Adicionar ou remover programas" do Windows,
+# e a expoe por "wine uninstaller --list", uma linha por programa no formato
+#     chave|||nome
+# A chave e o que "wine uninstaller --remove" aceita.
+#
+# Quem chama precisa exportar WINEPREFIX. Programas portateis, que nao trazem
+# desinstalador, nao aparecem aqui - e nao ha o que fazer quanto a isso, entao
+# a mensagem ao usuario tem que dizer isso em vez de deixar a lista muda.
+t_programas_instalados() {
+    command -v wine >/dev/null 2>&1 || return 1
+    wine uninstaller --list 2>/dev/null | grep -- '|||'
+}
+
+# Remove atalhos de menu que apontam para programa que nao existe mais.
+#
+# Depois de desinstalar, o Wine costuma deixar o atalho para tras. Um atalho
+# que nao abre nada e pior que atalho nenhum: o usuario clica, nao acontece
+# nada, e conclui que o computador esta quebrado.
+#
+# So mexemos em atalho que cita o NOSSO prefixo. Atalho de prefixo alheio e
+# do dono dele, mesmo estando na mesma pasta.
+t_limpa_atalhos_orfaos() {
+    local base d rel lnk n=0
+    base="$HOME/.local/share/applications/wine/Programs"
+    [ -d "$base" ] || return 0
+    while IFS= read -r d; do
+        [ -n "$d" ] || continue
+        grep -qF -- "$TANDEM_PREFIXO_PADRAO" "$d" 2>/dev/null || continue
+        rel="${d#"$base/"}"; rel="${rel%.desktop}"
+        # O Wine espelha a arvore do Menu Iniciar ao criar o atalho, entao o
+        # .lnk correspondente tem o mesmo caminho relativo.
+        for lnk in \
+            "$TANDEM_PREFIXO_PADRAO/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/$rel.lnk" \
+            "$TANDEM_PREFIXO_PADRAO"/drive_c/users/*/"Start Menu/Programs/$rel.lnk"; do
+            [ -f "$lnk" ] && continue 2
+        done
+        rm -f -- "$d" && n=$((n+1)) && t_diz "atalho orfao removido: $d"
+    done <<< "$(t_atalhos_wine)"
+    if [ "$n" -gt 0 ]; then
+        command -v update-desktop-database >/dev/null 2>&1 &&
+            update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
+        find "$base" -mindepth 1 -type d -empty -delete 2>/dev/null
+    fi
+    printf '%s' "$n"
     return 0
 }
 
@@ -336,6 +404,15 @@ t_pe_arch() {
 t_tem_wine32() {
     [ -d /usr/lib/wine/i386-unix ] || [ -d /usr/lib/i386-linux-gnu/wine ] ||
     [ -d /opt/wine-stable/lib/wine/i386-unix ]
+}
+
+# O caso normal, e o que o prefixo do Tandem usa (WINEARCH=win64). Existe
+# como funcao propria porque o diagnostico precisa AFIRMAR que 64 bits
+# funciona: falar so do 32, que e a excecao, faz o leitor concluir que 64
+# nao e suportado.
+t_tem_wine64() {
+    [ -d /usr/lib/wine/x86_64-unix ] || [ -d /usr/lib/x86_64-linux-gnu/wine ] ||
+    [ -d /opt/wine-stable/lib/wine/x86_64-unix ]
 }
 
 # ---------------------------------------------------------------- waydroid

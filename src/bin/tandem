@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="2.4"
+VERSAO="2.5"
 
 uso() {
     cat <<'AJUDA'
@@ -12,6 +12,8 @@ Tandem - roda programas Windows e apps Android no Linux.
 
   tandem                      abre o painel
   tandem install <arquivo>    instala/executa (.exe .msi .apk .xapk .apks)
+  tandem programas [nome]     lista e abre os programas Windows instalados
+  tandem desinstalar [nome]   remove um programa Windows instalado
   tandem android              abre a tela do Android
   tandem doctor               diagnostico do ambiente
   tandem repair               reaplica as associacoes de arquivo
@@ -49,7 +51,10 @@ acao_doctor() {
     out+="PROGRAMAS WINDOWS\n"
     if command -v wine >/dev/null 2>&1; then
         out+="  wine: $(wine --version 2>/dev/null)\n"
-        t_tem_wine32 && out+="  32 bits: sim\n" || out+="  32 bits: NÃO (programas antigos não abrem)\n"
+        t_tem_wine64 && out+="  programas de 64 bits: sim\n" ||
+            out+="  programas de 64 bits: NÃO (o Wine desta máquina é só de 32 bits)\n"
+        t_tem_wine32 && out+="  programas de 32 bits: sim\n" ||
+            out+="  programas de 32 bits: NÃO (programas antigos não abrem)\n"
         command -v winetricks >/dev/null 2>&1 &&
             out+="  winetricks: sim\n" || out+="  winetricks: NÃO (não instala dependências)\n"
         [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] &&
@@ -129,6 +134,151 @@ $p
 O Tandem nunca vai instalar nem alterar nada aí dentro."
 }
 
+# Escolhe um item de uma lista de nomes. Devolve o nome escolhido.
+# Uma coluna so, de proposito: as opcoes de coluna escondida mudaram entre
+# as versoes do zenity, e nao vale a pena depender delas.
+escolher() {
+    local titulo="$1" pergunta="$2"; shift 2
+    if t_tem_gui && command -v zenity >/dev/null 2>&1; then
+        zenity --list --title="$titulo" --text="$pergunta" \
+               --width=520 --height=400 --column="Programa" "$@" 2>/dev/null
+        return $?
+    fi
+    return 1
+}
+
+# ---------------------------------------------------------------- programas
+#
+# O menu do sistema nao e caminho confiavel de volta ao programa instalado:
+# sob Wayland o GNOME so relê a lista de aplicativos depois de sair e entrar
+# na conta, e ate la o programa instalado simplesmente nao existe para o
+# usuario. O Tandem sabe o que instalou, entao ele mesmo mostra e abre.
+acao_programas() {
+    local filtro="${1:-}" d nome escolha achou="" nomes=()
+    local lista; lista="$(t_atalhos_nossos)"
+    if [ -z "$lista" ]; then
+        t_erro "Nenhum programa do Windows instalado pelo Tandem por enquanto.
+
+Programas que não criam atalho no Menu Iniciar não aparecem aqui."
+        return 1
+    fi
+
+    if [ -n "$filtro" ]; then
+        while IFS= read -r d; do
+            [ -n "$d" ] || continue
+            nome="$(t_nome_do_atalho "$d")"
+            case "${nome,,}" in *"${filtro,,}"*) achou="$d"; break ;; esac
+        done <<< "$lista"
+        [ -n "$achou" ] || { t_erro "Não achei nenhum programa com \"$filtro\" no nome."; return 1; }
+        setsid gio launch "$achou" >/dev/null 2>&1 &
+        t_ok "Abrindo $(t_nome_do_atalho "$achou")..."
+        return 0
+    fi
+
+    while IFS= read -r d; do
+        [ -n "$d" ] || continue
+        nomes+=("$(t_nome_do_atalho "$d")")
+    done <<< "$lista"
+
+    # Sem janela (terminal, SSH), a lista sai em texto. O "escolher" devolve
+    # vazio tanto no Cancelar quanto na ausencia de zenity; no primeiro caso
+    # a listagem e inofensiva, no segundo e o unico caminho que resta.
+    escolha="$(escolher "Tandem - Programas do Windows" \
+                        "Qual programa você quer abrir?" "${nomes[@]}")"
+    if [ -z "$escolha" ]; then
+        printf 'Programas do Windows instalados pelo Tandem:\n\n'
+        printf '  %s\n' "${nomes[@]}"
+        printf '\nPara abrir um deles:  tandem programas "<parte do nome>"\n'
+        return 0
+    fi
+    acao_programas "$escolha"
+}
+
+# ------------------------------------------------------------- desinstalar
+#
+# O usuario-alvo nao sabe usar o Wine, e nao tem por que saber. Sem isto o
+# unico caminho era "WINEPREFIX=... wine uninstaller", que e exatamente o
+# tipo de coisa que este projeto existe para nao exigir de ninguem.
+acao_uninstall() {
+    local filtro="${1:-}" pref="$TANDEM_PREFIXO_PADRAO" lista linha nome
+    local escolha achou="" nomes=()
+
+    command -v wine >/dev/null 2>&1 || { t_erro "O Wine não está instalado."; return 1; }
+    [ -f "$pref/system.reg" ] || {
+        t_erro "Nenhum programa do Windows foi instalado pelo Tandem ainda."; return 1; }
+
+    # Desinstalar altera o prefixo, entao so vale para o nosso. Prefixo de
+    # terceiro - o do sistema de frente de caixa, por exemplo - e intocavel.
+    export WINEPREFIX="$pref"
+    lista="$(t_programas_instalados)"
+    if [ -z "$lista" ]; then
+        t_erro "Não encontrei nenhum programa do Windows para remover.
+
+Programas que não trazem desinstalador próprio não aparecem nesta lista."
+        return 1
+    fi
+
+    while IFS= read -r linha; do
+        [ -n "$linha" ] || continue
+        nomes+=("${linha#*|||}")
+    done <<< "$lista"
+
+    if [ -z "$filtro" ]; then
+        escolha="$(escolher "Tandem - Remover programa" \
+                            "Qual programa você quer remover?" "${nomes[@]}")"
+        if [ -z "$escolha" ]; then
+            printf 'Programas do Windows que podem ser removidos:\n\n'
+            printf '  %s\n' "${nomes[@]}"
+            printf '\nPara remover:  tandem desinstalar "<parte do nome>"\n'
+            return 0
+        fi
+        filtro="$escolha"
+    fi
+
+    while IFS= read -r linha; do
+        [ -n "$linha" ] || continue
+        nome="${linha#*|||}"
+        case "${nome,,}" in *"${filtro,,}"*) achou="${linha%%|||*}"; break ;; esac
+    done <<< "$lista"
+    [ -n "$achou" ] || { t_erro "Não achei nenhum programa com \"$filtro\" no nome."; return 1; }
+
+    # Confirmacao: janela; senao o terminal; sem nenhum dos dois, recusa
+    # DIZENDO por que - remover programa sem ninguem confirmando e risco,
+    # e desistir calado e defeito.
+    if ! t_pergunta "Remover este programa do Windows?
+
+$nome
+
+Os arquivos dele serão apagados." "Remover" "Cancelar"; then
+        if [ -t 0 ]; then
+            printf 'Remover "%s"? Os arquivos dele serão apagados. [s/N] ' "$nome"
+            read -r r
+            case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; return 1 ;; esac
+        else
+            t_erro "Não removi $nome: preciso de uma confirmação e não há janela nem terminal para perguntar."
+            return 1
+        fi
+    fi
+
+    t_progresso_abre "Removendo $nome..."
+    wine uninstaller --remove "$achou" >>"$LOG" 2>&1
+    local c=$?
+    wineserver -w 2>/dev/null
+    t_progresso_fecha
+
+    local orfaos; orfaos="$(t_limpa_atalhos_orfaos)"
+    t_diz "desinstalar $nome: codigo $c, $orfaos atalho(s) orfao(s) removido(s)"
+
+    if t_programas_instalados | grep -qF -- "$achou"; then
+        t_erro "Não consegui remover $nome.
+
+Alguns programas só saem pelo desinstalador deles. Abra o Tandem, escolha o programa e procure por \"Uninstall\"."
+        return 1
+    fi
+    t_ok "$nome foi removido."
+    return 0
+}
+
 acao_logs() {
     local l; l="$(ls -1t "$TANDEM_ESTADO"/*.log 2>/dev/null | head -1)"
     [ -n "$l" ] || { t_erro "Ainda não há registros."; return 1; }
@@ -145,6 +295,8 @@ acao_painel() {
             --text="O que você quer fazer?" \
             --column="Ação" --column="Descrição" --hide-header \
             "instalar"  "Instalar ou abrir um arquivo (.exe .msi .apk .xapk)" \
+            "programas" "Abrir um programa do Windows já instalado" \
+            "remover"   "Desinstalar um programa do Windows" \
             "android"   "Abrir a tela do Android" \
             "doctor"    "Ver o diagnóstico do ambiente" \
             "backup"    "Salvar o ambiente Windows" \
@@ -159,6 +311,8 @@ acao_painel() {
                      --file-filter="Programas e apps | *.exe *.msi *.apk *.xapk *.apks *.apkm" \
                      --file-filter="Todos | *" 2>/dev/null)" || continue
                 acao_install "$f" ;;
+            programas) acao_programas ;;
+            remover)   acao_uninstall ;;
             android)  setsid /usr/bin/tandem-android >/dev/null 2>&1 & ;;
             doctor)   acao_doctor ;;
             backup)   acao_backup ;;
@@ -174,6 +328,8 @@ acao_painel() {
 case "${1:-}" in
     ""|painel|panel)      acao_painel ;;
     install|instalar|abrir) shift; acao_install "$@" ;;
+    programas|apps)       shift; acao_programas "$@" ;;
+    desinstalar|uninstall|remover) shift; acao_uninstall "$@" ;;
     android)              exec /usr/bin/tandem-android ;;
     doctor|diagnostico)   acao_doctor ;;
     repair|consertar)     exec /usr/bin/tandem-repair ;;

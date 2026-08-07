@@ -42,8 +42,11 @@ can act on.
 - **Routes by file type.** `.msi` goes through `msiexec /i`, `.lnk` through
   `wine start /unix`. Associating `.msi` with plain `wine` — a common mistake —
   fails every time.
-- **Checks architecture before running.** A 32-bit program on a system without
-  `wine32` gets an actionable message, not a silent exit.
+- **Runs 64-bit and 32-bit programs.** 64-bit is the normal case and works out
+  of the box — the prefix is created as `win64`. 32-bit programs also run, but
+  they need `wine32`, which is a separate package; without it Tandem says so
+  and how to fix it, instead of exiting silently. ARM builds of Windows
+  software are detected and refused with an explanation.
 - **Never fails silently.** Every failure path ends in a dialog. The original
   sin of "double-click and nothing happens" is treated as a bug.
 
@@ -83,7 +86,7 @@ tandem protect ~/.wine-something
 Download the `.deb` from [Releases](../../releases) and double-click it, or:
 
 ```bash
-sudo apt install ./tandem_2.4_all.deb
+sudo apt install ./tandem_2.5_all.deb
 ```
 
 Then check your environment:
@@ -99,8 +102,9 @@ Tandem does not install Wine or Waydroid — it connects what you already have.
 
 | For | You need |
 |---|---|
-| Windows programs | `wine`, and `winetricks` for automatic dependencies |
-| 32-bit programs | `wine32` (`sudo dpkg --add-architecture i386`) |
+| Windows programs, 64-bit | `wine` — the normal case, nothing else needed |
+| Windows programs, 32-bit | also `wine32` (`sudo dpkg --add-architecture i386`) |
+| Automatic dependencies | `winetricks` |
 | Android apps | [`waydroid`](https://docs.waydro.id/), initialized |
 | Split packages (`.xapk`) | `adb` |
 | ARM-only apps on x86 | [libhoudini / libndk](https://github.com/casualsnek/waydroid_script) |

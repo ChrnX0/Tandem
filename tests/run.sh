@@ -269,6 +269,68 @@ DEPOIS_AT="$(t_atalhos_wine)"
 igual "atalho ja conhecido nao e reanunciado" \
       "" "$(t_anuncia_atalhos "$DEPOIS_AT" 2>&1 1>/dev/null)"
 
+secao "programas instalados e desinstalacao"
+
+# "wine uninstaller --list" imita a lista do Adicionar/Remover Programas.
+FALSO="$TMPRAIZ/bin"; mkdir -p "$FALSO"
+cat > "$FALSO/wine" <<'FIM'
+#!/bin/sh
+if [ "$1" = uninstaller ] && [ "$2" = --list ]; then
+    printf '7-Zip|||7-Zip 24.08 (x64)\n{GUID-1}|||Programa de Teste\n'
+    exit 0
+fi
+exit 0
+FIM
+chmod +x "$FALSO/wine"
+PATH="$FALSO:$PATH"
+
+igual "le a lista de programas do Wine" \
+      "7-Zip 24.08 (x64) Programa de Teste" \
+      "$(t_programas_instalados | sed 's/.*|||//' | tr '\n' ' ' | sed 's/ $//')"
+
+igual "extrai a chave que o desinstalador aceita" \
+      "7-Zip" "$(t_programas_instalados | head -1 | sed 's/|||.*//')"
+
+# Atalhos: so os do nosso prefixo, e orfao e o que perdeu o .lnk.
+WP="$HOME/.local/share/applications/wine/Programs"
+mkdir -p "$WP/7-Zip" "$WP/Alheio"
+printf '[Desktop Entry]\nName=7-Zip File Manager\nExec=env WINEPREFIX="%s" wine x\n' \
+       "$PREF_NOSSO" > "$WP/7-Zip/7-Zip File Manager.desktop"
+printf '[Desktop Entry]\nName=Coisa Alheia\nExec=env WINEPREFIX="%s" wine x\n' \
+       "$PREF_ALHEIO" > "$WP/Alheio/Coisa Alheia.desktop"
+
+igual "lista so os atalhos do nosso prefixo" \
+      "1" "$(t_atalhos_nossos | wc -l)"
+igual "le o nome amigavel do atalho" \
+      "7-Zip File Manager" "$(t_nome_do_atalho "$WP/7-Zip/7-Zip File Manager.desktop")"
+
+# Com o .lnk presente, o atalho e valido e nao pode ser removido.
+LNKDIR="$PREF_NOSSO/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/7-Zip"
+mkdir -p "$LNKDIR"; : > "$LNKDIR/7-Zip File Manager.lnk"
+igual "atalho com programa instalado nao e removido" "0" "$(t_limpa_atalhos_orfaos)"
+igual "  e continua no disco" \
+      "0" "$([ -f "$WP/7-Zip/7-Zip File Manager.desktop" ]; echo $?)"
+
+# Sem o .lnk, virou botao que nao abre nada: tem que sair.
+rm -f "$LNKDIR/7-Zip File Manager.lnk"
+igual "atalho orfao e removido" "1" "$(t_limpa_atalhos_orfaos)"
+igual "  e sumiu do disco" \
+      "1" "$([ -f "$WP/7-Zip/7-Zip File Manager.desktop" ]; echo $?)"
+igual "  e o atalho alheio foi preservado" \
+      "0" "$([ -f "$WP/Alheio/Coisa Alheia.desktop" ]; echo $?)"
+
+# Sem wine no PATH a lista falha sem quebrar quem chamou.
+igual "sem wine, a lista degrada em silencio controlado" \
+      "" "$(PATH=/nao/existe; t_programas_instalados 2>/dev/null)"
+
+secao "arquitetura do Wine"
+t_tem_wine64; r64=$?
+t_tem_wine32; r32=$?
+case "$r64$r32" in
+    [01][01]) passou "t_tem_wine64 e t_tem_wine32 devolvem 0 ou 1" ;;
+    *) falhou "t_tem_wine64 e t_tem_wine32 devolvem 0 ou 1" "0 ou 1" "$r64$r32" ;;
+esac
+
 secao "locale (o zenity recusa acento em locale inexistente)"
 
 t_locale_existe C.UTF-8;     igual "reconhece locale existente apesar do hifen" "0" "$?"
