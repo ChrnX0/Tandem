@@ -123,6 +123,25 @@ def escolher(verbos):
     return sorted(verbos, key=chave)[0]
 
 
+def familia(v):
+    """Nome do verbo sem a versao: vcrun2022 -> vcrun, dotnet48 -> dotnet."""
+    return re.sub(r"[0-9].*$", "", v)
+
+
+def confianca(verbos):
+    """Da para escolher sozinho entre estes verbos?
+
+    Um candidato so: obvio. Varios da MESMA familia: o desempate por versao
+    e defensavel, porque o runtime mais novo serve o anterior. Familias
+    diferentes (ie8 x wininet x wininet_win2k) e chute, e chute que custa
+    meia hora do dono - nesse caso o indice se cala e a DLL volta a ser
+    "sem traducao conhecida", que e a resposta honesta.
+    """
+    if len(verbos) == 1:
+        return "alta"
+    return "alta" if len({familia(v) for v in verbos}) == 1 else "baixa"
+
+
 def main():
     wt = acha_winetricks(sys.argv[1:])
     if not wt:
@@ -133,8 +152,9 @@ def main():
     linhas = []
     for dll in sorted(indice):
         verbos = indice[dll]
-        linhas.append("%s\t%s\t%s" % (dll, escolher(verbos), ",".join(sorted(verbos))))
-    texto = ("# dll\tverbo\ttodos-os-verbos\n"
+        linhas.append("%s\t%s\t%s\t%s" % (
+            dll, escolher(verbos), confianca(verbos), ",".join(sorted(verbos))))
+    texto = ("# dll\tverbo\tconfianca\ttodos-os-verbos\n"
              "# Gerado por tools/indice-winetricks.py a partir do winetricks\n"
              "# instalado. Nao edite a mao: as decisoes ficam em winedeps.sh.\n"
              + "\n".join(linhas) + "\n")

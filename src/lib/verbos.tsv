@@ -1,249 +1,249 @@
-# dll	verbo	todos-os-verbos
+# dll	verbo	confianca	todos-os-verbos
 # Gerado por tools/indice-winetricks.py a partir do winetricks
 # instalado. Nao edite a mao: as decisoes ficam em winedeps.sh.
-amstream.dll	amstream	amstream
-api-ms-win-crt-conio-l1-1-0.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-api-ms-win-crt-convert-l1-1-0.dll	vcrun2015	vcrun2015
-api-ms-win-crt-environment-l1-1-0.dll	vcrun2015	vcrun2015
-api-ms-win-crt-filesystem-l1-1-0.dll	vcrun2015	vcrun2015
-api-ms-win-crt-heap-l1-1-0.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-api-ms-win-crt-locale-l1-1-0.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-api-ms-win-crt-math-l1-1-0.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-api-ms-win-crt-multibyte-l1-1-0.dll	vcrun2015	vcrun2015
-api-ms-win-crt-private-l1-1-0.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-api-ms-win-crt-process-l1-1-0.dll	vcrun2015	vcrun2015
-api-ms-win-crt-runtime-l1-1-0.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-api-ms-win-crt-stdio-l1-1-0.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-api-ms-win-crt-string-l1-1-0.dll	vcrun2015	vcrun2015
-api-ms-win-crt-time-l1-1-0.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-api-ms-win-crt-utility-l1-1-0.dll	vcrun2015	vcrun2015
-atl100.dll	vcrun2010	vcrun2010
-atl110.dll	vcrun2012	vcrun2012
-atl120.dll	vcrun2013	vcrun2013
-atl140.dll	vcrun2019	vcrun2015,vcrun2017,vcrun2019
-atl80.dll	vcrun2005	vcrun2005
-atl90.dll	vcrun2008	vcrun2008
-avifil32.dll	avifil32	avifil32
-binkw32.dll	binkw32	binkw32
-cabinet.dll	cabinet	cabinet
-cmd.exe	cmd	cmd
-comctl32.dll	comctl32	comctl32
-concrt140.dll	vcrun2022	vcrun2015,vcrun2017,vcrun2019,vcrun2022
-crypt32.dll	crypt32	crypt32,crypt32_winxp
-cscript.exe	wsh57	wsh57
-d3dcompiler_46.dll	d3dcompiler_46	d3dcompiler_46
-d3dcompiler_47.dll	d3dcompiler_47	d3dcompiler_47
-d3drm.dll	d3drm	d3drm
-d3dx10_33.dll	d3dx10	d3dx10
-d3dx10_34.dll	d3dx10	d3dx10
-d3dx10_35.dll	d3dx10	d3dx10
-d3dx10_36.dll	d3dx10	d3dx10
-d3dx10_37.dll	d3dx10	d3dx10
-d3dx10_38.dll	d3dx10	d3dx10
-d3dx10_39.dll	d3dx10	d3dx10
-d3dx10_40.dll	d3dx10	d3dx10
-d3dx10_41.dll	d3dx10	d3dx10
-d3dx10_42.dll	d3dx10	d3dx10
-d3dx10_43.dll	d3dx10	d3dx10
-d3dx9_24.dll	d3dx9	d3dx9
-d3dx9_25.dll	d3dx9	d3dx9
-d3dx9_26.dll	d3dx9	d3dx9
-d3dx9_27.dll	d3dx9	d3dx9
-d3dx9_28.dll	d3dx9	d3dx9
-d3dx9_29.dll	d3dx9	d3dx9
-d3dx9_30.dll	d3dx9	d3dx9
-d3dx9_31.dll	d3dx9	d3dx9
-d3dx9_32.dll	d3dx9	d3dx9
-d3dx9_33.dll	d3dx9	d3dx9
-d3dx9_34.dll	d3dx9	d3dx9
-d3dx9_35.dll	d3dx9	d3dx9
-d3dx9_36.dll	d3dx9	d3dx9
-d3dx9_37.dll	d3dx9	d3dx9
-d3dx9_38.dll	d3dx9	d3dx9
-d3dx9_39.dll	d3dx9	d3dx9
-d3dx9_40.dll	d3dx9	d3dx9
-d3dx9_41.dll	d3dx9	d3dx9
-d3dx9_42.dll	d3dx9	d3dx9
-d3dx9_43.dll	d3dx9	d3dx9
-d3dxof.dll	d3dxof	d3dxof
-dbghelp.dll	dbghelp	dbghelp
-ddraw.dll	cnc_ddraw	cnc_ddraw
-devenum.dll	devenum	devenum
-dinput.dll	dinput	dinput
-dinput8.dll	dinput8	dinput8
-dmband.dll	dmband	dmband
-dmcompos.dll	dmcompos	dmcompos
-dmime.dll	dmime	dmime
-dmloader.dll	dmloader	dmloader
-dmscript.dll	dmscript	dmscript
-dmstyle.dll	dmstyle	dmstyle
-dmsynth.dll	dmsynth	dmsynth
-dmusic.dll	dmusic	dmusic
-dmusic32.dll	dmusic32	dmusic32
-dplaysvr.exe	directplay	directplay
-dplayx.dll	directplay	directplay
-dpmodemx.dll	directplay	directplay
-dpnet.dll	directplay	directplay
-dpnhpast.dll	directplay	directplay
-dpnhupnp.dll	directplay	directplay
-dpnsvr.exe	directplay	directplay
-dpvacm.dll	dpvoice	dpvoice
-dpvoice.dll	dpvoice	dpvoice
-dpvvox.dll	dpvoice	dpvoice
-dpwsockx.dll	directplay	directplay
-dsound.dll	dsound	dsound
-dswave.dll	dswave	dswave
-dx8vb.dll	dx8vb	dx8vb
-dxdiag.exe	dxdiag	dxdiag
-dxdiagn.dll	dxdiagn_feb2010	dxdiagn,dxdiagn_feb2010
-dxtrans.dll	dxtrans	dxtrans
-esent.dll	esent	esent
-fusion.dll	dotnet11	dotnet11
-gdiplus.dll	gdiplus	gdiplus,gdiplus_winxp
-hid.dll	hid	hid
-iccvid.dll	cinepak	cinepak
-ieframe.dll	ie8	ie7,ie8
-ieproxy.dll	ie8	ie7,ie8
-iertutil.dll	iertutil	iertutil
-iexplore.exe	ie8	ie6,ie7,ie8
-inetcpl.cpl.dll	ie6	ie6
-inseng.dll	ie6	ie6
-ir50_32.dll	icodecs	icodecs
-itircl.dll	ie8	ie6,ie7,ie8,itircl
-itss.dll	ie8	ie6,ie7,ie8,itss
-jscript.dll	ie8	ie6,ie7,ie8,wsh57
-l3codeca.acm.dll	wmp9	wmp10,wmp11,wmp9
-mf.dll	mf	mf
-mfplat.dll	wmp11	wmp11
-mlang.dll	ie6	ie6
-msaatext.dll	msaa	msaa
-msacm32.dll	msacm32	msacm32
-msado15.dll	native_mdac	native_mdac
-mscoree.dll	dotnet48	dotnet35,dotnet35sp1,dotnet40,dotnet45,dotnet452,dotnet46,dotnet461,dotnet462,dotnet471,dotnet472,dotnet48
-mscorwks.dll	dotnet35	dotnet11,dotnet11sp1,dotnet20,dotnet20sp1,dotnet20sp2,dotnet30,dotnet30sp1,dotnet35,dotnet35sp1
-msctf.dll	ie8	ie8,msctf
-msdasql.dll	native_mdac	native_mdac
-msdelta.dll	msdelta	msdelta
-msftedit.dll	msftedit	msftedit
-mshtml.dll	ie8	ie6,ie7,ie8
-msimtf.dll	ie7	ie6,ie7
-mspatcha.dll	mspatcha	mspatcha
-msvcm80.dll	vcrun2005	vcrun2005
-msvcm90.dll	vcrun2008	vcrun2008
-msvcp100.dll	vcrun2010	vcrun2010
-msvcp110.dll	vcrun2012	vcrun2012
-msvcp120.dll	vcrun2013	vcrun2013
-msvcp140.dll	vcrun2022	vcrun2015,vcrun2017,vcrun2019,vcrun2022
-msvcp140_1.dll	vcrun2022	vcrun2015,vcrun2017,vcrun2019,vcrun2022
-msvcp140_2.dll	vcrun2022	vcrun2017,vcrun2019,vcrun2022
-msvcp140_atomic_wait.dll	vcrun2022	vcrun2015,vcrun2017,vcrun2019,vcrun2022
-msvcp140_codecvt_ids.dll	vcrun2022	vcrun2019,vcrun2022
-msvcp80.dll	vcrun2005	vcrun2005
-msvcp90.dll	vcrun2008	vcrun2008
-msvcr100.dll	vcrun2010	vcrun2010
-msvcr110.dll	vcrun2012	vcrun2012
-msvcr120.dll	vcrun2013	vcrun2013
-msvcr80.dll	vcrun2005	vcrun2005
-msvcr90.dll	vcrun2008	vcrun2008
-msvcrt40.dll	msvcrt40	msvcrt40
-msxml3.dll	msxml3	msxml3
-msxml4.dll	msxml4	msxml4
-msxml6.dll	msxml6	msxml6
-mtxdm.dll	native_mdac	native_mdac
-odbc32.dll	native_mdac	native_mdac
-odbccp32.dll	native_mdac	native_mdac
-ole32.dll	ole32	ole32
-oleacc.dll	msaa	msaa
-oleaccrc.dll	msaa	msaa
-oleaut32.dll	oleaut32	native_oleaut32,oleaut32
-oledb32.dll	native_mdac	native_mdac
-pdh.dll	pdh_nt4	pdh,pdh_nt4
-prntvpt.dll	prntvpt	prntvpt
-qasf.dll	qasf	qasf
-qcap.dll	qcap	qcap
-qdvd.dll	qdvd	qdvd
-qedit.dll	qedit	qedit
-quartz.dll	quartz_feb2010	quartz,quartz_feb2010
-riched20.dll	riched30	riched20,riched30
-sapi.dll	sapi	sapi,speechsdk
-scrrun.dll	wsh57	wsh57
-secur32.dll	secur32	secur32
-setupapi.dll	setupapi	setupapi
-shdoclc.dll	ie8	ie6,ie7,ie8
-shdocvw.dll	ie8	ie6,ie7,ie8
-shlwapi.dll	ie8	ie6,ie7,ie8
-streamci.dll	directmusic	directmusic
-ucrtbase.dll	ucrtbase2019	ucrtbase2019,vcrun2015,vcrun2017
-uiribbon.dll	uiribbon	uiribbon
-updspapi.dll	updspapi	updspapi
-urlmon.dll	ie8	ev3,ie7,ie8,urlmon
-usp10.dll	usp10	usp10
-vbscript.dll	wsh57	wsh57
-vcamp140.dll	vcrun2022	vcrun2017,vcrun2019,vcrun2022
-vccorlib140.dll	vcrun2022	vcrun2015,vcrun2017,vcrun2019,vcrun2022
-vcomp.dll	vcrun2005	vcrun2005
-vcomp100.dll	vcrun2010	vcrun2010
-vcomp110.dll	vcrun2012	vcrun2012
-vcomp120.dll	vcrun2013	vcrun2013
-vcomp140.dll	vcrun2022	vcrun2015,vcrun2017,vcrun2019,vcrun2022
-vcomp90.dll	vcrun2008	vcrun2008
-vcruntime140.dll	vcrun2022	vcrun2015,vcrun2017,vcrun2019,vcrun2022
-vcruntime140_1.dll	vcrun2022	vcrun2015,vcrun2017,vcrun2019,vcrun2022
-wbemprox.dll	wmi	wmi
-webio.dll	webio	webio
-windowscodecs.dll	windowscodecs	windowscodecs
-windowscodecsext.dll	windowscodecs	windowscodecs
-winhttp.dll	winhttp	winhttp
-wininet.dll	ie8	ie7,ie8,wininet,wininet_win2k
-wmasf.dll	wmp11	wmp11
-wmiutils.dll	wmi	wmi
-wmp.dll	wmp9	wmp10,wmp11,wmp9
-wmplayer.exe	wmp9	wmp10,wmp11,wmp9
-wmpnssci.dll	wmp11	wmp11
-wmvcore.dll	wmp9	wmp10,wmp11,wmp9
-wscript.exe	wsh57	wsh57
-x3daudio1_0.dll	xact_x64	xact,xact_x64
-x3daudio1_1.dll	xact_x64	xact,xact_x64
-x3daudio1_2.dll	xact_x64	xact,xact_x64
-x3daudio1_3.dll	xact_x64	xact,xact_x64
-x3daudio1_4.dll	xact_x64	xact,xact_x64
-x3daudio1_5.dll	xact_x64	xact,xact_x64
-x3daudio1_6.dll	xact_x64	xact,xact_x64
-x3daudio1_7.dll	xact_x64	xact,xact_x64
-xactengine2_0.dll	xact_x64	xact,xact_x64
-xactengine2_1.dll	xact_x64	xact,xact_x64
-xactengine2_10.dll	xact_x64	xact,xact_x64
-xactengine2_2.dll	xact_x64	xact,xact_x64
-xactengine2_3.dll	xact_x64	xact,xact_x64
-xactengine2_4.dll	xact_x64	xact,xact_x64
-xactengine2_5.dll	xact_x64	xact,xact_x64
-xactengine2_6.dll	xact_x64	xact,xact_x64
-xactengine2_7.dll	xact_x64	xact,xact_x64
-xactengine2_8.dll	xact_x64	xact,xact_x64
-xactengine2_9.dll	xact_x64	xact,xact_x64
-xactengine3_0.dll	xact_x64	xact,xact_x64
-xactengine3_1.dll	xact_x64	xact,xact_x64
-xactengine3_2.dll	xact_x64	xact,xact_x64
-xactengine3_3.dll	xact_x64	xact,xact_x64
-xactengine3_4.dll	xact_x64	xact,xact_x64
-xactengine3_5.dll	xact_x64	xact,xact_x64
-xactengine3_6.dll	xact_x64	xact,xact_x64
-xactengine3_7.dll	xact_x64	xact,xact_x64
-xapofx1_1.dll	xact_x64	xact,xact_x64
-xapofx1_2.dll	xact_x64	xact,xact_x64
-xapofx1_3.dll	xact_x64	xact,xact_x64
-xapofx1_4.dll	xact_x64	xact,xact_x64
-xapofx1_5.dll	xact_x64	xact,xact_x64
-xaudio2_0.dll	xact_x64	xact,xact_x64
-xaudio2_1.dll	xact_x64	xact,xact_x64
-xaudio2_2.dll	xact_x64	xact,xact_x64
-xaudio2_3.dll	xact_x64	xact,xact_x64
-xaudio2_4.dll	xact_x64	xact,xact_x64
-xaudio2_5.dll	xact_x64	xact,xact_x64
-xaudio2_6.dll	xact_x64	xact,xact_x64
-xaudio2_7.dll	xact_x64	xact,xact_x64
-xinput1_1.dll	xinput	xinput
-xinput1_2.dll	xinput	xinput
-xinput1_3.dll	xinput	xinput
-xinput9_1_0.dll	xinput	xinput
-xmllite.dll	ie8	ie7,ie8,xmllite
+amstream.dll	amstream	alta	amstream
+api-ms-win-crt-conio-l1-1-0.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+api-ms-win-crt-convert-l1-1-0.dll	vcrun2015	alta	vcrun2015
+api-ms-win-crt-environment-l1-1-0.dll	vcrun2015	alta	vcrun2015
+api-ms-win-crt-filesystem-l1-1-0.dll	vcrun2015	alta	vcrun2015
+api-ms-win-crt-heap-l1-1-0.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+api-ms-win-crt-locale-l1-1-0.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+api-ms-win-crt-math-l1-1-0.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+api-ms-win-crt-multibyte-l1-1-0.dll	vcrun2015	alta	vcrun2015
+api-ms-win-crt-private-l1-1-0.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+api-ms-win-crt-process-l1-1-0.dll	vcrun2015	alta	vcrun2015
+api-ms-win-crt-runtime-l1-1-0.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+api-ms-win-crt-stdio-l1-1-0.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+api-ms-win-crt-string-l1-1-0.dll	vcrun2015	alta	vcrun2015
+api-ms-win-crt-time-l1-1-0.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+api-ms-win-crt-utility-l1-1-0.dll	vcrun2015	alta	vcrun2015
+atl100.dll	vcrun2010	alta	vcrun2010
+atl110.dll	vcrun2012	alta	vcrun2012
+atl120.dll	vcrun2013	alta	vcrun2013
+atl140.dll	vcrun2019	alta	vcrun2015,vcrun2017,vcrun2019
+atl80.dll	vcrun2005	alta	vcrun2005
+atl90.dll	vcrun2008	alta	vcrun2008
+avifil32.dll	avifil32	alta	avifil32
+binkw32.dll	binkw32	alta	binkw32
+cabinet.dll	cabinet	alta	cabinet
+cmd.exe	cmd	alta	cmd
+comctl32.dll	comctl32	alta	comctl32
+concrt140.dll	vcrun2022	alta	vcrun2015,vcrun2017,vcrun2019,vcrun2022
+crypt32.dll	crypt32	alta	crypt32,crypt32_winxp
+cscript.exe	wsh57	alta	wsh57
+d3dcompiler_46.dll	d3dcompiler_46	alta	d3dcompiler_46
+d3dcompiler_47.dll	d3dcompiler_47	alta	d3dcompiler_47
+d3drm.dll	d3drm	alta	d3drm
+d3dx10_33.dll	d3dx10	alta	d3dx10
+d3dx10_34.dll	d3dx10	alta	d3dx10
+d3dx10_35.dll	d3dx10	alta	d3dx10
+d3dx10_36.dll	d3dx10	alta	d3dx10
+d3dx10_37.dll	d3dx10	alta	d3dx10
+d3dx10_38.dll	d3dx10	alta	d3dx10
+d3dx10_39.dll	d3dx10	alta	d3dx10
+d3dx10_40.dll	d3dx10	alta	d3dx10
+d3dx10_41.dll	d3dx10	alta	d3dx10
+d3dx10_42.dll	d3dx10	alta	d3dx10
+d3dx10_43.dll	d3dx10	alta	d3dx10
+d3dx9_24.dll	d3dx9	alta	d3dx9
+d3dx9_25.dll	d3dx9	alta	d3dx9
+d3dx9_26.dll	d3dx9	alta	d3dx9
+d3dx9_27.dll	d3dx9	alta	d3dx9
+d3dx9_28.dll	d3dx9	alta	d3dx9
+d3dx9_29.dll	d3dx9	alta	d3dx9
+d3dx9_30.dll	d3dx9	alta	d3dx9
+d3dx9_31.dll	d3dx9	alta	d3dx9
+d3dx9_32.dll	d3dx9	alta	d3dx9
+d3dx9_33.dll	d3dx9	alta	d3dx9
+d3dx9_34.dll	d3dx9	alta	d3dx9
+d3dx9_35.dll	d3dx9	alta	d3dx9
+d3dx9_36.dll	d3dx9	alta	d3dx9
+d3dx9_37.dll	d3dx9	alta	d3dx9
+d3dx9_38.dll	d3dx9	alta	d3dx9
+d3dx9_39.dll	d3dx9	alta	d3dx9
+d3dx9_40.dll	d3dx9	alta	d3dx9
+d3dx9_41.dll	d3dx9	alta	d3dx9
+d3dx9_42.dll	d3dx9	alta	d3dx9
+d3dx9_43.dll	d3dx9	alta	d3dx9
+d3dxof.dll	d3dxof	alta	d3dxof
+dbghelp.dll	dbghelp	alta	dbghelp
+ddraw.dll	cnc_ddraw	alta	cnc_ddraw
+devenum.dll	devenum	alta	devenum
+dinput.dll	dinput	alta	dinput
+dinput8.dll	dinput8	alta	dinput8
+dmband.dll	dmband	alta	dmband
+dmcompos.dll	dmcompos	alta	dmcompos
+dmime.dll	dmime	alta	dmime
+dmloader.dll	dmloader	alta	dmloader
+dmscript.dll	dmscript	alta	dmscript
+dmstyle.dll	dmstyle	alta	dmstyle
+dmsynth.dll	dmsynth	alta	dmsynth
+dmusic.dll	dmusic	alta	dmusic
+dmusic32.dll	dmusic32	alta	dmusic32
+dplaysvr.exe	directplay	alta	directplay
+dplayx.dll	directplay	alta	directplay
+dpmodemx.dll	directplay	alta	directplay
+dpnet.dll	directplay	alta	directplay
+dpnhpast.dll	directplay	alta	directplay
+dpnhupnp.dll	directplay	alta	directplay
+dpnsvr.exe	directplay	alta	directplay
+dpvacm.dll	dpvoice	alta	dpvoice
+dpvoice.dll	dpvoice	alta	dpvoice
+dpvvox.dll	dpvoice	alta	dpvoice
+dpwsockx.dll	directplay	alta	directplay
+dsound.dll	dsound	alta	dsound
+dswave.dll	dswave	alta	dswave
+dx8vb.dll	dx8vb	alta	dx8vb
+dxdiag.exe	dxdiag	alta	dxdiag
+dxdiagn.dll	dxdiagn_feb2010	baixa	dxdiagn,dxdiagn_feb2010
+dxtrans.dll	dxtrans	alta	dxtrans
+esent.dll	esent	alta	esent
+fusion.dll	dotnet11	alta	dotnet11
+gdiplus.dll	gdiplus	baixa	gdiplus,gdiplus_winxp
+hid.dll	hid	alta	hid
+iccvid.dll	cinepak	alta	cinepak
+ieframe.dll	ie8	alta	ie7,ie8
+ieproxy.dll	ie8	alta	ie7,ie8
+iertutil.dll	iertutil	alta	iertutil
+iexplore.exe	ie8	alta	ie6,ie7,ie8
+inetcpl.cpl.dll	ie6	alta	ie6
+inseng.dll	ie6	alta	ie6
+ir50_32.dll	icodecs	alta	icodecs
+itircl.dll	ie8	baixa	ie6,ie7,ie8,itircl
+itss.dll	ie8	baixa	ie6,ie7,ie8,itss
+jscript.dll	ie8	baixa	ie6,ie7,ie8,wsh57
+l3codeca.acm.dll	wmp9	alta	wmp10,wmp11,wmp9
+mf.dll	mf	alta	mf
+mfplat.dll	wmp11	alta	wmp11
+mlang.dll	ie6	alta	ie6
+msaatext.dll	msaa	alta	msaa
+msacm32.dll	msacm32	alta	msacm32
+msado15.dll	native_mdac	alta	native_mdac
+mscoree.dll	dotnet48	alta	dotnet35,dotnet35sp1,dotnet40,dotnet45,dotnet452,dotnet46,dotnet461,dotnet462,dotnet471,dotnet472,dotnet48
+mscorwks.dll	dotnet35	alta	dotnet11,dotnet11sp1,dotnet20,dotnet20sp1,dotnet20sp2,dotnet30,dotnet30sp1,dotnet35,dotnet35sp1
+msctf.dll	ie8	baixa	ie8,msctf
+msdasql.dll	native_mdac	alta	native_mdac
+msdelta.dll	msdelta	alta	msdelta
+msftedit.dll	msftedit	alta	msftedit
+mshtml.dll	ie8	alta	ie6,ie7,ie8
+msimtf.dll	ie7	alta	ie6,ie7
+mspatcha.dll	mspatcha	alta	mspatcha
+msvcm80.dll	vcrun2005	alta	vcrun2005
+msvcm90.dll	vcrun2008	alta	vcrun2008
+msvcp100.dll	vcrun2010	alta	vcrun2010
+msvcp110.dll	vcrun2012	alta	vcrun2012
+msvcp120.dll	vcrun2013	alta	vcrun2013
+msvcp140.dll	vcrun2022	alta	vcrun2015,vcrun2017,vcrun2019,vcrun2022
+msvcp140_1.dll	vcrun2022	alta	vcrun2015,vcrun2017,vcrun2019,vcrun2022
+msvcp140_2.dll	vcrun2022	alta	vcrun2017,vcrun2019,vcrun2022
+msvcp140_atomic_wait.dll	vcrun2022	alta	vcrun2015,vcrun2017,vcrun2019,vcrun2022
+msvcp140_codecvt_ids.dll	vcrun2022	alta	vcrun2019,vcrun2022
+msvcp80.dll	vcrun2005	alta	vcrun2005
+msvcp90.dll	vcrun2008	alta	vcrun2008
+msvcr100.dll	vcrun2010	alta	vcrun2010
+msvcr110.dll	vcrun2012	alta	vcrun2012
+msvcr120.dll	vcrun2013	alta	vcrun2013
+msvcr80.dll	vcrun2005	alta	vcrun2005
+msvcr90.dll	vcrun2008	alta	vcrun2008
+msvcrt40.dll	msvcrt40	alta	msvcrt40
+msxml3.dll	msxml3	alta	msxml3
+msxml4.dll	msxml4	alta	msxml4
+msxml6.dll	msxml6	alta	msxml6
+mtxdm.dll	native_mdac	alta	native_mdac
+odbc32.dll	native_mdac	alta	native_mdac
+odbccp32.dll	native_mdac	alta	native_mdac
+ole32.dll	ole32	alta	ole32
+oleacc.dll	msaa	alta	msaa
+oleaccrc.dll	msaa	alta	msaa
+oleaut32.dll	oleaut32	baixa	native_oleaut32,oleaut32
+oledb32.dll	native_mdac	alta	native_mdac
+pdh.dll	pdh_nt4	baixa	pdh,pdh_nt4
+prntvpt.dll	prntvpt	alta	prntvpt
+qasf.dll	qasf	alta	qasf
+qcap.dll	qcap	alta	qcap
+qdvd.dll	qdvd	alta	qdvd
+qedit.dll	qedit	alta	qedit
+quartz.dll	quartz_feb2010	baixa	quartz,quartz_feb2010
+riched20.dll	riched30	alta	riched20,riched30
+sapi.dll	sapi	baixa	sapi,speechsdk
+scrrun.dll	wsh57	alta	wsh57
+secur32.dll	secur32	alta	secur32
+setupapi.dll	setupapi	alta	setupapi
+shdoclc.dll	ie8	alta	ie6,ie7,ie8
+shdocvw.dll	ie8	alta	ie6,ie7,ie8
+shlwapi.dll	ie8	alta	ie6,ie7,ie8
+streamci.dll	directmusic	alta	directmusic
+ucrtbase.dll	ucrtbase2019	baixa	ucrtbase2019,vcrun2015,vcrun2017
+uiribbon.dll	uiribbon	alta	uiribbon
+updspapi.dll	updspapi	alta	updspapi
+urlmon.dll	ie8	baixa	ev3,ie7,ie8,urlmon
+usp10.dll	usp10	alta	usp10
+vbscript.dll	wsh57	alta	wsh57
+vcamp140.dll	vcrun2022	alta	vcrun2017,vcrun2019,vcrun2022
+vccorlib140.dll	vcrun2022	alta	vcrun2015,vcrun2017,vcrun2019,vcrun2022
+vcomp.dll	vcrun2005	alta	vcrun2005
+vcomp100.dll	vcrun2010	alta	vcrun2010
+vcomp110.dll	vcrun2012	alta	vcrun2012
+vcomp120.dll	vcrun2013	alta	vcrun2013
+vcomp140.dll	vcrun2022	alta	vcrun2015,vcrun2017,vcrun2019,vcrun2022
+vcomp90.dll	vcrun2008	alta	vcrun2008
+vcruntime140.dll	vcrun2022	alta	vcrun2015,vcrun2017,vcrun2019,vcrun2022
+vcruntime140_1.dll	vcrun2022	alta	vcrun2015,vcrun2017,vcrun2019,vcrun2022
+wbemprox.dll	wmi	alta	wmi
+webio.dll	webio	alta	webio
+windowscodecs.dll	windowscodecs	alta	windowscodecs
+windowscodecsext.dll	windowscodecs	alta	windowscodecs
+winhttp.dll	winhttp	alta	winhttp
+wininet.dll	ie8	baixa	ie7,ie8,wininet,wininet_win2k
+wmasf.dll	wmp11	alta	wmp11
+wmiutils.dll	wmi	alta	wmi
+wmp.dll	wmp9	alta	wmp10,wmp11,wmp9
+wmplayer.exe	wmp9	alta	wmp10,wmp11,wmp9
+wmpnssci.dll	wmp11	alta	wmp11
+wmvcore.dll	wmp9	alta	wmp10,wmp11,wmp9
+wscript.exe	wsh57	alta	wsh57
+x3daudio1_0.dll	xact_x64	baixa	xact,xact_x64
+x3daudio1_1.dll	xact_x64	baixa	xact,xact_x64
+x3daudio1_2.dll	xact_x64	baixa	xact,xact_x64
+x3daudio1_3.dll	xact_x64	baixa	xact,xact_x64
+x3daudio1_4.dll	xact_x64	baixa	xact,xact_x64
+x3daudio1_5.dll	xact_x64	baixa	xact,xact_x64
+x3daudio1_6.dll	xact_x64	baixa	xact,xact_x64
+x3daudio1_7.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_0.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_1.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_10.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_2.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_3.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_4.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_5.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_6.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_7.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_8.dll	xact_x64	baixa	xact,xact_x64
+xactengine2_9.dll	xact_x64	baixa	xact,xact_x64
+xactengine3_0.dll	xact_x64	baixa	xact,xact_x64
+xactengine3_1.dll	xact_x64	baixa	xact,xact_x64
+xactengine3_2.dll	xact_x64	baixa	xact,xact_x64
+xactengine3_3.dll	xact_x64	baixa	xact,xact_x64
+xactengine3_4.dll	xact_x64	baixa	xact,xact_x64
+xactengine3_5.dll	xact_x64	baixa	xact,xact_x64
+xactengine3_6.dll	xact_x64	baixa	xact,xact_x64
+xactengine3_7.dll	xact_x64	baixa	xact,xact_x64
+xapofx1_1.dll	xact_x64	baixa	xact,xact_x64
+xapofx1_2.dll	xact_x64	baixa	xact,xact_x64
+xapofx1_3.dll	xact_x64	baixa	xact,xact_x64
+xapofx1_4.dll	xact_x64	baixa	xact,xact_x64
+xapofx1_5.dll	xact_x64	baixa	xact,xact_x64
+xaudio2_0.dll	xact_x64	baixa	xact,xact_x64
+xaudio2_1.dll	xact_x64	baixa	xact,xact_x64
+xaudio2_2.dll	xact_x64	baixa	xact,xact_x64
+xaudio2_3.dll	xact_x64	baixa	xact,xact_x64
+xaudio2_4.dll	xact_x64	baixa	xact,xact_x64
+xaudio2_5.dll	xact_x64	baixa	xact,xact_x64
+xaudio2_6.dll	xact_x64	baixa	xact,xact_x64
+xaudio2_7.dll	xact_x64	baixa	xact,xact_x64
+xinput1_1.dll	xinput	alta	xinput
+xinput1_2.dll	xinput	alta	xinput
+xinput1_3.dll	xinput	alta	xinput
+xinput9_1_0.dll	xinput	alta	xinput
+xmllite.dll	ie8	baixa	ie7,ie8,xmllite

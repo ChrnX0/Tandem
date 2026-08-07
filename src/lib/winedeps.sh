@@ -38,10 +38,13 @@ if [ -z "${TANDEM_VERBOS_TSV:-}" ]; then
     unset _c
 fi
 
+# So responde quando o indice tem confianca alta. Quando varios verbos de
+# FAMILIAS diferentes entregam a mesma DLL, escolher e chute - e chute que
+# custa meia hora do dono. Nesse caso a resposta honesta e nao saber.
 t_dll_no_indice() {
     [ -n "${TANDEM_VERBOS_TSV:-}" ] && [ -f "$TANDEM_VERBOS_TSV" ] || return 1
     awk -F'\t' -v alvo="${1,,}" \
-        '$1 == alvo { print $2; achou = 1; exit } END { exit !achou }' \
+        '$1 == alvo && $3 == "alta" { print $2; achou = 1; exit } END { exit !achou }' \
         "$TANDEM_VERBOS_TSV"
 }
 
@@ -65,7 +68,10 @@ t_dll_para_verbo_tabela() {
         msvcp100.dll|msvcr100.dll|mfc100*.dll|vcomp100.dll)  echo vcrun2010 ;;
         msvcp90.dll|msvcr90.dll|mfc90*.dll)                  echo vcrun2008 ;;
         msvcp80.dll|msvcr80.dll|mfc80*.dll)                  echo vcrun2005 ;;
-        msvcp71.dll|msvcr71.dll)                             echo vcrun6 ;;
+        # O vcrun6 entrega "mfc42, msvcp60, msvcirt" - nao as 71. Quem
+        # entrega msvcp71/msvcr71/mfc71 e o vcrun2003, que diz isso no
+        # proprio titulo. Segundo erro achado pelo auditor do winetricks.
+        msvcp71.dll|msvcr71.dll|mfc71*.dll)                  echo vcrun2003 ;;
         mfc42*.dll)                                          echo mfc42 ;;
 
         # .NET
@@ -76,8 +82,12 @@ t_dll_para_verbo_tabela() {
         d3dx10*.dll)         echo d3dx10 ;;
         d3dx11*.dll)         echo d3dx11_43 ;;
         d3dcompiler_43.dll)  echo d3dcompiler_43 ;;
+        d3dcompiler_46.dll)  echo d3dcompiler_46 ;;
         d3dcompiler_4*.dll)  echo d3dcompiler_47 ;;
-        xinput1_*.dll|x3daudio*.dll|xaudio2*.dll|xactengine*.dll) echo xact ;;
+        # O xact entrega xaudio2, x3daudio, xapofx e xactengine - nao o
+        # xinput, que tem verbo proprio. Terceiro erro do auditor.
+        xinput1_*.dll|xinput9*.dll) echo xinput ;;
+        x3daudio*.dll|xaudio2*.dll|xactengine*.dll|xapofx*.dll) echo xact ;;
         dxgi.dll|d3d11.dll|d3d10*.dll)                       echo d3dx11_43 ;;
 
         # Diversos comuns
@@ -88,8 +98,13 @@ t_dll_para_verbo_tabela() {
         msxml6.dll)          echo msxml6 ;;
         openal32.dll)        echo openal ;;
         physxloader.dll)     echo physx ;;
-        quartz.dll|amstream.dll) echo quartz ;;
-        wmvcore.dll|wmasf.dll)   echo wmp9 ;;
+        quartz.dll)          echo quartz ;;
+        # O quartz entrega so o quartz.dll; o amstream tem verbo proprio.
+        amstream.dll)        echo amstream ;;
+        wmvcore.dll)         echo wmp9 ;;
+        # O wmp9 entrega l3codeca, wmp, wmplayer e wmvcore - o wmasf so vem
+        # no wmp11. Quarto erro do auditor.
+        wmasf.dll)           echo wmp11 ;;
         jscript.dll|vbscript.dll) echo wsh57 ;;
         # A ATL vem junto com o runtime do Visual C++ do mesmo ano. Isto
         # apontava para "atmlib", que e o Adobe Type Manager - uma biblioteca

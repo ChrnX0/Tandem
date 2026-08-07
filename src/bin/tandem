@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="2.9"
+VERSAO="3.0"
 
 uso() {
     cat <<'AJUDA'

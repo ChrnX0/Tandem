@@ -90,7 +90,7 @@ tandem protect ~/.wine-alguma-coisa
 Baixe o `.deb` em [Releases](../../releases) e clique duas vezes, ou:
 
 ```bash
-sudo apt install ./tandem_2.9_all.deb
+sudo apt install ./tandem_3.0_all.deb
 ```
 
 Depois verifique o ambiente:

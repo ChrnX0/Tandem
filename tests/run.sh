@@ -34,6 +34,15 @@ mkdir -p "$HOME"
 # Sem sessao grafica: e assim que os testes verificam o caminho de terminal.
 unset DISPLAY WAYLAND_DISPLAY
 
+# A suite testa o REPOSITORIO, nunca o pacote instalado. Sem isto as
+# bibliotecas resolviam para /usr/lib/tandem quando o Tandem estava
+# instalado na maquina, e a suite passava a conferir a versao antiga - um
+# teste que aprova o codigo errado e pior que teste nenhum.
+export TANDEM_LIB="$RAIZ/src/lib"
+export TANDEM_VERBOS_TSV="$RAIZ/src/lib/verbos.tsv"
+export TANDEM_LIMITES="$RAIZ/src/lib/limites.tsv"
+export TANDEM_ALTERNATIVAS="$RAIZ/src/lib/alternativas.tsv"
+
 ARTEFATOS="$TMPRAIZ/artefatos"
 python3 tests/mkapk.py "$ARTEFATOS" >/dev/null || { echo "nao consegui gerar os artefatos"; exit 1; }
 
@@ -103,6 +112,16 @@ igual "traducao e insensivel a caixa" \
 # A ATL vem do runtime do Visual C++, nao do atmlib (Adobe Type Manager).
 # O erro instalava a coisa errada, gravava recibo, e na volta o Tandem dizia
 # "ja instalei o que este programa pedia" e desistia.
+igual "os seis mapeamentos que o auditor corrigiu" \
+      "amstream d3dcompiler_46 wmp11 xinput vcrun2003 vcrun2019" \
+      "$(for d in amstream.dll d3dcompiler_46.dll wmasf.dll xinput1_3.dll msvcr71.dll atl140.dll; do
+             printf '%s ' "$(t_dll_para_verbo_tabela $d)"; done | sed 's/ $//')"
+# E os vizinhos que estavam CERTOS nao podem ter sido levados junto.
+igual "os vizinhos corretos continuam intactos" \
+      "quartz wmp9 xact d3dcompiler_47" \
+      "$(for d in quartz.dll wmvcore.dll xaudio2_7.dll d3dcompiler_47.dll; do
+             printf '%s ' "$(t_dll_para_verbo_tabela $d)"; done | sed 's/ $//')"
+
 igual "atl vem do Visual C++ do mesmo ano, nao do Adobe Type Manager" \
       "vcrun2005 vcrun2008 vcrun2010 vcrun2012 vcrun2013 vcrun2019" \
       "$(for d in atl80 atl90 atl100 atl110 atl120 atl140; do
@@ -134,6 +153,32 @@ else
     pulou "indice do winetricks" "verbos.tsv ausente"
 fi
 
+# AUDITOR. Em vez de o indice responder no lugar da tabela, ele CONFERE a
+# tabela: para cada DLL que os dois conhecem, o verbo prometido a mao tem que
+# estar entre os que o winetricks diz que entregam aquela DLL. Este teste
+# sozinho encontrou seis erros de mapeamento - atl->atmlib (Adobe Type
+# Manager!), msvcr71->vcrun6, amstream->quartz, d3dcompiler_46->_47,
+# wmasf->wmp9 e xinput->xact - cada um deles instalando a coisa errada e
+# gravando recibo, o que fazia o Tandem desistir na tentativa seguinte.
+if [ -f "$RAIZ/src/lib/verbos.tsv" ]; then
+    suspeitos=""
+    while IFS=$'\t' read -r a_dll _ _ a_todos; do
+        case "$a_dll" in '#'*|'') continue ;; esac
+        a_mao="$(t_dll_para_verbo_tabela "$a_dll")"
+        [ -n "$a_mao" ] || continue
+        case ",$a_todos," in
+            *",$a_mao,"*) ;;
+            *) suspeitos="$suspeitos $a_dll->$a_mao(winetricks:$a_todos)" ;;
+        esac
+    done < "$RAIZ/src/lib/verbos.tsv"
+    if [ -z "$suspeitos" ]; then
+        passou "a tabela a mao so promete verbo que o winetricks confirma"
+    else
+        falhou "a tabela a mao so promete verbo que o winetricks confirma" \
+               "(nenhum suspeito)" "$suspeitos"
+    fi
+fi
+
 if command -v winetricks >/dev/null 2>&1; then
     if python3 tools/indice-winetricks.py --conferir >/dev/null 2>&1; then
         passou "o indice em disco bate com o winetricks instalado"
@@ -145,8 +190,6 @@ else
 fi
 
 secao "alternativas de Linux"
-
-TANDEM_ALTERNATIVAS="$RAIZ/src/lib/alternativas.tsv"
 
 igual "reconhece programa que TEM versao oficial para Linux" \
       "nativo" "$(t_alternativas_para teamviewer | head -1 | cut -d'|' -f1)"

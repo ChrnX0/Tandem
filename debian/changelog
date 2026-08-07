@@ -1,21 +1,29 @@
-tandem (2.9) unstable; urgency=medium
+tandem (3.0) unstable; urgency=medium
 
-  * Novo: "tandem alternativas <nome>" procura um programa de Linux que faca
-    o trabalho de um programa de Windows. Duas classes, e a diferenca e o
-    ponto todo: "nativo" quando E o mesmo programa com versao oficial para
-    Linux - caso em que rodar no Wine e sempre pior - e "parecido" quando e
-    outro programa, sempre com o que muda declarado. Dizer que o GIMP e o
-    Photoshop seria enganar o dono.
-  * A tabela e local e auditavel (alternativas.tsv), nao uma busca na
-    internet: o Tandem funciona sem rede e nao manda nada para lugar nenhum.
-    Uma linha nova nao exige mudar codigo.
-  * Quando o pre-voo reconhece que um programa nunca vai funcionar aqui -
-    chave de protecao, driver de sistema, USB direto - a mensagem de erro
-    passa a oferecer o caminho alternativo junto. E o unico momento em que
-    ficar calado deixaria o dono sem saida nenhuma, porque por mais que ele
-    tente aquele programa nao vai abrir.
-  * O Tandem nunca troca nada sozinho e nunca sugere trocar um programa que
-    esta funcionando.
+  * O indice do winetricks vira AUDITOR, e nao substituto. Um painel
+    adversarial refutou usa-lo como fonte em tempo de execucao, com medida:
+    mscoree.dll tem 11 verbos candidatos, mscorwks 9, e escolher errado num
+    mscoree custa 30 minutos. Agora o indice traz coluna de confianca - so
+    responde quando ha um candidato, ou quando todos sao da mesma familia e
+    o desempate por versao e defensavel. Sao 192 DLLs de resposta segura e
+    54 em que ele se cala, que e a resposta honesta.
+  * O auditor encontrou SEIS erros de mapeamento na tabela escrita a mao,
+    todos confirmados na fonte do winetricks. Cada um instalava a coisa
+    errada E gravava recibo, entao na tentativa seguinte o Tandem dizia "ja
+    instalei o que este programa pedia" e desistia:
+      atl*.dll        -> atmlib   (Adobe Type Manager; e o vcrun do ano)
+      msvcp71/msvcr71 -> vcrun6   (vcrun6 entrega as 60; e o vcrun2003)
+      amstream.dll    -> quartz   (quartz entrega so quartz; ha verbo proprio)
+      d3dcompiler_46  -> _47      (existe verbo dedicado para o 46)
+      wmasf.dll       -> wmp9     (wmp9 nao entrega wmasf; e o wmp11)
+      xinput1_*.dll   -> xact     (xact entrega xaudio2 e xactengine, nao
+                                   xinput, que tem verbo proprio)
+    A auditoria virou teste permanente: para cada DLL que os dois conhecem,
+    o verbo prometido a mao tem que estar entre os que o winetricks declara.
+  * Corrigido na suite de testes: ela resolvia as bibliotecas para
+    /usr/lib/tandem quando o pacote estava instalado na maquina, entao
+    conferia a versao antiga em vez do repositorio. Teste que aprova o
+    codigo errado e pior que teste nenhum.
 
- -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 08:00:00 +0000
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 09:00:00 +0000
 
