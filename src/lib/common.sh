@@ -494,6 +494,45 @@ t_pe_arch() {
     esac
 }
 
+# --------------------------------------------------------- pre-voo do PE
+#
+# Todo executavel Windows traz no proprio arquivo a lista de bibliotecas que
+# vai pedir - a tabela de importacoes. Ate agora o Tandem so descobria isso
+# DEPOIS de rodar e falhar, lendo o err:module:import_dll do Wine.
+#
+# O pre-voo NAO decide o que instalar. Nao pode: so o Wine sabe quais DLLs
+# ele proprio implementa, e agir por conta daria instalacao inutil - meia
+# hora do dono jogada fora. O pre-voo serve para o que a leitura sozinha
+# prova: reconhecer, ANTES de tentar, um programa que depende de coisa que
+# nunca vai funcionar aqui, e ter isso pronto para explicar a falha depois.
+
+t_pe_dlls() {
+    command -v python3 >/dev/null 2>&1 || return 1
+    python3 "${TANDEM_LIB:-/usr/lib/tandem}/peinfo.py" "$1" 2>/dev/null |
+        sed -n -e 's/^DLLS=//p' -e 's/^ATRASADAS=//p' | tr ',' '\n' | grep -v '^$'
+}
+
+# Devolve "classe|frase" do primeiro limite permanente reconhecido, ou nada.
+# A tabela mora em limites.tsv e cresce sem tocar em codigo.
+t_limite_do_programa() {
+    local tabela dll padrao classe frase
+    tabela="${TANDEM_LIMITES:-${TANDEM_LIB:-/usr/lib/tandem}/limites.tsv}"
+    [ -f "$tabela" ] || return 1
+    local dlls; dlls="$(t_pe_dlls "$1")"
+    [ -n "$dlls" ] || return 1
+    while IFS=$'\t' read -r padrao classe frase; do
+        case "$padrao" in ''|'#'*) continue ;; esac
+        [ -n "$frase" ] || continue
+        while IFS= read -r dll; do
+            # O padrao vem da tabela e usa * de proposito, entao nao pode
+            # ser citado.
+            # shellcheck disable=SC2254
+            case "$dll" in $padrao) printf '%s|%s' "$classe" "$frase"; return 0 ;; esac
+        done <<< "$dlls"
+    done < "$tabela"
+    return 1
+}
+
 t_tem_wine32() {
     [ -d /usr/lib/wine/i386-unix ] || [ -d /usr/lib/i386-linux-gnu/wine ] ||
     [ -d /opt/wine-stable/lib/wine/i386-unix ]

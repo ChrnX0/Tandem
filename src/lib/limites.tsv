@@ -1,0 +1,29 @@
+# padrao-de-dll	classe	frase para o dono
+#
+# Assinaturas lidas do PROPRIO executavel, antes de rodar. Cada linha amarra
+# um sinal a um limite ja declarado no LEIAME. A frase e sempre sobre a PARTE
+# do programa, nunca sobre o programa inteiro: um sistema de frente de caixa
+# pode abrir e funcionar, e so a impressao pelo pinpad nao ir.
+#
+# O padrao e comparado com "case" do shell, entao aceita * e ?. Uma DLL que
+# case aqui NAO impede o Tandem de tentar - a tentativa e barata e o veredito
+# pode errar. Ela entra na explicacao de por que nao funcionou, no lugar de
+# "o programa fechou com erro (codigo N)".
+#
+# Para acrescentar um caso novo, basta uma linha. Nenhum codigo muda.
+
+hasp*.dll	dongle	a proteção por chave física (HASP) precisa falar direto com a porta USB, e isso o Wine não faz
+haspms*.dll	dongle	a proteção por chave física (HASP) precisa falar direto com a porta USB, e isso o Wine não faz
+aksusb*.dll	dongle	a proteção por chave física (Aladdin) precisa falar direto com a porta USB, e isso o Wine não faz
+sentinel*.dll	dongle	a proteção por chave física (Sentinel) precisa falar direto com a porta USB, e isso o Wine não faz
+hardlock*.dll	dongle	a proteção por chave física (Hardlock) precisa falar direto com a porta USB, e isso o Wine não faz
+wibucm*.dll	dongle	a proteção por chave física (CodeMeter) precisa falar direto com a porta USB, e isso o Wine não faz
+codemeter*.dll	dongle	a proteção por chave física (CodeMeter) precisa falar direto com a porta USB, e isso o Wine não faz
+rockey*.dll	dongle	a proteção por chave física (Rockey) precisa falar direto com a porta USB, e isso o Wine não faz
+winusb.dll	usb	este programa conversa direto com um aparelho pela porta USB, e o Wine não repassa USB
+libusb*.dll	usb	este programa conversa direto com um aparelho pela porta USB, e o Wine não repassa USB
+hid.dll	usb-talvez	este programa fala com aparelho USB; teclado e leitor de código de barras costumam funcionar, outros aparelhos não
+ntoskrnl.exe	driver	este programa carrega um driver de sistema, e o Wine roda fora do núcleo do Linux
+wdfldr.dll	driver	este programa carrega um driver de sistema, e o Wine roda fora do núcleo do Linux
+winio*.dll	driver	este programa acessa o hardware diretamente, o que só um driver de sistema pode fazer
+inpout*.dll	driver	este programa acessa a porta paralela diretamente, o que só um driver de sistema pode fazer

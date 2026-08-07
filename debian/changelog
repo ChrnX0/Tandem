@@ -1,39 +1,30 @@
-tandem (2.6) unstable; urgency=medium
+tandem (2.7) unstable; urgency=medium
 
-  * Novo: "tandem preparar" instala sozinho o que falta - Wine, winetricks,
-    suporte a 32 bits, adb e o Waydroid (do repositorio oficial do projeto,
-    com chave conferida) - e inicializa o Android. Nao da para fazer isso
-    durante a instalacao do .deb: o dpkg segura uma trava enquanto o
-    postinst roda e um apt-get la dentro morre em impasse. O clique num
-    .exe sem Wine, e num programa de 32 bits sem wine32, tambem passam a
-    oferecer a instalacao na hora em vez de so avisar.
-  * Corrigido: fechar a janela de progresso matava o Tandem inteiro. O cano
-    era aberto so para escrita; quando o zenity sumia, a mensagem seguinte
-    recebia SIGPIPE e derrubava o processo com codigo 141, sem nada no log
-    e sem janela. Dentro do laco do winetricks isso cortava uma instalacao
-    de dependencia pela metade, sem recibo.
-  * Corrigido: quando a trava do duplo clique nao podia ser criada - pasta
-    pessoal cheia, somente leitura ou em rede - o Tandem saia com 0 dizendo
-    "este programa ja esta abrindo". Era mentira e era invisivel no duplo
-    clique: o resultado pratico era o duplo clique nao fazer nada, nunca.
-    Agora trava tomada e trava impossivel sao casos distintos.
-  * Travas e canos passam a viver em XDG_RUNTIME_DIR: disco local, por boot,
-    so do dono. Pasta pessoal em rede pode nao suportar flock, e duas
-    maquinas compartilhando a mesma pasta colidiam no nome do cano.
-  * Corrigido: falha do winetricks era reportada como sucesso. O laco
-    perguntava tres vezes, nao instalava nada e terminava dizendo "instalei
-    as dependencias mas o programa continua nao abrindo". Agora ele para na
-    primeira falha e explica a causa provavel lendo a saida do proprio
-    winetricks: sem internet, disco cheio, data do computador errada,
-    arquivo corrompido ou cabextract ausente.
-  * Corrigido: sem sessao grafica, a pergunta sobre instalar dependencias
-    devolvia "nao" sem perguntar nada e o programa saia calado. Agora lista
-    o que falta e o comando exato.
-  * A lista de programas instalados passa a ser lida direto do registro do
-    prefixo, e nao do "wine uninstaller --list". Em maquina real, instalador
-    de 32 bits grava a chave numa visao do registro e o uninstaller enumera
-    a outra: o 7-Zip estava instalado, a chave estava la, e a lista voltava
-    vazia. Lendo system.reg e user.reg enxergamos as duas visoes.
+  * Novo: pre-voo do executavel. src/lib/peinfo.py le a tabela de
+    importacoes do proprio .exe, em Python puro, sem executar nada.
+    Validado contra o objdump em 37 binarios reais: saida identica.
+  * Novo: veredito de impossibilidade antes de perder tempo. Se o programa
+    importa DLL de chave de protecao (HASP, Sentinel, CodeMeter, Rockey),
+    de acesso direto a USB ou de driver de sistema, o Tandem reconhece a
+    assinatura ANTES de rodar e, se a execucao falhar, explica a causa em
+    vez de dizer "o programa fechou com erro (codigo N)". A tabela mora em
+    limites.tsv e cresce sem tocar em codigo. O pre-voo nunca bloqueia e
+    nunca instala nada por conta propria: so o Wine sabe quais DLLs ele
+    mesmo implementa, e agir por conta daria instalacao inutil.
+  * Novo: indice DLL -> verbo gerado do proprio winetricks instalado. Cada
+    load_<verbo>() declara com "w_override_dlls native,builtin ..." quais
+    arquivos entrega; tools/indice-winetricks.py inverte essa leitura e
+    grava verbos.tsv. 246 DLLs, contra ~60 da tabela escrita a mao - 124
+    delas sem nenhuma cobertura antes. Sem rede e sem servico. A tabela a
+    mao continua com precedencia, porque carrega decisoes que o indice nao
+    tem como saber.
+  * Corrigido: as atl*.dll apontavam para o verbo "atmlib", que instala o
+    Adobe Type Manager - uma biblioteca de FONTES, sem relacao nenhuma com
+    a ATL, que vem junto do runtime do Visual C++ do mesmo ano. O estrago
+    era duplo: a instalacao nao resolvia e o recibo era gravado assim
+    mesmo, entao na tentativa seguinte o Tandem dizia "ja instalei o que
+    este programa pedia" e desistia. Encontrado comparando a tabela a mao
+    com o indice gerado.
 
- -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 02:00:00 +0000
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 06:00:00 +0000
 

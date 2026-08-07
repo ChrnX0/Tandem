@@ -147,6 +147,11 @@ if [ "$ARCH" = arm64 ]; then
     exit 1
 fi
 
+# Pre-voo: le a tabela de importacoes do proprio arquivo, sem executar nada.
+# Nao bloqueia e nao instala - guarda a explicacao para o caso de falhar.
+LIMITE="$(t_limite_do_programa "$PROG" 2>/dev/null)"
+[ -n "$LIMITE" ] && t_diz "pre-voo: limite reconhecido -> $LIMITE"
+
 # ------------------------------------------------------- 4. Como executar
 executar() {
     cd -- "$(dirname -- "$PROG")" || return 1
@@ -216,6 +221,15 @@ Isso costuma acontecer quando só o executável foi copiado, sem a pasta complet
             t_erro "Este arquivo não é um programa do Windows compatível."
         elif grep -qi '32-bit installation\|64-bit installation\|WINEARCH' "$LOG" 2>/dev/null; then
             t_erro "Conflito de ambiente Windows (32 x 64 bits) neste perfil."
+        elif [ -n "$LIMITE" ]; then
+            # O pre-voo tinha reconhecido a assinatura antes de rodar: em vez
+            # de um numero, o dono recebe a causa e sabe que nao adianta
+            # insistir nem procurar defeito na maquina dele.
+            t_erro "Este programa não abriu, e provavelmente não tem conserto:
+
+${LIMITE#*|}
+
+Isso é limite do Wine, não defeito da sua máquina nem do Tandem."
         else
             t_erro "O programa fechou com erro (código $CODIGO)."
         fi

@@ -20,8 +20,41 @@ t_dll_nativa() {
     return 1
 }
 
+# ------------------------------------------------- indice gerado (2a opiniao)
+#
+# A tabela escrita a mao abaixo cobre ~60 DLLs. O proprio winetricks conhece
+# centenas: dentro de cada load_<verbo>() ele declara, com
+# "w_override_dlls native,builtin ...", exatamente quais arquivos aquele verbo
+# entrega. tools/indice-winetricks.py inverte essa leitura e grava verbos.tsv.
+#
+# A tabela a mao tem PRECEDENCIA, de proposito: ela carrega decisoes que o
+# indice nao tem como saber. O indice entra so quando a tabela nao sabe
+# responder - e foi comparando os dois que apareceu o erro das atl*.dll.
+if [ -z "${TANDEM_VERBOS_TSV:-}" ]; then
+    for _c in "${TANDEM_LIB:-/usr/lib/tandem}/verbos.tsv" \
+              "$(dirname -- "${BASH_SOURCE[0]:-/nao}")/verbos.tsv"; do
+        [ -f "$_c" ] && { TANDEM_VERBOS_TSV="$_c"; break; }
+    done
+    unset _c
+fi
+
+t_dll_no_indice() {
+    [ -n "${TANDEM_VERBOS_TSV:-}" ] && [ -f "$TANDEM_VERBOS_TSV" ] || return 1
+    awk -F'\t' -v alvo="${1,,}" \
+        '$1 == alvo { print $2; achou = 1; exit } END { exit !achou }' \
+        "$TANDEM_VERBOS_TSV"
+}
+
 # Traduz uma DLL para um verbo do winetricks. Vazio = sem traducao conhecida.
 t_dll_para_verbo() {
+    local v
+    v="$(t_dll_para_verbo_tabela "$1")"
+    [ -n "$v" ] && { printf '%s' "$v"; return 0; }
+    t_dll_no_indice "$1" 2>/dev/null
+    return 0
+}
+
+t_dll_para_verbo_tabela() {
     local d="${1,,}"
     case "$d" in
         # Runtimes Visual C++
@@ -58,7 +91,19 @@ t_dll_para_verbo() {
         quartz.dll|amstream.dll) echo quartz ;;
         wmvcore.dll|wmasf.dll)   echo wmp9 ;;
         jscript.dll|vbscript.dll) echo wsh57 ;;
-        atl*.dll)            echo atmlib ;;
+        # A ATL vem junto com o runtime do Visual C++ do mesmo ano. Isto
+        # apontava para "atmlib", que e o Adobe Type Manager - uma biblioteca
+        # de FONTES, sem relacao nenhuma. O estrago era duplo: o dono esperava
+        # uma instalacao que nao resolvia, e o recibo era gravado assim mesmo,
+        # entao na tentativa seguinte o Tandem dizia "ja instalei o que este
+        # programa pedia" e desistia. Encontrado comparando a tabela com o
+        # indice gerado do proprio winetricks (tools/indice-winetricks.py).
+        atl140*.dll)         echo vcrun2019 ;;
+        atl120*.dll)         echo vcrun2013 ;;
+        atl110*.dll)         echo vcrun2012 ;;
+        atl100*.dll)         echo vcrun2010 ;;
+        atl90*.dll)          echo vcrun2008 ;;
+        atl80*.dll)          echo vcrun2005 ;;
         dbghelp.dll)         echo dbghelp ;;
         secur32.dll)         echo secur32 ;;
         usp10.dll)           echo usp10 ;;

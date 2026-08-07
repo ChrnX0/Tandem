@@ -138,6 +138,61 @@ def pe(caminho, maquina):
     return caminho
 
 
+def pe_com_imports(caminho, maquina=0x8664, dlls=("KERNEL32.dll",)):
+    """PE com tabela de importacoes de verdade, para exercitar o peinfo.
+
+    Uma secao so, endereco virtual igual ao deslocamento no arquivo, para que
+    a conversao RVA->offset do leitor seja exercitada com numeros que nao
+    coincidem por acaso.
+    """
+    SEC_RVA, SEC_RAW = 0x1000, 0x400
+    corpo = bytearray()
+
+    def rva(off_no_corpo):
+        return SEC_RVA + off_no_corpo
+
+    # nomes das DLLs, um a um, terminados em zero
+    nomes = {}
+    for d in dlls:
+        nomes[d] = rva(len(corpo))
+        corpo += d.encode("ascii") + b"\x00"
+    while len(corpo) % 4:
+        corpo += b"\x00"
+
+    # descritores de importacao: 20 bytes cada, terminados por um zerado
+    desc_rva = rva(len(corpo))
+    for d in dlls:
+        corpo += struct.pack("<IIIII", 0, 0, 0, nomes[d], 0)
+    corpo += b"\x00" * 20
+
+    secao_bruta = bytes(corpo).ljust(0x200, b"\x00")
+
+    cab = bytearray(SEC_RAW)
+    cab[0:2] = b"MZ"
+    struct.pack_into("<I", cab, 0x3C, 0x80)
+    pe = 0x80
+    cab[pe:pe + 4] = b"PE\x00\x00"
+    e64 = maquina == 0x8664
+    tam_opcional = 240 if e64 else 224
+    struct.pack_into("<HHIIIHH", cab, pe + 4,
+                     maquina, 1, 0, 0, 0, tam_opcional, 0x0002)
+    opc = pe + 24
+    struct.pack_into("<H", cab, opc, 0x20B if e64 else 0x10B)
+    # NumberOfRvaAndSizes e a tabela de diretorios
+    base_dir = opc + (112 if e64 else 96)
+    struct.pack_into("<I", cab, base_dir - 4, 16)
+    struct.pack_into("<II", cab, base_dir + 8, desc_rva, len(dlls) * 20)
+    # cabecalho da secao
+    sec = opc + tam_opcional
+    cab[sec:sec + 8] = b".text\x00\x00\x00"
+    struct.pack_into("<IIII", cab, sec + 8,
+                     len(secao_bruta), SEC_RVA, len(secao_bruta), SEC_RAW)
+
+    with open(caminho, "wb") as f:
+        f.write(bytes(cab) + secao_bruta)
+    return caminho
+
+
 def main():
     destino = sys.argv[1] if len(sys.argv) > 1 else "."
     os.makedirs(destino, exist_ok=True)
@@ -161,6 +216,12 @@ def main():
     pe(j("progarm.exe"), 0xAA64)
     with open(j("naoexe.exe"), "wb") as f:
         f.write(b"isto nao e um PE\n")
+
+    pe_com_imports(j("imports64.exe"), 0x8664,
+                   ("KERNEL32.dll", "MSVCP140.dll", "VCRUNTIME140.dll"))
+    pe_com_imports(j("imports32.exe"), 0x014C,
+                   ("kernel32.dll", "hasp_windows_x64.dll"))
+    pe_com_imports(j("importslimpo.exe"), 0x8664, ("KERNEL32.dll", "USER32.dll"))
 
     print("gerado em %s" % destino)
 

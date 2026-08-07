@@ -100,6 +100,90 @@ igual "traducao e insensivel a caixa" \
       "vcrun2022 vcrun2022" \
       "$(t_dll_para_verbo MSVCP140.DLL) $(t_dll_para_verbo msvcp140.dll)"
 
+# A ATL vem do runtime do Visual C++, nao do atmlib (Adobe Type Manager).
+# O erro instalava a coisa errada, gravava recibo, e na volta o Tandem dizia
+# "ja instalei o que este programa pedia" e desistia.
+igual "atl vem do Visual C++ do mesmo ano, nao do Adobe Type Manager" \
+      "vcrun2005 vcrun2008 vcrun2010 vcrun2012 vcrun2013 vcrun2019" \
+      "$(for d in atl80 atl90 atl100 atl110 atl120 atl140; do
+             printf '%s ' "$(t_dll_para_verbo_tabela $d.dll)"; done | sed 's/ $//')"
+
+secao "indice gerado do winetricks (segunda opiniao)"
+
+igual "a tabela a mao tem precedencia sobre o indice" \
+      "vcrun2022 dotnet48" \
+      "$(t_dll_para_verbo msvcp140.dll) $(t_dll_para_verbo mscoree.dll)"
+
+if [ -f "$RAIZ/src/lib/verbos.tsv" ]; then
+    n_ind="$(grep -vc '^#' "$RAIZ/src/lib/verbos.tsv")"
+    if [ "$n_ind" -gt 150 ]; then
+        passou "o indice cobre $n_ind DLLs"
+    else
+        falhou "o indice cobre mais de 150 DLLs" ">150" "$n_ind"
+    fi
+    igual "o indice responde por DLL que a tabela a mao nao conhece" \
+          "dsound" "$(t_dll_para_verbo dsound.dll)"
+    igual "DLL fora das duas continua sem traducao" \
+          "" "$(t_dll_para_verbo MinhaLibPropria.dll)"
+    # O desempate tem que entender versao com ponto omitido: dotnet48 e 4.8,
+    # dotnet472 e 4.7.2. Comparar como inteiro daria 472 > 48.
+    igual "o desempate do indice escolhe a versao mais nova" \
+          "dotnet48" \
+          "$(grep -m1 '^mscoree\.dll' "$RAIZ/src/lib/verbos.tsv" | cut -f2)"
+else
+    pulou "indice do winetricks" "verbos.tsv ausente"
+fi
+
+if command -v winetricks >/dev/null 2>&1; then
+    if python3 tools/indice-winetricks.py --conferir >/dev/null 2>&1; then
+        passou "o indice em disco bate com o winetricks instalado"
+    else
+        pulou "indice em disco x winetricks instalado" "versoes diferentes do winetricks"
+    fi
+else
+    pulou "regerar o indice" "winetricks nao instalado"
+fi
+
+# ------------------------------------------------------- pre-voo do PE
+
+secao "pre-voo: ler o .exe sem executar"
+
+pecampo() { python3 src/lib/peinfo.py "$1" 2>/dev/null | grep "^$2=" | cut -d= -f2-; }
+
+igual "le a arquitetura de um PE de 64 bits" \
+      "64" "$(pecampo "$ARTEFATOS/imports64.exe" ARQUITETURA)"
+igual "le a arquitetura de um PE de 32 bits" \
+      "32" "$(pecampo "$ARTEFATOS/imports32.exe" ARQUITETURA)"
+igual "le a tabela de importacoes inteira" \
+      "kernel32.dll,msvcp140.dll,vcruntime140.dll" \
+      "$(pecampo "$ARTEFATOS/imports64.exe" DLLS)"
+igual "normaliza os nomes para minusculas" \
+      "hasp_windows_x64.dll,kernel32.dll" \
+      "$(pecampo "$ARTEFATOS/imports32.exe" DLLS)"
+igual "arquivo que nao e PE degrada com mensagem" \
+      "nao comeca com MZ" "$(pecampo "$ARTEFATOS/naoexe.exe" ERRO)"
+igual "arquivo inexistente degrada com mensagem" \
+      "arquivo nao encontrado" "$(pecampo /nao/existe.exe ERRO)"
+python3 src/lib/peinfo.py >/dev/null 2>&1
+igual "sem argumento devolve erro de uso" "2" "$?"
+
+# O que o pre-voo consegue provar sozinho: reconhecer, ANTES de rodar, um
+# programa que depende de coisa que nunca vai funcionar aqui.
+TANDEM_LIB="$RAIZ/src/lib" TANDEM_LIMITES="$RAIZ/src/lib/limites.tsv" \
+    bash -c '. "'"$RAIZ"'/src/lib/common.sh"; t_limite_do_programa "'"$ARTEFATOS"'/imports32.exe"' \
+    > "$TMPRAIZ/lim.txt" 2>/dev/null
+case "$(cat "$TMPRAIZ/lim.txt")" in
+    dongle\|*chave\ física*) passou "reconhece proteção por chave física antes de rodar" ;;
+    *) falhou "reconhece proteção por chave física antes de rodar" \
+              "dongle|...chave física..." "$(cat "$TMPRAIZ/lim.txt")" ;;
+esac
+
+TANDEM_LIB="$RAIZ/src/lib" TANDEM_LIMITES="$RAIZ/src/lib/limites.tsv" \
+    bash -c '. "'"$RAIZ"'/src/lib/common.sh"; t_limite_do_programa "'"$ARTEFATOS"'/importslimpo.exe"' \
+    > "$TMPRAIZ/lim2.txt" 2>/dev/null
+igual "programa comum nao recebe veredito de impossibilidade" \
+      "" "$(cat "$TMPRAIZ/lim2.txt")"
+
 # --------------------------------------------------------- leitura de PE
 
 secao "arquitetura de executavel PE"
@@ -420,12 +504,16 @@ igual "executa comando sem aspas (MsiExec)" \
 
 secao "preparar: o Tandem instala o que falta"
 
-# Numa PATH pelada, tudo falta.
-faltas="$(PATH=/usr/bin:/bin t_pecas_faltando | cut -d'|' -f1 | tr '\n' ' ' | sed 's/ $//')"
-case "$faltas" in
-    *wine*waydroid*) passou "detecta o que falta (achou: $faltas)" ;;
-    *) falhou "detecta o que falta" "wine ... waydroid" "$faltas" ;;
-esac
+# Numa PATH vazia nada existe, entao a lista tem que vir completa - e assim
+# o teste nao depende do que esta instalado na maquina que roda a suite.
+faltas="$(PATH=/nao/existe t_pecas_faltando | cut -d'|' -f1 | tr '\n' ' ' | sed 's/ $//')"
+igual "sem nada instalado, lista tudo que falta" \
+      "wine winetricks adb waydroid" "$faltas"
+# E com tudo presente, a lista vem vazia.
+FINGE="$TMPRAIZ/finge"; mkdir -p "$FINGE"
+for c in wine winetricks adb waydroid; do printf '#!/bin/sh\n' > "$FINGE/$c"; chmod +x "$FINGE/$c"; done
+igual "com tudo instalado, nao ha o que preparar" \
+      "" "$(PATH="$FINGE" t_pecas_faltando | grep -v '^wine32|' )"
 
 script="$(t_script_instalacao wine wine32 waydroid)"
 case "$script" in
