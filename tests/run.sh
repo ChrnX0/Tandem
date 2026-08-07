@@ -269,6 +269,67 @@ fi
 # Memoria de um programa nao pode vazar para outro.
 igual "cada programa tem a sua memoria" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
 
+secao "receitas: conhecimento coletivo sem servidor"
+
+t_memoria_grava "$MEM_A" RESULTADO abriu
+t_memoria_grava "$MEM_A" RESOLVERAM "vcrun2022 msxml6"
+REC="$TMPRAIZ/receita.txt"
+t_receita_exporta "$MEM_A" > "$REC"
+
+if grep -q '^TANDEM_RECEITA=1$' "$REC" && grep -q '^IDENTIDADE=' "$REC"; then
+    passou "a receita se declara e carrega a identidade do programa"
+else
+    falhou "a receita se declara e carrega a identidade do programa" \
+           "TANDEM_RECEITA + IDENTIDADE" "$(cat "$REC")"
+fi
+if grep -q '^#.*mandar para outra pessoa' "$REC"; then
+    passou "a receita se explica para quem receber"
+else
+    falhou "a receita se explica para quem receber" "cabecalho explicativo" "ausente"
+fi
+
+t_memoria_esquece "$MEM_A" 2>/dev/null
+t_receita_importa "$REC" "$MEM_A"
+igual "receita legitima e aceita" "0" "$?"
+igual "  e vira memoria" "vcrun2022 msxml6" "$(t_memoria_le "$MEM_A" RESOLVERAM)"
+
+# Uma receita e do ARQUIVO, nao do nome. Aplicar a de outro programa
+# ensinaria a licao errada, e ninguem perceberia.
+t_receita_importa "$REC" "$MEM_B" 2>/dev/null
+igual "receita de outro programa e recusada" "3" "$?"
+igual "  e nao contamina a memoria do outro" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
+
+# A defesa que mais importa: o verbo de uma receita vira argumento de
+# "winetricks -q". Uma receita vinda de fora nao pode carregar comando.
+for veneno in 'vcrun2022 ;curl|sh' 'a$(rm -rf /)' '../../etc/passwd' 'a b`id`' 'a/b' 'a b c;d'; do
+    # Montado com grep+printf, nao com sed: o proprio veneno tem | e $ e
+    # quebraria o delimitador do sed antes de chegar ao codigo testado.
+    { grep -v '^RESOLVERAM=' "$REC"; printf 'RESOLVERAM=%s\n' "$veneno"; } > "$TMPRAIZ/veneno.txt"
+    t_memoria_esquece "$MEM_A" 2>/dev/null
+    t_receita_importa "$TMPRAIZ/veneno.txt" "$MEM_A" 2>/dev/null
+    if [ "$?" = 4 ] && [ -z "$(t_memoria_le "$MEM_A" RESOLVERAM 2>/dev/null)" ]; then
+        passou "recusa receita com comando embutido: $veneno"
+    else
+        falhou "recusa receita com comando embutido: $veneno" "codigo 4 e nada gravado" \
+               "$(t_memoria_le "$MEM_A" RESOLVERAM 2>/dev/null)"
+    fi
+done
+
+printf 'isto nao e receita\n' > "$TMPRAIZ/naorec.txt"
+t_receita_importa "$TMPRAIZ/naorec.txt" "$MEM_A" 2>/dev/null
+igual "arquivo que nao se declara receita e recusado" "2" "$?"
+t_receita_importa /nao/existe "$MEM_A" 2>/dev/null
+igual "receita inexistente falha sem quebrar" "1" "$?"
+
+t_verbo_valido vcrun2022; igual "nome de verbo comum e aceito" "0" "$?"
+t_verbo_valido 'a;b';      igual "nome com ponto e virgula e recusado" "1" "$?"
+t_verbo_valido '';         igual "nome vazio e recusado" "1" "$?"
+t_verbo_valido "$(printf 'a%.0s' $(seq 1 60))"
+igual "nome absurdamente longo e recusado" "1" "$?"
+
+t_memoria_esquece "$MEM_A" 2>/dev/null
+t_memoria_grava "$MEM_A" RESULTADO abriu
+
 t_memoria_esquece "$MEM_A"
 igual "esquecer apaga de verdade" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$MEM_A" 2>/dev/null

@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="3.0"
+VERSAO="3.1"
 
 uso() {
     cat <<'AJUDA'
@@ -22,6 +22,8 @@ Tandem - roda programas Windows e apps Android no Linux.
   tandem restore              restaura o ambiente Windows
   tandem protect <caminho>    protege um perfil Wine contra alteracoes
   tandem alternativas <nome>  procura um programa de Linux que faca o mesmo
+  tandem receita <arquivo>    exporta o que aprendeu, para mandar a alguem
+  tandem receita --importar <r> <arquivo>   usa a receita de outra pessoa
   tandem memoria [nome]       o que o Tandem aprendeu sobre os programas
   tandem esquecer <nome>      apaga o que ele aprendeu sobre um programa
   tandem logs                 mostra o log mais recente
@@ -391,6 +393,50 @@ Se você encontrar uma, ela pode ser acrescentada em uma linha."
     return 1
 }
 
+# -------------------------------------------------------------- receitas
+#
+# O conhecimento coletivo sem servidor: a memoria de um programa vira um
+# arquivo de texto que o dono manda para outra pessoa. So puxa, nunca
+# empurra - o Tandem le receitas e nunca envia nada para lugar nenhum.
+acao_receita() {
+    if [ "${1:-}" = "--importar" ]; then
+        local rec="${2:-}" prog="${3:-}"
+        [ -n "$rec" ] && [ -n "$prog" ] || {
+            t_erro "Uso:  tandem receita --importar <receita.txt> <programa.exe>"; return 1; }
+        [ -f "$prog" ] || { t_erro "Não achei o programa: $prog"; return 1; }
+        t_receita_importa "$rec" "$prog"
+        case $? in
+            0) t_ok "Receita aplicada.
+
+O Tandem agora sabe o que este programa pediu na máquina de quem mandou.
+Ele vai PERGUNTAR antes de instalar qualquer coisa — receita não é ordem."
+               return 0 ;;
+            2) t_erro "Este arquivo não é uma receita do Tandem." ;;
+            3) t_erro "Esta receita é de outro programa, ou de outra versão dele.
+
+Aplicar ensinaria a lição errada, então não apliquei." ;;
+            4) t_erro "Recusei a receita: ela traz um nome de componente suspeito.
+
+Receita vinda de fora não pode mandar o Tandem executar nada." ;;
+            *) t_erro "Não consegui ler esta receita." ;;
+        esac
+        return 1
+    fi
+
+    local prog="${1:-}"
+    [ -n "$prog" ] || { t_erro "Diga qual programa.
+
+Exemplo:  tandem receita ~/Downloads/sistema.exe"; return 1; }
+    [ -f "$prog" ] || { t_erro "Não achei o programa: $prog"; return 1; }
+    if ! t_receita_exporta "$prog"; then
+        t_erro "Ainda não aprendi nada sobre este programa.
+
+Abra ele uma vez pelo Tandem e a receita se forma sozinha."
+        return 1
+    fi
+    return 0
+}
+
 # ------------------------------------------------------------------ memoria
 #
 # O que o Tandem aprendeu, em texto que o dono consegue ler. Nao existe
@@ -497,6 +543,7 @@ case "${1:-}" in
     restore|restaurar)    acao_restore ;;
     protect|proteger)     shift; acao_protect "$@" ;;
     alternativas|alternativa) shift; acao_alternativas "$@" ;;
+    receita|receitas)     shift; acao_receita "$@" ;;
     memoria|memória)      shift; acao_memoria "$@" ;;
     esquecer|esqueca)     shift; acao_esquecer "$@" ;;
     logs|log)             acao_logs ;;

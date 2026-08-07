@@ -1,29 +1,26 @@
-tandem (3.0) unstable; urgency=medium
+tandem (3.1) unstable; urgency=medium
 
-  * O indice do winetricks vira AUDITOR, e nao substituto. Um painel
-    adversarial refutou usa-lo como fonte em tempo de execucao, com medida:
-    mscoree.dll tem 11 verbos candidatos, mscorwks 9, e escolher errado num
-    mscoree custa 30 minutos. Agora o indice traz coluna de confianca - so
-    responde quando ha um candidato, ou quando todos sao da mesma familia e
-    o desempate por versao e defensavel. Sao 192 DLLs de resposta segura e
-    54 em que ele se cala, que e a resposta honesta.
-  * O auditor encontrou SEIS erros de mapeamento na tabela escrita a mao,
-    todos confirmados na fonte do winetricks. Cada um instalava a coisa
-    errada E gravava recibo, entao na tentativa seguinte o Tandem dizia "ja
-    instalei o que este programa pedia" e desistia:
-      atl*.dll        -> atmlib   (Adobe Type Manager; e o vcrun do ano)
-      msvcp71/msvcr71 -> vcrun6   (vcrun6 entrega as 60; e o vcrun2003)
-      amstream.dll    -> quartz   (quartz entrega so quartz; ha verbo proprio)
-      d3dcompiler_46  -> _47      (existe verbo dedicado para o 46)
-      wmasf.dll       -> wmp9     (wmp9 nao entrega wmasf; e o wmp11)
-      xinput1_*.dll   -> xact     (xact entrega xaudio2 e xactengine, nao
-                                   xinput, que tem verbo proprio)
-    A auditoria virou teste permanente: para cada DLL que os dois conhecem,
-    o verbo prometido a mao tem que estar entre os que o winetricks declara.
-  * Corrigido na suite de testes: ela resolvia as bibliotecas para
-    /usr/lib/tandem quando o pacote estava instalado na maquina, entao
-    conferia a versao antiga em vez do repositorio. Teste que aprova o
-    codigo errado e pior que teste nenhum.
+  * Novo: receitas. A memoria de um programa vira um arquivo de texto
+    pequeno e legivel que o dono confere e manda para outra pessoa -
+    "tandem receita <programa>" exporta, "tandem receita --importar
+    <receita> <programa>" usa a de outrem. E o conhecimento coletivo sem
+    servidor nenhum.
+  * A direcao e sempre de fora para dentro: o Tandem LE receitas e nunca
+    envia nada para lugar nenhum. Um programa que manda dados sozinho nao
+    teria lugar numa maquina de frente de caixa, e uma base escrita por
+    qualquer um seria superficie de ataque.
+  * Tres recusas, porque receita vinda de fora e entrada nao confiavel:
+    arquivo que nao se declara receita; receita de OUTRO programa (a
+    identidade e do arquivo, entao aplicar a errada ensinaria a licao
+    errada sem ninguem perceber); e nome de componente com qualquer
+    caractere fora de letras, numeros, ponto, hifen e sublinhado. Esta
+    ultima e a que importa: o verbo vira argumento de "winetricks -q", e
+    sem a peneira uma receita poderia carregar um comando junto do nome.
+  * Receita importada vira memoria, e memoria so SUGERE - o Tandem
+    continua perguntando antes de instalar qualquer coisa.
+  * Corrigido na suite: a secao de testes estava duplicada por um replace
+    que casou duas vezes, e as bibliotecas resolviam para o pacote
+    instalado em vez do repositorio.
 
- -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 09:00:00 +0000
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 10:00:00 +0000
 

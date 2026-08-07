@@ -628,6 +628,76 @@ t_memoria_junta() {
     t_memoria_grava "$prog" "$chave" "${atual:+$atual }$item"
 }
 
+# ------------------------------------------------------------- receitas
+#
+# Uma receita e a memoria de um programa num arquivo pequeno e legivel, que
+# o dono pode conferir e mandar para outra pessoa. E o atomo do
+# conhecimento coletivo - e ele funciona sem servidor nenhum.
+#
+# A direcao e SEMPRE de fora para dentro: o Tandem le receitas, nunca envia
+# nada. Contribuir e um ato humano, deliberado e visivel. Um programa que
+# manda dados sozinho nao teria lugar numa maquina de frente de caixa, e
+# uma base escrita por qualquer um seria superficie de ataque.
+
+# Nome de verbo aceitavel. Esta e a defesa que importa: o verbo de uma
+# receita vira argumento de "winetricks -q". Sem esta peneira, uma receita
+# vinda de fora poderia carregar um comando junto do nome.
+t_verbo_valido() {
+    case "${1:-}" in
+        ''|*[!a-zA-Z0-9_.-]*) return 1 ;;
+    esac
+    [ "${#1}" -le 40 ] || return 1
+    return 0
+}
+
+t_receita_exporta() {
+    local prog="$1" arq
+    arq="$(t_memoria_arquivo "$prog" 2>/dev/null)" || return 1
+    [ -f "$arq" ] || return 1
+    printf '# Receita do Tandem: o que este programa precisou para funcionar.\n'
+    printf '# Pode ler, conferir e mandar para outra pessoa.\n'
+    printf '# Para usar:  tandem receita --importar <este arquivo>\n'
+    printf 'TANDEM_RECEITA=1\n'
+    printf 'IDENTIDADE=%s\n' "$(t_memoria_id "$prog")"
+    printf 'ORIGEM=%s\n' "$( . /etc/os-release 2>/dev/null
+                             printf '%s' "${PRETTY_NAME:-Linux}")"
+    grep -v '^#' "$arq"
+}
+
+# Le uma receita e a transforma em memoria. Recusa qualquer coisa que nao
+# reconheca: receita de outro programa, verbo com caractere estranho,
+# arquivo que nao se declara receita.
+t_receita_importa() {
+    local arq="$1" prog="$2" id_esperada chave valor verbos="" v
+    [ -f "$arq" ] || return 1
+    grep -q '^TANDEM_RECEITA=1$' "$arq" || return 2
+    id_esperada="$(t_memoria_id "$prog" 2>/dev/null)" || return 1
+
+    # A receita e de OUTRO programa? Aplicar seria ensinar a lição errada.
+    local id_receita
+    id_receita="$(sed -n 's/^IDENTIDADE=//p' "$arq" | head -1)"
+    [ -n "$id_receita" ] || return 3
+    [ "$id_receita" = "$id_esperada" ] || return 3
+
+    while IFS='=' read -r chave valor; do
+        case "$chave" in
+            RESOLVERAM|NAO_RESOLVERAM)
+                for v in $valor; do
+                    t_verbo_valido "$v" || { t_diz "receita recusada: verbo suspeito '$v'"; return 4; }
+                done
+                verbos="$verbos$chave=$valor"$'\n' ;;
+            ARQUITETURA|LIMITE|RESULTADO|PROGRAMA) verbos="$verbos$chave=$valor"$'\n' ;;
+        esac
+    done < "$arq"
+
+    while IFS='=' read -r chave valor; do
+        [ -n "$chave" ] || continue
+        t_memoria_grava "$prog" "$chave" "$valor"
+    done <<< "$verbos"
+    t_memoria_grava "$prog" ORIGEM_DA_RECEITA "$(basename -- "$arq")"
+    return 0
+}
+
 t_memoria_esquece() {
     local arq; arq="$(t_memoria_arquivo "$1" 2>/dev/null)" || return 1
     [ -f "$arq" ] || return 1
