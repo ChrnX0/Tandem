@@ -59,15 +59,13 @@ jobs:
           tandem doctor > /tmp/diag.txt
           test -s /tmp/diag.txt || { echo "o diagnostico saiu vazio"; exit 1; }
           sudo dpkg -P tandem
-          # Olhar o DISCO, nao perguntar ao shell. O "command -v" responde do
-          # cache de hash do bash e continua apontando para um binario que ja
-          # foi removido - foi exatamente assim que esta verificacao reprovou
-          # um purge que tinha funcionado. Acreditar no cache e evidencia
-          # fraca; conferir o arquivo e evidencia.
-          # Conferir os caminhos EXATOS que o pacote instala. Um find por
-          # "*tandem*" e largo demais: ele encontra as definicoes de terminal
-          # da Tandem Computers (tandem653, tandem6510) que vem no ncurses, e
-          # reprovou um purge que estava perfeito.
+          # Duas armadilhas ja pisadas aqui, as duas por evidencia fraca.
+          # O "command -v" responde do cache de hash do bash e apontava para
+          # um binario ja removido. E um find por
+          # "*tandem*" e largo demais: acha as definicoes de terminal da
+          # Tandem Computers (tandem653, tandem6510) que vem no ncurses.
+          # Os dois reprovaram um purge que estava perfeito. Conferir os
+          # caminhos exatos do pacote e a evidencia certa.
           sobrou=""
           for caminho in /usr/bin/tandem /usr/bin/tandem-exe /usr/bin/tandem-apk \
                          /usr/bin/tandem-android /usr/bin/tandem-repair \
