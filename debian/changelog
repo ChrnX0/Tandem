@@ -1,21 +1,21 @@
-tandem (2.8) unstable; urgency=medium
+tandem (2.9) unstable; urgency=medium
 
-  * Novo: memoria por programa. O Tandem passa a guardar o que aprendeu
-    sobre cada executavel - quais componentes resolveram, quais nao
-    resolveram, se abriu, quanto tempo levou, e o veredito do pre-voo. A
-    identidade e do ARQUIVO (tamanho + inicio + fim), nao do caminho, entao
-    a licao sobrevive a mover o programa de pasta e vale em outra maquina.
-  * A memoria SUGERE, nunca decide. Quando ha receita conhecida, o Tandem
-    pergunta se pode instalar de uma vez e pular a etapa de descobrir; se o
-    dono disser nao, roda como sempre rodou. Licao errada aprendida em
-    silencio se repetiria para sempre, e este programa mexe na maquina onde
-    o dono fatura.
-  * A memoria tambem aprende com a derrota: componente que foi instalado e
-    nao fez o programa abrir entra em NAO_RESOLVERAM, para nao ser
-    prometido como solucao na proxima vez.
-  * Novo: "tandem memoria" mostra tudo que foi aprendido, em texto legivel,
-    e "tandem esquecer <nome>" apaga. Nao existe memoria secreta: sem poder
-    VER o que foi guardado nao ha como confiar nem como corrigir.
+  * Novo: "tandem alternativas <nome>" procura um programa de Linux que faca
+    o trabalho de um programa de Windows. Duas classes, e a diferenca e o
+    ponto todo: "nativo" quando E o mesmo programa com versao oficial para
+    Linux - caso em que rodar no Wine e sempre pior - e "parecido" quando e
+    outro programa, sempre com o que muda declarado. Dizer que o GIMP e o
+    Photoshop seria enganar o dono.
+  * A tabela e local e auditavel (alternativas.tsv), nao uma busca na
+    internet: o Tandem funciona sem rede e nao manda nada para lugar nenhum.
+    Uma linha nova nao exige mudar codigo.
+  * Quando o pre-voo reconhece que um programa nunca vai funcionar aqui -
+    chave de protecao, driver de sistema, USB direto - a mensagem de erro
+    passa a oferecer o caminho alternativo junto. E o unico momento em que
+    ficar calado deixaria o dono sem saida nenhuma, porque por mais que ele
+    tente aquele programa nao vai abrir.
+  * O Tandem nunca troca nada sozinho e nunca sugere trocar um programa que
+    esta funcionando.
 
- -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 07:00:00 +0000
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 08:00:00 +0000
 

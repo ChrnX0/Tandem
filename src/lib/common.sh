@@ -494,6 +494,64 @@ t_pe_arch() {
     esac
 }
 
+# --------------------------------------------------------- alternativas
+#
+# O melhor desfecho para o dono nem sempre e "seu programa Windows roda no
+# Wine". As vezes e "voce nao precisa do Wine": muitos programas tem versao
+# oficial para Linux, e rodar a versao Windows deles no Wine e sempre pior -
+# mais lento, sem atualizacao, e quebra quando o Wine muda.
+#
+# O Tandem nunca troca nada e nunca sugere trocar programa que esta
+# funcionando. Isto aparece em duas situacoes: quando o dono pergunta, e
+# quando o pre-voo reconheceu que aquele programa nunca vai funcionar aqui -
+# onde ficar calado seria deixar o dono sem saida nenhuma.
+#
+# A tabela e local e auditavel, nao uma busca na internet: o Tandem funciona
+# sem rede e nao manda nada para lugar nenhum. Uma linha nova basta.
+
+TANDEM_ALTERNATIVAS="${TANDEM_ALTERNATIVAS:-${TANDEM_LIB:-/usr/lib/tandem}/alternativas.tsv}"
+
+# Procura por nome. Devolve "classe|nome|como instalar|o que muda", uma
+# alternativa por linha.
+t_alternativas_para() {
+    local alvo padrao classe nome como muda
+    alvo="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | tr -d ' _-')"
+    [ -n "$alvo" ] || return 1
+    [ -f "$TANDEM_ALTERNATIVAS" ] || return 1
+    local achou=1
+    while IFS=$'\t' read -r padrao classe nome como muda; do
+        case "$padrao" in ''|'#'*) continue ;; esac
+        [ -n "$nome" ] || continue
+        # shellcheck disable=SC2254
+        case "$alvo" in
+            $padrao) printf '%s|%s|%s|%s\n' "$classe" "$nome" "$como" "$muda"; achou=0 ;;
+        esac
+    done < "$TANDEM_ALTERNATIVAS"
+    return $achou
+}
+
+# Texto pronto para mostrar ao dono, ou vazio se nao houver nada.
+t_texto_alternativas() {
+    local linhas classe nome como muda saida=""
+    linhas="$(t_alternativas_para "$1")" || return 1
+    while IFS='|' read -r classe nome como muda; do
+        [ -n "$nome" ] || continue
+        if [ "$classe" = nativo ]; then
+            saida="$saida
+• $nome — feito para Linux
+  $muda
+  Como obter: $como"
+        else
+            saida="$saida
+• $nome — faz um trabalho parecido
+  Atenção: $muda
+  Como obter: $como"
+        fi
+    done <<< "$linhas"
+    [ -n "$saida" ] || return 1
+    printf '%s' "$saida"
+}
+
 # ------------------------------------------------------------- memoria
 #
 # Toda vez que o Tandem roda ele descobre coisas - quais componentes o

@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="2.8"
+VERSAO="2.9"
 
 uso() {
     cat <<'AJUDA'
@@ -21,6 +21,7 @@ Tandem - roda programas Windows e apps Android no Linux.
   tandem backup               salva o ambiente Windows
   tandem restore              restaura o ambiente Windows
   tandem protect <caminho>    protege um perfil Wine contra alteracoes
+  tandem alternativas <nome>  procura um programa de Linux que faca o mesmo
   tandem memoria [nome]       o que o Tandem aprendeu sobre os programas
   tandem esquecer <nome>      apaga o que ele aprendeu sobre um programa
   tandem logs                 mostra o log mais recente
@@ -361,6 +362,35 @@ O desinstalador do programa não completou. Tente de novo, ou remova pela janela
     return 0
 }
 
+# ------------------------------------------------------------- alternativas
+#
+# O dono pergunta; o Tandem responde com o que sabe, e diz claramente quando
+# nao sabe. Nunca troca nada, nunca insiste, e nunca sugere trocar programa
+# que esta funcionando.
+acao_alternativas() {
+    local nome="${1:-}" texto
+    if [ -z "$nome" ]; then
+        t_erro "Diga o nome do programa.
+
+Exemplo:  tandem alternativas photoshop"
+        return 1
+    fi
+    # Aceita tanto "photoshop" quanto o caminho de um .exe.
+    [ -f "$nome" ] && nome="$(basename -- "${nome%.*}")"
+
+    if texto="$(t_texto_alternativas "$nome")"; then
+        printf 'Programas de Linux que fazem o trabalho de "%s":\n%s\n' "$nome" "$texto" |
+            t_texto "Tandem - Alternativas para $nome"
+        return 0
+    fi
+
+    t_erro "Não conheço alternativa de Linux para \"$nome\".
+
+Isso não quer dizer que não exista — quer dizer que ainda não está na minha lista.
+Se você encontrar uma, ela pode ser acrescentada em uma linha."
+    return 1
+}
+
 # ------------------------------------------------------------------ memoria
 #
 # O que o Tandem aprendeu, em texto que o dono consegue ler. Nao existe
@@ -466,6 +496,7 @@ case "${1:-}" in
     backup)               acao_backup ;;
     restore|restaurar)    acao_restore ;;
     protect|proteger)     shift; acao_protect "$@" ;;
+    alternativas|alternativa) shift; acao_alternativas "$@" ;;
     memoria|memória)      shift; acao_memoria "$@" ;;
     esquecer|esqueca)     shift; acao_esquecer "$@" ;;
     logs|log)             acao_logs ;;

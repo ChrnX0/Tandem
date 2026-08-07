@@ -1,0 +1,62 @@
+# padrao	classe	nome	como instalar	o que muda
+#
+# Programas de Linux que fazem o trabalho de um programa de Windows.
+#
+# DUAS CLASSES, e a diferenca importa muito:
+#
+#   nativo   - E O MESMO PROGRAMA, com versao oficial para Linux. Nao ha
+#              troca nem adaptacao: e o mesmo produto, do mesmo fabricante,
+#              rodando direto. Rodar isso no Wine e sempre pior - mais lento,
+#              sem atualizacao automatica, e quebra quando o Wine muda.
+#              Esta e a categoria que mais resolve e menos gente conhece.
+#
+#   parecido - Outro programa, que faz um trabalho parecido. NAO e igual, e
+#              a coluna "o que muda" precisa dizer no que difere. Sugerir
+#              troca sem avisar a diferenca seria enganar.
+#
+# O Tandem NUNCA troca nada sozinho, e nunca sugere trocar um programa que
+# esta funcionando. Isto aparece em duas situacoes: quando o dono pergunta
+# ("tandem alternativas"), e quando o pre-voo reconhece que aquele programa
+# nunca vai funcionar aqui - onde ficar calado seria deixar o dono sem saida.
+#
+# Uma linha nova nao exige mudar codigo nenhum.
+
+*teamviewer*	nativo	TeamViewer para Linux	baixe em teamviewer.com/pt-br/download/linux/	é o mesmo TeamViewer, versão oficial para Linux
+*anydesk*	nativo	AnyDesk para Linux	baixe em anydesk.com/pt/downloads/linux	é o mesmo AnyDesk, versão oficial para Linux
+*rustdesk*	nativo	RustDesk para Linux	baixe em rustdesk.com	é o mesmo RustDesk, versão oficial para Linux
+*chrome*	nativo	Google Chrome	baixe em google.com/chrome	é o mesmo Chrome, versão oficial para Linux
+*firefox*	nativo	Firefox	já vem instalado no Zorin	é o mesmo Firefox
+*zoom*	nativo	Zoom para Linux	baixe em zoom.us/download	é o mesmo Zoom, versão oficial para Linux
+*skype*	nativo	Skype para Linux	sudo snap install skype	é o mesmo Skype, versão oficial para Linux
+*spotify*	nativo	Spotify para Linux	sudo snap install spotify	é o mesmo Spotify, versão oficial para Linux
+*vlc*	nativo	VLC	sudo apt install vlc	é o mesmo VLC
+*obs*studio*	nativo	OBS Studio	sudo apt install obs-studio	é o mesmo OBS Studio
+*audacity*	nativo	Audacity	sudo apt install audacity	é o mesmo Audacity
+*blender*	nativo	Blender	sudo apt install blender	é o mesmo Blender
+*inkscape*	nativo	Inkscape	sudo apt install inkscape	é o mesmo Inkscape
+*gimp*	nativo	GIMP	sudo apt install gimp	é o mesmo GIMP
+*libreoffice*	nativo	LibreOffice	já vem instalado no Zorin	é o mesmo LibreOffice
+*thunderbird*	nativo	Thunderbird	sudo apt install thunderbird	é o mesmo Thunderbird
+*filezilla*	nativo	FileZilla	sudo apt install filezilla	é o mesmo FileZilla
+*putty*	nativo	PuTTY	sudo apt install putty	é o mesmo PuTTY; no Linux o terminal já faz SSH sem programa extra
+*notepad++*	parecido	Gedit, Kate ou VS Code	sudo apt install gedit	edita texto e código; sem os plugins do Notepad++
+*winrar*	parecido	Gerenciador de arquivos do Zorin	já vem instalado	abre e cria .zip e .rar com dois cliques, sem instalar nada
+*7z*	parecido	Gerenciador de arquivos do Zorin	já vem instalado	abre e cria .zip e .7z com dois cliques, sem instalar nada
+*winzip*	parecido	Gerenciador de arquivos do Zorin	já vem instalado	abre e cria .zip com dois cliques, sem instalar nada
+*acrobat*	parecido	Evince ou Okular	já vem instalado no Zorin	lê e imprime PDF; não edita nem assina como o Acrobat pago
+*adobereader*	parecido	Evince ou Okular	já vem instalado no Zorin	lê e imprime PDF; não edita nem assina como o Acrobat pago
+*photoshop*	parecido	GIMP ou Krita	sudo apt install gimp krita	edita imagem, mas é outro programa: menus diferentes e sem os arquivos .psd com todos os recursos
+*coreldraw*	parecido	Inkscape	sudo apt install inkscape	desenho vetorial; abre .cdr com limitações e salva em .svg
+*illustrator*	parecido	Inkscape	sudo apt install inkscape	desenho vetorial; não abre .ai com todos os recursos
+*excel*	parecido	LibreOffice Calc	já vem instalado no Zorin	abre e salva .xlsx; macros do VBA não funcionam
+*word*	parecido	LibreOffice Writer	já vem instalado no Zorin	abre e salva .docx; a formatação pode sair diferente em documento complexo
+*powerpoint*	parecido	LibreOffice Impress	já vem instalado no Zorin	abre e salva .pptx; animações complexas podem sair diferentes
+*autocad*	parecido	LibreCAD ou FreeCAD	sudo apt install librecad freecad	desenho técnico; LibreCAD é só 2D e o FreeCAD trabalha diferente do AutoCAD
+*sketchup*	parecido	FreeCAD ou Blender	sudo apt install freecad	modelagem 3D, com jeito de trabalhar bem diferente
+*ccleaner*	parecido	BleachBit	sudo apt install bleachbit	limpa arquivos temporários; no Linux isso é raramente necessário
+*virtualbox*	nativo	VirtualBox para Linux	sudo apt install virtualbox	é o mesmo VirtualBox, e no Linux ele roda muito melhor
+*wireshark*	nativo	Wireshark	sudo apt install wireshark	é o mesmo Wireshark
+*qbittorrent*	nativo	qBittorrent	sudo apt install qbittorrent	é o mesmo qBittorrent
+*calibre*	nativo	Calibre	sudo apt install calibre	é o mesmo Calibre
+*handbrake*	nativo	HandBrake	sudo apt install handbrake	é o mesmo HandBrake
+*keepass*	nativo	KeePassXC	sudo apt install keepassxc	abre o mesmo arquivo de senhas .kdbx

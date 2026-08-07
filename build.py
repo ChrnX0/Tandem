@@ -34,6 +34,7 @@ LAYOUT = [
     ("usr/lib/tandem/peinfo.py",   "lib/peinfo.py",   0o755),
     ("usr/lib/tandem/verbos.tsv",  "lib/verbos.tsv",  0o644),
     ("usr/lib/tandem/limites.tsv", "lib/limites.tsv", 0o644),
+    ("usr/lib/tandem/alternativas.tsv", "lib/alternativas.tsv", 0o644),
     ("usr/share/applications/tandem.desktop",         "applications/tandem.desktop",         0o644),
     ("usr/share/applications/tandem-exe.desktop",     "applications/tandem-exe.desktop",     0o644),
     ("usr/share/applications/tandem-apk.desktop",     "applications/tandem-apk.desktop",     0o644),

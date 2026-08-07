@@ -144,6 +144,41 @@ else
     pulou "regerar o indice" "winetricks nao instalado"
 fi
 
+secao "alternativas de Linux"
+
+TANDEM_ALTERNATIVAS="$RAIZ/src/lib/alternativas.tsv"
+
+igual "reconhece programa que TEM versao oficial para Linux" \
+      "nativo" "$(t_alternativas_para teamviewer | head -1 | cut -d'|' -f1)"
+igual "reconhece programa que so tem parecido" \
+      "parecido" "$(t_alternativas_para photoshop | head -1 | cut -d'|' -f1)"
+igual "a busca ignora maiuscula, espaco e hifen" \
+      "nativo nativo nativo" \
+      "$(for n in TeamViewer 'team viewer' team-viewer; do
+             printf '%s ' "$(t_alternativas_para "$n" | head -1 | cut -d"|" -f1)"; done | sed 's/ $//')"
+t_alternativas_para "programa-que-ninguem-conhece" >/dev/null 2>&1
+igual "programa desconhecido falha sem inventar" "1" "$?"
+t_alternativas_para "" >/dev/null 2>&1
+igual "nome vazio falha sem quebrar" "1" "$?"
+
+# A diferenca entre "nativo" e "parecido" e o coracao da honestidade aqui:
+# dizer que o GIMP e o Photoshop seria enganar o dono.
+texto_alt="$(t_texto_alternativas photoshop)"
+case "$texto_alt" in
+    *"faz um trabalho parecido"*"Atenção:"*) passou "alternativa parecida vem com a ressalva" ;;
+    *) falhou "alternativa parecida vem com a ressalva" "faz um trabalho parecido + Atenção" "$texto_alt" ;;
+esac
+texto_nat="$(t_texto_alternativas teamviewer)"
+case "$texto_nat" in
+    *"feito para Linux"*) passou "alternativa nativa e apresentada como o mesmo programa" ;;
+    *) falhou "alternativa nativa e apresentada como o mesmo programa" "feito para Linux" "$texto_nat" ;;
+esac
+
+# Toda linha da tabela precisa das cinco colunas: uma linha malformada
+# apareceria como sugestao vazia na cara do dono.
+malformadas="$(awk -F"\t" '!/^#/ && NF>0 && (NF!=5 || $3=="")' "$TANDEM_ALTERNATIVAS" | wc -l)"
+igual "toda linha da tabela tem as cinco colunas" "0" "$malformadas"
+
 secao "memoria: o que o Tandem aprende"
 
 MEM_A="$ARTEFATOS/imports64.exe"

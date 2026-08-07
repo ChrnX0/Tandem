@@ -274,11 +274,20 @@ Isso costuma acontecer quando só o executável foi copiado, sem a pasta complet
             # O pre-voo tinha reconhecido a assinatura antes de rodar: em vez
             # de um numero, o dono recebe a causa e sabe que nao adianta
             # insistir nem procurar defeito na maquina dele.
+            #
+            # E aqui, so aqui, o Tandem oferece um caminho alternativo. Nao e
+            # sugerir troca: e o unico momento em que ficar calado deixaria o
+            # dono sem saida nenhuma, porque este programa nao vai funcionar
+            # por mais que ele tente.
+            ALTERNATIVA="$(t_texto_alternativas "$(basename -- "${PROG%.*}")" 2>/dev/null)"
             t_erro "Este programa não abriu, e provavelmente não tem conserto:
 
 ${LIMITE#*|}
 
-Isso é limite do Wine, não defeito da sua máquina nem do Tandem."
+Isso é limite do Wine, não defeito da sua máquina nem do Tandem.${ALTERNATIVA:+
+
+O que dá para fazer no lugar:
+$ALTERNATIVA}"
         else
             t_erro "O programa fechou com erro (código $CODIGO)."
         fi
