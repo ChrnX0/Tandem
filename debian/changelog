@@ -41,7 +41,15 @@ tandem (3.6) unstable; urgency=medium
   * The README and LEIAME stopped pointing the main installation path at an
     empty Releases page. Until a release exists, they show the build, which
     needs neither a Debian host nor dpkg-deb.
-  * 307 tests.
+  * The test suite is in English too, and the runner API with it: pass, fail,
+    equal, skip, section. A blanket rename is exactly how a test file gets
+    damaged invisibly - rewrite an EXPECTED value or a "case" pattern along
+    with the prose around it and the test keeps passing while comparing the
+    wrong thing. It happened during this very change: *...continua faltando*
+    became *...continua missing*, and the pattern stopped matching the message
+    Tandem actually produces. Both lists are now guarded by a checksum, so the
+    next bulk edit cannot touch them quietly.
+  * 309 tests.
 
  -- Paulo Eduardo <noreply@users.noreply.github.com>  Sun, 09 Aug 2026 02:00:00 +0000
 

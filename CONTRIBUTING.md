@@ -71,7 +71,7 @@ person will actually see it.
 
 ```bash
 python3 build.py --check     # packages; no Debian host, no dpkg-deb needed
-bash tests/run.sh            # 294 tests, no Wine, no Waydroid, no install
+bash tests/run.sh            # 309 tests, no Wine, no Waydroid, no install
 ```
 
 The suite sources the shell libraries straight from `src/lib` and synthesises

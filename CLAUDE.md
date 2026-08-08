@@ -113,7 +113,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 294 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 309 tests, no Wine, no Waydroid, no install
 ```
 
 The suite sources the libraries straight from `src/lib` and generates synthetic
@@ -270,7 +270,7 @@ root), no longer only by reading:
 - `tandem dados` listing and copying real files out of a prefix; `tandem socorro`
   producing its report; the bitness warning appearing in the dialog *before* the
   download.
-- 294 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 309 automated tests in `tests/run.sh`; CI on GitHub Actions.
 
 Verified **on the user's Zorin 18.1** (Wayland, Wine 10.0, Waydroid active):
 

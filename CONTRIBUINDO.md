@@ -71,7 +71,7 @@ português, num lugar onde a pessoa vai ver.
 
 ```bash
 python3 build.py --check     # empacota; não precisa de Debian nem de dpkg-deb
-bash tests/run.sh            # 294 testes, sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh            # 309 testes, sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
