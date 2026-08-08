@@ -33,13 +33,29 @@ fi
 # ------------------------------------------------- 1. Prior inspection
 INFO="$(python3 "${TANDEM_LIB:-/usr/lib/tandem}/apkinfo.py" "$APK" 2>>"$LOG")"
 t_diz "$INFO"
-FORMATO=""; PACOTE=""; MINSDK=""; ABIS=""; SPLITS=1; OBB=0; ERRO=""
+FORMATO=""; PACOTE=""; MINSDK=""; ABIS=""; SPLITS=1; OBB=0; ERRO=""; CIFRADO=0
 while IFS='=' read -r k v; do
     case "$k" in
         FORMATO) FORMATO="$v" ;; PACOTE) PACOTE="$v" ;; MINSDK) MINSDK="$v" ;;
         ABIS) ABIS="$v" ;; SPLITS) SPLITS="$v" ;; OBB) OBB="$v" ;; ERRO) ERRO="$v" ;;
+        CIFRADO) CIFRADO="$v" ;;
     esac
 done <<< "$INFO"
+
+# An .apkm the distributing site encrypted. Nothing but that site's own installer
+# opens one, so there is nothing to attempt - and attempting it produces a
+# Python exception in English about a missing password, which is the failure mode
+# this project treats as a defect.
+if [ "$CIFRADO" = 1 ]; then
+    t_erro "Este arquivo está protegido pelo site que distribui ele.
+
+O conteúdo vem trancado, e só o aplicativo do próprio site consegue abrir. Não é
+defeito da sua máquina nem do Tandem.
+
+Procure o mesmo app em outro lugar: um arquivo .apk ou .xapk comum instala aqui
+sem problema."
+    exit 1
+fi
 
 if [ -n "$ERRO" ]; then
     t_erro "Não consegui ler este arquivo.

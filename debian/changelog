@@ -95,7 +95,16 @@ tandem (3.8) unstable; urgency=medium
     dpkg was told about, flatpak and snap; the self-test exercises the .deb
     reader on a real package and checks that apt answers without a password,
     because the whole diagnosis rests on that.
-  * 77 new tests, 450 total.
+  * .apkm support existed on paper since 3.0 - a registered MIME type and a
+    name in the reader's own table, with no fixture behind it, which is a
+    promise rather than a feature. It is exercised now, and exercising it found
+    something: some .apkm files are ENCRYPTED by the site that distributes
+    them, and only that site's own installer opens one. The reader used to walk
+    into that and come back with a Python exception in English about a missing
+    password. It now recognises the encryption from the zip flag before reading
+    anything, and the owner is told the file is locked by the site rather than
+    broken.
+  * 100 new tests, 473 total.
 
  -- Paulo Eduardo <noreply@users.noreply.github.com>  Sun, 09 Aug 2026 05:00:00 +0000
 

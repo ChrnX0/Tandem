@@ -73,9 +73,9 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "677965117 521" "$soma_esperados"
+      "661923334 580" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
-      "543836661 1438" "$soma_padroes"
+      "3777721855 1474" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1386,6 +1386,46 @@ equal "with no extension, a runnable jar is recognized by its manifest" \
 cp "$JARS/biblioteca.jar" "$TMPROOT/so-zip"
 equal "a zip with no Main-Class stays with Android" \
       "CHAMOU tandem-apk" "$(despachar "$TMPROOT/so-zip")"
+
+section ".apkm: declared since 3.0 and never once exercised"
+
+# CLAUDE.md said it plainly: ".apkm support is declared but only .xapk/.apks were
+# tested." A format the package registers a MIME type for, and whose name appears
+# in the reader's own table, with no fixture behind it - which is a promise, not a
+# feature.
+info_apkm="$(python3 "$TANDEM_LIB/apkinfo.py" "$ARTIFACTS/mirror.apkm")"
+equal "an .apkm is recognised as its own format" "apkm" "$(t_campo "$info_apkm" FORMATO)"
+equal "the package name comes out of the base apk inside it" "com.exemplo.apkm" \
+      "$(t_campo "$info_apkm" PACOTE)"
+equal "the minimum Android version is read" "26" "$(t_campo "$info_apkm" MINSDK)"
+equal "the parts are counted" "3" "$(t_campo "$info_apkm" SPLITS)"
+equal "and the ABIs come from the split names" "arm64-v8a,armeabi-v7a" \
+      "$(t_campo "$info_apkm" ABIS)"
+
+# Some .apkm files are encrypted by the site that distributes them, and only that
+# site's own installer opens one. Before this, the reader walked into z.read() and
+# came back with a Python exception in English about a missing password - the exact
+# shape of failure this project treats as a defect.
+info_trancado="$(python3 "$TANDEM_LIB/apkinfo.py" "$ARTIFACTS/trancado.apkm")"
+equal "an encrypted .apkm is recognised as encrypted" "1" \
+      "$(t_campo "$info_trancado" CIFRADO)"
+equal "and it does not come back as a Python exception" "" \
+      "$(t_campo "$info_trancado" ERRO)"
+equal "the format is still named, from the file name" "apkm" \
+      "$(t_campo "$info_trancado" FORMATO)"
+equal "an ordinary package is not called encrypted" "0" \
+      "$(t_campo "$(python3 "$TANDEM_LIB/apkinfo.py" "$ARTIFACTS/jogo.xapk")" CIFRADO)"
+
+# And the whole command, with nobody to ask: it has to say so in Portuguese
+# rather than fail at extraction.
+saida_apkm="$(env -i HOME="$TMPROOT/casa-apkm" PATH="/usr/bin:/bin" \
+             TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+             timeout 60 bash "$ROOT/src/bin/tandem-apk" "$ARTIFACTS/trancado.apkm" 2>&1)"
+case "$saida_apkm" in
+    *"protegido pelo site"*) pass "tandem-apk explains an encrypted .apkm" ;;
+    *) fail "tandem-apk explains an encrypted .apkm" \
+            "the sentence about the site protecting it" "${saida_apkm:-zero bytes}" ;;
+esac
 
 section "native packages: reading .deb and .rpm without installing"
 

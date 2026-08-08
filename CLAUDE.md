@@ -135,7 +135,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 463 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 473 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -364,6 +364,13 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   with zero bytes; the `.flatpakrepo` one was found by running every handler
   against every fixture with no window and no terminal and demanding a sentence.
   Guard every refusal with `t_tem_gui ||`.
+- **Some `.apkm` files are ENCRYPTED by the site that distributes them**, and
+  only that site's own installer opens one. Detected from bit 0 of the zip
+  general-purpose flag (`ZipInfo.flag_bits & 0x1`), and the check has to come
+  BEFORE any `z.read()`: reading an encrypted entry raises a Python exception in
+  English about a missing password, which is exactly the shape of failure this
+  project treats as a defect. `zipfile` cannot write one, so the fixture sets the
+  flag by hand in both the local headers and the central directory.
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.
@@ -398,7 +405,7 @@ root), no longer only by reading:
 - `tandem dados` listing and copying real files out of a prefix; `tandem socorro`
   producing its report; the bitness warning appearing in the dialog *before* the
   download.
-- 463 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 473 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The five remaining formats closed on real files**: a `.deb` built for an
   older release produced the release-mismatch verdict with `libssl1.1` and
   `libicu70` named and **no password asked**; an arm64 package produced the
@@ -520,7 +527,9 @@ The queue, in order:
 3. Field-test what has not run on the owner's machine yet: `preparar`,
    `desinstalar`, `dados`, `socorro`, a double click on a real `.xapk`, and a
    double click on a real `.AppImage` and `.jar`.
-4. `.apkm` support is declared but only `.xapk`/`.apks` were tested.
+4. ~~`.apkm` support is declared but only `.xapk`/`.apks` were tested.~~ **Done:**
+   `tests/mkapk.py` now writes both a plain `.apkm` and an encrypted one, and the
+   reader is exercised on each.
 5. Clone a prefix with .NET already in it instead of running `dotnet48` from
    scratch (30 min, high failure rate) — delivery proof was the prerequisite and
    now exists; what is missing is the care never to read from a protected prefix

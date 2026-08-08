@@ -131,6 +131,11 @@ def inspecionar_apk_bytes(dados_apk, nome_exibicao=""):
         return pacote, minsdk, abis_de(z)
 
 
+def internos_cifrados(nomes):
+    """The .apk entries of an archive whose contents cannot be read."""
+    return [n for n in nomes if n.lower().endswith(".apk")]
+
+
 def main():
     if len(sys.argv) < 2:
         print("ERRO=uso: apkinfo.py <arquivo>")
@@ -142,10 +147,31 @@ def main():
 
     ext = os.path.splitext(caminho)[1].lower()
     formato, pacote, minsdk, abis, splits, obb = "desconhecido", "", None, [], 1, 0
+    cifrado = 0
 
     try:
         with zipfile.ZipFile(caminho) as z:
             nomes = z.namelist()
+            # Some .apkm files are encrypted by the site that distributes them,
+            # and only that site's own installer opens one. Nothing else can, so
+            # the honest answer is to say so instead of failing at extraction
+            # with a message about a bad password. Bit 0 of the zip
+            # general-purpose flag is where the file admits it.
+            cifrado = 1 if any(i.flag_bits & 0x1 for i in z.infolist()) else 0
+            if cifrado:
+                # Nothing further can be read, and trying produces a Python
+                # exception in English about a missing password. The format is
+                # known from the name and the encryption is the whole verdict.
+                formato = {".xapk": "xapk", ".apks": "apks",
+                           ".apkm": "apkm"}.get(ext, "apk")
+                print("FORMATO=%s" % formato)
+                print("PACOTE=")
+                print("MINSDK=")
+                print("ABIS=")
+                print("SPLITS=%d" % len(internos_cifrados(nomes)))
+                print("OBB=0")
+                print("CIFRADO=1")
+                return 0
             internos = [n for n in nomes if n.lower().endswith(".apk")]
             tem_manifesto = "AndroidManifest.xml" in nomes
 
@@ -189,6 +215,7 @@ def main():
     print("ABIS=%s" % ",".join(abis))
     print("SPLITS=%d" % splits)
     print("OBB=%d" % obb)
+    print("CIFRADO=%d" % cifrado)
     return 0
 
 

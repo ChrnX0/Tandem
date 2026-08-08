@@ -127,6 +127,51 @@ def pacote_dividido(caminho, base_pacote="com.exemplo.jogo", minsdk=24,
     return caminho
 
 
+def pacote_apkm(caminho, base_pacote="com.exemplo.apkm", cifrado=False):
+    """Builds an .apkm, the format APKMirror distributes.
+
+    Two things separate it from a .xapk: the metadata file is info.json rather
+    than manifest.json, and some of them are ENCRYPTED by the site - in which
+    case nothing but that site's own installer opens one. That is worth
+    detecting rather than discovering at extraction time, so this can write both.
+    """
+    tmp_base = caminho + ".base.tmp"
+    apk(tmp_base, base_pacote, 26, ("arm64-v8a", "armeabi-v7a"))
+    with open(tmp_base, "rb") as f:
+        base_bytes = f.read()
+    os.remove(tmp_base)
+
+    with zipfile.ZipFile(caminho, "w") as z:
+        z.writestr("base.apk", base_bytes)
+        z.writestr("split_config.arm64_v8a.apk", base_bytes)
+        z.writestr("split_config.xxhdpi.apk", base_bytes)
+        z.writestr("info.json", b'{"apk_title":"exemplo","pname":"%s"}'
+                   % base_pacote.encode())
+    if cifrado:
+        # zipfile cannot write an encrypted archive, so bit 0 of the
+        # general-purpose flag is set by hand - in the local headers AND in the
+        # central directory, because a reader may consult either.
+        with open(caminho, "rb") as f:
+            d = bytearray(f.read())
+        i = 0
+        while True:
+            i = d.find(b"PK\x03\x04", i)
+            if i < 0:
+                break
+            d[i + 6] |= 0x01
+            i += 4
+        i = 0
+        while True:
+            i = d.find(b"PK\x01\x02", i)
+            if i < 0:
+                break
+            d[i + 8] |= 0x01
+            i += 4
+        with open(caminho, "wb") as f:
+            f.write(bytes(d))
+    return caminho
+
+
 def pe(caminho, maquina):
     """Minimal PE executable, just enough for t_pe_arch to decide."""
     cab = bytearray(b"\x00" * 0x100)
@@ -206,6 +251,8 @@ def main():
     pacote_dividido(j("jogo.xapk"), com_obb=True)
     pacote_dividido(j("app.apks"), "com.exemplo.apks", 24, ("x86_64",),
                     False, ("config.pt", "config.x86_64"))
+    pacote_apkm(j("mirror.apkm"))
+    pacote_apkm(j("trancado.apkm"), "com.exemplo.trancado", cifrado=True)
 
     with open(j("corrompido.apk"), "wb") as f:
         f.write(b"PK\x03\x04this is not a valid zip in any way at all")
