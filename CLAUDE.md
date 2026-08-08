@@ -430,6 +430,31 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
 - **A `while read` loop drops the last line of `od` output**, which has no
   trailing newline - so the URL escaper cut the final character off everything.
   Loop with `for` over the unquoted substitution instead.
+- **CORRECTED, 2026-08-09: Waydroid DOES have a route to USB, and the README was
+  wrong about the mechanism.** Its LXC config carries no `lxc.cgroup.devices.deny`
+  at all, so the container is not the barrier. The barrier is that AOSP only
+  instantiates `UsbHostManager` when the platform declares
+  `android.hardware.usb.host`, and Waydroid's image does not - so
+  `getDeviceList()` is empty whatever exists under `/dev`. Waydroid also ships
+  `persist.waydroid.uevent`, a maintainer feature for exactly this, and Waydroid
+  bind-mounts `/var/lib/waydroid/host-permissions` over
+  `vendor/etc/host-permissions`, where the declaration can be dropped without
+  editing the image. Two people published working procedures.
+  **It stays rejected anyway**, for durability and rule №1 rather than for
+  nonexistence - see `docs/IDEAS.md`. And the empirical part survives: nobody in
+  any language has reported a thermal printer, a pinpad or a scale working inside
+  Waydroid.
+- **A barcode scanner already works inside Waydroid and always did.** It is a USB
+  HID keyboard and the compositor delivers its keystrokes. The real bug is that
+  it can type each code TWICE when `persist.waydroid.uevent` is on (Waydroid
+  issue #778). The README told those owners their scanner could not work.
+- **`android.hardware.usb.gadget` is NOT `android.hardware.usb.host`.** The "Usb
+  HAL not found" line in Waydroid issue #1512 is the gadget (peripheral-mode)
+  HAL and is irrelevant to host mode; reading it as proof that host USB is
+  impossible is the mistake behind the old claim.
+- **Android Translation Layer is WORSE here, not better.** No container, so the
+  premise dissolves - but its `UsbManager.getDeviceList()` is a hard stub
+  returning an empty map. Source-proven, not inferred.
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.

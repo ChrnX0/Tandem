@@ -67,3 +67,15 @@
 *calibre*	nativo	Calibre	sudo apt install calibre	é o mesmo Calibre
 *handbrake*	nativo	HandBrake	sudo apt install handbrake	é o mesmo HandBrake
 *keepass*	nativo	KeePassXC	sudo apt install keepassxc	abre o mesmo arquivo de senhas .kdbx
+
+# ---------------------------------------------------------------------------
+# Shop hardware. These four are not Windows programs, they are the peripherals
+# on a Brazilian counter - and they are here because the honest answer to "my
+# printer does not work inside Android" is not a workaround, it is that the
+# device belongs on Linux, where all four are better supported than in the
+# container. Established by search, 2026-08: nobody anywhere has reported a
+# thermal printer, a pinpad or a scale working inside Waydroid.
+impressora*termica	nativo	ESC/POS direto no Linux	a impressora aparece como /dev/usb/lp0 ou numa fila "raw" do CUPS	Imprime do Linux sem Android e sem Wine. Se o programa que imprime for um app Android, configure ele para impressora de REDE e aponte para este computador - a maioria dos apps de impressão térmica fala por rede.
+leitor*codigo*barras	nativo	já funciona, não instale nada	nenhuma instalação	Um leitor de código de barras é um teclado. Ele digita o código onde o cursor estiver, no Linux e dentro do Android, sem driver nenhum. Se ele digitar cada código DUAS vezes dentro do Android, veja "tandem doctor".
+balanca*	nativo	leitura direta pela porta serial	o aparelho aparece como /dev/ttyUSB0	Toledo, Filizola e Urano falam um protocolo de texto documentado pela porta serial. Um programa de Linux lê isso direto; dentro do Android, não.
+pinpad*	parecido	ACBrLib (ABECS) para Linux	https://acbr.sourceforge.io/ACBrLib/	A biblioteca brasileira ACBrLib é compilada para Linux e implementa o protocolo ABECS. ATENÇÃO: quem decide se o seu pinpad pode ser usado assim é a adquirente (Cielo, Rede, Stone), não o Tandem nem o fabricante.

@@ -356,12 +356,29 @@ Ser honesto sobre isso desde o começo economiza uma tarde de todo mundo.
 
 | | Por quê |
 |---|---|
-| **Dispositivo USB dentro do Android** | O Waydroid não repassa USB. Impressora térmica, leitor de cartão, leitor de código de barras e balança não existem dentro do contêiner. Nenhuma automação muda isso. |
+| **Hardware de loja dentro do Android** | **O seu leitor de código de barras já funciona** — ele é um teclado, e o Waydroid recebe as teclas dele pelo compositor como recebe de qualquer outro. Para impressora térmica, pinpad ou balança, ninguém no mundo relatou funcionar dentro do Waydroid, e o Tandem não vai mandar você por esse caminho. Deixe esses aparelhos no Linux, onde os quatro têm suporte melhor do que dentro do contêiner — o `tandem alternativas` mostra como. |
 | **App de banco e de pagamento** | O Play Integrity detecta o contêiner. Não há contorno confiável. |
 | **Programa Windows com driver de kernel** | Anti-cheat, alguns middlewares de pagamento de PDV, chave de proteção física. O Wine roda no espaço do usuário. |
 | **Licença amarrada ao hardware** | O Wine informa serial de BIOS e de disco vazio ou sintético. Software que identifica a máquina pode recusar a ativação — ou travar na tela de ativação. |
 
 O Tandem reconhece vários desses casos lendo o próprio executável, **antes de rodar**, e explica a falha em vez de mostrar um código de erro.
+
+<details>
+<summary>A primeira linha dizia algo mais forte, e conferir mostrou que o mecanismo estava errado</summary>
+
+<br>
+
+Ela dizia: *"O Waydroid não repassa USB. Impressora térmica, leitor de cartão, leitor de código de barras e balança não existem dentro do contêiner. Nenhuma automação muda isso."* O **conselho** estava certo. Todas as afirmações sobre o **mecanismo** estavam erradas, e um dos quatro aparelhos estava simplesmente errado.
+
+- **O Waydroid não nega aparelho nenhum.** A configuração LXC dele não tem uma linha `lxc.cgroup.devices.deny` sequer. O contêiner tem acesso pelo kernel; o que falta é outra coisa.
+- **A barreira real é uma declaração que falta.** O Android só liga o gerenciador de USB quando a plataforma declara `android.hardware.usb.host`, e a imagem do Waydroid não declara. Então a lista de aparelhos volta vazia, não importa o que exista em `/dev`. O Waydroid ainda traz `persist.waydroid.uevent`, um recurso do próprio mantenedor descrito como *"permitir ao Android acesso direto a aparelhos conectados na hora"*. Gente ligou os dois e usou aparelhos USB de verdade.
+- **Leitor de código de barras não precisa de nada disso.** Ele é um teclado USB; as teclas chegam pelo compositor sem configuração nenhuma. O problema conhecido do Waydroid aqui é o oposto do que a linha dizia — ele pode digitar cada código **duas vezes** ([issue #778](https://github.com/waydroid/waydroid/issues/778)). Dizer a esse dono que o leitor dele não funciona é mandar ele comprar um aparelho que já tem.
+
+**O que sobrevive, e é por isso que a linha continua:** ninguém, em idioma nenhum, relatou impressora térmica, pinpad ou balança funcionando dentro do Waydroid. O caminho existe no papel e ninguém andou por ele, então o Tandem descreve e não recomenda — e nunca vai automatizar a edição da imagem, que volta atrás na próxima atualização do Waydroid e deixaria o hardware da loja morto sem aviso nenhum.
+
+**E o reenquadramento, que importa mais:** nada desse hardware precisa estar dentro do Android. Impressora térmica recebe ESC/POS num nó de dispositivo ou numa fila "raw" do CUPS; balança fala texto documentado em `/dev/ttyUSB0`; pinpad aparece como porta serial, e a [ACBrLib](https://acbr.sourceforge.io/ACBrLib/) — a biblioteca brasileira padrão de automação comercial — é compilada para Linux e implementa o ABECS. O `tandem doctor` agora diz se esta máquina declara o recurso, e avisa do leitor que digita duas vezes.
+
+</details>
 
 ---
 

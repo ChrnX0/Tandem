@@ -124,6 +124,20 @@ acao_doctor() {
         fi
         command -v adb >/dev/null 2>&1 &&
             out+="  adb: sim\n" || out+="  adb: NÃO (pacotes .xapk não instalam)\n"
+        # Two checkable facts about THIS machine, in place of a paragraph of
+        # folklore. The barrier to a USB device inside Android is not the
+        # container - Waydroid denies no devices - it is that the Android image
+        # does not declare android.hardware.usb.host, so nothing enumerates.
+        if t_wd_usb_declarado; then
+            out+="  USB para o Android: declarado (aparelhos USB podem aparecer lá dentro)\n"
+        else
+            out+="  USB para o Android: não declarado (é o normal; o Android não enxerga\n"
+            out+="    aparelho USB nenhum, e leitor de código de barras não precisa disso)\n"
+        fi
+        if t_wd_uevent; then
+            out+="  acesso direto a aparelhos: ligado — ATENÇÃO: com um leitor de código de\n"
+            out+="    barras isto costuma digitar cada código DUAS vezes\n"
+        fi
     else
         out+="  waydroid: NÃO INSTALADO\n"
     fi

@@ -378,12 +378,29 @@ Being honest about this up front saves everyone an afternoon.
 
 | | Why |
 |---|---|
-| **USB devices inside Android** | Waydroid has no USB passthrough. Thermal printers, card readers, barcode scanners and scales do not exist inside the container. No automation changes this. |
+| **Shop hardware inside Android** | **Your barcode scanner already works** — it is a keyboard, and Waydroid gets its keystrokes from the compositor like any other. For a thermal printer, a pinpad or a scale, nobody anywhere has ever reported one working inside Waydroid, and Tandem will not send you down that road. Keep them on Linux, where all four are better supported than in the container — `tandem alternativas` shows how. |
 | **Banking and payment apps** | Play Integrity detects the container. There is no reliable workaround. |
 | **Windows software with kernel drivers** | Anti-cheat, some POS payment middleware, hardware dongles. Wine runs in user space. |
 | **Hardware-locked licensing** | Wine reports empty or synthetic BIOS and disk serials. Software that fingerprints the machine may refuse to activate — or crash on the activation screen. |
 
 Tandem recognises several of these from the executable itself, **before running it**, and explains the failure instead of showing you an exit code.
+
+<details>
+<summary>The first row used to say something stronger, and checking it showed the mechanism was wrong</summary>
+
+<br>
+
+It read: *"Waydroid has no USB passthrough. Thermal printers, card readers, barcode scanners and scales do not exist inside the container. No automation changes this."* The **advice** was sound. Every **mechanism claim** in it was false, and one of the four devices was flatly wrong.
+
+- **Waydroid denies no devices.** Its LXC configuration contains no `lxc.cgroup.devices.deny` line at all. The container has kernel access; what is missing is elsewhere.
+- **The real barrier is one missing declaration.** AOSP only instantiates `UsbHostManager` when the platform declares `android.hardware.usb.host`, and Waydroid's image does not. So `getDeviceList()` returns empty regardless of what exists under `/dev`. Waydroid also ships `persist.waydroid.uevent`, a maintainer-authored feature described as *"allow android direct access to hotplugged devices"*. People have enabled both and driven real USB devices.
+- **A barcode scanner needs none of that.** It is a USB HID keyboard; its keystrokes arrive through the Wayland compositor with zero configuration. Waydroid's known problem here is the opposite of the one claimed — it can type each code **twice** ([issue #778](https://github.com/waydroid/waydroid/issues/778)). Telling that owner their scanner cannot work sends them to buy hardware they already own.
+
+**What survives, and it is why the row stays:** nobody, in any language, has reported a thermal printer, a pinpad or a scale working inside Waydroid. The route exists on paper and nobody has walked it, so Tandem describes it and does not recommend it — and it will never automate the image edit, which reverts on the next Waydroid update and would leave a shop's hardware dead with no message.
+
+**And the reframe that matters more:** none of this hardware needs to be inside Android. A thermal printer takes ESC/POS on a device node or a CUPS raw queue; a scale speaks documented ASCII on `/dev/ttyUSB0`; a pinpad appears as a serial node, and [ACBrLib](https://acbr.sourceforge.io/ACBrLib/) — the standard Brazilian commercial-automation library — is compiled for Linux and implements ABECS. `tandem doctor` now reports whether this machine declares the feature, and warns about the double-typing scanner.
+
+</details>
 
 ---
 

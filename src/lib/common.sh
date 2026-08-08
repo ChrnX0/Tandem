@@ -1364,6 +1364,33 @@ t_wd_ip() {
     waydroid status 2>/dev/null | awk -F'\t' '/^IP:/ {gsub(/ /,"",$NF); print $NF; exit}'
 }
 
+# Does this Waydroid declare that Android may see USB devices?
+#
+# The barrier is precise and it is not the one the README used to describe.
+# Waydroid's LXC config carries no device-cgroup denial at all, so the container
+# is not what blocks a USB device - AOSP is. UsbService only instantiates
+# UsbHostManager when the platform declares android.hardware.usb.host, and the
+# LineageOS image Waydroid ships does not declare it, so getDeviceList() returns
+# an empty list no matter what exists under /dev.
+#
+# Waydroid bind-mounts a host directory over vendor/etc/host-permissions, which
+# is where such a declaration can be dropped without touching the shipped image.
+t_wd_usb_declarado() {
+    ls /var/lib/waydroid/host-permissions/*usb.host*.xml >/dev/null 2>&1 && return 0
+    waydroid shell -- sh -c 'ls /vendor/etc/permissions/android.hardware.usb.host.xml \
+        /vendor/etc/host-permissions/android.hardware.usb.host.xml 2>/dev/null' 2>/dev/null |
+        grep -q . && return 0
+    return 1
+}
+
+# The property that lets the container's own ueventd create device nodes. It is
+# a feature the Waydroid maintainer added ("allow android direct access to
+# hotplugged devices"), and it is also the cause of the one bug an owner with a
+# barcode scanner will actually hit.
+t_wd_uevent() {
+    waydroid prop get persist.waydroid.uevent 2>/dev/null | grep -qi true
+}
+
 t_wd_tem_arm() {
     waydroid shell -- sh -c 'ls /system/lib64/libhoudini.so /system/lib/libhoudini.so \
         /system/lib64/libndk_translation.so 2>/dev/null | head -1' 2>/dev/null | grep -q .
