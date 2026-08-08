@@ -1,9 +1,9 @@
 name: Release
 
-# O README manda baixar o .deb em Releases, e por treze versões não havia
-# release nenhum: o link levava a uma pagina vazia. Empurrar uma tag passa a
-# construir o pacote e anexa-lo, com a suite e o lintian rodando antes - um
-# release que ninguem conferiu e pior que release nenhum.
+# The README pointed people at Releases to download the .deb, and for thirteen
+# versions there was no release at all: the link led to an empty page. Pushing a
+# tag now builds the package and attaches it, with the suite and lintian running
+# first — a release nobody checked is worse than no release.
 #
 #   git tag v3.5 && git push origin v3.5
 
@@ -12,8 +12,8 @@ on:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
-      versao:
-        description: "Versão a construir (ex: 3.5). Vazio = a do debian/control."
+      version:
+        description: "Version to build (e.g. 3.5). Empty = the one in debian/control."
         required: false
 
 permissions:
@@ -25,82 +25,82 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ferramentas
+      - name: Tools
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq shellcheck desktop-file-utils lintian winetricks
 
-      - name: A tag tem que bater com o debian/control
+      - name: The tag must match debian/control
         run: |
-          controle="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          control="$(grep '^Version:' debian/control | cut -d' ' -f2)"
           if [ "${GITHUB_REF_TYPE:-}" = tag ]; then
               tag="${GITHUB_REF_NAME#v}"
-              [ "$tag" = "$controle" ] || {
-                  echo "a tag diz $tag e o debian/control diz $controle"
-                  echo "publicar as duas coisas diferentes deixa o usuario sem saber o que instalou"
+              [ "$tag" = "$control" ] || {
+                  echo "the tag says $tag and debian/control says $control"
+                  echo "publishing two different things leaves the user unsure what they installed"
                   exit 1; }
           fi
-          echo "VERSAO=$controle" >> "$GITHUB_ENV"
+          echo "VERSION=$control" >> "$GITHUB_ENV"
 
-      - name: Suite de testes
+      - name: Test suite
         run: bash tests/run.sh
 
-      - name: Empacotar
+      - name: Package
         run: python3 build.py --check
 
-      - name: Lintian sem erro nem aviso
+      - name: Lintian with no errors and no warnings
         run: |
-          saida="$(lintian --fail-on warning "tandem_${VERSAO}_all.deb" 2>&1)" || {
-              echo "$saida"; exit 1; }
-          [ -z "$saida" ] || { echo "$saida"; exit 1; }
+          out="$(lintian --fail-on warning "tandem_${VERSION}_all.deb" 2>&1)" || {
+              echo "$out"; exit 1; }
+          [ -z "$out" ] || { echo "$out"; exit 1; }
 
-      - name: Instalar e remover de verdade antes de publicar
+      - name: Really install and purge before publishing
         run: |
-          sudo apt-get install -y -qq "./tandem_${VERSAO}_all.deb"
+          sudo apt-get install -y -qq "./tandem_${VERSION}_all.deb"
           tandem version
           tandem doctor > /tmp/diag.txt
           test -s /tmp/diag.txt
           sudo dpkg -P tandem
 
-      - name: Soma de verificação
+      - name: Checksum
         run: |
-          sha256sum "tandem_${VERSAO}_all.deb" > "tandem_${VERSAO}_all.deb.sha256"
-          cat "tandem_${VERSAO}_all.deb.sha256"
+          sha256sum "tandem_${VERSION}_all.deb" > "tandem_${VERSION}_all.deb.sha256"
+          cat "tandem_${VERSION}_all.deb.sha256"
 
-      - name: Notas a partir do changelog
+      - name: Release notes from the changelog
         run: |
-          # O changelog do Debian já é a nota de release; extrair a entrada
-          # desta versão evita escrever a mesma coisa duas vezes e divergir.
-          awk -v v="$VERSAO" '
-              $0 ~ "^tandem \\(" v "\\)" { dentro = 1; next }
-              dentro && /^tandem \(/ { exit }
-              dentro && /^ -- / { exit }
-              dentro { print }
-          ' debian/changelog | sed 's/^  \* /- /; s/^    / /' > notas.md
+          # The Debian changelog already is the release note; extracting this
+          # version's entry avoids writing the same thing twice and drifting.
+          awk -v v="$VERSION" '
+              $0 ~ "^tandem \\(" v "\\)" { inside = 1; next }
+              inside && /^tandem \(/ { exit }
+              inside && /^ -- / { exit }
+              inside { print }
+          ' debian/changelog | sed 's/^  \* /- /; s/^    / /' > notes.md
           {
             echo
-            echo "## Instalar"
+            echo "## Install"
             echo
             echo '```bash'
-            echo "sudo apt install ./tandem_${VERSAO}_all.deb"
+            echo "sudo apt install ./tandem_${VERSION}_all.deb"
             echo '```'
             echo
-            echo "Depois, para instalar o que faltar (Wine, winetricks, Android):"
+            echo "Then, to install whatever is missing (Wine, winetricks, Android):"
             echo
             echo '```bash'
             echo "tandem preparar"
             echo '```'
             echo
-            echo "SHA-256: \`$(cut -d' ' -f1 "tandem_${VERSAO}_all.deb.sha256")\`"
-          } >> notas.md
-          cat notas.md
+            echo "SHA-256: \`$(cut -d' ' -f1 "tandem_${VERSION}_all.deb.sha256")\`"
+          } >> notes.md
+          cat notes.md
 
-      - name: Publicar
+      - name: Publish
         uses: softprops/action-gh-release@v2
         with:
-          name: "Tandem ${{ env.VERSAO }}"
-          body_path: notas.md
+          name: "Tandem ${{ env.VERSION }}"
+          body_path: notes.md
           draft: false
           files: |
-            tandem_${{ env.VERSAO }}_all.deb
-            tandem_${{ env.VERSAO }}_all.deb.sha256
+            tandem_${{ env.VERSION }}_all.deb
+            tandem_${{ env.VERSION }}_all.deb.sha256

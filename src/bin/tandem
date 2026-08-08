@@ -747,7 +747,7 @@ acao_logs() {
 #
 # A ideia do dono, e ela e boa: em vez de um servidor-ponte entre todos os
 # Tandems, um ARQUIVO que cada instalacao baixa - o modelo das listas de
-# filtro de bloqueador de anuncio. Ver docs/FORMATO-LISTA.md.
+# filtro de bloqueador de anuncio. Ver docs/LIST-FORMAT.md.
 acao_lista() {
     case "${1:-ver}" in
         atualizar|baixar|sincronizar)

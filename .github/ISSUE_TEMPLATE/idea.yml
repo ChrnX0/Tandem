@@ -1,0 +1,37 @@
+name: Idea
+description: Suggest something new
+title: "[idea] "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before writing: [docs/IDEAS.md](https://github.com/ChrnX0/Tandem/blob/main/docs/IDEAS.md)
+        holds 52 ideas with a verdict each, and **the rejected ones carry the
+        written reason**. If yours is already there as rejected, good — bring the
+        new argument. That is exactly why the reason is written down.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: |
+        The project's criterion: an idea that increases what Tandem EXPLAINS is
+        worth more than one that increases what it executes. And a feature the
+        shop owner cannot even notice exists is not a feature.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+    validations:
+      required: true
+  - type: textarea
+    id: against
+    attributes:
+      label: What is the argument AGAINST it?
+      description: |
+        Every idea has one. Writing the counter-argument yourself is what separates
+        a proposal from a wish list.
+    validations:
+      required: false

@@ -1,11 +1,12 @@
 name: CI
 
-# O Tandem nunca teve CI. Enquanto isso, cada verificacao dependia de alguem
-# lembrar de rodar - e "esqueci de rodar" nao aparece em lugar nenhum ate o
-# defeito chegar no balcao.
+# Tandem had no CI for a long time. Until then, every check depended on somebody
+# remembering to run it — and "I forgot to run it" shows up nowhere until the
+# defect reaches the shop counter.
 #
-# Aqui roda o que da para rodar sem Wine, sem Waydroid e sem sessao grafica:
-# a suite inteira, o empacotador, e o lintian contra o .deb de verdade.
+# This runs everything that works without Wine, without Waydroid and without a
+# graphical session: the whole suite, the packager, and lintian against the real
+# .deb.
 
 on:
   push:
@@ -15,73 +16,72 @@ on:
 
 jobs:
   gate:
-    # Mesma base do Zorin 18, que e o alvo do projeto.
+    # Same base as Zorin 18, which is the project target.
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
-          # O portao julga o diff; sem historico ele nao tem contra o que comparar.
+          # The gate judges the diff; with no history it has nothing to compare against.
           fetch-depth: 0
 
-      - name: Ferramentas
+      - name: Tools
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq shellcheck desktop-file-utils lintian winetricks
 
-      - name: Suite de testes
+      - name: Test suite
         run: bash tests/run.sh
 
-      - name: Empacotar
+      - name: Package
         run: python3 build.py --check
 
-      - name: Lintian sem erro nem aviso
+      - name: Lintian with no errors and no warnings
         run: |
-          versao="$(grep '^Version:' debian/control | cut -d' ' -f2)"
-          saida="$(lintian --fail-on warning "tandem_${versao}_all.deb" 2>&1)" || {
-              echo "$saida"; exit 1; }
-          [ -z "$saida" ] || { echo "$saida"; exit 1; }
-          echo "lintian limpo"
+          version="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          out="$(lintian --fail-on warning "tandem_${version}_all.deb" 2>&1)" || {
+              echo "$out"; exit 1; }
+          [ -z "$out" ] || { echo "$out"; exit 1; }
+          echo "lintian clean"
 
-      - name: Construcao reproduzivel
+      - name: Reproducible build
         run: |
-          versao="$(grep '^Version:' debian/control | cut -d' ' -f2)"
-          a="$(sha256sum "tandem_${versao}_all.deb" | cut -d' ' -f1)"
+          version="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          a="$(sha256sum "tandem_${version}_all.deb" | cut -d' ' -f1)"
           python3 build.py >/dev/null
-          b="$(sha256sum "tandem_${versao}_all.deb" | cut -d' ' -f1)"
-          [ "$a" = "$b" ] || { echo "duas construcoes deram arquivos diferentes"; exit 1; }
-          echo "reproduzivel: $a"
+          b="$(sha256sum "tandem_${version}_all.deb" | cut -d' ' -f1)"
+          [ "$a" = "$b" ] || { echo "two builds produced different files"; exit 1; }
+          echo "reproducible: $a"
 
-      - name: Instalar, configurar e remover de verdade
+      - name: Really install, configure and purge
         run: |
-          versao="$(grep '^Version:' debian/control | cut -d' ' -f2)"
-          sudo apt-get install -y -qq "./tandem_${versao}_all.deb"
+          version="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          sudo apt-get install -y -qq "./tandem_${version}_all.deb"
           tandem version
           tandem doctor > /tmp/diag.txt
-          test -s /tmp/diag.txt || { echo "o diagnostico saiu vazio"; exit 1; }
+          test -s /tmp/diag.txt || { echo "the diagnosis came out empty"; exit 1; }
           sudo dpkg -P tandem
-          # Duas armadilhas ja pisadas aqui, as duas por evidencia fraca.
-          # O "command -v" responde do cache de hash do bash e apontava para
-          # um binario ja removido. E um find por
-          # "*tandem*" e largo demais: acha as definicoes de terminal da
-          # Tandem Computers (tandem653, tandem6510) que vem no ncurses.
-          # Os dois reprovaram um purge que estava perfeito. Conferir os
-          # caminhos exatos do pacote e a evidencia certa.
-          sobrou=""
-          for caminho in /usr/bin/tandem /usr/bin/tandem-exe /usr/bin/tandem-apk \
+          # Two traps already stepped on here, both from weak evidence.
+          # "command -v" answers from bash's hash cache and pointed at a binary
+          # that had already been removed. And a find for "*tandem*" is far too
+          # broad: it matches the Tandem Computers terminal definitions
+          # (tandem653, tandem6510) shipped by ncurses. Both failed a purge that
+          # was perfect. Checking the package's exact paths is the right evidence.
+          left=""
+          for path in /usr/bin/tandem /usr/bin/tandem-exe /usr/bin/tandem-apk \
                          /usr/bin/tandem-android /usr/bin/tandem-repair \
                          /usr/lib/tandem /usr/share/applications/tandem.desktop \
                          /usr/share/mime/packages/tandem.xml \
                          /usr/share/man/man1/tandem.1.gz; do
-              [ -e "$caminho" ] && sobrou="$sobrou $caminho"
+              [ -e "$path" ] && left="$left $path"
           done
-          [ -z "$sobrou" ] || { echo "sobrou depois do purge:$sobrou"; exit 1; }
-          dpkg -l tandem >/dev/null 2>&1 && { echo "o dpkg ainda conhece o pacote"; exit 1; }
-          echo "purge limpo"
+          [ -z "$left" ] || { echo "left behind after purge:$left"; exit 1; }
+          dpkg -l tandem >/dev/null 2>&1 && { echo "dpkg still knows the package"; exit 1; }
+          echo "purge clean"
 
       - name: ProofGate
-        # O portao do proprio dono do projeto: guardas sobre o diff, estado da
-        # arvore, e o veredito preso ao SHA.
+        # The project owner's own gate: guards over the diff, tree state, and a
+        # verdict pinned to the SHA.
         run: |
           bash <(curl -fsSL https://raw.githubusercontent.com/ChrnX0/proofgate/main/install.sh) || true
           [ -f .proofgate/verify.sh ] && bash .proofgate/verify.sh || \
-            echo "proofgate indisponivel nesta execucao; as etapas acima ja cobrem o essencial"
+            echo "proofgate unavailable in this run; the steps above already cover the essentials"

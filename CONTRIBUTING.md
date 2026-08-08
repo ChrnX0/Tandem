@@ -15,7 +15,7 @@ point-of-sale system on an actual counter.
 Every report about a real program is worth more than a new feature.
 
 **Did it work?** Run this and paste the line into an
-[issue](https://github.com/ChrnX0/Tandem/issues/new?template=lista.yml):
+[issue](https://github.com/ChrnX0/Tandem/issues/new?template=list.yml):
 
 ```bash
 tandem contribuir /path/to/program.exe
@@ -25,7 +25,7 @@ The line carries no filename, no path, no username, no machine name, no network
 address and no log line — and Tandem refuses to generate it if any of those
 appear. What it does carry is a fingerprint of the file, the architecture, and
 which Windows components fixed it. The full format is in
-[docs/FORMATO-LISTA.md](docs/FORMATO-LISTA.md).
+[docs/LIST-FORMAT.md](docs/LIST-FORMAT.md).
 
 **Did it fail?** Run this and attach the file:
 
@@ -71,7 +71,7 @@ person will actually see it.
 
 ```bash
 python3 build.py --check     # packages; no Debian host, no dpkg-deb needed
-bash tests/run.sh            # 289 tests, no Wine, no Waydroid, no install
+bash tests/run.sh            # 294 tests, no Wine, no Waydroid, no install
 ```
 
 The suite sources the shell libraries straight from `src/lib` and synthesises
@@ -107,7 +107,7 @@ opened and a progress bar that killed the whole program.
 
 ## What has already been rejected
 
-Before proposing, look at [docs/IDEIAS.md](docs/IDEIAS.md) (Portuguese). It holds
+Before proposing, look at [docs/IDEAS.md](docs/IDEAS.md). It holds
 52 ideas with a verdict each, and **the rejected ones carry the written reason.**
 Half the obvious ideas were already turned down for a concrete reason —
 scheduled automatic backups, syncing data to the cloud, a first-run wizard. If
@@ -126,8 +126,8 @@ src/lib/winedeps.sh       DLL → winetricks verb
 src/lib/peinfo.py         reads the PE import table without executing it
 src/lib/apkinfo.py        reads binary AndroidManifest, pure Python
 tests/run.sh              the suite
-docs/IDEIAS.md            the idea ledger, with verdicts
-docs/FORMATO-LISTA.md     the community list format
+docs/IDEAS.md             the idea ledger, with verdicts
+docs/LIST-FORMAT.md       the community list format
 ```
 
 ## Licence

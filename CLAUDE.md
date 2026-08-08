@@ -58,8 +58,8 @@ src/bin/tandem-apk        pré-voo + install; xapk/apks via adb install-multiple
 src/bin/tandem-repair     disputa de associação MIME
 src/polkit/               regra estreita: só start/restart do waydroid-container
 tests/run.sh              suíte; tests/mkapk.py gera os pacotes sintéticos
-docs/IDEIAS.md            ideário com veredito; as recusadas com o motivo
-docs/FORMATO-LISTA.md     o registro da lista da comunidade, campo a campo
+docs/IDEAS.md            ideário com veredito; as recusadas com o motivo
+docs/LIST-FORMAT.md     o registro da lista da comunidade, campo a campo
 lista/lista.tsv           a lista publicada; vazia até haver relato de gente
 ```
 
@@ -269,7 +269,7 @@ da distro, Waydroid 1.6.2 MAINLINE com GAPPS e libhoudini, `binderfs` com nós
 ## Próximos passos
 
 O ideário completo — as 52 ideias dos dois painéis, cada uma com veredito, e as
-recusadas com o motivo escrito — vive em `docs/IDEIAS.md`. Leia de lá antes de
+recusadas com o motivo escrito — vive em `docs/IDEAS.md`. Leia de lá antes de
 propor coisa nova; metade das ideias óbvias já foi recusada por um motivo.
 
 A fila, em ordem:

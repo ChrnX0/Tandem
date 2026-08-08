@@ -1,21 +1,22 @@
-## O que muda
+## What changes
 
-<!-- Uma ou duas frases. O porquê importa mais que o quê. -->
+<!-- One or two sentences. The why matters more than the what. -->
 
-## Como você sabe que funciona
+## How you know it works
 
 <!--
-O projeto usa uma hierarquia de evidência, e "pronto" exige pelo menos E3:
-  E1 estático (li o código)   E2 testado (a suíte cobre)
-  E3 exercitado (rodei e olhei o resultado)   E4 funcionou na máquina de alguém
-Diga qual nível você alcançou e como.
+The project uses an explicit evidence hierarchy, and "done" requires at least E3:
+  E1 static (I read the code)      E2 tested (the suite covers it)
+  E3 exercised (I ran it and looked at the result)
+  E4 in production (it worked on someone's machine)
+Say which level you reached, and how.
 -->
 
-## Antes de marcar como pronto
+## Before marking as ready
 
-- [ ] `bash tests/run.sh` passa
-- [ ] `python3 build.py --check` passa
-- [ ] Se adicionei teste: quebrei o código de propósito e confirmei que ele reprova
-- [ ] Se adicionei comando: está no `uso()`, no `man/tandem.1`, no `README.md` e no `LEIAME.md`
-- [ ] Nenhum caminho de erro novo termina em silêncio
-- [ ] Não escrevo em perfil Wine que o Tandem não criou
+- [ ] `bash tests/run.sh` passes
+- [ ] `python3 build.py --check` passes
+- [ ] If I added a test: I broke the code on purpose and confirmed the test fails
+- [ ] If I added a command: it is in `uso()`, `man/tandem.1`, `README.md` and `LEIAME.md`
+- [ ] No new error path ends in silence
+- [ ] I do not write into a Wine prefix Tandem did not create

@@ -12,11 +12,11 @@ about which `winetricks` verb you need.
 ```
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-![tests](https://img.shields.io/badge/tests-289-brightgreen)
+![tests](https://img.shields.io/badge/tests-294-brightgreen)
 ![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)
 ![licence](https://img.shields.io/badge/licence-MIT-blue)
 
-[Português](LEIAME.md) · [Contributing](CONTRIBUTING.md) · [Idea ledger](docs/IDEIAS.md)
+[Português](LEIAME.md) · [Contributing](CONTRIBUTING.md) · [Idea ledger](docs/IDEAS.md)
 
 <p align="center">
   <img src="docs/imagens/painel.png" alt="Tandem panel" width="520">
@@ -202,7 +202,7 @@ Reading is automatic once you ask for it. **Publishing is not**: `tandem
 contribuir` builds the line and shows it to you in full — you send it. The line
 carries no filename, no path, no username, no machine name, no IP and no log,
 and the generator refuses to produce it if any of those appear. Format in
-[docs/FORMATO-LISTA.md](docs/FORMATO-LISTA.md).
+[docs/LIST-FORMAT.md](docs/LIST-FORMAT.md).
 
 ## Build
 
@@ -259,7 +259,7 @@ one file.
 
 Details, the five rules that do not bend, and the evidence bar in
 [CONTRIBUTING.md](CONTRIBUTING.md). Before proposing a feature, check
-[docs/IDEIAS.md](docs/IDEIAS.md) — 52 ideas with a verdict each, and the
+[docs/IDEAS.md](docs/IDEAS.md) — 52 ideas with a verdict each, and the
 rejected ones carry the written reason.
 
 ## Licence

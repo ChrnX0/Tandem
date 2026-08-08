@@ -1,0 +1,48 @@
+name: It worked — contribute to the community list
+description: A program ran, and the lesson can help other people
+title: "[list] "
+labels: ["community list"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. This is the single most valuable contribution to the project:
+        almost no real commercial program has ever run on Tandem.
+
+        Run this and paste the line below:
+
+        ```bash
+        tandem contribuir /path/to/program.exe
+        ```
+
+        The line carries **no** filename, path, username, machine name, network
+        address or log — Tandem refuses to generate it if any of those appear.
+        The full format is in
+        [docs/LIST-FORMAT.md](https://github.com/ChrnX0/Tandem/blob/main/docs/LIST-FORMAT.md).
+  - type: textarea
+    id: record
+    attributes:
+      label: The line from "tandem contribuir"
+      description: Eight TAB-separated fields. Paste it exactly as it came out.
+      render: text
+      placeholder: "9f2a...c1	64	vcrun2022,dotnet48	-	confirmado	1	2026-08	-"
+    validations:
+      required: true
+  - type: input
+    id: program
+    attributes:
+      label: Which program is it? (optional)
+      description: Only to give context to whoever reads this. The line above does not say.
+      placeholder: "Acme POS 4.2"
+    validations:
+      required: false
+  - type: textarea
+    id: caveats
+    attributes:
+      label: Any caveats?
+      description: |
+        Did it work completely, or did something come out odd? Printing, accented
+        characters, a report — Wine's typical failure with commercial software is
+        opening and being subtly wrong, so this matters.
+    validations:
+      required: false

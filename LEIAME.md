@@ -12,11 +12,11 @@ precisar caçar em fórum qual pacote do `winetricks` está faltando.
 ```
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-![testes](https://img.shields.io/badge/testes-289-brightgreen)
+![testes](https://img.shields.io/badge/testes-294-brightgreen)
 ![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)
 ![licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)
 
-[English](README.md) · [Como colaborar](CONTRIBUINDO.md) · [Ideário](docs/IDEIAS.md)
+[English](README.md) · [Como colaborar](CONTRIBUINDO.md) · [Ideário](docs/IDEAS.md)
 
 <p align="center">
   <img src="docs/imagens/painel.png" alt="Painel do Tandem" width="520">
@@ -207,7 +207,7 @@ Ler é automático depois que você pede. **Publicar não é**: o `tandem
 contribuir` monta a linha e mostra ela inteira — quem envia é você. A linha não
 carrega nome de arquivo, caminho, usuário, nome da máquina, IP nem log, e o
 gerador se recusa a produzi-la se alguma dessas coisas aparecer. O formato está
-em [docs/FORMATO-LISTA.md](docs/FORMATO-LISTA.md).
+em [docs/LIST-FORMAT.md](docs/LIST-FORMAT.md).
 
 ## Compilar
 
@@ -265,7 +265,7 @@ perguntaria.
 
 Os detalhes, as cinco regras que não se quebram e a régua de evidência estão em
 [CONTRIBUINDO.md](CONTRIBUINDO.md). Antes de propor coisa nova, dê uma olhada em
-[docs/IDEIAS.md](docs/IDEIAS.md) — 52 ideias com veredito, e as recusadas trazem
+[docs/IDEAS.md](docs/IDEAS.md) — 52 ideias com veredito, e as recusadas trazem
 o motivo escrito.
 
 ## Licença

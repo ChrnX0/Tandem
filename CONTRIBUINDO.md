@@ -15,7 +15,7 @@ loja de verdade em cima de um balcão.
 Cada relato de programa real vale mais que uma funcionalidade nova.
 
 **Deu certo?** Rode isto e cole a linha numa
-[issue](https://github.com/ChrnX0/Tandem/issues/new?template=lista.yml):
+[issue](https://github.com/ChrnX0/Tandem/issues/new?template=list.yml):
 
 ```bash
 tandem contribuir /caminho/do/programa.exe
@@ -25,7 +25,7 @@ A linha não carrega nome de arquivo, caminho, seu usuário, o nome do
 computador, endereço de rede nem uma linha de log — e o Tandem se recusa a
 gerá-la se alguma dessas coisas aparecer. O que vai é uma impressão digital do
 arquivo, a arquitetura, e quais componentes do Windows resolveram. O formato
-inteiro está em [docs/FORMATO-LISTA.md](docs/FORMATO-LISTA.md).
+inteiro está em [docs/LIST-FORMAT.md](docs/LIST-FORMAT.md).
 
 **Não deu certo?** Rode isto e anexe o arquivo:
 
@@ -71,7 +71,7 @@ português, num lugar onde a pessoa vai ver.
 
 ```bash
 python3 build.py --check     # empacota; não precisa de Debian nem de dpkg-deb
-bash tests/run.sh            # 289 testes, sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh            # 294 testes, sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
@@ -108,8 +108,9 @@ inteiro.
 
 ## O que já foi recusado
 
-Antes de propor, dê uma olhada em [docs/IDEIAS.md](docs/IDEIAS.md). São 52
-ideias com veredito, e **as recusadas trazem o motivo escrito**. Metade das
+Antes de propor, dê uma olhada em [docs/IDEAS.md](docs/IDEAS.md) — em inglês,
+porque é o documento que gente de fora lê. São 52 ideias com veredito, e **as
+recusadas trazem o motivo escrito**. Metade das
 ideias óbvias já foi recusada por uma razão concreta — backup automático
 agendado, sincronizar dados para a nuvem, assistente de primeira execução. Se
 você discorda de uma recusa, ótimo: traga o argumento novo, que é exatamente
@@ -127,8 +128,8 @@ src/lib/winedeps.sh       DLL → verbo do winetricks
 src/lib/peinfo.py         lê a tabela de importações do PE, sem executar
 src/lib/apkinfo.py        lê AndroidManifest binário, Python puro
 tests/run.sh              a suíte
-docs/IDEIAS.md            o ideário, com veredito
-docs/FORMATO-LISTA.md     o formato da lista da comunidade
+docs/IDEAS.md             o ideário, com veredito (em inglês)
+docs/LIST-FORMAT.md       o formato da lista da comunidade
 ```
 
 ## Licença

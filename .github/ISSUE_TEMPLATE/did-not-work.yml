@@ -1,0 +1,50 @@
+name: A program did not work
+description: A double-click that did nothing, an error, or a program that opens wrong
+title: "[did not open] "
+labels: ["did not work"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        You do not need to know anything technical. Tandem builds the report for you:
+
+        ```bash
+        tandem socorro
+        ```
+
+        It writes a file in your home directory. **Look at it before attaching** —
+        it shows file paths from your machine.
+
+        The report comes out in Portuguese, which is the language Tandem speaks to
+        its users. Paste it as is; maintainers read it.
+  - type: textarea
+    id: what
+    attributes:
+      label: What were you trying to do?
+      placeholder: |
+        I double-clicked the installer for my shop's POS system and nothing happened.
+    validations:
+      required: true
+  - type: textarea
+    id: onscreen
+    attributes:
+      label: What appeared on screen?
+      description: If a window came up, copy its text or attach a photo.
+    validations:
+      required: false
+  - type: input
+    id: program
+    attributes:
+      label: Which program is it?
+      description: Name and version, if you know them. Do not attach the program itself.
+      placeholder: "Acme POS 4.2, 32-bit installer"
+    validations:
+      required: false
+  - type: textarea
+    id: report
+    attributes:
+      label: Output of "tandem socorro"
+      description: Paste the contents, or drag the file in here.
+      render: text
+    validations:
+      required: false

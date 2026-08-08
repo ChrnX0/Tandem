@@ -849,7 +849,7 @@ t_tem_wine64() {
 # Contribuicao automatica seria uma maquina de producao mandando dados para
 # fora sem ninguem pedir. E a regra numero 1 aplicada a rede.
 #
-# O formato completo esta em docs/FORMATO-LISTA.md.
+# O formato completo esta em docs/LIST-FORMAT.md.
 
 TANDEM_LISTA_URL="${TANDEM_LISTA_URL:-https://raw.githubusercontent.com/ChrnX0/Tandem/main/lista/lista.tsv}"
 TANDEM_LISTA="${TANDEM_LISTA:-$TANDEM_ESTADO/lista.tsv}"
