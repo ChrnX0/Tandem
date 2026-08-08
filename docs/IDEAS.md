@@ -185,6 +185,51 @@ as Zorin 18.
 | **The memory/list shortcut bypassed the delivery proof**, writing the receipt from the exit code alone — and doing so on the one path where the lesson comes from outside and deserves *more* suspicion, not less. | **DONE** — v3.5, found by an adversarial audit |
 | **Choose the `_x64` verb when the program is 64-bit.** A verb-by-verb survey settled it: most modern verbs already install both payloads, exactly one has a 64-bit sibling (`xact` → `xact_x64`), and eight are 32-bit-only with no sibling. | **DONE** — v3.5. For those eight, a 64-bit program gets warned before the download rather than after |
 
+## The long game: an OS, and why I would not build one yet
+
+The project owner's stated destination: a Linux-based OS that natively runs
+Linux, Android **and** Windows install packages, where the OS itself manages
+whatever is needed to make them run — plus closing the small places where
+Windows is simply nicer than Linux. The example given is exact: on Zorin you
+cannot right-click the desktop and create a new file.
+
+The substance is right, and Tandem is already the seed of it. The insight this
+project was built on — *the value is not in running the program, it is in
+closing the diagnostic loop for someone who cannot read a log* — is an
+operating-system-shaped insight. What Tandem does per file, an OS does
+system-wide.
+
+Three judgements about it, written down so they can be argued with later.
+
+| Question | Verdict |
+|---|---|
+| **Should this become a distribution?** | **NOT YET — build the layer, not the distro.** Distributions die of maintenance, not of ideas: security updates, kernel/Mesa/Wine churn, hardware regressions, forever, for every user. A layer installs on the machine somebody already owns — day-one users, no reinstall, and the same code benefits Zorin, Ubuntu and Fedora users at once. If it ever becomes an OS, let it be because the layer got so good that shipping it preinstalled is the obvious move. That is how Bazzite happened; it is not how LindowsOS happened. |
+| **Should the goal be "as good as Windows"?** | **RECONSIDER.** Wine will never be Windows for kernel drivers, hardware dongles or Play Integrity, and those are exactly the 5% a shop's livelihood runs on. Competing on parity means losing on the part that matters. Tandem's real edge is the opposite and it is rarer: **it never lies about what it cannot do.** A `limites.tsv` that says "this will never work, here is why, here is what to do instead" is worth more to a shop owner than a compatibility percentage. Keep that as the identity. |
+| **Is the right-click paper cut worth chasing?** | **YES — and it belongs to a sibling, not to Tandem.** The gap is not technical: in Nautilus the "New Document" submenu appears as soon as `~/Templates` contains a file. One line fixes it. That is the whole lesson — the Linux desktop is assembled from components where each owns its piece and nobody owns the experience. A layer that owns the paper cuts is a real product. But putting it inside Tandem would blur the identity that makes Tandem good. Same family, different binary. |
+
+### What that makes the next real step
+
+Not an OS. **One handler for every install format a person can double-click.**
+
+Today, on a normal Zorin desktop: double-clicking an `.AppImage` does nothing,
+because it arrives without the executable bit. A `.jar` does nothing. A
+`.flatpakref`, an `.rpm` on a `.deb` system, an `.msix` — nothing useful. That
+is *the same bug Tandem exists to kill*, "I double-clicked and nothing
+happened", for formats that are native to Linux rather than foreign to it.
+
+Tandem already owns four formats and the whole diagnostic machinery. Extending
+it to the Linux-native ones is the highest-value work available, it needs no
+distribution, and it is the piece the eventual OS would have needed anyway.
+
+| Format | What happens today | Verdict |
+|---|---|---|
+| `.AppImage` | nothing — arrives without the executable bit | **NEXT** — chmod, run, and explain when FUSE is missing |
+| `.jar` | nothing, or an archive manager opens it | **NEXT** — needs a JRE; say so instead of failing |
+| `.flatpakref` / `.flatpakrepo` | handled only if a store is installed | **DEPOIS** |
+| `.rpm` on a Debian system | nothing useful | **DEPOIS** — refuse with the reason, and name the equivalent |
+| `.msix` / `.appx` | nothing | **REJECTED for now** — Wine support is not there; promising it would be a lie |
+| kernel work, own package manager, own desktop | — | **REJECTED** — this is where projects of this shape die |
+
 ## The queue
 
 1. **Fill the community list.** The mechanism exists and is empty, and inventing
