@@ -20,7 +20,10 @@ trap limpar EXIT INT TERM
 # Mesma distincao do tandem-exe: trava tomada por outro processo e um caso,
 # trava que nao pode ser criada e outro. Confundir os dois transformava
 # "pasta pessoal cheia" na mensagem errada "outra instalacao em andamento".
-if exec 9> "$TANDEM_TRAVAS/apk.lock" 2>/dev/null; then
+# As chaves impedem que o 2>/dev/null vire desvio permanente do stderr do
+# programa inteiro. Ver o comentario longo no tandem-exe: sem elas, todo
+# caminho de erro sem sessao grafica termina em zero byte de saida.
+if { exec 9> "$TANDEM_TRAVAS/apk.lock"; } 2>/dev/null; then
     flock -w 900 9 || { t_erro "Outra instalação já está em andamento."; exit 1; }
 else
     t_diz "nao consegui criar a trava de instalacao; seguindo sem ela"

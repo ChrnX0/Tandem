@@ -160,10 +160,27 @@ fi
 # Manager!), msvcr71->vcrun6, amstream->quartz, d3dcompiler_46->_47,
 # wmasf->wmp9 e xinput->xact - cada um deles instalando a coisa errada e
 # gravando recibo, o que fazia o Tandem desistir na tentativa seguinte.
+#
+# Divergencias DELIBERADAS ficam declaradas aqui, com o motivo. Sem esta
+# lista so restavam duas saidas ruins: apagar o teste (e perder o auditor) ou
+# ceder e trocar por uma traducao pior. Com ela, a divergencia conhecida passa
+# e qualquer divergencia NOVA continua reprovando.
+#
+#   mfc42.dll: o indice so conhece o vcrun6, porque o verbo "mfc42" declara a
+#   DLL no titulo em prosa ("...mfc42 library; part of vcrun6"), sem lista
+#   entre parenteses para o gerador ler. Escolher o vcrun6 instalaria o
+#   runtime inteiro do Visual C++ 6 para entregar um arquivo que o verbo
+#   estreito extrai sozinho com cabextract.
+EXCECOES_AUDITOR="mfc42.dll"
+
 if [ -f "$RAIZ/src/lib/verbos.tsv" ]; then
     suspeitos=""
-    while IFS=$'\t' read -r a_dll _ _ a_todos; do
+    # A quinta coluna (fonte: override/titulo/ambos) precisa ser lida, senao
+    # o "read" joga ela dentro de a_todos e a comparacao de pertinencia falha
+    # para TODA linha - o auditor passa a acusar as 108 traducoes certas.
+    while IFS=$'\t' read -r a_dll _ _ a_todos _; do
         case "$a_dll" in '#'*|'') continue ;; esac
+        case " $EXCECOES_AUDITOR " in *" $a_dll "*) continue ;; esac
         a_mao="$(t_dll_para_verbo_tabela "$a_dll")"
         [ -n "$a_mao" ] || continue
         case ",$a_todos," in
@@ -873,6 +890,87 @@ igual "sem argumento devolve erro de uso" "2" "$?"
 
 # ------------------------------------------------------------- pacote
 
+secao "dados: o que se refaz e o que nao se refaz"
+
+# Um prefixo com as duas coisas misturadas, que e como todo prefixo real e.
+PD="$TMPRAIZ/prefdados"
+mkdir -p "$PD/drive_c/windows/system32" \
+         "$PD/drive_c/users/zero/Documents" \
+         "$PD/drive_c/users/zero/AppData/Roaming/SistemaLoja" \
+         "$PD/drive_c/users/Public/Documents" \
+         "$PD/drive_c/Program Files/SistemaLoja" \
+         "$PD/drive_c/Program Files/SistemaLoja/Temp" \
+         "$PD/drive_c/users/zero/Desktop"
+: > "$PD/system.reg"; : > "$PD/.tandem-prefixo"
+# Ambiente: refazivel, nao entra.
+head -c 4096 /dev/zero > "$PD/drive_c/windows/system32/msvcp140.dll"
+head -c 2048 /dev/zero > "$PD/drive_c/Program Files/SistemaLoja/loja.exe"
+# Dados: insubstituiveis, entram.
+head -c 9000 /dev/zero > "$PD/drive_c/Program Files/SistemaLoja/cadastro.mdb"
+head -c 1500 /dev/zero > "$PD/drive_c/users/zero/Documents/vendas.xlsx"
+head -c 700  /dev/zero > "$PD/drive_c/users/zero/AppData/Roaming/SistemaLoja/config.db"
+# Lixo que nao merece viagem.
+head -c 5000 /dev/zero > "$PD/drive_c/Program Files/SistemaLoja/Temp/rascunho.bak"
+# Pasta vazia nao e dado, e enfeite do Wine.
+LISTA_D="$(t_dados_lista "$PD")"
+
+case "$LISTA_D" in
+    *"Program Files/SistemaLoja/cadastro.mdb"*) passou "acha o banco largado ao lado do executavel" ;;
+    *) falhou "acha o banco largado ao lado do executavel" "cadastro.mdb" "$LISTA_D" ;;
+esac
+case "$LISTA_D" in
+    *"users/zero/Documents"*) passou "acha a pasta Documentos do usuario" ;;
+    *) falhou "acha a pasta Documentos do usuario" "users/zero/Documents" "$LISTA_D" ;;
+esac
+case "$LISTA_D" in
+    *msvcp140.dll*|*loja.exe*) falhou "nao carrega o ambiente junto" "sem dll nem exe" "$LISTA_D" ;;
+    *) passou "nao carrega o ambiente junto" ;;
+esac
+case "$LISTA_D" in
+    *rascunho.bak*) falhou "ignora o que esta em Temp" "sem rascunho.bak" "$LISTA_D" ;;
+    *) passou "ignora o que esta em Temp" ;;
+esac
+case "$LISTA_D" in
+    *users/Public*) falhou "ignora as pastas de sistema do Windows" "sem Public" "$LISTA_D" ;;
+    *) passou "ignora as pastas de sistema do Windows" ;;
+esac
+case "$LISTA_D" in
+    *Desktop*) falhou "pasta vazia nao vira item" "sem Desktop" "$LISTA_D" ;;
+    *) passou "pasta vazia nao vira item" ;;
+esac
+igual "soma o tamanho de tudo que achou" \
+      "0" "$([ "$(t_dados_total "$PD")" -gt 10000 ]; echo $?)"
+
+# A copia tem que ser abrivel e conter os dados, so os dados.
+ARQD="$TMPRAIZ/dados.tar.gz"
+t_dados_salva "$PD" "$ARQD"
+igual "a copia dos dados e gerada" "0" "$?"
+CONTEUDO="$(tar -tzf "$ARQD" 2>/dev/null)"
+case "$CONTEUDO" in
+    *cadastro.mdb*) passou "a copia leva o banco" ;;
+    *) falhou "a copia leva o banco" "cadastro.mdb" "$CONTEUDO" ;;
+esac
+case "$CONTEUDO" in
+    *msvcp140.dll*) falhou "a copia nao leva o ambiente" "sem dll" "$CONTEUDO" ;;
+    *) passou "a copia nao leva o ambiente" ;;
+esac
+# Devolver num prefixo vazio tem que recolocar no lugar certo.
+PD2="$TMPRAIZ/prefvazio"; mkdir -p "$PD2/drive_c"
+tar -C "$PD2/drive_c" -xzf "$ARQD" 2>/dev/null
+igual "a copia volta no lugar certo" \
+      "0" "$([ -f "$PD2/drive_c/Program Files/SistemaLoja/cadastro.mdb" ]; echo $?)"
+
+# Prefixo sem nada do dono: nao ha o que salvar, e isso NAO e erro.
+PD3="$TMPRAIZ/prefnovo"; mkdir -p "$PD3/drive_c/windows/system32"
+igual "prefixo recem-criado nao tem dados" "0" "$(t_dados_total "$PD3")"
+t_dados_salva "$PD3" "$TMPRAIZ/vazio.tar.gz" 2>/dev/null
+igual "nao inventa copia de prefixo vazio" "1" "$?"
+igual "  e nao deixa arquivo pela metade no disco" \
+      "1" "$([ -f "$TMPRAIZ/vazio.tar.gz" ]; echo $?)"
+
+igual "tamanho em portugues legivel" "9 KB" "$(t_tamanho_amigavel 9216)"
+igual "tamanho pequeno fica em bytes" "800 bytes" "$(t_tamanho_amigavel 800)"
+
 secao "prova de entrega: o winetricks sair 0 nao prova que a DLL chegou"
 
 # Ate aqui a suite exercitava as bibliotecas. Este bloco roda o tandem-exe
@@ -920,16 +1018,19 @@ exit 0
 FIM
 chmod +x "$E2E/bin"/*
 
-# $1 = pasta da rodada (vira o HOME), $2 = arquivo que o winetricks entrega
+# $1 = pasta da rodada (vira o HOME), $2 = arquivo que o winetricks entrega,
+# $3 = "semgui" para rodar sem sessao grafica (caminho de terminal)
 roda_exe() {
-    local casa="$1" entrega="$2" pref
+    local casa="$1" entrega="$2" modo="${3:-gui}" pref tela=:99
     pref="$casa/.local/share/tandem/wine"
     mkdir -p "$pref/drive_c/windows/system32"
     : > "$pref/system.reg"; : > "$pref/.tandem-prefixo"
-    env -i HOME="$casa" DISPLAY=:99 PATH="$E2E/bin:/usr/bin:/bin" \
+    [ "$modo" = semgui ] && tela=""
+    env -i HOME="$casa" DISPLAY="$tela" PATH="$E2E/bin:/usr/bin:/bin" \
         E2E_ENTREGA="$entrega" E2E_DIARIO="$casa/diario.txt" \
         E2E_JANELAS="$casa/janelas.txt" TANDEM_LIB="$RAIZ/src/lib" \
-        bash "$RAIZ/src/bin/tandem-exe" "$ARTEFATOS/prog64.exe" >/dev/null 2>&1
+        bash "$RAIZ/src/bin/tandem-exe" "$ARTEFATOS/prog64.exe" \
+        > "$casa/stdout.txt" 2> "$casa/stderr.txt"
 }
 
 if [ ! -x "$E2E/bin/wine" ]; then
@@ -986,6 +1087,25 @@ else
           "2" "$(grep -c vcrun2003 "$B/diario.txt" 2>/dev/null)"
     igual "segunda execucao: a suspeita e anotada de novo, com data" \
           "2" "$(grep -c vcrun2003 "$B/.local/state/tandem/traducao-suspeita.tsv" 2>/dev/null)"
+
+    # --- Caso 4: sem sessao grafica, a mensagem tem que sair pelo terminal.
+    #
+    # Este teste existe por causa de um defeito medido num Ubuntu 24.04 real:
+    # o laco detectava a DLL, traduzia certo, montava a mensagem certa com o
+    # comando certo - e devolvia codigo 53 com ZERO BYTE de saida. A causa era
+    # "exec 7> arq 2>/dev/null": exec sem comando aplica as redirecoes ao
+    # shell inteiro, e de forma permanente, entao aquele 2>/dev/null desviava
+    # o stderr de todo o resto do programa. Nenhum teste pegava porque todos
+    # rodavam com DISPLAY definido, onde a mensagem sai pela janela.
+    C="$E2E/semjanela"; mkdir -p "$C"; roda_exe "$C" "" semgui
+    if [ -s "$C/stderr.txt" ]; then passou "sem janela: a mensagem sai pelo terminal"
+    else falhou "sem janela: a mensagem sai pelo terminal" \
+                "qualquer texto no stderr" "zero byte (erro em silencio)"; fi
+    case "$(cat "$C/stderr.txt" 2>/dev/null)" in
+        *"winetricks -q vcrun2003"*) passou "sem janela: diz o comando exato para resolver" ;;
+        *) falhou "sem janela: diz o comando exato para resolver" \
+                  "winetricks -q vcrun2003" "$(head -c 200 "$C/stderr.txt" 2>/dev/null)" ;;
+    esac
 fi
 
 secao "pacote .deb"

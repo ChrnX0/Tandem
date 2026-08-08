@@ -19,6 +19,9 @@ Tandem - roda programas Windows e apps Android no Linux.
   tandem doctor               diagnostico do ambiente (o que existe)
   tandem autoteste            exercita de verdade (o que funciona)
   tandem repair               reaplica as associacoes de arquivo
+  tandem dados                mostra os seus arquivos dentro do Windows
+  tandem dados salvar         copia SO os seus arquivos (rapido e pequeno)
+  tandem dados restaurar [c]  devolve os seus arquivos de uma copia
   tandem backup               salva o ambiente Windows
   tandem restore              restaura o ambiente Windows
   tandem protect <caminho>    protege um perfil Wine contra alteracoes
@@ -98,6 +101,103 @@ acao_doctor() {
     printf '%b' "$out" | t_texto "Tandem - Diagnóstico"
 }
 
+# ---------------------------------------------------------------- dados
+#
+# "Se voce desistir do Linux, seus dados voltam com voce." E essa frase que
+# faz um dono de loja aceitar tentar - e ate a versao 3.4 o Tandem nao tinha
+# como cumpri-la, porque nada aqui distinguia o ambiente (reconstruivel) dos
+# arquivos que a pessoa digitou (nao).
+acao_dados() {
+    local sub="${1:-listar}"
+    case "$sub" in
+        salvar|save|copiar)   acao_dados_salvar "${2:-}" ;;
+        restaurar|restore)    acao_dados_restaurar "${2:-}" ;;
+        listar|lista|"")      acao_dados_listar ;;
+        *) t_erro "Não conheço \"tandem dados $sub\".
+
+Use:  tandem dados | tandem dados salvar | tandem dados restaurar"; return 1 ;;
+    esac
+}
+
+acao_dados_listar() {
+    local p="$TANDEM_PREFIXO_PADRAO" total linhas
+    [ -d "$p/drive_c" ] || { t_erro "Ainda não há um ambiente Windows aqui."; return 1; }
+    linhas="$(t_dados_lista "$p" 2>/dev/null)"
+    total="$(printf '%s\n' "$linhas" | awk -F'\t' '{s += $3} END {print s + 0}')"
+    if [ -z "$linhas" ]; then
+        t_texto "Seus arquivos dentro do Windows
+
+Não encontrei nenhum arquivo seu ainda - só o ambiente, que o Tandem
+sabe refazer sozinho em alguns minutos.
+
+Isso é normal se você ainda não usou nenhum programa para valer."
+        return 0
+    fi
+    t_texto "Seus arquivos dentro do Windows
+
+Estes são os arquivos que VOCÊ criou. O resto (o Windows de mentira, os
+componentes, os programas) o Tandem refaz sozinho; isto aqui, não:
+
+$(printf '%s\n' "$linhas" | sort -t"$(printf '\t')" -k3 -rn | head -40 |
+  while IFS="$(printf '\t')" read -r _ caminho bytes; do
+      printf -- '- %-52s %s\n' "$caminho" "$(t_tamanho_amigavel "$bytes")"
+  done)
+
+Total: $(t_tamanho_amigavel "$total") em $(printf '%s\n' "$linhas" | grep -c .) itens.
+
+Para guardar uma cópia só disso:   tandem dados salvar"
+}
+
+acao_dados_salvar() {
+    local p="$TANDEM_PREFIXO_PADRAO" destino="${1:-}" total
+    [ -d "$p/drive_c" ] || { t_erro "Ainda não há um ambiente Windows aqui."; return 1; }
+    total="$(t_dados_total "$p")"
+    if [ "${total:-0}" -eq 0 ]; then
+        t_aviso "Não há arquivos seus para copiar ainda."
+        return 0
+    fi
+    [ -n "$destino" ] || destino="$HOME/tandem-dados-$(date +%F-%H%M).tar.gz"
+    t_progresso_abre "Copiando os seus arquivos ($(t_tamanho_amigavel "$total"))..."
+    t_dados_salva "$p" "$destino"; local c=$?
+    t_progresso_fecha
+    if [ $c -eq 0 ]; then
+        t_ok "Seus arquivos foram copiados para:
+
+$destino
+
+Este arquivo é seu. Guarde num pendrive ou mande para você mesmo por
+e-mail: com ele, seus dados voltam em qualquer computador."
+    else
+        t_erro "Não consegui copiar os seus arquivos."
+    fi
+    return $c
+}
+
+acao_dados_restaurar() {
+    local p="$TANDEM_PREFIXO_PADRAO" arq="${1:-}"
+    [ -n "$arq" ] || arq="$(ls -1t "$HOME"/tandem-dados-*.tar.gz 2>/dev/null | head -1)"
+    [ -n "$arq" ] && [ -f "$arq" ] || {
+        t_erro "Não encontrei nenhuma cópia dos seus arquivos.
+
+Se você tem o arquivo, diga onde ele está:
+tandem dados restaurar /caminho/da/copia.tar.gz"; return 1; }
+    [ -d "$p/drive_c" ] || { t_erro "Ainda não há um ambiente Windows para devolver os arquivos."; return 1; }
+    # Devolver dado NAO apaga nada: arquivo que ja existe fica como esta. Um
+    # restore que sobrescreve o trabalho de hoje com a copia da semana passada
+    # e exatamente o estrago que este comando existe para evitar.
+    t_pergunta "Devolver os seus arquivos a partir de:
+
+$(basename -- "$arq")
+
+Nada do que já existe será apagado - só entram os arquivos que faltam." \
+        "Devolver" "Cancelar" || return 1
+    t_progresso_abre "Devolvendo os seus arquivos..."
+    tar -C "$p/drive_c" -xzf "$arq" --skip-old-files 2>>"$LOG"; local c=$?
+    t_progresso_fecha
+    [ $c -eq 0 ] && t_ok "Seus arquivos foram devolvidos." || t_erro "Não consegui devolver os arquivos."
+    return $c
+}
+
 acao_backup() {
     local p="$TANDEM_PREFIXO_PADRAO"
     [ -f "$p/system.reg" ] || { t_erro "Não há ambiente Windows para salvar ainda."; return 1; }
@@ -121,6 +221,13 @@ acao_restore() {
 $(basename -- "$arq")
 
 O ambiente atual será substituído." "Restaurar" "Cancelar" || return 1
+    # Antes de trocar o ambiente inteiro, guarda o que nao se refaz. Sem isto
+    # o comando devolvia o ambiente da semana passada e levava as vendas do
+    # mes junto - em silencio, e sem chance de desfazer.
+    local resgate
+    resgate="$(t_dados_resgate "$TANDEM_PREFIXO_PADRAO" antes-de-restaurar)" && \
+        t_aviso "Guardei uma cópia dos seus arquivos em:
+$resgate"
     t_progresso_abre "Restaurando..."
     rm -rf -- "$TANDEM_PREFIXO_PADRAO"
     mkdir -p "$(dirname -- "$TANDEM_PREFIXO_PADRAO")"
@@ -331,6 +438,15 @@ Os arquivos dele serão apagados." "Remover" "Cancelar"; then
             return 1
         fi
     fi
+
+    # O desinstalador do programa apaga a pasta dele inteira - e em software
+    # comercial brasileiro o banco de dados costuma morar ali dentro, ao lado
+    # do executavel. O dono confirmou remover o PROGRAMA; ninguem perguntou se
+    # ele queria perder o cadastro. A copia sai antes, sempre.
+    local resgate
+    resgate="$(t_dados_resgate "$TANDEM_PREFIXO_PADRAO" antes-de-remover)" && \
+        t_aviso "Antes de remover, guardei uma cópia dos seus arquivos em:
+$resgate"
 
     # Preferimos o desinstalador silencioso, que o proprio programa declara
     # no registro. Sem ele, rodamos o desinstalador normal: abre a janela do
@@ -623,6 +739,7 @@ acao_painel() {
             "android"   "Abrir a tela do Android" \
             "doctor"    "Ver o diagnóstico do ambiente" \
             "autoteste" "Testar de verdade se tudo funciona aqui" \
+            "dados"     "Ver e copiar os SEUS arquivos" \
             "backup"    "Salvar o ambiente Windows" \
             "restore"   "Restaurar o ambiente Windows" \
             "repair"    "Consertar a abertura de arquivos com dois cliques" \
@@ -642,6 +759,7 @@ acao_painel() {
             android)  setsid /usr/bin/tandem-android >/dev/null 2>&1 & ;;
             doctor)   acao_doctor ;;
             autoteste) acao_autoteste ;;
+            dados)    acao_dados ;;
             backup)   acao_backup ;;
             restore)  acao_restore ;;
             repair)   /usr/bin/tandem-repair ;;
@@ -663,6 +781,7 @@ case "${1:-}" in
     doctor|diagnostico)   acao_doctor ;;
     autoteste|autotest)   acao_autoteste ;;
     repair|consertar)     exec /usr/bin/tandem-repair ;;
+    dados|meus-dados)     shift; acao_dados "$@" ;;
     backup)               acao_backup ;;
     restore|restaurar)    acao_restore ;;
     protect|proteger)     shift; acao_protect "$@" ;;

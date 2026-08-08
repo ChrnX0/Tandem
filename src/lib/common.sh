@@ -195,7 +195,7 @@ t_progresso_texto() {
     # escrever - o trabalho continua, so deixa de ter barra de progresso.
     if [ -n "${TANDEM_PROG_PID:-}" ] && ! kill -0 "$TANDEM_PROG_PID" 2>/dev/null; then
         t_diz "janela de progresso fechada pelo usuario; seguindo sem ela"
-        exec 8>&- 2>/dev/null
+        { exec 8>&-; } 2>/dev/null
         rm -f "$TANDEM_FIFO" 2>/dev/null
         TANDEM_FIFO=""
         return 0
@@ -206,7 +206,7 @@ t_progresso_texto() {
 
 t_progresso_fecha() {
     [ -n "${TANDEM_FIFO:-}" ] || return 0
-    exec 8>&- 2>/dev/null
+    { exec 8>&-; } 2>/dev/null
     wait "$TANDEM_PROG_PID" 2>/dev/null
     rm -f "$TANDEM_FIFO" 2>/dev/null
     TANDEM_FIFO=""
@@ -786,6 +786,131 @@ t_tem_wine64() {
 # Executa um script como root: direto se ja somos root, sudo se ha terminal,
 # pkexec se ha sessao grafica. A ordem poe o terminal na frente porque nele
 # o usuario VE o apt trabalhando; o pkexec mostra so o pedido de senha.
+# ============================================================== DADOS
+#
+# A distincao que faltava no projeto inteiro: AMBIENTE se reconstroi em vinte
+# minutos - o prefixo, o Wine, os runtimes -, DADOS nao se reconstroem nunca.
+# Cadastro de clientes de sete anos, XML de NF-e (cinco anos de guarda por
+# lei), o movimento do mes. Ate aqui tres caminhos apagavam isso sem copia: o
+# rm -rf do prefixo incompleto no tandem-exe, o "tandem restore" (que devolve
+# o ambiente e leva as vendas junto) e o desinstalador do programa.
+#
+# Nao da para perguntar ao programa onde ele guarda as coisas. Da para
+# procurar em dois lugares com criterio: as pastas pessoais do usuario
+# Windows, e os arquivos de dados largados dentro da pasta do proprio
+# programa - um .mdb ou um .fdb dentro de Program Files e o banco de alguem,
+# nao parte da instalacao.
+
+# Extensoes que so existem porque alguem digitou alguma coisa.
+TANDEM_EXT_DADOS='mdb accdb fdb gdb dbf db sqlite sqlite3 db3 sdf
+xls xlsx xlsm ods csv doc docx odt rtf txt pdf
+bak backup qbw qbb'
+
+# Pastas pessoais do Windows que valem a pena carregar junto.
+TANDEM_PASTAS_DADOS='Documents Desktop Downloads Pictures AppData/Roaming'
+
+t_tamanho_amigavel() {
+    local b="${1:-0}"
+    if   [ "$b" -ge 1073741824 ] 2>/dev/null; then awk -v b="$b" 'BEGIN{printf "%.1f GB", b/1073741824}'
+    elif [ "$b" -ge 1048576 ]    2>/dev/null; then awk -v b="$b" 'BEGIN{printf "%.0f MB", b/1048576}'
+    elif [ "$b" -ge 1024 ]       2>/dev/null; then awk -v b="$b" 'BEGIN{printf "%.0f KB", b/1024}'
+    else printf '%s bytes' "$b"; fi
+}
+
+# Lista o que e dado dentro de um prefixo: "tipo<TAB>caminho-em-drive_c<TAB>bytes".
+# Os caminhos sao relativos a drive_c de proposito: e assim que o tar consegue
+# empacotar e devolver no lugar certo, inclusive noutra maquina.
+t_dados_lista() {
+    local pref="${1:-$TANDEM_PREFIXO_PADRAO}" c u sub rel bytes
+    c="$pref/drive_c"
+    [ -d "$c" ] || return 1
+
+    for u in "$c"/users/*/; do
+        [ -d "$u" ] || continue
+        case "$(basename -- "${u%/}")" in
+            Public|Default|Default\ User|All\ Users) continue ;;
+        esac
+        for sub in $TANDEM_PASTAS_DADOS; do
+            [ -d "$u$sub" ] || continue
+            # Pasta existente e vazia e enfeite do Wine, nao e dado do dono.
+            find "$u$sub" -type f -print -quit 2>/dev/null | grep -q . || continue
+            rel="${u#"$c"/}$sub"
+            bytes="$(du -sb "$u$sub" 2>/dev/null | cut -f1)"
+            printf 'pasta\t%s\t%s\n' "$rel" "${bytes:-0}"
+        done
+    done
+
+    # Arquivos de dados fora das pastas pessoais: e o caso do sistema de loja
+    # que guarda o banco ao lado do executavel, que e a regra e nao a excecao
+    # em software comercial brasileiro.
+    local args=() e primeiro=1
+    for e in $TANDEM_EXT_DADOS; do
+        [ "$primeiro" = 1 ] && primeiro=0 || args+=(-o)
+        args+=(-iname "*.$e")
+    done
+    timeout 60 find "$c" -type f \( "${args[@]}" \) \
+        -not -path "$c/windows/*" -not -path "$c/users/*" \
+        -not -path "*/Temp/*" -not -path "*/Cache/*" \
+        -size +0 -print0 2>/dev/null |
+    while IFS= read -r -d '' f; do
+        printf 'arquivo\t%s\t%s\n' "${f#"$c"/}" "$(stat -c%s "$f" 2>/dev/null || echo 0)"
+    done
+}
+
+t_dados_total() {
+    t_dados_lista "$1" 2>/dev/null | awk -F'\t' '{s += $3} END {print s + 0}'
+}
+
+# Empacota exatamente o que t_dados_lista achou. Devolve 1 se nao havia nada -
+# e "nao havia nada" NAO e falha: prefixo recem-criado nao tem dado nenhum.
+t_dados_salva() {
+    local pref="$1" destino="$2" c lista c_tar
+    c="$pref/drive_c"
+    [ -d "$c" ] || return 1
+    lista="$(mktemp)" || return 1
+    t_dados_lista "$pref" | cut -f2 > "$lista"
+    if [ ! -s "$lista" ]; then rm -f "$lista"; return 1; fi
+    tar -C "$c" -czf "$destino" --files-from "$lista" 2>>"${LOG:-/dev/null}"
+    c_tar=$?
+    rm -f "$lista"
+    return $c_tar
+}
+
+# Copia de resgate antes de um caminho destrutivo. Nunca impede a operacao:
+# se nao der para salvar, avisa e segue - travar o dono no meio de um conserto
+# seria trocar um problema por outro. Imprime o caminho da copia, se houve.
+t_dados_resgate() {
+    local pref="$1" motivo="${2:-resgate}" destino
+    [ -d "$pref/drive_c" ] || return 1
+    destino="$HOME/tandem-dados-$motivo-$(date +%F-%H%M%S).tar.gz"
+    if t_dados_salva "$pref" "$destino"; then
+        t_diz "copia de resgate dos dados em $destino"
+        printf '%s\n' "$destino"
+        return 0
+    fi
+    rm -f "$destino" 2>/dev/null
+    return 1
+}
+
+# Devolve o prefixo de comando que impede a maquina de suspender durante uma
+# instalacao longa - ou nada, se ele nao funcionar aqui.
+#
+# Conferir com "command -v systemd-inhibit" nao basta, e a diferenca custou uma
+# instalacao inteira num Ubuntu 24.04 real: o binario existe, mas sem barramento
+# D-Bus de sessao ele sai 1 com "Failed to connect to bus" e leva o comando
+# embrulhado junto. O winetricks nem chegou a rodar, e o dono foi informado de
+# que devia conferir a conexao de internet - que estava perfeita. E o mesmo erro
+# de sempre: presenca nao e funcionamento. Aqui a gente exercita.
+t_inibidor() {
+    command -v systemd-inhibit >/dev/null 2>&1 || return 0
+    systemd-inhibit --what=idle --who=Tandem --why=teste \
+        true >/dev/null 2>&1 || {
+        t_diz "systemd-inhibit existe mas nao funciona aqui; seguindo sem ele"
+        return 0
+    }
+    printf '%s' "systemd-inhibit --what=idle:sleep:shutdown --who=Tandem --why=Instalando_componentes_do_Windows --mode=block"
+}
+
 t_como_root() {
     local script="$1"
     if [ "$(id -u)" = 0 ]; then

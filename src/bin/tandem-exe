@@ -46,7 +46,16 @@ TRAVA="$TANDEM_TRAVAS/exe-$CHAVE.lock"
 # resultado era o duplo clique nao fazer nada, para sempre. Sem trava a
 # protecao contra clique duplo se perde, o que e ruim; recusar-se a abrir o
 # programa e pior.
-if exec 7> "$TRAVA" 2>/dev/null; then
+# As chaves nao sao enfeite. "exec" SEM COMANDO aplica as redirecoes ao shell
+# inteiro, e de forma permanente: escrito "exec 7> arq 2>/dev/null", o
+# 2>/dev/null nao cala o exec - cala o stderr de TODO o resto do programa.
+# Efeito medido num Ubuntu 24.04 sem sessao grafica: o laco detectava a DLL
+# certa, traduzia certo, montava a mensagem certa com o comando certo... e
+# devolvia codigo 53 com zero byte de saida. O erro em silencio mais completo
+# que este projeto ja produziu, escondido justamente no codigo escrito para
+# consertar um erro em silencio. Com as chaves, o fd 7 persiste e o desvio do
+# stderr morre no fim do grupo.
+if { exec 7> "$TRAVA"; } 2>/dev/null; then
     flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
 else
     t_diz "nao consegui criar a trava em $TRAVA; seguindo sem ela"
@@ -80,7 +89,18 @@ unset WINEDLLOVERRIDES
 
 # ------------------------------------------------- 2. Criar prefixo padrao
 if [ "$NOSSO" = 1 ] && [ ! -f "$WINEPREFIX/system.reg" ]; then
-    [ -d "$WINEPREFIX" ] && { t_diz "prefixo incompleto, refazendo"; rm -rf -- "$WINEPREFIX"; }
+    if [ -d "$WINEPREFIX" ]; then
+        # "Incompleto" quer dizer sem system.reg. Nao quer dizer vazio: pode
+        # haver um wineboot interrompido com a pasta de Documentos ja cheia.
+        # Apagar direto era o caminho destrutivo mais silencioso do projeto -
+        # acontecia dentro de um duplo clique, sem ninguem pedir nada.
+        RESGATE="$(t_dados_resgate "$WINEPREFIX" ambiente-incompleto)" &&
+            t_aviso "O ambiente Windows estava pela metade e vai ser refeito.
+Guardei os seus arquivos em:
+$RESGATE"
+        t_diz "prefixo incompleto, refazendo"
+        rm -rf -- "$WINEPREFIX"
+    fi
     mkdir -p "$(dirname -- "$WINEPREFIX")"
     t_progresso_abre "Primeira vez: preparando o ambiente Windows..."
     (
@@ -351,12 +371,9 @@ sudo apt install winetricks"; exit 1; }
 
     # systemd-inhibit impede a maquina de suspender no meio: uma instalacao de
     # .NET pode levar 30 minutos, e suspender no meio corrompe o prefixo.
-    if command -v systemd-inhibit >/dev/null 2>&1; then
-        INIBIR="systemd-inhibit --what=idle:sleep:shutdown --who=Tandem \
-                --why=Instalando_componentes_do_Windows --mode=block"
-    else
-        INIBIR=""
-    fi
+    # t_inibidor EXERCITA em vez de so conferir se o binario existe - a lição
+    # do autoteste aplicada aqui, depois de o atalho custar uma instalacao.
+    INIBIR="$(t_inibidor)"
 
     t_progresso_abre "Instalando componentes do Windows. Pode demorar. Não feche esta janela."
     FALHARAM=""
@@ -410,8 +427,19 @@ sudo apt install winetricks"; exit 1; }
     if [ -n "$FALHARAM" ]; then
         RESTO="$TANDEM_TRAVAS/wt.$$"
         tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO" 2>/dev/null || : > "$RESTO"
-        PORQUE="Verifique se o computador está conectado à internet."
-        if grep -qi 'No space left on device' "$RESTO" 2>/dev/null; then
+        # A causa mais comum e a internet, mas afirmar isso sem evidencia
+        # manda o dono procurar defeito no lugar errado - foi o que aconteceu
+        # quando o systemd-inhibit derrubou a instalacao antes de ela comecar.
+        # Sem sinal de download tentado, a resposta honesta e nao saber.
+        if grep -qiE 'saved \[|wget|Downloading|HTTP request sent' "$RESTO" 2>/dev/null; then
+            PORQUE="Verifique se o computador está conectado à internet."
+        else
+            PORQUE="Não consegui identificar a causa. Os detalhes técnicos estão em:
+$LOG"
+        fi
+        if grep -qi 'Failed to connect to bus' "$RESTO" 2>/dev/null; then
+            PORQUE="Falta um serviço do sistema (D-Bus). Reiniciar o computador costuma resolver."
+        elif grep -qi 'No space left on device' "$RESTO" 2>/dev/null; then
             PORQUE="O disco está cheio."
         elif grep -qi 'certificate\|SSL\|not yet valid\|has expired' "$RESTO" 2>/dev/null; then
             PORQUE="A data do computador parece errada, e isso derruba os downloads.

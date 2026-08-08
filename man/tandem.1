@@ -110,8 +110,27 @@ novo.
 Reaplica as associações de arquivo. Use quando o duplo clique abrir o
 diálogo "Abrir com…" em vez do Tandem.
 .TP
+.B tandem dados
+Mostra os arquivos que
+.I você
+criou dentro do Windows — documentos, planilhas, bancos de dados de
+programas — separados do ambiente, que o Tandem sabe refazer sozinho.
+.RS
+.TP
+.B tandem dados salvar
+Copia somente esses arquivos para um
+.I .tar.gz
+na pasta pessoal. É rápido e pequeno, porque não leva o ambiente junto.
+.TP
+.BI "tandem dados restaurar " [cópia]
+Devolve os arquivos de uma cópia. Nada que já existe é sobrescrito; só
+entram os arquivos que faltam. Sem argumento, usa a cópia mais recente.
+.RE
+.TP
 .B tandem backup
 Salva o ambiente Windows do Tandem em um arquivo na pasta pessoal.
+Inclui os seus arquivos, mas é pesado; para levar só os dados, use
+.BR "tandem dados salvar" .
 .TP
 .B tandem restore
 Restaura o ambiente Windows a partir do backup mais recente.
