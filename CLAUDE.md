@@ -6,10 +6,11 @@ first time.
 
 ## What it is
 
-A `.deb` package that makes `.exe`, `.msi`, `.apk` and `.xapk` open with a
-**double click** on Linux. It is not a prefix manager and not a Bottles
-replacement: it is a **thin layer of decision, translation and diagnosis** on top
-of `wine`, `winetricks -q` and `waydroid`.
+A `.deb` package that makes `.exe`, `.msi`, `.apk`, `.xapk`, `.AppImage` and
+`.jar` open with a **double click** on Linux. It is not a prefix manager and not
+a Bottles replacement: it is a **thin layer of decision, translation and
+diagnosis** on top of `wine`, `winetricks -q`, `waydroid`, the AppImage runtime
+and `java`.
 
 The target user is not a programmer. The quality bar is: *no error path may end
 in silence.* "I double-clicked and nothing happened" is treated as a bug, not as
@@ -78,10 +79,15 @@ debian/postinst           shortcut only: the per-user work happens on first run
 man/tandem.1              the manual; the other four are ".so" stubs
 src/mime/tandem.xml       registers .xapk/.apks/.apkm as a zip subclass
 src/lib/common.sh         log, messages, locale, progress, prefixes, PE, waydroid,
-                          memory, recipes, alternatives, data, list, pre-flight
+                          memory, recipes, alternatives, data, list, pre-flight,
+                          native formats (arch, java, fuse, menu entries)
 src/lib/winedeps.sh       DLL -> winetricks verb; DLLs with no translation
 src/lib/apkinfo.py        binary AndroidManifest reader, pure Python
 src/lib/peinfo.py         PE import-table reader, without executing anything
+src/lib/appimageinfo.py   AppImage ELF header: generation, arch, payload offset,
+                          and whether the download finished
+src/lib/jarinfo.py        jar manifest + bytecode major: is it a program, and
+                          which Java does it need
 src/lib/verbos.tsv        GENERATED DLL->verb index; do not edit by hand
 src/lib/limites.tsv       signatures of what will never work (dongle, driver)
 src/lib/alternativas.tsv  Linux programs that do the same job
@@ -92,9 +98,14 @@ proofgate.json            evidence gate: stack, coupled files
 src/bin/tandem            CLI + zenity panel; 20 commands
 src/bin/tandem-exe        the run->detect->install->retry loop
 src/bin/tandem-apk        pre-flight + install; xapk/apks via adb install-multiple
+src/bin/tandem-appimage   exec bit, arch, truncation, FUSE workaround, menu entry
+src/bin/tandem-jar        program-or-library, Java version, Class-Path, JavaFX
 src/bin/tandem-repair     the MIME association dispute
 src/polkit/               narrow rule: only start/restart of waydroid-container
 tests/run.sh              the suite; tests/mkapk.py generates the synthetic packages
+tests/real-programs.sh    REAL software, weekly: PuTTY/Notepad++/7-Zip/WinMerge
+                          pinned by sha256, window checked with xdotool; builds a
+                          real AppImage with appimagetool and compiles a real jar
 docs/IDEAS.md             idea ledger with verdicts; the rejected ones with the reason
 docs/LIST-FORMAT.md       the community list record, field by field
 lista/lista.tsv           the published list; empty until real people report
@@ -113,7 +124,8 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 309 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 364 tests, no Wine, no Waydroid, no install
+bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
 The suite sources the libraries straight from `src/lib` and generates synthetic
@@ -236,6 +248,67 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   (`. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"`). With the path hard-coded
   there was no way to exercise the run→detect→install loop without installing the
   package, and the whole suite stopped at the library level.
+- **`shared-mime-info` already knows the two native types.** `application/vnd.appimage`
+  (glob priority 60) and `application/x-iso9660-appimage` (50) for AppImage,
+  `application/java-archive` for `.jar`. No new MIME XML was needed - only
+  `.desktop` files claiming them and `tandem-repair` winning the dispute. A
+  `.jar` is disputed by the system's own Java launcher; an AppImage usually has
+  **no owner at all**, which is why the click does nothing.
+- **An AppImage's payload offset is computable from the ELF header**:
+  `e_shoff + e_shentsize * e_shnum`. Verified against the runtime's own
+  `--appimage-offset` on a real file: 944632 both ways, with nothing executed.
+  The squashfs superblock sits at that offset (magic `hsqs`) and its `bytes_used`
+  at superblock offset 40 - so `offset + bytes_used > filesize` proves an
+  interrupted download without running anything.
+- **`--appimage-extract` does NOT need FUSE.** Measured with `/dev/fuse` moved
+  away: the plain run exits **127** printing `Cannot mount AppImage, please check
+  your FUSE setup`, while `--appimage-extract` and `--appimage-extract-and-run`
+  both still work. That is why the menu-entry extraction works on exactly the
+  machines that have no FUSE, and why the workaround needs nothing installed.
+- **`libfuse2` was renamed `libfuse2t64`** in the 64-bit `time_t` transition, so
+  the install has to try both names. Ask the loader (`ldconfig -p`) about
+  `libfuse.so.2`, never `dpkg` about a package name.
+- **Class file major minus 44 is the Java version.** 52 = Java 8, 65 = Java 21.
+  Checked against a real JVM: a class bumped to 66 is refused with `class file
+  version 66.0, this version of the Java Runtime only recognizes class file
+  versions up to 65.0`. **Classes under `META-INF/versions/` must be excluded**
+  from the maximum - they are the multi-release mechanism, present so a NEWER
+  Java picks them up, and counting one marked 74 announced "needs Java 30" for a
+  jar that runs fine on 21.
+- **`java -version` writes two different shapes**, and the split matters:
+  `1.8.0_412` is Java 8, `21.0.10` is Java 21. Reading only the first number
+  turns Java 8 into Java 1 - and then Tandem refuses a program on a machine that
+  runs it perfectly. It also prints to **stderr**, and with `JAVA_TOOL_OPTIONS`
+  set in the environment it prints a paragraph of proxy settings FIRST, so
+  `head -1` puts that paragraph in the middle of `tandem doctor`. Grep for
+  `version "`.
+- **A `.jar` manifest folds at 72 bytes** and continues on a line starting with a
+  single space, splitting file names down the middle. A `Class-Path` read line by
+  line yields paths that do not exist. Values are also CRLF-terminated.
+- **A truncated `.jar` is always detectable**, because a zip's index lives at the
+  END of the file. `zipfile.BadZipFile` is therefore the signature of an
+  interrupted download, not of a corrupt program.
+- **`zipfile.writestr` MUTATES the `ZipInfo` you hand it** (`header_offset`,
+  `CRC`, sizes). Passing the source archive's own objects while copying entries
+  corrupts the source mid-loop - "Bad magic number for file header" on the next
+  read. It silently made a multi-release test build the wrong file, so the case
+  it existed for was never exercised. Copy the bytes, write by name.
+- **The first-run mark has to record the VERSION, not just existence.** It was an
+  empty file, so "already run once" meant "never again" - and a machine upgraded
+  from a version that did not know a format never claimed it. Reproduced by
+  installing 3.7 over 3.6: `.jar` still answered `openjdk-21-java.desktop`. Fixed
+  by writing `$TANDEM_VERSAO` into the mark and running `tandem-repair
+  --somente-novos`, which claims only types absent from
+  `~/.config/tandem/tipos-aplicados.txt`. Whoever adds a sixth format must add
+  its types; the upgrade path is what makes them reach an existing user.
+- **`case " $LIST " in *" $x "*)` does not work on a NEWLINE-separated list.** The
+  MIME type lists in `tandem-repair` are newline-separated, so the pattern
+  matched nothing and every type was written as `type=` with an empty handler -
+  which reads to the system as "no default". Loop over the unquoted variable
+  instead; word splitting handles both separators.
+- **`openjdk-<n>-java.desktop` owns `application/java-archive`** on any machine
+  with a JRE installed. It is a real rival, unlike the AppImage case where the
+  type usually has no owner at all.
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.
@@ -270,7 +343,34 @@ root), no longer only by reading:
 - `tandem dados` listing and copying real files out of a prefix; `tandem socorro`
   producing its report; the bitness warning appearing in the dialog *before* the
   download.
-- 309 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 364 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- **Real Windows software, run through Tandem, with the window checked on
+  screen** (`tests/real-programs.sh`, 26 checks green): PuTTY and Notepad++ x64
+  both opened a window with the expected title, screenshots taken; `peinfo.py`
+  agreed with `objdump` import for import on all four binaries; Brazilian CP1252
+  text rendered correctly in the editor. It also established a fact the README
+  had wrong: **2 of 2 real installers are 32-bit**, even the one that installs
+  64-bit software, which makes `wine32` far more important than it looks.
+- **`tandem desinstalar` cleans up its orphan shortcuts.** Confirmed on real
+  Wine with 7-Zip really installed: both `.desktop` files removed, the empty
+  folder pruned, the log line written (`2 atalho(s) orfao(s) removido(s)`), and
+  the registry key gone. An earlier session reported this as a defect; the cause
+  was a `timeout 200` in the test killing the command before cleanup ran.
+- **The native formats closed end to end on a real AppImage built by the real
+  `appimagetool`**: the execute bit went from `-rw-r--r--` to `-rwxr-xr-x`, the
+  program ran, the menu entry was written from the AppImage's own desktop file
+  (with its author's `Name` and `Categories`, and accepted by
+  `desktop-file-validate`), the icon was extracted, and the silent-success guard
+  fired on its own with "abriu e fechou sozinho".
+- **The FUSE workaround closed end to end with `/dev/fuse` actually removed**:
+  first attempt failed with the real message, Tandem recognised it, retried with
+  `--appimage-extract-and-run`, opened the program, wrote the menu entry, told
+  the owner the one-line fix, and recorded `MODO=extrair`. On the next run with
+  FUSE present it noticed the reason no longer held and took the fast road again.
+- **The Java pre-flight caught a version mismatch before running anything**: a
+  jar needing Java 22 on a machine with 21 produced "ele pede o Java 22 e o
+  instalado aqui é o 21", with **zero** `UnsupportedClassVersionError` in the log
+  - the JVM was never asked.
 
 Verified **on the user's Zorin 18.1** (Wayland, Wine 10.0, Waydroid active):
 
@@ -289,8 +389,11 @@ Verified **on the user's Zorin 18.1** (Wayland, Wine 10.0, Waydroid active):
 
 **Still unverified — needs the real machine:** `pkexec` and the polkit rule (the
 Waydroid service was already active, so the rule was never exercised), XAPK
-installation on a real Waydroid, and the newer commands `preparar`, `programas`,
-`desinstalar`, `dados` and `socorro` in the field.
+installation on a real Waydroid, the newer commands `preparar`, `programas`,
+`desinstalar`, `dados` and `socorro` in the field, and a double click on a real
+`.AppImage` / `.jar` from the file manager (the association is applied and the
+executables are proven from the command line; what has not been seen is GNOME
+routing the click).
 
 Reference environment where the project was born: Zorin OS 18.1 (Ubuntu noble
 base), kernel 7.0, x86_64, Wayland/GNOME, 15 GB RAM, Wine 10.0 from the distro
@@ -341,18 +444,30 @@ The queue, in order:
    line would be exactly the mistake the `confidence` field exists to prevent, so
    it only fills with reports from real people. `tandem contribuir` builds the
    line; the issue template receives it.
-2. **A real shop program.** The loop has now worked end to end with real Wine and
-   real `winetricks`, but against a forged `.exe` in a container. That proves the
-   mechanism, not the product. It is still the project's largest uncertainty.
+2. **A real shop program.** `tests/real-programs.sh` now runs real Windows
+   software weekly and checks the window on screen, which closes the "no real
+   binary has ever run on it" gap. What it does NOT close is commercial software
+   on a counter: a Brazilian POS system, an accounting package, a fiscal printer
+   driver. That remains the project's largest uncertainty and no amount of CI
+   fixes it.
 3. Field-test what has not run on the owner's machine yet: `preparar`,
-   `desinstalar`, `dados`, `socorro`, and a double click on a real `.xapk`.
+   `desinstalar`, `dados`, `socorro`, a double click on a real `.xapk`, and a
+   double click on a real `.AppImage` and `.jar`.
 4. `.apkm` support is declared but only `.xapk`/`.apks` were tested.
 5. Clone a prefix with .NET already in it instead of running `dotnet48` from
    scratch (30 min, high failure rate) — delivery proof was the prerequisite and
    now exists; what is missing is the care never to read from a protected prefix
    in use.
+6. The next native formats, in the order `docs/IDEAS.md` argues for: `.deb` and
+   `.rpm` (a `.deb` double-clicked is a dependency problem with a bad error
+   message; an `.rpm` on Debian is a "this is for another distribution" verdict
+   that nothing gives today), then `.flatpakref`. `.msix` was rejected and the
+   reason is written down — do not reopen it without reading that first.
 
-**Done, do not redo:** v3.6 is published — tag, `.deb` and `.sha256` attached,
+**Done, do not redo:** `.AppImage` and `.jar` are implemented, tested and
+verified end to end on real files — see the State section for exactly what was
+measured. The orphan-shortcut question is settled: it was never a defect. The
+real-program harness exists and is green. v3.6 is published — tag, `.deb` and `.sha256` attached,
 and the published artifact verified byte-for-byte identical to a local build.
 The next release goes out the same way; see the section below for why the
 browser path exists.

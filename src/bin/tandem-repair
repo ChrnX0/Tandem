@@ -6,12 +6,30 @@
 # gnome-mimeapps.list and zorin-mimeapps.list have HIGHER precedence and
 # override it silently. Here we write to the right place and clean up the
 # competitors, with a backup.
+#
+# Two modes. Run by the owner, it claims every type Tandem handles - he asked.
+# Run with --somente-novos, from the first execution after an upgrade, it claims
+# only the types that were never claimed on this machine.
+#
+# That distinction is the whole reason this file keeps a record. Reclaiming
+# everything on every upgrade would overwrite a choice the owner made on purpose;
+# claiming nothing would mean a version that learned a new format never gets to
+# open it, and the double click goes on doing nothing - which is the exact bug
+# this project exists to kill. A type this machine has never seen Tandem claim
+# carries no decision of the owner's to respect.
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 t_log_init repair
+
+SOMENTE_NOVOS=0
+[ "${1:-}" = "--somente-novos" ] && SOMENTE_NOVOS=1
 
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
 mkdir -p "$CFG"
 ALVO="$CFG/mimeapps.list"
+# The types already applied on this machine, one per line. Lives next to the
+# protected-prefix list, which is the folder that holds this user's decisions.
+JA_FEITOS="$(dirname -- "$TANDEM_PROTEGIDOS")/tipos-aplicados.txt"
+mkdir -p "$(dirname -- "$JA_FEITOS")" 2>/dev/null
 
 TIPOS_APK="application/vnd.android.package-archive
 application/vnd.android.xapk
@@ -23,17 +41,44 @@ application/vnd.microsoft.portable-executable
 application/x-msi
 application/x-msdos-program
 application/x-ms-shortcut"
+# The native formats. The dispute here is different in kind: for .exe there is
+# a rival handler, while an AppImage usually has NOBODY - the browser saves it
+# without the execute bit and the system has no idea what to do with it. The
+# .jar does have a rival, the system's own Java launcher, and losing to it is
+# what turns a missing Java into "nothing happened".
+TIPOS_APPIMAGE="application/vnd.appimage
+application/x-iso9660-appimage"
+TIPOS_JAR="application/java-archive
+application/x-java-archive"
 
 # Who owned the types before? Zorin already installs "Windows App Support" and
 # Waydroid installs waydroid.app.install.desktop - both fight with Tandem.
 ANTES_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
 ANTES_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
-t_diz "antes: exe=$ANTES_EXE apk=$ANTES_APK"
+ANTES_APPIMAGE="$(xdg-mime query default application/vnd.appimage 2>/dev/null)"
+ANTES_JAR="$(xdg-mime query default application/java-archive 2>/dev/null)"
+t_diz "antes: exe=$ANTES_EXE apk=$ANTES_APK appimage=$ANTES_APPIMAGE jar=$ANTES_JAR"
+
+# Which types this run is responsible for.
+TODOS="$TIPOS_APK $TIPOS_EXE $TIPOS_APPIMAGE $TIPOS_JAR"
+TIPOS=""
+for t in $TODOS; do
+    if [ "$SOMENTE_NOVOS" = 1 ] &&
+       grep -qxF -- "$t" "$JA_FEITOS" 2>/dev/null; then
+        continue
+    fi
+    TIPOS="$TIPOS $t"
+done
+if [ -z "$TIPOS" ]; then
+    t_diz "nada novo para associar; a lista de tipos ja esta aplicada"
+    exit 0
+fi
+t_diz "associando:$TIPOS"
 
 for f in "$CFG"/*-mimeapps.list; do
     [ -f "$f" ] || continue
     cp -f "$f" "$f.bak-tandem" 2>/dev/null || true
-    for t in $TIPOS_APK $TIPOS_EXE; do
+    for t in $TIPOS; do
         sed -i "\|^${t}=|d" "$f" 2>/dev/null || true
     done
     t_diz "limpou conflitos em $f"
@@ -54,18 +99,48 @@ aplicar() {
     return 0
 }
 
-for t in $TIPOS_APK; do aplicar "$t" tandem-apk.desktop; done
-for t in $TIPOS_EXE; do aplicar "$t" tandem-exe.desktop; done
+# Which handler answers for which type. Only the types selected above.
+#
+# Written as a loop over the unquoted variable, which splits on whitespace, and
+# not as a "case" against a padded string: the lists are separated by NEWLINES,
+# so a pattern looking for a type surrounded by spaces matched nothing and every
+# type came out pointed at an empty handler. The suite caught it; reading it did
+# not.
+dono_de() {
+    local t
+    for t in $TIPOS_APK;      do [ "$t" = "$1" ] && { printf 'tandem-apk.desktop';      return 0; }; done
+    for t in $TIPOS_EXE;      do [ "$t" = "$1" ] && { printf 'tandem-exe.desktop';      return 0; }; done
+    for t in $TIPOS_APPIMAGE; do [ "$t" = "$1" ] && { printf 'tandem-appimage.desktop'; return 0; }; done
+    for t in $TIPOS_JAR;      do [ "$t" = "$1" ] && { printf 'tandem-jar.desktop';      return 0; }; done
+    return 1
+}
+for t in $TIPOS; do
+    # An unresolved handler would be written as "type=" - an association that
+    # points at nothing, which reads to the system as "no default" and to a
+    # person as "Tandem did apply it". Refuse instead, and say so.
+    app="$(dono_de "$t")" || { t_diz "!!! sem handler para $t; nao associei"; continue; }
+    aplicar "$t" "$app"
+    grep -qxF -- "$t" "$JA_FEITOS" 2>/dev/null ||
+        printf '%s\n' "$t" >> "$JA_FEITOS" 2>/dev/null
+done
 
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 
 DEPOIS_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
 DEPOIS_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
-RES="  .exe   antes: ${ANTES_EXE:-nenhum}
-         agora: ${DEPOIS_EXE:-nenhum}
+DEPOIS_APPIMAGE="$(xdg-mime query default application/vnd.appimage 2>/dev/null)"
+DEPOIS_JAR="$(xdg-mime query default application/java-archive 2>/dev/null)"
+RES="  .exe        antes: ${ANTES_EXE:-nenhum}
+              agora: ${DEPOIS_EXE:-nenhum}
 
-  .apk   antes: ${ANTES_APK:-nenhum}
-         agora: ${DEPOIS_APK:-nenhum}"
+  .apk        antes: ${ANTES_APK:-nenhum}
+              agora: ${DEPOIS_APK:-nenhum}
+
+  .AppImage   antes: ${ANTES_APPIMAGE:-nenhum}
+              agora: ${DEPOIS_APPIMAGE:-nenhum}
+
+  .jar        antes: ${ANTES_JAR:-nenhum}
+              agora: ${DEPOIS_JAR:-nenhum}"
 t_diz "$RES"
 
 RELATORIO="Associações reaplicadas.

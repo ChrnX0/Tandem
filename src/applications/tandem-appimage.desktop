@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Run with Tandem (AppImage)
+Name[pt_BR]=Executar com Tandem (AppImage)
+Comment=Open this AppImage, fixing the permission on its own
+Comment[pt_BR]=Abre este AppImage, ajustando a permissão por conta própria
+Exec=/usr/bin/tandem-appimage %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+MimeType=application/vnd.appimage;application/x-iso9660-appimage;
+Categories=System;

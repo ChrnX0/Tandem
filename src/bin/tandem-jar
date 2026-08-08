@@ -1,0 +1,208 @@
+#!/bin/bash
+# Tandem - runs a Java program (.jar).
+#
+# A .jar fails on a double click for two reasons, and Java announces both of
+# them in words nobody outside the trade can act on.
+#
+#   "no main manifest attribute"  means the file is a piece of a program, not a
+#   program. The two are indistinguishable from the outside - same extension,
+#   same icon - and the owner has no way of knowing he downloaded the wrong one.
+#
+#   "UnsupportedClassVersionError: class file version 65.0" means the program
+#   needs a newer Java. The number 65 appears nowhere on the download page; the
+#   number the page shows is 21. They differ by 44.
+#
+# Both are read off the file before anything runs, so the answer arrives in two
+# seconds instead of after a failure.
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
+
+t_log_init jar "$*"
+
+BRUTO="${1:-}"
+[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
+[ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "Arquivo não encontrado:
+$BRUTO"; exit 1; }
+
+# See the long comment in tandem-exe about the braces around exec.
+CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
+if { exec 7> "$TANDEM_TRAVAS/jar-$CHAVE.lock"; } 2>/dev/null; then
+    flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
+else
+    t_diz "nao consegui criar a trava; seguindo sem ela"
+fi
+
+# ------------------------------------------------- 1. Read it without running
+INFO="$(t_jar_info "$PROG")"
+t_diz "$INFO"
+ERRO="$(t_campo "$INFO" ERRO)"
+PRINCIPAL="$(t_campo "$INFO" PRINCIPAL)"
+PEDE="$(t_campo "$INFO" JAVA)"
+JAVAFX="$(t_campo "$INFO" JAVAFX)"
+AGENTE="$(t_campo "$INFO" AGENTE)"
+DEPS="$(t_campo "$INFO" DEPENDENCIAS)"
+
+if [ "$ERRO" = "zip invalido ou incompleto" ]; then
+    # The index of a .jar lives at the end of the file, so an interrupted
+    # download always breaks it here - and it breaks looking like a corrupt
+    # program rather than like a partial transfer.
+    t_memoria_grava "$PROG" RESULTADO "incompleto" 2>/dev/null
+    t_erro "Este arquivo está incompleto ou não é um programa Java.
+
+$(basename -- "$PROG")
+
+Se você acabou de baixar, o download provavelmente foi cortado no meio.
+Baixe de novo e tente outra vez."
+    exit 1
+fi
+if [ -n "$ERRO" ]; then
+    t_erro "Não consegui ler este arquivo.
+
+$ERRO"
+    exit 1
+fi
+
+# ------------------------------------- 2. Is this a program at all? Pre-flight
+if [ -z "$PRINCIPAL" ]; then
+    if [ "$AGENTE" = 1 ]; then
+        t_memoria_grava "$PROG" LIMITE "agente|nao abre sozinho" 2>/dev/null
+        t_erro "$(t_texto_jar_agente)"
+    else
+        t_memoria_grava "$PROG" LIMITE "biblioteca|nao abre sozinho" 2>/dev/null
+        t_erro "$(t_texto_jar_biblioteca)"
+    fi
+    exit 1
+fi
+t_diz "classe principal: $PRINCIPAL, pede java ${PEDE:-?}"
+
+# --------------------------------------------------------------- 3. The Java
+if ! command -v java >/dev/null 2>&1; then
+    if t_pergunta "Este programa é feito em Java, e o Java não está instalado.
+
+Posso instalar agora? Precisa de internet e da sua senha." "Instalar" "Agora não"; then
+        t_progresso_abre "Instalando o Java. Pode demorar alguns minutos..."
+        t_como_root "$(t_script_instalacao java)" >>"$LOG" 2>&1
+        t_progresso_fecha
+    fi
+    command -v java >/dev/null 2>&1 || { t_erro "$(t_texto_java_falta)"; exit 1; }
+    t_ok "Java instalado."
+fi
+TEM="$(t_java_versao)"
+t_diz "java instalado: ${TEM:-nao identificado}"
+
+# Checked BEFORE running, because Java's own answer for this case names a
+# number that means nothing to the owner. If the installed Java is not
+# identified we do not block: not knowing is not evidence.
+if [ -n "$PEDE" ] && [ -n "$TEM" ] && [ "$PEDE" -gt "$TEM" ] 2>/dev/null; then
+    t_memoria_grava "$PROG" RESULTADO "java antigo" 2>/dev/null
+    t_memoria_grava "$PROG" JAVA "$PEDE" 2>/dev/null
+    if t_pergunta "$(t_texto_java_antigo "$PEDE" "$TEM")
+
+Posso instalar o Java $PEDE agora?" "Instalar" "Agora não"; then
+        t_progresso_abre "Instalando o Java $PEDE..."
+        t_como_root "$(t_script_instalacao "java$PEDE")" >>"$LOG" 2>&1
+        t_progresso_fecha
+        TEM="$(t_java_versao)"
+    fi
+    if [ -n "$TEM" ] && [ "$PEDE" -gt "$TEM" ] 2>/dev/null; then
+        t_erro "$(t_texto_java_antigo "$PEDE" "$TEM")"
+        exit 1
+    fi
+    t_ok "Java $PEDE instalado."
+fi
+[ -n "$PEDE" ] && t_memoria_grava "$PROG" JAVA "$PEDE" 2>/dev/null
+
+# A Class-Path in the manifest names files that have to sit next to this one.
+# When they are missing, Java fails deep inside the program with a class name -
+# never with the name of the file that is actually absent.
+SEM_DEPS=""
+if [ -n "$DEPS" ]; then
+    PASTA="$(dirname -- "$PROG")"
+    for d in ${DEPS//,/ }; do
+        [ -e "$PASTA/$d" ] || SEM_DEPS="$SEM_DEPS $d"
+    done
+    [ -n "$SEM_DEPS" ] && t_diz "dependencias declaradas e ausentes:$SEM_DEPS"
+fi
+
+INICIO=$SECONDS
+t_aviso "Abrindo $(basename -- "$PROG")..."
+MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+(
+    cd -- "$(dirname -- "$PROG")" || exit 1
+    java -jar "$PROG" >>"$LOG" 2>&1
+)
+CODIGO=$?
+
+if [ "$CODIGO" -eq 0 ]; then
+    DUROU=$((SECONDS-INICIO))
+    t_memoria_grava "$PROG" RESULTADO abriu 2>/dev/null
+    t_memoria_grava "$PROG" SEGUNDOS "$DUROU" 2>/dev/null
+    t_memoria_grava "$PROG" VISTO_EM "$(date +%F)" 2>/dev/null
+    t_confirma_funcionou "$PROG" "$DUROU"
+    exit 0
+fi
+
+PARCIAL="$TANDEM_TRAVAS/parcial-jar.$$"
+tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+
+# ------------------------------------------------- 4. What Java complained of
+if grep -q 'UnsupportedClassVersionError' "$PARCIAL" 2>/dev/null; then
+    # Reading it from the message as well as from the file: a fat jar can carry
+    # one class newer than all the others, and only the failure names it.
+    MAIOR="$(sed -n 's/.*class file version \([0-9]*\).*/\1/p' "$PARCIAL" | head -1)"
+    [ -n "$MAIOR" ] && PEDE=$((MAIOR-44))
+    rm -f "$PARCIAL"
+    t_memoria_grava "$PROG" RESULTADO "java antigo" 2>/dev/null
+    [ -n "$PEDE" ] && t_memoria_grava "$PROG" JAVA "$PEDE" 2>/dev/null
+    t_erro "$(t_texto_java_antigo "${PEDE:-mais nova}" "${TEM:-o instalado}")"
+    exit "$CODIGO"
+fi
+
+if grep -qi 'javafx' "$PARCIAL" 2>/dev/null || [ "$JAVAFX" = 1 ]; then
+    rm -f "$PARCIAL"
+    t_memoria_grava "$PROG" RESULTADO "falta javafx" 2>/dev/null
+    t_erro "$(t_texto_jar_javafx)"
+    exit "$CODIGO"
+fi
+
+if [ -n "$SEM_DEPS" ] &&
+   grep -q 'NoClassDefFoundError\|ClassNotFoundException' "$PARCIAL" 2>/dev/null; then
+    rm -f "$PARCIAL"
+    t_memoria_grava "$PROG" RESULTADO "faltam arquivos" 2>/dev/null
+    t_erro "Faltam arquivos que deveriam estar na mesma pasta deste programa:
+$(for d in $SEM_DEPS; do printf -- '\n- %s' "$d"; done)
+
+Isso costuma acontecer quando só um arquivo foi copiado, sem a pasta completa.
+Baixe o programa inteiro, ou procure a versão marcada como \"with dependencies\"."
+    exit "$CODIGO"
+fi
+
+if grep -q 'HeadlessException\|No X11 DISPLAY\|Can.t connect to X11' "$PARCIAL" 2>/dev/null; then
+    rm -f "$PARCIAL"
+    t_erro "Este programa precisa de uma tela para abrir, e está sendo executado
+sem interface gráfica."
+    exit "$CODIGO"
+fi
+
+if grep -q 'Unable to access jarfile' "$PARCIAL" 2>/dev/null; then
+    rm -f "$PARCIAL"
+    t_erro "O Java não conseguiu ler este arquivo.
+
+Verifique se ele não está numa pasta protegida ou num pendrive retirado."
+    exit "$CODIGO"
+fi
+
+# The program's own words, in English, because they are its words: inventing a
+# translation here would be inventing a cause.
+ULTIMAS="$(t_palavras_do_programa "$PARCIAL")"
+rm -f "$PARCIAL"
+t_memoria_grava "$PROG" RESULTADO "nao abriu" 2>/dev/null
+t_erro "O programa fechou com erro (código $CODIGO).${ULTIMAS:+
+
+Foi isto que ele disse:
+
+$ULTIMAS}
+
+O registro completo está em:
+$LOG"
+exit "$CODIGO"

@@ -36,6 +36,8 @@ cat <<'FIM'
 
     Clique duas vezes num .exe ou .msi   -> roda no Windows (Wine)
     Clique duas vezes num .apk ou .xapk  -> instala no Android
+    Clique duas vezes num .AppImage      -> roda direto, sem instalar
+    Clique duas vezes num .jar           -> roda no Java
     Menu de aplicativos -> Tandem        -> painel com tudo
 
   Verifique o ambiente com:  tandem doctor

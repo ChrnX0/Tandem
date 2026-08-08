@@ -1,5 +1,5 @@
 #!/bin/bash
-# Tandem - the suite that runs REAL Windows software.
+# Tandem - the suite that runs REAL software, not synthetic files.
 #
 # The project's largest uncertainty, written down in docs/IDEAS.md, is that
 # almost no real commercial program has ever run on it. tests/run.sh covers the
@@ -57,6 +57,19 @@ INSTALLERS=(
 "7zip|https://www.7-zip.org/a/7z2408.exe|faa87251336d864b877a5e6c3e9c9a5e250318be2fdfc8a42ceadb3a956e0405"
 "winmerge|https://github.com/WinMerge/winmerge/releases/download/v2.16.44/WinMerge-2.16.44-x64-Setup.exe|055e960261fc31723856082d2bf1aec2bcc2c71f1ae2d759efec3d766affeaec"
 )
+
+# appimagetool is not a program under test: it is the tool that BUILDS the
+# AppImage the tests then read, so what it proves is that our reader agrees with
+# the reference implementation on a file that implementation made.
+#
+# Upstream publishes only a "continuous" build, which means the checksum below
+# WILL go stale. That is handled as a skip and not as a failure - a rebuilt
+# build tool is not a regression in this repository - but the binary is never
+# executed unpinned, and the new checksum is printed so a human can move the pin
+# after looking at where it came from. Silence in either direction would be
+# worse: executing whatever arrives, or dropping the coverage without saying so.
+APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+APPIMAGETOOL_SHA="a6d71e2b6cd66f8e8d16c37ad164658985e0cf5fcaa950c90a482890cb9d13e0"
 
 if [ "${1:-}" = "--list" ]; then
     printf 'Programs run through Tandem and checked on screen:\n'
@@ -270,6 +283,174 @@ if [ "$VER_JANELA" = 1 ] && [ -d "$CACHE/notepadpp.d" ]; then
     fi
 else
     skip "Brazilian text renders" "needs a display and the portable editor"
+fi
+
+section "native formats: a real AppImage, built by the real appimagetool"
+
+# The synthetic headers in tests/run.sh prove the reader. They cannot prove that
+# an AppImage produced by the tool everybody actually uses is read the same way,
+# and they cannot prove the two things that only exist at runtime: that
+# --appimage-extract works with no FUSE, and that the desktop entry inside the
+# image is where we think it is.
+#
+# So this builds one. appimagetool is downloaded pinned, and the AppImage it
+# produces carries a real squashfs, a real runtime and a real desktop entry.
+fetch "$APPIMAGETOOL_URL" "$APPIMAGETOOL_SHA" "$CACHE/appimagetool"
+case $? in
+    0) tem_appimagetool=1 ;;
+    2) tem_appimagetool=0
+       printf '     the pinned build tool moved; update APPIMAGETOOL_SHA after checking it\n' ;;
+    *) tem_appimagetool=0 ;;
+esac
+if [ "$tem_appimagetool" = 1 ]; then
+    chmod +x "$CACHE/appimagetool"
+
+    # The offset our reader computes from the ELF header has to be the same
+    # number the runtime prints by running itself. That is the one claim in
+    # appimageinfo.py that can be checked against an independent authority.
+    nosso="$(python3 "$ROOT/src/lib/appimageinfo.py" "$CACHE/appimagetool" |
+             sed -n 's/^DESLOCAMENTO=//p')"
+    deles="$("$CACHE/appimagetool" --appimage-offset 2>/dev/null |
+             tr -cd '0-9')"
+    if [ -n "$nosso" ] && [ "$nosso" = "$deles" ]; then
+        pass "the payload offset we read matches --appimage-offset ($nosso)"
+    else
+        fail "the payload offset we read matches --appimage-offset" \
+             "we said ${nosso:-nothing}, the runtime said ${deles:-nothing}"
+    fi
+
+    mkdir -p "$TMP/AppDir"
+    printf '#!/bin/sh\nexit 0\n' > "$TMP/AppDir/AppRun"
+    chmod +x "$TMP/AppDir/AppRun"
+    printf '[Desktop Entry]\nType=Application\nName=Loja Teste\nExec=AppRun\n' \
+        > "$TMP/AppDir/loja-teste.desktop"
+    printf 'Icon=loja-teste\nCategories=Office;\nTerminal=false\n' \
+        >> "$TMP/AppDir/loja-teste.desktop"
+    python3 -c "
+import base64, sys
+open(sys.argv[1], 'wb').write(base64.b64decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAF'
+    'AAH/q842iQAAAABJRU5ErkJggg=='))" "$TMP/AppDir/loja-teste.png"
+
+    if ARCH=x86_64 timeout 300 "$CACHE/appimagetool" --appimage-extract-and-run \
+            "$TMP/AppDir" "$TMP/loja-teste.AppImage" >/dev/null 2>&1 &&
+       [ -f "$TMP/loja-teste.AppImage" ]; then
+        pass "appimagetool produced a real AppImage to test against"
+
+        info="$(python3 "$ROOT/src/lib/appimageinfo.py" "$TMP/loja-teste.AppImage")"
+        campo() { printf '%s\n' "$info" | sed -n "s/^$1=//p"; }
+        [ "$(campo TIPO)" = 2 ] && pass "a freshly built AppImage reads as generation 2" ||
+            fail "a freshly built AppImage reads as generation 2" "$(campo TIPO)"
+        [ "$(campo COMPLETO)" = 1 ] && pass "a complete AppImage is not called truncated" ||
+            fail "a complete AppImage is not called truncated" "$info"
+
+        # The whole point: the browser leaves it without the execute bit, and
+        # Tandem is what fixes that.
+        CASA_AI="$TMP/casa-appimage"; mkdir -p "$CASA_AI"; : > "$CASA_AI/.primeira-vez"
+        cp "$TMP/loja-teste.AppImage" "$CASA_AI/loja-teste.AppImage"
+        chmod -x "$CASA_AI/loja-teste.AppImage"
+        env -i HOME="$CASA_AI" PATH=/usr/bin:/bin TANDEM_LIB="$ROOT/src/lib" \
+            TANDEM_BIN="$ROOT/src/bin" \
+            timeout 300 bash "$ROOT/src/bin/tandem-appimage" \
+            "$CASA_AI/loja-teste.AppImage" >/dev/null 2>&1
+        [ -x "$CASA_AI/loja-teste.AppImage" ] &&
+            pass "Tandem gave the AppImage the execute bit the browser did not" ||
+            fail "Tandem gave the AppImage the execute bit" "still not executable"
+
+        # And the menu entry, taken from the AppImage's own desktop file, with
+        # the name its author wrote.
+        atalho="$(find "$CASA_AI/.local/share/applications" \
+                       -name 'tandem-appimage-*.desktop' 2>/dev/null | head -1)"
+        if [ -n "$atalho" ] && grep -q '^Name=Loja Teste$' "$atalho"; then
+            pass "the menu entry carries the name from inside the AppImage"
+        else
+            fail "the menu entry carries the name from inside the AppImage" \
+                 "${atalho:-no entry created}"
+        fi
+        if [ -n "$atalho" ] && command -v desktop-file-validate >/dev/null 2>&1; then
+            desktop-file-validate "$atalho" 2>/dev/null &&
+                pass "the menu entry Tandem writes is a valid desktop file" ||
+                fail "the menu entry Tandem writes is a valid desktop file" \
+                     "$(desktop-file-validate "$atalho" 2>&1 | head -3)"
+        fi
+    else
+        fail "appimagetool produced a real AppImage to test against" \
+             "the build failed; the rest of this section could not run"
+    fi
+else
+    skip "real AppImage" "the pinned appimagetool was not available"
+fi
+
+section "native formats: a real .jar, compiled by a real compiler"
+
+# jarinfo.py claims a class file major of 65 means Java 21. The authority on
+# that is the JVM, which refuses to load a class newer than itself and says so
+# by number. Here the claim is checked against it: a jar is compiled, its major
+# is bumped by one, and the JVM has to refuse it with the number we predicted.
+if command -v javac >/dev/null 2>&1 && command -v java >/dev/null 2>&1; then
+    mkdir -p "$TMP/java"
+    printf 'public class Ola { public static void main(String[] a) { System.out.println("ok"); } }\n' \
+        > "$TMP/java/Ola.java"
+    if javac -d "$TMP/java/classes" "$TMP/java/Ola.java" 2>/dev/null &&
+       (cd "$TMP/java/classes" && jar --create --file "$TMP/java/ola.jar" --main-class Ola .) 2>/dev/null
+    then
+        pass "compiled a real .jar to read"
+        nosso="$(python3 "$ROOT/src/lib/jarinfo.py" "$TMP/java/ola.jar" | sed -n 's/^JAVA=//p')"
+        # The Java that compiled it is the Java it needs.
+        deles="$(java -version 2>&1 | sed -n 's/.*version "\([^"]*\)".*/\1/p' | head -1)"
+        case "$deles" in 1.*) deles="$(printf '%s' "$deles" | cut -d. -f2)" ;;
+                         *)   deles="$(printf '%s' "$deles" | cut -d. -f1 | tr -cd '0-9')" ;; esac
+        if [ "$nosso" = "$deles" ]; then
+            pass "the Java version we read is the one that compiled it ($nosso)"
+        else
+            fail "the Java version we read is the one that compiled it" \
+                 "we said ${nosso:-nothing}, the compiler was $deles"
+        fi
+
+        # One version into the future: the JVM must refuse, and must name the
+        # major we would have predicted.
+        python3 - "$TMP/java/ola.jar" "$TMP/java/futuro.jar" <<'PYFIM'
+import struct, sys, zipfile
+with zipfile.ZipFile(sys.argv[1]) as z:
+    itens = [(n, z.read(n)) for n in z.namelist()]
+with zipfile.ZipFile(sys.argv[2], 'w') as out:
+    for n, d in itens:
+        if n.endswith('.class'):
+            maior = struct.unpack_from('>H', d, 6)[0]
+            d = d[:6] + struct.pack('>H', maior + 1) + d[8:]
+        out.writestr(n, d)
+PYFIM
+        previsto="$(python3 "$ROOT/src/lib/jarinfo.py" "$TMP/java/futuro.jar" |
+                    sed -n 's/^JAVA=//p')"
+        recusa="$(java -jar "$TMP/java/futuro.jar" 2>&1 | grep -o 'class file version [0-9]*')"
+        if [ "$previsto" = "$((deles+1))" ] && [ -n "$recusa" ]; then
+            pass "the JVM refuses the version we predicted (we said $previsto, it said \"$recusa\")"
+        else
+            fail "the JVM refuses the version we predicted" \
+                 "we said ${previsto:-nothing}; the JVM said ${recusa:-nothing}"
+        fi
+
+        # And Tandem catches it BEFORE running: the log must not contain the
+        # JVM's own error, because the JVM was never asked.
+        CASA_J="$TMP/casa-jar"; mkdir -p "$CASA_J"; : > "$CASA_J/.primeira-vez"
+        saida="$(env -i HOME="$CASA_J" PATH=/usr/bin:/bin TANDEM_LIB="$ROOT/src/lib" \
+                 timeout 120 bash "$ROOT/src/bin/tandem-jar" "$TMP/java/futuro.jar" 2>&1)"
+        case "$saida" in
+            *"precisa de uma versão mais nova do Java"*)
+                if grep -q 'UnsupportedClassVersionError' \
+                        "$CASA_J/.local/state/tandem/jar.log" 2>/dev/null; then
+                    fail "the wrong Java version is caught before running" \
+                         "it ran the program and read the failure afterwards"
+                else
+                    pass "the wrong Java version is caught before running the program"
+                fi ;;
+            *) fail "the wrong Java version is caught before running" "${saida:-zero bytes}" ;;
+        esac
+    else
+        skip "real .jar" "javac is here but the compile failed"
+    fi
+else
+    skip "real .jar" "no JDK on this machine"
 fi
 
 section "what the real binaries taught us"

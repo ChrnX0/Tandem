@@ -1,15 +1,16 @@
 Package: tandem
-Version: 3.6
+Version: 3.7
 Section: utils
 Priority: optional
 Architecture: all
 Depends: python3 (>= 3.8), zenity, desktop-file-utils, xdg-utils, unzip, libglib2.0-bin
 Recommends: libnotify-bin, wine, winetricks, waydroid, adb, curl | wget
+Suggests: default-jre, libfuse2t64 | libfuse2, openjfx
 Maintainer: Paulo Eduardo <noreply@users.noreply.github.com>
 Homepage: https://github.com/ChrnX0/Tandem
-Description: Run Windows programs and Android apps by double-clicking
- Tandem makes .exe, .msi, .apk and .xapk files behave like native
- applications on Linux. Double-click a file and it runs.
+Description: Run Windows, Android and Linux packages by double-clicking
+ Tandem makes .exe, .msi, .apk, .xapk, .AppImage and .jar files behave
+ like native applications on Linux. Double-click a file and it runs.
  .
  For Windows programs it detects missing runtime libraries from Wine's
  own error output, maps them to winetricks packages, installs them and
@@ -19,6 +20,14 @@ Description: Run Windows programs and Android apps by double-clicking
  minimum SDK and split-package layout, so incompatibilities are
  reported in plain language instead of failing silently. Split
  packages (.xapk/.apks/.apkm) are installed through ADB.
+ .
+ For the formats Linux uses itself the diagnosis comes before the run.
+ An AppImage is checked for a complete download, the right processor
+ and the execute bit the browser did not set; when FUSE is absent it
+ falls back to unpacking instead of failing. A .jar is read for its
+ Main-Class, so a library is not reported as a broken program, and for
+ the Java version its bytecode demands, so "class file version 65" is
+ answered with "this needs Java 21".
  .
  Wine prefixes that Tandem did not create are treated as read-only,
  so production systems are never modified by the automation.

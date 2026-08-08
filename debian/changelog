@@ -1,3 +1,95 @@
+tandem (3.7) unstable; urgency=medium
+
+  * Two formats Linux uses itself now open with a double click: .AppImage and
+    .jar. The reason is the same one that started this project - the owner
+    downloaded something, clicked it, and nothing happened - and for these two
+    the cause is not Wine, it is Linux.
+  * An AppImage arrives from the browser without the execute bit, and a file
+    without that bit is not offered to the system as a program at all. The
+    click opens an archive manager, or does nothing, and the file gets blamed.
+    Tandem sets the bit: the owner double-clicked, he has already said he wants
+    to run it, and asking permission for the one thing that makes that possible
+    would be theatre.
+  * appimageinfo.py reads the header without executing anything. The AppImage
+    generation and the processor it was built for live in the first twenty
+    bytes, and the payload's own header says how many bytes it should have - so
+    an interrupted download, which is the most common way an AppImage fails for
+    a lay user, is diagnosed as an interrupted download instead of as a broken
+    program. The payload offset it computes was checked against the runtime's
+    own --appimage-offset on a real AppImage: same number, with nothing run.
+  * FUSE is worked around instead of demanded. Ubuntu dropped libfuse2 from the
+    default install in 22.04 and every second-generation AppImage mounts itself
+    with it, so a fresh download on a current Zorin fails with a dlopen message
+    and nothing else. Tandem recognises that failure and retries with
+    --appimage-extract-and-run, which needs nothing installed; it says so
+    afterwards, and only after the program actually worked. Measured with
+    /dev/fuse removed: exit code 127, and the workaround opened the program.
+  * The AppImage goes into the applications menu, using the desktop entry the
+    AppImage itself carries. This is the same problem "tandem programas" exists
+    for - on Wayland GNOME does not re-read the application list - except here
+    it has a real fix. Extraction does not mount anything, so it works on
+    exactly the machines that have no FUSE; that was verified, not assumed.
+    An entry whose file has since been deleted removes itself.
+  * jarinfo.py answers the two questions Java answers in words nobody outside
+    the trade can act on. "no main manifest attribute" becomes "this file is a
+    piece of a program, not a program" - the two kinds of .jar are
+    indistinguishable from the outside, and the owner has no way of knowing he
+    downloaded the wrong one. "UnsupportedClassVersionError: class file version
+    65.0" becomes "it needs Java 21, you have 17": the number on the download
+    page and the number in the error differ by 44.
+  * Classes under META-INF/versions/ are excluded from that maximum on purpose.
+    They are the multi-release mechanism, present so a NEWER Java can pick them
+    up, and counting them demands a Java the program does not require. Checked
+    against a real JVM: a jar carrying a class marked for a Java that does not
+    exist yet still runs, and Tandem still says 21.
+  * A manifest Class-Path is checked against the folder before running. Java's
+    answer when a sibling jar is missing names a class, never the absent file.
+    The 72-byte line folding is undone first - a wrapped Class-Path splits file
+    names in the middle, and reading it line by line yields paths that do not
+    exist.
+  * A machine upgraded from an older version never claimed the new formats. The
+    first-run mark was an empty file, so "already run once" meant "never again",
+    and the double click on a .AppImage or a .jar went on doing nothing - the
+    exact bug this project exists to kill, reintroduced by the mechanism
+    meant to respect the owner's choices. Reproduced by installing 3.7 over
+    3.6 on a real machine: .jar still answered openjdk-21-java.desktop, and the
+    self-test said so out loud.
+    The mark now records which version did the work. On an upgrade the prefix
+    scan is NOT repeated, and tandem-repair runs in a new --somente-novos mode
+    that claims only the types this machine has never claimed - kept in
+    tipos-aplicados.txt. A type the owner has never seen Tandem own carries no
+    decision of his to overwrite; one he re-pointed on purpose is left alone.
+  * The type-to-handler lookup in tandem-repair matched a newline-separated list
+    with a pattern looking for spaces, so every type came out associated with an
+    empty handler - "application/java-archive=" - which reads to the system
+    as no default at all and to a person as a job done. The suite caught it
+    before it was ever committed; reading the code did not. An unresolvable
+    handler is now refused and logged instead of written.
+  * tandem preparar installs the Java and the FUSE library too, and doctor
+    reports both, along with the machine's processor and how many AppImages
+    Tandem has put in the menu. The self-test exercises the two new readers
+    rather than listing them, and now checks the file association of all four
+    formats instead of only the .exe.
+  * tandem programas lists AppImages next to the Windows programs. For the
+    owner they are the same thing - something he installed with Tandem.
+  * A version number read off a file becomes part of a command that runs as
+    root when Tandem offers to install the Java a program asks for. It is
+    reduced to digits before it gets there.
+  * tandem-apk reached for /usr/lib/tandem/apkinfo.py with the path nailed
+    down, so exercising it from a working copy silently read the INSTALLED
+    library instead. The executables all honour TANDEM_LIB; now the sibling
+    binaries honour TANDEM_BIN for the same reason, and the panel can be
+    exercised without installing the package.
+  * The manual pointed at docs/FORMATO-LISTA.md, renamed when the repository
+    went English.
+  * A CI harness runs real Windows software through Tandem weekly - PuTTY,
+    Notepad++, 7-Zip and WinMerge, pinned by sha256 - and looks at the screen
+    afterwards with xdotool instead of trusting an exit code. It also
+    cross-checks peinfo.py against objdump on every binary it downloads. The
+    project's largest uncertainty was never the mechanism, it was the sample.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Sun, 09 Aug 2026 03:00:00 +0000
+
 tandem (3.6) unstable; urgency=medium
 
   * The whole repository is now written in English - comments, documentation,

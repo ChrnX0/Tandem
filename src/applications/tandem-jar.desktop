@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Run with Tandem (Java)
+Name[pt_BR]=Executar com Tandem (Java)
+Comment=Open this Java program, checking what it needs first
+Comment[pt_BR]=Abre este programa Java, conferindo antes o que ele precisa
+Exec=/usr/bin/tandem-jar %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+MimeType=application/java-archive;application/x-java-archive;
+Categories=System;

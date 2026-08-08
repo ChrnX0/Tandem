@@ -3,7 +3,18 @@
 # Loaded by every executable. Never use "set -e" here:
 # the wait loops depend on commands that fail on purpose.
 
+# The version, in one place. It is here and not in src/bin/tandem because the
+# first-run bookkeeping needs it, and that lives in this file: a version that
+# learned to open a new format has to claim that format on a machine that was
+# already running an older one.
+TANDEM_VERSAO="3.7"
+
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
+# Where the sibling executables live. Overridable for the same reason
+# TANDEM_LIB is: with the path nailed down, exercising the panel from a working
+# copy silently ran the INSTALLED binaries instead - so a whole command could be
+# broken in the repository and every test still pass.
+TANDEM_BIN="${TANDEM_BIN:-/usr/bin}"
 TANDEM_ESTADO="${XDG_STATE_HOME:-$HOME/.local/state}/tandem"
 mkdir -p "$TANDEM_ESTADO" 2>/dev/null || TANDEM_ESTADO=""
 
@@ -313,18 +324,40 @@ t_procura_prefixos() {
 #
 # The mark avoids repeating: whoever changes the association on purpose later
 # does not want Tandem rewriting their choice on every double click.
+#
+# But the mark used to be empty, and "already run once" then meant "never again"
+# - so a machine upgraded from a version that did not know .AppImage and .jar
+# never claimed them, and the double click went on doing nothing. Measured on
+# this container: after installing 3.7 over 3.6, the .jar still answered
+# openjdk-21-java.desktop and the self-test said so.
+#
+# So the mark now records WHICH VERSION did the work. On an upgrade the prefix
+# scan is not repeated - it already happened, and rerunning it would re-protect
+# prefixes the owner may have deliberately unprotected - and the associations are
+# reapplied in the narrow mode that only claims types this machine has never
+# claimed. A type the owner has never seen Tandem own carries no choice of his to
+# overwrite.
 t_primeira_vez() {
-    local dir marca
+    local dir marca visto
     dir="$(dirname -- "$TANDEM_PROTEGIDOS")"
     marca="$dir/.primeira-vez"
-    [ -f "$marca" ] && return 0
+    visto="$(head -1 "$marca" 2>/dev/null)"
+    [ "$visto" = "$TANDEM_VERSAO" ] && return 0
     mkdir -p "$dir" 2>/dev/null || return 0
-    t_diz "primeira execucao deste usuario: procurando prefixos e aplicando associacoes"
-    t_procura_prefixos
-    if [ -x /usr/bin/tandem-repair ]; then
-        TANDEM_SILENCIOSO=1 /usr/bin/tandem-repair >>"${LOG:-/dev/null}" 2>&1
+    if [ -f "$marca" ]; then
+        t_diz "atualizacao de ${visto:-uma versao anterior} para $TANDEM_VERSAO: conferindo tipos novos"
+        if [ -x "$TANDEM_BIN/tandem-repair" ]; then
+            TANDEM_SILENCIOSO=1 "$TANDEM_BIN"/tandem-repair --somente-novos \
+                >>"${LOG:-/dev/null}" 2>&1
+        fi
+    else
+        t_diz "primeira execucao deste usuario: procurando prefixos e aplicando associacoes"
+        t_procura_prefixos
+        if [ -x "$TANDEM_BIN/tandem-repair" ]; then
+            TANDEM_SILENCIOSO=1 "$TANDEM_BIN"/tandem-repair >>"${LOG:-/dev/null}" 2>&1
+        fi
     fi
-    : > "$marca" 2>/dev/null
+    printf '%s\n' "$TANDEM_VERSAO" > "$marca" 2>/dev/null
     return 0
 }
 
@@ -1226,16 +1259,35 @@ t_pecas_faltando() {
         echo "winetricks|Instalador de componentes do Windows"
     command -v adb >/dev/null 2>&1 ||
         echo "adb|Instalador de pacotes Android divididos (.xapk)"
+    command -v java >/dev/null 2>&1 ||
+        echo "java|Java (roda os programas .jar)"
+    # An AppImage without FUSE still opens - Tandem falls back to unpacking it -
+    # but every launch pays for the unpacking. The library is a few hundred
+    # kilobytes and it stopped being installed by default in Ubuntu 22.04.
+    t_tem_fuse2 ||
+        echo "fuse|Suporte para abrir AppImage direto (FUSE)"
     command -v waydroid >/dev/null 2>&1 ||
         echo "waydroid|Android (Waydroid) - baixa cerca de 1 GB"
     return 0
+}
+
+# Is libfuse2 there? Asked of the loader, not of dpkg: the package is called
+# libfuse2 on some releases and libfuse2t64 on others, and the loader knows the
+# library by the only name that never changed.
+t_tem_fuse2() {
+    # The whole pipeline inside the braces, not just ldconfig: with a stripped
+    # PATH it is bash that complains about grep, and bash writes that to the
+    # shell's stderr where a redirection on one element of the pipe cannot
+    # reach it. The stray line showed up in the middle of a test listing.
+    { ldconfig -p | grep -q 'libfuse\.so\.2'; } 2>/dev/null ||
+    ls /usr/lib/*/libfuse.so.2 /lib/*/libfuse.so.2 >/dev/null 2>&1
 }
 
 # Assembles the installation script for the requested pieces (one per
 # argument). Everything in a single script: one single password, one single
 # run.
 t_script_instalacao() {
-    local peca
+    local peca n
     printf 'set -e\nexport DEBIAN_FRONTEND=noninteractive\n'
     for peca in "$@"; do
         case "$peca" in
@@ -1243,6 +1295,19 @@ t_script_instalacao() {
             wine32)     printf 'dpkg --add-architecture i386\napt-get update -q\napt-get install -y wine32:i386\n' ;;
             winetricks) printf 'apt-get install -y winetricks\n' ;;
             adb)        printf 'apt-get install -y adb\n' ;;
+            java)       printf 'apt-get update -q\napt-get install -y default-jre\n' ;;
+            java[0-9]*)
+                # The version comes from a file read off the disk, so it never
+                # reaches the script without being reduced to digits: this
+                # string becomes part of a command running as root.
+                n="${peca#java}"; n="$(printf '%s' "$n" | tr -cd '0-9')"
+                [ -n "$n" ] || continue
+                printf 'apt-get update -q\napt-get install -y openjdk-%s-jre || apt-get install -y default-jre\n' "$n"
+                ;;
+            fuse)
+                # Renamed to libfuse2t64 in the 64-bit-time_t transition, so
+                # both names are tried; and "set -e" is on, hence the || .
+                printf 'apt-get install -y libfuse2t64 || apt-get install -y libfuse2\n' ;;
             waydroid)
                 # Waydroid is not in the Ubuntu/Zorin repositories: it comes
                 # from the project's official repository. We add the source
@@ -1354,4 +1419,258 @@ Execute uma vez:  sudo waydroid init"
     fi
     t_wd_pronto || { t_erro "O Android iniciou mas não ficou pronto a tempo."; return 1; }
     return 0
+}
+
+# ------------------------------------------------------- native packages
+#
+# The formats Linux itself uses, and which fail on a double click for reasons
+# that have nothing to do with Wine or Android. They are here for the same
+# reason .exe is: the owner double-clicked something he downloaded, and
+# "nothing happened" is a defect.
+#
+# Two are handled: .AppImage, whose failure is almost always the missing
+# execute bit or a half-finished download, and .jar, whose failure is almost
+# always a Java that is missing or older than the program. Both are diagnosed
+# by reading the file, never by running it and guessing from the wreckage.
+
+# The machine's architecture with the names an ELF header uses, so comparing an
+# AppImage against the computer is a string comparison and not a table.
+t_maquina_arch() {
+    case "$(uname -m 2>/dev/null)" in
+        x86_64|amd64)   printf 'x86_64' ;;
+        i?86)           printf 'i386' ;;
+        aarch64|arm64)  printf 'aarch64' ;;
+        armv7*|armhf)   printf 'armhf' ;;
+        riscv64)        printf 'riscv64' ;;
+        ppc64le)        printf 'ppc64le' ;;
+        *)              printf '%s' "$(uname -m 2>/dev/null)" ;;
+    esac
+}
+
+# An x86_64 machine runs an i386 AppImage as long as the 32-bit libraries are
+# there; the reverse is never true. Everything else has to match.
+t_arch_compativel() {
+    local do_arquivo="$1" da_maquina="${2:-$(t_maquina_arch)}"
+    # Not knowing is not a reason to block: an architecture we cannot read is
+    # answered by trying, not by refusing.
+    case "$do_arquivo" in ''|'?') return 0 ;; esac
+    [ "$do_arquivo" = "$da_maquina" ] && return 0
+    [ "$da_maquina" = x86_64 ] && [ "$do_arquivo" = i386 ] && return 0
+    [ "$da_maquina" = aarch64 ] && [ "$do_arquivo" = armhf ] && return 0
+    return 1
+}
+
+# One field out of a KEY=VALUE reader. The readers all answer in the same
+# shape, so one function serves peinfo, apkinfo, appimageinfo and jarinfo.
+t_campo() {
+    printf '%s\n' "$1" | sed -n "s/^$2=//p" | tail -1
+}
+
+t_appimage_info() {
+    command -v python3 >/dev/null 2>&1 || return 1
+    python3 "$TANDEM_LIB/appimageinfo.py" "$1" 2>/dev/null
+}
+
+t_jar_info() {
+    command -v python3 >/dev/null 2>&1 || return 1
+    python3 "$TANDEM_LIB/jarinfo.py" "$1" 2>/dev/null
+}
+
+# The installed Java's feature version: 21, 17, 11, 8...
+#
+# Two shapes have to be read, because Java changed how it numbers itself in the
+# middle: 1.8.0_412 is Java 8 and 21.0.10 is Java 21. Reading only the first
+# number turns Java 8 into Java 1 - and then Tandem would announce that a
+# program needing Java 8 cannot run on a machine that runs it perfectly well.
+t_java_versao() {
+    local bruto
+    command -v java >/dev/null 2>&1 || return 1
+    bruto="$(java -version 2>&1 | sed -n 's/.*version "\([^"]*\)".*/\1/p' | head -1)"
+    [ -n "$bruto" ] || return 1
+    case "$bruto" in
+        1.*) printf '%s' "$bruto" | cut -d. -f2 ;;
+        *)   printf '%s' "$bruto" | cut -d. -f1 | tr -cd '0-9' ;;
+    esac
+}
+
+# Does this failure look like the missing FUSE library?
+#
+# AppImages of the second generation mount themselves, and mounting needs
+# libfuse. Ubuntu 22.04 dropped libfuse2 from the default install, so a
+# freshly downloaded AppImage on a current Zorin fails with a dlopen message
+# and nothing else - the single most common AppImage failure there is, and it
+# has a fix that needs no installing at all.
+t_falha_fuse() {
+    grep -qiE 'libfuse\.so\.2|fusermount|dlopen\(\).*libfuse|/dev/fuse|AppImages? require FUSE|cannot mount' \
+         "$1" 2>/dev/null
+}
+
+# Where Tandem keeps the menu entries of the AppImages it has run. Its own
+# folder, so removing them never touches somebody else's shortcut.
+TANDEM_ATALHOS_NATIVOS="$HOME/.local/share/applications"
+TANDEM_ICONES_NATIVOS="$HOME/.local/share/icons/hicolor/256x256/apps"
+
+# Puts an AppImage in the menu, by copying the desktop entry the AppImage
+# itself carries.
+#
+# This exists for the same reason "tandem programas" exists: on Wayland, GNOME
+# does not re-read the application list, and a program the owner cannot find
+# again is a program he has not installed. The Exec line is rewritten to the
+# absolute path of the file - the entry inside the AppImage points at a name
+# that only exists while it is mounted.
+#
+# Runs the AppImage's own runtime to extract, which is fine: by this point we
+# have already decided to run it, and it is the only way in - reading the
+# squashfs would need unsquashfs, which is not installed on a normal machine.
+t_integra_appimage() {
+    local prog="$1" tmp dsk nome icone destino base
+    [ -x "$prog" ] || return 1
+    base="$(basename -- "${prog%.*}")"
+    destino="$TANDEM_ATALHOS_NATIVOS/tandem-appimage-$(printf '%s' "$prog" | cksum | tr -d ' ').desktop"
+    tmp="$(mktemp -d 2>/dev/null)" || return 1
+    (
+        cd "$tmp" 2>/dev/null || exit 1
+        # --appimage-extract does not mount anything - the runtime reads the
+        # squashfs itself - so this path also works on a machine with no FUSE,
+        # which is exactly the machine that most needs the menu entry.
+        timeout 120 "$prog" --appimage-extract '*.desktop' >/dev/null 2>&1
+        timeout 120 "$prog" --appimage-extract '*.png' >/dev/null 2>&1
+        timeout 120 "$prog" --appimage-extract '*.svg' >/dev/null 2>&1
+    )
+    dsk="$(find "$tmp" -name '*.desktop' -type f 2>/dev/null | head -1)"
+    if [ -z "$dsk" ]; then
+        rm -rf -- "$tmp"
+        return 1
+    fi
+    nome="$(sed -n 's/^Name=//p' "$dsk" | head -1)"
+    [ -n "$nome" ] || nome="$base"
+    icone="$(find "$tmp" -maxdepth 3 \( -name '*.png' -o -name '*.svg' \) -type f 2>/dev/null |
+             head -1)"
+    if [ -n "$icone" ]; then
+        mkdir -p "$TANDEM_ICONES_NATIVOS" 2>/dev/null
+        cp -f -- "$icone" "$TANDEM_ICONES_NATIVOS/tandem-$base.${icone##*.}" 2>/dev/null
+    fi
+    mkdir -p "$TANDEM_ATALHOS_NATIVOS" 2>/dev/null || { rm -rf -- "$tmp"; return 1; }
+    {
+        printf '[Desktop Entry]\n'
+        printf 'Type=Application\n'
+        printf 'Name=%s\n' "$nome"
+        # The comment is the receipt: whoever finds this file later knows who
+        # wrote it and which file it points at.
+        printf 'Comment=Instalado pelo Tandem a partir de %s\n' "$prog"
+        printf 'Exec=%s\n' "$(printf '%s' "$prog" | sed 's/ /\\ /g')"
+        # An empty Icon= is not the same as no Icon=: desktop-file-validate
+        # complains about the first and accepts the second.
+        [ -n "$icone" ] && printf 'Icon=tandem-%s\n' "$base"
+        printf 'Terminal=false\n'
+        printf 'X-Tandem-AppImage=%s\n' "$prog"
+        sed -n 's/^Categories=/Categories=/p' "$dsk" | head -1
+        sed -n 's/^StartupWMClass=/StartupWMClass=/p' "$dsk" | head -1
+    } > "$destino" 2>/dev/null || { rm -rf -- "$tmp"; return 1; }
+    rm -rf -- "$tmp"
+    command -v update-desktop-database >/dev/null 2>&1 &&
+        update-desktop-database "$TANDEM_ATALHOS_NATIVOS" 2>/dev/null
+    t_diz "atalho de AppImage criado: $destino -> $nome"
+    printf '%s' "$nome"
+    return 0
+}
+
+# The menu entries Tandem created for AppImages, one .desktop path per line -
+# the same shape as t_atalhos_nossos, so "tandem programas" can list both
+# without knowing the difference.
+#
+# An entry whose AppImage no longer exists is deleted on the way past: the owner
+# moved or deleted the download, and a menu item that opens nothing is worse
+# than no menu item. Only entries carrying our own X-Tandem-AppImage line are
+# touched, so nobody else's shortcut is ever at risk.
+t_atalhos_appimage() {
+    local d prog
+    [ -d "$TANDEM_ATALHOS_NATIVOS" ] || return 0
+    for d in "$TANDEM_ATALHOS_NATIVOS"/tandem-appimage-*.desktop; do
+        [ -f "$d" ] || continue
+        prog="$(sed -n 's/^X-Tandem-AppImage=//p' "$d" | head -1)"
+        if [ -z "$prog" ] || [ ! -f "$prog" ]; then
+            rm -f -- "$d" 2>/dev/null
+            t_diz "atalho de AppImage removido (arquivo sumiu): $d"
+            continue
+        fi
+        printf '%s\n' "$d"
+    done
+    return 0
+}
+
+# The last lines the PROGRAM printed, with Tandem's own lines taken out.
+#
+# This is the only place in the project that shows raw log back to the owner, so
+# it is the only place where the log's own bookkeeping becomes visible. The
+# first version of it opened "this is what the program said" with a sentence
+# Tandem itself had written one line earlier.
+t_palavras_do_programa() {
+    grep -v -e '^$' -e '^aviso: ' -e '^ok: ' -e '^ERRO: ' -e '^>>> ' -e '^===== ' \
+         "$1" 2>/dev/null | tail -"${2:-4}"
+}
+
+# --------------------------------------------------- messages, in Portuguese
+
+t_texto_java_falta() {
+    printf 'Este programa é feito em Java, e o Java não está instalado.\n\n'
+    printf 'Instale pela Central de Programas procurando por "Java", ou no Terminal:\n\n'
+    printf 'sudo apt install default-jre\n\n'
+    printf 'Ou deixe o Tandem instalar:  tandem preparar\n'
+}
+
+t_texto_java_antigo() {
+    local pede="$1" tem="$2"
+    printf 'Este programa precisa de uma versão mais nova do Java.\n\n'
+    printf 'Ele pede o Java %s e o instalado aqui é o %s.\n\n' "$pede" "$tem"
+    printf 'Para instalar a versão que ele pede:\n\n'
+    printf 'sudo apt install openjdk-%s-jre\n\n' "$pede"
+    printf 'Não é defeito da sua máquina nem do programa: o Java se recusa a abrir\n'
+    printf 'um programa feito para uma versão posterior à dele.\n'
+}
+
+t_texto_jar_biblioteca() {
+    printf 'Este arquivo é uma peça de um programa, não um programa.\n\n'
+    printf 'Arquivos .jar servem para as duas coisas, e por fora são iguais. Este\n'
+    printf 'aqui não tem ponto de partida: ele é feito para ser usado por outro\n'
+    printf 'programa, não para abrir sozinho.\n\n'
+    printf 'Se você esperava um programa, procure no site de onde baixou um arquivo\n'
+    printf 'marcado como "executável", "runnable" ou "with dependencies".\n'
+}
+
+t_texto_jar_agente() {
+    printf 'Este arquivo é um acessório de outro programa Java, e não abre sozinho.\n\n'
+    printf 'Ele é feito para ser acoplado a um programa que já esteja rodando.\n'
+}
+
+t_texto_jar_javafx() {
+    printf 'Este programa usa o JavaFX, que não vem junto com o Java.\n\n'
+    printf 'Para instalar:\n\n'
+    printf 'sudo apt install openjfx\n'
+}
+
+t_texto_appimage_incompleto() {
+    local prog="$1"
+    printf 'O download deste arquivo não terminou.\n\n'
+    printf '%s\n\n' "$(basename -- "$prog")"
+    printf 'O arquivo diz por dentro que deveria ser maior do que é. Não é defeito\n'
+    printf 'do programa: a transferência foi cortada no meio.\n\n'
+    printf 'Baixe de novo e tente outra vez.\n'
+}
+
+t_texto_appimage_arch() {
+    local do_arquivo="$1" da_maquina="$2"
+    printf 'Este programa foi feito para outro tipo de processador.\n\n'
+    printf 'Ele é para %s e este computador é %s.\n\n' "$do_arquivo" "$da_maquina"
+    printf 'Procure no site de onde você baixou a versão para %s.\n' "$da_maquina"
+}
+
+t_texto_appimage_fuse() {
+    printf 'Este programa precisa de uma peça do sistema para se abrir (o FUSE),\n'
+    printf 'e ela não está instalada.\n\n'
+    printf 'O Tandem já contornou isso desta vez, abrindo o programa por outro\n'
+    printf 'caminho - um pouco mais lento, mas funciona.\n\n'
+    printf 'Para deixar rápido de vez:\n\n'
+    printf 'sudo apt install libfuse2t64\n\n'
+    printf '(em sistemas mais antigos o nome é libfuse2)\n'
 }

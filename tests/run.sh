@@ -73,9 +73,9 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2258576263 304" "$soma_esperados"
+      "3004592584 401" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
-      "2933457071 934" "$soma_padroes"
+      "3823810213 1343" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -580,6 +580,103 @@ rm -f "$MARCA_PV"; : > "$TANDEM_PROTEGIDOS"
 
 # ------------------------------------------------------------- messages
 
+section "upgrading: a version that learned a new format has to claim it"
+
+# The mark used to be an empty file, so "already run once" meant "never again".
+# A machine upgraded from a version that did not know .AppImage and .jar
+# therefore never claimed them, and the double click went on doing nothing.
+# Measured on a real container: after installing 3.7 over 3.6, .jar still
+# answered openjdk-21-java.desktop, and the self-test said so.
+CASA_UP="$TMPROOT/upgrade"; mkdir -p "$CASA_UP/.config/tandem"
+ESPIA_REP="$TMPROOT/espia-repair"; mkdir -p "$ESPIA_REP"
+cat > "$ESPIA_REP/tandem-repair" <<'FIMR'
+#!/bin/sh
+printf '%s\n' "${1:-completo}" >> "$TANDEM_CHAMADAS"
+FIMR
+chmod +x "$ESPIA_REP/tandem-repair"
+
+chamar_primeira_vez() {
+    env HOME="$CASA_UP" TANDEM_BIN="$ESPIA_REP" TANDEM_CHAMADAS="$TMPROOT/chamadas.txt" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_primeira_vez' 2>/dev/null
+}
+
+# A genuine first run: the prefix scan happens and every type is claimed.
+: > "$TMPROOT/chamadas.txt"
+chamar_primeira_vez
+equal "on a first run, the associations are applied in full" \
+      "completo" "$(cat "$TMPROOT/chamadas.txt")"
+equal "and the mark records which version did it" \
+      "$(grep '^TANDEM_VERSAO=' "$ROOT/src/lib/common.sh" | cut -d'"' -f2)" \
+      "$(cat "$CASA_UP/.config/tandem/.primeira-vez")"
+
+# Running again with the same version does nothing at all: whoever changed an
+# association on purpose does not want it rewritten on every double click.
+: > "$TMPROOT/chamadas.txt"
+chamar_primeira_vez
+equal "running again on the same version does not touch the associations" \
+      "" "$(cat "$TMPROOT/chamadas.txt")"
+
+# An upgrade from an older version: the narrow mode, which claims only types
+# this machine has never claimed.
+printf '3.6\n' > "$CASA_UP/.config/tandem/.primeira-vez"
+: > "$TMPROOT/chamadas.txt"
+chamar_primeira_vez
+equal "an upgrade claims only the types that are new" \
+      "--somente-novos" "$(cat "$TMPROOT/chamadas.txt")"
+
+# And the empty mark left by every version before this one counts as an upgrade,
+# not as a first run - that is the case that was actually broken.
+: > "$CASA_UP/.config/tandem/.primeira-vez"
+: > "$TMPROOT/chamadas.txt"
+chamar_primeira_vez
+equal "the empty mark left by an old version counts as an upgrade" \
+      "--somente-novos" "$(cat "$TMPROOT/chamadas.txt")"
+
+# tandem-repair itself: --somente-novos must skip what is recorded and claim
+# what is not, and the full run must claim everything.
+CASA_REP="$TMPROOT/repair"; mkdir -p "$CASA_REP/.config/tandem"
+correr_repair() {
+    env -i HOME="$CASA_REP" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_SILENCIOSO=1 bash "$ROOT/src/bin/tandem-repair" "$@" >/dev/null 2>&1
+}
+correr_repair
+aplicados="$CASA_REP/.config/tandem/tipos-aplicados.txt"
+if grep -qxF 'application/vnd.appimage' "$aplicados" 2>/dev/null &&
+   grep -qxF 'application/java-archive' "$aplicados" 2>/dev/null &&
+   grep -qxF 'application/x-ms-dos-executable' "$aplicados" 2>/dev/null; then
+    pass "a full repair records every type it claimed"
+else
+    fail "a full repair records every type it claimed" \
+         "exe, appimage and jar recorded" "$(tr '\n' ' ' < "$aplicados" 2>/dev/null)"
+fi
+antes="$(grep -c . "$aplicados")"
+correr_repair --somente-novos
+equal "a second narrow repair has nothing left to claim" \
+      "$antes" "$(grep -c . "$aplicados")"
+# Drop one line and the narrow mode has to notice exactly that one.
+grep -vxF 'application/java-archive' "$aplicados" > "$aplicados.tmp"
+mv "$aplicados.tmp" "$aplicados"
+correr_repair --somente-novos
+if grep -qxF 'application/java-archive' "$aplicados" 2>/dev/null; then
+    pass "the narrow repair claims the one type that was missing"
+else
+    fail "the narrow repair claims the one type that was missing" \
+         "application/java-archive recorded again" "still absent"
+fi
+# The .jar association written to mimeapps.list must name the jar handler and
+# not some other one: the table that maps type to handler is easy to get wrong
+# and impossible to notice by reading.
+if grep -qxF 'application/java-archive=tandem-jar.desktop' \
+        "$CASA_REP/.config/mimeapps.list" 2>/dev/null &&
+   grep -qxF 'application/vnd.appimage=tandem-appimage.desktop' \
+        "$CASA_REP/.config/mimeapps.list" 2>/dev/null; then
+    pass "each type is pointed at its own handler"
+else
+    fail "each type is pointed at its own handler" \
+         "jar->tandem-jar, appimage->tandem-appimage" \
+         "$(grep -E 'java-archive|appimage' "$CASA_REP/.config/mimeapps.list" 2>/dev/null | tr '\n' ' ')"
+fi
+
 section "no message gets lost"
 
 t_tem_gui; equal "without DISPLAY there is no graphical interface" "1" "$?"
@@ -801,12 +898,16 @@ section "preparar: Tandem installs what is missing"
 # suite.
 faltas="$(PATH=/nao/existe t_pecas_faltando | cut -d'|' -f1 | tr '\n' ' ' | sed 's/ $//')"
 equal "with nothing installed, lists everything that is missing" \
-      "wine winetricks adb waydroid" "$faltas"
-# And with everything present, the list comes back empty.
+      "wine winetricks adb java fuse waydroid" "$faltas"
+# And with everything present, the list comes back empty. FUSE is not a command
+# on the PATH, so it is answered by the stub of the function instead.
 FINGE="$TMPROOT/finge"; mkdir -p "$FINGE"
-for c in wine winetricks adb waydroid; do printf '#!/bin/sh\n' > "$FINGE/$c"; chmod +x "$FINGE/$c"; done
+for c in wine winetricks adb java waydroid; do printf '#!/bin/sh\n' > "$FINGE/$c"; chmod +x "$FINGE/$c"; done
+t_tem_fuse2() { return 0; }
 equal "with everything installed, there is nothing to prepare" \
       "" "$(PATH="$FINGE" t_pecas_faltando | grep -v '^wine32|' )"
+unset -f t_tem_fuse2
+. "$ROOT/src/lib/common.sh"
 
 script="$(t_script_instalacao wine wine32 waydroid)"
 case "$script" in
@@ -964,6 +1065,327 @@ if [ -c /dev/tty ] && (exec < /dev/tty) 2>/dev/null; then
 else
     skip "t_texto with a terminal on the input" "the suite runs without a controlling terminal"
 fi
+
+section "native packages: AppImage"
+
+# A header written here and now. The twenty bytes that decide everything are
+# ELF + the AI mark + the generation + the machine, and the reader is not
+# allowed to need anything else.
+cabecalho_appimage() {
+    local destino="$1" geracao="${2:-2}" maquina="${3:-\076\000}" shoff="${4:-}"
+    {
+        printf '\177ELF\002\001\001\000AI'
+        printf "\\$(printf '%03o' "$geracao")"
+        printf '\000\000\000\000\000\003\000'
+        printf "$maquina"
+        # e_version, e_entry, e_phoff: 4 + 8 + 8 bytes of zeros up to e_shoff
+        head -c 20 /dev/zero
+        if [ -n "$shoff" ]; then printf "$shoff"; else head -c 8 /dev/zero; fi
+        head -c 16 /dev/zero          # e_flags, e_ehsize, e_phentsize, e_phnum
+    } > "$destino"
+    head -c $((64 - $(stat -c%s "$destino"))) /dev/zero >> "$destino"
+}
+
+AI_OK="$TMPROOT/ok.AppImage"
+cabecalho_appimage "$AI_OK"
+equal "the AppImage header is exactly 64 bytes" "64" "$(stat -c%s "$AI_OK")"
+info_ai="$(t_appimage_info "$AI_OK")"
+equal "reads the AppImage generation" "2" "$(t_campo "$info_ai" TIPO)"
+equal "reads the processor it was built for" "x86_64" "$(t_campo "$info_ai" ARQUITETURA)"
+
+# An ARM AppImage on this machine: the answer has to be that it does not run,
+# and the reason has to be the processor.
+AI_ARM="$TMPROOT/arm.AppImage"
+cabecalho_appimage "$AI_ARM" 2 '\267\000'
+equal "recognizes an ARM AppImage" "aarch64" \
+      "$(t_campo "$(t_appimage_info "$AI_ARM")" ARQUITETURA)"
+
+# A .AppImage that is only an ELF: an ordinary Linux program with a misleading
+# name. Blocking it would be right and useless - the owner needs to be told it
+# can still be run.
+AI_ELF="$TMPROOT/so-elf.AppImage"
+{ printf '\177ELF\002\001\001\000\000\000\000\000\000\000\000\000'; head -c 48 /dev/zero; } > "$AI_ELF"
+equal "an ELF with no AI mark is not taken for an AppImage" \
+      "nao tem a marca AI do AppImage" "$(t_campo "$(t_appimage_info "$AI_ELF")" ERRO)"
+printf 'nao sou um ELF nenhum, so texto\n' > "$TMPROOT/texto.AppImage"
+equal "a text file is not taken for an AppImage" \
+      "nao comeca com ELF" "$(t_campo "$(t_appimage_info "$TMPROOT/texto.AppImage")" ERRO)"
+
+# The verdict that is worth the most, and the one no other program gives: the
+# download was cut in the middle. The payload says how big it should be, and
+# the file is shorter than that.
+AI_CORTADO="$TMPROOT/cortado.AppImage"
+python3 - "$AI_CORTADO" <<'PYFIM'
+import struct, sys
+# A 64-byte ELF header whose section table ends at 64, then a squashfs
+# superblock declaring a filesystem far bigger than what follows it.
+cab = bytearray(64)
+cab[0:4] = b'\x7fELF'; cab[4] = 2; cab[5] = 1; cab[6] = 1
+cab[8:10] = b'AI'; cab[10] = 2
+struct.pack_into('<H', cab, 16, 3)          # e_type
+struct.pack_into('<H', cab, 18, 0x3E)       # e_machine = x86_64
+struct.pack_into('<Q', cab, 0x28, 64)       # e_shoff
+struct.pack_into('<H', cab, 0x3A, 0)        # e_shentsize
+struct.pack_into('<H', cab, 0x3C, 1)        # e_shnum -> payload starts at 64
+sb = bytearray(96)
+sb[0:4] = b'hsqs'
+struct.pack_into('<Q', sb, 40, 10 * 1024 * 1024)   # says it is 10 MiB
+open(sys.argv[1], 'wb').write(bytes(cab) + bytes(sb))
+PYFIM
+info_cortado="$(t_appimage_info "$AI_CORTADO")"
+equal "the payload offset comes out of the header, with nothing run" \
+      "64" "$(t_campo "$info_cortado" DESLOCAMENTO)"
+equal "recognizes the payload as squashfs" "squashfs" "$(t_campo "$info_cortado" CARGA)"
+equal "an interrupted download is recognized as interrupted" \
+      "0" "$(t_campo "$info_cortado" COMPLETO)"
+
+# Architecture: an x86_64 machine runs a 32-bit AppImage, and never the reverse.
+t_arch_compativel x86_64 x86_64 && pass "x86_64 runs on x86_64" \
+    || fail "x86_64 runs on x86_64" "compatible" "refused"
+t_arch_compativel i386 x86_64 && pass "a 32-bit AppImage runs on a 64-bit machine" \
+    || fail "a 32-bit AppImage runs on a 64-bit machine" "compatible" "refused"
+t_arch_compativel x86_64 i386 && fail "a 64-bit AppImage does not run on a 32-bit machine" \
+    "refused" "accepted" || pass "a 64-bit AppImage does not run on a 32-bit machine"
+t_arch_compativel aarch64 x86_64 && fail "an ARM AppImage does not run on a PC" \
+    "refused" "accepted" || pass "an ARM AppImage does not run on a PC"
+# Not knowing is not a reason to refuse: an unreadable architecture is answered
+# by trying, the same rule the proof of delivery follows.
+t_arch_compativel '?' x86_64 && pass "an unknown architecture is not blocked" \
+    || fail "an unknown architecture is not blocked" "compatible" "refused"
+
+# FUSE. The text below is the real output of a real AppImage measured with
+# /dev/fuse removed - not a sentence invented to match the pattern.
+printf 'fuse: device not found, try '"'"'modprobe fuse'"'"' first\n\nCannot mount AppImage, please check your FUSE setup.\n' \
+    > "$TMPROOT/fuse.log"
+t_falha_fuse "$TMPROOT/fuse.log" && pass "recognizes the real FUSE failure" \
+    || fail "recognizes the real FUSE failure" "recognized" "not recognized"
+printf 'Segmentation fault\nsome other problem entirely\n' > "$TMPROOT/outro.log"
+t_falha_fuse "$TMPROOT/outro.log" && fail "does not see FUSE where there is none" \
+    "not recognized" "recognized" || pass "does not see FUSE where there is none"
+
+# Menu entries: ours are pruned when the file disappears, and nobody else's is
+# ever touched.
+APPS="$HOME/.local/share/applications"; mkdir -p "$APPS"
+printf 'x' > "$TMPROOT/existe.AppImage"
+printf '[Desktop Entry]\nName=Existe\nX-Tandem-AppImage=%s\n' "$TMPROOT/existe.AppImage" \
+    > "$APPS/tandem-appimage-111.desktop"
+printf '[Desktop Entry]\nName=Sumiu\nX-Tandem-AppImage=%s\n' "$TMPROOT/nao-existe.AppImage" \
+    > "$APPS/tandem-appimage-222.desktop"
+printf '[Desktop Entry]\nName=De Outra Pessoa\nExec=outracoisa\n' \
+    > "$APPS/appimage-de-outro.desktop"
+listados="$(t_atalhos_appimage)"
+equal "only the AppImage that still exists is listed" \
+      "$APPS/tandem-appimage-111.desktop" "$listados"
+[ -f "$APPS/tandem-appimage-222.desktop" ] &&
+    fail "the entry whose file vanished is removed" "removed" "still there" ||
+    pass "the entry whose file vanished is removed"
+[ -f "$APPS/appimage-de-outro.desktop" ] &&
+    pass "somebody else's shortcut is preserved" ||
+    fail "somebody else's shortcut is preserved" "preserved" "removed"
+
+section "native packages: Java"
+
+# Real jars, built here: python3 is already a dependency of the package, so the
+# suite does not need a JDK to have something authentic to read.
+JARS="$TMPROOT/jars"; mkdir -p "$JARS"
+python3 - "$JARS" <<'PYFIM'
+import os, struct, sys, zipfile
+
+destino = sys.argv[1]
+
+def classe(major, corpo=b''):
+    return b'\xca\xfe\xba\xbe' + struct.pack('>HH', 0, major) + corpo
+
+def jar(nome, manifesto, entradas):
+    with zipfile.ZipFile(os.path.join(destino, nome), 'w') as z:
+        z.writestr('META-INF/MANIFEST.MF', manifesto)
+        for n, d in entradas:
+            z.writestr(n, d)
+
+# Java 21 (major 65) and a Main-Class: a program.
+jar('programa.jar', b'Manifest-Version: 1.0\r\nMain-Class: Ola\r\n\r\n',
+    [('Ola.class', classe(65))])
+# The same classes with no Main-Class: a library, and a double click on it gets
+# "no main manifest attribute" from Java.
+jar('biblioteca.jar', b'Manifest-Version: 1.0\r\n\r\n', [('Ola.class', classe(65))])
+# A java agent: not run by double clicking either, but for another reason.
+jar('agente.jar', b'Manifest-Version: 1.0\r\nPremain-Class: Ola\r\n\r\n',
+    [('Ola.class', classe(65))])
+# Multi-release: the class under versions/ is there so a NEWER Java picks it up.
+# Counting it would demand a Java the program does not require.
+jar('multi.jar', b'Manifest-Version: 1.0\r\nMain-Class: Ola\r\nMulti-Release: true\r\n\r\n',
+    [('Ola.class', classe(65)), ('META-INF/versions/30/Ola.class', classe(74))])
+# A Class-Path folded at 72 bytes, the way the real manifest writer folds it:
+# the file name is split down the middle.
+jar('dobrado.jar',
+    b'Manifest-Version: 1.0\r\nMain-Class: Ola\r\n'
+    b'Class-Path: uma-biblioteca-de-nome-bem-comprido.jar outra-bibl\r\n'
+    b' ioteca-javafx-comprida.jar\r\n\r\n',
+    [('Ola.class', classe(65))])
+# JavaFX named in the constant pool of the main class, and carried nowhere.
+jar('fx.jar', b'Manifest-Version: 1.0\r\nMain-Class: Fx\r\n\r\n',
+    [('Fx.class', classe(52, b'javafx/application/Application'))])
+# An interrupted download: the index of a zip is at the END of the file.
+with open(os.path.join(destino, 'programa.jar'), 'rb') as f:
+    inteiro = f.read()
+open(os.path.join(destino, 'cortado.jar'), 'wb').write(inteiro[:len(inteiro) // 2])
+PYFIM
+
+info_jar="$(t_jar_info "$JARS/programa.jar")"
+equal "reads the Main-Class of a program" "Ola" "$(t_campo "$info_jar" PRINCIPAL)"
+equal "translates class file version 65 into Java 21" "21" "$(t_campo "$info_jar" JAVA)"
+equal "keeps the raw major version for the log" "65" "$(t_campo "$info_jar" MAIOR)"
+equal "a library has no Main-Class" "" \
+      "$(t_campo "$(t_jar_info "$JARS/biblioteca.jar")" PRINCIPAL)"
+equal "an agent is recognized as an agent" "1" \
+      "$(t_campo "$(t_jar_info "$JARS/agente.jar")" AGENTE)"
+equal "a library is not mistaken for an agent" "0" \
+      "$(t_campo "$(t_jar_info "$JARS/biblioteca.jar")" AGENTE)"
+# The one that matters: a class marked for a Java that does not exist yet sits
+# under versions/ precisely so it is ignored by older ones. Counting it would
+# announce "needs Java 30" for a program that runs on 21.
+info_multi="$(t_jar_info "$JARS/multi.jar")"
+equal "multi-release is recognized" "1" "$(t_campo "$info_multi" MULTI)"
+equal "a class under versions/ does not raise the required Java" \
+      "21" "$(t_campo "$info_multi" JAVA)"
+# A Class-Path split in the middle of a file name has to come back whole,
+# otherwise Tandem looks for a file that does not exist and blames the folder.
+equal "a folded Class-Path is put back together" \
+      "uma-biblioteca-de-nome-bem-comprido.jar,outra-biblioteca-javafx-comprida.jar" \
+      "$(t_campo "$(t_jar_info "$JARS/dobrado.jar")" DEPENDENCIAS)"
+equal "JavaFX is found in the constant pool" "1" \
+      "$(t_campo "$(t_jar_info "$JARS/fx.jar")" JAVAFX)"
+equal "an interrupted download is not reported as a broken program" \
+      "zip invalido ou incompleto" "$(t_campo "$(t_jar_info "$JARS/cortado.jar")" ERRO)"
+equal "a file that is not a zip at all" \
+      "zip invalido ou incompleto" "$(t_campo "$(t_jar_info "$TMPROOT/texto.AppImage")" ERRO)"
+
+# The installed Java's version, written two different ways by Java itself.
+# Reading only the first number turns Java 8 into Java 1 - and then Tandem
+# would refuse a program on a machine that runs it perfectly well.
+FINGE_J="$TMPROOT/finge-java"; mkdir -p "$FINGE_J"
+cat > "$FINGE_J/java" <<'FIMJ'
+#!/bin/sh
+echo 'openjdk version "1.8.0_412"' >&2
+FIMJ
+chmod +x "$FINGE_J/java"
+equal "Java 1.8.0_412 is Java 8" "8" "$(PATH="$FINGE_J:$PATH" t_java_versao)"
+cat > "$FINGE_J/java" <<'FIMJ'
+#!/bin/sh
+echo 'openjdk version "21.0.10" 2026-01-20' >&2
+FIMJ
+chmod +x "$FINGE_J/java"
+equal "Java 21.0.10 is Java 21" "21" "$(PATH="$FINGE_J:$PATH" t_java_versao)"
+cat > "$FINGE_J/java" <<'FIMJ'
+#!/bin/sh
+echo 'java version "17.0.9" 2023-10-17 LTS' >&2
+FIMJ
+chmod +x "$FINGE_J/java"
+equal "the Oracle wording is read the same way" "17" "$(PATH="$FINGE_J:$PATH" t_java_versao)"
+
+# A version number read off a file becomes part of a command that runs as root.
+plano_j="$(t_script_instalacao java21)"
+case "$plano_j" in
+    *"openjdk-21-jre"*) pass "the plan installs the Java version the program asks for" ;;
+    *) fail "the plan installs the Java version the program asks for" "openjdk-21-jre" "$plano_j" ;;
+esac
+plano_j="$(t_script_instalacao 'java21; rm -rf /')"
+case "$plano_j" in
+    *"rm -rf"*) fail "a poisoned Java version does not reach the root command" \
+                     "only digits" "$plano_j" ;;
+    *"openjdk-21-jre"*) pass "a poisoned Java version does not reach the root command" ;;
+    *) fail "a poisoned Java version does not reach the root command" "openjdk-21-jre" "$plano_j" ;;
+esac
+plano_j="$(t_script_instalacao fuse)"
+case "$plano_j" in
+    *libfuse2t64*libfuse2*) pass "FUSE is tried under both names it has had" ;;
+    *) fail "FUSE is tried under both names it has had" "libfuse2t64 || libfuse2" "$plano_j" ;;
+esac
+
+section "native packages: the whole command, end to end"
+
+# The libraries were right and five commands still printed nothing, because no
+# test had ever run a command. These run the two new executables whole, with no
+# Wine, no Java and no network - and demand a sentence, in Portuguese, on the
+# way out.
+CASA_N="$TMPROOT/casa-nativos"; mkdir -p "$CASA_N"
+: > "$CASA_N/.primeira-vez"
+correr_nativo() {
+    env -i HOME="$CASA_N" PATH="/usr/bin:/bin" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+        bash "$ROOT/src/bin/$1" "$2" 2>&1
+}
+
+saida_n="$(correr_nativo tandem-jar "$JARS/biblioteca.jar")"
+case "$saida_n" in
+    *"peça de um programa"*) pass "a library .jar is explained, not reported as broken" ;;
+    *) fail "a library .jar is explained, not reported as broken" \
+            "the sentence about being a piece of a program" "${saida_n:-zero bytes}" ;;
+esac
+saida_n="$(correr_nativo tandem-jar "$JARS/cortado.jar")"
+case "$saida_n" in
+    *"incompleto"*|*"cortado no meio"*) pass "an interrupted .jar download says so" ;;
+    *) fail "an interrupted .jar download says so" "the sentence about the download" \
+            "${saida_n:-zero bytes}" ;;
+esac
+saida_n="$(correr_nativo tandem-jar "$JARS/agente.jar")"
+case "$saida_n" in
+    *"acessório de outro programa"*) pass "a java agent is explained" ;;
+    *) fail "a java agent is explained" "the sentence about being an accessory" \
+            "${saida_n:-zero bytes}" ;;
+esac
+saida_n="$(correr_nativo tandem-appimage "$AI_CORTADO")"
+case "$saida_n" in
+    *"download deste arquivo não terminou"*) pass "an interrupted AppImage download says so" ;;
+    *) fail "an interrupted AppImage download says so" "the sentence about the download" \
+            "${saida_n:-zero bytes}" ;;
+esac
+saida_n="$(correr_nativo tandem-appimage "$AI_ARM")"
+case "$saida_n" in
+    *"outro tipo de processador"*) pass "an ARM AppImage says it is the processor" ;;
+    *) fail "an ARM AppImage says it is the processor" "the sentence about the processor" \
+            "${saida_n:-zero bytes}" ;;
+esac
+saida_n="$(correr_nativo tandem-appimage "$AI_ELF")"
+case "$saida_n" in
+    *"programa de Linux comum"*) pass "an ELF named .AppImage is told how to run anyway" ;;
+    *) fail "an ELF named .AppImage is told how to run anyway" \
+            "the sentence about an ordinary Linux program" "${saida_n:-zero bytes}" ;;
+esac
+saida_n="$(correr_nativo tandem-appimage "$TMPROOT/nao-existe.AppImage")"
+case "$saida_n" in
+    *"não encontrado"*) pass "a missing file is reported by both new commands" ;;
+    *) fail "a missing file is reported by both new commands" "arquivo nao encontrado" \
+            "${saida_n:-zero bytes}" ;;
+esac
+
+# Dispatch: "tandem install" has to reach the right executable. TANDEM_BIN
+# exists for exactly this - with the path nailed down the test would have been
+# exercising the INSTALLED package.
+ESPIAO="$TMPROOT/espiao"; mkdir -p "$ESPIAO"
+for b in tandem-exe tandem-apk tandem-appimage tandem-jar; do
+    printf '#!/bin/sh\necho "CHAMOU %s"\n' "$b" > "$ESPIAO/$b"
+    chmod +x "$ESPIAO/$b"
+done
+despachar() {
+    env -i HOME="$CASA_N" PATH="/usr/bin:/bin" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ESPIAO" \
+        bash "$ROOT/src/bin/tandem" install "$1" 2>&1
+}
+equal "a .AppImage goes to tandem-appimage" "CHAMOU tandem-appimage" "$(despachar "$AI_OK")"
+equal "a .jar goes to tandem-jar" "CHAMOU tandem-jar" "$(despachar "$JARS/programa.jar")"
+# With no extension the decision is by content, and the specific mark comes
+# before the generic one: every AppImage is an ELF and every jar is a zip.
+cp "$AI_OK" "$TMPROOT/sem-extensao"
+equal "with no extension, an AppImage is recognized by its header" \
+      "CHAMOU tandem-appimage" "$(despachar "$TMPROOT/sem-extensao")"
+cp "$JARS/programa.jar" "$TMPROOT/sem-extensao-jar"
+equal "with no extension, a runnable jar is recognized by its manifest" \
+      "CHAMOU tandem-jar" "$(despachar "$TMPROOT/sem-extensao-jar")"
+# And a zip that is NOT a jar stays with Android, which is what it was before.
+cp "$JARS/biblioteca.jar" "$TMPROOT/so-zip"
+equal "a zip with no Main-Class stays with Android" \
+      "CHAMOU tandem-apk" "$(despachar "$TMPROOT/so-zip")"
 
 section "community list (modelled on filter lists)"
 
@@ -1526,7 +1948,7 @@ VERSAO_DEB="$(grep '^Version:' debian/control | cut -d' ' -f2)"
 PACOTE_DEB="$ROOT/tandem_${VERSAO_DEB}_all.deb"
 
 equal "the version in control matches the one in the executable" \
-      "$VERSAO_DEB" "$(grep '^VERSAO=' src/bin/tandem | cut -d'"' -f2)"
+      "$VERSAO_DEB" "$(grep '^TANDEM_VERSAO=' src/lib/common.sh | cut -d'"' -f2)"
 
 if [ -f "$PACOTE_DEB" ]; then
     pass "the .deb was generated"

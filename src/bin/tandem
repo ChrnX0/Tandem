@@ -4,16 +4,18 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="3.6"
+# One source of truth: common.sh. This line still says VERSAO= so the coupled
+# check in the suite can find it, and it reads the value rather than repeating it.
+VERSAO="$TANDEM_VERSAO"
 
 uso() {
     cat <<'AJUDA'
-Tandem - roda programas Windows e apps Android no Linux.
+Tandem - roda programas Windows, apps Android e pacotes do Linux.
 
   tandem                      abre o painel
-  tandem install <arquivo>    instala/executa (.exe .msi .apk .xapk .apks)
-  tandem preparar             instala o que falta (Wine, Android, ...)
-  tandem programas [nome]     lista e abre os programas Windows instalados
+  tandem install <arquivo>    instala/executa (.exe .msi .apk .xapk .AppImage .jar)
+  tandem preparar             instala o que falta (Wine, Java, Android, ...)
+  tandem programas [nome]     lista e abre os programas instalados
   tandem desinstalar [nome]   remove um programa Windows instalado
   tandem android              abre a tela do Android
   tandem doctor               diagnostico do ambiente (o que existe)
@@ -46,11 +48,24 @@ acao_install() {
     local f="$1"
     [ -n "$f" ] || { t_erro "Informe o arquivo."; return 1; }
     case "${f,,}" in
-        *.apk|*.xapk|*.apks|*.apkm) exec /usr/bin/tandem-apk "$f" ;;
-        *.exe|*.msi|*.msp|*.lnk|*.bat|*.cmd|*.url) exec /usr/bin/tandem-exe "$f" ;;
+        *.apk|*.xapk|*.apks|*.apkm) exec "$TANDEM_BIN"/tandem-apk "$f" ;;
+        *.exe|*.msi|*.msp|*.lnk|*.bat|*.cmd|*.url) exec "$TANDEM_BIN"/tandem-exe "$f" ;;
+        *.appimage) exec "$TANDEM_BIN"/tandem-appimage "$f" ;;
+        *.jar)      exec "$TANDEM_BIN"/tandem-jar "$f" ;;
         *)
-            if head -c2 -- "$f" 2>/dev/null | grep -q MZ; then exec /usr/bin/tandem-exe "$f"
-            elif head -c2 -- "$f" 2>/dev/null | grep -q PK; then exec /usr/bin/tandem-apk "$f"
+            # By content, when the name says nothing. The order matters: an
+            # AppImage is an ELF and a .jar is a zip, so the specific mark is
+            # looked for before the generic one - a zip that is not a jar is an
+            # Android package, and an ELF that is not an AppImage is an ordinary
+            # Linux program that needs nobody's help to run.
+            if head -c2 -- "$f" 2>/dev/null | grep -q MZ; then
+                exec "$TANDEM_BIN"/tandem-exe "$f"
+            elif t_appimage_info "$f" 2>/dev/null | grep -q '^TIPO='; then
+                exec "$TANDEM_BIN"/tandem-appimage "$f"
+            elif t_jar_info "$f" 2>/dev/null | grep -q '^PRINCIPAL=.'; then
+                exec "$TANDEM_BIN"/tandem-jar "$f"
+            elif head -c2 -- "$f" 2>/dev/null | grep -q PK; then
+                exec "$TANDEM_BIN"/tandem-apk "$f"
             else t_erro "Não reconheci o tipo deste arquivo."; return 1
             fi ;;
     esac
@@ -94,6 +109,24 @@ acao_doctor() {
     else
         out+="  waydroid: NÃO INSTALADO\n"
     fi
+    out+="\nPACOTES DO LINUX\n"
+    if command -v java >/dev/null 2>&1; then
+        # The version line, not the first line: with JAVA_TOOL_OPTIONS set in
+        # the environment - common on machines somebody has configured - Java
+        # prints a paragraph of proxy settings first, and "head -1" put the
+        # whole paragraph in the middle of the diagnosis.
+        out+="  java: $(t_java_versao 2>/dev/null || echo '?') ($(java -version 2>&1 |
+              grep -m1 'version "' | sed 's/^ *//'))\n"
+    else
+        out+="  java: NÃO INSTALADO (programas .jar não abrem)\n"
+    fi
+    t_tem_fuse2 &&
+        out+="  FUSE: sim (AppImage abre direto)\n" ||
+        out+="  FUSE: NÃO (AppImage abre pelo caminho lento, desempacotando)\n"
+    out+="  processador: $(t_maquina_arch)\n"
+    local n_ai; n_ai="$(t_atalhos_appimage | grep -c . 2>/dev/null)"
+    out+="  AppImage no menu: ${n_ai:-0}\n"
+
     out+="\nPERFIS PROTEGIDOS\n"
     if [ -s "$TANDEM_PROTEGIDOS" ]; then
         while read -r l; do [ -n "$l" ] && out+="  $l\n"; done < "$TANDEM_PROTEGIDOS"
@@ -345,11 +378,17 @@ escolher() {
 # user. Tandem knows what it installed, so it shows and opens them itself.
 acao_programas() {
     local filtro="${1:-}" d nome escolha achou="" nomes=()
-    local lista; lista="$(t_atalhos_nossos)"
+    # Windows shortcuts and AppImage entries in the same list. For the owner
+    # they are the same thing - a program he installed with Tandem - and the
+    # reason this command exists applies to both: on Wayland, GNOME does not
+    # re-read the application list, so a program he cannot find again is a
+    # program he has not installed.
+    local lista; lista="$(t_atalhos_nossos; t_atalhos_appimage)"
+    lista="$(printf '%s\n' "$lista" | grep -v '^$')"
     if [ -z "$lista" ]; then
-        t_erro "Nenhum programa do Windows instalado pelo Tandem por enquanto.
+        t_erro "Nenhum programa instalado pelo Tandem por enquanto.
 
-Programas que não criam atalho no Menu Iniciar não aparecem aqui."
+Programas do Windows que não criam atalho no Menu Iniciar não aparecem aqui."
         return 1
     fi
 
@@ -373,10 +412,10 @@ Programas que não criam atalho no Menu Iniciar não aparecem aqui."
     # With no window (terminal, SSH), the list comes out as text. "escolher"
     # returns empty both on Cancel and when zenity is missing; in the first
     # case the listing is harmless, in the second it is the only path left.
-    escolha="$(escolher "Tandem - Programas do Windows" \
+    escolha="$(escolher "Tandem - Programas instalados" \
                         "Qual programa você quer abrir?" "${nomes[@]}")"
     if [ -z "$escolha" ]; then
-        printf 'Programas do Windows instalados pelo Tandem:\n\n'
+        printf 'Programas instalados pelo Tandem:\n\n'
         printf '  %s\n' "${nomes[@]}"
         printf '\nPara abrir um deles:  tandem programas "<parte do nome>"\n'
         return 0
@@ -624,15 +663,71 @@ acao_autoteste() {
     # 7. Do the associations point at Tandem? That is what makes the double
     #    click arrive here; without it the rest does not matter.
     if command -v xdg-mime >/dev/null 2>&1; then
-        local dono; dono="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
-        if [ "$dono" = "tandem-exe.desktop" ]; then
-            passa "o duplo clique num .exe vem para o Tandem"
-        else
-            falha "o duplo clique num .exe não vem para o Tandem" "quem responde é: ${dono:-ninguém} — rode: tandem repair"
-        fi
+        local dono par
+        # One line per format, because they are disputed by different rivals:
+        # Zorin's "Windows App Support" wants the .exe, Waydroid wants the .apk,
+        # the system's own Java launcher wants the .jar, and an AppImage usually
+        # has no owner at all - which is precisely why it does nothing when
+        # clicked.
+        for par in "application/x-ms-dos-executable|.exe|tandem-exe.desktop" \
+                   "application/vnd.android.package-archive|.apk|tandem-apk.desktop" \
+                   "application/vnd.appimage|.AppImage|tandem-appimage.desktop" \
+                   "application/java-archive|.jar|tandem-jar.desktop"; do
+            dono="$(xdg-mime query default "${par%%|*}" 2>/dev/null)"
+            if [ "$dono" = "${par##*|}" ]; then
+                passa "o duplo clique num $(printf '%s' "$par" | cut -d'|' -f2) vem para o Tandem"
+            else
+                falha "o duplo clique num $(printf '%s' "$par" | cut -d'|' -f2) não vem para o Tandem" \
+                      "quem responde é: ${dono:-ninguém} — rode: tandem repair"
+            fi
+        done
     fi
 
-    # 8. Is the protection of other people's prefixes in force? It exercises
+    # 8. Does the AppImage reader work on this machine? Exercised against a
+    #    header written here and now, so it needs no file and no network: the
+    #    twenty bytes that decide everything are the ones being read.
+    {
+        printf '\177ELF\002\001\001\000AI\002\000\000\000\000\000\003\000>\000'
+        head -c 44 /dev/zero
+    } > "$tmp/falso.AppImage" 2>/dev/null
+    local lido; lido="$(t_appimage_info "$tmp/falso.AppImage" 2>/dev/null)"
+    if [ "$(t_campo "$lido" TIPO)" = 2 ] &&
+       [ "$(t_campo "$lido" ARQUITETURA)" = x86_64 ]; then
+        passa "o pré-voo do AppImage lê tipo e processador"
+    else
+        falha "o pré-voo do AppImage não leu o cabeçalho" "${lido:-nenhuma resposta} — o python3 desta máquina pode estar quebrado"
+    fi
+
+    # 9. Does the jar reader work? Against a real .jar, if this machine has one
+    #    - the Java packages of the distribution all ship them.
+    local umjar
+    umjar="$(find "$TANDEM_PREFIXO_PADRAO" /usr/share/java /usr/lib/jvm \
+                  "$HOME/Downloads" -maxdepth 4 -name '*.jar' -size -50M \
+                  2>/dev/null | head -1)"
+    if [ -n "$umjar" ]; then
+        if [ -n "$(t_campo "$(t_jar_info "$umjar")" MAIOR)" ]; then
+            passa "o pré-voo do Java lê um .jar de verdade"
+        else
+            falha "o pré-voo do Java não conseguiu ler um .jar" "$umjar"
+        fi
+    else
+        saida="$saida  --      pré-voo do Java (nenhum .jar nesta máquina para exercitar)"$'\n'
+    fi
+
+    # 10. Java is not required for Tandem to work, but if it IS here its version
+    #     has to be readable - the whole "needs a newer Java" diagnosis hangs on
+    #     that one number, and Java writes it two different ways.
+    if command -v java >/dev/null 2>&1; then
+        local jv; jv="$(t_java_versao)"
+        case "$jv" in
+            ''|*[!0-9]*) falha "não consegui ler a versão do Java" "java -version respondeu: $(java -version 2>&1 | head -1)" ;;
+            *)           passa "a versão do Java foi reconhecida ($jv)" ;;
+        esac
+    else
+        saida="$saida  --      versão do Java (Java não instalado)"$'\n'
+    fi
+
+    # 11. Is the protection of other people's prefixes in force? It exercises
     #    the decision, not the list: it asks the code what it would do.
     local alheio protegidos=0 desprotegidos=""
     while IFS= read -r alheio; do
@@ -915,9 +1010,9 @@ acao_painel() {
         esc="$(zenity --list --title="Tandem" --width=520 --height=400 \
             --text="O que você quer fazer?" \
             --column="Ação" --column="Descrição" --hide-header \
-            "instalar"  "Instalar ou abrir um arquivo (.exe .msi .apk .xapk)" \
-            "preparar"  "Instalar o que falta (Wine, Android...)" \
-            "programas" "Abrir um programa do Windows já instalado" \
+            "instalar"  "Instalar ou abrir um arquivo (.exe .apk .AppImage .jar)" \
+            "preparar"  "Instalar o que falta (Wine, Java, Android...)" \
+            "programas" "Abrir um programa já instalado" \
             "remover"   "Desinstalar um programa do Windows" \
             "android"   "Abrir a tela do Android" \
             "doctor"    "Ver o diagnóstico do ambiente" \
@@ -935,19 +1030,19 @@ acao_painel() {
             instalar)
                 local f
                 f="$(zenity --file-selection --title="Escolha o arquivo" \
-                     --file-filter="Programas e apps | *.exe *.msi *.apk *.xapk *.apks *.apkm" \
+                     --file-filter="Programas e apps | *.exe *.msi *.apk *.xapk *.apks *.apkm *.AppImage *.appimage *.jar" \
                      --file-filter="Todos | *" 2>/dev/null)" || continue
                 acao_install "$f" ;;
             preparar)  acao_preparar ;;
             programas) acao_programas ;;
             remover)   acao_uninstall ;;
-            android)  setsid /usr/bin/tandem-android >/dev/null 2>&1 & ;;
+            android)  setsid "$TANDEM_BIN"/tandem-android >/dev/null 2>&1 & ;;
             doctor)   acao_doctor ;;
             autoteste) acao_autoteste ;;
             dados)    acao_dados ;;
             backup)   acao_backup ;;
             restore)  acao_restore ;;
-            repair)   /usr/bin/tandem-repair ;;
+            repair)   "$TANDEM_BIN"/tandem-repair ;;
             memoria)  acao_memoria ;;
             lista)    acao_lista atualizar ;;
             socorro)  acao_socorro ;;
@@ -964,10 +1059,10 @@ case "${1:-}" in
     preparar|setup)       acao_preparar ;;
     programas|apps)       shift; acao_programas "$@" ;;
     desinstalar|uninstall|remover) shift; acao_uninstall "$@" ;;
-    android)              exec /usr/bin/tandem-android ;;
+    android)              exec "$TANDEM_BIN"/tandem-android ;;
     doctor|diagnostico)   acao_doctor ;;
     autoteste|autotest)   acao_autoteste ;;
-    repair|consertar)     exec /usr/bin/tandem-repair ;;
+    repair|consertar)     exec "$TANDEM_BIN"/tandem-repair ;;
     dados|meus-dados)     shift; acao_dados "$@" ;;
     backup)               acao_backup ;;
     restore|restaurar)    acao_restore ;;

@@ -31,7 +31,7 @@ else
 fi
 
 # ------------------------------------------------- 1. Prior inspection
-INFO="$(python3 /usr/lib/tandem/apkinfo.py "$APK" 2>>"$LOG")"
+INFO="$(python3 "${TANDEM_LIB:-/usr/lib/tandem}/apkinfo.py" "$APK" 2>>"$LOG")"
 t_diz "$INFO"
 FORMATO=""; PACOTE=""; MINSDK=""; ABIS=""; SPLITS=1; OBB=0; ERRO=""
 while IFS='=' read -r k v; do

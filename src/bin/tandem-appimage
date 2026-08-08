@@ -1,0 +1,258 @@
+#!/bin/bash
+# Tandem - runs an AppImage, fixing on its own what stops it from opening.
+#
+# An AppImage is the closest Linux has to a Windows program: one file, no
+# installing, double click and go. Except that the double click does not go.
+# The file arrives from the browser without the execute bit, and a file without
+# that bit is not offered to the system as a program at all - so the click
+# opens an archive manager, or does nothing, and the owner concludes the
+# program is broken.
+#
+# That is the whole reason this exists. Everything else here - FUSE, the
+# architecture, the interrupted download - are the failures that come after,
+# and each one has its own sentence instead of a number.
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
+
+t_log_init appimage "$*"
+
+BRUTO="${1:-}"
+[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
+[ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "Arquivo não encontrado:
+$BRUTO"; exit 1; }
+
+# Same reasoning as in tandem-exe, including the braces: "exec" with no command
+# applies its redirections to the whole shell, permanently, and a 2>/dev/null
+# written outside them silences every error message this program would ever
+# print. A lock held by somebody else and a lock that cannot be created are
+# different cases: the first one stops, the second one carries on without it.
+CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
+if { exec 7> "$TANDEM_TRAVAS/appimage-$CHAVE.lock"; } 2>/dev/null; then
+    flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
+else
+    t_diz "nao consegui criar a trava; seguindo sem ela"
+fi
+
+# ------------------------------------------------- 1. Read it without running
+INFO="$(t_appimage_info "$PROG")"
+t_diz "$INFO"
+ERRO="$(t_campo "$INFO" ERRO)"
+TIPO="$(t_campo "$INFO" TIPO)"
+ARCH="$(t_campo "$INFO" ARQUITETURA)"
+COMPLETO="$(t_campo "$INFO" COMPLETO)"
+
+if [ -n "$ERRO" ]; then
+    # An ELF with no AI mark is a perfectly ordinary Linux program that happens
+    # to be named .AppImage. Saying "this is not an AppImage" would be true and
+    # useless; what the owner needs to know is that it can still be run.
+    if [ "$ERRO" = "nao tem a marca AI do AppImage" ]; then
+        t_erro "Este arquivo não é um AppImage, mesmo com esse nome.
+
+Ele é um programa de Linux comum. Para abrir, no Terminal:
+
+chmod +x \"$PROG\"
+\"$PROG\""
+    else
+        t_erro "Não consegui ler este arquivo.
+
+$ERRO"
+    fi
+    exit 1
+fi
+
+# The best diagnosis available here, and the cheapest: the file says by itself
+# how big it should be. Nothing else is worth investigating while it is short.
+if [ "$COMPLETO" = 0 ]; then
+    t_memoria_grava "$PROG" RESULTADO "incompleto" 2>/dev/null
+    t_erro "$(t_texto_appimage_incompleto "$PROG")"
+    exit 1
+fi
+
+MAQUINA="$(t_maquina_arch)"
+t_diz "appimage tipo $TIPO, arquitetura $ARCH, maquina $MAQUINA"
+if ! t_arch_compativel "$ARCH" "$MAQUINA"; then
+    t_memoria_grava "$PROG" RESULTADO "arquitetura errada" 2>/dev/null
+    t_memoria_grava "$PROG" LIMITE "arquitetura|$(t_texto_appimage_arch "$ARCH" "$MAQUINA")" 2>/dev/null
+    t_erro "$(t_texto_appimage_arch "$ARCH" "$MAQUINA")"
+    exit 1
+fi
+t_memoria_grava "$PROG" ARQUITETURA "$ARCH" 2>/dev/null
+
+# ------------------------------------------------------- 2. The execute bit
+#
+# The fix that makes this whole program worth existing. The owner double
+# clicked the file: he has already said he wants to run it, and asking
+# permission to do the one thing that lets that happen would be theatre.
+if [ ! -x "$PROG" ]; then
+    if chmod +x -- "$PROG" 2>>"$LOG"; then
+        t_diz "permissao de execucao aplicada em $PROG"
+    else
+        t_erro "Não consegui marcar este arquivo como executável.
+
+$PROG
+
+Isso costuma acontecer quando o arquivo está num pendrive ou numa pasta
+somente-leitura. Copie o arquivo para a sua pasta pessoal e tente de novo."
+        exit 1
+    fi
+fi
+
+# --------------------------------------------- 3. What memory already knows
+# The only lesson worth keeping about an AppImage: whether this machine had to
+# take the slow road because it has no FUSE. Skipping the failed attempt saves
+# the owner from watching an error window that Tandem already knows how to
+# avoid.
+MODO="$(t_memoria_le "$PROG" MODO 2>/dev/null)"
+[ "$MODO" = extrair ] && t_diz "memoria: esta maquina precisa do modo extrair"
+INICIO=$SECONDS
+
+executar() {
+    local extra="$1"
+    cd -- "$(dirname -- "$PROG")" || return 1
+    if [ -n "$extra" ]; then
+        "$PROG" "$extra" >>"$LOG" 2>&1
+    else
+        "$PROG" >>"$LOG" 2>&1
+    fi
+}
+
+# ------------------------------------- 4. Run, diagnose, work around, repeat
+#
+# The remembered lesson is only followed while the reason for it still holds. If
+# the owner has since installed the library - and Tandem itself told him how -
+# taking the slow road on his word from last month would make every launch
+# slower for a problem that no longer exists.
+EXTRA=""
+if [ "$MODO" = extrair ] && ! t_tem_fuse2; then
+    EXTRA="--appimage-extract-and-run"
+elif [ "$MODO" = extrair ]; then
+    t_diz "memoria diz extrair, mas o FUSE existe agora: tentando o caminho rapido"
+fi
+CONTORNOU=0
+while :; do
+    t_aviso "Abrindo $(basename -- "$PROG")..."
+    # The mark is taken AFTER the warning, and that order is not cosmetic:
+    # t_aviso writes its own line to the log, and this is the one place in the
+    # project that shows the tail of the log back to the owner. With the mark
+    # taken first, "this is what the program said" opened with a sentence
+    # Tandem itself had written - measured on a real AppImage.
+    MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+    executar "$EXTRA"
+    CODIGO=$?
+
+    if [ "$CODIGO" -eq 0 ]; then
+        DUROU=$((SECONDS-INICIO))
+        t_memoria_grava "$PROG" RESULTADO abriu 2>/dev/null
+        t_memoria_grava "$PROG" SEGUNDOS "$DUROU" 2>/dev/null
+        t_memoria_grava "$PROG" VISTO_EM "$(date +%F)" 2>/dev/null
+        [ -n "$EXTRA" ] && t_memoria_grava "$PROG" MODO extrair 2>/dev/null
+
+        # The program ran and is gone from the screen. Without a menu entry the
+        # owner has to find the file again to open it a second time - the same
+        # problem "tandem programas" exists to solve for Windows software, and
+        # here it has a real fix: the AppImage carries its own desktop entry.
+        NOME="$(t_integra_appimage "$PROG" 2>/dev/null)"
+        if [ -n "$NOME" ]; then
+            t_ok "$NOME está agora no seu menu de aplicativos.
+
+Se não aparecer, saia e entre novamente na sua conta."
+        fi
+        # Only after the program worked: telling the owner to install libfuse
+        # while the program is broken for another reason would send him after
+        # the wrong thing.
+        [ "$CONTORNOU" = 1 ] && t_aviso "$(t_texto_appimage_fuse)"
+
+        # Exit code 0 does not mean it worked - the lesson from the Windows
+        # loop applies unchanged. The owner is the only witness, and he is
+        # asked once.
+        t_confirma_funcionou "$PROG" "$DUROU"
+        exit 0
+    fi
+
+    PARCIAL="$TANDEM_TRAVAS/parcial-appimage.$$"
+    tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+
+    # ---------------------------------------------------------- FUSE
+    # Ubuntu dropped libfuse2 from the default install in 22.04, and every
+    # AppImage of the second generation mounts itself with it. This is the most
+    # common AppImage failure on a current Zorin, and it needs nothing
+    # installed: the runtime knows how to unpack itself instead of mounting.
+    if [ -z "$EXTRA" ] && t_falha_fuse "$PARCIAL"; then
+        t_diz "falha de FUSE reconhecida; tentando de novo com --appimage-extract-and-run"
+        rm -f "$PARCIAL"
+        EXTRA="--appimage-extract-and-run"
+        CONTORNOU=1
+        continue
+    fi
+
+    # ------------------------------------------- the system is too old
+    # An AppImage carries its own libraries but not the C library, so one built
+    # on a newer distribution than the owner's fails here. It is not fixable by
+    # installing anything, and it is not his machine being broken.
+    if grep -q 'GLIBC_[0-9.]*.*not found\|version .GLIBC_' "$PARCIAL" 2>/dev/null; then
+        PEDE="$(sed -n "s/.*GLIBC_\([0-9.]*\).*/\1/p" "$PARCIAL" | sort -V | tail -1)"
+        rm -f "$PARCIAL"
+        t_memoria_grava "$PROG" RESULTADO "sistema antigo" 2>/dev/null
+        t_erro "Este programa é mais novo que o seu sistema Linux.
+
+Ele foi feito para uma versão mais recente das bibliotecas básicas${PEDE:+ (pede a GLIBC $PEDE)}.
+
+Não tem conserto instalando nada: procure no site de onde baixou uma versão
+mais antiga do programa, ou a versão marcada para a sua distribuição."
+        exit "$CODIGO"
+    fi
+
+    # ------------------------------------------- a library of the system
+    if grep -q 'error while loading shared libraries' "$PARCIAL" 2>/dev/null; then
+        FALTA="$(sed -n 's/.*error while loading shared libraries: \([^:]*\).*/\1/p' \
+                 "$PARCIAL" | head -1)"
+        rm -f "$PARCIAL"
+        t_memoria_grava "$PROG" RESULTADO "falta biblioteca" 2>/dev/null
+        t_erro "Falta uma peça do sistema para este programa abrir:
+
+${FALTA:-uma biblioteca do sistema}
+
+Isso quer dizer que o programa espera algo que a sua versão do Linux não traz.
+Procure no site de onde você baixou se há uma versão para a sua distribuição."
+        exit "$CODIGO"
+    fi
+
+    # ---------------------------------------- a folder that forbids running
+    # A pen drive, or a partition mounted with noexec. The execute bit is
+    # there, chmod said yes, and running is still refused - which reads like a
+    # defect in the program and is a property of the folder.
+    if grep -qi 'Permission denied\|Operation not permitted' "$PARCIAL" 2>/dev/null; then
+        MONTAGEM="$(df --output=target -- "$PROG" 2>/dev/null | tail -1)"
+        if [ -n "$MONTAGEM" ] &&
+           findmnt -no OPTIONS --target "$MONTAGEM" 2>/dev/null | grep -q noexec; then
+            rm -f "$PARCIAL"
+            t_memoria_grava "$PROG" RESULTADO "pasta sem permissao" 2>/dev/null
+            t_erro "Este programa está numa pasta onde o sistema não deixa executar nada.
+
+$MONTAGEM
+
+Costuma ser um pendrive ou um disco externo. Copie o arquivo para a sua pasta
+pessoal e abra de lá."
+            exit "$CODIGO"
+        fi
+    fi
+
+    # ------------------------------------------------------ nothing known
+    #
+    # Even here it does not end in a number alone. The last lines the program
+    # printed are the only thing left, and they are shown - in English, because
+    # they are the program's own words and inventing a translation for them
+    # would be inventing a cause.
+    ULTIMAS="$(t_palavras_do_programa "$PARCIAL")"
+    rm -f "$PARCIAL"
+    t_memoria_grava "$PROG" RESULTADO "nao abriu" 2>/dev/null
+    t_erro "O programa fechou com erro (código $CODIGO).${ULTIMAS:+
+
+Foi isto que ele disse:
+
+$ULTIMAS}
+
+O registro completo está em:
+$LOG"
+    exit "$CODIGO"
+done

@@ -19,7 +19,8 @@ DEB = os.path.join(ROOT, "debian")
 MAN = os.path.join(ROOT, "man")
 MTIME = 1735689600  # fixed, for reproducible builds
 
-MANPAGES = ["tandem", "tandem-exe", "tandem-apk", "tandem-android", "tandem-repair"]
+MANPAGES = ["tandem", "tandem-exe", "tandem-apk", "tandem-android", "tandem-repair",
+            "tandem-appimage", "tandem-jar"]
 
 # path in package  <-  path in repo, mode
 LAYOUT = [
@@ -28,10 +29,14 @@ LAYOUT = [
     ("usr/bin/tandem-apk",       "bin/tandem-apk",       0o755),
     ("usr/bin/tandem-android",   "bin/tandem-android",   0o755),
     ("usr/bin/tandem-repair",    "bin/tandem-repair",    0o755),
+    ("usr/bin/tandem-appimage",  "bin/tandem-appimage",  0o755),
+    ("usr/bin/tandem-jar",       "bin/tandem-jar",       0o755),
     ("usr/lib/tandem/common.sh",   "lib/common.sh",   0o644),
     ("usr/lib/tandem/winedeps.sh", "lib/winedeps.sh", 0o644),
     ("usr/lib/tandem/apkinfo.py",  "lib/apkinfo.py",  0o755),
     ("usr/lib/tandem/peinfo.py",   "lib/peinfo.py",   0o755),
+    ("usr/lib/tandem/appimageinfo.py", "lib/appimageinfo.py", 0o755),
+    ("usr/lib/tandem/jarinfo.py",  "lib/jarinfo.py",  0o755),
     ("usr/lib/tandem/verbos.tsv",  "lib/verbos.tsv",  0o644),
     ("usr/lib/tandem/limites.tsv", "lib/limites.tsv", 0o644),
     ("usr/lib/tandem/alternativas.tsv", "lib/alternativas.tsv", 0o644),
@@ -39,6 +44,8 @@ LAYOUT = [
     ("usr/share/applications/tandem-exe.desktop",     "applications/tandem-exe.desktop",     0o644),
     ("usr/share/applications/tandem-apk.desktop",     "applications/tandem-apk.desktop",     0o644),
     ("usr/share/applications/tandem-android.desktop", "applications/tandem-android.desktop", 0o644),
+    ("usr/share/applications/tandem-appimage.desktop", "applications/tandem-appimage.desktop", 0o644),
+    ("usr/share/applications/tandem-jar.desktop",      "applications/tandem-jar.desktop",      0o644),
     ("usr/share/icons/hicolor/scalable/apps/tandem.svg", "icons/tandem.svg", 0o644),
     ("usr/share/polkit-1/rules.d/49-tandem.rules", "polkit/49-tandem.rules", 0o644),
     ("usr/share/mime/packages/tandem.xml", "mime/tandem.xml", 0o644),

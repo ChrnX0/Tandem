@@ -223,12 +223,39 @@ distribution, and it is the piece the eventual OS would have needed anyway.
 
 | Format | What happens today | Verdict |
 |---|---|---|
-| `.AppImage` | nothing — arrives without the executable bit | **NEXT** — chmod, run, and explain when FUSE is missing |
-| `.jar` | nothing, or an archive manager opens it | **NEXT** — needs a JRE; say so instead of failing |
+| `.AppImage` | nothing — arrives without the executable bit | **DONE in 3.7** — chmod, arch, truncated download, FUSE worked around, menu entry from the image's own desktop file |
+| `.jar` | nothing, or an archive manager opens it | **DONE in 3.7** — program-or-library from the manifest, Java version from the bytecode, `Class-Path` checked against the folder |
 | `.flatpakref` / `.flatpakrepo` | handled only if a store is installed | **DEPOIS** |
+| `.deb` double-clicked | a store opens, or nothing; a missing dependency reads as a broken file | **DEPOIS** — the diagnosis Tandem is best at, applied to the format the distribution itself uses |
 | `.rpm` on a Debian system | nothing useful | **DEPOIS** — refuse with the reason, and name the equivalent |
 | `.msix` / `.appx` | nothing | **REJECTED for now** — Wine support is not there; promising it would be a lie |
 | kernel work, own package manager, own desktop | — | **REJECTED** — this is where projects of this shape die |
+
+### What the two done ones taught, for whoever does the next
+
+Worth writing down, because both lessons generalise and neither was obvious
+before the work.
+
+**The diagnosis is worth more than the execution.** Running an AppImage is one
+`chmod` and one `exec`. What took the work was the five things that go wrong
+afterwards, and four of the five are readable off the file *before* running it —
+the truncated download, the wrong processor, the generation, the payload size.
+The pattern is `peinfo.py` all over again: the file already knows why it will
+fail, and nobody asks it.
+
+**Check every claim against the format's own reference implementation.** Two
+claims here could have been wrong for years without anyone noticing: that the
+payload offset equals `e_shoff + e_shentsize * e_shnum`, and that class file
+major minus 44 is the Java version. Both are now checked in CI against the
+authority that decides them — the AppImage runtime's own `--appimage-offset`, and
+a JVM that refuses to load a class one version too new. Neither check needs a
+maintainer to remember anything.
+
+And one that cost a wrong answer before being caught: **the exceptions in a
+format are the whole job.** `META-INF/versions/` exists so a *newer* Java picks
+those classes up, so counting them announced "needs Java 30" for a jar that runs
+fine on 21. The next format will have its own version of that clause. Find it
+before shipping.
 
 ## The queue
 
@@ -236,16 +263,26 @@ distribution, and it is the piece the eventual OS would have needed anyway.
    a line would be exactly the mistake the `confidence` field exists to prevent.
    It only fills with reports from people.
 2. Field-test what has not yet run on a real owner's machine: `preparar`,
-   `desinstalar`, `dados`, `socorro`, and a double-click on a real `.xapk`.
+   `desinstalar`, `dados`, `socorro`, and a double-click on a real `.xapk`,
+   `.AppImage` and `.jar`.
 3. **A real shop program** — see below.
+4. `.deb` and `.rpm`, then `.flatpakref`. See the table above for why that order.
 
 ## The question still without an answer
 
-**No real commercial shop program has ever run on this.** The main loop has now
-worked end to end with real Wine and real `winetricks` — but against an `.exe`
-forged to be missing a DLL, in a container, not against a commercial system on a
-shop's machine. That synthetic test already paid for itself: it found four
-defects in one afternoon, two of them erasing entire messages in silence.
+**No real commercial shop program has ever run on this.** Since 3.7 the loop runs
+weekly against real freely-redistributable Windows software — PuTTY, Notepad++,
+7-Zip, WinMerge — through the real `tandem-exe`, with `xdotool` confirming a
+window appeared and a screenshot kept. That closed the "no binary somebody else
+compiled has ever touched it" gap, and it immediately corrected something the
+README had wrong: every real installer tested is 32-bit, even the one that
+installs 64-bit software.
+
+What it does not close is commercial software on a counter: a Brazilian POS
+system, an accounting package, a fiscal printer driver. The earlier synthetic
+`.exe` test already paid for itself — it found four defects in one afternoon, two
+of them erasing entire messages in silence — and the real-software harness is a
+step closer, but neither is a shop.
 
 Even so, it proves the mechanism works, not that the product is useful. That gap
 is still the project's largest uncertainty, and it is why

@@ -1,6 +1,6 @@
-.TH TANDEM 1 "2026-08-08" "tandem 3.6" "Comandos do usuário"
+.TH TANDEM 1 "2026-08-08" "tandem 3.7" "Comandos do usuário"
 .SH NOME
-tandem \- roda programas Windows e aplicativos Android no Linux
+tandem \- roda programas Windows, aplicativos Android e pacotes do Linux
 .SH SINOPSE
 .B tandem
 .RI [ comando ]
@@ -12,6 +12,12 @@ tandem \- roda programas Windows e aplicativos Android no Linux
 .B tandem-apk
 .I arquivo.apk
 .br
+.B tandem-appimage
+.I arquivo.AppImage
+.br
+.B tandem-jar
+.I arquivo.jar
+.br
 .B tandem-android
 .br
 .B tandem-repair
@@ -21,11 +27,13 @@ O
 faz arquivos
 .IR .exe ,
 .IR .msi ,
-.I .apk
+.IR .apk ,
+.IR .xapk ,
+.I .AppImage
 e
-.I .xapk
+.I .jar
 abrirem com dois cliques no Linux. Ele não substitui o Wine nem o Waydroid:
-é uma camada de decisão, tradução e diagnóstico por cima dos dois.
+é uma camada de decisão, tradução e diagnóstico por cima deles.
 .PP
 Para programas Windows, o Tandem executa o arquivo, lê a saída de erro do
 Wine à procura de bibliotecas faltando, traduz cada uma para o pacote do
@@ -36,20 +44,35 @@ faria à mão.
 Para aplicativos Android, o Tandem inspeciona o pacote antes de instalar
 (arquitetura, versão mínima do sistema e divisão em partes) e relata
 incompatibilidades em português, em vez de falhar sem explicação.
+.PP
+Para os formatos que o próprio Linux usa, o diagnóstico vem antes da
+execução. Um
+.I .AppImage
+é conferido quanto ao download completo, ao tipo de processador e à
+permissão de execução que o navegador não deu; quando falta o FUSE, o
+Tandem abre o programa desempacotando em vez de falhar, e coloca o
+programa no menu de aplicativos usando o atalho que o próprio AppImage
+carrega. Um
+.I .jar
+é lido para saber se é um programa ou apenas uma peça de programa, e para
+saber de qual versão do Java ele precisa \(em de modo que
+.RB \(lq "class file version 65" \(rq
+seja respondido com \(lqisto precisa do Java 21\(rq.
 .SH COMANDOS
 .TP
 .B tandem
 Abre o painel gráfico. Sem sessão gráfica, mostra esta ajuda.
 .TP
 .BI "tandem install " arquivo
-Instala ou executa o arquivo, escolhendo Wine ou Android pelo tipo.
+Instala ou executa o arquivo, escolhendo Wine, Android, AppImage ou Java
+pelo tipo. Quando o nome não diz nada, decide pelo conteúdo.
 .TP
 .B tandem android
 Abre a tela do Android.
 .TP
 .B "tandem preparar"
-Instala o que falta — Wine, winetricks, suporte a 32 bits, adb e o Android
-(Waydroid) — e inicializa o Android. Pede a senha uma vez só. Isso não pode
+Instala o que falta — Wine, winetricks, suporte a 32 bits, adb, o Java, o
+FUSE e o Android (Waydroid) — e inicializa o Android. Pede a senha uma vez só. Isso não pode
 acontecer durante a instalação do pacote: o
 .BR dpkg (1)
 segura uma trava enquanto o
@@ -163,7 +186,7 @@ inteira, para você conferir e enviar se quiser. O Tandem nunca envia
 sozinho. A linha não carrega nome de arquivo, pasta, usuário, nome da
 máquina, endereço de rede nem log; o gerador se recusa a produzi\-la se
 alguma dessas coisas aparecer. O formato está descrito em
-.IR docs/FORMATO\-LISTA.md .
+.IR docs/LIST\-FORMAT.md .
 .TP
 .B tandem socorro
 Junta num arquivo único tudo o que alguém precisa para ajudar você à
@@ -225,6 +248,12 @@ indexado por uma impressão digital do arquivo.
 .I ~/.local/share/tandem/wine/.tandem-verbos
 Recibo dos componentes já instalados naquele perfil. Impede repetir uma
 instalação já paga.
+.TP
+.I ~/.local/share/applications/tandem-appimage-*.desktop
+Atalhos de menu que o Tandem criou para AppImages, com a linha
+.I X-Tandem-AppImage
+apontando para o arquivo. Um atalho cujo arquivo desapareceu é apagado
+sozinho na próxima listagem.
 .TP
 .I ~/.local/state/tandem/lista.tsv
 A lista da comunidade, quando baixada por

@@ -4,10 +4,11 @@
 
 ### Clique duas vezes num arquivo. Ele funciona.
 
-**`.exe` · `.msi` · `.apk` · `.xapk` no Linux — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
+**`.exe` · `.msi` · `.apk` · `.xapk` · `.AppImage` · `.jar` no Linux — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![testes](https://img.shields.io/badge/testes-309-brightgreen)](tests/run.sh)
+[![testes](https://img.shields.io/badge/testes-364-brightgreen)](tests/run.sh)
+[![programas reais](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
 [![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
 [![licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)](LICENSE)
@@ -127,8 +128,8 @@ tandem protect ~/.wine-pdv     # marca qualquer perfil como intocável
 Baixe o `.deb` em **[Releases](../../releases/latest)** e clique duas vezes. Ou, pelo terminal:
 
 ```bash
-curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.6_all.deb
-sudo apt install ./tandem_3.6_all.deb
+curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.7_all.deb
+sudo apt install ./tandem_3.7_all.deb
 ```
 
 <details>
@@ -141,7 +142,7 @@ A construção é reprodutível: o `.deb` anexado ao release é byte a byte idê
 ```bash
 git clone https://github.com/ChrnX0/Tandem && cd Tandem
 python3 build.py --check
-sha256sum tandem_3.6_all.deb          # compare com o .sha256 do release
+sha256sum tandem_3.7_all.deb          # compare com o .sha256 do release
 ```
 
 Todo release é construído pelo workflow em [`.github/workflows/release.yml`](.github/workflows/release.yml), que roda a suíte e o `lintian`, depois instala, configura e remove o pacote de verdade num Ubuntu 24.04 — e só publica se tudo isso passar.
@@ -159,7 +160,7 @@ tandem preparar
 
 <br>
 
-Ele instala Wine, `winetricks`, suporte a 32 bits, `adb` e Waydroid — inclusive o repositório do Waydroid com a chave, na ordem certa — e pede a senha uma vez só.
+Ele instala Wine, `winetricks`, suporte a 32 bits, `adb`, o Java, a biblioteca do FUSE e o Waydroid — inclusive o repositório do Waydroid com a chave, na ordem certa — e pede a senha uma vez só.
 
 Isso não pode acontecer durante a instalação do `.deb`: o `dpkg` segura uma trava enquanto o `postinst` roda, e um `apt-get` lá dentro esperaria para sempre. O clique duplo num `.exe` sem Wine também oferece instalar na hora, porque é aí que a pessoa quer resolver.
 
@@ -174,6 +175,8 @@ Isso não pode acontecer durante a instalação do `.deb`: o `dpkg` segura uma t
 | Dependências automáticas | `winetricks` |
 | Aplicativos Android | [`waydroid`](https://docs.waydro.id/), inicializado |
 | Pacotes divididos (`.xapk`) | `adb` |
+| Programas `.jar` | `java` — o pacote `default-jre` |
+| `.AppImage` na velocidade cheia | `libfuse2t64` (sem ele o Tandem desempacota, e avisa) |
 | Apps só-ARM em x86 | [libhoudini / libndk](https://github.com/casualsnek/waydroid_script) |
 
 Testado no Zorin OS 18.1 e no Ubuntu 24.04. Deve funcionar em qualquer distribuição baseada em Debian com um desktop que siga o freedesktop.
@@ -189,6 +192,46 @@ Testado no Zorin OS 18.1 e no Ubuntu 24.04. Deve funcionar em qualquer distribui
 
 ---
 
+## Os formatos que o próprio Linux usa
+
+Dois deles falham no clique duplo por motivos que não têm nada a ver com o Wine, e tudo a ver com o Linux. O Tandem trata os dois como trata um `.exe`: lê o arquivo primeiro, explica numa frase, e conserta o que dá para consertar.
+
+### `.AppImage` — um arquivo só, sem instalar, e um clique duplo que não faz nada
+
+Um AppImage chega do navegador **sem a permissão de execução**, e um arquivo sem essa permissão nem é oferecido ao sistema como programa. O clique abre um descompactador, ou não acontece nada, e a culpa fica com o arquivo. O Tandem marca a permissão — você clicou duas vezes, já disse que quer abrir.
+
+Depois vêm as falhas seguintes, todas lidas do arquivo antes de executar coisa alguma:
+
+| O que está errado | O que você ouve |
+|---|---|
+| O download foi cortado no meio | *"o download deste arquivo não terminou"* — o arquivo diz por dentro que deveria ser maior do que é |
+| Feito para outro processador | *"ele é para `aarch64` e este computador é `x86_64`"* |
+| Falta o FUSE | nada — o Tandem **contorna**, desempacotando em vez de montar, e depois conta a linha única que resolve de vez |
+| Feito numa distribuição mais nova | *"este programa é mais novo que o seu sistema Linux"*, com a GLIBC que ele pede — e que instalar coisa nenhuma resolve |
+| Num pendrive montado com `noexec` | *"esta pasta não deixa executar nada; copie para a sua pasta pessoal"* |
+
+Ele também coloca o programa **no seu menu de aplicativos**, usando o atalho que o próprio AppImage carrega por dentro. Desempacotar não monta nada, então isso funciona exatamente nas máquinas que não têm FUSE. Se depois você apagar o arquivo, o atalho se apaga sozinho.
+
+### `.jar` — o Java responde em números que ninguém sabe usar
+
+Duas falhas cobrem quase todas, e o Java descreve as duas em palavras que quem clicou não tem como aproveitar.
+
+**`no main manifest attribute`** quer dizer que o arquivo é uma *peça* de um programa, não um programa. Os dois tipos de `.jar` são indistinguíveis por fora — mesma extensão, mesmo ícone — então não havia como saber que você baixou o errado. O Tandem lê o manifesto e diz.
+
+**`UnsupportedClassVersionError: class file version 65.0`** quer dizer que ele precisa de um Java mais novo. O número que está na página de download é `21`. A diferença entre os dois é 44. O Tandem faz essa subtração **antes de executar qualquer coisa**, e oferece instalar a versão que o programa pede:
+
+```
+Este programa precisa de uma versão mais nova do Java.
+
+Ele pede o Java 22 e o instalado aqui é o 21.
+
+Para instalar a versão que ele pede:
+
+sudo apt install openjdk-22-jre
+```
+
+---
+
 ## Comandos
 
 Você quase não vai precisar disto — o normal é clicar duas vezes. Quando quiser a linha de comando:
@@ -197,8 +240,8 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 |---|---|
 | `tandem` | o painel |
 | `tandem install <arquivo>` | instala ou executa qualquer coisa |
-| `tandem preparar` | instala o que falta (Wine, Android, …) |
-| `tandem programas` | lista e abre os programas Windows instalados |
+| `tandem preparar` | instala o que falta (Wine, Java, Android, …) |
+| `tandem programas` | lista e abre os programas instalados, Windows e AppImage |
 | `tandem desinstalar` | remove um programa Windows instalado |
 | `tandem android` | abre a tela do Android |
 | `tandem doctor` | diagnóstico do ambiente — o que **existe** |
@@ -265,7 +308,7 @@ O Tandem reconhece vários desses casos lendo o próprio executável, **antes de
 
 **A contribuição mais valiosa não exige código.**
 
-O Tandem tem um problema honesto: quase nenhum programa comercial de verdade jamais rodou nele. O laço de dependências foi exercitado com Wine e `winetricks` reais — mas contra binários feitos para o teste, não contra o sistema de uma loja em cima de um balcão. Cada relato de programa real vale mais que uma funcionalidade nova.
+O Tandem tem um problema honesto: quase nenhum programa *comercial* de verdade jamais rodou nele. Desde a versão 3.7 o laço é exercitado toda semana contra software Windows real de redistribuição livre, com captura de tela provando que a janela apareceu — mas isso ainda não é o sistema de uma loja em cima de um balcão. Cada relato de programa real vale mais que uma funcionalidade nova.
 
 | Deu certo | Não deu certo |
 |---|---|
@@ -280,12 +323,14 @@ As cinco regras que não se quebram, e a régua de evidência que "pronto" preci
 
 ```bash
 python3 build.py --check   # empacota; sem Debian, sem dpkg-deb
-bash tests/run.sh          # 309 testes; sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 364 testes; sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android sintéticos com `AndroidManifest.xml` binário de verdade, então o leitor de manifesto roda no mesmo caminho de código de um APK real. Ferramenta opcional (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) é usada quando existe e pulada quando não existe, então a suíte passa numa máquina pelada.
 
 O CI ainda roda o `lintian` sem nenhum aviso, confere que a construção é byte a byte reprodutível, e faz um ciclo real de instalar–configurar–remover num Ubuntu 24.04.
+
+Um segundo fluxo roda **programas de verdade** toda semana: PuTTY, Notepad++, 7-Zip e WinMerge, cada um fixado por `sha256`, cada um passando pelo Tandem — e depois ele olha a tela com o `xdotool`, porque um programa que sai `0` sem desenhar janela nenhuma é exatamente como o Wine falha com software comercial. Ele também constrói um AppImage de verdade com o `appimagetool` de verdade e compila um `.jar` de verdade, e confere os dois leitores contra as implementações de referência deles.
 
 </details>
 

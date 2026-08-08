@@ -5,6 +5,11 @@ name: Real programs
 # this proves it against binaries somebody else compiled, and looks at the
 # screen afterwards.
 #
+# It also checks the two native-format readers against their own reference
+# implementations: the AppImage payload offset against the runtime's
+# --appimage-offset, and the Java version a .jar demands against a JVM that
+# refuses to load it.
+#
 # Separate from CI on purpose: it needs network, Wine, an X server and several
 # minutes. Putting it in the fast suite would make every push slow and every
 # publisher's outage look like a regression in this repository.
@@ -33,8 +38,12 @@ jobs:
           sudo apt-get update -qq
           # wine32 is not a nicety: every real installer we tested is 32-bit,
           # even the ones that install 64-bit software.
+          # default-jdk is here for the native-format section: the claim that
+          # class file major 65 means Java 21 is checked against a real JVM,
+          # which is the only authority on it.
           sudo apt-get install -y -qq wine wine32 wine64 winetricks \
-                                      xvfb xdotool imagemagick unzip binutils
+                                      xvfb xdotool imagemagick unzip binutils \
+                                      default-jdk desktop-file-utils
 
       - name: Cache the downloads
         uses: actions/cache@v4
