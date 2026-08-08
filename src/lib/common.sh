@@ -1,17 +1,17 @@
 # shellcheck shell=bash
-# Tandem - biblioteca comum.
-# Carregada por todos os executaveis. Nunca use "set -e" aqui:
-# os lacos de espera dependem de comandos que falham de proposito.
+# Tandem - common library.
+# Loaded by every executable. Never use "set -e" here:
+# the wait loops depend on commands that fail on purpose.
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 TANDEM_ESTADO="${XDG_STATE_HOME:-$HOME/.local/state}/tandem"
 mkdir -p "$TANDEM_ESTADO" 2>/dev/null || TANDEM_ESTADO=""
 
-# Travas e canos de progresso vao para o diretorio de execucao do usuario
-# quando ele existe: e disco local (numa pasta pessoal em rede o flock pode
-# simplesmente nao funcionar), e por sessao de boot, e ja nasce so do dono.
-# Duas maquinas compartilhando a mesma pasta pessoal tambem deixam de
-# colidir - o nome do cano usa o PID, que se repete entre maquinas.
+# Locks and progress pipes go to the user's runtime directory when it exists:
+# it is local disk (on a home folder mounted over the network flock may simply
+# not work), it is per boot session, and it is born owner-only.
+# Two machines sharing the same home folder also stop colliding - the pipe
+# name uses the PID, which repeats across machines.
 if [ -n "${XDG_RUNTIME_DIR:-}" ] && mkdir -p "$XDG_RUNTIME_DIR/tandem" 2>/dev/null; then
     TANDEM_TRAVAS="$XDG_RUNTIME_DIR/tandem"
     chmod 700 "$TANDEM_TRAVAS" 2>/dev/null
@@ -19,14 +19,14 @@ else
     TANDEM_TRAVAS="${TANDEM_ESTADO:-/tmp}"
 fi
 
-# Prefixo padrao para programas Windows avulsos.
+# Default prefix for standalone Windows programs.
 TANDEM_PREFIXO_PADRAO="${TANDEM_PREFIXO_PADRAO:-$HOME/.local/share/tandem/wine}"
 
-# Prefixos que a automacao NUNCA pode modificar (protege sistemas em producao).
-# Uma linha por caminho. Ex: ~/.wine-pdv
+# Prefixes the automation may NEVER modify (protects production systems).
+# One line per path. Ex: ~/.wine-pdv
 TANDEM_PROTEGIDOS="$HOME/.config/tandem/protegidos.txt"
 
-# ------------------------------------------------------------------ log
+# ------------------------------------------------------------------- log
 
 t_log_init() {
     LOG="${TANDEM_ESTADO:+$TANDEM_ESTADO/$1.log}"
@@ -40,31 +40,32 @@ t_log_init() {
 
 t_diz() { printf '%s\n' "$*" >> "${LOG:-/dev/null}" 2>/dev/null; }
 
-# ------------------------------------------------------------- mensagens
+# -------------------------------------------------------------- messages
 #
-# Regra desta secao: nenhuma mensagem pode se perder. Toda mensagem vai
-# SEMPRE para o log; a tela e o terminal sao apenas os destinos visiveis.
-# Se a janela nao pode ser mostrada, o texto sai no terminal - nunca some.
+# Rule for this section: no message may be lost. Every message ALWAYS goes to
+# the log; the screen and the terminal are only the visible destinations.
+# If the window cannot be shown, the text comes out on the terminal - it never
+# disappears.
 #
-# O zenity e o notify-send falham quando nao ha sessao grafica (terminal
-# puro, SSH, TTY). Sem esta checagem eles falham em silencio e o usuario
-# fica com "nao aconteceu nada", que este projeto trata como defeito.
+# zenity and notify-send fail when there is no graphical session (plain
+# terminal, SSH, TTY). Without this check they fail silently and the user is
+# left with "nothing happened", which this project treats as a defect.
 
 t_tem_gui() {
     [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
 }
 
-# ------------------------------------------------------------------ locale
+# ---------------------------------------------------------------- locale
 #
-# O zenity (via glib) recusa QUALQUER argumento com caractere nao-ASCII
-# quando o locale em vigor nao foi gerado no sistema: o glib cai para
-# ANSI_X3.4-1968 e responde "This option is not available", codigo 255.
-# Como toda mensagem deste programa tem acento, um locale ausente faz todas
-# as janelas sumirem sem deixar rastro. Por isso nunca definimos um locale
-# sem antes confirmar que ele existe.
+# zenity (through glib) refuses ANY argument with a non-ASCII character when
+# the locale in effect was not generated on the system: glib falls back to
+# ANSI_X3.4-1968 and answers "This option is not available", exit code 255.
+# Since every message in this program has an accent, a missing locale makes
+# all the windows disappear without a trace. That is why we never set a
+# locale without first confirming that it exists.
 
-# locale -a imprime "pt_BR.utf8": sem hifen e em minusculas. Normalize os dois
-# lados antes de comparar, senao "pt_BR.UTF-8" nunca casa com nada.
+# locale -a prints "pt_BR.utf8": no hyphen and lowercase. Normalize both sides
+# before comparing, otherwise "pt_BR.UTF-8" never matches anything.
 t_locale_existe() {
     local alvo
     alvo="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d '-')"
@@ -73,8 +74,8 @@ t_locale_existe() {
         grep -qx -- "$alvo"
 }
 
-# Primeiro candidato que exista de fato. C.UTF-8 fecha a lista porque vem
-# embutido na glibc: esta presente mesmo sem nenhum locale gerado.
+# The first candidate that actually exists. C.UTF-8 closes the list because it
+# is built into glibc: it is present even with no locale generated.
 t_locale_utf8() {
     local c
     for c in "$@" C.UTF-8; do
@@ -111,8 +112,9 @@ t_ok() {
     return 0
 }
 
-# Erro que o usuario PRECISA ver: notificacao + janela; terminal se nao houver
-# nem uma nem outra. O log recebe sempre, para o pos-morte de "nao funcionou".
+# Error the user MUST see: notification + window; terminal if there is neither
+# one nor the other. The log always gets it, for the "it did not work"
+# post-mortem.
 t_erro() {
     local mostrou=0
     t_diz "ERRO: $1"
@@ -131,8 +133,8 @@ t_erro() {
     return 0
 }
 
-# Pergunta sim/nao. Sem interface grafica nao ha como perguntar: devolve
-# 1 (= "nao"), que todos os chamadores tratam como desistencia segura.
+# Yes/no question. With no graphical interface there is no way to ask: returns
+# 1 (= "no"), which every caller treats as a safe give-up.
 t_pergunta() {
     t_tem_gui || return 1
     command -v zenity >/dev/null 2>&1 || return 1
@@ -140,29 +142,29 @@ t_pergunta() {
            --ok-label="${2:-Sim}" --cancel-label="${3:-Não}" 2>/dev/null
 }
 
-# Mostra um texto longo lido da entrada padrao.
+# Shows a long text read from standard input.
 #
-# A janela so faz sentido quando ninguem esta esperando o texto na saida
-# padrao. Terminal, cano e arquivo sao pedidos EXPLICITOS por texto:
+# The window only makes sense when nobody is waiting for the text on standard
+# output. Terminal, pipe and file are EXPLICIT requests for text:
 #   tandem doctor                  -> terminal
-#   tandem doctor | grep wine      -> o cano recebe o texto
-#   tandem doctor > relatorio.txt  -> o arquivo recebe o texto
-# Testar so "[ -t 1 ]" confundia os dois ultimos com duplo clique e mandava
-# o diagnostico para uma janela, gravando um arquivo vazio - justamente
-# quando o usuario esta tentando enviar o diagnostico para alguem.
-# Sobra o duplo clique, onde a saida vai para /dev/null ou para o journal:
-# ai sim a janela e o unico jeito de a pessoa ver alguma coisa.
+#   tandem doctor | grep wine      -> the pipe receives the text
+#   tandem doctor > relatorio.txt  -> the file receives the text
+# Testing only "[ -t 1 ]" confused the last two with a double click and sent
+# the diagnosis to a window, writing an empty file - exactly when the user is
+# trying to send the diagnosis to somebody.
+# What is left is the double click, where the output goes to /dev/null or to
+# the journal: there the window is the only way for the person to see anything.
 t_texto() {
     local titulo="${1:-Tandem}" conteudo
-    # O conteudo vem da ENTRADA PADRAO; o argumento e so o titulo da janela.
-    # Quem esquece disso e passa o texto como argumento cai num "cat" que
-    # espera para sempre por um stdin que ninguem vai fechar - o comando
-    # congela no meio do duplo clique, sem janela e sem mensagem. Ja aconteceu
-    # em cinco comandos de uma vez. Com terminal na entrada, nao ha nada
-    # canalizado: seguimos sem travar.
+    # The content comes from STANDARD INPUT; the argument is only the window
+    # title. Whoever forgets that and passes the text as an argument lands in
+    # a "cat" that waits forever for a stdin nobody is going to close - the
+    # command freezes in the middle of the double click, with no window and no
+    # message. It already happened in five commands at once. With a terminal
+    # on the input there is nothing piped in: we carry on without hanging.
     if [ -t 0 ]; then conteudo=""; else conteudo="$(cat)"; fi
-    # E se ainda assim nao veio nada, o titulo aparece. Melhor uma linha
-    # pobre do que um comando que roda, sai com 0 e nao imprime nada.
+    # And if even so nothing came in, the title shows up. Better a poor line
+    # than a command that runs, exits 0 and prints nothing.
     [ -n "$conteudo" ] || conteudo="$titulo"
     if [ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]; then
         printf '%s\n' "$conteudo"
@@ -176,7 +178,7 @@ t_texto() {
     printf '%s\n' "$conteudo"
 }
 
-# Barra de progresso indeterminada. Uso:
+# Indeterminate progress bar. Usage:
 #   t_progresso_abre "Instalando..." ; ... ; t_progresso_fecha
 t_progresso_abre() {
     t_tem_gui || return 0
@@ -187,21 +189,21 @@ t_progresso_abre() {
     ( zenity --progress --pulsate --auto-close --no-cancel \
              --title="Tandem" --text="$1" --width=420 < "$TANDEM_FIFO" 2>/dev/null ) &
     TANDEM_PROG_PID=$!
-    # Leitura E escrita, de proposito. Abrindo so para escrita, o cano fica
-    # com um unico leitor - o zenity. Quando esse leitor some (o usuario
-    # fecha a janela no X, o gnome-shell reinicia, o zenity recusa uma
-    # opcao), a proxima mensagem de progresso recebe SIGPIPE e MATA o Tandem
-    # inteiro: saida 141, nada no log, nenhuma janela. No tandem-exe isso
-    # acontece dentro do laco do winetricks, cortando uma instalacao pela
-    # metade sem recibo. Mantendo o descritor 8 tambem aberto para leitura,
-    # o cano nunca fica sem leitor e a escrita nunca gera o sinal.
+    # Reading AND writing, on purpose. Opening for writing only, the pipe is
+    # left with a single reader - zenity. When that reader goes away (the user
+    # closes the window on the X, gnome-shell restarts, zenity refuses an
+    # option), the next progress message gets SIGPIPE and KILLS the whole
+    # Tandem: exit 141, nothing in the log, no window. In tandem-exe that
+    # happens inside the winetricks loop, cutting an installation in half with
+    # no receipt. By keeping descriptor 8 open for reading too, the pipe never
+    # runs out of readers and the write never raises the signal.
     exec 8<> "$TANDEM_FIFO"
 }
 
 t_progresso_texto() {
     [ -n "${TANDEM_FIFO:-}" ] || return 0
-    # A janela ainda esta viva? Se o usuario fechou, registramos e paramos de
-    # escrever - o trabalho continua, so deixa de ter barra de progresso.
+    # Is the window still alive? If the user closed it, we record that and
+    # stop writing - the work goes on, it just loses the progress bar.
     if [ -n "${TANDEM_PROG_PID:-}" ] && ! kill -0 "$TANDEM_PROG_PID" 2>/dev/null; then
         t_diz "janela de progresso fechada pelo usuario; seguindo sem ela"
         { exec 8>&-; } 2>/dev/null
@@ -222,9 +224,9 @@ t_progresso_fecha() {
     return 0
 }
 
-# ---------------------------------------------------------------- prefixo
+# ---------------------------------------------------------------- prefix
 
-# Sobe a arvore de diretorios procurando a raiz de um prefixo Wine.
+# Walks up the directory tree looking for the root of a Wine prefix.
 t_prefixo_do_arquivo() {
     local d
     d="$(dirname -- "$1")"
@@ -237,12 +239,12 @@ t_prefixo_do_arquivo() {
     return 1
 }
 
-# Um prefixo esta protegido se o usuario listou, ou se nao e o nosso padrao
-# e nao foi criado pelo Tandem (marca .tandem-prefixo).
+# A prefix is protected if the user listed it, or if it is not our default one
+# and was not created by Tandem (the .tandem-prefixo mark).
 #
-# A lista do usuario e consultada PRIMEIRO, de proposito: quem roda
-# "tandem protect" no proprio prefixo padrao esta pedindo que nem o Tandem
-# mexa nele, e essa decisao tem que valer mais que a marca de propriedade.
+# The user's list is consulted FIRST, on purpose: whoever runs
+# "tandem protect" on the default prefix itself is asking that not even Tandem
+# touch it, and that decision has to outweigh the ownership mark.
 t_prefixo_protegido() {
     local p="$1"
     if [ -f "$TANDEM_PROTEGIDOS" ] && grep -qxF -- "$p" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
@@ -250,10 +252,10 @@ t_prefixo_protegido() {
     fi
     [ "$p" = "$TANDEM_PREFIXO_PADRAO" ] && return 1
     [ -f "$p/.tandem-prefixo" ] && return 1
-    return 0   # desconhecido = trate como protegido
+    return 0   # unknown = treat it as protected
 }
 
-# Registra um prefixo na lista de intocaveis. Idempotente.
+# Registers a prefix in the untouchable list. Idempotent.
 t_protege() {
     local p="$1" dir
     [ -n "$p" ] && [ -d "$p" ] || return 1
@@ -265,13 +267,14 @@ t_protege() {
     return 0
 }
 
-# Procura prefixos Wine que ja existiam e registra todos como protegidos.
+# Looks for Wine prefixes that already existed and registers them all as
+# protected.
 #
-# Os lugares conhecidos primeiro, depois uma varredura rasa da pasta pessoal:
-# um instalador de terceiro (um sistema de frente de caixa, por exemplo) pode
-# ter posto o prefixo em qualquer canto. O -maxdepth limita o custo e o
-# timeout garante que uma pasta pessoal enorme nao trave a primeira execucao;
-# se a varredura for cortada, os lugares conhecidos ja foram cobertos.
+# The known places first, then a shallow sweep of the home folder: a
+# third-party installer (a point-of-sale system, for example) may have put the
+# prefix in any corner. The -maxdepth limits the cost and the timeout makes
+# sure a huge home folder does not stall the first run; if the sweep is cut
+# short, the known places have already been covered.
 t_procura_prefixos() {
     local p reg
     for p in "$HOME"/.wine*/ \
@@ -296,19 +299,20 @@ t_procura_prefixos() {
     return 0
 }
 
-# Trabalho que precisa acontecer uma vez por usuario, na primeira execucao.
+# Work that has to happen once per user, on the first run.
 #
-# Isto vive aqui, e nao no postinst do pacote, porque la o trabalho
-# por-usuario depende de adivinhar quem instalou - SUDO_USER, PKEXEC_UID e
-# logname. As tres vias falham juntas quando o .deb e instalado pelo
-# instalador grafico, que roda num daemon sem sudo e sem terminal de
-# controle: o bloco inteiro e pulado e o usuario fica sem protecao visivel e
-# sem associacao de arquivo, sem nenhum aviso. Aqui nao ha o que adivinhar,
-# ja estamos rodando como o dono do HOME - funcione o pacote instalado por
-# apt, por dpkg, pelo instalador grafico, ou por um usuario criado depois.
+# This lives here, and not in the package postinst, because there the per-user
+# work depends on guessing who installed it - SUDO_USER, PKEXEC_UID and
+# logname. All three fail together when the .deb is installed by the graphical
+# installer, which runs in a daemon with no sudo and no controlling terminal:
+# the whole block is skipped and the user is left with no visible protection
+# and no file association, with no warning at all. Here there is nothing to
+# guess, we are already running as the owner of HOME - whether the package was
+# installed by apt, by dpkg, by the graphical installer, or by a user created
+# afterwards.
 #
-# A marca evita repetir: quem mudar a associacao de proposito depois nao
-# quer o Tandem reescrevendo a escolha dele a cada duplo clique.
+# The mark avoids repeating: whoever changes the association on purpose later
+# does not want Tandem rewriting their choice on every double click.
 t_primeira_vez() {
     local dir marca
     dir="$(dirname -- "$TANDEM_PROTEGIDOS")"
@@ -324,25 +328,27 @@ t_primeira_vez() {
     return 0
 }
 
-# ------------------------------------------------------- atalhos de menu
+# -------------------------------------------------------- menu shortcuts
 #
-# Quando um instalador Windows cria atalho no Menu Iniciar, o winemenubuilder
-# cria o .desktop correspondente em ~/.local/share/applications/wine/Programs.
-# Duas coisas precisam acontecer depois disso, e nenhuma acontecia:
+# When a Windows installer creates a Start Menu shortcut, winemenubuilder
+# creates the corresponding .desktop in
+# ~/.local/share/applications/wine/Programs.
+# Two things need to happen after that, and neither one did:
 #
-# 1. Atualizar o cache do ambiente grafico. O Tandem ja fazia isso, mas ANTES
-#    de executar o programa - cedo demais para ver um atalho que ainda nao
-#    existia. O menu entao ignora uma subpasta que acabou de nascer.
-# 2. Dizer ao usuario onde o programa foi parar. Sem isso o desfecho e
-#    "instalei e sumiu": o programa entra na maquina e a pessoa nao tem
-#    caminho de volta. Sucesso silencioso e tao ruim quanto erro silencioso.
+# 1. Refresh the graphical environment's cache. Tandem already did that, but
+#    BEFORE running the program - far too early to see a shortcut that did not
+#    exist yet. The menu then ignores a subfolder that has just been born.
+# 2. Tell the user where the program ended up. Without that the outcome is
+#    "I installed it and it vanished": the program gets onto the machine and
+#    the person has no way back. Silent success is as bad as silent failure.
 
 t_atalhos_wine() {
     find "$HOME/.local/share/applications/wine" -name '*.desktop' 2>/dev/null | LC_ALL=C sort
 }
 
-# So os atalhos do nosso prefixo. Atalho de prefixo alheio esta na mesma
-# pasta mas e do dono dele: nao listamos, nao abrimos, nao apagamos.
+# Only the shortcuts from our prefix. A shortcut from somebody else's prefix
+# is in the same folder but belongs to its owner: we do not list it, we do not
+# open it, we do not delete it.
 t_atalhos_nossos() {
     local d
     while IFS= read -r d; do
@@ -352,7 +358,7 @@ t_atalhos_nossos() {
     return 0
 }
 
-# Nome amigavel de um atalho, para mostrar ao usuario.
+# Friendly name of a shortcut, to show to the user.
 t_nome_do_atalho() {
     local n
     n="$(sed -n 's/^Name=//p' "$1" 2>/dev/null | head -1)"
@@ -360,7 +366,7 @@ t_nome_do_atalho() {
     printf '%s' "$n"
 }
 
-# Compara com a lista de antes e anuncia o que apareceu.
+# Compares with the earlier list and announces what showed up.
 t_anuncia_atalhos() {
     local antes="$1" novos nomes
     novos="$(printf '%s\n' "$(t_atalhos_wine)" | grep -vxF -- "${antes:-__nada__}" 2>/dev/null)"
@@ -375,22 +381,22 @@ $nomes"
     return 0
 }
 
-# --------------------------------------------- programas Windows instalados
+# --------------------------------------------- installed Windows programs
 #
-# O Windows guarda a lista do "Adicionar ou remover programas" no registro,
-# em CurrentVersion\Uninstall. Nos lemos o system.reg e o user.reg do prefixo
-# DIRETAMENTE, em vez de perguntar ao "wine uninstaller", por um motivo
-# descoberto em maquina real: instalador de 32 bits grava a chave numa visao
-# do registro, e o uninstaller.exe - que vira processo de 32 bits quando o
-# wine32 esta presente - enumera a outra. Resultado: 7-Zip instalado, chave
-# no registro, e a lista vazia. Lendo o arquivo nos enxergamos as duas
-# visoes (nativa e Wow6432Node), nao dependemos da arquitetura do processo,
-# e nem precisamos do Wine para listar.
+# Windows keeps the "Add or remove programs" list in the registry, under
+# CurrentVersion\Uninstall. We read the prefix's system.reg and user.reg
+# DIRECTLY, instead of asking "wine uninstaller", for a reason discovered on a
+# real machine: a 32-bit installer writes the key into one view of the
+# registry, and uninstaller.exe - which becomes a 32-bit process when wine32
+# is present - enumerates the other one. Result: 7-Zip installed, key in the
+# registry, and an empty list. By reading the file we see both views (native
+# and Wow6432Node), we do not depend on the process architecture, and we do
+# not even need Wine in order to list.
 #
-# Saida, uma linha por programa:
-#     chave|||nome|||desinstalador-silencioso|||desinstalador
-# Entradas sem nome ou sem desinstalador nao sao programas de verdade
-# (componentes, runtimes) e ficam de fora, como no proprio Windows.
+# Output, one line per program:
+#     key|||name|||silent-uninstaller|||uninstaller
+# Entries with no name or no uninstaller are not real programs (components,
+# runtimes) and are left out, just like in Windows itself.
 t_uninstall_dump() {
     local pref="${1:-$TANDEM_PREFIXO_PADRAO}" f
     for f in "$pref/system.reg" "$pref/user.reg"; do
@@ -425,22 +431,22 @@ t_uninstall_dump() {
     done | awk -F'\\|\\|\\|' '!vistos[$1]++'
 }
 
-# Compatibilidade com quem so quer "chave|||nome".
+# Compatibility for whoever only wants "key|||name".
 t_programas_instalados() {
     t_uninstall_dump "$@" | awk -F'\\|\\|\\|' '{ printf "%s|||%s\n", $1, $2 }'
 }
 
-# Separa um comando do Windows ("C:\...\Uninstall.exe" /S) em executavel e
-# argumentos, e o executa no prefixo atual. O caminho pode vir entre aspas
-# (e quase sempre vem, por causa de "Program Files").
+# Splits a Windows command ("C:\...\Uninstall.exe" /S) into executable and
+# arguments, and runs it in the current prefix. The path may come quoted (and
+# almost always does, because of "Program Files").
 t_executa_comando_windows() {
     local cmd="$1" exe resto
     case "$cmd" in
         '"'*)
             exe="${cmd#\"}"; exe="${exe%%\"*}"
-            # Corte por comprimento, nunca por padrao: as barras invertidas
-            # de um caminho Windows viram escape em ${var#padrao} e o corte
-            # falha em silencio, repetindo o caminho como argumento.
+            # Cut by length, never by pattern: the backslashes of a Windows
+            # path turn into escapes in ${var#pattern} and the cut fails
+            # silently, repeating the path as an argument.
             resto="${cmd:$(( ${#exe} + 2 ))}" ;;
         *)
             exe="${cmd%% *}"
@@ -448,19 +454,19 @@ t_executa_comando_windows() {
     esac
     resto="${resto# }"
     [ -n "$exe" ] || return 1
-    # Os argumentos do desinstalador sao separados por espaco de proposito.
+    # The uninstaller arguments are separated by spaces on purpose.
     # shellcheck disable=SC2086
     wine "$exe" $resto
 }
 
-# Remove atalhos de menu que apontam para programa que nao existe mais.
+# Removes menu shortcuts that point to a program that no longer exists.
 #
-# Depois de desinstalar, o Wine costuma deixar o atalho para tras. Um atalho
-# que nao abre nada e pior que atalho nenhum: o usuario clica, nao acontece
-# nada, e conclui que o computador esta quebrado.
+# After uninstalling, Wine usually leaves the shortcut behind. A shortcut that
+# opens nothing is worse than no shortcut at all: the user clicks, nothing
+# happens, and concludes that the computer is broken.
 #
-# So mexemos em atalho que cita o NOSSO prefixo. Atalho de prefixo alheio e
-# do dono dele, mesmo estando na mesma pasta.
+# We only touch a shortcut that mentions OUR prefix. A shortcut from somebody
+# else's prefix belongs to its owner, even sitting in the same folder.
 t_limpa_atalhos_orfaos() {
     local base d rel lnk n=0
     base="$HOME/.local/share/applications/wine/Programs"
@@ -469,8 +475,8 @@ t_limpa_atalhos_orfaos() {
         [ -n "$d" ] || continue
         grep -qF -- "$TANDEM_PREFIXO_PADRAO" "$d" 2>/dev/null || continue
         rel="${d#"$base/"}"; rel="${rel%.desktop}"
-        # O Wine espelha a arvore do Menu Iniciar ao criar o atalho, entao o
-        # .lnk correspondente tem o mesmo caminho relativo.
+        # Wine mirrors the Start Menu tree when it creates the shortcut, so
+        # the corresponding .lnk has the same relative path.
         for lnk in \
             "$TANDEM_PREFIXO_PADRAO/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/$rel.lnk" \
             "$TANDEM_PREFIXO_PADRAO"/drive_c/users/*/"Start Menu/Programs/$rel.lnk"; do
@@ -487,7 +493,7 @@ t_limpa_atalhos_orfaos() {
     return 0
 }
 
-# Arquitetura de um executavel PE: 32, 64, arm64 ou "?"; falha se nao for PE.
+# Architecture of a PE executable: 32, 64, arm64 or "?"; fails if not a PE.
 t_pe_arch() {
     local f="$1" off mach
     [ "$(od -An -c -N2 -- "$f" 2>/dev/null | tr -d ' ')" = "MZ" ] || return 1
@@ -503,25 +509,25 @@ t_pe_arch() {
     esac
 }
 
-# --------------------------------------------------------- alternativas
+# ---------------------------------------------------------- alternatives
 #
-# O melhor desfecho para o dono nem sempre e "seu programa Windows roda no
-# Wine". As vezes e "voce nao precisa do Wine": muitos programas tem versao
-# oficial para Linux, e rodar a versao Windows deles no Wine e sempre pior -
-# mais lento, sem atualizacao, e quebra quando o Wine muda.
+# The best outcome for the owner is not always "your Windows program runs
+# under Wine". Sometimes it is "you do not need Wine": many programs have an
+# official Linux version, and running their Windows version under Wine is
+# always worse - slower, without updates, and it breaks when Wine changes.
 #
-# O Tandem nunca troca nada e nunca sugere trocar programa que esta
-# funcionando. Isto aparece em duas situacoes: quando o dono pergunta, e
-# quando o pre-voo reconheceu que aquele programa nunca vai funcionar aqui -
-# onde ficar calado seria deixar o dono sem saida nenhuma.
+# Tandem never swaps anything and never suggests replacing a program that is
+# working. This shows up in two situations: when the owner asks, and when the
+# pre-flight recognized that that program is never going to work here - where
+# keeping quiet would leave the owner with no way out at all.
 #
-# A tabela e local e auditavel, nao uma busca na internet: o Tandem funciona
-# sem rede e nao manda nada para lugar nenhum. Uma linha nova basta.
+# The table is local and auditable, not an internet search: Tandem works
+# without a network and sends nothing anywhere. One new line is enough.
 
 TANDEM_ALTERNATIVAS="${TANDEM_ALTERNATIVAS:-${TANDEM_LIB:-/usr/lib/tandem}/alternativas.tsv}"
 
-# Procura por nome. Devolve "classe|nome|como instalar|o que muda", uma
-# alternativa por linha.
+# Looks up by name. Returns "class|name|how to install|what changes", one
+# alternative per line.
 t_alternativas_para() {
     local alvo padrao classe nome como muda
     alvo="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | tr -d ' _-')"
@@ -539,7 +545,7 @@ t_alternativas_para() {
     return $achou
 }
 
-# Texto pronto para mostrar ao dono, ou vazio se nao houver nada.
+# Text ready to show to the owner, or empty if there is nothing.
 t_texto_alternativas() {
     local linhas classe nome como muda saida=""
     linhas="$(t_alternativas_para "$1")" || return 1
@@ -561,32 +567,33 @@ t_texto_alternativas() {
     printf '%s' "$saida"
 }
 
-# ------------------------------------------------------------- memoria
+# ---------------------------------------------------------------- memory
 #
-# Toda vez que o Tandem roda ele descobre coisas - quais componentes o
-# programa pediu, qual resolveu, quanto tempo levou, se abriu no fim. Ate
-# aqui isso virava uma linha de log e morria. A memoria guarda o que foi
-# aprendido POR PROGRAMA, num arquivo de texto legivel que o dono pode abrir,
-# conferir e mandar para outra pessoa.
+# Every time Tandem runs it discovers things - which components the program
+# asked for, which one solved it, how long it took, whether it opened in the
+# end. Until now that turned into one log line and died. The memory keeps what
+# was learned PER PROGRAM, in a readable text file the owner can open, check
+# and send to somebody else.
 #
-# Duas regras que a memoria nao pode quebrar:
+# Two rules the memory cannot break:
 #
-# 1. Ela nunca age sozinha. Uma receita e sugestao, nao ordem: o Tandem
-#    mostra o que aprendeu e pergunta. Licao errada aprendida em silencio se
-#    repetiria para sempre, e este programa mexe na maquina onde o dono
-#    fatura.
-# 2. Ela e sempre legivel e apagavel. Se a memoria atrapalhar, "tandem
-#    esquecer" resolve, e o dono consegue LER o que estava guardado antes de
-#    decidir.
+# 1. It never acts on its own. A recipe is a suggestion, not an order: Tandem
+#    shows what it learned and asks. A wrong lesson learned silently would
+#    repeat forever, and this program touches the machine where the owner
+#    makes their money.
+# 2. It is always readable and erasable. If the memory gets in the way,
+#    "tandem esquecer" fixes it, and the owner can READ what was stored before
+#    deciding.
 
 TANDEM_MEMORIA="${TANDEM_MEMORIA:-$HOME/.local/share/tandem/memoria}"
 
-# Identidade estavel de um programa: tamanho + inicio + fim do arquivo.
+# Stable identity of a program: size + start + end of the file.
 #
-# Nao usamos o caminho, que muda de pasta e de maquina, nem o nome, que se
-# repete ("setup.exe"). Ler o arquivo inteiro seria lento num instalador de
-# meio giga, e as pontas mais o tamanho ja separam versoes diferentes do
-# mesmo programa - que e a unica confusao que importa evitar aqui.
+# We do not use the path, which changes folder and machine, nor the name,
+# which repeats ("setup.exe"). Reading the whole file would be slow on a
+# half-gigabyte installer, and the ends plus the size already separate
+# different versions of the same program - which is the only confusion that
+# matters to avoid here.
 t_memoria_id() {
     local f="$1" tam
     [ -f "$f" ] || return 1
@@ -606,13 +613,17 @@ t_memoria_arquivo() {
 }
 
 t_memoria_le() {
-    local arq; arq="$(t_memoria_arquivo "$1")" || return 1
+    local arq valor; arq="$(t_memoria_arquivo "$1")" || return 1
     [ -f "$arq" ] || return 1
-    sed -n "s/^$2=//p" "$arq" | tail -1
+    valor="$(sed -n "s/^$2=//p" "$arq" | tail -1)"
+    [ -n "$valor" ] || return 1
+    # Undo the escaping t_memoria_grava applies to keep one value per line.
+    printf '%b' "${valor//%/%%}"
+    printf '\n'
 }
 
-# Grava uma chave, substituindo o valor anterior. Cria o arquivo na primeira
-# vez, com o nome do programa em cima para o dono saber do que se trata.
+# Writes a key, replacing the previous value. Creates the file the first time,
+# with the program name at the top so the owner knows what it is about.
 t_memoria_grava() {
     local prog="$1" chave="$2" valor="$3" arq tmp
     arq="$(t_memoria_arquivo "$prog")" || return 1
@@ -625,11 +636,25 @@ t_memoria_grava() {
         } > "$arq" 2>/dev/null || return 1
     fi
     tmp="$arq.novo"
-    { grep -v "^$chave=" "$arq" 2>/dev/null; printf '%s=%s\n' "$chave" "$valor"; } > "$tmp" 2>/dev/null &&
-        mv -f "$tmp" "$arq" 2>/dev/null
+    # The file format is one KEY=VALUE per line, so the value must be one line.
+    # A multi-line value used to be written raw, and the rewrite filter
+    # (grep -v "^KEY=") only removes the FIRST physical line - the continuation
+    # lines survive as orphans and a fresh copy is appended on every run. Four
+    # runs left twenty-two lines with three orphan blocks in them, and the
+    # damage is permanent because nothing ever cleans it up. Escape on write,
+    # unescape on read.
+    valor="${valor//\\/\\\\}"
+    valor="${valor//$'\n'/\\n}"
+    {
+        # Drop the old value AND any orphan continuation lines a previous
+        # version may already have written: a line that is neither a comment
+        # nor KEY=VALUE has no business in this file.
+        grep -E '^(#|[A-Z_]+=)' "$arq" 2>/dev/null | grep -v "^$chave="
+        printf '%s=%s\n' "$chave" "$valor"
+    } > "$tmp" 2>/dev/null && mv -f "$tmp" "$arq" 2>/dev/null
 }
 
-# Acrescenta um item a uma lista separada por espaco, sem repetir.
+# Appends an item to a space-separated list, without repeating it.
 t_memoria_junta() {
     local prog="$1" chave="$2" item="$3" atual
     atual="$(t_memoria_le "$prog" "$chave" 2>/dev/null)"
@@ -637,20 +662,20 @@ t_memoria_junta() {
     t_memoria_grava "$prog" "$chave" "${atual:+$atual }$item"
 }
 
-# ------------------------------------------------------------- receitas
+# --------------------------------------------------------------- recipes
 #
-# Uma receita e a memoria de um programa num arquivo pequeno e legivel, que
-# o dono pode conferir e mandar para outra pessoa. E o atomo do
-# conhecimento coletivo - e ele funciona sem servidor nenhum.
+# A recipe is one program's memory in a small, readable file that the owner
+# can check and send to somebody else. It is the atom of collective knowledge
+# - and it works with no server at all.
 #
-# A direcao e SEMPRE de fora para dentro: o Tandem le receitas, nunca envia
-# nada. Contribuir e um ato humano, deliberado e visivel. Um programa que
-# manda dados sozinho nao teria lugar numa maquina de frente de caixa, e
-# uma base escrita por qualquer um seria superficie de ataque.
+# The direction is ALWAYS from the outside in: Tandem reads recipes, it never
+# sends anything. Contributing is a human act, deliberate and visible. A
+# program that sends data on its own would have no place on a point-of-sale
+# machine, and a base written by just anybody would be attack surface.
 
-# Nome de verbo aceitavel. Esta e a defesa que importa: o verbo de uma
-# receita vira argumento de "winetricks -q". Sem esta peneira, uma receita
-# vinda de fora poderia carregar um comando junto do nome.
+# Acceptable verb name. This is the defense that matters: the verb of a recipe
+# becomes an argument to "winetricks -q". Without this sieve, a recipe coming
+# from outside could carry a command along with the name.
 t_verbo_valido() {
     case "${1:-}" in
         ''|*[!a-zA-Z0-9_.-]*) return 1 ;;
@@ -670,23 +695,24 @@ t_receita_exporta() {
     printf 'IDENTIDADE=%s\n' "$(t_memoria_id "$prog")"
     printf 'ORIGEM=%s\n' "$( . /etc/os-release 2>/dev/null
                              printf '%s' "${PRETTY_NAME:-Linux}")"
-    # De onde vem a confianca desta licao. Sem esta linha, "o processo saiu
-    # 0" e "uma pessoa olhou a tela e disse que estava certo" chegavam do
-    # outro lado com exatamente o mesmo peso.
+    # Where the confidence of this lesson comes from. Without this line, "the
+    # process exited 0" and "a person looked at the screen and said it was
+    # right" arrived on the other side with exactly the same weight.
     printf 'CONFIANCA=%s\n' "$(t_confianca_da_licao "$prog")"
     grep -v '^#' "$arq"
 }
 
-# Le uma receita e a transforma em memoria. Recusa qualquer coisa que nao
-# reconheca: receita de outro programa, verbo com caractere estranho,
-# arquivo que nao se declara receita.
+# Reads a recipe and turns it into memory. Refuses anything it does not
+# recognize: a recipe for another program, a verb with a strange character, a
+# file that does not declare itself a recipe.
 t_receita_importa() {
     local arq="$1" prog="$2" id_esperada chave valor verbos="" v
     [ -f "$arq" ] || return 1
     grep -q '^TANDEM_RECEITA=1$' "$arq" || return 2
     id_esperada="$(t_memoria_id "$prog" 2>/dev/null)" || return 1
 
-    # A receita e de OUTRO programa? Aplicar seria ensinar a lição errada.
+    # Is the recipe from ANOTHER program? Applying it would teach the wrong
+    # lesson.
     local id_receita
     id_receita="$(sed -n 's/^IDENTIDADE=//p' "$arq" | head -1)"
     [ -n "$id_receita" ] || return 3
@@ -717,39 +743,39 @@ t_memoria_esquece() {
     rm -f -- "$arq"
 }
 
-# --------------------------------------------------- prova de entrega
+# ----------------------------------------------------- proof of delivery
 #
-# O componente instalado entregou mesmo o arquivo que estava faltando?
+# Did the installed component really deliver the file that was missing?
 #
-# O Wine grava os nomes em minusculas e o log dele traz "MSVCP140.dll", por
-# isso -iname. As duas visoes do system32 sao consultadas: instalador de 32
-# bits num prefixo win64 escreve em syswow64.
-# A DLL chegou onde este programa consegue carregar?
+# Wine writes the names in lowercase and its log carries "MSVCP140.dll", hence
+# -iname. Both views of system32 are consulted: a 32-bit installer in a win64
+# prefix writes into syswow64.
+# Did the DLL arrive where this program is able to load it?
 #
-#   0 = chegou no lugar certo
-#   1 = nao chegou a lugar nenhum
-#   2 = chegou, mas na bitola errada - existe no prefixo e este programa
-#       nao consegue usar
+#   0 = arrived in the right place
+#   1 = did not arrive anywhere
+#   2 = arrived, but in the wrong bitness - it exists in the prefix and this
+#       program cannot use it
 #
-# A distincao entre 1 e 2 nao e preciosismo: ela apareceu na primeira vez que
-# o laco rodou com winetricks de verdade. O verbo mfc42 SAIU 0 e entregou o
-# arquivo - em syswow64, que e a pasta de 32 bits. O programa era de 64 bits,
-# o Wine continuou dizendo "not found", e a prova de entrega (que olhava as
-# duas pastas) aprovou e gravou recibo. Resultado: o beco sem saida de novo,
-# com a causa intacta, so que agora com um recibo por cima. O winetricks ate
-# avisa disso em ingles no meio do log - "many verbs only install 32-bit
-# versions of packages" - que e exatamente o tipo de recado que o dono da
-# loja nunca vai ler.
+# The distinction between 1 and 2 is not fussiness: it showed up the first
+# time the loop ran with a real winetricks. The mfc42 verb EXITED 0 and
+# delivered the file - into syswow64, which is the 32-bit folder. The program
+# was 64-bit, Wine kept saying "not found", and the proof of delivery (which
+# looked at both folders) approved it and wrote a receipt. Result: the dead
+# end all over again, with the cause intact, only now with a receipt on top.
+# winetricks even warns about this in English in the middle of the log - "many
+# verbs only install 32-bit versions of packages" - which is exactly the kind
+# of notice the shop owner is never going to read.
 #
-# Num prefixo win64 o Wine segue a convencao do Windows: system32 guarda as
-# DLLs de 64 bits e syswow64 as de 32. Num prefixo win32 so existe system32,
-# e ela e de 32 bits.
+# In a win64 prefix Wine follows the Windows convention: system32 holds the
+# 64-bit DLLs and syswow64 the 32-bit ones. In a win32 prefix only system32
+# exists, and it is 32-bit.
 t_dll_no_prefixo() {
     local dll="$1" arch="${2:-}" c s32 s64 tem32=1 tem64=1
     [ -n "$dll" ] && [ -n "${WINEPREFIX:-}" ] || return 1
     c="$WINEPREFIX/drive_c/windows"
     s64="$c/system32"; s32="$c/syswow64"
-    # Sem syswow64, o prefixo e de 32 bits: system32 guarda as de 32.
+    # With no syswow64, the prefix is 32-bit: system32 holds the 32-bit ones.
     [ -d "$s32" ] || { s32="$c/system32"; s64=""; }
 
     _t_acha_dll() {
@@ -763,24 +789,25 @@ t_dll_no_prefixo() {
     case "$arch" in
         64) [ "$tem64" = 0 ] && return 0; [ "$tem32" = 0 ] && return 2 ;;
         32) [ "$tem32" = 0 ] && return 0; [ "$tem64" = 0 ] && return 2 ;;
-        # Sem saber a arquitetura do programa, qualquer uma serve: e melhor
-        # nao condenar do que condenar por engano.
+        # Without knowing the program's architecture, any of them will do: it
+        # is better not to condemn than to condemn by mistake.
         *)  { [ "$tem32" = 0 ] || [ "$tem64" = 0 ]; } && return 0 ;;
     esac
     return 1
 }
 
-# --------------------------------------------------------- pre-voo do PE
+# ---------------------------------------------------------- PE pre-flight
 #
-# Todo executavel Windows traz no proprio arquivo a lista de bibliotecas que
-# vai pedir - a tabela de importacoes. Ate agora o Tandem so descobria isso
-# DEPOIS de rodar e falhar, lendo o err:module:import_dll do Wine.
+# Every Windows executable carries in the file itself the list of libraries it
+# is going to ask for - the import table. Until now Tandem only found that out
+# AFTER running and failing, by reading Wine's err:module:import_dll.
 #
-# O pre-voo NAO decide o que instalar. Nao pode: so o Wine sabe quais DLLs
-# ele proprio implementa, e agir por conta daria instalacao inutil - meia
-# hora do dono jogada fora. O pre-voo serve para o que a leitura sozinha
-# prova: reconhecer, ANTES de tentar, um programa que depende de coisa que
-# nunca vai funcionar aqui, e ter isso pronto para explicar a falha depois.
+# The pre-flight does NOT decide what to install. It cannot: only Wine knows
+# which DLLs it implements itself, and acting on its own would mean a useless
+# installation - half an hour of the owner's time thrown away. The pre-flight
+# is there for what reading alone proves: recognizing, BEFORE trying, a
+# program that depends on something that is never going to work here, and
+# having that ready to explain the failure afterwards.
 
 t_pe_dlls() {
     command -v python3 >/dev/null 2>&1 || return 1
@@ -788,8 +815,8 @@ t_pe_dlls() {
         sed -n -e 's/^DLLS=//p' -e 's/^ATRASADAS=//p' | tr ',' '\n' | grep -v '^$'
 }
 
-# Devolve "classe|frase" do primeiro limite permanente reconhecido, ou nada.
-# A tabela mora em limites.tsv e cresce sem tocar em codigo.
+# Returns "class|sentence" of the first permanent limit recognized, or nothing.
+# The table lives in limites.tsv and grows without touching code.
 t_limite_do_programa() {
     local tabela dll padrao classe frase
     tabela="${TANDEM_LIMITES:-${TANDEM_LIB:-/usr/lib/tandem}/limites.tsv}"
@@ -800,8 +827,8 @@ t_limite_do_programa() {
         case "$padrao" in ''|'#'*) continue ;; esac
         [ -n "$frase" ] || continue
         while IFS= read -r dll; do
-            # O padrao vem da tabela e usa * de proposito, entao nao pode
-            # ser citado.
+            # The pattern comes from the table and uses * on purpose, so it
+            # cannot be quoted.
             # shellcheck disable=SC2254
             case "$dll" in $padrao) printf '%s|%s' "$classe" "$frase"; return 0 ;; esac
         done <<< "$dlls"
@@ -814,52 +841,55 @@ t_tem_wine32() {
     [ -d /opt/wine-stable/lib/wine/i386-unix ]
 }
 
-# O caso normal, e o que o prefixo do Tandem usa (WINEARCH=win64). Existe
-# como funcao propria porque o diagnostico precisa AFIRMAR que 64 bits
-# funciona: falar so do 32, que e a excecao, faz o leitor concluir que 64
-# nao e suportado.
+# The normal case, and the one Tandem's prefix uses (WINEARCH=win64). It
+# exists as a function of its own because the diagnosis needs to STATE that
+# 64-bit works: talking only about 32, which is the exception, makes the
+# reader conclude that 64 is not supported.
 t_tem_wine64() {
     [ -d /usr/lib/wine/x86_64-unix ] || [ -d /usr/lib/x86_64-linux-gnu/wine ] ||
     [ -d /opt/wine-stable/lib/wine/x86_64-unix ]
 }
 
-# ------------------------------------------------------- instalar o que falta
+# -------------------------------------------------- install what is missing
 #
-# O Tandem sabe diagnosticar o que falta (doctor); daqui ele tambem conserta.
-# Nao da para fazer isso durante a instalacao do proprio .deb: o dpkg segura
-# uma trava enquanto o postinst roda, e "apt-get install" la dentro morre em
-# deadlock. O momento certo e o primeiro uso - ou a hora exata do clique em
-# que a peca faltou.
+# Tandem knows how to diagnose what is missing (doctor); from here on it also
+# fixes it. This cannot be done while the .deb itself is being installed: dpkg
+# holds a lock while the postinst runs, and an "apt-get install" in there dies
+# in a deadlock. The right moment is the first use - or the exact moment of
+# the click where the piece was missing.
 
-# Executa um script como root: direto se ja somos root, sudo se ha terminal,
-# pkexec se ha sessao grafica. A ordem poe o terminal na frente porque nele
-# o usuario VE o apt trabalhando; o pkexec mostra so o pedido de senha.
-# ================================================= LISTA DA COMUNIDADE
+# Runs a script as root: directly if we are already root, sudo if there is a
+# terminal, pkexec if there is a graphical session. The order puts the
+# terminal first because there the user SEES apt working; pkexec shows only
+# the password prompt.
+# ==================================================== COMMUNITY LIST
 #
-# O modelo e o das listas de filtro de bloqueador de anuncio: um arquivo de
-# texto estatico, buscado por HTTPS, que cada instalacao le e mescla no que ja
-# sabe. E por isso que o EasyList sobrevive ha vinte anos com orcamento de
-# voluntario e um servico proprio nao sobreviveria - arquivo estatico nao tem
-# servidor caindo, nem conta, nem banco, nem custo por usuario, e qualquer um
-# pode espelhar.
+# The model is that of ad-blocker filter lists: a static text file, fetched
+# over HTTPS, that each installation reads and merges into what it already
+# knows. That is why EasyList has survived for twenty years on a volunteer's
+# budget and a service of our own would not - a static file has no server
+# going down, no account, no database, no per-user cost, and anybody can
+# mirror it.
 #
-# As duas metades sao ASSIMETRICAS de proposito:
-#   descer  - automatico quando o dono liga; e so um GET de arquivo publico
-#   subir   - o Tandem MONTA o registro, quem envia e o dono
-# Contribuicao automatica seria uma maquina de producao mandando dados para
-# fora sem ninguem pedir. E a regra numero 1 aplicada a rede.
+# The two halves are ASYMMETRIC on purpose:
+#   download - automatic when the owner turns it on; it is just a GET of a
+#              public file
+#   upload   - Tandem ASSEMBLES the record, the owner is the one who sends it
+# Automatic contribution would be a production machine sending data out
+# without anybody asking for it. It is rule number 1 applied to the network.
 #
-# O formato completo esta em docs/LIST-FORMAT.md.
+# The full format is in docs/LIST-FORMAT.md.
 
 TANDEM_LISTA_URL="${TANDEM_LISTA_URL:-https://raw.githubusercontent.com/ChrnX0/Tandem/main/lista/lista.tsv}"
 TANDEM_LISTA="${TANDEM_LISTA:-$TANDEM_ESTADO/lista.tsv}"
 TANDEM_LISTA_VERSAO=1
 
-# Campos que jamais podem sair desta maquina. Nao e recomendacao: e o teste
-# que o gerador de contribuicao roda contra o proprio texto antes de mostrar.
+# Fields that may never leave this machine. This is not a recommendation: it
+# is the test the contribution generator runs against its own text before
+# showing it.
 t_lista_vaza() {
     local reg="$1"
-    # Caminho, nome de maquina, usuario, IP, e qualquer coisa com barra.
+    # Path, machine name, user, IP, and anything with a slash.
     case "$reg" in
         */*|*"$HOME"*|*"$(id -un)"*) return 0 ;;
     esac
@@ -868,7 +898,8 @@ t_lista_vaza() {
     return 1
 }
 
-# Monta o registro padronizado deste programa. Vazio = nao ha o que contribuir.
+# Assembles the standardized record for this program. Empty = there is nothing
+# to contribute.
 t_lista_registro() {
     local prog="$1" id arch verbos reprovados conf reg
     id="$(t_memoria_id "$prog" 2>/dev/null)" || return 1
@@ -877,19 +908,22 @@ t_lista_registro() {
     verbos="$(t_memoria_le "$prog" RESOLVERAM 2>/dev/null | tr ' ' ',')"
     reprovados="$(t_memoria_le "$prog" NAO_RESOLVERAM 2>/dev/null | tr ' ' ',')"
     conf="$(t_confianca_da_licao "$prog")"
-    # Sem nenhuma licao, contribuir seria so ruido na lista dos outros.
+    # With no lesson at all, contributing would be just noise in other
+    # people's list.
     [ -n "$verbos" ] || [ -n "$reprovados" ] || [ "$conf" = reprovado ] || return 1
     reg="$(printf '%s\t%s\t%s\t%s\t%s\t1\t%s\t-' \
         "$id" "${arch:--}" "${verbos:--}" "${reprovados:--}" "$conf" "$(date +%Y-%m)")"
-    # Data com DIA identifica; ano e mes, nao. E a barra de um caminho que
-    # entrasse por engano derruba o registro inteiro em vez de vazar.
+    # A date with a DAY identifies; year and month do not. And the slash of a
+    # path that slipped in by mistake takes the whole record down instead of
+    # leaking.
     t_lista_vaza "$reg" && { t_diz "registro recusado: continha dado da maquina"; return 1; }
     printf '%s\n' "$reg"
 }
 
-# Le a lista baixada e devolve os verbos conhecidos para este programa.
-# So responde quando a licao vem confirmada por gente: e a diferenca entre
-# espalhar conhecimento e espalhar engano com a mesma eficiencia.
+# Reads the downloaded list and returns the known verbs for this program.
+# It only answers when the lesson comes confirmed by people: that is the
+# difference between spreading knowledge and spreading error with the same
+# efficiency.
 t_lista_consulta() {
     local prog="$1" id
     [ -f "$TANDEM_LISTA" ] || return 1
@@ -906,8 +940,9 @@ t_lista_maquinas() {
     awk -F'\t' -v alvo="$1" '/^#/ {next} $1 == alvo { print $6; exit }' "$TANDEM_LISTA"
 }
 
-# Baixa a lista. Arquivo malformado NAO substitui o bom que ja esta em disco:
-# lista quebrada calaria a segunda opiniao sem ninguem perceber.
+# Downloads the list. A malformed file does NOT replace the good one already
+# on disk: a broken list would silence the second opinion with nobody
+# noticing.
 t_lista_atualiza() {
     local tmp rc
     command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 2
@@ -916,9 +951,10 @@ t_lista_atualiza() {
     if command -v curl >/dev/null 2>&1; then
         curl -fsSL --max-time 30 -o "$tmp" "$TANDEM_LISTA_URL" 2>>"${LOG:-/dev/null}"
         rc=$?
-        # 22 = o servidor respondeu com erro (404 e o caso comum: a lista
-        # ainda nao foi publicada). Mandar o dono conferir a internet por
-        # causa disso e o mandar procurar defeito numa maquina perfeita.
+        # 22 = the server answered with an error (404 is the common case: the
+        # list has not been published yet). Sending the owner to check the
+        # internet because of that is sending them to look for a defect in a
+        # perfect machine.
         [ $rc -eq 22 ] && { rm -f "$tmp"; return 4; }
     else
         wget -q -T 30 -O "$tmp" "$TANDEM_LISTA_URL" 2>>"${LOG:-/dev/null}"
@@ -935,31 +971,33 @@ t_lista_atualiza() {
     return 0
 }
 
-# =============================================== SUCESSO EM SILENCIO
+# ================================================== SILENT SUCCESS
 #
-# Ver o comentario longo no tandem-exe. Aqui fica o mecanismo: perguntar uma
-# vez por programa, guardar a resposta, e - o mais importante - nunca deixar
-# "saiu 0" se passar por "funcionou" na hora de exportar a licao.
+# See the long comment in tandem-exe. Here is the mechanism: ask once per
+# program, store the answer, and - most importantly - never let "exited 0"
+# pass for "it worked" when the time comes to export the lesson.
 
-# Uma saida rapida e sem nada na tela merece desconfianca. Instalador demora;
-# programa de verdade fica aberto enquanto a pessoa usa. Fechar sozinho em
-# poucos segundos e o retrato do executavel que morreu calado.
+# A quick exit with nothing on the screen deserves suspicion. An installer
+# takes time; a real program stays open while the person uses it. Closing by
+# itself in a few seconds is the portrait of the executable that died quiet.
 TANDEM_SEGUNDOS_SUSPEITO="${TANDEM_SEGUNDOS_SUSPEITO:-3}"
 
 t_saida_suspeita() {
     [ "${1:-0}" -lt "$TANDEM_SEGUNDOS_SUSPEITO" ] 2>/dev/null
 }
 
-# Pergunta ao dono se funcionou, e grava CONFIRMADO=sim|nao na memoria.
-# Sem janela nao pergunta nada: inventar uma resposta seria pior que nao ter.
+# Asks the owner whether it worked, and writes CONFIRMADO=sim|nao into the
+# memory. With no window it asks nothing: making up an answer would be worse
+# than not having one.
 t_confirma_funcionou() {
     local prog="$1" durou="${2:-0}" ja
     ja="$(t_memoria_le "$prog" CONFIRMADO 2>/dev/null)"
     [ -n "$ja" ] && return 0
 
     if t_saida_suspeita "$durou"; then
-        # Aqui nem da para comemorar: o programa fechou sozinho antes de
-        # qualquer pessoa conseguir usar. Dizer "abriu!" seria mentira.
+        # Here there is nothing even to celebrate: the program closed by
+        # itself before anybody could use it. Saying "it opened!" would be a
+        # lie.
         t_memoria_grava "$prog" RESULTADO "fechou sozinho"
         t_aviso "O programa abriu e fechou sozinho em $durou segundo(s), sem dar tempo de usar."
     fi
@@ -981,8 +1019,8 @@ caminho para outras pessoas." "Sim, funcionou" "Não, algo saiu errado"; then
     return 0
 }
 
-# O grau de confianca de uma licao, em uma palavra. E o que separa "uma
-# pessoa olhou e disse que funciona" de "o processo terminou sem erro".
+# The confidence level of a lesson, in a single word. It is what separates "a
+# person looked and said it works" from "the process finished without error".
 t_confianca_da_licao() {
     case "$(t_memoria_le "$1" CONFIRMADO 2>/dev/null)" in
         sim) printf 'confirmado' ;;
@@ -991,27 +1029,28 @@ t_confianca_da_licao() {
     esac
 }
 
-# ============================================================== DADOS
+# =============================================================== DATA
 #
-# A distincao que faltava no projeto inteiro: AMBIENTE se reconstroi em vinte
-# minutos - o prefixo, o Wine, os runtimes -, DADOS nao se reconstroem nunca.
-# Cadastro de clientes de sete anos, XML de NF-e (cinco anos de guarda por
-# lei), o movimento do mes. Ate aqui tres caminhos apagavam isso sem copia: o
-# rm -rf do prefixo incompleto no tandem-exe, o "tandem restore" (que devolve
-# o ambiente e leva as vendas junto) e o desinstalador do programa.
+# The distinction the whole project was missing: the ENVIRONMENT rebuilds
+# itself in twenty minutes - the prefix, Wine, the runtimes -, DATA never
+# rebuilds. A seven-year customer database, NF-e XML (five years of mandatory
+# retention by law), this month's takings. Until now three paths erased that
+# with no copy: the rm -rf of the incomplete prefix in tandem-exe, "tandem
+# restore" (which gives the environment back and takes the sales with it) and
+# the program's own uninstaller.
 #
-# Nao da para perguntar ao programa onde ele guarda as coisas. Da para
-# procurar em dois lugares com criterio: as pastas pessoais do usuario
-# Windows, e os arquivos de dados largados dentro da pasta do proprio
-# programa - um .mdb ou um .fdb dentro de Program Files e o banco de alguem,
-# nao parte da instalacao.
+# There is no way to ask the program where it keeps things. There is a way to
+# look in two places with judgement: the personal folders of the Windows user,
+# and the data files dumped inside the program's own folder - an .mdb or an
+# .fdb inside Program Files is somebody's database, not part of the
+# installation.
 
-# Extensoes que so existem porque alguem digitou alguma coisa.
+# Extensions that only exist because somebody typed something.
 TANDEM_EXT_DADOS='mdb accdb fdb gdb dbf db sqlite sqlite3 db3 sdf
 xls xlsx xlsm ods csv doc docx odt rtf txt pdf
 bak backup qbw qbb'
 
-# Pastas pessoais do Windows que valem a pena carregar junto.
+# Windows personal folders that are worth carrying along.
 TANDEM_PASTAS_DADOS='Documents Desktop Downloads Pictures AppData/Roaming'
 
 t_tamanho_amigavel() {
@@ -1022,9 +1061,10 @@ t_tamanho_amigavel() {
     else printf '%s bytes' "$b"; fi
 }
 
-# Lista o que e dado dentro de um prefixo: "tipo<TAB>caminho-em-drive_c<TAB>bytes".
-# Os caminhos sao relativos a drive_c de proposito: e assim que o tar consegue
-# empacotar e devolver no lugar certo, inclusive noutra maquina.
+# Lists what counts as data inside a prefix:
+# "type<TAB>path-within-drive_c<TAB>bytes".
+# The paths are relative to drive_c on purpose: that is how tar manages to
+# pack them and put them back in the right place, even on another machine.
 t_dados_lista() {
     local pref="${1:-$TANDEM_PREFIXO_PADRAO}" c u sub rel bytes
     c="$pref/drive_c"
@@ -1037,7 +1077,8 @@ t_dados_lista() {
         esac
         for sub in $TANDEM_PASTAS_DADOS; do
             [ -d "$u$sub" ] || continue
-            # Pasta existente e vazia e enfeite do Wine, nao e dado do dono.
+            # An existing empty folder is Wine decoration, not the owner's
+            # data.
             find "$u$sub" -type f -print -quit 2>/dev/null | grep -q . || continue
             rel="${u#"$c"/}$sub"
             bytes="$(du -sb "$u$sub" 2>/dev/null | cut -f1)"
@@ -1045,67 +1086,109 @@ t_dados_lista() {
         done
     done
 
-    # Arquivos de dados fora das pastas pessoais: e o caso do sistema de loja
-    # que guarda o banco ao lado do executavel, que e a regra e nao a excecao
-    # em software comercial brasileiro.
+    # Data files outside the personal folders: this is the case of the shop
+    # system that keeps the database next to the executable, which is the rule
+    # and not the exception in Brazilian commercial software.
     local args=() e primeiro=1
     for e in $TANDEM_EXT_DADOS; do
         [ "$primeiro" = 1 ] && primeiro=0 || args+=(-o)
         args+=(-iname "*.$e")
     done
+    # The find writes to a temporary file instead of straight into the pipe,
+    # because in a pipe its exit status is lost. A prefix big enough to hit the
+    # 60 s timeout would then look exactly like a prefix with no data at all -
+    # and the caller of this function is usually about to delete something.
+    # Code 124 (timeout) is propagated as 3: "I could not finish looking".
+    local achados rc
+    achados="$(mktemp)" || return 1
     timeout 60 find "$c" -type f \( "${args[@]}" \) \
         -not -path "$c/windows/*" -not -path "$c/users/*" \
         -not -path "*/Temp/*" -not -path "*/Cache/*" \
-        -size +0 -print0 2>/dev/null |
+        -size +0 -print0 > "$achados" 2>/dev/null
+    rc=$?
     while IFS= read -r -d '' f; do
         printf 'arquivo\t%s\t%s\n' "${f#"$c"/}" "$(stat -c%s "$f" 2>/dev/null || echo 0)"
-    done
+    done < "$achados"
+    rm -f "$achados"
+    [ "$rc" -eq 124 ] && { t_diz "a busca por dados em $c estourou o tempo"; return 3; }
+    return 0
 }
 
 t_dados_total() {
     t_dados_lista "$1" 2>/dev/null | awk -F'\t' '{s += $3} END {print s + 0}'
 }
 
-# Empacota exatamente o que t_dados_lista achou. Devolve 1 se nao havia nada -
-# e "nao havia nada" NAO e falha: prefixo recem-criado nao tem dado nenhum.
+# Packs exactly what t_dados_lista found. Returns 1 if there was nothing - and
+# "there was nothing" is NOT a failure: a freshly created prefix has no data
+# at all.
+# 0 = copied, 2 = there was nothing to copy, 1 = there WAS data and the copy
+# failed. Those three used to be a single "return 1", which meant a full disk
+# and a fresh prefix were indistinguishable to the caller - and the caller is
+# about to delete things.
 t_dados_salva() {
     local pref="$1" destino="$2" c lista c_tar
     c="$pref/drive_c"
-    [ -d "$c" ] || return 1
+    [ -d "$c" ] || return 2
     lista="$(mktemp)" || return 1
-    t_dados_lista "$pref" | cut -f2 > "$lista"
-    if [ ! -s "$lista" ]; then rm -f "$lista"; return 1; fi
+    t_dados_lista "$pref" > "$lista.bruto"; local c_lista=$?
+    cut -f2 "$lista.bruto" > "$lista"; rm -f "$lista.bruto"
+    # Timeout is not "there is nothing here": treat it as a failed copy, which
+    # is the outcome that makes the caller stop before deleting.
+    if [ "$c_lista" -eq 3 ]; then rm -f "$lista"; return 1; fi
+    if [ ! -s "$lista" ]; then rm -f "$lista"; return 2; fi
     tar -C "$c" -czf "$destino" --files-from "$lista" 2>>"${LOG:-/dev/null}"
     c_tar=$?
     rm -f "$lista"
-    return $c_tar
+    [ "$c_tar" -eq 0 ] || return 1
+    return 0
 }
 
-# Copia de resgate antes de um caminho destrutivo. Nunca impede a operacao:
-# se nao der para salvar, avisa e segue - travar o dono no meio de um conserto
-# seria trocar um problema por outro. Imprime o caminho da copia, se houve.
+# Rescue copy before a destructive path. It never blocks the operation: if it
+# cannot save, it warns and carries on - locking the owner up in the middle of
+# a repair would be trading one problem for another. Prints the path of the
+# copy, if there was one.
+# Rescue copy before a destructive path. Same three outcomes as t_dados_salva,
+# and the distinction is the whole point: "there was nothing to save" is normal
+# and silent, while "there was data and I could not save it" has to stop the
+# caller before it deletes anything. Merging the two meant a full disk looked
+# exactly like an empty prefix, and the deletion went ahead either way.
 t_dados_resgate() {
-    local pref="$1" motivo="${2:-resgate}" destino
-    [ -d "$pref/drive_c" ] || return 1
+    local pref="$1" motivo="${2:-resgate}" destino c
+    [ -d "$pref/drive_c" ] || return 2
     destino="$HOME/tandem-dados-$motivo-$(date +%F-%H%M%S).tar.gz"
-    if t_dados_salva "$pref" "$destino"; then
+    t_dados_salva "$pref" "$destino"; c=$?
+    if [ "$c" -eq 0 ]; then
         t_diz "copia de resgate dos dados em $destino"
         printf '%s\n' "$destino"
         return 0
     fi
     rm -f "$destino" 2>/dev/null
+    [ "$c" -eq 2 ] && { t_diz "nada do dono para resgatar em $pref"; return 2; }
+    t_diz "FALHOU a copia de resgate de $pref"
     return 1
 }
 
-# Devolve o prefixo de comando que impede a maquina de suspender durante uma
-# instalacao longa - ou nada, se ele nao funcionar aqui.
+# The sentence the owner reads when the rescue copy failed and something is
+# about to be deleted anyway. Separated out because all three destructive
+# paths need exactly the same wording.
+t_texto_resgate_falhou() {
+    printf 'Encontrei arquivos seus aqui dentro e NÃO consegui fazer uma cópia deles.
+
+Isso costuma ser disco cheio ou pasta pessoal sem permissão de escrita.
+
+Se continuar, esses arquivos vão ser apagados e não há como recuperar. O
+mais seguro é parar, liberar espaço, e tentar de novo.'
+}
+
+# Returns the command prefix that keeps the machine from suspending during a
+# long installation - or nothing, if it does not work here.
 #
-# Conferir com "command -v systemd-inhibit" nao basta, e a diferenca custou uma
-# instalacao inteira num Ubuntu 24.04 real: o binario existe, mas sem barramento
-# D-Bus de sessao ele sai 1 com "Failed to connect to bus" e leva o comando
-# embrulhado junto. O winetricks nem chegou a rodar, e o dono foi informado de
-# que devia conferir a conexao de internet - que estava perfeita. E o mesmo erro
-# de sempre: presenca nao e funcionamento. Aqui a gente exercita.
+# Checking with "command -v systemd-inhibit" is not enough, and the difference
+# cost a whole installation on a real Ubuntu 24.04: the binary exists, but
+# with no session D-Bus bus it exits 1 with "Failed to connect to bus" and
+# takes the wrapped command down with it. winetricks never even got to run,
+# and the owner was told to check the internet connection - which was perfect.
+# It is the same old mistake: presence is not function. Here we exercise it.
 t_inibidor() {
     command -v systemd-inhibit >/dev/null 2>&1 || return 0
     systemd-inhibit --what=idle --who=Tandem --why=teste \
@@ -1129,8 +1212,8 @@ t_como_root() {
     fi
 }
 
-# O que falta nesta maquina, uma peca por linha. Cada linha e
-#     codigo|descricao para o usuario
+# What is missing on this machine, one piece per line. Each line is
+#     code|description for the user
 t_pecas_faltando() {
     command -v wine >/dev/null 2>&1 ||
         echo "wine|Wine (roda os programas do Windows)"
@@ -1146,8 +1229,9 @@ t_pecas_faltando() {
     return 0
 }
 
-# Monta o script de instalacao para as pecas pedidas (uma por argumento).
-# Tudo em um script so: uma unica senha, uma unica execucao.
+# Assembles the installation script for the requested pieces (one per
+# argument). Everything in a single script: one single password, one single
+# run.
 t_script_instalacao() {
     local peca
     printf 'set -e\nexport DEBIAN_FRONTEND=noninteractive\n'
@@ -1158,9 +1242,9 @@ t_script_instalacao() {
             winetricks) printf 'apt-get install -y winetricks\n' ;;
             adb)        printf 'apt-get install -y adb\n' ;;
             waydroid)
-                # O Waydroid nao esta nos repositorios do Ubuntu/Zorin: vem
-                # do repositorio oficial do projeto. Adicionamos a fonte com
-                # chave conferida, do jeito que o proprio projeto instrui.
+                # Waydroid is not in the Ubuntu/Zorin repositories: it comes
+                # from the project's official repository. We add the source
+                # with a checked key, the way the project itself instructs.
                 cat <<'FIM'
 if ! command -v waydroid >/dev/null 2>&1; then
     python3 - <<'PY'
@@ -1183,7 +1267,7 @@ FIM
     done
 }
 
-# ---------------------------------------------------------------- waydroid
+# -------------------------------------------------------------- waydroid
 
 t_wd_sessao_ok() {
     waydroid status 2>>"${LOG:-/dev/null}" | grep -q "Session:[[:space:]]*RUNNING"
@@ -1206,7 +1290,8 @@ t_wd_tem_arm() {
         /system/lib64/libndk_translation.so 2>/dev/null | head -1' 2>/dev/null | grep -q .
 }
 
-# Garante container + sessao + boot completo. Devolve 1 e ja avisa em caso de falha.
+# Ensures container + session + completed boot. Returns 1 and already warns in
+# case of failure.
 t_wd_garantir() {
     local estado
     if ! command -v waydroid >/dev/null 2>&1; then
@@ -1240,7 +1325,8 @@ Deixe o Tandem instalar tudo:  tandem preparar"
         sleep 1
     done
 
-    # A sessao pode estar subindo pelo autostart: dê um tempo antes de competir.
+    # The session may be coming up through autostart: give it some time before
+    # competing with it.
     if ! t_wd_sessao_ok; then
         for _ in $(seq 1 10); do t_wd_sessao_ok && break; sleep 2; done
     fi

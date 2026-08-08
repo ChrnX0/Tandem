@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  O freedesktop conhece .apk (application/vnd.android.package-archive), mas nao
-  conhece os formatos de pacote dividido. Sem estes tipos, um .xapk e detectado
-  como ZIP generico e o duplo clique nunca chega ao Tandem.
+  freedesktop knows .apk (application/vnd.android.package-archive) but does not
+  know the split-package formats. Without these types a .xapk is detected as a
+  generic ZIP and the double click never reaches Tandem.
 
-  Sao declarados como subclasse de application/zip: e o que faz o casamento por
-  extensao vencer a deteccao por conteudo, que veria apenas um ZIP.
+  They are declared as a subclass of application/zip: that is what makes the
+  extension match win over content sniffing, which would only see a ZIP.
+
+  The pt_BR <comment> lines are what the user reads in the file manager, so
+  they stay in Portuguese.
 -->
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
 

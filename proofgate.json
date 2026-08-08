@@ -1,5 +1,5 @@
 {
-  "$comment": "ProofGate para o Tandem. Sem isto ele nao enxerga a suite: o Tandem e projeto de shell com runner proprio, e a deteccao automatica so conhece os ecossistemas com manifesto (package.json, Cargo.toml, go.mod...). Sem essa linha o portao passava verde sem rodar um teste sequer - exatamente o tipo de aprovacao vazia que a skill existe para impedir.",
+  "$comment": "ProofGate for Tandem. Without this it cannot see the suite: Tandem is a shell project with its own runner, and automatic detection only knows ecosystems that have a manifest (package.json, Cargo.toml, go.mod...). Without this line the gate went green without running a single test - exactly the kind of empty approval the skill exists to prevent.",
 
   "commands": {
     "typecheck": "bash -c 'for f in src/bin/* src/lib/*.sh debian/postinst debian/postrm; do bash -n \"$f\" || exit 1; done; python3 -m py_compile src/lib/*.py tools/*.py build.py'",
@@ -8,32 +8,32 @@
     "build": "python3 build.py --check"
   },
 
-  "$comment_source": "O codigo do Tandem vive em src/ e tools/; debian/ carrega os scripts de instalacao, que tambem sao codigo.",
+  "$comment_source": "Tandem's code lives in src/ and tools/; debian/ carries the installation scripts, which are code too.",
   "sourceGlobs": "src/|tools/|debian/|build.py",
 
-  "$comment_coupled": "Arquivos que so fazem sentido juntos. Mexer num e esquecer o outro ja aconteceu nesta base: a versao vive em quatro lugares, e um pacote com versao nova e changelog velho e reprovado pelo lintian.",
+  "$comment_coupled": "Files that only make sense together. Changing one and forgetting the other has already happened in this repository: the version lives in four places, and a package with a new version and an old changelog is rejected by lintian.",
   "coupledFiles": [
     {
       "a": "debian/control",
       "b": "debian/changelog",
-      "reason": "versao nova exige entrada nova no changelog, com data nova - o lintian reprova sem isso"
+      "reason": "a new version requires a new changelog entry with a fresh date - lintian fails without it"
     },
     {
       "a": "src/bin/tandem",
       "b": "man/tandem.1",
-      "reason": "comando novo tem que aparecer no manual, senao o pacote documenta uma coisa e faz outra"
+      "reason": "a new command has to appear in the manual, otherwise the package documents one thing and does another"
     },
     {
       "a": "src/lib/winedeps.sh",
       "b": "tests/run.sh",
-      "reason": "a tabela DLL->verbo ja teve seis erros que instalavam a coisa errada; mudar sem teste e como andar sem o auditor"
+      "reason": "the DLL->verb table has already had six errors that installed the wrong thing; changing it without a test is walking without the auditor"
     }
   ],
 
-  "$comment_pii": "Nao ha dado pessoal aqui, mas ha uma coisa que nunca pode vazar para o log: o caminho de um prefixo Wine alheio junto de um comando de escrita.",
+  "$comment_pii": "There is no personal data here, but there is one thing that must never leak into the log: the path of somebody else's Wine prefix next to a write command.",
   "piiTerms": "senha|password|token|credencial",
 
-  "$comment_money": "O Tandem nao lida com dinheiro. Desligado para nao gerar ruido.",
+  "$comment_money": "Tandem does not handle money. Switched off so it does not generate noise.",
   "severity": { "float-money": "off", "sql-concat": "off" },
 
   "maxFileKb": 512,

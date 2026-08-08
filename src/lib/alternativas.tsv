@@ -1,25 +1,32 @@
-# padrao	classe	nome	como instalar	o que muda
+# pattern	class	name	how to install	what changes
 #
-# Programas de Linux que fazem o trabalho de um programa de Windows.
+# Linux programs that do the job of a Windows program.
 #
-# DUAS CLASSES, e a diferenca importa muito:
+# TWO CLASSES, and the difference matters a great deal:
 #
-#   nativo   - E O MESMO PROGRAMA, com versao oficial para Linux. Nao ha
-#              troca nem adaptacao: e o mesmo produto, do mesmo fabricante,
-#              rodando direto. Rodar isso no Wine e sempre pior - mais lento,
-#              sem atualizacao automatica, e quebra quando o Wine muda.
-#              Esta e a categoria que mais resolve e menos gente conhece.
+#   nativo   - IT IS THE SAME PROGRAM, with an official Linux build. There is
+#              no swap and no adaptation: same product, same vendor, running
+#              directly. Running it under Wine is always worse - slower, no
+#              automatic updates, and it breaks when Wine changes. This is the
+#              category that solves the most and that the fewest people know
+#              about.
 #
-#   parecido - Outro programa, que faz um trabalho parecido. NAO e igual, e
-#              a coluna "o que muda" precisa dizer no que difere. Sugerir
-#              troca sem avisar a diferenca seria enganar.
+#   parecido - A different program that does a similar job. It is NOT the
+#              same, and the "what changes" column has to say how it differs.
+#              Suggesting a swap without naming the difference would be
+#              misleading.
 #
-# O Tandem NUNCA troca nada sozinho, e nunca sugere trocar um programa que
-# esta funcionando. Isto aparece em duas situacoes: quando o dono pergunta
-# ("tandem alternativas"), e quando o pre-voo reconhece que aquele programa
-# nunca vai funcionar aqui - onde ficar calado seria deixar o dono sem saida.
+# Tandem NEVER swaps anything on its own, and never suggests replacing a
+# program that is working. This surfaces in two situations: when the owner
+# asks ("tandem alternativas"), and when the pre-flight recognises that a
+# program will never work here - where staying quiet would leave the owner
+# with no way out.
 #
-# Uma linha nova nao exige mudar codigo nenhum.
+# A new line requires no code changes.
+#
+# The class values (nativo/parecido) are on-disk format, compared by the
+# shell: do not translate them. The name, install instructions and "what
+# changes" columns are shown to the user, so they stay in Portuguese.
 
 *teamviewer*	nativo	TeamViewer para Linux	baixe em teamviewer.com/pt-br/download/linux/	é o mesmo TeamViewer, versão oficial para Linux
 *anydesk*	nativo	AnyDesk para Linux	baixe em anydesk.com/pt/downloads/linux	é o mesmo AnyDesk, versão oficial para Linux

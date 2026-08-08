@@ -1,16 +1,19 @@
-# padrao-de-dll	classe	frase para o dono
+# dll-pattern	class	sentence for the owner
 #
-# Assinaturas lidas do PROPRIO executavel, antes de rodar. Cada linha amarra
-# um sinal a um limite ja declarado no LEIAME. A frase e sempre sobre a PARTE
-# do programa, nunca sobre o programa inteiro: um sistema de frente de caixa
-# pode abrir e funcionar, e so a impressao pelo pinpad nao ir.
+# Signatures read from the executable ITSELF, before running it. Each line ties
+# a signal to a limit already declared in the README. The sentence is always
+# about the PART of the program, never about the whole thing: a point-of-sale
+# system can open and work perfectly, with only the pinpad printing failing.
 #
-# O padrao e comparado com "case" do shell, entao aceita * e ?. Uma DLL que
-# case aqui NAO impede o Tandem de tentar - a tentativa e barata e o veredito
-# pode errar. Ela entra na explicacao de por que nao funcionou, no lugar de
-# "o programa fechou com erro (codigo N)".
+# The pattern is matched with shell "case", so it accepts * and ?. A DLL that
+# matches here does NOT stop Tandem from trying - trying is cheap and the
+# verdict can be wrong. It feeds the explanation of why it did not work, in
+# place of "the program exited with an error (code N)".
 #
-# Para acrescentar um caso novo, basta uma linha. Nenhum codigo muda.
+# Adding a new case takes one line. No code changes.
+#
+# The class values are on-disk format, compared by the shell: do not translate
+# them.
 
 hasp*.dll	dongle	a proteção por chave física (HASP) precisa falar direto com a porta USB, e isso o Wine não faz
 haspms*.dll	dongle	a proteção por chave física (HASP) precisa falar direto com a porta USB, e isso o Wine não faz

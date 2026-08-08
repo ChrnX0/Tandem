@@ -1,5 +1,5 @@
 #!/bin/bash
-# Tandem - abre a tela do Android.
+# Tandem - opens the Android screen.
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 t_log_init android
 

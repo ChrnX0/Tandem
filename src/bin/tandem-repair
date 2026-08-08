@@ -1,10 +1,11 @@
 #!/bin/bash
-# Tandem - reaplica as associacoes de arquivo.
+# Tandem - reapplies the file associations.
 #
-# Por que isso e necessario: o GNOME le varios arquivos de associacao em ordem
-# de precedencia. O ~/.config/mimeapps.list e o normal, mas gnome-mimeapps.list
-# e zorin-mimeapps.list tem precedencia MAIOR e sobrescrevem em silencio.
-# Aqui gravamos no lugar certo e limpamos os concorrentes, com backup.
+# Why this is necessary: GNOME reads several association files in order of
+# precedence. The ~/.config/mimeapps.list is the normal one, but
+# gnome-mimeapps.list and zorin-mimeapps.list have HIGHER precedence and
+# override it silently. Here we write to the right place and clean up the
+# competitors, with a backup.
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 t_log_init repair
 
@@ -23,8 +24,8 @@ application/x-msi
 application/x-msdos-program
 application/x-ms-shortcut"
 
-# Quem detinha os tipos antes? O Zorin ja instala "Windows App Support" e o
-# Waydroid instala waydroid.app.install.desktop - os dois disputam com o Tandem.
+# Who owned the types before? Zorin already installs "Windows App Support" and
+# Waydroid installs waydroid.app.install.desktop - both fight with Tandem.
 ANTES_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
 ANTES_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
 t_diz "antes: exe=$ANTES_EXE apk=$ANTES_APK"
@@ -71,16 +72,17 @@ RELATORIO="Associações reaplicadas.
 
 $RES"
 
-# Chamado de dentro do postinst ou da primeira execucao: nao pode abrir
-# janela nenhuma. O zenity --info espera o clique, e um dialogo aberto no
-# meio de um "apt install" travaria o gerenciador de pacotes ate alguem
-# perceber e clicar.
+# Called from inside the postinst or from the first run: it must not open any
+# window at all. The zenity --info waits for the click, and a dialog opened in
+# the middle of an "apt install" would hang the package manager until someone
+# noticed and clicked.
 if [ -n "${TANDEM_SILENCIOSO:-}" ]; then
     exit 0
 fi
 
-# Terminal primeiro; senao a janela; se a janela nao abrir, a saida padrao.
-# Antes, com zenity instalado e sem display, este relatorio sumia calado.
+# Terminal first; otherwise the window; if the window does not open, standard
+# output. Before, with zenity installed and no display, this report vanished
+# without a word.
 if [ -t 1 ]; then
     printf '%s\n' "$RELATORIO"
 elif ! { t_tem_gui && command -v zenity >/dev/null 2>&1 &&

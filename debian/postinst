@@ -3,22 +3,25 @@ set -e
 
 update-desktop-database /usr/share/applications 2>/dev/null || true
 gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
-# Registra os tipos .xapk/.apks/.apkm. Sem isso o sistema ve so um ZIP e o
-# duplo clique nunca chega ao Tandem.
+# Registers the .xapk/.apks/.apkm types. Without this the system sees only a
+# ZIP and the double click never reaches Tandem.
 update-mime-database /usr/share/mime 2>/dev/null || true
 
-# Descobre quem instalou, para aplicar as associacoes no perfil certo.
+# Find out who installed it, so the associations are applied to the right
+# profile.
 USUARIO="${SUDO_USER:-}"
 if [ -z "$USUARIO" ] && [ -n "${PKEXEC_UID:-}" ]; then
     USUARIO="$(getent passwd "$PKEXEC_UID" | cut -d: -f1 || true)"
 fi
 [ -z "$USUARIO" ] && USUARIO="$(logname 2>/dev/null || true)"
 
-# Adiantar o trabalho por-usuario e so um atalho: quando as tres vias acima
-# falham - e todas falham juntas se o .deb for instalado pelo instalador
-# grafico, que roda num daemon sem sudo e sem terminal - o proprio programa
-# faz isso na primeira execucao, ja rodando como o dono do HOME.
-# TANDEM_SILENCIOSO impede que um dialogo abra no meio do apt e trave o dpkg.
+# Getting the per-user work done here is only a shortcut: when the three
+# routes above fail - and they all fail together if the .deb is installed by
+# the graphical installer, which runs inside a daemon with no sudo and no
+# terminal - the program itself does this on the first run, already running as
+# the owner of the HOME.
+# TANDEM_SILENCIOSO keeps a dialog from opening in the middle of apt and
+# hanging dpkg.
 if [ -n "$USUARIO" ] && [ "$USUARIO" != "root" ]; then
     LAR="$(getent passwd "$USUARIO" | cut -d: -f6 || true)"
     if [ -n "$LAR" ] && [ -d "$LAR" ]; then

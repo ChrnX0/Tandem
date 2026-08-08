@@ -1,5 +1,5 @@
 #!/bin/bash
-# Tandem - instala um app Android (.apk, .xapk, .apks, .apkm) no Waydroid.
+# Tandem - installs an Android app (.apk, .xapk, .apks, .apkm) into Waydroid.
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 
 t_log_init apk "$*"
@@ -17,19 +17,20 @@ limpar() {
 }
 trap limpar EXIT INT TERM
 
-# Mesma distincao do tandem-exe: trava tomada por outro processo e um caso,
-# trava que nao pode ser criada e outro. Confundir os dois transformava
-# "pasta pessoal cheia" na mensagem errada "outra instalacao em andamento".
-# As chaves impedem que o 2>/dev/null vire desvio permanente do stderr do
-# programa inteiro. Ver o comentario longo no tandem-exe: sem elas, todo
-# caminho de erro sem sessao grafica termina em zero byte de saida.
+# Same distinction as in tandem-exe: a lock held by another process is one
+# case, a lock that cannot be created at all is another. Confusing the two
+# turned "home folder full" into the wrong message "another installation in
+# progress". The braces keep the 2>/dev/null from becoming a permanent
+# redirection of the whole program's stderr. See the long comment in
+# tandem-exe: without them, every error path with no graphical session ends
+# in zero bytes of output.
 if { exec 9> "$TANDEM_TRAVAS/apk.lock"; } 2>/dev/null; then
     flock -w 900 9 || { t_erro "Outra instalação já está em andamento."; exit 1; }
 else
     t_diz "nao consegui criar a trava de instalacao; seguindo sem ela"
 fi
 
-# ------------------------------------------------- 1. Inspecao previa
+# ------------------------------------------------- 1. Prior inspection
 INFO="$(python3 /usr/lib/tandem/apkinfo.py "$APK" 2>>"$LOG")"
 t_diz "$INFO"
 FORMATO=""; PACOTE=""; MINSDK=""; ABIS=""; SPLITS=1; OBB=0; ERRO=""
@@ -52,7 +53,7 @@ fi
 t_progresso_abre "Preparando o Android..."
 t_wd_garantir || exit 1
 
-# ------------------------------------------- 2. Compatibilidade, antes de tentar
+# ------------------------------------------- 2. Compatibility, before trying
 SDK="$(t_wd_sdk)"
 if [ -n "$MINSDK" ] && [ -n "$SDK" ] && [ "$MINSDK" -gt "$SDK" ] 2>/dev/null; then
     t_progresso_fecha
@@ -64,7 +65,7 @@ Procure uma versão mais antiga do app."
     exit 1
 fi
 
-# So tem biblioteca ARM? Precisa do tradutor.
+# Only ARM libraries? Then the translator is required.
 if [ -n "$ABIS" ] && ! printf '%s' "$ABIS" | grep -q 'x86'; then
     if ! t_wd_tem_arm; then
         t_progresso_fecha
@@ -81,7 +82,7 @@ sudo venv/bin/python3 main.py install houdini"
     t_diz "app ARM-only, tradutor presente"
 fi
 
-# ------------------------------------------------------- 3. Instalar
+# ------------------------------------------------------- 3. Install
 resultado() {
     local saida="$1"
     case "$saida" in
@@ -113,7 +114,7 @@ Procure no menu de aplicativos."
         *Failure*|*INSTALL_FAILED*|*Exception*|*error:*|*Error:*)
             t_erro "Não deu para instalar este app." ;;
         *)
-            # Sem palavra-chave: confirma consultando o proprio Android.
+            # No keyword: confirm by asking Android itself.
             if [ -n "$PACOTE" ] && waydroid shell -- pm list packages 2>/dev/null |
                  grep -q "package:$PACOTE"; then
                 t_ok "Instalado com sucesso. Procure no menu de aplicativos."
@@ -132,7 +133,7 @@ if [ "$FORMATO" = "apk" ]; then
     resultado "$SAIDA"; exit $?
 fi
 
-# ---------------------------- 4. Pacote dividido (xapk/apks/apkm) via ADB
+# ---------------------------- 4. Split package (xapk/apks/apkm) via ADB
 t_progresso_texto "Extraindo as $SPLITS partes do aplicativo..."
 TMP="$(mktemp -d)"
 if ! unzip -q -o "$APK" -d "$TMP" 2>>"$LOG"; then
@@ -168,7 +169,7 @@ t_progresso_texto "Instalando ${#PARTES[@]} partes..."
 SAIDA="$(timeout 900 adb -s "$IP:5555" install-multiple -r "${PARTES[@]}" 2>&1)"
 t_diz "$SAIDA"
 
-# Arquivos de dados extras (OBB), quando houver.
+# Extra data files (OBB), when present.
 if [ "$OBB" = 1 ] && [ -d "$TMP/Android/obb" ]; then
     t_progresso_texto "Copiando arquivos de dados do app..."
     adb -s "$IP:5555" shell mkdir -p /sdcard/Android/obb >>"$LOG" 2>&1

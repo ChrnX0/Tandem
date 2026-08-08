@@ -1,10 +1,10 @@
 #!/bin/bash
-# Tandem - comando principal e painel.
+# Tandem - main command and control panel.
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="3.5"
+VERSAO="3.6"
 
 uso() {
     cat <<'AJUDA'
@@ -40,7 +40,7 @@ Tandem - roda programas Windows e apps Android no Linux.
 AJUDA
 }
 
-# ------------------------------------------------------------------ acoes
+# ---------------------------------------------------------------- actions
 
 acao_install() {
     local f="$1"
@@ -101,17 +101,17 @@ acao_doctor() {
         out+="  (nenhum listado; perfis de terceiros são protegidos automaticamente)\n"
     fi
 
-    # %b (e nao "$out" cru) porque o texto tem \n para expandir mas pode
-    # conter % vindo de caminhos e versoes, que quebrariam o formato.
+    # %b (and not raw "$out") because the text has \n to expand but may
+    # contain % coming from paths and versions, which would break the format.
     printf '%b' "$out" | t_texto "Tandem - Diagnóstico"
 }
 
 # ---------------------------------------------------------------- dados
 #
-# "Se voce desistir do Linux, seus dados voltam com voce." E essa frase que
-# faz um dono de loja aceitar tentar - e ate a versao 3.4 o Tandem nao tinha
-# como cumpri-la, porque nada aqui distinguia o ambiente (reconstruivel) dos
-# arquivos que a pessoa digitou (nao).
+# "If you give up on Linux, your data comes back with you." That sentence is
+# what makes a shop owner willing to try - and up to version 3.4 Tandem had no
+# way to keep it, because nothing here told the environment (rebuildable)
+# apart from the files the person typed in (not).
 acao_dados() {
     local sub="${1:-listar}"
     case "$sub" in
@@ -187,9 +187,9 @@ acao_dados_restaurar() {
 Se você tem o arquivo, diga onde ele está:
 tandem dados restaurar /caminho/da/copia.tar.gz"; return 1; }
     [ -d "$p/drive_c" ] || { t_erro "Ainda não há um ambiente Windows para devolver os arquivos."; return 1; }
-    # Devolver dado NAO apaga nada: arquivo que ja existe fica como esta. Um
-    # restore que sobrescreve o trabalho de hoje com a copia da semana passada
-    # e exatamente o estrago que este comando existe para evitar.
+    # Giving data back DELETES nothing: a file that already exists stays as it
+    # is. A restore that overwrites today's work with last week's copy is
+    # exactly the damage this command exists to prevent.
     t_pergunta "Devolver os seus arquivos a partir de:
 
 $(basename -- "$arq")
@@ -231,13 +231,19 @@ acao_restore() {
 $(basename -- "$arq")
 
 O ambiente atual será substituído." "Restaurar" "Cancelar" || return 1
-    # Antes de trocar o ambiente inteiro, guarda o que nao se refaz. Sem isto
-    # o comando devolvia o ambiente da semana passada e levava as vendas do
-    # mes junto - em silencio, e sem chance de desfazer.
+    # Before swapping the whole environment, save what cannot be remade.
+    # Without this the command gave back last week's environment and took the
+    # month's sales along with it - silently, and with no chance to undo.
     local resgate
-    resgate="$(t_dados_resgate "$TANDEM_PREFIXO_PADRAO" antes-de-restaurar)" && \
-        t_aviso "Guardei uma cópia dos seus arquivos em:
-$resgate"
+    local c_resgate
+    resgate="$(t_dados_resgate "$TANDEM_PREFIXO_PADRAO" antes-de-restaurar)"; c_resgate=$?
+    case $c_resgate in
+        0) t_aviso "Guardei uma cópia dos seus arquivos em:
+$resgate" ;;
+        1) t_pergunta "$(t_texto_resgate_falhou)
+
+Restaurar mesmo assim?" "Restaurar assim mesmo" "Parar" || return 1 ;;
+    esac
     t_progresso_abre "Restaurando..."
     rm -rf -- "$TANDEM_PREFIXO_PADRAO"
     mkdir -p "$(dirname -- "$TANDEM_PREFIXO_PADRAO")"
@@ -260,10 +266,11 @@ O Tandem nunca vai instalar nem alterar nada aí dentro."
 
 # ----------------------------------------------------------------- preparar
 #
-# "Ao instalar o Tandem ele tambem instala o Wine e o Waydroid e tudo o que
-# precisa" - pedido do usuario, e a resposta tecnica honesta: durante a
-# instalacao do .deb e impossivel (trava do dpkg), mas um comando depois
-# resolve tudo de uma vez. E o clique num .exe sem Wine tambem oferece.
+# "When you install Tandem it should also install Wine and Waydroid and
+# everything it needs" - the user's request, and the honest technical answer:
+# during the .deb installation that is impossible (dpkg's lock), but one
+# command afterwards settles everything at once. And clicking a .exe with no
+# Wine offers it too.
 acao_preparar() {
     local faltas linha codigos=() descricoes=() plano="" script c
 
@@ -317,9 +324,9 @@ tandem doctor"
     return 0
 }
 
-# Escolhe um item de uma lista de nomes. Devolve o nome escolhido.
-# Uma coluna so, de proposito: as opcoes de coluna escondida mudaram entre
-# as versoes do zenity, e nao vale a pena depender delas.
+# Picks one item from a list of names. Returns the chosen name.
+# One column only, on purpose: the hidden-column options changed between
+# zenity versions, and it is not worth depending on them.
 escolher() {
     local titulo="$1" pergunta="$2"; shift 2
     if t_tem_gui && command -v zenity >/dev/null 2>&1; then
@@ -332,10 +339,10 @@ escolher() {
 
 # ---------------------------------------------------------------- programas
 #
-# O menu do sistema nao e caminho confiavel de volta ao programa instalado:
-# sob Wayland o GNOME so relê a lista de aplicativos depois de sair e entrar
-# na conta, e ate la o programa instalado simplesmente nao existe para o
-# usuario. O Tandem sabe o que instalou, entao ele mesmo mostra e abre.
+# The system menu is not a reliable way back to the installed program: under
+# Wayland, GNOME only re-reads the application list after you log out and log
+# back in, and until then the installed program simply does not exist for the
+# user. Tandem knows what it installed, so it shows and opens them itself.
 acao_programas() {
     local filtro="${1:-}" d nome escolha achou="" nomes=()
     local lista; lista="$(t_atalhos_nossos)"
@@ -363,9 +370,9 @@ Programas que não criam atalho no Menu Iniciar não aparecem aqui."
         nomes+=("$(t_nome_do_atalho "$d")")
     done <<< "$lista"
 
-    # Sem janela (terminal, SSH), a lista sai em texto. O "escolher" devolve
-    # vazio tanto no Cancelar quanto na ausencia de zenity; no primeiro caso
-    # a listagem e inofensiva, no segundo e o unico caminho que resta.
+    # With no window (terminal, SSH), the list comes out as text. "escolher"
+    # returns empty both on Cancel and when zenity is missing; in the first
+    # case the listing is harmless, in the second it is the only path left.
     escolha="$(escolher "Tandem - Programas do Windows" \
                         "Qual programa você quer abrir?" "${nomes[@]}")"
     if [ -z "$escolha" ]; then
@@ -379,9 +386,9 @@ Programas que não criam atalho no Menu Iniciar não aparecem aqui."
 
 # ------------------------------------------------------------- desinstalar
 #
-# O usuario-alvo nao sabe usar o Wine, e nao tem por que saber. Sem isto o
-# unico caminho era "WINEPREFIX=... wine uninstaller", que e exatamente o
-# tipo de coisa que este projeto existe para nao exigir de ninguem.
+# The target user does not know how to use Wine, and has no reason to. Without
+# this the only path was "WINEPREFIX=... wine uninstaller", which is exactly
+# the kind of thing this project exists so as not to demand of anyone.
 acao_uninstall() {
     local filtro="${1:-}" pref="$TANDEM_PREFIXO_PADRAO" lista linha nome
     local escolha achou="" nomes=() silencioso normal
@@ -389,8 +396,9 @@ acao_uninstall() {
     [ -f "$pref/system.reg" ] || {
         t_erro "Nenhum programa do Windows foi instalado pelo Tandem ainda."; return 1; }
 
-    # Desinstalar altera o prefixo, entao so vale para o nosso. Prefixo de
-    # terceiro - o do sistema de frente de caixa, por exemplo - e intocavel.
+    # Uninstalling changes the prefix, so it only holds for ours. A
+    # third-party prefix - the point-of-sale system's, for example - is
+    # untouchable.
     export WINEPREFIX="$pref"
     lista="$(t_uninstall_dump "$pref")"
     if [ -z "$lista" ]; then
@@ -431,9 +439,9 @@ Programas que não trazem desinstalador próprio não aparecem nesta lista."
     [ -n "$achou" ] || { t_erro "Não achei nenhum programa com \"$filtro\" no nome."; return 1; }
     command -v wine >/dev/null 2>&1 || { t_erro "O Wine não está instalado."; return 1; }
 
-    # Confirmacao: janela; senao o terminal; sem nenhum dos dois, recusa
-    # DIZENDO por que - remover programa sem ninguem confirmando e risco,
-    # e desistir calado e defeito.
+    # Confirmation: a window; failing that, the terminal; with neither, it
+    # refuses SAYING why - removing a program with nobody confirming is a
+    # risk, and giving up silently is a defect.
     if ! t_pergunta "Remover este programa do Windows?
 
 $nome
@@ -449,18 +457,25 @@ Os arquivos dele serão apagados." "Remover" "Cancelar"; then
         fi
     fi
 
-    # O desinstalador do programa apaga a pasta dele inteira - e em software
-    # comercial brasileiro o banco de dados costuma morar ali dentro, ao lado
-    # do executavel. O dono confirmou remover o PROGRAMA; ninguem perguntou se
-    # ele queria perder o cadastro. A copia sai antes, sempre.
+    # The program's uninstaller wipes its whole folder - and in Brazilian
+    # commercial software the database usually lives right in there, next to
+    # the executable. The owner confirmed removing the PROGRAM; nobody asked
+    # whether he wanted to lose the records. The copy is made first, always.
     local resgate
-    resgate="$(t_dados_resgate "$TANDEM_PREFIXO_PADRAO" antes-de-remover)" && \
-        t_aviso "Antes de remover, guardei uma cópia dos seus arquivos em:
-$resgate"
+    local c_resgate
+    resgate="$(t_dados_resgate "$TANDEM_PREFIXO_PADRAO" antes-de-remover)"; c_resgate=$?
+    case $c_resgate in
+        0) t_aviso "Antes de remover, guardei uma cópia dos seus arquivos em:
+$resgate" ;;
+        1) t_pergunta "$(t_texto_resgate_falhou)
 
-    # Preferimos o desinstalador silencioso, que o proprio programa declara
-    # no registro. Sem ele, rodamos o desinstalador normal: abre a janela do
-    # proprio programa e o usuario confirma la - honesto, ainda que em ingles.
+Remover mesmo assim?" "Remover assim mesmo" "Parar" || return 1 ;;
+    esac
+
+    # We prefer the silent uninstaller, which the program itself declares in
+    # the registry. Without it, we run the normal uninstaller: it opens the
+    # program's own window and the user confirms there - honest, even if in
+    # English.
     local c
     if [ -n "$silencioso" ]; then
         t_progresso_abre "Removendo $nome..."
@@ -480,7 +495,7 @@ $resgate"
     local orfaos; orfaos="$(t_limpa_atalhos_orfaos)"
     t_diz "desinstalar $nome: codigo $c, $orfaos atalho(s) orfao(s) removido(s)"
 
-    # A prova dos nove e o registro: a chave sumiu?
+    # The acid test is the registry: did the key disappear?
     if t_uninstall_dump "$pref" | grep -qF -- "$achou|||"; then
         t_erro "Não consegui remover $nome.
 
@@ -493,9 +508,9 @@ O desinstalador do programa não completou. Tente de novo, ou remova pela janela
 
 # ------------------------------------------------------------- alternativas
 #
-# O dono pergunta; o Tandem responde com o que sabe, e diz claramente quando
-# nao sabe. Nunca troca nada, nunca insiste, e nunca sugere trocar programa
-# que esta funcionando.
+# The owner asks; Tandem answers with what it knows, and says plainly when it
+# does not know. It never swaps anything, never insists, and never suggests
+# replacing a program that is working.
 acao_alternativas() {
     local nome="${1:-}" texto
     if [ -z "$nome" ]; then
@@ -504,7 +519,7 @@ acao_alternativas() {
 Exemplo:  tandem alternativas photoshop"
         return 1
     fi
-    # Aceita tanto "photoshop" quanto o caminho de um .exe.
+    # Accepts both "photoshop" and the path to a .exe.
     [ -f "$nome" ] && nome="$(basename -- "${nome%.*}")"
 
     if texto="$(t_texto_alternativas "$nome")"; then
@@ -522,20 +537,21 @@ Se você encontrar uma, ela pode ser acrescentada em uma linha."
 
 # -------------------------------------------------------------- autoteste
 #
-# O "doctor" LISTA: diz que o zenity esta instalado, que o locale existe, que
-# o Wine responde. Isso e evidencia fraca - prova que a peca esta la, nao que
-# ela funciona.
+# The "doctor" LISTS: it says zenity is installed, that the locale exists,
+# that Wine answers. That is weak evidence - it proves the part is there, not
+# that it works.
 #
-# Cinco defeitos encontrados em campo eram invisiveis para uma lista e
-# visiveis para um exercicio:
-#   - zenity instalado, mas recusando todo texto acentuado (locale ausente)
-#   - o cano de progresso existindo, mas matando o processo ao ser escrito
-#   - a trava configurada, mas impossivel de criar
-#   - o doctor funcionando no terminal, mas gravando zero byte num arquivo
-#   - o erro sendo "mostrado" numa janela que nunca abriu
+# Five defects found in the field were invisible to a listing and visible to
+# an exercise:
+#   - zenity installed, but refusing every accented text (missing locale)
+#   - the progress pipe existing, but killing the process when written to
+#   - the lock configured, but impossible to create
+#   - the doctor working in the terminal, but writing zero bytes to a file
+#   - the error being "shown" in a window that never opened
 #
-# O autoteste EXERCITA. Cada verificacao roda a coisa de verdade e olha o
-# resultado. Onde o exercicio nao e possivel sem o dono ver, ele pergunta.
+# The self-test EXERCISES. Each check runs the real thing and looks at the
+# result. Where the exercise is not possible without the owner watching, it
+# asks.
 acao_autoteste() {
     local ok=0 falhou=0 saida="" tmp
     tmp="$(mktemp -d)"
@@ -544,32 +560,32 @@ acao_autoteste() {
     passa() { ok=$((ok+1));     saida="$saida  PASSA   $1"$'\n'; }
     falha() { falhou=$((falhou+1)); saida="$saida  FALHA   $1"$'\n         '"$2"$'\n'; }
 
-    # 1. A mensagem de erro chega em ALGUM lugar? Sem isto, todo o resto do
-    #    diagnostico e inutil: o dono nunca saberia do problema.
+    # 1. Does the error message reach SOMEWHERE? Without this, all the rest of
+    #    the diagnosis is useless: the owner would never learn of the problem.
     if [ -n "$(t_erro "autoteste: ignore esta mensagem" 2>&1 1>/dev/null)" ] || t_tem_gui; then
         passa "as mensagens de erro têm para onde ir"
     else
         falha "as mensagens de erro somem" "sem janela e sem terminal, um erro daqui não chega a ninguém"
     fi
 
-    # 2. O texto acentuado sobrevive? E o defeito que apagou a interface
-    #    inteira numa maquina real, e nenhuma lista o pegaria.
+    # 2. Does accented text survive? This is the defect that wiped out the
+    #    whole interface on a real machine, and no listing would catch it.
     if [ "$(locale charmap 2>/dev/null)" = "UTF-8" ]; then
         passa "o sistema aceita texto com acento (charmap UTF-8)"
     else
         falha "o texto com acento não passa" "o locale em vigor não é UTF-8; as janelas do Tandem não vão abrir"
     fi
 
-    # 3. O diagnostico consegue ser gravado num arquivo? Se nao, o dono nao
-    #    tem como mandar para ninguem.
+    # 3. Can the diagnosis be written to a file? If not, the owner has no way
+    #    to send it to anyone.
     if ( "$0" version > "$tmp/redir.txt" 2>/dev/null ) && [ -s "$tmp/redir.txt" ]; then
         passa "o diagnóstico pode ser gravado e enviado"
     else
         falha "o diagnóstico não pode ser enviado" "gravar em arquivo produziu zero byte"
     fi
 
-    # 4. A trava do duplo clique pode ser criada? Se nao, o duplo clique
-    #    para de funcionar - e em silencio, foi o que aconteceu.
+    # 4. Can the double-click lock be created? If not, the double click stops
+    #    working - and silently, which is what happened.
     if ( exec 7> "$TANDEM_TRAVAS/autoteste.lock" ) 2>/dev/null &&
        rm -f "$TANDEM_TRAVAS/autoteste.lock" 2>/dev/null; then
         passa "a trava do duplo clique pode ser criada ($TANDEM_TRAVAS)"
@@ -577,8 +593,8 @@ acao_autoteste() {
         falha "a trava não pode ser criada" "em $TANDEM_TRAVAS — disco cheio, sem permissão, ou pasta em rede"
     fi
 
-    # 5. A barra de progresso aguenta a janela sumir? Exercitado de verdade:
-    #    abre, fecha o leitor, escreve. Antes isso matava o Tandem com 141.
+    # 5. Does the progress bar survive the window vanishing? Really exercised:
+    #    open it, kill the reader, write. This used to kill Tandem with 141.
     if t_tem_gui && command -v zenity >/dev/null 2>&1; then
         ( t_progresso_abre "autoteste"; kill "${TANDEM_PROG_PID:-0}" 2>/dev/null
           sleep 0.3; t_progresso_texto "depois de fechada"; t_progresso_fecha ) >/dev/null 2>&1
@@ -591,8 +607,8 @@ acao_autoteste() {
         saida="$saida  --      barra de progresso (sem sessão gráfica para exercitar)"$'\n'
     fi
 
-    # 6. O leitor de PE funciona nesta maquina? Exercitado contra um binario
-    #    Windows de verdade, se houver um a mao no prefixo.
+    # 6. Does the PE reader work on this machine? Exercised against a real
+    #    Windows binary, if there is one at hand in the prefix.
     local umexe
     umexe="$(find "$TANDEM_PREFIXO_PADRAO/drive_c" -name '*.exe' -size -20M 2>/dev/null | head -1)"
     if [ -n "$umexe" ]; then
@@ -605,8 +621,8 @@ acao_autoteste() {
         saida="$saida  --      pré-voo do PE (nenhum programa Windows instalado ainda)"$'\n'
     fi
 
-    # 7. As associacoes apontam para o Tandem? E o que faz o duplo clique
-    #    chegar aqui; sem isso o resto nao importa.
+    # 7. Do the associations point at Tandem? That is what makes the double
+    #    click arrive here; without it the rest does not matter.
     if command -v xdg-mime >/dev/null 2>&1; then
         local dono; dono="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
         if [ "$dono" = "tandem-exe.desktop" ]; then
@@ -616,8 +632,8 @@ acao_autoteste() {
         fi
     fi
 
-    # 8. A protecao dos prefixos alheios esta valendo? Exercita a decisao,
-    #    nao a lista: pergunta ao codigo o que ele faria.
+    # 8. Is the protection of other people's prefixes in force? It exercises
+    #    the decision, not the list: it asks the code what it would do.
     local alheio protegidos=0 desprotegidos=""
     while IFS= read -r alheio; do
         [ -n "$alheio" ] || continue
@@ -642,9 +658,9 @@ acao_autoteste() {
 
 # -------------------------------------------------------------- receitas
 #
-# O conhecimento coletivo sem servidor: a memoria de um programa vira um
-# arquivo de texto que o dono manda para outra pessoa. So puxa, nunca
-# empurra - o Tandem le receitas e nunca envia nada para lugar nenhum.
+# Collective knowledge with no server: a program's memory becomes a text file
+# that the owner sends to another person. Pull only, never push - Tandem reads
+# recipes and never sends anything anywhere.
 acao_receita() {
     if [ "${1:-}" = "--importar" ]; then
         local rec="${2:-}" prog="${3:-}"
@@ -675,8 +691,8 @@ Receita vinda de fora não pode mandar o Tandem executar nada." ;;
 
 Exemplo:  tandem receita ~/Downloads/sistema.exe"; return 1; }
     [ -f "$prog" ] || { t_erro "Não achei o programa: $prog"; return 1; }
-    # Avisa ANTES, na saida de erro, para nao sujar a receita que sai no
-    # stdout e costuma ser redirecionada para um arquivo.
+    # Warn BEFOREHAND, on the error output, so as not to dirty the recipe that
+    # goes out on stdout and is usually redirected into a file.
     case "$(t_confianca_da_licao "$prog")" in
         reprovado)
             t_aviso "Atenção: você disse que este programa NÃO funcionou direito aqui.
@@ -696,9 +712,9 @@ Abra ele uma vez pelo Tandem e a receita se forma sozinha."
 
 # ------------------------------------------------------------------ memoria
 #
-# O que o Tandem aprendeu, em texto que o dono consegue ler. Nao existe
-# memoria secreta: se ele nao conseguir VER o que foi guardado, nao tem como
-# confiar nem como corrigir.
+# What Tandem has learned, in text the owner can read. There is no secret
+# memory: if he cannot SEE what was stored, he has no way to trust it and no
+# way to correct it.
 acao_memoria() {
     local filtro="${1:-}" arq prog saida="" n=0
     if [ ! -d "$TANDEM_MEMORIA" ] || [ -z "$(ls -A "$TANDEM_MEMORIA" 2>/dev/null)" ]; then
@@ -745,9 +761,9 @@ acao_logs() {
 
 # ----------------------------------------------------------------- lista
 #
-# A ideia do dono, e ela e boa: em vez de um servidor-ponte entre todos os
-# Tandems, um ARQUIVO que cada instalacao baixa - o modelo das listas de
-# filtro de bloqueador de anuncio. Ver docs/LIST-FORMAT.md.
+# The owner's idea, and it is a good one: instead of a bridge server between
+# all the Tandems, a FILE that each installation downloads - the ad-blocker
+# filter-list model. See docs/LIST-FORMAT.md.
 acao_lista() {
     case "${1:-ver}" in
         atualizar|baixar|sincronizar)
@@ -793,8 +809,8 @@ $(head -1 "$TANDEM_LISTA")" | t_texto "Tandem - Lista da comunidade"
     esac
 }
 
-# Monta o registro para o dono conferir e mandar. NAO envia nada: a maquina de
-# uma loja nao fala com servidor nenhum por decisao de um automatismo.
+# Assembles the record for the owner to check and send. It sends NOTHING: a
+# shop's machine does not talk to any server by decision of an automation.
 acao_contribuir() {
     local prog="${1:-}" reg
     [ -n "$prog" ] || { t_erro "Diga qual programa.
@@ -835,14 +851,15 @@ https://github.com/ChrnX0/Tandem/issues" | t_texto "Tandem - Contribuir"
 
 # ---------------------------------------------------------------- socorro
 #
-# Suporte remoto hoje e alguem ditando comandos por telefone para uma pessoa
-# que nao sabe onde fica o Terminal. Isto junta tudo o que quem entende vai
-# pedir num arquivo so, que o dono manda por WhatsApp e pronto.
+# Remote support today is someone dictating commands over the phone to a
+# person who does not know where the Terminal is. This gathers everything
+# whoever understands the thing is going to ask for into a single file, which
+# the owner sends over WhatsApp and that is it.
 #
-# O arquivo diz na primeira linha o que tem dentro. Ele contem caminhos de
-# arquivo do dono, e caminho de arquivo as vezes tem nome de cliente - quem
-# decide mandar e ele, mas so decide de verdade se souber o que esta
-# mandando.
+# The file says on its first line what is inside it. It contains the owner's
+# file paths, and a file path sometimes carries a customer's name - he is the
+# one who decides to send it, but he only really decides if he knows what he
+# is sending.
 acao_socorro() {
     local arq l
     arq="$HOME/tandem-socorro-$(date +%F-%H%M).txt"
@@ -890,8 +907,8 @@ que estão nesta máquina."
 }
 
 acao_painel() {
-    # Sem sessao grafica o painel nao tem como aparecer: mostre a ajuda em
-    # vez de abrir e fechar uma janela invisivel sem dizer nada.
+    # With no graphical session the panel has no way to show up: display the
+    # help instead of opening and closing an invisible window saying nothing.
     if ! t_tem_gui || ! command -v zenity >/dev/null 2>&1; then uso; return 0; fi
     local esc
     while :; do
@@ -963,8 +980,8 @@ case "${1:-}" in
     contribuir|contribuicao) shift; acao_contribuir "$@" ;;
     socorro|ajuda-tecnica) acao_socorro ;;
     logs|log)             acao_logs ;;
-    # Uso interno do postinst: ja foi feito na chamada a t_primeira_vez
-    # la em cima. Fica fora da ajuda de proposito.
+    # Internal use by postinst: already done in the t_primeira_vez call up
+    # top. Kept out of the help on purpose.
     --primeira-vez)       : ;;
     version|--version|-v) echo "Tandem $VERSAO" ;;
     help|--help|-h)       uso ;;

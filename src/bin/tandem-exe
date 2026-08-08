@@ -1,11 +1,11 @@
 #!/bin/bash
-# Tandem - executa um programa Windows, resolvendo dependencias sozinho.
+# Tandem - runs a Windows program, resolving dependencies on its own.
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 . "${TANDEM_LIB:-/usr/lib/tandem}/winedeps.sh"
 
 t_log_init exe "$*"
-# Antes de qualquer decisao sobre prefixo: garante que os prefixos que ja
-# existiam estejam registrados como intocaveis.
+# Before any decision about a prefix: make sure the prefixes that already
+# existed are registered as untouchable.
 t_primeira_vez
 
 BRUTO="${1:-}"
@@ -14,7 +14,7 @@ PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 [ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "Arquivo não encontrado:
 $BRUTO"; exit 1; }
 
-# Sem Wine, o clique nao pode morrer num aviso: oferecemos instalar na hora.
+# Without Wine, the click cannot die on a warning: we offer to install it now.
 if ! command -v wine >/dev/null 2>&1; then
     if t_pergunta "O Wine, que roda os programas do Windows, não está instalado.
 
@@ -33,38 +33,39 @@ Ou deixe o Tandem instalar tudo:  tandem preparar"; exit 1; }
     t_ok "Wine instalado."
 fi
 
-# Dois cliques rapidos disparam dois processos. Sem isso, duas instalacoes
-# de dependencia concorrentes corrompem o prefixo. Trava por arquivo, para
-# nao impedir abrir dois programas diferentes ao mesmo tempo.
+# Two quick clicks fire off two processes. Without this, two concurrent
+# dependency installs corrupt the prefix. Lock per file, so as not to prevent
+# opening two different programs at the same time.
 CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
 TRAVA="$TANDEM_TRAVAS/exe-$CHAVE.lock"
-# Duas situacoes que pareciam uma so. Se OUTRO processo ja tem a trava, sair
-# esta certo. Mas se a trava nao pode nem ser criada - pasta pessoal cheia,
-# somente leitura, em rede - o "exec" falha, o bash segue vivo, o flock
-# responde "Bad file descriptor" e o codigo antigo saia com 0 dizendo "este
-# programa ja esta abrindo". Mentira, e invisivel no duplo clique: o
-# resultado era o duplo clique nao fazer nada, para sempre. Sem trava a
-# protecao contra clique duplo se perde, o que e ruim; recusar-se a abrir o
-# programa e pior.
-# As chaves nao sao enfeite. "exec" SEM COMANDO aplica as redirecoes ao shell
-# inteiro, e de forma permanente: escrito "exec 7> arq 2>/dev/null", o
-# 2>/dev/null nao cala o exec - cala o stderr de TODO o resto do programa.
-# Efeito medido num Ubuntu 24.04 sem sessao grafica: o laco detectava a DLL
-# certa, traduzia certo, montava a mensagem certa com o comando certo... e
-# devolvia codigo 53 com zero byte de saida. O erro em silencio mais completo
-# que este projeto ja produziu, escondido justamente no codigo escrito para
-# consertar um erro em silencio. Com as chaves, o fd 7 persiste e o desvio do
-# stderr morre no fim do grupo.
+# Two situations that looked like one. If ANOTHER process already holds the
+# lock, bailing out is right. But if the lock cannot even be created - home
+# folder full, read-only, on a network share - the "exec" fails, bash stays
+# alive, flock answers "Bad file descriptor" and the old code exited with 0
+# saying "this program is already opening". A lie, and invisible on a double
+# click: the result was the double click doing nothing, forever. Without a
+# lock the protection against a double click is lost, which is bad; refusing
+# to open the program is worse.
+# The braces are not decoration. "exec" WITH NO COMMAND applies the
+# redirections to the whole shell, and permanently: written as
+# "exec 7> file 2>/dev/null", the 2>/dev/null does not silence the exec - it
+# silences stderr for ALL the rest of the program. Measured effect on an
+# Ubuntu 24.04 with no graphical session: the loop detected the right DLL,
+# translated it right, assembled the right message with the right command...
+# and returned code 53 with zero bytes of output. The most complete silent
+# failure this project has ever produced, hidden precisely inside the code
+# written to fix a silent failure. With the braces, fd 7 persists and the
+# stderr redirection dies at the end of the group.
 if { exec 7> "$TRAVA"; } 2>/dev/null; then
     flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
 else
     t_diz "nao consegui criar a trava em $TRAVA; seguindo sem ela"
 fi
 
-# --------------------------------------------------- 1. Qual prefixo usar
-# Se o arquivo mora dentro de um prefixo existente, respeite-o.
-# E o que impede o Tandem de rodar o atualizador de um sistema em producao
-# num ambiente vazio, sem as dependencias que aquele sistema instalou.
+# ------------------------------------------------- 1. Which prefix to use
+# If the file lives inside an existing prefix, respect it.
+# This is what keeps Tandem from running the updater of a production system
+# in an empty environment, without the dependencies that system installed.
 if PREF="$(t_prefixo_do_arquivo "$PROG")"; then
     export WINEPREFIX="$PREF"
     NOSSO=0
@@ -76,28 +77,37 @@ fi
 t_prefixo_protegido "$WINEPREFIX" && PROTEGIDO=1 || PROTEGIDO=0
 
 export WINEDEBUG=fixme-all
-# O Wine usa o locale para escolher o idioma do programa Windows. Definir
-# pt_BR.UTF-8 sem checar era perigoso: num sistema onde esse locale nao foi
-# gerado (Zorin instalado em ingles, por exemplo) o glib cai para ASCII e o
-# zenity passa a recusar todo texto acentuado - ou seja, todas as janelas de
-# erro deste programa deixavam de aparecer, em silencio.
+# Wine uses the locale to choose the language of the Windows program. Setting
+# pt_BR.UTF-8 without checking was dangerous: on a system where that locale
+# was not generated (a Zorin installed in English, for instance) glib falls
+# back to ASCII and zenity starts refusing every accented text - that is, all
+# the error windows of this program stopped appearing, silently.
 TANDEM_LOCALE="$(t_locale_utf8 "${LC_ALL:-}" pt_BR.UTF-8 "${LANG:-}")"
 export LC_ALL="$TANDEM_LOCALE"
-# winemenubuilder LIGADO: e ele que cria o atalho no menu do Linux quando um
-# instalador Windows cria atalho no Menu Iniciar.
+# winemenubuilder ON: it is the one that creates the Linux menu shortcut when
+# a Windows installer creates a shortcut in the Start Menu.
 unset WINEDLLOVERRIDES
 
-# ------------------------------------------------- 2. Criar prefixo padrao
+# ------------------------------------------------ 2. Create default prefix
 if [ "$NOSSO" = 1 ] && [ ! -f "$WINEPREFIX/system.reg" ]; then
     if [ -d "$WINEPREFIX" ]; then
-        # "Incompleto" quer dizer sem system.reg. Nao quer dizer vazio: pode
-        # haver um wineboot interrompido com a pasta de Documentos ja cheia.
-        # Apagar direto era o caminho destrutivo mais silencioso do projeto -
-        # acontecia dentro de um duplo clique, sem ninguem pedir nada.
-        RESGATE="$(t_dados_resgate "$WINEPREFIX" ambiente-incompleto)" &&
-            t_aviso "O ambiente Windows estava pela metade e vai ser refeito.
+        # "Incomplete" means without system.reg. It does not mean empty:
+        # there may be an interrupted wineboot with the Documents folder
+        # already full. Deleting it outright was the most silent destructive
+        # path in the project - it happened inside a double click, with
+        # nobody asking for anything.
+        RESGATE="$(t_dados_resgate "$WINEPREFIX" ambiente-incompleto)"; C_RESGATE=$?
+        case $C_RESGATE in
+            0) t_aviso "O ambiente Windows estava pela metade e vai ser refeito.
 Guardei os seus arquivos em:
-$RESGATE"
+$RESGATE" ;;
+            1) # There is data here and the copy failed. This runs inside a
+               # double click, so there is nobody watching a terminal: refusing
+               # is the only honest move. Deleting anyway would be the exact
+               # loss this whole mechanism exists to prevent.
+               t_erro "$(t_texto_resgate_falhou)"
+               exit 1 ;;
+        esac
         t_diz "prefixo incompleto, refazendo"
         rm -rf -- "$WINEPREFIX"
     fi
@@ -105,7 +115,7 @@ $RESGATE"
     t_progresso_abre "Primeira vez: preparando o ambiente Windows..."
     (
       flock -w 1200 9 || exit 1
-      # Sem os dialogos de Mono/Gecko em ingles, que travam usuario leigo.
+      # Without the Mono/Gecko dialogs in English, which stall a lay user.
       WINEARCH=win64 WINEDLLOVERRIDES="mscoree=d;mshtml=d;winemenubuilder.exe=d" \
           wineboot -u >>"$LOG" 2>&1
       wineserver -w
@@ -118,26 +128,26 @@ $RESGATE"
     PROTEGIDO=0
     t_ok "Ambiente Windows pronto."
 fi
-# Em prefixo ja existente, definir WINEARCH faz o Wine se recusar a iniciar.
+# On an already existing prefix, setting WINEARCH makes Wine refuse to start.
 unset WINEARCH
 
-# O winemenubuilder faz duas coisas: cria atalhos no menu do Linux para os
-# programas Windows instalados (queremos) e sequestra as associacoes de
-# arquivo do sistema, roubando .txt, .jpg e .pdf (nao queremos). Desligar o
-# binario inteiro mata as duas. Esta chave desliga so o sequestro - e o que
-# esta por tras da opcao "Manage File Associations" do winecfg.
-# Somente em prefixo nosso: em prefixo de terceiro nada e alterado.
+# winemenubuilder does two things: it creates Linux menu shortcuts for the
+# installed Windows programs (we want that) and it hijacks the system's file
+# associations, stealing .txt, .jpg and .pdf (we do not want that). Turning
+# off the whole binary kills both. This key turns off only the hijacking - it
+# is what sits behind winecfg's "Manage File Associations" option.
+# Only in a prefix of ours: in a third party's prefix nothing is changed.
 if [ "$PROTEGIDO" = 0 ] && [ ! -f "$WINEPREFIX/.tandem-assoc" ]; then
     wine reg add 'HKCU\Software\Wine\FileOpenAssociations' /v Enable /t REG_SZ /d N /f \
         >>"$LOG" 2>&1 && : > "$WINEPREFIX/.tandem-assoc"
-    # Limpa o que o Wine ja tenha espalhado antes desta trava.
+    # Cleans up whatever Wine may have already spread before this guard.
     rm -f "$HOME/.local/share/applications/wine-extension-"*.desktop 2>/dev/null
     rm -f "$HOME/.local/share/mime/packages/x-wine"* 2>/dev/null
     update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
     update-mime-database "$HOME/.local/share/mime" 2>/dev/null
 fi
 
-# ------------------------------------------------ 3. Checagem de 32 bits
+# ------------------------------------------------------- 3. 32-bit check
 ARCH="$(t_pe_arch "$PROG" 2>/dev/null || true)"
 t_diz "arquitetura do PE: ${ARCH:-nao identificada}"
 if [ "$ARCH" = 32 ] && ! t_tem_wine32; then
@@ -167,24 +177,25 @@ if [ "$ARCH" = arm64 ]; then
     exit 1
 fi
 
-# Pre-voo: le a tabela de importacoes do proprio arquivo, sem executar nada.
-# Nao bloqueia e nao instala - guarda a explicacao para o caso de falhar.
+# Pre-flight: reads the import table of the file itself, without running
+# anything. It does not block and does not install - it keeps the explanation
+# around in case things fail.
 LIMITE="$(t_limite_do_programa "$PROG" 2>/dev/null)"
 [ -n "$LIMITE" ] && t_diz "pre-voo: limite reconhecido -> $LIMITE"
 
-# ------------------------------------------------- memoria deste programa
-# O que o Tandem ja aprendeu sobre ESTE arquivo, aqui ou noutra maquina.
+# ------------------------------------------------- memory of this program
+# What Tandem has already learned about THIS file, here or on another machine.
 SABIDOS="$(t_memoria_le "$PROG" RESOLVERAM 2>/dev/null)"
-# Se esta maquina ainda nao sabe nada deste programa, a lista da comunidade
-# pode saber. Ela nao decide nada: vira exatamente o mesmo tipo de sugestao
-# que a memoria local, e passa pela mesma pergunta.
+# If this machine still knows nothing about this program, the community list
+# may know. It decides nothing: it becomes exactly the same kind of suggestion
+# as the local memory, and goes through the same question.
 if [ -z "$SABIDOS" ]; then
     DA_LISTA="$(t_lista_consulta "$PROG" 2>/dev/null)"
     if [ -n "$DA_LISTA" ]; then
         SABIDOS="$DA_LISTA"
-        # A contagem de maquinas e a unica coisa que a lista sabe e nenhum
-        # forum sabe. Guardar isso num arquivo e nao dizer ao dono seria jogar
-        # fora a melhor razao que ele tem para confiar na sugestao.
+        # The machine count is the one thing the list knows and no forum
+        # knows. Keeping that in a file and not telling the owner would be
+        # throwing away the best reason he has to trust the suggestion.
         DE_QUANTAS="$(t_lista_maquinas "$(t_memoria_id "$PROG" 2>/dev/null)" 2>/dev/null)"
         t_diz "lista da comunidade conhece este programa ->$DA_LISTA (${DE_QUANTAS:-?} maquinas)"
     fi
@@ -195,15 +206,16 @@ INICIO=$SECONDS
 t_memoria_grava "$PROG" ARQUITETURA "${ARCH:-?}" 2>/dev/null
 [ -n "$LIMITE" ] && t_memoria_grava "$PROG" LIMITE "$LIMITE" 2>/dev/null
 
-# A memoria SUGERE, nunca decide. Instalar sozinho com base numa licao
-# passada seria repetir um engano para sempre - e no prefixo de um dono de
-# loja isso custa caro. Entao ela so encurta o caminho se ele mandar.
+# The memory SUGGESTS, it never decides. Installing on its own based on a past
+# lesson would be repeating a mistake forever - and in a shop owner's prefix
+# that costs dearly. So it only shortens the path if he says so.
 if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null 2>&1; then
     PENDENTES=""
     for v in $SABIDOS; do
-        # A licao pode vir da lista da comunidade, que e conteudo de
-        # TERCEIRO. O mesmo cuidado da receita vale aqui: nome de verbo com
-        # caractere fora do esperado nao vira argumento de comando nenhum.
+        # The lesson may come from the community list, which is THIRD PARTY
+        # content. The same care taken with recipes applies here: a verb name
+        # with an unexpected character does not become an argument to any
+        # command.
         t_verbo_valido "$v" || { t_diz "verbo recusado (nome suspeito): $v"; continue; }
         v="$(t_verbo_para_arquitetura "$v" "$ARCH")"
         grep -qxF -- "$v" "$WINEPREFIX/.tandem-verbos" 2>/dev/null || PENDENTES="$PENDENTES $v"
@@ -219,20 +231,21 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
 $(for v in $PENDENTES; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)
 
 Instalar agora e pular a etapa de descobrir?" "Instalar" "Tentar sem instalar"; then
-            # Este atalho tambem pode rodar o dotnet48, que leva meia hora:
-            # suspender no meio corrompe o prefixo igual.
+            # This shortcut can also run dotnet48, which takes half an hour:
+            # suspending in the middle corrupts the prefix just the same.
             INIBIR_MEM="$(t_inibidor)"
             t_progresso_abre "Instalando o que este programa já pediu antes..."
             for v in $PENDENTES; do
                 t_progresso_texto "Instalando $(t_verbo_amigavel "$v")..."
                 t_diz ">>> winetricks -q $v (da memoria)"
                 if $INIBIR_MEM winetricks -q "$v" >>"$LOG" 2>&1; then
-                    # A prova de entrega vale aqui tambem. Este caminho
-                    # gravava recibo so com o codigo de saida - ou seja,
-                    # contornava inteira a tese da 3.3, e logo onde a licao
-                    # veio de fora e merece MAIS desconfianca, nao menos.
-                    # Sem DLL conhecida para conferir nao ha o que provar:
-                    # ausencia de prova nao condena, a regra de sempre.
+                    # The proof of delivery applies here too. This path used
+                    # to write a receipt based on the exit code alone - that
+                    # is, it bypassed the whole thesis of 3.3, and precisely
+                    # where the lesson came from outside and deserves MORE
+                    # distrust, not less. With no known DLL to check there is
+                    # nothing to prove: absence of proof does not condemn,
+                    # the usual rule.
                     ALVO="$(t_dll_do_verbo "$v")"
                     if [ -z "$ALVO" ] || t_dll_no_prefixo "$ALVO" "$ARCH"; then
                         printf '%s\n' "$v" >> "$WINEPREFIX/.tandem-verbos"
@@ -248,7 +261,7 @@ Instalar agora e pular a etapa de descobrir?" "Instalar" "Tentar sem instalar"; 
     fi
 fi
 
-# ------------------------------------------------------- 4. Como executar
+# ---------------------------------------------------------- 4. How to run
 executar() {
     cd -- "$(dirname -- "$PROG")" || return 1
     case "${PROG,,}" in
@@ -262,14 +275,14 @@ executar() {
     esac
 }
 
-# ---------------------------------------- 5. Rodar, detectar, instalar, repetir
+# ---------------------------------------------- 5. Run, detect, install, repeat
 MAX=3
 tentativa=1
 ATALHOS_ANTES="$(t_atalhos_wine)"
 INSTALADOS_AGORA=""
-# Pares "dll<TAB>verbo" que esta execucao ja provou nao entregues.
+# "dll<TAB>verb" pairs that this run has already proven undelivered.
 SUSPEITAS=""
-# Pares que chegaram, na bitola que este programa nao consegue usar.
+# Pairs that did arrive, in the bitness this program cannot use.
 BITOLA=""
 while :; do
     MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
@@ -277,50 +290,53 @@ while :; do
     executar
     CODIGO=$?
     if [ "$CODIGO" -eq 0 ]; then
-        # Aprendeu: os verbos instalados NESTA execucao foram os que
-        # resolveram. Guardar so os que vieram agora evita creditar a receita
-        # com coisa que ja estava no prefixo por outro motivo.
+        # Learned: the verbs installed IN THIS RUN were the ones that solved
+        # it. Keeping only the ones that came now avoids crediting the recipe
+        # with something that was already in the prefix for another reason.
         for v in $INSTALADOS_AGORA; do t_memoria_junta "$PROG" RESOLVERAM "$v"; done
         DUROU=$((SECONDS-INICIO))
         t_memoria_grava "$PROG" RESULTADO abriu
         t_memoria_grava "$PROG" SEGUNDOS "$DUROU"
         t_memoria_grava "$PROG" VISTO_EM "$(date +%F)"
-        # Se era um instalador, apareceram atalhos: diga onde o programa foi
-        # parar. Se era so um programa rodando, nada aparece e nada e dito.
+        # If it was an installer, shortcuts showed up: say where the program
+        # ended up. If it was just a program running, nothing shows up and
+        # nothing is said.
         t_anuncia_atalhos "$ATALHOS_ANTES"
 
-        # ------------------------------------------- sucesso em silencio
+        # ------------------------------------------------ silent success
         #
-        # Codigo 0 diz que o processo terminou sem erro. Nao diz que o
-        # programa funcionou. O modo de falha caracteristico do Wine com
-        # software comercial nao e fechar com erro - e abrir e estar
-        # sutilmente errado: cupom com acento quebrado, relatorio em branco,
-        # data invertida, janela que nunca apareceu. Tudo isso sai 0. Um
-        # projeto cuja regua e "nenhum erro em silencio" tinha um sucesso em
-        # silencio no centro, e a receita exportava a licao errada com a
-        # mesma confianca de uma certa.
+        # Code 0 says the process finished without an error. It does not say
+        # the program worked. Wine's characteristic failure mode with
+        # commercial software is not closing with an error - it is opening
+        # and being subtly wrong: a receipt with broken accents, a blank
+        # report, an inverted date, a window that never appeared. All of that
+        # exits 0. A project whose yardstick is "no silent failures" had a
+        # silent success at its center, and the recipe exported the wrong
+        # lesson with the same confidence as a right one.
         #
-        # A unica testemunha do que aconteceu na tela e o dono. Perguntamos
-        # UMA vez por programa - repetir a cada abertura viraria estorvo, e
-        # estorvo o usuario aprende a fechar sem ler.
+        # The only witness to what happened on screen is the owner. We ask
+        # ONCE per program - repeating it on every launch would become a
+        # nuisance, and a nuisance is something the user learns to close
+        # without reading.
         t_confirma_funcionou "$PROG" "$DUROU"
         exit 0
     fi
 
-    # Olha apenas o trecho do log gerado nesta tentativa.
+    # Looks only at the stretch of the log generated in this attempt.
     PARCIAL="$TANDEM_TRAVAS/parcial.$$"
     tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
 
     VERBOS="$(t_verbos_do_log "$PARCIAL")"
     ORFAS="$(t_dlls_sem_traducao "$PARCIAL")"
-    # Os mesmos pares, guardados: e por eles que se confere depois se o
-    # arquivo que faltava realmente chegou.
+    # The same pairs, kept: they are what lets us check afterwards whether the
+    # missing file actually arrived.
     PARES="$(t_pares_do_log "$PARCIAL")"
     rm -f "$PARCIAL"
 
-    # Um unico verbo tem irmao de 64 bits (xact -> xact_x64), e ele so serve
-    # se o programa for de 64. Trocar aqui, antes de qualquer instalacao,
-    # evita pagar o download da carga errada para descobrir depois.
+    # A single verb has a 64-bit sibling (xact -> xact_x64), and it is only
+    # useful if the program is 64-bit. Swapping here, before any install,
+    # avoids paying for the download of the wrong payload only to find out
+    # later.
     if [ -n "$VERBOS" ]; then
         VERBOS="$(for v in $VERBOS; do t_verbo_para_arquitetura "$v" "$ARCH"; echo; done)"
         PARES="$(printf '%s\n' "$PARES" | while IFS="$(printf '\t')" read -r _d _v; do
@@ -329,9 +345,10 @@ while :; do
         done)"
     fi
 
-    # Conferido contra o DISCO a cada rodada, e nao acumulado da instalacao:
-    # assim a explicacao continua valendo na segunda vez que o dono abre o
-    # programa, quando o recibo ja existe e nada mais e instalado.
+    # Checked against the DISK on every round, and not accumulated from the
+    # install: that way the explanation still holds the second time the owner
+    # opens the program, when the receipt already exists and nothing more gets
+    # installed.
     BITOLA=""
     while IFS="$(printf '\t')" read -r _d _v; do
         [ -n "$_d" ] && [ -n "$_v" ] || continue
@@ -342,15 +359,16 @@ while :; do
 $PARES
 PARES_FIM
 
-    # Recibo: nunca repetir uma instalacao ja paga. O dotnet48 leva meia hora;
-    # reinstalar por engano e o pior desperdicio possivel do tempo do usuario.
+    # Receipt: never repeat an install already paid for. dotnet48 takes half
+    # an hour; reinstalling it by mistake is the worst possible waste of the
+    # user's time.
     RECIBO="$WINEPREFIX/.tandem-verbos"
     NOVOS=""; REPETIDOS=""; REINCIDENTES=""
     for v in $VERBOS; do
         if printf '%s\n' "$SUSPEITAS" | grep -q "$(printf '\t')$v\$"; then
-            # Ja tentei este verbo nesta execucao e a DLL nao chegou. Tentar
-            # de novo gastaria o tempo do dono no mesmo engano - meia hora,
-            # no caso do .NET.
+            # I already tried this verb in this run and the DLL did not
+            # arrive. Trying again would spend the owner's time on the same
+            # mistake - half an hour, in the case of .NET.
             REINCIDENTES="$REINCIDENTES $v"
         elif [ -f "$RECIBO" ] && grep -qxF -- "$v" "$RECIBO" 2>/dev/null; then
             REPETIDOS="$REPETIDOS $v"
@@ -374,8 +392,8 @@ PARES_FIM
     fi
 
     if [ -z "$VERBOS" ] && [ -n "$REPETIDOS" ]; then
-        # Licao negativa: estes foram instalados e o programa continua sem
-        # abrir. Registrar evita prometer na proxima vez que eles resolvem.
+        # Negative lesson: these were installed and the program still does not
+        # open. Recording it avoids promising next time that they solve it.
         for v in $REPETIDOS; do t_memoria_junta "$PROG" NAO_RESOLVERAM "$v"; done
         t_memoria_grava "$PROG" RESULTADO "nao abriu"
         t_erro "Já instalei o que este programa pedia:$REPETIDOS
@@ -396,14 +414,14 @@ Isso costuma acontecer quando só o executável foi copiado, sem a pasta complet
         elif grep -qi '32-bit installation\|64-bit installation\|WINEARCH' "$LOG" 2>/dev/null; then
             t_erro "Conflito de ambiente Windows (32 x 64 bits) neste perfil."
         elif [ -n "$LIMITE" ]; then
-            # O pre-voo tinha reconhecido a assinatura antes de rodar: em vez
-            # de um numero, o dono recebe a causa e sabe que nao adianta
-            # insistir nem procurar defeito na maquina dele.
+            # The pre-flight had recognized the signature before running:
+            # instead of a number, the owner gets the cause and knows there
+            # is no point insisting nor looking for a defect in his machine.
             #
-            # E aqui, so aqui, o Tandem oferece um caminho alternativo. Nao e
-            # sugerir troca: e o unico momento em que ficar calado deixaria o
-            # dono sem saida nenhuma, porque este programa nao vai funcionar
-            # por mais que ele tente.
+            # And here, only here, Tandem offers an alternative path. It is
+            # not suggesting a switch: it is the one moment where keeping
+            # quiet would leave the owner with no way out at all, because
+            # this program is not going to work no matter how hard he tries.
             ALTERNATIVA="$(t_texto_alternativas "$(basename -- "${PROG%.*}")" 2>/dev/null)"
             t_erro "Este programa não abriu, e provavelmente não tem conserto:
 
@@ -435,10 +453,10 @@ O Tandem não instala nada automaticamente neste perfil, porque ele pertence a o
 
     LISTA="$(for v in $VERBOS; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)"
 
-    # Se o programa e de 64 bits e o componente so existe em 32, a instalacao
-    # quase certamente nao vai resolver. Nao bloqueamos - o dono decide, como
-    # no caso dos limites -, mas ele decide sabendo, em vez de esperar meia
-    # hora de download para ouvir a mesma coisa depois.
+    # If the program is 64-bit and the component only exists in 32, the
+    # install is almost certainly not going to solve it. We do not block - the
+    # owner decides, as with the limits - but he decides knowing, instead of
+    # waiting half an hour of downloading to hear the same thing afterwards.
     SO32=""
     if [ "$ARCH" = 64 ]; then
         for v in $VERBOS; do
@@ -458,9 +476,10 @@ Instalar provavelmente não vai resolver. Não é defeito da sua máquina: quem 
 $LISTA$RESSALVA
 
 Posso instalar agora?" "Instalar" "Cancelar"; then
-        # Sem sessao grafica o t_pergunta devolve "nao" sem ter perguntado
-        # nada. Sair calado aqui era um caminho de erro em silencio: quem
-        # roda pelo terminal nao ficava sabendo nem o que faltava.
+        # With no graphical session t_pergunta returns "no" without having
+        # asked anything. Exiting quietly here was a silent failure path:
+        # whoever runs it from the terminal did not even find out what was
+        # missing.
         if ! t_tem_gui; then
             t_erro "O programa precisa destes componentes do Windows:
 
@@ -477,10 +496,11 @@ $(for v in $VERBOS; do printf 'winetricks -q %s\n' "$v"; done)"
 
 sudo apt install winetricks"; exit 1; }
 
-    # systemd-inhibit impede a maquina de suspender no meio: uma instalacao de
-    # .NET pode levar 30 minutos, e suspender no meio corrompe o prefixo.
-    # t_inibidor EXERCITA em vez de so conferir se o binario existe - a lição
-    # do autoteste aplicada aqui, depois de o atalho custar uma instalacao.
+    # systemd-inhibit keeps the machine from suspending in the middle: a .NET
+    # install can take 30 minutes, and suspending in the middle corrupts the
+    # prefix. t_inibidor EXERCISES it instead of just checking whether the
+    # binary exists - the lesson from the self-test applied here, after the
+    # shortcut cost an installation.
     INIBIR="$(t_inibidor)"
 
     t_progresso_abre "Instalando componentes do Windows. Pode demorar. Não feche esta janela."
@@ -490,27 +510,29 @@ sudo apt install winetricks"; exit 1; }
         t_diz ">>> winetricks -q $v"
         MARCA_WT=$(wc -l < "$LOG" 2>/dev/null || echo 0)
         if $INIBIR winetricks -q "$v" >>"$LOG" 2>&1; then
-            # ------------------------------------------- prova de entrega
-            # O winetricks sair 0 diz que ELE terminou, nao que o arquivo que
-            # faltava chegou. Sem esta conferencia, uma traducao errada
-            # gravava recibo igual a uma certa - e o recibo e permanente: na
-            # tentativa seguinte o Tandem dizia "ja instalei o que este
-            # programa pedia" e desistia, com a causa real intacta. Foi
-            # exatamente o estrago das atl*.dll apontando para o Adobe Type
-            # Manager.
+            # ------------------------------------ proof of delivery
+            # winetricks exiting 0 says that IT finished, not that the file
+            # that was missing arrived. Without this check, a wrong
+            # translation wrote a receipt just like a right one - and the
+            # receipt is permanent: on the next attempt Tandem said "I
+            # already installed what this program asked for" and gave up,
+            # with the real cause untouched. That was exactly the damage of
+            # the atl*.dll pointing at Adobe Type Manager.
             #
-            # Ausencia de prova nao condena: so a contradicao provada - a DLL
-            # pedida continuar ausente - segura o recibo.
+            # Absence of proof does not condemn: only the proven
+            # contradiction - the requested DLL still being absent - holds
+            # back the receipt.
             FALTOU=""
             for dll in $(printf '%s\n' "$PARES" |
                          awk -F'\t' -v alvo="$v" '$2 == alvo { print $1 }'); do
                 t_dll_no_prefixo "$dll" "$ARCH"
                 case $? in
                     0) ;;
-                    2) # Chegou, na bitola errada. Nao e traducao errada - o
-                       # verbo fez o que prometeu -, entao o recibo vale: nao
-                       # adianta reinstalar. A rodada seguinte reconhece o
-                       # caso lendo o disco e explica ao dono.
+                    2) # It arrived, in the wrong bitness. This is not a wrong
+                       # translation - the verb did what it promised - so the
+                       # receipt holds: reinstalling is pointless. The next
+                       # round recognizes the case by reading the disk and
+                       # explains it to the owner.
                        t_diz "!!! $v entregou $dll na bitola errada para um programa de ${ARCH:-?} bits" ;;
                     *) FALTOU="$FALTOU $dll" ;;
                 esac
@@ -525,9 +547,9 @@ sudo apt install winetricks"; exit 1; }
             else
                 printf '%s\n' "$v" >> "$RECIBO"
             fi
-            # Entra na lista dos dois jeitos: se o programa ABRIR depois
-            # disso, abrir e evidencia mais forte que a minha conferencia de
-            # arquivo, e a licao merece ser guardada.
+            # It goes on the list either way: if the program DOES OPEN after
+            # that, opening is stronger evidence than my file check, and the
+            # lesson deserves to be kept.
             INSTALADOS_AGORA="$INSTALADOS_AGORA $v"
         else
             t_diz "!!! winetricks falhou em $v"
@@ -537,17 +559,18 @@ sudo apt install winetricks"; exit 1; }
     wineserver -w
     t_progresso_fecha
 
-    # Se o winetricks nao conseguiu baixar, dizer "instalei as dependencias e
-    # ainda nao abre" seria mentira - e mandaria o dono procurar o defeito no
-    # lugar errado. Lemos as proprias palavras do winetricks para explicar a
-    # causa provavel em vez de despejar o log na cara dele.
+    # If winetricks could not download, saying "I installed the dependencies
+    # and it still does not open" would be a lie - and would send the owner
+    # looking for the defect in the wrong place. We read winetricks' own words
+    # to explain the likely cause instead of dumping the log in his face.
     if [ -n "$FALHARAM" ]; then
         RESTO="$TANDEM_TRAVAS/wt.$$"
         tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO" 2>/dev/null || : > "$RESTO"
-        # A causa mais comum e a internet, mas afirmar isso sem evidencia
-        # manda o dono procurar defeito no lugar errado - foi o que aconteceu
-        # quando o systemd-inhibit derrubou a instalacao antes de ela comecar.
-        # Sem sinal de download tentado, a resposta honesta e nao saber.
+        # The most common cause is the internet, but claiming that without
+        # evidence sends the owner looking for the defect in the wrong place -
+        # which is what happened when systemd-inhibit brought the install down
+        # before it even started. With no sign of a download being attempted,
+        # the honest answer is not knowing.
         if grep -qiE 'saved \[|wget|Downloading|HTTP request sent' "$RESTO" 2>/dev/null; then
             PORQUE="Verifique se o computador está conectado à internet."
         else

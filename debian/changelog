@@ -1,149 +1,202 @@
+tandem (3.6) unstable; urgency=medium
+
+  * The whole repository is now written in English - comments, documentation,
+    this changelog - and CLAUDE.md records that as a standing directive. Four
+    deliberate exceptions, all for the same reason: the product's user is a
+    Brazilian shop owner who is not a programmer. Strings shown to the user,
+    the command names they type, anything shipped inside the package
+    (man/tandem.1, the .desktop entries, the pt_BR MIME comments) and the
+    LEIAME/CONTRIBUINDO pair stay in Portuguese. The short form: the
+    repository is English, the product is Portuguese.
+  * Five defects found by an adversarial audit, each one reproduced on the
+    machine before being believed.
+  * A multi-line value corrupted the memory file permanently. The format is
+    one KEY=VALUE per line and the bitness message is five lines; the rewrite
+    filter only removed the first physical line, so every run left the
+    continuation lines behind as orphans and appended a fresh copy. Four runs,
+    twenty-two lines, three blocks of garbage, growing forever. Values are now
+    escaped on write and unescaped on read, and the rewrite drops orphan lines
+    left by earlier versions.
+  * The rescue copy told the truth about only two of its three outcomes.
+    "There was nothing to save" and "there was data and the copy FAILED" both
+    returned 1, and all three destructive paths carried on deleting either
+    way - reproduced with a full disk. They are now distinct codes, and a
+    failed copy stops the deletion: the double-click path refuses outright,
+    the two interactive ones ask with the risk spelled out.
+  * The data search lost the exit status of its own find by running it inside
+    a pipe. A prefix big enough to hit the 60 s timeout looked exactly like a
+    prefix with no data at all - to a caller that was about to delete
+    something. The timeout now propagates as a failed copy.
+  * wmvcore.dll pointed at wmp9 for every program. wmp9 has no real win64
+    branch: its payload is the 32-bit XP installer, which lands in syswow64
+    and is useless to a 64-bit program. wmp11 does have one, and its overrides
+    are a strict superset. A 64-bit program asking for wmvcore.dll now gets
+    wmp11.
+  * The list of 32-bit-only verbs is now classified from the INSTALLED
+    winetricks instead of being written down here. The fixed list named eight
+    verbs; an inventory found 42, 38 of them reachable from a real Wine log. A
+    list that only covers what somebody remembered to add covers nothing, and
+    winetricks is updated from outside this project. The eight remain as the
+    fallback for when winetricks cannot be read.
+  * The README and LEIAME stopped pointing the main installation path at an
+    empty Releases page. Until a release exists, they show the build, which
+    needs neither a Debian host nor dpkg-deb.
+  * 307 tests.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Sun, 09 Aug 2026 02:00:00 +0000
+
 tandem (3.5) unstable; urgency=medium
 
-  * O repositorio fica pronto para gente de fora: CONTRIBUINDO.md e
-    CONTRIBUTING.md com as cinco regras que nao se quebram e a regua de
-    evidencia; modelos de issue que ja pedem a saida do "tandem socorro" e a
-    linha do "tandem contribuir"; modelo de PR; e um fluxo de release que
-    constroi o .deb, roda a suite e o lintian, instala e remove de verdade, e
-    so entao publica. O README mandava baixar em Releases havia treze versoes,
-    e nao existia release nenhum.
-  * Capturas de tela reais das janelas do proprio programa no README e no
-    LEIAME, e os dois passam a listar os 20 comandos - eles ainda descreviam
-    9, e afirmavam que o Tandem nao instala Wine nem Waydroid, o que o
-    "tandem preparar" faz desde a 2.x.
-  * O verbo passa a ser escolhido pela bitola do programa. Levantamento verbo
-    por verbo do winetricks instalado: a maioria dos verbos modernos ja
-    instala as duas cargas sozinha, UM tem irmao de 64 bits (xact ->
-    xact_x64), e oito so tem carga de 32 sem irmao nenhum. Para esses oito,
-    num programa de 64 bits, o Tandem avisa ANTES de instalar que aquilo
-    provavelmente nao vai resolver - em vez de o dono descobrir depois de meia
-    hora de download. Nao bloqueia: explica e deixa decidir.
-  * A prova de entrega passa a valer no atalho da memoria e da lista, que era
-    o unico caminho que gravava recibo so com o codigo de saida do winetricks
-    - contornando inteira a tese da 3.3, e logo onde a licao vem de fora e
-    merece mais desconfianca, nao menos. O mesmo atalho ganhou o inibidor de
-    suspensao (ele tambem pode rodar o dotnet48, de meia hora) e a validacao
-    de nome de verbo que a receita ja tinha e a lista nao.
-  * A contagem de maquinas da lista chega ao usuario: "em 340 maquinas este
-    programa precisou destes componentes" e a unica coisa que a lista sabe e
-    que nenhum forum sabe. Estava especificada, lida por uma funcao, testada,
-    e nunca aparecia.
-  * Baixar a lista distingue "sem internet" de "a lista ainda nao existe". Um
-    404 mandava o dono conferir o roteador por causa de um arquivo que nao
-    foi publicado.
-  * O teste de deriva de documentacao passa a EXTRAIR os comandos do case
-    principal em vez de usar lista fixa. Com lista fixa ele passava verde
-    enquanto quatro comandos novos nao estavam em documento nenhum.
-  * A receita ensinava a sintaxe errada de importacao, e quem recebia caia num
-    erro de uso. O manual ganhou "version", "help", as cinco pastas que o
-    Tandem cria e as variaveis de ambiente; e a data dele, congelada em
-    2025-01-01 por treze versoes, passou a ser real.
-  * "curl | wget" entra em Recommends: a lista da comunidade depende de um
-    dos dois e nenhum estava declarado.
-  * 294 testes.
+  * The repository is now ready for people from outside: CONTRIBUTING.md and
+    CONTRIBUINDO.md carry the five rules that do not bend and the evidence
+    bar; the issue templates already ask for the output of "tandem socorro"
+    and the line from "tandem contribuir"; there is a PR template; and a
+    release workflow builds the .deb, runs the suite and lintian, really
+    installs and purges it, and only then publishes. The README had been
+    pointing at Releases for thirteen versions and no release existed.
+  * Real screenshots of the program's own windows in the README and LEIAME,
+    and both now list all 20 commands. They described 9, and claimed Tandem
+    does not install Wine or Waydroid, which "tandem preparar" has been doing
+    since 2.x.
+  * Everything written in the repository is now in English - comments, test
+    names, documentation, this changelog. Messages to the user stay in
+    Portuguese: that is rule number 2, and the target user is a Brazilian shop
+    owner who is not a programmer.
+  * The verb is now chosen by the program's bitness. A verb-by-verb survey of
+    the installed winetricks: most modern verbs already install both payloads
+    on their own, exactly ONE has a 64-bit sibling (xact -> xact_x64), and
+    eight are 32-bit-only with no sibling at all. For those eight, on a 64-bit
+    program, Tandem warns BEFORE installing that it probably will not help -
+    instead of the owner finding out after half an hour of downloading. It
+    does not block: it explains and lets them decide.
+  * Delivery proof now also applies on the memory/list shortcut, which was the
+    one path still writing the receipt from the winetricks exit code alone -
+    bypassing the entire 3.3 thesis, and doing so exactly where the lesson
+    comes from outside and deserves more suspicion, not less. The same
+    shortcut gained the suspend inhibitor (it can also run dotnet48, at half
+    an hour) and the verb-name validation that recipes already had and the
+    list did not.
+  * The list's machine count reaches the user: "on 340 machines this program
+    needed these components" is the one thing the list knows that no forum
+    does. It was specified, read by a function, tested, and never shown.
+  * Fetching the list distinguishes "no internet" from "the list does not
+    exist yet". A 404 was sending the owner to check their router because of a
+    file that had not been published.
+  * The documentation-drift test now EXTRACTS the commands from the main case
+    statement instead of using a fixed list. With a fixed list it went green
+    while four new commands were in no document at all.
+  * Recipes were teaching the wrong import syntax, so whoever received one hit
+    a usage error. The manual gained "version", "help", the five directories
+    Tandem creates and the environment variables; and its date, frozen at
+    2025-01-01 for thirteen versions, became real.
+  * "curl | wget" enters Recommends: the community list depends on one of the
+    two and neither was declared.
+  * 294 tests.
 
  -- Paulo Eduardo <noreply@users.noreply.github.com>  Sat, 08 Aug 2026 22:00:00 +0000
 
 tandem (3.4) unstable; urgency=medium
 
-  * "tandem dados": AMBIENTE se refaz em vinte minutos, DADOS nunca. Nada no
-    projeto separava as duas coisas, e tres caminhos apagavam dado do dono
-    sem copia - o rm -rf do prefixo incompleto, o restore e o desinstalador
-    do programa. Os tres agora salvam antes. O criterio nao adivinha: pastas
-    pessoais do usuario Windows, mais arquivos de dados largados dentro da
-    pasta do programa, que e onde software comercial brasileiro guarda o
-    banco. Devolver nunca sobrescreve o que ja existe.
-  * Sucesso em silencio. Codigo 0 dizia "funcionou", mas o modo de falha
-    caracteristico do Wine com software comercial e abrir e estar sutilmente
-    errado. Agora o Tandem pergunta uma vez por programa, guarda a resposta,
-    e a receita sai marcada com a origem da confianca: "confirmado" por
-    gente vale diferente de "so-abriu". Saida em menos de tres segundos
-    deixa de ser comemorada.
-  * Bitola. Na primeira vez que o laco rodou com winetricks DE VERDADE, o
-    verbo mfc42 saiu 0, entregou o arquivo - em syswow64, a pasta de 32
-    bits - e o programa de 64 bits continuou sem achar nada. A prova de
-    entrega da 3.3 olhava as duas pastas, aprovou e gravou recibo: beco sem
-    saida de novo, agora com recibo por cima. A conferencia passa a ser por
-    arquitetura, e existe um terceiro desfecho com mensagem propria: chegou,
-    na bitola que este programa nao usa. Nao e defeito da maquina - e limite
-    de quem distribui o componente.
-  * O ponto cego do auditor, fechado. O gerador so lia w_override_dlls, e o
-    vcrun2003 declara mfc71, msvcp71 e msvcr71 apenas no title=. O indice
-    era cego exatamente onde a tabela errava. Vai de 246 para 274 DLLs.
-  * exec SEM COMANDO aplica as redirecoes ao shell inteiro. "exec 7> arq
-    2>/dev/null" nao calava o exec: calava o stderr de todo o resto do
-    programa. Sem sessao grafica, o laco detectava, traduzia e montava a
-    mensagem certa - e saia com codigo 53 e zero byte. Quatro ocorrencias.
-  * systemd-inhibit existe e nao funciona sem D-Bus, e levava o winetricks
-    junto; o dono era mandado conferir uma internet que estava perfeita.
-    Presenca nao e funcionamento.
-  * Lista da comunidade, no modelo das listas de filtro de bloqueador de
-    anuncio: um arquivo de texto estatico buscado por HTTPS, sem servidor,
-    sem conta, sem custo por usuario. Descer e automatico; SUBIR nao -
-    "tandem contribuir" monta a linha padronizada e mostra ela inteira, e
-    quem envia e o dono. O registro nao carrega caminho, usuario, nome de
-    maquina, IP nem log, e o gerador se recusa a produzi-lo se algo disso
-    aparecer. Formato em docs/FORMATO-LISTA.md.
-  * "tandem socorro": um arquivo unico com diagnostico, autoteste, o que foi
-    aprendido e os registros, para mandar a quem entende. Suporte remoto
-    deixa de depender de ditar comando por telefone.
-  * Os executaveis respeitam TANDEM_LIB, o que permitiu exercitar o laco
-    inteiro em teste. 271 testes.
+  * "tandem dados": the ENVIRONMENT rebuilds in twenty minutes, DATA never
+    does. Nothing in the project separated the two, and three code paths were
+    deleting the owner's data with no copy - the rm -rf of an incomplete
+    prefix, restore, and the program's own uninstaller. All three now save
+    first. The search does not guess: Windows user folders, plus data files
+    dropped inside the program's own directory, which is where Brazilian
+    commercial software keeps its database. Restoring never overwrites what is
+    already there.
+  * Silent success. Exit code 0 used to mean "it worked", but Wine's
+    characteristic failure with commercial software is opening and being
+    subtly wrong. Tandem now asks once per program, stores the answer, and the
+    recipe comes out marked with where its confidence came from: "confirmado"
+    by a person weighs differently from "so-abriu". Exiting in under three
+    seconds is no longer celebrated.
+  * Bitness. The first time the loop ran with REAL winetricks, the mfc42 verb
+    exited 0, delivered the file - into syswow64, the 32-bit folder - and the
+    64-bit program still could not find it. The 3.3 delivery proof looked in
+    both folders, approved, and wrote the receipt: the dead end again, now
+    with a receipt on top. The check became per-architecture, and there is a
+    third outcome with a message of its own: it arrived, in a bitness this
+    program cannot use. That is not a defect in the machine - it is a limit of
+    whoever distributes the component.
+  * The auditor's blind spot, closed. The generator only read w_override_dlls,
+    and vcrun2003 declares mfc71, msvcp71 and msvcr71 only in title=. The
+    index was blind exactly where the table was wrong. It goes from 246 to 274
+    DLLs.
+  * exec WITHOUT A COMMAND applies its redirections to the whole shell.
+    "exec 7> file 2>/dev/null" did not silence the exec: it silenced stderr
+    for all the rest of the program. With no graphical session, the loop
+    detected, translated and assembled the correct message - and exited 53
+    with zero bytes. Four occurrences.
+  * systemd-inhibit exists and does not work without D-Bus, and it took
+    winetricks down with it; the owner was told to check an internet
+    connection that was perfectly fine. Presence is not function.
+  * Community list, on the ad-blocker filter-list model: a static text file
+    fetched over HTTPS, no server, no account, no per-user cost. Down is
+    automatic; UP is not - "tandem contribuir" builds the standardised line
+    and shows it in full, and the owner is the one who sends it. The record
+    carries no path, username, machine name, IP or log, and the generator
+    refuses to produce it if any of those appear. Format in
+    docs/LIST-FORMAT.md.
+  * "tandem socorro": a single file with the diagnosis, the self-test, what
+    was learned and the logs, to send to someone who understands. Remote
+    support stops depending on dictating commands over the phone.
+  * The executables honour TANDEM_LIB, which is what made it possible to
+    exercise the whole loop in a test. 271 tests.
 
  -- Paulo Eduardo <noreply@users.noreply.github.com>  Sat, 08 Aug 2026 20:00:00 +0000
 
 tandem (3.3) unstable; urgency=medium
 
-  * Prova de entrega. O winetricks sair 0 diz que ELE terminou, nao que o
-    arquivo que faltava chegou - e o Tandem tratava as duas coisas como a
-    mesma. Uma traducao errada gravava recibo igual a uma certa, e recibo e
-    permanente: na tentativa seguinte o programa dizia "ja instalei o que
-    este programa pedia" e desistia, com a causa real intacta. Foi
-    exatamente o estrago das atl*.dll apontando para o Adobe Type Manager.
-    Agora, depois de instalar, o Tandem confere se a DLL pedida apareceu no
-    prefixo. Ausencia de prova nao condena; so a contradicao provada segura
-    o recibo.
-  * Quando a entrega nao se confirma, tres coisas mudam de uma vez: nao ha
-    recibo, o par DLL/verbo vai para traducao-suspeita.tsv, e a memoria NAO
-    aprende a licao negativa - ela viajaria com a receita para a outra
-    maquina e ensinaria o mesmo engano la. A mensagem passa a assumir a
-    culpa e a citar o arquivo pelo nome, em vez de mandar o dono procurar
-    defeito numa maquina que esta perfeita.
-  * O mesmo verbo nao e reinstalado duas vezes na mesma execucao depois de
-    falhar a entrega. Seriam trinta minutos jogados fora, no caso do .NET.
-  * Os executaveis passam a respeitar TANDEM_LIB para achar as bibliotecas.
-    Com o caminho fixo em /usr/lib/tandem nao havia como exercitar o laco
-    roda->detecta->instala sem instalar o pacote - e era justamente o laco
-    que nunca tinha rodado, nem em campo nem em teste.
-  * Doze testes novos rodam o tandem-exe inteiro contra um wine e um
-    winetricks de mentira, cobrindo os dois desfechos e a segunda execucao.
-    218 testes no total.
+  * Delivery proof. winetricks exiting 0 says that IT finished, not that the
+    missing file arrived - and Tandem was treating the two as the same thing.
+    A wrong translation wrote a receipt exactly like a correct one, and a
+    receipt is permanent: on the next attempt the program said "I already
+    installed what this program was asking for" and gave up, with the real
+    cause untouched. That is precisely the damage the atl*.dll entries did by
+    pointing at the Adobe Type Manager. Now, after installing, Tandem checks
+    whether the requested DLL appeared in the prefix. Absence of proof does
+    not condemn; only a proven contradiction holds the receipt back.
+  * When delivery is not confirmed, three things change at once: there is no
+    receipt, the DLL/verb pair goes to traducao-suspeita.tsv, and memory does
+    NOT learn the negative lesson - it would travel with the recipe to another
+    machine and teach the same mistake there. The message now takes the blame
+    and names the file, instead of sending the owner hunting for a defect in a
+    machine that is perfectly fine.
+  * The same verb is not reinstalled twice in one run after delivery fails.
+    That would be thirty minutes thrown away, in the .NET case.
+  * The executables now honour TANDEM_LIB when locating the libraries. With
+    the path hard-coded to /usr/lib/tandem there was no way to exercise the
+    run->detect->install loop without installing the package - and that loop
+    was precisely the thing that had never run, in the field or in a test.
+  * Twelve new tests run the whole of tandem-exe against a fake wine and a
+    fake winetricks, covering both outcomes and the second run. 218 tests in
+    total.
 
  -- Paulo Eduardo <noreply@users.noreply.github.com>  Sat, 08 Aug 2026 12:00:00 +0000
 
 tandem (3.2) unstable; urgency=medium
 
-  * Novo: "tandem autoteste". O doctor LISTA o que existe; o autoteste
-    EXERCITA e diz o que funciona - e a diferenca ja custou caro aqui.
-    Cinco defeitos encontrados em campo eram invisiveis para uma lista:
-    zenity instalado mas recusando texto acentuado, o cano de progresso
-    matando o processo ao ser escrito, a trava impossivel de criar, o
-    diagnostico gravando zero byte em arquivo, e o erro "mostrado" numa
-    janela que nunca abriu. Onde nao da para exercitar, ele diz que pulou
-    em vez de fingir que aprovou.
-  * O repositorio ganha portao de evidencia (proofgate.json) e CI. O portao
-    nao enxergava a suite: e projeto de shell com runner proprio, e a
-    deteccao automatica so conhece ecossistemas com manifesto - passava
-    verde sem rodar um teste sequer. Agora roda os 206 testes, o shellcheck
-    e a checagem de sintaxe, e declara os arquivos que so fazem sentido
-    juntos (control com changelog, tandem com o manual, winedeps com os
-    testes).
-  * Primeiro CI do projeto: suite, empacotamento, lintian sem aviso,
-    construcao reproduzivel, e um ciclo real de instalar-configurar-remover
-    num Ubuntu 24.04, que e a base do Zorin 18.
-  * O manual documenta os comandos novos, e um teste confere os dois
-    sentidos: nenhum comando fica sem documentacao, e o manual nao promete
-    comando que nao existe.
+  * New: "tandem autoteste". doctor LISTS what exists; the self-test
+    EXERCISES and says what works - and the difference has already been
+    expensive here. Five defects found in the field were invisible to a list:
+    zenity installed but refusing accented text, the progress pipe killing the
+    process when written to, the lock that could not be created, the diagnosis
+    writing zero bytes to a file, and the error "shown" in a window that never
+    opened. Where it cannot exercise, it says it skipped instead of pretending
+    it approved.
+  * The repository gains an evidence gate (proofgate.json) and CI. The gate
+    could not see the suite: this is a shell project with its own runner, and
+    automatic detection only knows ecosystems with a manifest - it went green
+    without running a single test. It now runs the 206 tests, shellcheck and
+    the syntax check, and declares the files that only make sense together
+    (control with changelog, tandem with the manual, winedeps with the tests).
+  * The project's first CI: suite, packaging, lintian with no warnings,
+    reproducible build, and a real install-configure-purge cycle on Ubuntu
+    24.04, which is the base of Zorin 18.
+  * The manual documents the new commands, and a test checks both directions:
+    no command is left undocumented, and the manual promises no command that
+    does not exist.
 
  -- Paulo Eduardo <noreply@users.noreply.github.com>  Fri, 07 Aug 2026 11:00:00 +0000
 

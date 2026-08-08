@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Gera pacotes Android sinteticos para os testes do Tandem.
+"""Generates synthetic Android packages for the Tandem tests.
 
-Escreve um AndroidManifest.xml binario (AXML) de verdade - string pool,
-mapa de recursos e tag START - para que o apkinfo.py seja exercitado no
-mesmo caminho de codigo que roda com um APK real. Nao depende do SDK do
-Android nem de rede.
+Writes a real binary AndroidManifest.xml (AXML) - string pool, resource
+map and START tag - so that apkinfo.py is exercised through the same code
+path it runs with a real APK. Depends on neither the Android SDK nor the
+network.
 
-Uso:  mkapk.py <diretorio-de-saida>
+Usage:  mkapk.py <output-directory>
 """
 import os
 import struct
@@ -24,7 +24,7 @@ TYPE_STRING = 0x03
 
 
 def _pool(strings):
-    """Serializa um chunk de string pool em UTF-16 (o formato do aapt)."""
+    """Serializes a string pool chunk in UTF-16 (the format aapt uses)."""
     offsets, blob = [], b""
     for s in strings:
         offsets.append(len(blob))
@@ -39,7 +39,7 @@ def _pool(strings):
     head = struct.pack(
         "<HHIIIIII",
         STRING_POOL, hsize, csize,
-        len(strings), 0,       # contagem de strings, de estilos
+        len(strings), 0,       # string count, style count
         0,                     # flags: 0 = UTF-16
         str_start, 0,
     )
@@ -62,23 +62,24 @@ def _start_tag(name_i, attrs):
     hsize = 16
     body = struct.pack("<II", 0xFFFFFFFF, name_i)
     # ResXMLTree_attrExt: attributeStart, attributeSize, attributeCount,
-    # idIndex, classIndex, styleIndex. attributeStart e' relativo ao inicio
-    # desta struct (20 bytes), attributeSize e' o tamanho de CADA atributo.
+    # idIndex, classIndex, styleIndex. attributeStart is relative to the
+    # start of this struct (20 bytes), attributeSize is the size of EACH
+    # attribute.
     body += struct.pack("<HHHHHH", 20, 20, len(attrs), 0, 0, 0)
     body += b"".join(attrs)
     csize = hsize + len(body)
-    # header: tipo, hsize, csize, linha, comentario
+    # header: type, hsize, csize, line, comment
     return struct.pack("<HHIII", START_TAG, hsize, csize, 1, 0xFFFFFFFF) + body
 
 
 def manifesto(pacote, minsdk):
-    """AndroidManifest.xml binario minimo com <manifest package> e <uses-sdk>."""
-    # A ordem importa: o indice de cada string e usado nos atributos, e o
-    # mapa de recursos e indexado pelo indice do NOME do atributo.
+    """Minimal binary AndroidManifest.xml with <manifest package> and <uses-sdk>."""
+    # The order matters: the index of each string is used in the attributes,
+    # and the resource map is indexed by the index of the attribute NAME.
     strings = ["package", "minSdkVersion", "manifest", "uses-sdk", pacote]
     I_PACKAGE, I_MINSDK, I_MANIFEST, I_USESSDK, I_VALOR = range(5)
 
-    # Uma entrada por string; so as que sao nome de atributo importam.
+    # One entry per string; only the ones that are attribute names matter.
     resmap = [0] * len(strings)
     resmap[I_MINSDK] = ATTR_MINSDK_RES
 
@@ -107,7 +108,7 @@ def apk(caminho, pacote="com.exemplo.app", minsdk=21, abis=(), extras=None):
 
 def pacote_dividido(caminho, base_pacote="com.exemplo.jogo", minsdk=24,
                     abis=("arm64-v8a",), com_obb=False, splits=("config.xxhdpi",)):
-    """Monta um .xapk/.apks: varios .apk dentro de um zip, sem manifesto na raiz."""
+    """Builds a .xapk/.apks: several .apk inside a zip, no manifest at the root."""
     tmp_base = caminho + ".base.tmp"
     apk(tmp_base, base_pacote, minsdk, abis)
     with open(tmp_base, "rb") as f:
@@ -127,7 +128,7 @@ def pacote_dividido(caminho, base_pacote="com.exemplo.jogo", minsdk=24,
 
 
 def pe(caminho, maquina):
-    """Executavel PE minimo, so o suficiente para t_pe_arch decidir."""
+    """Minimal PE executable, just enough for t_pe_arch to decide."""
     cab = bytearray(b"\x00" * 0x100)
     cab[0:2] = b"MZ"
     struct.pack_into("<I", cab, 60, 0x80)          # e_lfanew
@@ -139,11 +140,11 @@ def pe(caminho, maquina):
 
 
 def pe_com_imports(caminho, maquina=0x8664, dlls=("KERNEL32.dll",)):
-    """PE com tabela de importacoes de verdade, para exercitar o peinfo.
+    """PE with a real import table, to exercise peinfo.
 
-    Uma secao so, endereco virtual igual ao deslocamento no arquivo, para que
-    a conversao RVA->offset do leitor seja exercitada com numeros que nao
-    coincidem por acaso.
+    A single section, virtual address equal to the offset in the file, so
+    that the reader's RVA->offset conversion is exercised with numbers that
+    do not match by accident.
     """
     SEC_RVA, SEC_RAW = 0x1000, 0x400
     corpo = bytearray()
@@ -151,7 +152,7 @@ def pe_com_imports(caminho, maquina=0x8664, dlls=("KERNEL32.dll",)):
     def rva(off_no_corpo):
         return SEC_RVA + off_no_corpo
 
-    # nomes das DLLs, um a um, terminados em zero
+    # DLL names, one by one, zero-terminated
     nomes = {}
     for d in dlls:
         nomes[d] = rva(len(corpo))
@@ -159,7 +160,7 @@ def pe_com_imports(caminho, maquina=0x8664, dlls=("KERNEL32.dll",)):
     while len(corpo) % 4:
         corpo += b"\x00"
 
-    # descritores de importacao: 20 bytes cada, terminados por um zerado
+    # import descriptors: 20 bytes each, terminated by an all-zero one
     desc_rva = rva(len(corpo))
     for d in dlls:
         corpo += struct.pack("<IIIII", 0, 0, 0, nomes[d], 0)
@@ -178,11 +179,11 @@ def pe_com_imports(caminho, maquina=0x8664, dlls=("KERNEL32.dll",)):
                      maquina, 1, 0, 0, 0, tam_opcional, 0x0002)
     opc = pe + 24
     struct.pack_into("<H", cab, opc, 0x20B if e64 else 0x10B)
-    # NumberOfRvaAndSizes e a tabela de diretorios
+    # NumberOfRvaAndSizes and the directory table
     base_dir = opc + (112 if e64 else 96)
     struct.pack_into("<I", cab, base_dir - 4, 16)
     struct.pack_into("<II", cab, base_dir + 8, desc_rva, len(dlls) * 20)
-    # cabecalho da secao
+    # section header
     sec = opc + tam_opcional
     cab[sec:sec + 8] = b".text\x00\x00\x00"
     struct.pack_into("<IIII", cab, sec + 8,
@@ -207,7 +208,7 @@ def main():
                     False, ("config.pt", "config.x86_64"))
 
     with open(j("corrompido.apk"), "wb") as f:
-        f.write(b"PK\x03\x04isto nao e um zip valido de jeito nenhum")
+        f.write(b"PK\x03\x04this is not a valid zip in any way at all")
     with open(j("vazio.apk"), "wb") as f:
         f.write(b"")
 
@@ -215,7 +216,7 @@ def main():
     pe(j("prog64.exe"), 0x8664)
     pe(j("progarm.exe"), 0xAA64)
     with open(j("naoexe.exe"), "wb") as f:
-        f.write(b"isto nao e um PE\n")
+        f.write(b"this is not a PE\n")
 
     pe_com_imports(j("imports64.exe"), 0x8664,
                    ("KERNEL32.dll", "MSVCP140.dll", "VCRUNTIME140.dll"))
@@ -223,7 +224,7 @@ def main():
                    ("kernel32.dll", "hasp_windows_x64.dll"))
     pe_com_imports(j("importslimpo.exe"), 0x8664, ("KERNEL32.dll", "USER32.dll"))
 
-    print("gerado em %s" % destino)
+    print("generated in %s" % destino)
 
 
 if __name__ == "__main__":

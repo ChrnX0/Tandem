@@ -114,10 +114,15 @@ tandem protect ~/.wine-alguma-coisa
 
 ## Instalação
 
-Baixe o `.deb` em [Releases](../../releases) e clique duas vezes, ou:
+Quando houver um release publicado, baixe o `.deb` em
+[Releases](../../releases) e clique duas vezes. Até lá, construa — não precisa
+de máquina Debian nem do `dpkg-deb`, o empacotador escreve o arquivo `ar`
+sozinho:
 
 ```bash
-sudo apt install ./tandem_3.5_all.deb
+git clone https://github.com/ChrnX0/Tandem && cd Tandem
+python3 build.py --check
+sudo apt install ./tandem_3.6_all.deb
 ```
 
 Depois verifique o ambiente:

@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-"""Gera o indice DLL -> verbo lendo o proprio winetricks instalado.
+"""Generates the DLL -> verb index by reading the installed winetricks itself.
 
-O winetricks ja sabe exatamente quais arquivos cada verbo entrega: dentro de
-load_<verbo>() ele chama
+winetricks already knows exactly which files each verb delivers: inside
+load_<verb>() it calls
 
     w_override_dlls native,builtin msvcp140 vcruntime140 ...
 
-para dizer ao Wine que use as versoes recem-instaladas. Ninguem usa isso como
-indice porque o winetricks so anda no sentido verbo -> instalacao. Invertendo
-a leitura, sai a tabela que o Tandem precisa - com a cobertura inteira do
-winetricks, sem rede, sem servico e sem manter lista a mao.
+to tell Wine to use the freshly installed versions. Nobody uses this as an
+index because winetricks only walks in the verb -> installation direction.
+Reading it backwards yields the table Tandem needs - with the whole coverage
+of winetricks, no network, no service and no hand-kept list.
 
-    python3 tools/indice-winetricks.py             # escreve src/lib/verbos.tsv
-    python3 tools/indice-winetricks.py --conferir  # so compara com o atual
+    python3 tools/indice-winetricks.py             # writes src/lib/verbos.tsv
+    python3 tools/indice-winetricks.py --conferir  # only compares with current
 
-A tabela escrita a mao em src/lib/winedeps.sh continua valendo e tem
-precedencia: ela carrega decisoes que o indice nao tem como saber, como
-mandar msvcp140 para vcrun2022 (o mais novo, que serve os anteriores) em vez
-de para vcrun2015. O indice entra como segunda opinião, para as centenas de
-DLLs que a tabela a mao nunca vai cobrir.
+The hand-written table in src/lib/winedeps.sh remains valid and takes
+precedence: it carries decisions the index has no way of knowing, such as
+sending msvcp140 to vcrun2022 (the newest one, which serves the earlier ones)
+instead of to vcrun2015. The index comes in as a second opinion, for the
+hundreds of DLLs the hand-written table will never cover.
 """
 import os
 import re
@@ -31,22 +31,22 @@ DESTINO = os.path.join(RAIZ, "src", "lib", "verbos.tsv")
 INICIO_VERBO = re.compile(r"^load_([a-z0-9_.]+)\s*\(\)")
 OVERRIDE = re.compile(r"^\s*w_override_dlls\s+(?:native,builtin|native|builtin,native)\s+(.+?)\s*$")
 
-# ------------------------------------------------------- o ponto cego do 1o
+# ------------------------------------------------ the blind spot of the 1st
 #
-# Ler so w_override_dlls deixava o indice cego exatamente onde a tabela a mao
-# errava. O vcrun2003 nao chama w_override_dlls nenhuma vez: as DLLs que ele
-# entrega estao declaradas apenas no titulo -
+# Reading only w_override_dlls left the index blind exactly where the
+# hand-written table was wrong. vcrun2003 never calls w_override_dlls once:
+# the DLLs it delivers are declared only in the title -
 #     w_metadata vcrun2003 dlls \
 #         title="Visual C++ 2003 libraries (mfc71,msvcp71,msvcr71)"
-# - e por isso ele tinha ZERO entradas no indice, enquanto a tabela mandava
-# msvcr71.dll para o vcrun6, que nao entrega isso. O auditor nao podia achar o
-# erro porque nao enxergava o certo. O mesmo vale para as mfc140* do vcrun2022,
-# confirmado numa maquina real.
+# - and that is why it had ZERO entries in the index, while the table sent
+# msvcr71.dll to vcrun6, which does not deliver that. The auditor could not
+# find the error because it could not see the right answer. The same goes for
+# the mfc140* of vcrun2022, confirmed on a real machine.
 #
-# O risco de ler titulo e o oposto: quase todo parenteses em titulo NAO e lista
-# de DLL ("(Deprecated, no-op)", "(0.54)", "(developers only)"). Dois filtros
-# estreitos resolvem: a categoria tem que ser "dlls", e o titulo tem que dizer
-# "dll" ou "librar" antes do parenteses.
+# The risk of reading the title is the opposite: almost every parenthesis in a
+# title is NOT a DLL list ("(Deprecated, no-op)", "(0.54)", "(developers
+# only)"). Two narrow filters solve it: the category has to be "dlls", and the
+# title has to say "dll" or "librar" before the parenthesis.
 METADATA = re.compile(r"^\s*w_metadata\s+([a-z0-9_.]+)\s+([a-z]+)")
 TITULO = re.compile(r'title="([^"]*)"')
 LISTA_NO_TITULO = re.compile(r"\(([^()]*)\)")
@@ -54,7 +54,7 @@ TOKEN_DLL = re.compile(r"^[a-z][a-z0-9_+-]*(\.dll)?$")
 
 
 def dlls_do_titulo(titulo):
-    """Nomes de DLL declarados entre parenteses no titulo, ou lista vazia."""
+    """DLL names declared between parentheses in the title, or empty list."""
     if not re.search(r"dll|librar", titulo, re.I):
         return []
     for bruto in LISTA_NO_TITULO.findall(titulo):
@@ -63,24 +63,24 @@ def dlls_do_titulo(titulo):
             continue
         if not all(TOKEN_DLL.match(p) for p in pecas):
             continue
-        # "(Deprecated, no-op)" passaria pelo formato; nao passa pelo filtro
-        # de categoria e de palavra, e nem por este: numero de versao solto.
+        # "(Deprecated, no-op)" would pass the format check; it does not pass
+        # the category and word filters, nor this one: a loose version number.
         if any(re.fullmatch(r"[0-9.]+", p) for p in pecas):
             continue
         return pecas
     return []
 
-# Verbos que entregam DLL mas nao sao dependencia de programa: instalar por
-# engano so gasta o tempo do dono e pode piorar o prefixo.
+# Verbs that deliver a DLL but are not a program dependency: installing one by
+# mistake only wastes the owner's time and can make the prefix worse.
 IGNORAR_VERBOS = {
     "sandbox", "isolate_home", "remove_mono", "vd", "videomemorysize",
     "ddr", "orm", "psm", "rtlm", "mwo", "fontsmooth", "alldlls",
-    # Nao instala nada: manda o Wine usar o Mono no lugar do .NET. Deixar
-    # entrar fazia o mscoree.dll apontar para ca em vez de para o dotnet.
+    # Installs nothing: it tells Wine to use Mono in place of .NET. Letting it
+    # in made mscoree.dll point here instead of to dotnet.
     "forcemono",
 }
 
-# Palavras que aparecem na linha de override mas nao sao nome de DLL.
+# Words that show up on the override line but are not a DLL name.
 NAO_E_DLL = re.compile(r"[^a-z0-9_.+-]")
 
 
@@ -92,7 +92,7 @@ def acha_winetricks(argv):
 
 
 def ler(caminho):
-    """({dll: [verbos]}, {dll: fonte}) lido do winetricks."""
+    """({dll: [verbs]}, {dll: source}) read from winetricks."""
     indice = {}
     fontes = {}
     verbo = None
@@ -107,7 +107,7 @@ def ler(caminho):
 
     with open(caminho, encoding="utf-8", errors="replace") as f:
         for linha in f:
-            # Bloco de metadados: so a categoria "dlls" interessa.
+            # Metadata block: only the "dlls" category matters.
             m = METADATA.match(linha)
             if m:
                 meta_verbo = m.group(1) if m.group(2) == "dlls" else None
@@ -136,9 +136,10 @@ def ler(caminho):
                 continue
             for peca in m.group(1).split():
                 peca = peca.strip('"\'').lower()
-                # O winetricks escreve o nome sem extensao ("msvcp140") e as
-                # vezes com ela ("cmd.exe"). Normalizamos para .dll, que e o
-                # formato que o Wine usa na mensagem de erro que lemos.
+                # winetricks writes the name without the extension
+                # ("msvcp140") and sometimes with it ("cmd.exe"). We normalize
+                # to .dll, which is the format Wine uses in the error message
+                # we read.
                 if peca.endswith(".exe") or peca.endswith(".drv"):
                     dll = peca
                 elif peca.endswith(".dll"):
@@ -154,20 +155,21 @@ def ler(caminho):
 
 
 def escolher(verbos):
-    """Desempata quando varios verbos entregam a mesma DLL.
+    """Breaks the tie when several verbs deliver the same DLL.
 
-    Regra: o mais NOVO serve os anteriores. O runtime do Visual C++ e
-    cumulativo - quem instala o vcrun2022 tem o que o vcrun2015 daria -,
-    entao entre nomes que so diferem no ano, vence o maior. Fora isso, o
-    nome mais curto, que costuma ser o pacote base e nao uma variante.
+    Rule: the NEWEST one serves the earlier ones. The Visual C++ runtime is
+    cumulative - whoever installs vcrun2022 has what vcrun2015 would give -,
+    so among names that differ only in the year, the largest wins. Beyond
+    that, the shortest name, which is usually the base package and not a
+    variant.
     """
     def versao(v):
-        """Numero do nome do verbo, comparavel entre irmaos.
+        """Number from the verb name, comparable between siblings.
 
-        Ano de quatro digitos e ano: vcrun2022 > vcrun2015. Qualquer outro
-        numero e versao com o ponto omitido, um digito por parte:
-        dotnet48 -> (4,8) e dotnet472 -> (4,7,2), entao 4.8 ganha. Comparar
-        como inteiro daria 472 > 48, que e o contrario do certo.
+        A four-digit year is a year: vcrun2022 > vcrun2015. Any other number
+        is a version with the dot omitted, one digit per part:
+        dotnet48 -> (4,8) and dotnet472 -> (4,7,2), so 4.8 wins. Comparing as
+        an integer would give 472 > 48, which is the opposite of right.
         """
         maior = ()
         for n in re.findall(r"\d+", v):
@@ -181,26 +183,27 @@ def escolher(verbos):
 
     def chave(v):
         ver = versao(v)
-        # Verbo sem numero nenhum vai para o fim: entre irmaos versionados,
-        # quem nao declara versao nao pode ganhar por omissao.
+        # A verb with no number at all goes to the end: among versioned
+        # siblings, one that declares no version cannot win by omission.
         return (0 if ver else 1, tuple(-x for x in ver), len(v), v)
 
     return sorted(verbos, key=chave)[0]
 
 
 def familia(v):
-    """Nome do verbo sem a versao: vcrun2022 -> vcrun, dotnet48 -> dotnet."""
+    """Verb name without the version: vcrun2022 -> vcrun, dotnet48 -> dotnet."""
     return re.sub(r"[0-9].*$", "", v)
 
 
 def confianca(verbos):
-    """Da para escolher sozinho entre estes verbos?
+    """Can we choose among these verbs on our own?
 
-    Um candidato so: obvio. Varios da MESMA familia: o desempate por versao
-    e defensavel, porque o runtime mais novo serve o anterior. Familias
-    diferentes (ie8 x wininet x wininet_win2k) e chute, e chute que custa
-    meia hora do dono - nesse caso o indice se cala e a DLL volta a ser
-    "sem traducao conhecida", que e a resposta honesta.
+    A single candidate: obvious. Several from the SAME family: breaking the
+    tie by version is defensible, because the newer runtime serves the older
+    one. Different families (ie8 vs wininet vs wininet_win2k) is a guess, and
+    a guess that costs the owner half an hour - in that case the index stays
+    quiet and the DLL goes back to being "no known translation", which is the
+    honest answer.
     """
     if len(verbos) == 1:
         return "alta"
@@ -210,7 +213,7 @@ def confianca(verbos):
 def main():
     wt = acha_winetricks(sys.argv[1:])
     if not wt:
-        print("winetricks nao encontrado; nada a fazer", file=sys.stderr)
+        print("winetricks not found; nothing to do", file=sys.stderr)
         return 0
 
     indice, fontes = ler(wt)
@@ -220,6 +223,11 @@ def main():
         linhas.append("%s\t%s\t%s\t%s\t%s" % (
             dll, escolher(verbos), confianca(verbos), ",".join(sorted(verbos)),
             fontes.get(dll, "override")))
+    # The header of the generated file stays in Portuguese on purpose: the
+    # column names are the same field names the rest of the code compares
+    # against, and the text is byte-compared with the src/lib/verbos.tsv
+    # committed to the repository by --conferir. Changing it here without
+    # regenerating the table turns the check red.
     texto = ("# dll\tverbo\tconfianca\ttodos-os-verbos\tfonte\n"
              "# Gerado por tools/indice-winetricks.py a partir do winetricks\n"
              "# instalado. Nao edite a mao: as decisoes ficam em winedeps.sh.\n"
@@ -231,13 +239,13 @@ def main():
             with open(DESTINO, encoding="utf-8") as f:
                 atual = f.read()
         igual = atual == texto
-        print("%d DLLs indexadas de %s" % (len(linhas), wt))
-        print("tabela em disco: %s" % ("igual" if igual else "DIFERENTE"))
+        print("%d DLLs indexed from %s" % (len(linhas), wt))
+        print("table on disk: %s" % ("same" if igual else "DIFFERENT"))
         return 0 if igual else 1
 
     with open(DESTINO, "w", encoding="utf-8") as f:
         f.write(texto)
-    print("%d DLLs indexadas de %s -> %s" % (len(linhas), wt, DESTINO))
+    print("%d DLLs indexed from %s -> %s" % (len(linhas), wt, DESTINO))
     return 0
 
 

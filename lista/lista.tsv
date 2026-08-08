@@ -1,9 +1,9 @@
 # TANDEM-LISTA 1
-# Lista da comunidade do Tandem. Um programa por linha, campos separados por TAB.
-# Formato completo: docs/FORMATO-LISTA.md
+# The Tandem community list. One program per line, TAB-separated fields.
+# Full format: docs/LIST-FORMAT.md
 #
-# identidade	arch	verbos	reprovados	confianca	maquinas	visto	nota
+# identity	arch	verbs	failed	confidence	machines	seen	note
 #
-# Ainda vazia. Ela so pode ser preenchida por relatos de gente que rodou o
-# programa de verdade - inventar linha aqui seria exatamente o engano que o
-# campo "confianca" existe para impedir.
+# Still empty. It can only be filled by reports from people who actually ran
+# the program - inventing a line here would be exactly the mistake the
+# "confidence" field exists to prevent.

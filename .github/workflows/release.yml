@@ -5,7 +5,7 @@ name: Release
 # tag now builds the package and attaches it, with the suite and lintian running
 # first — a release nobody checked is worse than no release.
 #
-#   git tag v3.5 && git push origin v3.5
+#   git tag v3.6 && git push origin v3.6
 
 on:
   push:

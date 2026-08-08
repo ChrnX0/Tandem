@@ -1,69 +1,106 @@
-# Tandem — contexto para o agente
+# Tandem — context for the agent
 
-Leia antes de mexer em qualquer coisa. Este arquivo existe para uma sessão nova
-retomar o trabalho sem repetir descobertas que já custaram caro.
+Read this before touching anything. This file exists so that a fresh session can
+pick the work back up without re-paying for discoveries that were expensive the
+first time.
 
-## O que é
+## What it is
 
-Pacote `.deb` que faz `.exe`, `.msi`, `.apk` e `.xapk` abrirem com **dois
-cliques** no Linux. Não é gerenciador de prefixos nem substituto do Bottles: é
-uma **camada fina de decisão, tradução e diagnóstico** por cima de `wine`,
-`winetricks -q` e `waydroid`.
+A `.deb` package that makes `.exe`, `.msi`, `.apk` and `.xapk` open with a
+**double click** on Linux. It is not a prefix manager and not a Bottles
+replacement: it is a **thin layer of decision, translation and diagnosis** on top
+of `wine`, `winetricks -q` and `waydroid`.
 
-O usuário-alvo não é programador. A régua de qualidade é: *nenhum caminho de
-erro pode terminar em silêncio*. "Cliquei duas vezes e não aconteceu nada" é
-tratado como defeito, não como limitação.
+The target user is not a programmer. The quality bar is: *no error path may end
+in silence.* "I double-clicked and nothing happened" is treated as a bug, not as
+a limitation.
 
-## Regras invioláveis
+## Inviolable rules
 
-1. **Nunca escrever em prefixo Wine que o Tandem não criou.** Prefixo nosso tem
-   a marca `.tandem-prefixo`. Qualquer outro é somente leitura para a
-   automação: o Tandem executa o programa lá dentro, informa o que falta e
-   **para**. Isso existe porque a máquina de origem roda um sistema de frente de
-   caixa em prefixo próprio — instalar dependência dentro de um ambiente de
-   produção que funciona é pior do que não automatizar nada.
-2. **Mensagens ao usuário em português, sem jargão.** `NO_MATCHING_ABIS` vira
+1. **Never write into a Wine prefix Tandem did not create.** Our prefixes carry
+   the `.tandem-prefixo` marker. Any other one is read-only to the automation:
+   Tandem runs the program inside it, reports what is missing, and **stops**.
+   This exists because the origin machine also runs a point-of-sale system in
+   its own prefix — installing a dependency inside a working production
+   environment is worse than not automating at all.
+2. **User-facing messages in Portuguese, no jargon.** `NO_MATCHING_ABIS` becomes
    "este app é feito só para celular e não roda aqui".
-3. **`set -e` só no empacotador, nunca nos executáveis.** Os laços de espera
-   dependem de comandos que falham de propósito (`grep -q ... && break`).
-4. **Não repetir instalação já paga.** `dotnet48` leva ~30 min; há recibo em
-   `$WINEPREFIX/.tandem-verbos`.
-5. **O empacotador não pode depender de `dpkg-deb`.** `build.py` escreve o
-   arquivo `ar` à mão e roda em qualquer SO, inclusive Windows.
+3. **`set -e` only in the packager, never in the executables.** The wait loops
+   depend on commands that fail on purpose (`grep -q ... && break`).
+4. **Never repeat an install already paid for.** `dotnet48` takes ~30 min; the
+   receipt lives in `$WINEPREFIX/.tandem-verbos`.
+5. **The packager must not depend on `dpkg-deb`.** `build.py` writes the `ar`
+   archive by hand and runs on any OS, Windows included.
 
-## Mapa
+## Language of the repository
+
+**Everything written in this repository is in English** — comments, test names,
+documentation, the changelog, and commit messages. That is a standing directive:
+the repository is where people from outside come to read and contribute, and a
+codebase they cannot read is a wall.
+
+Four deliberate exceptions, all of them for the same reason — the product's user
+is a Brazilian shop owner who is not a programmer:
+
+1. **Every string shown to the user stays in Portuguese.** That is rule №2 above
+   and it is a product requirement, not a preference. It covers whatever goes to
+   `t_erro`, `t_aviso`, `t_ok`, `t_pergunta`, `t_texto`, `zenity`, and the help
+   text in `uso()`.
+2. **The command names the user types stay in Portuguese** — `preparar`,
+   `programas`, `desinstalar`, `dados`, `alternativas`, `receita`, `memoria`,
+   `esquecer`, `socorro`, `contribuir`, `lista`. Most carry an English alias for
+   people who expect one.
+3. **Anything shipped inside the package stays in Portuguese**, because it is
+   product, not repository: `man/tandem.1` (the user reads it with `man
+   tandem`), the `Name`/`Comment` fields of the `.desktop` files, and the
+   `xml:lang="pt_BR"` comments in `src/mime/tandem.xml`.
+4. **`LEIAME.md` and `CONTRIBUINDO.md` stay in Portuguese.** They are the front
+   door for the audience that actually runs this software, and a test keeps
+   their command lists in sync with the English pair.
+
+The short form: **the repository is English, the product is Portuguese.**
+
+And one thing that only looks like language: **the literal values written into
+state files** — `abriu`, `confirmado`, `so-abriu`, `reprovado`, `RESOLVERAM`,
+`NAO_RESOLVERAM`, `CONFIANCA`, `alta`, `baixa`, `override`, `titulo`, `ambos`,
+`nativo`, `parecido`. Those are on-disk format, not prose. Translating one
+silently breaks compatibility with memory files and recipes already written on
+someone's machine.
+
+## Map
 
 ```
-build.py                  empacotador (ar + tar.gz manuais)
-debian/control            versão do pacote vive aqui
-debian/changelog          entrada nova a cada versão; lintian exige data nova
-debian/copyright          DEP-5; lintian exige
-debian/postinst           só atalho: o trabalho por-usuário é na 1ª execução
-man/tandem.1              manual; os outros quatro são stubs ".so"
-src/mime/tandem.xml       registra .xapk/.apks/.apkm como subclasse de zip
-src/lib/common.sh         log, mensagem, locale, progresso, prefixo, PE, waydroid,
-                          memoria, receitas, alternativas, pre-voo, preparar
-src/lib/winedeps.sh       DLL -> verbo do winetricks; DLLs sem tradução
-src/lib/apkinfo.py        leitor de AndroidManifest binário, Python puro
-src/lib/peinfo.py         leitor da tabela de importações do PE, sem executar
-src/lib/verbos.tsv        índice DLL->verbo GERADO; não editar à mão
-src/lib/limites.tsv       assinaturas do que nunca vai funcionar (dongle, driver)
-src/lib/alternativas.tsv  programas de Linux que fazem o mesmo trabalho
-tools/indice-winetricks.py  gera verbos.tsv lendo o winetricks instalado
-proofgate.json            portão de evidência: stack, arquivos acoplados
-.github/workflows/ci.yml  suíte + lintian + ciclo real de instalação
-src/bin/tandem            CLI + painel zenity; preparar/programas/desinstalar
-src/bin/tandem-exe        loop roda->detecta->instala->repete
-src/bin/tandem-apk        pré-voo + install; xapk/apks via adb install-multiple
-src/bin/tandem-repair     disputa de associação MIME
-src/polkit/               regra estreita: só start/restart do waydroid-container
-tests/run.sh              suíte; tests/mkapk.py gera os pacotes sintéticos
-docs/IDEAS.md            ideário com veredito; as recusadas com o motivo
-docs/LIST-FORMAT.md     o registro da lista da comunidade, campo a campo
-lista/lista.tsv           a lista publicada; vazia até haver relato de gente
+build.py                  packager (hand-written ar + tar.gz)
+debian/control            the package version lives here
+debian/changelog          a new entry per version; lintian demands a fresh date
+debian/copyright          DEP-5; lintian demands it
+debian/postinst           shortcut only: the per-user work happens on first run
+man/tandem.1              the manual; the other four are ".so" stubs
+src/mime/tandem.xml       registers .xapk/.apks/.apkm as a zip subclass
+src/lib/common.sh         log, messages, locale, progress, prefixes, PE, waydroid,
+                          memory, recipes, alternatives, data, list, pre-flight
+src/lib/winedeps.sh       DLL -> winetricks verb; DLLs with no translation
+src/lib/apkinfo.py        binary AndroidManifest reader, pure Python
+src/lib/peinfo.py         PE import-table reader, without executing anything
+src/lib/verbos.tsv        GENERATED DLL->verb index; do not edit by hand
+src/lib/limites.tsv       signatures of what will never work (dongle, driver)
+src/lib/alternativas.tsv  Linux programs that do the same job
+tools/indice-winetricks.py  generates verbos.tsv by reading the installed winetricks
+proofgate.json            evidence gate: stack, coupled files
+.github/workflows/ci.yml  suite + lintian + a real install cycle
+.github/workflows/release.yml  tag -> build, verify, publish the .deb
+src/bin/tandem            CLI + zenity panel; 20 commands
+src/bin/tandem-exe        the run->detect->install->retry loop
+src/bin/tandem-apk        pre-flight + install; xapk/apks via adb install-multiple
+src/bin/tandem-repair     the MIME association dispute
+src/polkit/               narrow rule: only start/restart of waydroid-container
+tests/run.sh              the suite; tests/mkapk.py generates the synthetic packages
+docs/IDEAS.md             idea ledger with verdicts; the rejected ones with the reason
+docs/LIST-FORMAT.md       the community list record, field by field
+lista/lista.tsv           the published list; empty until real people report
 ```
 
-Comandos (`tandem --help` é a fonte da verdade):
+Commands (`tandem --help` is the source of truth):
 
 ```
 install    programas   desinstalar   preparar     android
@@ -72,244 +109,255 @@ protect    alternativas  receita     memoria      esquecer     logs
 lista      contribuir  socorro
 ```
 
-Build e verificação:
+Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 294 testes, sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 294 tests, no Wine, no Waydroid, no install
 ```
 
-A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
-sintéticos com `AndroidManifest.xml` binário de verdade (`tests/mkapk.py`), então
-o leitor de manifesto é exercitado no mesmo caminho de código de um APK real.
-Ferramenta opcional ausente é pulada, não reprovada. **Rode antes de commitar.**
+The suite sources the libraries straight from `src/lib` and generates synthetic
+Android packages with a real binary `AndroidManifest.xml` (`tests/mkapk.py`), so
+the manifest reader is exercised on the same code path a real APK takes. An
+absent optional tool is skipped, not failed. **Run it before committing.**
 
-## Como o detector de dependências funciona
+## How the dependency detector works
 
-O Wine escreve `err:module:import_dll Library MSVCP140.dll not found` quando
-falta biblioteca. `t_verbos_do_log` lê essas linhas, ignora DLLs que o próprio
-Wine implementa (`kernel32`, `user32`…) e traduz o resto para verbos do
-winetricks. DLL sem tradução conhecida **não** é dependência do sistema — é
-arquivo que o programa deveria trazer junto, e a mensagem diz isso.
+Wine writes `err:module:import_dll Library MSVCP140.dll not found` when a library
+is missing. `t_verbos_do_log` reads those lines, ignores DLLs Wine implements
+itself (`kernel32`, `user32`…) and translates the rest into winetricks verbs. A
+DLL with no known translation is **not** a system dependency — it is a file the
+program itself should have shipped, and the message says so.
 
-Teste sem precisar do Wine:
+Test it without needing Wine:
 
 ```bash
 . src/lib/winedeps.sh
 printf '0:err:module:import_dll Library MSVCP140.dll (needed by X) not found\n' > /tmp/w.log
-t_verbos_do_log /tmp/w.log     # espera: vcrun2022
+t_verbos_do_log /tmp/w.log     # expects: vcrun2022
 ```
 
-## Fatos do ecossistema já apurados (não repesquisar)
+## Ecosystem facts already established (do not re-research)
 
-- **Nenhum projeto faz detecção automática de dependência de `.exe`.** Nem
-  Bottles, nem Lutris, nem PlayOnLinux — todos exigem um humano escolhendo numa
-  lista. O loop do Tandem é trabalho novo; calibre a expectativa de acerto.
-- **O Bottles não instala dependência por linha de comando** (só GUI), o que o
-  inviabiliza como motor.
-- **O Tandem entra numa disputa de associação, não num vazio.** O Zorin 18 traz
-  "Windows App Support" e o Waydroid instala `waydroid.app.install.desktop`. Se
-  o duplo clique abrir um diálogo "Abrir com…", é isso — rode `tandem repair`,
-  que mostra quem detinha o tipo antes e depois.
-- **`~/.config/gnome-mimeapps.list` e `zorin-mimeapps.list` têm precedência
-  maior** que `mimeapps.list` e sobrescrevem em silêncio. O `tandem-repair`
-  limpa os concorrentes com backup.
-- **`waydroid app install` retorna 0 mesmo falhando.** Sempre parsear a saída.
-- **`Session: RUNNING` não significa Android pronto.** Esperar
-  `sys.boot_completed`; com GAPPS leva mais 20–60 s.
-- **`winemenubuilder` faz duas coisas.** Cria atalhos de menu (queremos) e
-  sequestra associações de `.txt`/`.jpg`/`.pdf` (não queremos). Desligar o
-  binário mata as duas; a chave certa é
+- **No project does automatic dependency detection for `.exe`.** Not Bottles,
+  not Lutris, not PlayOnLinux — all of them require a human picking from a list.
+  Tandem's loop is new work; calibrate your expectations of its hit rate.
+- **Bottles cannot install dependencies from the command line** (GUI only),
+  which rules it out as an engine.
+- **Tandem enters an association dispute, not a vacuum.** Zorin 18 ships
+  "Windows App Support" and Waydroid installs `waydroid.app.install.desktop`. If
+  a double click opens an "Open with…" dialog, that is why — run `tandem repair`,
+  which shows who held the type before and after.
+- **`~/.config/gnome-mimeapps.list` and `zorin-mimeapps.list` outrank**
+  `mimeapps.list` and override it silently. `tandem-repair` clears the
+  competitors, with a backup.
+- **`waydroid app install` returns 0 even when it fails.** Always parse the
+  output.
+- **`Session: RUNNING` does not mean Android is ready.** Wait for
+  `sys.boot_completed`; with GAPPS that is another 20–60 s.
+- **`winemenubuilder` does two things.** It creates menu shortcuts (we want
+  that) and hijacks `.txt`/`.jpg`/`.pdf` associations (we do not). Disabling the
+  binary kills both; the right key is
   `HKCU\Software\Wine\FileOpenAssociations\Enable = N`.
-- **`WINEARCH` só na criação do prefixo.** Definir em prefixo existente faz o
-  Wine se recusar a iniciar.
-- **`.msi` não é PE.** `wine arquivo.msi` falha sempre; tem que ser
+- **`WINEARCH` only at prefix creation.** Setting it on an existing prefix makes
+  Wine refuse to start.
+- **`.msi` is not a PE.** `wine file.msi` always fails; it has to be
   `wine msiexec /i`.
-- **O zenity recusa acento se o locale não existir.** Definir um locale que o
-  sistema não gerou (`LC_ALL=pt_BR.UTF-8` num Zorin instalado em inglês) faz o
-  glib cair para `ANSI_X3.4-1968`; a partir daí qualquer argumento não-ASCII
-  devolve `This option is not available`, código 255, e **nenhuma janela
-  aparece**. Como toda mensagem daqui tem acento, isso apagava a interface
-  inteira em silêncio. Detector confiável: `locale charmap` tem que dizer
-  `UTF-8`. Use `t_locale_utf8`, nunca escreva um locale fixo.
-- **`zenity --error` bloqueia até o clique** e devolve 0. Se devolver diferente
-  de 0, a janela não foi mostrada — é esse o sinal que o `t_erro` usa para
-  decidir se precisa repetir a mensagem no terminal.
-- **Cano de progresso aberto só para escrita mata o processo.** Quando o
-  zenity sumia, a mensagem seguinte levava SIGPIPE e derrubava o Tandem
-  inteiro: código 141, nada no log. Dentro do laço do `winetricks` isso cortava
-  uma instalação pela metade. Abrir o descritor com `exec 8<> fifo` resolve —
-  com leitura e escrita o cano nunca fica sem leitor.
-- **`exec N> arquivo` que falha não aborta o bash.** O script segue vivo, o
-  `flock` responde "Bad file descriptor", e confundir isso com "trava tomada"
-  fazia o duplo clique morrer em silêncio. Trava impossível e trava ocupada são
-  casos distintos: no primeiro, siga sem trava.
-- **`wine uninstaller --list` mente.** Instalador de 32 bits grava a chave em
-  `Wow6432Node\...\Uninstall`, e o `uninstaller.exe` — que vira processo de 32
-  bits quando há `wine32` — enumera a outra visão. Confirmado com Wine real: o
-  7-Zip instalado e a lista vazia. Leia `system.reg` e `user.reg` direto; as
-  duas visões aparecem, e nem precisa do Wine para listar.
-- **O GNOME sob Wayland não relê a lista de aplicativos.** Um `.desktop` novo
-  numa subpasta recém-criada (`applications/wine/Programs/X/`) só aparece no
-  menu depois de sair e entrar na conta. `update-desktop-database` **não**
-  resolve — testado na máquina real. Por isso existe `tandem programas`: o
-  Tandem não pode depender do menu do sistema para você achar o que instalou.
-- **Não dá para instalar dependências no `postinst`.** O `dpkg` segura uma
-  trava enquanto ele roda; um `apt-get` lá dentro espera para sempre. Daí
-  `tandem preparar` ser um comando separado.
-- **`[ -t 1 ]` sozinho não distingue duplo clique de redirecionamento.** Cano e
-  arquivo também não são terminal, e mandar o diagnóstico para uma janela fazia
-  `tandem doctor > relatorio.txt` gravar zero bytes. Teste os três:
+- **zenity refuses accented text when the locale does not exist.** Setting a
+  locale the system never generated (`LC_ALL=pt_BR.UTF-8` on a Zorin installed in
+  English) makes glib fall back to `ANSI_X3.4-1968`; from then on any non-ASCII
+  argument returns `This option is not available`, exit 255, and **no window
+  appears at all**. Since every message here has accents, that erased the entire
+  interface in silence. Reliable detector: `locale charmap` must say `UTF-8`. Use
+  `t_locale_utf8`, never hard-code a locale.
+- **`zenity --error` blocks until the click** and returns 0. A non-zero return
+  means the window was never shown — that is the signal `t_erro` uses to decide
+  whether it needs to repeat the message on the terminal.
+- **A progress pipe opened write-only kills the process.** When zenity went
+  away, the next progress message took SIGPIPE and brought the whole of Tandem
+  down: exit 141, nothing in the log. Inside the `winetricks` loop that cut an
+  install in half. Opening the descriptor with `exec 8<> fifo` fixes it — with
+  both ends open the pipe never runs out of readers.
+- **An `exec N> file` that fails does not abort bash.** The script stays alive,
+  `flock` answers "Bad file descriptor", and mistaking that for "lock taken" made
+  the double click die in silence. An impossible lock and a busy lock are
+  different cases: in the first, carry on without a lock.
+- **`wine uninstaller --list` lies.** A 32-bit installer writes its key under
+  `Wow6432Node\...\Uninstall`, and `uninstaller.exe` — which becomes a 32-bit
+  process when `wine32` is present — enumerates the other view. Confirmed with
+  real Wine: 7-Zip installed, list empty. Read `system.reg` and `user.reg`
+  directly; both views show up, and you do not even need Wine to list them.
+- **GNOME under Wayland does not re-read the application list.** A new
+  `.desktop` in a freshly created subfolder (`applications/wine/Programs/X/`)
+  only appears in the menu after logging out and back in.
+  `update-desktop-database` does **not** fix it — tested on the real machine.
+  That is why `tandem programas` exists: Tandem cannot depend on the system menu
+  for you to find what you installed.
+- **You cannot install dependencies from `postinst`.** `dpkg` holds a lock while
+  it runs; an `apt-get` in there waits forever. Hence `tandem preparar` being a
+  separate command.
+- **`[ -t 1 ]` alone does not distinguish a double click from a redirect.** A
+  pipe and a file are not terminals either, and sending the diagnosis to a window
+  made `tandem doctor > report.txt` write zero bytes. Test all three:
   `[ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]`.
-- **`exec` SEM COMANDO aplica as redireções ao shell inteiro, e para sempre.**
-  Escrito `exec 7> arq 2>/dev/null`, aquele `2>/dev/null` não cala o `exec`:
-  cala o stderr de **todo o resto do programa**. Medido num Ubuntu 24.04 sem
-  sessão gráfica: o laço detectava a DLL certa, traduzia certo, montava a
-  mensagem certa com o comando certo — e devolvia código 53 com **zero byte**
-  de saída. Estava escondido dentro do código escrito para consertar um erro
-  em silêncio. A forma correta é `{ exec 7> arq; } 2>/dev/null`: o descritor
-  persiste, o desvio morre no fim do grupo.
-- **Chegar não é chegar na bitola certa.** Num prefixo `win64`, `system32`
-  guarda as DLLs de 64 bits e `syswow64` as de 32. O verbo `mfc42` sai 0 e
-  entrega em `syswow64`; um programa de 64 bits continua sem achar. A prova de
-  entrega da 3.3 olhava as duas pastas e aprovava — beco sem saída com recibo
-  por cima. Confira **por arquitetura**. Metade dos verbos do winetricks só
-  tem carga de 32 bits, e ele avisa isso em inglês no meio do log.
-- **`systemd-inhibit` existe e não funciona sem D-Bus.** Sai 1 e leva junto o
-  comando que embrulha; o `winetricks` nem chegou a rodar. Exercite antes de
-  usar (`t_inibidor`), não pergunte se o binário existe.
-- **`t_texto` lê o conteúdo da ENTRADA PADRÃO**; o argumento é só o título da
-  janela. Passar o texto como argumento faz o comando rodar, sair com 0 e não
-  imprimir nada — aconteceu em cinco comandos de uma vez, e nenhum teste pegou
-  porque todos exercitavam bibliotecas, nunca o comando inteiro. Há um teste
-  agora que roda cada comando e exige saída.
-- **`winetricks -q` sair 0 não significa que o arquivo chegou.** Ele reporta
-  que *ele* terminou. Com uma tradução errada na tabela, o verbo instalava
-  outra coisa, saía 0, e o recibo era gravado igual a uma instalação certa —
-  e recibo é permanente pela regra nº 4. Na tentativa seguinte o Tandem dizia
-  "já instalei o que este programa pedia" e desistia, com a causa real
-  intacta. Desde a 3.3 há prova de entrega: confere-se a DLL pedida em
-  `system32`/`syswow64` antes de gravar. **Ausência de prova não condena** —
-  só a contradição provada segura o recibo, porque nem todo verbo entrega uma
-  DLL homônima.
-- **Os executáveis respeitam `TANDEM_LIB`** para achar as bibliotecas
-  (`. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"`). Com o caminho fixo não
-  havia como exercitar o laço roda→detecta→instala sem instalar o pacote, e a
-  suíte inteira parava no nível de biblioteca.
-- **O Waydroid não está nos repositórios do Ubuntu/Zorin.** `apt-cache policy
-  waydroid` devolve `Candidate: (none)`. Vem de `repo.waydro.id`, com chave.
+- **`exec` WITHOUT A COMMAND applies its redirections to the whole shell, and
+  permanently.** Written as `exec 7> file 2>/dev/null`, that `2>/dev/null` does
+  not silence the `exec`: it silences stderr for **all the rest of the program**.
+  Measured on an Ubuntu 24.04 with no graphical session: the loop detected the
+  right DLL, translated it correctly, assembled the correct message with the
+  correct command — and returned exit 53 with **zero bytes** of output. It was
+  hiding inside the code written to fix a silent failure. The correct form is
+  `{ exec 7> file; } 2>/dev/null`: the descriptor persists, the redirect dies at
+  the end of the group.
+- **Arriving is not arriving in the right bitness.** In a `win64` prefix,
+  `system32` holds the 64-bit DLLs and `syswow64` the 32-bit ones. The `mfc42`
+  verb exits 0 and delivers into `syswow64`; a 64-bit program still cannot find
+  it. The v3.3 delivery proof looked in both folders and approved — a dead end
+  with a receipt on top. Check **per architecture**. Half the winetricks verbs
+  ship 32-bit payloads only, and it says so in English in the middle of the log.
+- **`systemd-inhibit` exists and does not work without D-Bus.** It exits 1 and
+  takes the wrapped command down with it; `winetricks` never even ran. Exercise
+  it before using it (`t_inibidor`), do not ask whether the binary exists.
+- **`t_texto` reads its content from STANDARD INPUT**; the argument is only the
+  window title. Passing the text as the argument makes the command run, exit 0
+  and print nothing — it happened to five commands at once, and no test caught it
+  because every test exercised libraries, never a whole command. There is a test
+  now that runs each command and demands output.
+- **`winetricks -q` exiting 0 does not mean the file arrived.** It reports that
+  *it* finished. With a wrong entry in the table, the verb installed something
+  else, exited 0, and the receipt was written exactly as for a correct install —
+  and a receipt is permanent under rule №4. On the next attempt Tandem said "I
+  already installed what this program was asking for" and gave up, with the real
+  cause untouched. Since 3.3 there is delivery proof: the requested DLL is
+  checked in `system32`/`syswow64` before the receipt is written. **Absence of
+  proof does not condemn** — only a proven contradiction holds the receipt back,
+  because not every verb delivers a same-named DLL.
+- **The executables honour `TANDEM_LIB`** when locating the libraries
+  (`. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"`). With the path hard-coded
+  there was no way to exercise the run→detect→install loop without installing the
+  package, and the whole suite stopped at the library level.
+- **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
+  waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
+  signing key.
 
-## Estado
+## State
 
-Verificado **em Linux real** (Ubuntu 24.04 noble, mesma base do Zorin 18, com
-root), não mais só por leitura:
+Verified **on real Linux** (Ubuntu 24.04 noble, the same base as Zorin 18, with
+root), no longer only by reading:
 
-- O `.deb` escrito à mão pelo `build.py` é aceito pelo `dpkg` de verdade:
-  `dpkg-deb --info/--contents`, `dpkg -i`, `dpkg --configure`. Instala,
-  configura e desinstala. Construção reproduzível (duas builds, mesmo cksum).
-- `lintian` limpo: zero erros, zero avisos.
-- O `postinst` no caminho por-usuário: protegeu sozinho os três prefixos Wine
-  pré-existentes (`~/.wine`, `~/.wine-pdv`, `wineprefixes/*`). **Regra nº 1
-  confirmada ponta a ponta.**
-- `tandem-repair` contra um `gnome-mimeapps.list` concorrente: removeu as
-  entradas em disputa, preservou o `text/plain` alheio, gravou no
-  `mimeapps.list`, deixou backup.
-- `tandem doctor`, `version`, `--help`, painel sem GUI: todos com saída.
-- Janelas do zenity abrem de fato (verificado sob Xvfb), inclusive com acento.
-- Wine 10.0 real instalado no container: prefixo `win64` criado do zero,
-  7-Zip x64 instalado por `.exe` e por `.msi`, registro inspecionado à mão.
-- 294 testes automatizados em `tests/run.sh`; CI no GitHub Actions.
+- The `.deb` written by hand by `build.py` is accepted by a real `dpkg`:
+  `dpkg-deb --info/--contents`, `dpkg -i`, `dpkg --configure`. It installs,
+  configures and uninstalls. Reproducible build (two builds, same cksum).
+- `lintian` clean: zero errors, zero warnings.
+- `postinst` on the per-user path: it protected, on its own, the three
+  pre-existing Wine prefixes (`~/.wine`, `~/.wine-pdv`, `wineprefixes/*`).
+  **Rule №1 confirmed end to end.**
+- `tandem-repair` against a competing `gnome-mimeapps.list`: it removed the
+  disputed entries, preserved someone else's `text/plain`, wrote to
+  `mimeapps.list`, and left a backup.
+- `tandem doctor`, `version`, `--help`, the panel with no GUI: all produce
+  output.
+- zenity windows really do open (verified under Xvfb), accents included.
+- Real Wine installed in the container: a `win64` prefix created from scratch,
+  7-Zip x64 installed from both `.exe` and `.msi`, registry inspected by hand.
+- **The run→detect→install loop closed successfully with real tools.** A
+  hand-forged 32-bit PE importing `mfc42.dll` (a DLL Wine does not implement,
+  cross-checked against `objdump` before use): detected, installed, the DLL
+  landed in `syswow64`, the bitness matched, the second attempt exited 0, memory
+  recorded `RESOLVERAM=mfc42` and `CONFIRMADO=sim`, and the recipe came out
+  marked `CONFIANCA=confirmado`. The same test with a 64-bit PE produced the
+  bitness dead end and the message that explains it.
+- `tandem dados` listing and copying real files out of a prefix; `tandem socorro`
+  producing its report; the bitness warning appearing in the dialog *before* the
+  download.
+- 294 automated tests in `tests/run.sh`; CI on GitHub Actions.
 
-Verificado **no Zorin 18.1 do usuário** (Wayland, Wine 10.0, Waydroid ativo):
+Verified **on the user's Zorin 18.1** (Wayland, Wine 10.0, Waydroid active):
 
-- `tandem doctor` completo, com o ambiente todo presente.
-- Os dois prefixos pré-existentes (`~/.wine` e `~/.wine-pdv`, o do PDV) foram
-  protegidos **sozinhos** na primeira execução, sem digitar nada.
-- Duplo clique roteando: `xdg-mime query default` responde `tandem-exe.desktop`
-  e `tandem-apk.desktop`.
-- 7-Zip x64 instalado pelo Tandem: prefixo criado, instalador executado,
-  `.lnk` no Menu Iniciar, `winemenubuilder` gerando o `.desktop`.
-- **As associações do usuário sobreviveram intactas** — `zip`, `txt`, `jpeg` e
-  `pdf` continuam com os apps do Zorin, nenhum `wine-extension`. É a prova da
-  decisão de desligar só o sequestro pela chave `FileOpenAssociations` em vez
-  do `winemenubuilder` inteiro.
-- A janela de erro acentuada aparece de verdade, com o texto certo.
+- `tandem doctor` complete, with the whole environment present.
+- The two pre-existing prefixes (`~/.wine` and `~/.wine-pdv`, the POS one) were
+  protected **on their own** on first run, without typing anything.
+- Double click routing: `xdg-mime query default` answers `tandem-exe.desktop`
+  and `tandem-apk.desktop`.
+- 7-Zip x64 installed by Tandem: prefix created, installer executed, `.lnk` in
+  the Start Menu, `winemenubuilder` generating the `.desktop`.
+- **The user's file associations survived intact** — `zip`, `txt`, `jpeg` and
+  `pdf` still belong to the Zorin apps, no `wine-extension` anywhere. That is the
+  proof of the decision to disable only the hijack via the
+  `FileOpenAssociations` key rather than `winemenubuilder` as a whole.
+- The accented error window really appears, with the right text.
 
-**Ainda não verificado — precisa da máquina de verdade:** `pkexec` e a regra
-polkit (o serviço do Waydroid já estava ativo, então a regra nunca foi
-exercitada), o laço roda→detecta→instala com `winetricks` real ponta a ponta
-(o 7-Zip não depende de nada, então o laço nunca precisou agir), instalação de
-XAPK num Waydroid real, e os comandos novos `preparar`, `programas` e
-`desinstalar` em campo.
+**Still unverified — needs the real machine:** `pkexec` and the polkit rule (the
+Waydroid service was already active, so the rule was never exercised), XAPK
+installation on a real Waydroid, and the newer commands `preparar`, `programas`,
+`desinstalar`, `dados` and `socorro` in the field.
 
-Ambiente de referência onde o projeto nasceu: Zorin OS 18.1 (base Ubuntu
-noble), kernel 7.0, x86_64, Wayland/GNOME, 15 GB RAM, Wine 10.0 do repositório
-da distro, Waydroid 1.6.2 MAINLINE com GAPPS e libhoudini, `binderfs` com nós
-`anbox-*`.
+Reference environment where the project was born: Zorin OS 18.1 (Ubuntu noble
+base), kernel 7.0, x86_64, Wayland/GNOME, 15 GB RAM, Wine 10.0 from the distro
+repository, Waydroid 1.6.2 MAINLINE with GAPPS and libhoudini, `binderfs` with
+`anbox-*` nodes.
 
-## O que foi construído depois da 2.1
+## What was built after 2.1
 
-- **Pré-voo** (`peinfo.py`): lê a tabela de importações do `.exe` sem executar.
-  Validado contra o `objdump` em 37 binários reais — saída idêntica nos 37.
-- **Veredito de impossibilidade** (`limites.tsv`): reconhece chave de proteção,
-  driver de sistema e USB direto ANTES de rodar. Não bloqueia; explica a falha.
-- **Índice do winetricks** (`verbos.tsv`, 274 DLLs): gerado do `w_override_dlls`
-  de cada verbo. Só responde com confiança alta — 192 sim, 54 se calam.
-  Usado sobretudo como AUDITOR da tabela à mão, e nessa função achou **seis
-  erros de mapeamento** que instalavam a coisa errada e gravavam recibo.
-- **Memória e receitas**: o que cada programa pediu, indexado pelo ARQUIVO
-  (tamanho + primeiro e último MiB), então a lição sobrevive a mudar de pasta
-  e vale noutra máquina. Receita é arquivo de texto que o dono manda para
-  alguém. Só puxa, nunca empurra.
-- **`tandem autoteste`**: exercita em vez de listar. Onde não dá para
-  exercitar, diz que pulou.
-- **`tandem preparar`**, **`programas`**, **`desinstalar`**, **`alternativas`**.
-- **Portão de evidência e CI**, os dois primeiros do projeto.
+- **Pre-flight** (`peinfo.py`): reads the `.exe` import table without executing
+  it. Validated against `objdump` on 37 real binaries — identical output on all
+  37.
+- **Impossibility verdict** (`limites.tsv`): recognises protection dongles,
+  system drivers and direct USB BEFORE running. It does not block; it explains
+  the failure.
+- **The winetricks index** (`verbos.tsv`, 274 DLLs): generated from each verb's
+  `w_override_dlls` and, since 3.4, from the DLL list in `title=` as well. It
+  only answers with high confidence. Used above all as an AUDITOR of the
+  hand-written table, and in that role it found **six mapping errors** that were
+  installing the wrong thing and writing a receipt for it.
+- **Memory and recipes**: what each program asked for, keyed by the FILE (size +
+  first and last MiB), so the lesson survives moving folders and holds on another
+  machine. A recipe is a text file the owner sends to someone. It only pulls,
+  never pushes.
+- **Delivery proof** (3.3): the receipt requires evidence that the DLL arrived,
+  and since 3.4 that the bitness matches.
+- **`tandem dados`** (3.4): environment separated from data, with a copy taken
+  before every destructive path.
+- **Silent success** (3.4): `exit 0` stopped meaning "it worked"; the owner is
+  asked once, and the recipe carries where its confidence came from.
+- **The community list** (3.4): the ad-blocker filter-list model. Down is
+  automatic; up is the owner's decision.
+- **`tandem autoteste`**: exercises instead of listing. Where it cannot
+  exercise, it says it skipped.
+- **`tandem preparar`**, **`programas`**, **`desinstalar`**, **`alternativas`**,
+  **`socorro`**, **`contribuir`**.
+- **Evidence gate, CI and a release pipeline.**
 
-## Próximos passos
+## Next steps
 
-O ideário completo — as 52 ideias dos dois painéis, cada uma com veredito, e as
-recusadas com o motivo escrito — vive em `docs/IDEAS.md`. Leia de lá antes de
-propor coisa nova; metade das ideias óbvias já foi recusada por um motivo.
+The full idea ledger — the 52 ideas from both panels, each with a verdict, and
+the rejected ones with the reason written down — lives in `docs/IDEAS.md`. Read
+it before proposing anything new; half the obvious ideas were already turned down
+for a reason.
 
-A fila, em ordem:
+The queue, in order:
 
-1. **`tandem dados`.** Nada no projeto separa AMBIENTE (reconstruível em 30
-   min) de DADOS (irreconstruíveis; NF-e tem guarda de 5 anos). Três caminhos
-   apagam dado do dono hoje sem cópia: `tandem-exe` (`rm -rf` do prefixo
-   incompleto), `acao_restore` (devolve o ambiente e leva as vendas do mês) e
-   o desinstalador do programa. O `backup` salva só o ambiente. A frase que
-   resume: *"se você desistir do Linux, seus dados voltam com você"* — é isso
-   que faz um dono de loja aceitar tentar.
-2. **Sucesso em silêncio.** `CODIGO -eq 0` é tratado como "funcionou", mas o
-   modo de falha típico do Wine com software comercial é abrir e estar
-   sutilmente errado: cupom com acento quebrado, relatório em branco, data
-   invertida. Tudo isso sai 0, o Tandem comemora, e a receita exporta a lição
-   errada. Um projeto cuja régua é "nenhum erro em silêncio" tem no centro um
-   sucesso em silêncio.
-3. O auditor tem um ponto cego confirmado: o gerador só lê `w_override_dlls`,
-   e verbos como o `vcrun2003` declaram as DLLs apenas no `title=`. Resultado:
-   zero entradas de `vcrun2003` no índice — ele era cego exatamente onde a
-   tabela errava. Ler também a lista entre parênteses do `title=`.
-4. Testar em campo os comandos novos: `desinstalar`, `programas`, `preparar`,
-   `autoteste`, `alternativas`, `receita`.
-5. Duplo clique num `.xapk` de verdade. Os tipos MIME agora estão registrados
-   (`src/mime/tandem.xml`); antes o sistema via só um ZIP genérico e o suporte
-   a pacotes divididos era inalcançável pelo duplo clique.
-6. **Um `.exe` que falte alguma coisa.** Com a prova de entrega da 3.3 o laço
-   passou a ser exercitado em CI contra um `wine`/`winetricks` de mentira, mas
-   em campo ele nunca agiu: o 7-Zip não depende de nada. Continua sendo a
-   maior incerteza do projeto.
-7. Publicar release no GitHub com o `.deb` anexado.
-8. Suporte a `.apkm` foi declarado mas só `.xapk`/`.apks` foram testados.
-9. Clonar um prefixo com .NET pronto em vez de rodar `dotnet48` do zero
-   (30 min, alta taxa de falha) — a prova de entrega era pré-requisito disso e
-   já existe; falta o cuidado de nunca ler de prefixo protegido em uso.
+1. **Fill the community list.** The mechanism exists and is empty. Inventing a
+   line would be exactly the mistake the `confidence` field exists to prevent, so
+   it only fills with reports from real people. `tandem contribuir` builds the
+   line; the issue template receives it.
+2. **A real shop program.** The loop has now worked end to end with real Wine and
+   real `winetricks`, but against a forged `.exe` in a container. That proves the
+   mechanism, not the product. It is still the project's largest uncertainty.
+3. Field-test what has not run on the owner's machine yet: `preparar`,
+   `desinstalar`, `dados`, `socorro`, and a double click on a real `.xapk`.
+4. Publish the release. The workflow exists: `git tag v3.5 && git push origin
+   v3.5` builds, tests, installs, purges and publishes with a checksum.
+5. `.apkm` support is declared but only `.xapk`/`.apks` were tested.
+6. Clone a prefix with .NET already in it instead of running `dotnet48` from
+   scratch (30 min, high failure rate) — delivery proof was the prerequisite and
+   now exists; what is missing is the care never to read from a protected prefix
+   in use.
 
-## Ambiente da máquina de desenvolvimento
+## Development machine environment
 
-Windows. Cópia de trabalho em `C:\tandem`. O `git push` funciona porque a
-credencial do GitHub já está no credential helper — **não tente ler o arquivo
-de credenciais** (é bloqueado, e com razão): basta rodar `git push` e o Git a
-usa sozinho. A integração MCP do GitHub desta conta é **somente leitura**:
-`create_repository` e `push_files` retornam 403. Use `git` direto.
+Windows. Working copy at `C:\tandem`. `git push` works because the GitHub
+credential is already in the credential helper — **do not try to read the
+credentials file** (it is blocked, and rightly so): just run `git push` and Git
+uses it. This account's GitHub MCP integration is **read-only**:
+`create_repository` and `push_files` return 403. Use `git` directly.

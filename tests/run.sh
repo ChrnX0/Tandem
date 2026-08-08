@@ -1154,6 +1154,26 @@ fi
 
 igual "mfc42 e reconhecido como so-32" "0" "$(t_verbo_so_32 mfc42; echo $?)"
 igual "vcrun2022 nao e so-32"          "1" "$(t_verbo_so_32 vcrun2022; echo $?)"
+# A classificacao vem do winetricks INSTALADO, nao de lista escrita aqui: uma
+# lista fixa cobria oito verbos, e o inventario do winetricks achou 42.
+igual "verbo com irmao _x64 nao conta como so-32" "1" "$(t_verbo_so_32 xact; echo $?)"
+igual "verbo que o winetricks nao conhece nao vira so-32" \
+      "1" "$(t_verbo_so_32 naoexisteesteverbo; echo $?)"
+if t_winetricks_tem_verbo dsound; then
+    igual "a classificacao alcanca verbo fora da lista antiga (dsound)" \
+          "0" "$(t_verbo_so_32 dsound; echo $?)"
+else
+    pulou "classificacao de dsound" "verbo ausente neste winetricks"
+fi
+# wmp9 nao tem ramo win64 de verdade; wmp11 tem, e entrega um superconjunto.
+if t_winetricks_tem_verbo wmp11; then
+    igual "wmvcore de 64 bits vai para o wmp11, nao para o wmp9" \
+          "wmp11" "$(t_verbo_para_arquitetura "$(t_dll_para_verbo wmvcore.dll)" 64)"
+    igual "  e de 32 bits continua no wmp9" \
+          "wmp9" "$(t_verbo_para_arquitetura "$(t_dll_para_verbo wmvcore.dll)" 32)"
+else
+    pulou "wmvcore em 64 bits" "wmp11 ausente neste winetricks"
+fi
 
 # AUDITOR DA BITOLA. As duas listas acima foram levantadas do winetricks
 # 20240105 lendo verbo por verbo. Winetricks e atualizado por fora do Tandem:
@@ -1265,10 +1285,58 @@ igual "a copia volta no lugar certo" \
 # Prefixo sem nada do dono: nao ha o que salvar, e isso NAO e erro.
 PD3="$TMPRAIZ/prefnovo"; mkdir -p "$PD3/drive_c/windows/system32"
 igual "prefixo recem-criado nao tem dados" "0" "$(t_dados_total "$PD3")"
+# Tres desfechos distintos, e a distincao e o ponto: "nao havia nada" e normal
+# e silencioso, "havia dado e a copia falhou" tem que parar quem esta prestes a
+# apagar. Juntar os dois num "return 1" fazia disco cheio parecer prefixo vazio,
+# e a exclusao seguia de qualquer jeito.
 t_dados_salva "$PD3" "$TMPRAIZ/vazio.tar.gz" 2>/dev/null
-igual "nao inventa copia de prefixo vazio" "1" "$?"
+igual "prefixo sem dados devolve 2, nao 1" "2" "$?"
 igual "  e nao deixa arquivo pela metade no disco" \
       "1" "$([ -f "$TMPRAIZ/vazio.tar.gz" ]; echo $?)"
+t_dados_resgate "$PD3" teste >/dev/null 2>&1
+igual "o resgate de prefixo vazio tambem devolve 2" "2" "$?"
+# Copia que FALHA de verdade: destino num caminho que nao existe.
+t_dados_salva "$PD" "/nao/existe/x.tar.gz" 2>/dev/null
+igual "copia que falha devolve 1, e nao 2" "1" "$?"
+# E a frase que o dono le nesse caso tem que dizer o risco com todas as letras.
+case "$(t_texto_resgate_falhou)" in
+    *"NÃO consegui fazer uma cópia"*"não há como recuperar"*)
+        passou "a mensagem de resgate falhado diz o risco" ;;
+    *) falhou "a mensagem de resgate falhado diz o risco" \
+              "NÃO consegui... não há como recuperar" "$(t_texto_resgate_falhou)" ;;
+esac
+# E os tres caminhos destrutivos tem que tratar o codigo 1 antes de apagar.
+for alvo in src/bin/tandem-exe src/bin/tandem; do
+    if grep -q 't_texto_resgate_falhou' "$RAIZ/$alvo"; then
+        passou "$alvo para quando a copia de resgate falha"
+    else
+        falhou "$alvo para quando a copia de resgate falha" \
+               "t_texto_resgate_falhou" "ausente"
+    fi
+done
+
+# Valor de varias linhas na memoria: o formato e CHAVE=VALOR por linha, e
+# gravar cru deixava linhas orfas que a reescrita nao removia - uma copia nova
+# a cada abertura, para sempre. Medido: quatro gravacoes, 22 linhas, tres
+# blocos de lixo.
+MEM_ML="$ARTEFATOS/prog32.exe"
+t_memoria_esquece "$MEM_ML" 2>/dev/null
+for _i in 1 2 3 4; do
+    t_memoria_grava "$MEM_ML" LIMITE "linha um
+linha dois
+
+linha quatro"
+done
+t_memoria_grava "$MEM_ML" RESULTADO abriu
+igual "valor de varias linhas nao acumula lixo" \
+      "5" "$(wc -l < "$(t_memoria_arquivo "$MEM_ML")")"
+igual "  e volta inteiro na leitura" \
+      "linha um
+linha dois
+
+linha quatro" "$(t_memoria_le "$MEM_ML" LIMITE)"
+igual "  sem estragar as outras chaves" "abriu" "$(t_memoria_le "$MEM_ML" RESULTADO)"
+t_memoria_esquece "$MEM_ML" 2>/dev/null
 
 igual "tamanho em portugues legivel" "9 KB" "$(t_tamanho_amigavel 9216)"
 igual "tamanho pequeno fica em bytes" "800 bytes" "$(t_tamanho_amigavel 800)"

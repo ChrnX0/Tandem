@@ -1,15 +1,15 @@
-// Tandem - permite iniciar o contêiner do Android sem pedir senha.
+// Tandem - lets the Android container start without asking for a password.
 //
-// Escopo deliberadamente estreito: apenas as ações start/restart do serviço
-// waydroid-container.service, apenas para quem já está fisicamente sentado
-// na máquina (subject.local), com sessão ativa, e no grupo de administradores.
-// Qualquer outra unidade do systemd continua exigindo autenticação normal.
+// The scope is deliberately narrow: only the start/restart actions of the
+// waydroid-container.service unit, only for someone physically sitting at the
+// machine (subject.local), with an active session, and in the administrators
+// group. Every other systemd unit still requires normal authentication.
 polkit.addRule(function (action, subject) {
     if (action.id !== "org.freedesktop.systemd1.manage-units") {
         return polkit.Result.NOT_HANDLED;
     }
-    var unidade = action.lookup("unit");
-    if (unidade !== "waydroid-container.service") {
+    var unit = action.lookup("unit");
+    if (unit !== "waydroid-container.service") {
         return polkit.Result.NOT_HANDLED;
     }
     var verbo = action.lookup("verb");

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Inspeciona APK / XAPK / APKS sem precisar do Android SDK.
+"""Inspects APK / XAPK / APKS without needing the Android SDK.
 
-Uso:  apkinfo.py <arquivo>
-Saida: linhas CHAVE=VALOR (facil de ler no shell com eval/grep)
+Usage:  apkinfo.py <file>
+Output: KEY=VALUE lines (easy to read from the shell with eval/grep)
 
 FORMATO=apk|xapk|apks|desconhecido
-PACOTE=<nome do pacote ou vazio>
-MINSDK=<numero ou vazio>
-ABIS=<lista separada por virgula, vazio = universal>
-SPLITS=<quantidade de apks dentro do pacote>
+PACOTE=<package name, or empty>
+MINSDK=<number, or empty>
+ABIS=<comma-separated list, empty = universal>
+SPLITS=<how many apks inside the package>
 OBB=<0|1>
-ERRO=<mensagem, se algo falhou>
+ERRO=<message, if something failed>
 """
 import sys, zipfile, struct, os
 
@@ -24,7 +24,7 @@ ATTR_MINSDK_RES = 0x0101020C  # android:minSdkVersion
 
 
 def _ler_pool(buf, off):
-    """Le um chunk de string pool. Devolve (lista_de_strings, tamanho_do_chunk)."""
+    """Reads a string pool chunk. Returns (list_of_strings, chunk_size)."""
     tipo, hsize, csize = struct.unpack_from("<HHI", buf, off)
     if tipo != STRING_POOL:
         return [], csize
@@ -37,7 +37,7 @@ def _ler_pool(buf, off):
         p = base + o
         try:
             if utf8:
-                # duas contagens (chars, bytes), cada uma 1 ou 2 bytes
+                # two counts (chars, bytes), each one 1 or 2 bytes long
                 n = buf[p]; p += 1
                 if n & 0x80:
                     p += 1
@@ -56,7 +56,7 @@ def _ler_pool(buf, off):
 
 
 def ler_manifesto(dados):
-    """Extrai (pacote, minSdk) do AndroidManifest.xml binario."""
+    """Extracts (package, minSdk) from the binary AndroidManifest.xml."""
     pacote, minsdk = "", None
     if len(dados) < 8:
         return pacote, minsdk
@@ -150,11 +150,12 @@ def main():
             tem_manifesto = "AndroidManifest.xml" in nomes
 
             if internos and not tem_manifesto:
-                # pacote dividido (xapk / apks / apkm)
+                # split package (xapk / apks / apkm)
                 formato = {".xapk": "xapk", ".apks": "apks", ".apkm": "apkm"}.get(ext, "xapk")
                 splits = len(internos)
                 obb = 1 if any(n.lower().endswith(".obb") for n in nomes) else 0
-                # a base costuma ser a maior, ou a sem "config"/"split" no nome
+                # the base is usually the largest one, or the one without
+                # "config"/"split" in its name
                 candidatas = [n for n in internos
                               if "config." not in n.lower() and "split_" not in n.lower()]
                 base = candidatas[0] if candidatas else max(

@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
-"""Le a etiqueta de um executavel Windows SEM executar nada.
+"""Reads the label of a Windows executable WITHOUT running anything.
 
-Todo PE traz, no proprio arquivo, a lista de bibliotecas que vai pedir ao
-sistema quando abrir - a tabela de importacoes. Ate agora o Tandem so
-descobria isso DEPOIS de rodar e falhar, lendo o "err:module:import_dll" do
-Wine. Lendo a tabela antes, ele sabe o que vai faltar sem nunca ter falhado,
-e consegue avisar em dois segundos que um programa nao tem conserto - em vez
-de o dono descobrir depois de meia hora instalando dependencia.
+Every PE carries, inside the file itself, the list of libraries it will ask
+the system for when it opens - the import table. Until now Tandem only found
+that out AFTER running and failing, by reading Wine's "err:module:import_dll".
+By reading the table beforehand, it knows what is going to be missing without
+ever having failed, and it can warn in two seconds that a program has no fix -
+instead of the owner finding out after half an hour of installing dependencies.
 
-Uso:  peinfo.py <arquivo.exe>
-Saida: linhas CHAVE=VALOR, o mesmo contrato do apkinfo.py
+Usage:  peinfo.py <file.exe>
+Output: KEY=VALUE lines, the same contract as apkinfo.py
 
 ARQUITETURA=32|64|arm64|?
 DOTNET=0|1
-DLLS=<lista separada por virgula, em minusculas>
-ATRASADAS=<idem, das importacoes atrasadas>
-ERRO=<mensagem, se algo falhou>
+DLLS=<comma-separated list, lowercase>
+ATRASADAS=<same, for the delayed imports>
+ERRO=<message, if something failed>
 """
 import os
 import struct
 import sys
 
-# Diretorios da tabela de dados do PE que nos interessam.
+# Entries of the PE data directory table that matter to us.
 DIR_IMPORT = 1
 DIR_DELAY = 13
-DIR_CLR = 14        # se preenchido, o programa e .NET
+DIR_CLR = 14        # if filled in, the program is .NET
 
 MAQUINAS = {0x014C: "32", 0x8664: "64", 0xAA64: "arm64", 0x01C4: "arm"}
 
@@ -42,7 +42,7 @@ def _u32(b, o):
 
 
 def cabecalho(dados):
-    """Devolve (arquitetura, inicio_do_opcional, tamanho_do_opcional, n_secoes)."""
+    """Returns (architecture, start_of_optional, size_of_optional, n_sections)."""
     if len(dados) < 0x40 or dados[:2] != b"MZ":
         raise NaoEhPE("nao comeca com MZ")
     pe = _u32(dados, 0x3C)
@@ -55,10 +55,10 @@ def cabecalho(dados):
 
 
 def diretorios(dados, opcional):
-    """Lista [(rva, tamanho)] da tabela de diretorios de dados.
+    """List of [(rva, size)] from the data directory table.
 
-    O deslocamento muda entre PE32 e PE32+ porque o segundo troca varios
-    campos de 4 por 8 bytes e nao tem BaseOfData.
+    The offset differs between PE32 and PE32+ because the latter swaps
+    several fields from 4 to 8 bytes and has no BaseOfData.
     """
     magia = _u16(dados, opcional)
     if magia == 0x10B:
@@ -79,7 +79,7 @@ def diretorios(dados, opcional):
 
 
 def secoes(dados, opcional, tam_opcional, n_secoes):
-    """[(rva, tamanho_virtual, tamanho_bruto, offset_bruto)] de cada secao."""
+    """[(rva, virtual_size, raw_size, raw_offset)] for each section."""
     base = opcional + tam_opcional
     fora = []
     for i in range(n_secoes):
@@ -92,10 +92,11 @@ def secoes(dados, opcional, tam_opcional, n_secoes):
 
 
 def para_offset(rva, secs):
-    """Converte endereco virtual em posicao dentro do arquivo."""
+    """Converts a virtual address into a position inside the file."""
     for va, vsize, bruto, off in secs:
-        # O tamanho gravado costuma ser maior que o virtual por causa do
-        # alinhamento; usar o maior evita recusar um endereco valido.
+        # The recorded raw size is usually larger than the virtual one because
+        # of alignment; using the larger of the two avoids rejecting a valid
+        # address.
         limite = max(vsize, bruto)
         if va <= rva < va + limite:
             return off + (rva - va)
@@ -103,7 +104,7 @@ def para_offset(rva, secs):
 
 
 def texto_em(dados, off, limite=256):
-    """Le uma string ASCII terminada em zero."""
+    """Reads a zero-terminated ASCII string."""
     if off is None or off < 0 or off >= len(dados):
         return ""
     fim = dados.find(b"\0", off, off + limite)
@@ -113,18 +114,18 @@ def texto_em(dados, off, limite=256):
 
 
 def nomes_de_dll(dados, rva, secs, atrasada=False):
-    """Percorre os descritores de importacao e devolve os nomes das DLLs.
+    """Walks the import descriptors and returns the DLL names.
 
-    Cada descritor tem 20 bytes e a lista termina num descritor todo zerado.
-    O campo do nome fica no deslocamento 12 (importacao normal) ou 4
-    (importacao atrasada, cujo descritor tem outro formato).
+    Each descriptor is 20 bytes long and the list ends at an all-zero
+    descriptor. The name field sits at offset 12 (normal import) or 4
+    (delayed import, whose descriptor has a different layout).
     """
     achados = []
     off = para_offset(rva, secs)
     if off is None:
         return achados
     campo_nome = 4 if atrasada else 12
-    for i in range(4096):                       # teto de sanidade
+    for i in range(4096):                       # sanity ceiling
         p = off + i * 20
         if p + 20 > len(dados):
             break
@@ -134,7 +135,7 @@ def nomes_de_dll(dados, rva, secs, atrasada=False):
         nome_rva = _u32(dados, p + campo_nome)
         if not nome_rva:
             continue
-        # Alguns arquivos gravam o nome atrasado como endereco absoluto.
+        # Some files record the delayed name as an absolute address.
         pos = para_offset(nome_rva, secs)
         if pos is None and atrasada:
             pos = nome_rva if nome_rva < len(dados) else None
@@ -162,8 +163,8 @@ def inspecionar(caminho):
         atrasadas = nomes_de_dll(dados, dir_rva(DIR_DELAY), secs, atrasada=True)
 
     dotnet = 1 if dir_rva(DIR_CLR) else 0
-    # Um binario .NET importa so mscoree.dll; sem esta marca o Tandem
-    # concluiria que ele nao depende de nada.
+    # A .NET binary imports only mscoree.dll; without this mark Tandem would
+    # conclude that it does not depend on anything.
     if dotnet and "mscoree.dll" not in dlls:
         dlls.append("mscoree.dll")
 
@@ -183,7 +184,7 @@ def main():
     except NaoEhPE as e:
         print("ERRO=%s" % e)
         return 1
-    except Exception as e:                        # arquivo truncado, cortado
+    except Exception as e:                        # truncated, chopped file
         print("ERRO=%s" % str(e).replace("\n", " ")[:200])
         return 1
 
