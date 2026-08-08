@@ -605,36 +605,36 @@ igual "the MIME types file is valid XML" "ok" \
 
 for tipo in vnd.android.xapk vnd.android.apks vnd.android.apkm; do
     if grep -q "application/$tipo" src/mime/tandem.xml; then
-        passou "declara application/$tipo"
+        passou "declares application/$tipo"
     else
-        falhou "declara application/$tipo" "presente" "ausente"
+        falhou "declares application/$tipo" "present" "missing"
     fi
     if grep -q "application/$tipo" src/applications/tandem-apk.desktop; then
-        passou "  e o .desktop reivindica o tipo"
+        passou "  and the .desktop claims the type"
     else
-        falhou "  e o .desktop reivindica o tipo" "presente" "ausente"
+        falhou "  and the .desktop claims the type" "present" "missing"
     fi
     if grep -q "application/$tipo" src/bin/tandem-repair; then
-        passou "  e o repair reaplica o tipo"
+        passou "  and repair reapplies the type"
     else
-        falhou "  e o repair reaplica o tipo" "presente" "ausente"
+        falhou "  and repair reapplies the type" "present" "missing"
     fi
 done
 
-# Subclasse de zip e o que faz o casamento por extensao vencer a deteccao
-# por conteudo: sem isso o sistema insiste que o arquivo e um ZIP.
+# Being a subclass of zip is what makes the extension match beat content
+# detection: without it the system insists the file is a ZIP.
 if grep -q 'sub-class-of.*application/zip' src/mime/tandem.xml; then
-    passou "os tipos sao subclasse de application/zip"
+    passou "the types are subclasses of application/zip"
 else
-    falhou "os tipos sao subclasse de application/zip" "sub-class-of zip" "ausente"
+    falhou "the types are subclasses of application/zip" "sub-class-of zip" "missing"
 fi
 
-secao "a barra de progresso nao pode matar o Tandem"
+secao "the progress bar must not kill Tandem"
 
-# Achado do painel, confirmado: com o cano aberto so para escrita, fechar a
-# janela de progresso mandava SIGPIPE e matava o processo inteiro - saida
-# 141, nada no log, nenhuma janela. Dentro do laco do winetricks isso cortava
-# uma instalacao de dependencia pela metade.
+# Panel finding, confirmed: with the pipe opened write-only, closing the
+# progress window sent SIGPIPE and killed the whole process - exit 141, nothing
+# in the log, no window. Inside the winetricks loop that cut a dependency
+# installation in half.
 FZ="$TMPRAIZ/fz"; mkdir -p "$FZ"
 printf '#!/bin/sh\nhead -c1 >/dev/null 2>&1\nexit 0\n' > "$FZ/zenity"
 chmod +x "$FZ/zenity"
@@ -653,57 +653,58 @@ t_progresso_fecha
 echo VIVO
 FIM
 saida_prog="$(bash "$TMPRAIZ/prog.sh" 2>/dev/null)"; rc_prog=$?
-igual "o script sobrevive a janela de progresso fechada" "0" "$rc_prog"
-igual "  e chega ate o fim" "VIVO" "$saida_prog"
+igual "the script survives the progress window being closed" "0" "$rc_prog"
+igual "  and reaches the end" "VIVO" "$saida_prog"
 if grep -q 'janela de progresso fechada' "$TANDEM_ESTADO/progteste.log" 2>/dev/null; then
-    passou "  e registra no log que a janela sumiu"
+    passou "  and records in the log that the window vanished"
 else
-    falhou "  e registra no log que a janela sumiu" "linha no log" "ausente"
+    falhou "  and records in the log that the window vanished" "line in the log" "missing"
 fi
 
-secao "travas: nao poder criar nao e o mesmo que estar tomada"
+secao "locks: being unable to create one is not the same as it being taken"
 
-igual "as travas ficam no diretorio de execucao quando ele existe" \
+igual "locks live in the runtime directory when it exists" \
       "$TMPRAIZ/run/tandem" \
       "$(XDG_RUNTIME_DIR="$TMPRAIZ/run" bash -c '. "'"$RAIZ"'/src/lib/common.sh"; printf %s "$TANDEM_TRAVAS"')"
-igual "sem diretorio de execucao, cai para a pasta de estado" \
+igual "without a runtime directory, falls back to the state folder" \
       "$TANDEM_ESTADO" \
       "$(env -u XDG_RUNTIME_DIR bash -c '. "'"$RAIZ"'/src/lib/common.sh"; printf %s "$TANDEM_TRAVAS"')"
 
-# O bash NAO aborta quando um "exec N>" falha: sem distinguir os dois casos,
-# uma pasta pessoal cheia virava "este programa ja esta abrindo" e exit 0.
-igual "exec com caminho invalido falha sem derrubar o script" \
+# bash does NOT abort when an "exec N>" fails: without telling the two cases
+# apart, a full home folder turned into "this program is already opening" and
+# exit 0.
+igual "exec with an invalid path fails without bringing the script down" \
       "seguiu" \
       "$(bash -c 'if exec 7> /nao/existe/x.lock; then echo travou; else echo seguiu; fi' 2>/dev/null)"
 
-secao "atalhos de menu depois de um instalador"
+secao "menu shortcuts after an installer"
 
 APPS="$HOME/.local/share/applications/wine/Programs/Coisa"
 mkdir -p "$APPS"
 ANTES_AT="$(t_atalhos_wine)"
-igual "sem atalho nenhum, a lista vem vazia" "" "$ANTES_AT"
+igual "with no shortcut at all, the list comes back empty" "" "$ANTES_AT"
 
-igual "nada novo, nada anunciado" \
+igual "nothing new, nothing announced" \
       "" "$(t_anuncia_atalhos "$ANTES_AT" 2>&1 1>/dev/null)"
 
 : > "$APPS/Coisa Legal.desktop"
 saida_at="$(t_anuncia_atalhos "$ANTES_AT" 2>&1 1>/dev/null)"
 case "$saida_at" in
-    *"Coisa Legal"*) passou "atalho novo é anunciado pelo nome" ;;
-    *) falhou "atalho novo é anunciado pelo nome" "cita 'Coisa Legal'" "$saida_at" ;;
+    *"Coisa Legal"*) passou "a new shortcut is announced by name" ;;
+    *) falhou "a new shortcut is announced by name" "mentions 'Coisa Legal'" "$saida_at" ;;
 esac
 
-# Depois de anunciado, a mesma lista de antes nao pode anunciar de novo:
-# a comparacao tem que ser contra o estado corrente.
+# Once announced, the same earlier list must not announce it again: the
+# comparison has to be against the current state.
 DEPOIS_AT="$(t_atalhos_wine)"
-igual "atalho ja conhecido nao e reanunciado" \
+igual "an already known shortcut is not re-announced" \
       "" "$(t_anuncia_atalhos "$DEPOIS_AT" 2>&1 1>/dev/null)"
 
-secao "programas instalados e desinstalacao"
+secao "installed programs and uninstallation"
 
-# O registro de um prefixo real, resumido: uma entrada na visao nativa, uma
-# na visao de 32 bits (Wow6432Node - o caso do 7-Zip da maquina real), um
-# componente de sistema que nao pode aparecer, e lixo sem desinstalador.
+# A real prefix's registry, abridged: one entry in the native view, one in the
+# 32-bit view (Wow6432Node - the 7-Zip case from the real machine), a system
+# component that must not show up, and junk with no uninstaller.
 cat > "$PREF_NOSSO/system.reg" <<'FIM'
 WINE REGISTRY Version 2
 ;; All keys relative to \\Machine
@@ -726,29 +727,29 @@ WINE REGISTRY Version 2
 "UninstallString"="\"C:\\Program Files\\7-Zip\\Uninstall.exe\""
 FIM
 
-igual "le as DUAS visoes do registro (nativa e 32 bits)" \
+igual "reads BOTH registry views (native and 32-bit)" \
       "7-Zip 24.09 (x64) Programa MSI 1.0" \
       "$(t_uninstall_dump "$PREF_NOSSO" | awk -F'\\|\\|\\|' '{print $2}' | sort | tr '\n' ' ' | sed 's/ $//')"
 
-igual "componente de sistema fica de fora" \
+igual "a system component is left out" \
       "" "$(t_uninstall_dump "$PREF_NOSSO" | grep -c Oculto | sed 's/^0$//')"
 
-igual "entrada sem desinstalador fica de fora" \
+igual "an entry with no uninstaller is left out" \
       "" "$(t_uninstall_dump "$PREF_NOSSO" | grep -c SemNada | sed 's/^0$//')"
 
-igual "extrai o desinstalador silencioso com aspas e caminho real" \
+igual "extracts the silent uninstaller with quotes and a real path" \
       '"C:\Program Files\7-Zip\Uninstall.exe" /S' \
       "$(t_uninstall_dump "$PREF_NOSSO" | awk -F'\\|\\|\\|' '$1=="7-Zip"{print $3}')"
 
-igual "extrai a chave que identifica o programa" \
+igual "extracts the key that identifies the program" \
       "{GUID-MSI}" \
       "$(t_uninstall_dump "$PREF_NOSSO" | awk -F'\\|\\|\\|' '$2=="Programa MSI 1.0"{print $1}')"
 
-igual "t_programas_instalados mantem o formato chave|||nome" \
+igual "t_programas_instalados keeps the key|||name format" \
       "7-Zip|||7-Zip 24.09 (x64)" \
       "$(t_programas_instalados "$PREF_NOSSO" | grep '^7-Zip')"
 
-# O separador de comando do Windows: caminho entre aspas + argumento.
+# The Windows command separator: quoted path + argument.
 FALSO="$TMPRAIZ/bin"; mkdir -p "$FALSO"
 cat > "$FALSO/wine" <<'FIM'
 #!/bin/sh
@@ -757,56 +758,57 @@ FIM
 chmod +x "$FALSO/wine"
 PATH="$FALSO:$PATH"
 
-igual "executa desinstalador com caminho entre aspas" \
+igual "runs an uninstaller with a quoted path" \
       'exe=C:\Program Files\7-Zip\Uninstall.exe' \
       "$(t_executa_comando_windows '"C:\Program Files\7-Zip\Uninstall.exe" /S' | head -1)"
-igual "  e repassa os argumentos" \
+igual "  and passes the arguments through" \
       'args=C:\Program Files\7-Zip\Uninstall.exe /S' \
       "$(t_executa_comando_windows '"C:\Program Files\7-Zip\Uninstall.exe" /S' | tail -1)"
-igual "executa comando sem aspas (MsiExec)" \
+igual "runs a command without quotes (MsiExec)" \
       'exe=MsiExec.exe' \
       "$(t_executa_comando_windows 'MsiExec.exe /X{GUID-MSI}' | head -1)"
 
-secao "preparar: o Tandem instala o que falta"
+secao "preparar: Tandem installs what is missing"
 
-# Numa PATH vazia nada existe, entao a lista tem que vir completa - e assim
-# o teste nao depende do que esta instalado na maquina que roda a suite.
+# On an empty PATH nothing exists, so the list has to come back complete - that
+# way the test does not depend on what is installed on the machine running the
+# suite.
 faltas="$(PATH=/nao/existe t_pecas_faltando | cut -d'|' -f1 | tr '\n' ' ' | sed 's/ $//')"
-igual "sem nada instalado, lista tudo que falta" \
+igual "with nothing installed, lists everything that is missing" \
       "wine winetricks adb waydroid" "$faltas"
-# E com tudo presente, a lista vem vazia.
+# And with everything present, the list comes back empty.
 FINGE="$TMPRAIZ/finge"; mkdir -p "$FINGE"
 for c in wine winetricks adb waydroid; do printf '#!/bin/sh\n' > "$FINGE/$c"; chmod +x "$FINGE/$c"; done
-igual "com tudo instalado, nao ha o que preparar" \
+igual "with everything installed, there is nothing to prepare" \
       "" "$(PATH="$FINGE" t_pecas_faltando | grep -v '^wine32|' )"
 
 script="$(t_script_instalacao wine wine32 waydroid)"
 case "$script" in
-    *"apt-get install -y wine winetricks"*) passou "o plano instala wine e winetricks juntos" ;;
-    *) falhou "o plano instala wine e winetricks juntos" "apt-get install -y wine winetricks" "$script" ;;
+    *"apt-get install -y wine winetricks"*) passou "the plan installs wine and winetricks together" ;;
+    *) falhou "the plan installs wine and winetricks together" "apt-get install -y wine winetricks" "$script" ;;
 esac
 case "$script" in
-    *"dpkg --add-architecture i386"*) passou "o plano habilita 32 bits antes do wine32" ;;
-    *) falhou "o plano habilita 32 bits antes do wine32" "dpkg --add-architecture i386" "(ausente)" ;;
+    *"dpkg --add-architecture i386"*) passou "the plan enables 32-bit before wine32" ;;
+    *) falhou "the plan enables 32-bit before wine32" "dpkg --add-architecture i386" "(missing)" ;;
 esac
 case "$script" in
-    *"repo.waydro.id"*signed-by*) passou "o waydroid vem do repositorio oficial com chave" ;;
-    *) falhou "o waydroid vem do repositorio oficial com chave" "repo.waydro.id + signed-by" "(ausente)" ;;
+    *"repo.waydro.id"*signed-by*) passou "waydroid comes from the official repository with a key" ;;
+    *) falhou "waydroid comes from the official repository with a key" "repo.waydro.id + signed-by" "(missing)" ;;
 esac
 case "$script" in
-    *"waydroid init"*) passou "o plano inicializa o Android depois de instalar" ;;
-    *) falhou "o plano inicializa o Android depois de instalar" "waydroid init" "(ausente)" ;;
+    *"waydroid init"*) passou "the plan initializes Android after installing" ;;
+    *) falhou "the plan initializes Android after installing" "waydroid init" "(missing)" ;;
 esac
 
-# t_como_root: somos root nos testes? entao executa direto.
+# t_como_root: are we root in the tests? then run it directly.
 if [ "$(id -u)" = 0 ]; then
-    igual "como root, executa direto sem pedir senha" \
+    igual "as root, runs directly without asking for a password" \
           "funcionou" "$(t_como_root 'echo funcionou')"
 else
-    pulou "como root executa direto" "suite rodando sem root"
+    pulou "as root runs directly" "suite running without root"
 fi
 
-# Atalhos: so os do nosso prefixo, e orfao e o que perdeu o .lnk.
+# Shortcuts: only the ones in our prefix, and an orphan is one that lost its .lnk.
 WP="$HOME/.local/share/applications/wine/Programs"
 mkdir -p "$WP/7-Zip" "$WP/Alheio"
 printf '[Desktop Entry]\nName=7-Zip File Manager\nExec=env WINEPREFIX="%s" wine x\n' \
@@ -814,106 +816,106 @@ printf '[Desktop Entry]\nName=7-Zip File Manager\nExec=env WINEPREFIX="%s" wine 
 printf '[Desktop Entry]\nName=Coisa Alheia\nExec=env WINEPREFIX="%s" wine x\n' \
        "$PREF_ALHEIO" > "$WP/Alheio/Coisa Alheia.desktop"
 
-igual "lista so os atalhos do nosso prefixo" \
+igual "lists only the shortcuts from our prefix" \
       "1" "$(t_atalhos_nossos | wc -l)"
-igual "le o nome amigavel do atalho" \
+igual "reads the friendly name of the shortcut" \
       "7-Zip File Manager" "$(t_nome_do_atalho "$WP/7-Zip/7-Zip File Manager.desktop")"
 
-# Com o .lnk presente, o atalho e valido e nao pode ser removido.
+# With the .lnk present, the shortcut is valid and must not be removed.
 LNKDIR="$PREF_NOSSO/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/7-Zip"
 mkdir -p "$LNKDIR"; : > "$LNKDIR/7-Zip File Manager.lnk"
-igual "atalho com programa instalado nao e removido" "0" "$(t_limpa_atalhos_orfaos)"
-igual "  e continua no disco" \
+igual "a shortcut whose program is installed is not removed" "0" "$(t_limpa_atalhos_orfaos)"
+igual "  and stays on disk" \
       "0" "$([ -f "$WP/7-Zip/7-Zip File Manager.desktop" ]; echo $?)"
 
-# Sem o .lnk, virou botao que nao abre nada: tem que sair.
+# Without the .lnk it became a button that opens nothing: it has to go.
 rm -f "$LNKDIR/7-Zip File Manager.lnk"
-igual "atalho orfao e removido" "1" "$(t_limpa_atalhos_orfaos)"
-igual "  e sumiu do disco" \
+igual "an orphan shortcut is removed" "1" "$(t_limpa_atalhos_orfaos)"
+igual "  and is gone from disk" \
       "1" "$([ -f "$WP/7-Zip/7-Zip File Manager.desktop" ]; echo $?)"
-igual "  e o atalho alheio foi preservado" \
+igual "  and someone else's shortcut was preserved" \
       "0" "$([ -f "$WP/Alheio/Coisa Alheia.desktop" ]; echo $?)"
 
-# Sem wine no PATH a lista falha sem quebrar quem chamou.
-igual "sem wine, a lista degrada em silencio controlado" \
+# Without wine on the PATH the listing fails without breaking the caller.
+igual "without wine, the listing degrades in controlled silence" \
       "" "$(PATH=/nao/existe; t_programas_instalados 2>/dev/null)"
 
-secao "arquitetura do Wine"
+secao "Wine architecture"
 t_tem_wine64; r64=$?
 t_tem_wine32; r32=$?
 case "$r64$r32" in
-    [01][01]) passou "t_tem_wine64 e t_tem_wine32 devolvem 0 ou 1" ;;
-    *) falhou "t_tem_wine64 e t_tem_wine32 devolvem 0 ou 1" "0 ou 1" "$r64$r32" ;;
+    [01][01]) passou "t_tem_wine64 and t_tem_wine32 return 0 or 1" ;;
+    *) falhou "t_tem_wine64 and t_tem_wine32 return 0 or 1" "0 or 1" "$r64$r32" ;;
 esac
 
-secao "locale (o zenity recusa acento em locale inexistente)"
+secao "locale (zenity refuses accents on a nonexistent locale)"
 
-t_locale_existe C.UTF-8;     igual "reconhece locale existente apesar do hifen" "0" "$?"
-t_locale_existe c.utf8;      igual "comparacao ignora caixa e hifen" "0" "$?"
-t_locale_existe zz_ZZ.UTF-8; igual "recusa locale inexistente" "1" "$?"
-t_locale_existe "";          igual "recusa locale vazio" "1" "$?"
+t_locale_existe C.UTF-8;     igual "recognizes an existing locale despite the hyphen" "0" "$?"
+t_locale_existe c.utf8;      igual "the comparison ignores case and hyphens" "0" "$?"
+t_locale_existe zz_ZZ.UTF-8; igual "refuses a nonexistent locale" "1" "$?"
+t_locale_existe "";          igual "refuses an empty locale" "1" "$?"
 
-igual "escolhe o primeiro candidato que exista" \
+igual "picks the first candidate that exists" \
       "C.UTF-8" "$(t_locale_utf8 zz_ZZ.UTF-8 C.UTF-8)"
-igual "cai para C.UTF-8 quando nenhum existe" \
+igual "falls back to C.UTF-8 when none exists" \
       "C.UTF-8" "$(t_locale_utf8 zz_ZZ.UTF-8 yy_YY.UTF-8)"
-igual "sem candidato algum ainda devolve algo utilizavel" \
+igual "with no candidate at all it still returns something usable" \
       "C.UTF-8" "$(t_locale_utf8)"
-igual "candidato vazio nao atrapalha a escolha" \
+igual "an empty candidate does not disturb the choice" \
       "C.UTF-8" "$(t_locale_utf8 "" "" C.UTF-8)"
 
-# O que importa no fim: o locale escolhido tem que produzir charmap UTF-8,
-# porque e isso que decide se o zenity aceita ou recusa texto acentuado.
-igual "o locale escolhido produz charmap UTF-8" \
+# What matters in the end: the chosen locale has to produce a UTF-8 charmap,
+# because that is what decides whether zenity accepts or refuses accented text.
+igual "the chosen locale produces a UTF-8 charmap" \
       "UTF-8" "$(LC_ALL="$(t_locale_utf8 zz_ZZ.UTF-8)" locale charmap 2>/dev/null)"
 
 # -------------------------------------------------------------- apkinfo
 
-secao "inspecao de pacotes Android"
+secao "Android package inspection"
 
 campo() { python3 src/lib/apkinfo.py "$1" 2>/dev/null | grep "^$2=" | cut -d= -f2-; }
 
-igual "apk simples: formato"      "apk"                   "$(campo "$ARTEFATOS/universal.apk" FORMATO)"
-igual "apk simples: pacote"       "com.exemplo.universal" "$(campo "$ARTEFATOS/universal.apk" PACOTE)"
-igual "apk simples: sdk minimo"   "21"                    "$(campo "$ARTEFATOS/universal.apk" MINSDK)"
-igual "apk universal: sem ABI"    ""                      "$(campo "$ARTEFATOS/universal.apk" ABIS)"
+igual "plain apk: format"         "apk"                   "$(campo "$ARTEFATOS/universal.apk" FORMATO)"
+igual "plain apk: package"        "com.exemplo.universal" "$(campo "$ARTEFATOS/universal.apk" PACOTE)"
+igual "plain apk: minimum sdk"    "21"                    "$(campo "$ARTEFATOS/universal.apk" MINSDK)"
+igual "universal apk: no ABI"     ""                      "$(campo "$ARTEFATOS/universal.apk" ABIS)"
 
-igual "apk x86: ABIs"             "x86,x86_64"            "$(campo "$ARTEFATOS/x86.apk" ABIS)"
-igual "apk so ARM: ABIs"          "arm64-v8a,armeabi-v7a" "$(campo "$ARTEFATOS/armonly.apk" ABIS)"
-igual "apk exigente: sdk minimo"  "99"                    "$(campo "$ARTEFATOS/futuro.apk" MINSDK)"
+igual "x86 apk: ABIs"             "x86,x86_64"            "$(campo "$ARTEFATOS/x86.apk" ABIS)"
+igual "ARM-only apk: ABIs"        "arm64-v8a,armeabi-v7a" "$(campo "$ARTEFATOS/armonly.apk" ABIS)"
+igual "demanding apk: minimum sdk" "99"                   "$(campo "$ARTEFATOS/futuro.apk" MINSDK)"
 
-igual "xapk: formato"             "xapk"                  "$(campo "$ARTEFATOS/jogo.xapk" FORMATO)"
-igual "xapk: pacote vem do apk base" "com.exemplo.jogo"   "$(campo "$ARTEFATOS/jogo.xapk" PACOTE)"
-igual "xapk: sdk vem do apk base" "24"                    "$(campo "$ARTEFATOS/jogo.xapk" MINSDK)"
-igual "xapk: conta as partes"     "2"                     "$(campo "$ARTEFATOS/jogo.xapk" SPLITS)"
-igual "xapk: detecta OBB"         "1"                     "$(campo "$ARTEFATOS/jogo.xapk" OBB)"
+igual "xapk: format"              "xapk"                  "$(campo "$ARTEFATOS/jogo.xapk" FORMATO)"
+igual "xapk: package comes from the base apk" "com.exemplo.jogo" "$(campo "$ARTEFATOS/jogo.xapk" PACOTE)"
+igual "xapk: sdk comes from the base apk" "24"                  "$(campo "$ARTEFATOS/jogo.xapk" MINSDK)"
+igual "xapk: counts the parts"    "2"                     "$(campo "$ARTEFATOS/jogo.xapk" SPLITS)"
+igual "xapk: detects OBB"         "1"                     "$(campo "$ARTEFATOS/jogo.xapk" OBB)"
 
-igual "apks: formato"             "apks"                  "$(campo "$ARTEFATOS/app.apks" FORMATO)"
-igual "apks: conta as partes"     "3"                     "$(campo "$ARTEFATOS/app.apks" SPLITS)"
-igual "apks: sem OBB"             "0"                     "$(campo "$ARTEFATOS/app.apks" OBB)"
+igual "apks: format"              "apks"                  "$(campo "$ARTEFATOS/app.apks" FORMATO)"
+igual "apks: counts the parts"    "3"                     "$(campo "$ARTEFATOS/app.apks" SPLITS)"
+igual "apks: no OBB"              "0"                     "$(campo "$ARTEFATOS/app.apks" OBB)"
 
-igual "arquivo corrompido degrada com mensagem" \
+igual "a corrupt file degrades with a message" \
       "arquivo corrompido ou nao e um pacote Android" \
       "$(campo "$ARTEFATOS/corrompido.apk" ERRO)"
-igual "arquivo vazio degrada com mensagem" \
+igual "an empty file degrades with a message" \
       "arquivo corrompido ou nao e um pacote Android" \
       "$(campo "$ARTEFATOS/vazio.apk" ERRO)"
-igual "arquivo inexistente degrada com mensagem" \
+igual "a missing file degrades with a message" \
       "arquivo nao encontrado" \
       "$(campo /nao/existe.apk ERRO)"
 
 python3 src/lib/apkinfo.py >/dev/null 2>&1
-igual "sem argumento devolve erro de uso" "2" "$?"
+igual "no argument returns a usage error" "2" "$?"
 
-# ------------------------------------------------------------- pacote
+# ------------------------------------------------------------- package
 
-secao "nenhum comando sai mudo"
+secao "no command comes out mute"
 
-# t_texto le o CONTEUDO da entrada padrao e usa o argumento como TITULO.
-# Cinco comandos novos passaram o texto como argumento e leram um stdin
-# vazio: rodavam, saiam com 0 e nao imprimiam UMA LINHA. Nenhum teste pegava
-# porque todos exercitavam funcoes de biblioteca, nunca o comando inteiro.
-# Descoberto rodando "tandem dados" num Ubuntu de verdade.
+# t_texto reads the CONTENT from standard input and uses the argument as the
+# TITLE. Five new commands passed the text as an argument and read an empty
+# stdin: they ran, exited 0 and printed NOT ONE LINE. No test caught it because
+# they all exercised library functions, never the whole command.
+# Found by running "tandem dados" on a real Ubuntu.
 CASA_C="$TMPRAIZ/cli"; mkdir -p "$CASA_C/.local/share/tandem/wine/drive_c/windows"
 : > "$CASA_C/.local/share/tandem/wine/system.reg"
 : > "$CASA_C/.local/share/tandem/wine/.tandem-prefixo"
@@ -921,177 +923,178 @@ CASA_C="$TMPRAIZ/cli"; mkdir -p "$CASA_C/.local/share/tandem/wine/drive_c/window
 for cmd in "dados" "lista" "doctor" "--help" "version"; do
     saida="$(env -i HOME="$CASA_C" PATH="/usr/bin:/bin" TANDEM_LIB="$RAIZ/src/lib" \
              bash "$RAIZ/src/bin/tandem" $cmd 2>&1)"
-    if [ -n "$saida" ]; then passou "\"tandem $cmd\" imprime alguma coisa"
-    else falhou "\"tandem $cmd\" imprime alguma coisa" "qualquer texto" "zero byte"; fi
+    if [ -n "$saida" ]; then passou "\"tandem $cmd\" prints something"
+    else falhou "\"tandem $cmd\" prints something" "any text" "zero bytes"; fi
 done
 
-# E o uso errado tem que degradar, nunca sair mudo: sem nada na entrada,
-# t_texto imprime pelo menos o titulo.
-igual "t_texto sem conteudo imprime o titulo" \
+# And wrong usage has to degrade, never come out mute: with nothing on the
+# input, t_texto prints at least the title.
+igual "t_texto with no content prints the title" \
       "Titulo qualquer" "$(t_texto "Titulo qualquer" < /dev/null)"
-# A guarda contra congelar so da para exercitar onde existe terminal.
+# The guard against freezing can only be exercised where a terminal exists.
 if [ -c /dev/tty ] && (exec < /dev/tty) 2>/dev/null; then
     timeout 5 bash -c '. "'"$RAIZ"'/src/lib/common.sh"; t_texto "T" < /dev/tty' >/dev/null 2>&1
-    igual "t_texto com terminal na entrada nao trava" "0" "$?"
+    igual "t_texto with a terminal on the input does not hang" "0" "$?"
 else
-    pulou "t_texto com terminal na entrada" "a suite roda sem terminal de controle"
+    pulou "t_texto with a terminal on the input" "the suite runs without a controlling terminal"
 fi
 
-secao "lista da comunidade (modelo das listas de filtro)"
+secao "community list (modelled on filter lists)"
 
 PROG_L="$ARTEFATOS/prog64.exe"
 ID_L="$(t_memoria_id "$PROG_L")"
 export TANDEM_LISTA="$TMPRAIZ/lista.tsv"
 
-# Sem lista baixada, nao ha o que consultar - e isso nao e erro.
+# With no list downloaded there is nothing to query - and that is not an error.
 rm -f "$TANDEM_LISTA"
-igual "sem lista baixada, a consulta cala" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+igual "with no list downloaded, the query stays quiet" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
 
 {
   printf '# TANDEM-LISTA 1\n'
   printf '%s\t64\tvcrun2022,dotnet48\t-\tconfirmado\t340\t2026-08\t-\n' "$ID_L"
   printf 'aaaa\t64\tvcrun2010\t-\tso-abriu\t2\t2026-07\t-\n'
 } > "$TANDEM_LISTA"
-igual "acha o programa pela impressao digital do arquivo" \
+igual "finds the program by the file's fingerprint" \
       "vcrun2022 dotnet48" "$(t_lista_consulta "$PROG_L")"
-igual "a contagem de maquinas vem junto" "340" "$(t_lista_maquinas "$ID_L")"
+igual "the machine count comes along" "340" "$(t_lista_maquinas "$ID_L")"
 
-# Licao sem gente confirmando NAO e espalhada. Espalhar engano e mais facil
-# que espalhar acerto: erro nao da trabalho de produzir.
+# A lesson with nobody confirming it is NOT spread. Spreading a mistake is
+# easier than spreading a correct answer: errors take no work to produce.
 {
   printf '# TANDEM-LISTA 1\n'
   printf '%s\t64\tvcrun2022\t-\tso-abriu\t9\t2026-08\t-\n' "$ID_L"
 } > "$TANDEM_LISTA"
-igual "licao nao confirmada nao e sugerida" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+igual "an unconfirmed lesson is not suggested" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
 
-# O registro que sai desta maquina.
+# The record that leaves this machine.
 t_memoria_esquece "$PROG_L" 2>/dev/null
 t_memoria_grava "$PROG_L" ARQUITETURA 64
 t_memoria_junta "$PROG_L" RESOLVERAM vcrun2022
 t_memoria_grava "$PROG_L" CONFIRMADO sim
 REG_L="$(t_lista_registro "$PROG_L")"
-igual "o registro tem os oito campos do formato" \
+igual "the record has the format's eight fields" \
       "8" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
 case "$REG_L" in
-    "$ID_L"*) passou "o registro comeca pela identidade do arquivo" ;;
-    *) falhou "o registro comeca pela identidade do arquivo" "$ID_L..." "$REG_L" ;;
+    "$ID_L"*) passou "the record starts with the file identity" ;;
+    *) falhou "the record starts with the file identity" "$ID_L..." "$REG_L" ;;
 esac
 case "$REG_L" in
-    *confirmado*) passou "o registro carrega a origem da confianca" ;;
-    *) falhou "o registro carrega a origem da confianca" "confirmado" "$REG_L" ;;
+    *confirmado*) passou "the record carries where the confidence came from" ;;
+    *) falhou "the record carries where the confidence came from" "confirmado" "$REG_L" ;;
 esac
-# O que NUNCA pode sair: caminho, usuario, maquina, IP, dia do mes.
+# What must NEVER leave: path, user, machine, IP, day of the month.
 case "$REG_L" in
-    */*) falhou "o registro nao carrega caminho nenhum" "sem barra" "$REG_L" ;;
-    *) passou "o registro nao carrega caminho nenhum" ;;
-esac
-case "$REG_L" in
-    *"$(id -un)"*) falhou "o registro nao carrega o nome do usuario" "sem usuario" "$REG_L" ;;
-    *) passou "o registro nao carrega o nome do usuario" ;;
+    */*) falhou "the record carries no path at all" "no slash" "$REG_L" ;;
+    *) passou "the record carries no path at all" ;;
 esac
 case "$REG_L" in
-    *"$(date +%Y-%m-%d)"*) falhou "a data nao tem o dia" "so ano-mes" "$REG_L" ;;
-    *) passou "a data nao tem o dia" ;;
+    *"$(id -un)"*) falhou "the record does not carry the user name" "no user" "$REG_L" ;;
+    *) passou "the record does not carry the user name" ;;
 esac
-# E o guarda funciona mesmo se alguem estragar o gerador no futuro.
-igual "o guarda barra um registro com caminho" \
+case "$REG_L" in
+    *"$(date +%Y-%m-%d)"*) falhou "the date has no day" "year-month only" "$REG_L" ;;
+    *) passou "the date has no day" ;;
+esac
+# And the guard works even if someone breaks the generator in the future.
+igual "the guard blocks a record with a path" \
       "0" "$(t_lista_vaza "abc	64	/home/alguem/x	-	confirmado	1	2026-08	-"; echo $?)"
-igual "o guarda barra um registro com IP" \
+igual "the guard blocks a record with an IP" \
       "0" "$(t_lista_vaza "abc	64	vcrun2022	-	confirmado	1	2026-08	192.168.0.7"; echo $?)"
-igual "o guarda deixa passar um registro limpo" \
+igual "the guard lets a clean record through" \
       "1" "$(t_lista_vaza "$REG_L"; echo $?)"
 
-# O documento do formato promete que todo verbo vindo de fora e validado antes
-# de virar argumento de comando. O atalho da memoria/lista gravava recibo e
-# chamava o winetricks sem passar por lugar nenhum de validacao - a receita
-# validava, a lista nao.
-igual "verbo com caractere fora do esperado e recusado" \
+# The format document promises that every verb coming from outside is validated
+# before becoming a command argument. The memory/list shortcut wrote a receipt
+# and called winetricks without going through any validation at all - the recipe
+# validated, the list did not.
+igual "a verb with an unexpected character is refused" \
       "1" "$(t_verbo_valido 'vcrun2022; rm -rf /'; echo $?)"
-igual "verbo com barra e recusado" "1" "$(t_verbo_valido '../../etc/passwd'; echo $?)"
-igual "verbo normal passa" "0" "$(t_verbo_valido vcrun2022; echo $?)"
+igual "a verb with a slash is refused" "1" "$(t_verbo_valido '../../etc/passwd'; echo $?)"
+igual "an ordinary verb passes" "0" "$(t_verbo_valido vcrun2022; echo $?)"
 case "$(grep -c 't_verbo_valido' "$RAIZ/src/bin/tandem-exe")" in
-    0) falhou "o atalho da lista valida o verbo antes de usar" "t_verbo_valido" "ausente" ;;
-    *) passou "o atalho da lista valida o verbo antes de usar" ;;
+    0) falhou "the list shortcut validates the verb before using it" "t_verbo_valido" "missing" ;;
+    *) passou "the list shortcut validates the verb before using it" ;;
 esac
-# E a prova de entrega tambem vale nesse atalho: era o unico caminho que
-# gravava recibo so com o codigo de saida.
+# And proof of delivery applies to that shortcut too: it was the only path that
+# wrote a receipt based on the exit code alone.
 case "$(grep -c 't_dll_no_prefixo' "$RAIZ/src/bin/tandem-exe")" in
-    0|1) falhou "a prova de entrega cobre tambem o atalho da memoria" \
-                "dois usos de t_dll_no_prefixo" "menos que isso" ;;
-    *) passou "a prova de entrega cobre tambem o atalho da memoria" ;;
+    0|1) falhou "proof of delivery also covers the memory shortcut" \
+                "two uses of t_dll_no_prefixo" "fewer than that" ;;
+    *) passou "proof of delivery also covers the memory shortcut" ;;
 esac
 
-# Programa sem licao nenhuma nao vira ruido na lista dos outros.
+# A program with no lesson at all must not become noise in other people's list.
 t_memoria_esquece "$PROG_L" 2>/dev/null
 t_lista_registro "$PROG_L" >/dev/null 2>&1
-igual "sem licao, nao ha o que contribuir" "1" "$?"
+igual "with no lesson, there is nothing to contribute" "1" "$?"
 
-# Arquivo que nao se declara como lista NAO substitui o bom que ja esta em
-# disco. Uma lista quebrada calaria a segunda opiniao sem ninguem perceber -
-# e "parou de sugerir" e o tipo de defeito que ninguem nota.
+# A file that does not declare itself a list must NOT replace the good one
+# already on disk. A broken list would silence the second opinion without anyone
+# noticing - and "stopped suggesting" is the kind of defect nobody spots.
 printf '# TANDEM-LISTA 1\nboa\t64\tx\t-\tconfirmado\t1\t2026-08\t-\n' > "$TANDEM_LISTA"
 printf 'nao sou uma lista do Tandem\n' > "$TMPRAIZ/intruso.txt"
 if command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1; then
     TANDEM_LISTA_URL="file://$TMPRAIZ/intruso.txt" t_lista_atualiza >/dev/null 2>&1
-    igual "arquivo sem cabecalho valido e recusado" "3" "$?"
-    igual "  e a lista boa continua em disco" "1" "$(grep -c '^boa' "$TANDEM_LISTA")"
-    igual "  sem deixar o intruso entrar" "0" "$(grep -c 'nao sou uma lista' "$TANDEM_LISTA")"
-    # E o caminho feliz: um arquivo bem formado substitui.
+    igual "a file without a valid header is refused" "3" "$?"
+    igual "  and the good list stays on disk" "1" "$(grep -c '^boa' "$TANDEM_LISTA")"
+    igual "  without letting the intruder in" "0" "$(grep -c 'nao sou uma lista' "$TANDEM_LISTA")"
+    # And the happy path: a well-formed file does replace it.
     printf '# TANDEM-LISTA 1\nnova\t64\ty\t-\tconfirmado\t5\t2026-08\t-\n' > "$TMPRAIZ/boa.tsv"
     TANDEM_LISTA_URL="file://$TMPRAIZ/boa.tsv" t_lista_atualiza >/dev/null 2>&1
-    igual "arquivo bem formado substitui" "1" "$(grep -c '^nova' "$TANDEM_LISTA")"
+    igual "a well-formed file replaces it" "1" "$(grep -c '^nova' "$TANDEM_LISTA")"
 else
-    pulou "atualizacao da lista" "sem curl nem wget"
+    pulou "list update" "no curl and no wget"
 fi
 unset TANDEM_LISTA
 
-secao "sucesso em silencio: sair 0 nao e ter funcionado"
+secao "silent success: exiting 0 is not the same as having worked"
 
-igual "saida instantanea e suspeita" "0" "$(t_saida_suspeita 1; echo $?)"
-igual "programa que ficou aberto nao e suspeito" "1" "$(t_saida_suspeita 40; echo $?)"
+igual "an instant exit is suspicious" "0" "$(t_saida_suspeita 1; echo $?)"
+igual "a program that stayed open is not suspicious" "1" "$(t_saida_suspeita 40; echo $?)"
 
 PROG_S="$ARTEFATOS/prog64.exe"
 t_memoria_esquece "$PROG_S" 2>/dev/null
-igual "sem resposta do dono, a licao vale menos" \
+igual "with no answer from the owner, the lesson is worth less" \
       "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
 t_memoria_grava "$PROG_S" CONFIRMADO sim
-igual "com o dono confirmando, a licao vale mais" \
+igual "with the owner confirming, the lesson is worth more" \
       "confirmado" "$(t_confianca_da_licao "$PROG_S")"
 t_memoria_grava "$PROG_S" CONFIRMADO nao
-igual "com o dono reprovando, a licao fica marcada como reprovada" \
+igual "with the owner rejecting, the lesson is marked as rejected" \
       "reprovado" "$(t_confianca_da_licao "$PROG_S")"
 
-# A receita tem que carregar a origem da confianca. Sem esta linha, "o
-# processo saiu 0" e "uma pessoa olhou a tela" chegavam do outro lado com
-# exatamente o mesmo peso - e a segunda pessoa nao tinha como saber.
+# The recipe has to carry where the confidence came from. Without this line,
+# "the process exited 0" and "a person looked at the screen" arrived on the
+# other side with exactly the same weight - and the second person had no way
+# to tell.
 case "$(t_receita_exporta "$PROG_S")" in
-    *"CONFIANCA=reprovado"*) passou "a receita sai marcada com a confianca" ;;
-    *) falhou "a receita sai marcada com a confianca" "CONFIANCA=reprovado" \
+    *"CONFIANCA=reprovado"*) passou "the recipe comes out marked with the confidence" ;;
+    *) falhou "the recipe comes out marked with the confidence" "CONFIANCA=reprovado" \
               "$(t_receita_exporta "$PROG_S" | head -8)" ;;
 esac
 
-# Sem janela nao ha como perguntar - e inventar uma resposta seria pior do
-# que nao ter resposta nenhuma.
+# Without a window there is no way to ask - and making up an answer would be
+# worse than having no answer at all.
 t_memoria_esquece "$PROG_S" 2>/dev/null
 ( unset DISPLAY WAYLAND_DISPLAY; t_confirma_funcionou "$PROG_S" 30 ) >/dev/null 2>&1
-igual "sem janela, nao inventa confirmacao" \
+igual "without a window, it does not invent a confirmation" \
       "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
 t_memoria_esquece "$PROG_S" 2>/dev/null
 
-secao "bitola: chegar nao e chegar no lugar que este programa usa"
+secao "bitness: arriving is not arriving where this program looks"
 
-# Prefixo win64 do jeito que o Wine monta: system32 tem as DLLs de 64 bits e
-# syswow64 as de 32. Este teste existe porque a primeira execucao do laco com
-# winetricks DE VERDADE terminou assim: o verbo mfc42 saiu 0, entregou o
-# arquivo em syswow64, a prova de entrega olhou as duas pastas, aprovou, e o
-# programa de 64 bits continuou sem achar nada.
+# A win64 prefix the way Wine builds it: system32 holds the 64-bit DLLs and
+# syswow64 the 32-bit ones. This test exists because the first run of the loop
+# with a REAL winetricks ended like this: the mfc42 verb exited 0, delivered the
+# file into syswow64, proof of delivery looked at both folders, approved, and
+# the 64-bit program still found nothing.
 PB="$TMPRAIZ/pref64"
 mkdir -p "$PB/drive_c/windows/system32" "$PB/drive_c/windows/syswow64"
 (
   export WINEPREFIX="$PB"
-  : > "$PB/drive_c/windows/syswow64/mfc42.dll"       # so 32 bits
-  : > "$PB/drive_c/windows/system32/msvcp140.dll"    # so 64 bits
-  : > "$PB/drive_c/windows/syswow64/gdiplus.dll"     # as duas
+  : > "$PB/drive_c/windows/syswow64/mfc42.dll"       # 32-bit only
+  : > "$PB/drive_c/windows/system32/msvcp140.dll"    # 64-bit only
+  : > "$PB/drive_c/windows/syswow64/gdiplus.dll"     # both
   : > "$PB/drive_c/windows/system32/gdiplus.dll"
 
   t_dll_no_prefixo mfc42.dll 64;    echo "a $?"
@@ -1102,84 +1105,85 @@ mkdir -p "$PB/drive_c/windows/system32" "$PB/drive_c/windows/syswow64"
   t_dll_no_prefixo sumiu.dll 64;    echo "f $?"
   t_dll_no_prefixo mfc42.dll "";    echo "g $?"
 ) > "$TMPRAIZ/bit.txt"
-igual "programa de 64 bits, DLL so em syswow64: bitola errada" \
+igual "64-bit program, DLL only in syswow64: wrong bitness" \
       "2" "$(awk '$1=="a"{print $2}' "$TMPRAIZ/bit.txt")"
-igual "programa de 32 bits, a mesma DLL serve" \
+igual "32-bit program, the same DLL does the job" \
       "0" "$(awk '$1=="b"{print $2}' "$TMPRAIZ/bit.txt")"
-igual "programa de 64 bits, DLL em system32: serve" \
+igual "64-bit program, DLL in system32: does the job" \
       "0" "$(awk '$1=="c"{print $2}' "$TMPRAIZ/bit.txt")"
-igual "programa de 32 bits, DLL so em system32: bitola errada" \
+igual "32-bit program, DLL only in system32: wrong bitness" \
       "2" "$(awk '$1=="d"{print $2}' "$TMPRAIZ/bit.txt")"
-igual "DLL nas duas pastas serve para os dois" \
+igual "a DLL in both folders serves both" \
       "0" "$(awk '$1=="e"{print $2}' "$TMPRAIZ/bit.txt")"
-igual "DLL ausente continua ausente" \
+igual "a missing DLL stays missing" \
       "1" "$(awk '$1=="f"{print $2}' "$TMPRAIZ/bit.txt")"
-# Sem saber a arquitetura, condenar seria pior do que nao saber.
-igual "sem arquitetura conhecida, nao condena" \
+# Without knowing the architecture, condemning would be worse than not knowing.
+igual "with no known architecture, it does not condemn" \
       "0" "$(awk '$1=="g"{print $2}' "$TMPRAIZ/bit.txt")"
 
-# Prefixo win32: so existe system32, e ela e de 32 bits.
+# win32 prefix: only system32 exists, and it is 32-bit.
 PB32="$TMPRAIZ/pref32"; mkdir -p "$PB32/drive_c/windows/system32"
 : > "$PB32/drive_c/windows/system32/mfc42.dll"
-igual "prefixo de 32 bits: system32 serve a programa de 32" \
+igual "32-bit prefix: system32 serves a 32-bit program" \
       "0" "$(WINEPREFIX="$PB32"; export WINEPREFIX; t_dll_no_prefixo mfc42.dll 32; echo $?)"
 
 TXB="$(t_texto_bitola "$(printf 'mfc42.dll\tmfc42')" 64)"
 case "$TXB" in
-    *"64 bits"*"32 bits"*mfc42.dll*) passou "a mensagem diz as duas bitolas e o arquivo" ;;
-    *) falhou "a mensagem diz as duas bitolas e o arquivo" "64/32/mfc42.dll" "$TXB" ;;
+    *"64 bits"*"32 bits"*mfc42.dll*) passou "the message names both bitnesses and the file" ;;
+    *) falhou "the message names both bitnesses and the file" "64/32/mfc42.dll" "$TXB" ;;
 esac
 case "$TXB" in
-    *"Não é defeito da sua máquina"*) passou "a mensagem tira a culpa da maquina do dono" ;;
-    *) falhou "a mensagem tira a culpa da maquina do dono" "Não é defeito da sua máquina" "$TXB" ;;
+    *"Não é defeito da sua máquina"*) passou "the message takes the blame off the owner's machine" ;;
+    *) falhou "the message takes the blame off the owner's machine" "Não é defeito da sua máquina" "$TXB" ;;
 esac
 
-secao "escolher o verbo pela bitola do programa"
+secao "choosing the verb by the program's bitness"
 
-igual "programa de 32 bits fica com o verbo normal" \
+igual "a 32-bit program keeps the normal verb" \
       "xact" "$(t_verbo_para_arquitetura xact 32)"
-igual "verbo sem irmao de 64 nao e trocado" \
+igual "a verb with no 64-bit sibling is not swapped" \
       "vcrun2022" "$(t_verbo_para_arquitetura vcrun2022 64)"
-igual "sem arquitetura conhecida, nao troca nada" \
+igual "with no known architecture, nothing is swapped" \
       "xact" "$(t_verbo_para_arquitetura xact '')"
 if t_winetricks_tem_verbo xact_x64; then
-    igual "programa de 64 bits ganha o irmao xact_x64" \
+    igual "a 64-bit program gets the xact_x64 sibling" \
           "xact_x64" "$(t_verbo_para_arquitetura xact 64)"
 else
-    # Winetricks antigo sem o irmao: melhor o verbo normal do que um nome
-    # de verbo que este winetricks nao conhece.
-    igual "sem o irmao neste winetricks, mantem o verbo normal" \
+    # Old winetricks without the sibling: better the normal verb than a verb
+    # name this winetricks does not know.
+    igual "without the sibling in this winetricks, keeps the normal verb" \
           "xact" "$(t_verbo_para_arquitetura xact 64)"
 fi
 
-igual "mfc42 e reconhecido como so-32" "0" "$(t_verbo_so_32 mfc42; echo $?)"
-igual "vcrun2022 nao e so-32"          "1" "$(t_verbo_so_32 vcrun2022; echo $?)"
-# A classificacao vem do winetricks INSTALADO, nao de lista escrita aqui: uma
-# lista fixa cobria oito verbos, e o inventario do winetricks achou 42.
-igual "verbo com irmao _x64 nao conta como so-32" "1" "$(t_verbo_so_32 xact; echo $?)"
-igual "verbo que o winetricks nao conhece nao vira so-32" \
+igual "mfc42 is recognized as 32-bit-only" "0" "$(t_verbo_so_32 mfc42; echo $?)"
+igual "vcrun2022 is not 32-bit-only"       "1" "$(t_verbo_so_32 vcrun2022; echo $?)"
+# The classification comes from the INSTALLED winetricks, not from a list
+# written here: a fixed list covered eight verbs, and the winetricks inventory
+# found 42.
+igual "a verb with an _x64 sibling does not count as 32-bit-only" "1" "$(t_verbo_so_32 xact; echo $?)"
+igual "a verb winetricks does not know does not become 32-bit-only" \
       "1" "$(t_verbo_so_32 naoexisteesteverbo; echo $?)"
 if t_winetricks_tem_verbo dsound; then
-    igual "a classificacao alcanca verbo fora da lista antiga (dsound)" \
+    igual "the classification reaches a verb outside the old list (dsound)" \
           "0" "$(t_verbo_so_32 dsound; echo $?)"
 else
-    pulou "classificacao de dsound" "verbo ausente neste winetricks"
+    pulou "dsound classification" "verb absent in this winetricks"
 fi
-# wmp9 nao tem ramo win64 de verdade; wmp11 tem, e entrega um superconjunto.
+# wmp9 has no real win64 branch; wmp11 does, and delivers a superset.
 if t_winetricks_tem_verbo wmp11; then
-    igual "wmvcore de 64 bits vai para o wmp11, nao para o wmp9" \
+    igual "64-bit wmvcore goes to wmp11, not to wmp9" \
           "wmp11" "$(t_verbo_para_arquitetura "$(t_dll_para_verbo wmvcore.dll)" 64)"
-    igual "  e de 32 bits continua no wmp9" \
+    igual "  and the 32-bit one stays on wmp9" \
           "wmp9" "$(t_verbo_para_arquitetura "$(t_dll_para_verbo wmvcore.dll)" 32)"
 else
-    pulou "wmvcore em 64 bits" "wmp11 ausente neste winetricks"
+    pulou "wmvcore in 64 bits" "wmp11 absent in this winetricks"
 fi
 
-# AUDITOR DA BITOLA. As duas listas acima foram levantadas do winetricks
-# 20240105 lendo verbo por verbo. Winetricks e atualizado por fora do Tandem:
-# sem este teste, o dia em que o projeto passar a instalar carga de 64 bits
-# para o mfc42 ninguem fica sabendo, e o Tandem continua avisando que nao tem
-# conserto para uma coisa que passou a ter.
+# BITNESS AUDITOR. The two lists above were compiled from winetricks 20240105,
+# reading verb by verb. Winetricks is updated outside Tandem: without this test,
+# the day the project starts installing a 64-bit payload for mfc42 nobody finds
+# out, and Tandem keeps warning that there is no fix for something that now has
+# one.
 WT="$(command -v winetricks 2>/dev/null)"
 if [ -n "$WT" ] && [ -r "$WT" ]; then
     divergiu=""

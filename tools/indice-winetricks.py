@@ -191,7 +191,7 @@ def escolher(verbos):
 
 
 def familia(v):
-    """Verb name without the version: vcrun2022 -> vcrun, dotnet48 -> dotnet."""
+    """Verb name without version: vcrun2022 -> vcrun, dotnet48 -> dotnet."""
     return re.sub(r"[0-9].*$", "", v)
 
 
