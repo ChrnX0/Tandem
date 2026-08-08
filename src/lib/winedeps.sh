@@ -141,6 +141,61 @@ t_verbos_do_log() {
     done | sort -u
 }
 
+# Os mesmos pares que a funcao acima calcula e descarta: dll<TAB>verbo.
+#
+# E a chave que faltava. O recibo em .tandem-verbos guarda o NOME DO VERBO e
+# a condicao de gravacao e o winetricks ter saido 0 - ou seja, um cache cuja
+# chave e a pergunta e cujo valor e "eu ja respondi", sem registro nenhum de
+# se a resposta serviu. Todo cache assim guarda respostas, nao respostas
+# certas: uma traducao errada entra igual a uma certa, e a regra numero 4
+# passa a proibir a correcao. Com o par em maos da para perguntar depois:
+# a DLL que faltava apareceu?
+t_pares_do_log() {
+    local log="$1" dll verbo
+    [ -f "$log" ] || return 0
+    grep -o 'import_dll Library [^ ]*' "$log" 2>/dev/null |
+        awk '{print $3}' | sed 's/[.,;]$//' | sort -u |
+    while read -r dll; do
+        [ -n "$dll" ] || continue
+        t_dll_nativa "$dll" && continue
+        verbo="$(t_dll_para_verbo "$dll")"
+        [ -n "$verbo" ] && printf '%s\t%s\n' "${dll,,}" "$verbo"
+    done | sort -u
+}
+
+# ------------------------------------------------------- traducao suspeita
+#
+# Quando o winetricks sai 0 e a DLL pedida continua faltando, quem errou fui
+# eu: a tabela mandou instalar o pacote errado. O caso nao pode virar recibo
+# (o recibo faria o Tandem dizer "ja instalei o que este programa pedia" e
+# desistir para sempre) nem virar licao na memoria (a licao errada viajaria
+# junto com a receita para a outra maquina). Vira anotacao, aqui.
+t_anota_suspeita() {
+    local dll="$1" verbo="$2"
+    [ -n "$dll" ] && [ -n "$verbo" ] || return 0
+    [ -n "${TANDEM_ESTADO:-}" ] || return 0
+    printf '%s\t%s\t%s\n' "$dll" "$verbo" "$(date +%F)" \
+        >> "$TANDEM_ESTADO/traducao-suspeita.tsv" 2>/dev/null || return 0
+}
+
+# Transforma as suspeitas desta execucao na frase que o dono le. A mensagem
+# assume a culpa em vez de mandar ele procurar defeito na maquina - que e o
+# que "instalei as dependencias e ainda nao abre" fazia.
+t_texto_suspeitas() {
+    local linhas="$1" dll verbo texto=""
+    while IFS="$(printf '\t')" read -r dll verbo; do
+        [ -n "$dll" ] && [ -n "$verbo" ] || continue
+        texto="$texto
+- instalei $(t_verbo_amigavel "$verbo"), mas $dll continua faltando"
+    done <<EOF
+$linhas
+EOF
+    printf 'O programa pediu arquivos que eu tentei instalar, e eles não chegaram:
+%s
+
+Isso é erro meu, não da sua máquina: a tradução que eu uso para esses arquivos aponta para o pacote errado. Já anotei e não vou repetir a mesma instalação.' "$texto"
+}
+
 # Le um log e imprime as DLLs que faltaram e NAO tem traducao conhecida
 # (normalmente sao bibliotecas que o proprio programa deveria trazer junto).
 t_dlls_sem_traducao() {
@@ -164,17 +219,27 @@ t_verbo_amigavel() {
         vcrun2010) echo "Visual C++ 2010" ;;
         vcrun2008) echo "Visual C++ 2008" ;;
         vcrun2005) echo "Visual C++ 2005" ;;
+        vcrun2019) echo "Visual C++ 2015-2019" ;;
+        vcrun2003) echo "Visual C++ 2003" ;;
         vcrun6)    echo "Visual C++ 6" ;;
         mfc42)     echo "MFC 4.2" ;;
         dotnet48)  echo ".NET Framework 4.8 (demora ~30 min)" ;;
         d3dx9|d3dx10|d3dx11_43) echo "DirectX ($1)" ;;
         d3dcompiler_43|d3dcompiler_47) echo "DirectX Compiler" ;;
+        d3dcompiler_46) echo "DirectX Compiler" ;;
         xact)      echo "DirectX Áudio" ;;
+        xinput)    echo "DirectX (controles)" ;;
         gdiplus)   echo "GDI+" ;;
         riched20)  echo "Editor de texto rico" ;;
         msxml3|msxml4|msxml6) echo "MSXML" ;;
         openal)    echo "OpenAL (áudio)" ;;
         physx)     echo "PhysX" ;;
+        quartz|amstream) echo "DirectShow (vídeo)" ;;
+        wmp9|wmp11) echo "Windows Media Player" ;;
+        wsh57)     echo "Windows Script Host" ;;
+        dbghelp)   echo "Depurador do Windows" ;;
+        secur32)   echo "Segurança do Windows" ;;
+        usp10)     echo "Desenho de texto (Uniscribe)" ;;
         *)         echo "$1" ;;
     esac
 }

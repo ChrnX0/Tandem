@@ -58,6 +58,7 @@ src/bin/tandem-apk        pré-voo + install; xapk/apks via adb install-multiple
 src/bin/tandem-repair     disputa de associação MIME
 src/polkit/               regra estreita: só start/restart do waydroid-container
 tests/run.sh              suíte; tests/mkapk.py gera os pacotes sintéticos
+docs/IDEIAS.md            ideário com veredito; as recusadas com o motivo
 ```
 
 Comandos (`tandem --help` é a fonte da verdade):
@@ -72,7 +73,7 @@ Build e verificação:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 206 testes, sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 218 testes, sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
@@ -157,6 +158,19 @@ t_verbos_do_log /tmp/w.log     # espera: vcrun2022
   arquivo também não são terminal, e mandar o diagnóstico para uma janela fazia
   `tandem doctor > relatorio.txt` gravar zero bytes. Teste os três:
   `[ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]`.
+- **`winetricks -q` sair 0 não significa que o arquivo chegou.** Ele reporta
+  que *ele* terminou. Com uma tradução errada na tabela, o verbo instalava
+  outra coisa, saía 0, e o recibo era gravado igual a uma instalação certa —
+  e recibo é permanente pela regra nº 4. Na tentativa seguinte o Tandem dizia
+  "já instalei o que este programa pedia" e desistia, com a causa real
+  intacta. Desde a 3.3 há prova de entrega: confere-se a DLL pedida em
+  `system32`/`syswow64` antes de gravar. **Ausência de prova não condena** —
+  só a contradição provada segura o recibo, porque nem todo verbo entrega uma
+  DLL homônima.
+- **Os executáveis respeitam `TANDEM_LIB`** para achar as bibliotecas
+  (`. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"`). Com o caminho fixo não
+  havia como exercitar o laço roda→detecta→instala sem instalar o pacote, e a
+  suíte inteira parava no nível de biblioteca.
 - **O Waydroid não está nos repositórios do Ubuntu/Zorin.** `apt-cache policy
   waydroid` devolve `Candidate: (none)`. Vem de `repo.waydro.id`, com chave.
 
@@ -179,7 +193,7 @@ root), não mais só por leitura:
 - Janelas do zenity abrem de fato (verificado sob Xvfb), inclusive com acento.
 - Wine 10.0 real instalado no container: prefixo `win64` criado do zero,
   7-Zip x64 instalado por `.exe` e por `.msi`, registro inspecionado à mão.
-- 206 testes automatizados em `tests/run.sh`; CI no GitHub Actions.
+- 218 testes automatizados em `tests/run.sh`; CI no GitHub Actions.
 
 Verificado **no Zorin 18.1 do usuário** (Wayland, Wine 10.0, Waydroid ativo):
 
@@ -229,20 +243,15 @@ da distro, Waydroid 1.6.2 MAINLINE com GAPPS e libhoudini, `binderfs` com nós
 
 ## Próximos passos
 
-0. **A tese, e o item mais importante da lista: prova de entrega.** Hoje o
-   recibo `.tandem-verbos` é gravado quando `winetricks -q` sai 0, o que
-   mistura "o comando rodou" com "o componente certo chegou". Como a regra
-   nº 4 proíbe repetir, toda tradução errada vira beco permanente: o verbo
-   entra no recibo, na volta cai em REPETIDOS, e o dono lê "já instalei o que
-   este programa pedia" — mentira. Foi o que o `atl*` fez por seis versões.
-   O conserto: depois do `winetricks` sair 0 e ANTES de gravar o recibo,
-   conferir se a DLL que faltava apareceu no `system32`/`syswow64`. Se não
-   apareceu, não grava recibo e diz a verdade — "a tradução que eu uso para
-   esse arquivo provavelmente está errada; é problema meu". Isso torna o laço
-   auto-corretivo, e é pré-requisito de qualquer clone de prefixo.
+O ideário completo — as 52 ideias dos dois painéis, cada uma com veredito, e as
+recusadas com o motivo escrito — vive em `docs/IDEIAS.md`. Leia de lá antes de
+propor coisa nova; metade das ideias óbvias já foi recusada por um motivo.
+
+A fila, em ordem:
+
 1. **`tandem dados`.** Nada no projeto separa AMBIENTE (reconstruível em 30
    min) de DADOS (irreconstruíveis; NF-e tem guarda de 5 anos). Três caminhos
-   apagam dado do dono hoje sem cópia: `tandem-exe:83` (`rm -rf` do prefixo
+   apagam dado do dono hoje sem cópia: `tandem-exe` (`rm -rf` do prefixo
    incompleto), `acao_restore` (devolve o ambiente e leva as vendas do mês) e
    o desinstalador do programa. O `backup` salva só o ambiente. A frase que
    resume: *"se você desistir do Linux, seus dados voltam com você"* — é isso
@@ -259,20 +268,18 @@ da distro, Waydroid 1.6.2 MAINLINE com GAPPS e libhoudini, `binderfs` com nós
    tabela errava. Ler também a lista entre parênteses do `title=`.
 4. Testar em campo os comandos novos: `desinstalar`, `programas`, `preparar`,
    `autoteste`, `alternativas`, `receita`.
-2. Duplo clique num `.xapk` de verdade. Os tipos MIME agora estão registrados
+5. Duplo clique num `.xapk` de verdade. Os tipos MIME agora estão registrados
    (`src/mime/tandem.xml`); antes o sistema via só um ZIP genérico e o suporte
    a pacotes divididos era inalcançável pelo duplo clique.
-3. Um `.exe` que **falte** alguma coisa, para o laço roda→detecta→instala
-   finalmente trabalhar. O 7-Zip foi fácil demais: não depende de nada.
-4. Publicar release no GitHub com o `.deb` anexado.
-5. Suporte a `.apkm` foi declarado mas só `.xapk`/`.apks` foram testados.
-6. Considerar clonar um prefixo com .NET pronto em vez de rodar `dotnet48` do
-   zero (30 min, alta taxa de falha) — ideia levantada, não implementada,
-   requer cuidado para nunca ler de prefixo protegido em uso.
-7. Um painel de ideação de seis lentes rodou e gerou 31 ideias julgadas; dois
-   agentes (roteiro e crítico de completude) morreram no limite de sessão. Os
-   achados que sobreviveram viraram os consertos de SIGPIPE, trava e
-   winetricks. Falta a síntese estratégica.
+6. **Um `.exe` que falte alguma coisa.** Com a prova de entrega da 3.3 o laço
+   passou a ser exercitado em CI contra um `wine`/`winetricks` de mentira, mas
+   em campo ele nunca agiu: o 7-Zip não depende de nada. Continua sendo a
+   maior incerteza do projeto.
+7. Publicar release no GitHub com o `.deb` anexado.
+8. Suporte a `.apkm` foi declarado mas só `.xapk`/`.apks` foram testados.
+9. Clonar um prefixo com .NET pronto em vez de rodar `dotnet48` do zero
+   (30 min, alta taxa de falha) — a prova de entrega era pré-requisito disso e
+   já existe; falta o cuidado de nunca ler de prefixo protegido em uso.
 
 ## Ambiente da máquina de desenvolvimento
 

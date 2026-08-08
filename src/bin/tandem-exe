@@ -1,7 +1,7 @@
 #!/bin/bash
 # Tandem - executa um programa Windows, resolvendo dependencias sozinho.
-. /usr/lib/tandem/common.sh
-. /usr/lib/tandem/winedeps.sh
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
+. "${TANDEM_LIB:-/usr/lib/tandem}/winedeps.sh"
 
 t_log_init exe "$*"
 # Antes de qualquer decisao sobre prefixo: garante que os prefixos que ja
@@ -208,6 +208,8 @@ MAX=3
 tentativa=1
 ATALHOS_ANTES="$(t_atalhos_wine)"
 INSTALADOS_AGORA=""
+# Pares "dll<TAB>verbo" que esta execucao ja provou nao entregues.
+SUSPEITAS=""
 while :; do
     MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
     t_aviso "Abrindo $(basename -- "$PROG")..."
@@ -233,20 +235,34 @@ while :; do
 
     VERBOS="$(t_verbos_do_log "$PARCIAL")"
     ORFAS="$(t_dlls_sem_traducao "$PARCIAL")"
+    # Os mesmos pares, guardados: e por eles que se confere depois se o
+    # arquivo que faltava realmente chegou.
+    PARES="$(t_pares_do_log "$PARCIAL")"
     rm -f "$PARCIAL"
 
     # Recibo: nunca repetir uma instalacao ja paga. O dotnet48 leva meia hora;
     # reinstalar por engano e o pior desperdicio possivel do tempo do usuario.
     RECIBO="$WINEPREFIX/.tandem-verbos"
-    NOVOS=""; REPETIDOS=""
+    NOVOS=""; REPETIDOS=""; REINCIDENTES=""
     for v in $VERBOS; do
-        if [ -f "$RECIBO" ] && grep -qxF -- "$v" "$RECIBO" 2>/dev/null; then
+        if printf '%s\n' "$SUSPEITAS" | grep -q "$(printf '\t')$v\$"; then
+            # Ja tentei este verbo nesta execucao e a DLL nao chegou. Tentar
+            # de novo gastaria o tempo do dono no mesmo engano - meia hora,
+            # no caso do .NET.
+            REINCIDENTES="$REINCIDENTES $v"
+        elif [ -f "$RECIBO" ] && grep -qxF -- "$v" "$RECIBO" 2>/dev/null; then
             REPETIDOS="$REPETIDOS $v"
         else
             NOVOS="$NOVOS $v"
         fi
     done
     VERBOS="$(printf '%s\n' $NOVOS)"
+
+    if [ -z "$VERBOS" ] && [ -n "$REINCIDENTES" ]; then
+        t_memoria_grava "$PROG" RESULTADO "nao abriu"
+        t_erro "$(t_texto_suspeitas "$SUSPEITAS")"
+        exit "$CODIGO"
+    fi
 
     if [ -z "$VERBOS" ] && [ -n "$REPETIDOS" ]; then
         # Licao negativa: estes foram instalados e o programa continua sem
@@ -349,7 +365,35 @@ sudo apt install winetricks"; exit 1; }
         t_diz ">>> winetricks -q $v"
         MARCA_WT=$(wc -l < "$LOG" 2>/dev/null || echo 0)
         if $INIBIR winetricks -q "$v" >>"$LOG" 2>&1; then
-            printf '%s\n' "$v" >> "$RECIBO"
+            # ------------------------------------------- prova de entrega
+            # O winetricks sair 0 diz que ELE terminou, nao que o arquivo que
+            # faltava chegou. Sem esta conferencia, uma traducao errada
+            # gravava recibo igual a uma certa - e o recibo e permanente: na
+            # tentativa seguinte o Tandem dizia "ja instalei o que este
+            # programa pedia" e desistia, com a causa real intacta. Foi
+            # exatamente o estrago das atl*.dll apontando para o Adobe Type
+            # Manager.
+            #
+            # Ausencia de prova nao condena: so a contradicao provada - a DLL
+            # pedida continuar ausente - segura o recibo.
+            FALTOU=""
+            for dll in $(printf '%s\n' "$PARES" |
+                         awk -F'\t' -v alvo="$v" '$2 == alvo { print $1 }'); do
+                t_dll_no_prefixo "$dll" || FALTOU="$FALTOU $dll"
+            done
+            if [ -n "$FALTOU" ]; then
+                t_diz "!!! $v saiu 0 mas nao entregou:$FALTOU"
+                for dll in $FALTOU; do
+                    SUSPEITAS="${SUSPEITAS:+$SUSPEITAS
+}$dll$(printf '\t')$v"
+                    t_anota_suspeita "$dll" "$v"
+                done
+            else
+                printf '%s\n' "$v" >> "$RECIBO"
+            fi
+            # Entra na lista dos dois jeitos: se o programa ABRIR depois
+            # disso, abrir e evidencia mais forte que a minha conferencia de
+            # arquivo, e a licao merece ser guardada.
             INSTALADOS_AGORA="$INSTALADOS_AGORA $v"
         else
             t_diz "!!! winetricks falhou em $v"

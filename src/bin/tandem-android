@@ -1,6 +1,6 @@
 #!/bin/bash
 # Tandem - abre a tela do Android.
-. /usr/lib/tandem/common.sh
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 t_log_init android
 
 t_progresso_abre "Abrindo o Android..."

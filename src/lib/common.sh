@@ -704,6 +704,24 @@ t_memoria_esquece() {
     rm -f -- "$arq"
 }
 
+# --------------------------------------------------- prova de entrega
+#
+# O componente instalado entregou mesmo o arquivo que estava faltando?
+#
+# O Wine grava os nomes em minusculas e o log dele traz "MSVCP140.dll", por
+# isso -iname. As duas visoes do system32 sao consultadas: instalador de 32
+# bits num prefixo win64 escreve em syswow64.
+t_dll_no_prefixo() {
+    local dll="$1" d
+    [ -n "$dll" ] && [ -n "${WINEPREFIX:-}" ] || return 1
+    for d in "$WINEPREFIX/drive_c/windows/system32" \
+             "$WINEPREFIX/drive_c/windows/syswow64"; do
+        [ -d "$d" ] || continue
+        find "$d" -maxdepth 1 -iname "$dll" -print -quit 2>/dev/null | grep -q . && return 0
+    done
+    return 1
+}
+
 # --------------------------------------------------------- pre-voo do PE
 #
 # Todo executavel Windows traz no proprio arquivo a lista de bibliotecas que

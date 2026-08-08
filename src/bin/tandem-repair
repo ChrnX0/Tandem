@@ -5,7 +5,7 @@
 # de precedencia. O ~/.config/mimeapps.list e o normal, mas gnome-mimeapps.list
 # e zorin-mimeapps.list tem precedencia MAIOR e sobrescrevem em silencio.
 # Aqui gravamos no lugar certo e limpamos os concorrentes, com backup.
-. /usr/lib/tandem/common.sh
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 t_log_init repair
 
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}"

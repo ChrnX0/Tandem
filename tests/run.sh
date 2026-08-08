@@ -873,6 +873,121 @@ igual "sem argumento devolve erro de uso" "2" "$?"
 
 # ------------------------------------------------------------- pacote
 
+secao "prova de entrega: o winetricks sair 0 nao prova que a DLL chegou"
+
+# Ate aqui a suite exercitava as bibliotecas. Este bloco roda o tandem-exe
+# INTEIRO - o laco roda->detecta->instala->repete - com um wine e um
+# winetricks de mentira. E o unico jeito de exercitar em CI o caminho que
+# nunca disparou em campo, porque o unico programa ja instalado de verdade
+# (7-Zip) nao depende de nada.
+
+E2E="$TMPRAIZ/e2e"; mkdir -p "$E2E/bin"
+
+# Um programa que sempre falha reclamando da mesma DLL.
+cat > "$E2E/bin/wine" <<'FIM'
+#!/bin/sh
+# "wine reg add" tem que funcionar: e o desligamento do sequestro de
+# associacoes de arquivo. Qualquer outra chamada finge o programa quebrado.
+[ "$1" = reg ] && exit 0
+printf '0009:err:module:import_dll Library MSVCR71.dll (needed by Z:\\x.exe) not found\n' >&2
+exit 53
+FIM
+printf '#!/bin/sh\nexit 0\n' > "$E2E/bin/wineserver"
+# O winetricks obediente: sai 0 sempre, e so entrega o arquivo se mandarem.
+# E exatamente esta a armadilha - o codigo de saida nao e a entrega.
+cat > "$E2E/bin/winetricks" <<'FIM'
+#!/bin/sh
+printf '%s\n' "$*" >> "$E2E_DIARIO"
+if [ -n "$E2E_ENTREGA" ]; then
+    mkdir -p "$WINEPREFIX/drive_c/windows/system32"
+    : > "$WINEPREFIX/drive_c/windows/system32/$E2E_ENTREGA"
+fi
+exit 0
+FIM
+# Sem isto o laco chamaria o systemd-inhibit real, que nao roda em container.
+cat > "$E2E/bin/systemd-inhibit" <<'FIM'
+#!/bin/sh
+while [ $# -gt 0 ]; do case "$1" in --*) shift ;; *) break ;; esac; done
+exec "$@"
+FIM
+# Responde "Instalar" e guarda o texto que o dono veria na tela.
+cat > "$E2E/bin/zenity" <<'FIM'
+#!/bin/sh
+for a in "$@"; do
+    case "$a" in --text=*) printf '%s\n<<<>>>\n' "${a#--text=}" >> "$E2E_JANELAS" ;; esac
+done
+exit 0
+FIM
+chmod +x "$E2E/bin"/*
+
+# $1 = pasta da rodada (vira o HOME), $2 = arquivo que o winetricks entrega
+roda_exe() {
+    local casa="$1" entrega="$2" pref
+    pref="$casa/.local/share/tandem/wine"
+    mkdir -p "$pref/drive_c/windows/system32"
+    : > "$pref/system.reg"; : > "$pref/.tandem-prefixo"
+    env -i HOME="$casa" DISPLAY=:99 PATH="$E2E/bin:/usr/bin:/bin" \
+        E2E_ENTREGA="$entrega" E2E_DIARIO="$casa/diario.txt" \
+        E2E_JANELAS="$casa/janelas.txt" TANDEM_LIB="$RAIZ/src/lib" \
+        bash "$RAIZ/src/bin/tandem-exe" "$ARTEFATOS/prog64.exe" >/dev/null 2>&1
+}
+
+if [ ! -x "$E2E/bin/wine" ]; then
+    pulou "prova de entrega" "nao consegui montar o ambiente falso"
+else
+    # --- Caso 1: a instalacao entrega o arquivo. Recibo normal.
+    A="$E2E/entregou"; mkdir -p "$A"; roda_exe "$A" msvcr71.dll
+    igual "entregou: o recibo e gravado" \
+          "vcrun2003" "$(sort -u "$A/.local/share/tandem/wine/.tandem-verbos" 2>/dev/null | tr '\n' ' ' | sed 's/ $//')"
+    igual "entregou: nao ha traducao suspeita anotada" \
+          "1" "$([ -f "$A/.local/state/tandem/traducao-suspeita.tsv" ]; echo $?)"
+    igual "entregou: o winetricks foi chamado uma vez so" \
+          "1" "$(grep -c vcrun2003 "$A/diario.txt" 2>/dev/null)"
+
+    # --- Caso 2: o winetricks sai 0 e o arquivo nao chega.
+    B="$E2E/enganou"; mkdir -p "$B"; roda_exe "$B" ""
+    igual "nao entregou: o recibo NAO e gravado" \
+          "1" "$([ -s "$B/.local/share/tandem/wine/.tandem-verbos" ]; echo $?)"
+    igual "nao entregou: a suspeita fica anotada com a DLL e o verbo" \
+          "msvcr71.dll	vcrun2003" \
+          "$(cut -f1,2 "$B/.local/state/tandem/traducao-suspeita.tsv" 2>/dev/null | head -1)"
+    # A mensagem tem que citar o arquivo que faltou e assumir a culpa. Dizer
+    # "instalei as dependencias e ainda nao abre" mandaria o dono procurar
+    # defeito na maquina dele, que esta perfeita.
+    JAN="$(cat "$B/janelas.txt" 2>/dev/null)"
+    case "$JAN" in
+        *msvcr71.dll*continua\ faltando*) passou "nao entregou: a mensagem cita o arquivo que faltou" ;;
+        *) falhou "nao entregou: a mensagem cita o arquivo que faltou" \
+                  "...msvcr71.dll continua faltando..." "${JAN:-(nenhuma janela)}" ;;
+    esac
+    case "$JAN" in
+        *"erro meu, não da sua máquina"*) passou "nao entregou: a culpa e assumida pelo Tandem" ;;
+        *) falhou "nao entregou: a culpa e assumida pelo Tandem" \
+                  "erro meu, não da sua máquina" "${JAN:-(nenhuma janela)}" ;;
+    esac
+    case "$JAN" in
+        *"Já instalei o que este programa pedia"*)
+            falhou "nao entregou: nao cai no beco sem saida do recibo" \
+                   "outra mensagem" "Já instalei o que este programa pedia" ;;
+        *) passou "nao entregou: nao cai no beco sem saida do recibo" ;;
+    esac
+    # A licao errada nao pode virar memoria: ela viajaria com a receita para
+    # a outra maquina e ensinaria o engano de novo.
+    igual "nao entregou: nada de NAO_RESOLVERAM na memoria" \
+          "" "$(grep -h '^NAO_RESOLVERAM=' "$B/.local/state/tandem/memoria/"*.txt 2>/dev/null)"
+    # Dentro da mesma execucao o verbo suspeito nao e reinstalado: seriam
+    # meia hora jogadas fora, no caso do .NET.
+    igual "nao entregou: nao repete a instalacao na mesma execucao" \
+          "1" "$(grep -c vcrun2003 "$B/diario.txt" 2>/dev/null)"
+
+    # --- Caso 3: segunda execucao. Sem recibo, tem que oferecer de novo.
+    roda_exe "$B" ""
+    igual "segunda execucao: oferece instalar outra vez" \
+          "2" "$(grep -c vcrun2003 "$B/diario.txt" 2>/dev/null)"
+    igual "segunda execucao: a suspeita e anotada de novo, com data" \
+          "2" "$(grep -c vcrun2003 "$B/.local/state/tandem/traducao-suspeita.tsv" 2>/dev/null)"
+fi
+
 secao "pacote .deb"
 
 DEB_SAIDA="$TMPRAIZ/build"

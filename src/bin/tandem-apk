@@ -1,6 +1,6 @@
 #!/bin/bash
 # Tandem - instala um app Android (.apk, .xapk, .apks, .apkm) no Waydroid.
-. /usr/lib/tandem/common.sh
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 
 t_log_init apk "$*"
 

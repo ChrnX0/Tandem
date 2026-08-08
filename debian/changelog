@@ -1,3 +1,32 @@
+tandem (3.3) unstable; urgency=medium
+
+  * Prova de entrega. O winetricks sair 0 diz que ELE terminou, nao que o
+    arquivo que faltava chegou - e o Tandem tratava as duas coisas como a
+    mesma. Uma traducao errada gravava recibo igual a uma certa, e recibo e
+    permanente: na tentativa seguinte o programa dizia "ja instalei o que
+    este programa pedia" e desistia, com a causa real intacta. Foi
+    exatamente o estrago das atl*.dll apontando para o Adobe Type Manager.
+    Agora, depois de instalar, o Tandem confere se a DLL pedida apareceu no
+    prefixo. Ausencia de prova nao condena; so a contradicao provada segura
+    o recibo.
+  * Quando a entrega nao se confirma, tres coisas mudam de uma vez: nao ha
+    recibo, o par DLL/verbo vai para traducao-suspeita.tsv, e a memoria NAO
+    aprende a licao negativa - ela viajaria com a receita para a outra
+    maquina e ensinaria o mesmo engano la. A mensagem passa a assumir a
+    culpa e a citar o arquivo pelo nome, em vez de mandar o dono procurar
+    defeito numa maquina que esta perfeita.
+  * O mesmo verbo nao e reinstalado duas vezes na mesma execucao depois de
+    falhar a entrega. Seriam trinta minutos jogados fora, no caso do .NET.
+  * Os executaveis passam a respeitar TANDEM_LIB para achar as bibliotecas.
+    Com o caminho fixo em /usr/lib/tandem nao havia como exercitar o laco
+    roda->detecta->instala sem instalar o pacote - e era justamente o laco
+    que nunca tinha rodado, nem em campo nem em teste.
+  * Doze testes novos rodam o tandem-exe inteiro contra um wine e um
+    winetricks de mentira, cobrindo os dois desfechos e a segunda execucao.
+    218 testes no total.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Sat, 08 Aug 2026 12:00:00 +0000
+
 tandem (3.2) unstable; urgency=medium
 
   * Novo: "tandem autoteste". O doctor LISTA o que existe; o autoteste

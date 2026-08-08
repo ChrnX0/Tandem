@@ -1,10 +1,10 @@
 #!/bin/bash
 # Tandem - comando principal e painel.
-. /usr/lib/tandem/common.sh
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="3.2"
+VERSAO="3.3"
 
 uso() {
     cat <<'AJUDA'
