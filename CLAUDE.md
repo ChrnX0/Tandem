@@ -346,13 +346,16 @@ The queue, in order:
    mechanism, not the product. It is still the project's largest uncertainty.
 3. Field-test what has not run on the owner's machine yet: `preparar`,
    `desinstalar`, `dados`, `socorro`, and a double click on a real `.xapk`.
-4. Publish the release. The workflow exists: `git tag v3.5 && git push origin
-   v3.5` builds, tests, installs, purges and publishes with a checksum.
-5. `.apkm` support is declared but only `.xapk`/`.apks` were tested.
-6. Clone a prefix with .NET already in it instead of running `dotnet48` from
+4. `.apkm` support is declared but only `.xapk`/`.apks` were tested.
+5. Clone a prefix with .NET already in it instead of running `dotnet48` from
    scratch (30 min, high failure rate) — delivery proof was the prerequisite and
    now exists; what is missing is the care never to read from a protected prefix
    in use.
+
+**Done, do not redo:** v3.6 is published — tag, `.deb` and `.sha256` attached,
+and the published artifact verified byte-for-byte identical to a local build.
+The next release goes out the same way; see the section below for why the
+browser path exists.
 
 ## What an agent session cannot do here
 
