@@ -1,123 +1,128 @@
+<div align="center">
+
 # Tandem
 
-**Clique duas vezes num arquivo. Ele funciona.**
+### Clique duas vezes num arquivo. Ele funciona.
 
-O Tandem faz arquivos `.exe`, `.msi`, `.apk` e `.xapk` se comportarem como
-programas nativos no Linux — sem terminal, sem configuração manual, sem
-precisar caçar em fórum qual pacote do `winetricks` está faltando.
-
-```
-.exe .msi   →  Wine     — dependências detectadas e instaladas sozinhas
-.apk .xapk  →  Android  — compatibilidade verificada antes, em português claro
-```
+**`.exe` · `.msi` · `.apk` · `.xapk` no Linux — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-![testes](https://img.shields.io/badge/testes-294-brightgreen)
-![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)
-![licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)
+[![testes](https://img.shields.io/badge/testes-307-brightgreen)](tests/run.sh)
+[![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
+[![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
+[![licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)](LICENSE)
 
-[English](README.md) · [Como colaborar](CONTRIBUINDO.md) · [Ideário](docs/IDEAS.md)
+**[English](README.md)** · [Como colaborar](CONTRIBUINDO.md) · [Ideário](docs/IDEAS.md) · [Formato da lista](docs/LIST-FORMAT.md)
 
-<p align="center">
-  <img src="docs/imagens/painel.png" alt="Painel do Tandem" width="520">
-</p>
+<img src="docs/imagens/painel.png" alt="O painel do Tandem" width="520">
+
+</div>
 
 ---
 
-## Por quê
+## A diferença, num relance
 
-Rodar um programa Windows ou um app Android no Linux já é possível hoje, mas o
-caminho é hostil para quem não é programador: instalar o Wine, criar um perfil,
-descobrir qual biblioteca falta lendo `err:module:import_dll` num terminal,
-traduzir isso para um pacote do `winetricks`, instalar, tentar de novo. No lado
-Android, ligar um serviço de contêiner, depois uma sessão, depois esperar um
-boot sem nenhum sinal de progresso, e só então descobrir que o `.apk` era só
-para celular.
+<table>
+<tr>
+<th width="50%">Fazer um programa Windows rodar hoje</th>
+<th width="50%">Com o Tandem</th>
+</tr>
+<tr>
+<td>
 
-O Tandem faz esse trabalho por você e informa o resultado numa frase sobre a
-qual dá para agir.
-
-## O que ele faz de fato
-
-### Programas Windows
-
-- **Descobre o que falta lendo a saída do próprio Wine.** Quando um programa
-  falha, o Wine escreve `err:module:import_dll Library MSVCP140.dll not found`.
-  O Tandem lê essas linhas, traduz cada DLL para o pacote que a fornece,
-  instala e tenta de novo — até três rodadas. É exatamente o que uma pessoa
-  experiente faria à mão.
-- **Separa "falta um componente do Windows" de "o programa está incompleto".**
-  DLLs sem tradução conhecida quase sempre são arquivos que o próprio programa
-  deveria trazer junto. O Tandem diz isso, em vez de instalar qualquer coisa.
-- **Trata cada tipo de arquivo do jeito certo.** `.msi` vai por `msiexec /i`,
-  `.lnk` por `wine start /unix`. Associar `.msi` ao `wine` puro — erro comum —
-  falha sempre.
-- **Roda programas de 64 e de 32 bits.** 64 bits é o caso normal e funciona sem
-  configuração — o ambiente é criado como `win64`. Programas de 32 bits também
-  rodam, mas exigem o `wine32`, que é um pacote à parte; sem ele o Tandem diz
-  isso e como resolver, em vez de fechar calado. Programas feitos para Windows
-  ARM são detectados e recusados com explicação.
-- **Nunca falha calado.** Todo caminho de erro termina numa janela. "Cliquei
-  duas vezes e não aconteceu nada" é tratado como defeito.
-- **Confere se o conserto chegou mesmo.** O `winetricks` sair 0 diz que *ele*
-  terminou, não que o arquivo que faltava chegou. O Tandem confere se a DLL
-  está lá — e na bitola certa — antes de dar a instalação por feita. Um
-  programa de 64 bits não carrega DLL de 32 bits de dentro da `syswow64`, e
-  metade dos pacotes do `winetricks` só tem carga de 32. Quando é esse o caso,
-  ele avisa antes de você gastar o download:
-
-<p align="center">
-  <img src="docs/imagens/dependencia.png" alt="Janela avisando que o componente só existe em 32 bits" width="720">
-</p>
-
-- **Assume a culpa quando a culpa é dele.** "Instalei as dependências e ainda
-  não abre" manda um dono de loja procurar defeito numa máquina que está
-  perfeita. O Tandem diz qual arquivo continua faltando e de quem é o problema:
-
-<p align="center">
-  <img src="docs/imagens/bitola.png" alt="Erro explicando que o componente só existe em 32 bits" width="720">
-</p>
-
-### Aplicativos Android
-
-- **Analisa o pacote antes de instalar.** Um leitor de manifesto binário
-  embutido (sem precisar do SDK do Android) extrai o nome do pacote, o
-  `minSdkVersion` e as arquiteturas nativas, e compara com o Android em
-  execução. Você é avisado — *"este app exige Android 15, o seu é 13"* — em vez
-  de assistir a uma instalação falhar.
-- **Instala pacotes divididos.** `.xapk`, `.apks` e `.apkm` são extraídos e
-  instalados via ADB com `install-multiple`, incluindo os arquivos de dados
-  (OBB). A maioria dos apps grandes é distribuída assim.
-- **Lê o resultado verdadeiro.** O `waydroid app install` retorna sucesso mesmo
-  quando falha. O Tandem lê a saída e traduz `NO_MATCHING_ABIS`,
-  `INSTALL_FAILED_OLDER_SDK` e companhia para português.
-- **Espera o sinal certo.** `Session: RUNNING` significa que o gerenciador de
-  sessão subiu, não que o Android terminou de iniciar. O Tandem espera o
-  `sys.boot_completed`.
-
-### Segurança
-
-Perfis Wine que o Tandem não criou são **somente leitura para a automação**.
-Se um programa mora dentro de um perfil existente, o Tandem o executa *naquele
-perfil* e se recusa a instalar qualquer coisa ali — informa o que falta e para.
-
-Isso existe porque o projeto nasceu numa máquina que também roda um sistema de
-frente de caixa em perfil próprio. Automação que "ajuda" instalando um
-componente dentro de um ambiente de produção que funciona é pior que automação
-nenhuma.
-
-Para proteger um perfil explicitamente:
-
-```bash
-tandem protect ~/.wine-alguma-coisa
+```console
+$ sudo apt install wine winetricks
+$ WINEPREFIX=~/.wine-app winecfg
+$ wine setup.exe
+0024:err:module:import_dll Library
+MSVCP140.dll not found
+$ # ...que pacote é esse?
+$ # (abre um fórum, lê 40 respostas)
+$ winetricks -q vcrun2019
+$ wine setup.exe
+0024:err:module:import_dll Library
+VCRUNTIME140_1.dll not found
+$ # (volta pro fórum)
 ```
 
-## Instalação
+</td>
+<td>
 
-Quando houver um release publicado, baixe o `.deb` em
-[Releases](../../releases) e clique duas vezes. Até lá, construa — não precisa
-de máquina Debian nem do `dpkg-deb`, o empacotador escreve o arquivo `ar`
-sozinho:
+<br>
+
+### Clique duas vezes.
+
+<br>
+
+Se faltar alguma coisa, o Tandem descobre, diz numa frase que você entende, pergunta uma vez e instala.
+
+Se **não tiver como** funcionar, ele diz isso também — **antes** de você gastar meia hora de download.
+
+<br>
+
+</td>
+</tr>
+</table>
+
+---
+
+## O que ele faz de diferente
+
+Wine, Bottles, Lutris e PlayOnLinux todos rodam programas Windows, e fazem isso bem. O que nenhum deles faz é **fechar o laço de diagnóstico para quem não sabe ler um log**. O Tandem é isso, e só isso.
+
+### 🔁 Ele lê a saída de erro do próprio Wine e age
+
+Quando um programa falha, o Wine escreve `err:module:import_dll Library MSVCP140.dll not found`. O Tandem lê essas linhas, traduz cada DLL para o pacote que a fornece, instala e tenta de novo — é o laço que uma pessoa experiente faria à mão.
+
+```mermaid
+flowchart TD
+    A["Clique duplo num .exe"] --> B["Roda no Wine"]
+    B -->|saiu 0| C["Pergunta uma vez: funcionou de verdade?"]
+    B -->|falhou| D["Lê a saída de erro do Wine"]
+    D --> E["Traduz cada DLL para um verbo do winetricks"]
+    E --> F{"Já instalei isso antes?"}
+    F -->|sim| G["Diz isso com clareza, para de adivinhar"]
+    F -->|não| H["Explica o que falta, pergunta, instala"]
+    H --> I{"O arquivo chegou,<br/>na bitola certa?"}
+    I -->|sim| B
+    I -->|não| J["Assume a culpa, cita o arquivo, para"]
+```
+
+### 🧾 Terminar não é a mesma coisa que funcionar
+
+O `winetricks` sair `0` diz que **ele** terminou, não que o arquivo que faltava chegou. O Tandem confere se a DLL está lá de verdade — *e na bitola certa*. Um programa de 64 bits não carrega DLL de 32 bits de dentro da `syswow64`, e boa parte dos pacotes do `winetricks` só tem carga de 32.
+
+Quando é esse o caso, você fica sabendo **antes** do download:
+
+<div align="center">
+<img src="docs/imagens/dependencia.png" alt="Janela avisando que o componente só existe em 32 bits" width="760">
+</div>
+
+### 🙋 Ele assume a culpa quando a culpa é dele
+
+*"Instalei as dependências e ainda não abre"* manda um dono de loja procurar defeito numa máquina que está perfeita. O Tandem cita o arquivo que continua faltando e diz de quem é o problema:
+
+<div align="center">
+<img src="docs/imagens/bitola.png" alt="Erro explicando que o componente só existe em 32 bits" width="760">
+</div>
+
+### 🔇 Nenhum caminho de erro termina em silêncio
+
+"Cliquei duas vezes e não aconteceu nada" é tratado como **defeito**, não como limitação. Toda falha termina numa janela; sem sessão gráfica, no terminal; e sempre no log. Essa regra já pegou uma janela de erro que nunca abria, uma barra de progresso que derrubava o programa inteiro, e um desvio que calava a saída do próprio programa.
+
+### 🔒 Ele não mexe em perfil Wine que não criou
+
+Perfil que o Tandem não fez é **somente leitura para a automação**. Se o seu programa mora dentro de um, o Tandem roda ele *lá*, informa o que falta e **para**.
+
+> Isso existe porque o projeto nasceu numa máquina que também roda um sistema de frente de caixa em perfil próprio. Automação que "gentilmente" instala uma dependência dentro de um ambiente de produção que funciona é pior do que não automatizar nada.
+
+```bash
+tandem protect ~/.wine-pdv     # marca qualquer perfil como intocável
+```
+
+---
+
+## Instalação
 
 ```bash
 git clone https://github.com/ChrnX0/Tandem && cd Tandem
@@ -125,154 +130,155 @@ python3 build.py --check
 sudo apt install ./tandem_3.6_all.deb
 ```
 
-Depois verifique o ambiente:
+Não precisa de máquina Debian nem do `dpkg-deb` — o empacotador escreve o arquivo `ar` sozinho, em qualquer sistema. Quando houver um release publicado, dará para baixar o `.deb` direto em [Releases](../../releases) e clicar duas vezes.
 
-```bash
-tandem doctor
-```
-
-O que estiver faltando, o Tandem instala para você:
+Depois, deixe o Tandem instalar o que faltar:
 
 ```bash
 tandem preparar
 ```
 
-Isso põe Wine, `winetricks`, suporte a 32 bits, `adb` e Waydroid no lugar —
-inclusive o repositório do Waydroid com a chave, na ordem certa — e pede a senha
-uma vez só. Isso não pode acontecer durante a instalação do `.deb`: o `dpkg`
-segura uma trava enquanto o `postinst` roda, e um `apt-get` lá dentro esperaria
-para sempre. O duplo clique num `.exe` sem Wine também oferece instalar na hora,
-porque é aí que a pessoa quer resolver.
+<details>
+<summary>O que o <code>tandem preparar</code> faz de fato, e por que é um comando separado</summary>
 
-## Requisitos
+<br>
+
+Ele instala Wine, `winetricks`, suporte a 32 bits, `adb` e Waydroid — inclusive o repositório do Waydroid com a chave, na ordem certa — e pede a senha uma vez só.
+
+Isso não pode acontecer durante a instalação do `.deb`: o `dpkg` segura uma trava enquanto o `postinst` roda, e um `apt-get` lá dentro esperaria para sempre. O clique duplo num `.exe` sem Wine também oferece instalar na hora, porque é aí que a pessoa quer resolver.
+
+</details>
+
+### Requisitos
 
 | Para | Você precisa de |
 |---|---|
-| Programas Windows de 64 bits | `wine` — o caso normal, não precisa de mais nada |
-| Programas Windows de 32 bits | também o `wine32` (`sudo dpkg --add-architecture i386`) |
+| Programas Windows de 64 bits | `wine` — o caso normal, mais nada |
+| Programas Windows de 32 bits | também `wine32` (`sudo dpkg --add-architecture i386`) |
 | Dependências automáticas | `winetricks` |
-| Apps Android | [`waydroid`](https://docs.waydro.id/), já inicializado |
+| Aplicativos Android | [`waydroid`](https://docs.waydro.id/), inicializado |
 | Pacotes divididos (`.xapk`) | `adb` |
-| Apps só de celular (ARM) | [libhoudini / libndk](https://github.com/casualsnek/waydroid_script) |
+| Apps só-ARM em x86 | [libhoudini / libndk](https://github.com/casualsnek/waydroid_script) |
 
-Testado no Zorin OS 18.1 (base Ubuntu 24.04). Deve funcionar em qualquer
-distribuição baseada em Debian com ambiente gráfico padrão.
+Testado no Zorin OS 18.1 e no Ubuntu 24.04. Deve funcionar em qualquer distribuição baseada em Debian com um desktop que siga o freedesktop.
 
-## Uso
+---
 
-Quase nenhum — você clica duas vezes nos arquivos. Quando quiser a linha de
-comando:
+## Android também
 
-```bash
-tandem                       # painel
-tandem install arquivo.xapk  # instala ou executa qualquer coisa
-tandem preparar              # instala o que falta (Wine, Android, ...)
-tandem programas             # lista e abre os programas Windows instalados
-tandem desinstalar           # remove um programa Windows instalado
-tandem android               # abre a tela do Android
-tandem doctor                # diagnóstico do ambiente — o que EXISTE
-tandem autoteste             # exercita aqui — o que FUNCIONA
-tandem repair                # reaplica as associações de arquivo
-tandem dados                 # mostra os SEUS arquivos dentro do Windows
-tandem dados salvar          # copia só os seus arquivos (pequeno e rápido)
-tandem dados restaurar       # devolve, sem nunca sobrescrever
-tandem backup                # salva o ambiente Windows inteiro
-tandem restore               # restaura
-tandem protect <caminho>     # marca um perfil Wine como intocável
-tandem alternativas <nome>   # procura um programa de Linux que faça o mesmo
-tandem receita <arquivo>     # exporta o que aprendeu, para mandar a alguém
-tandem lista                 # o que a comunidade já descobriu
-tandem lista atualizar       # baixa a lista (não manda nada seu)
-tandem memoria               # o que o Tandem aprendeu sobre cada programa
-tandem esquecer <nome>       # apaga o que ele aprendeu sobre um programa
-tandem contribuir <arquivo>  # monta a linha para você mandar, se quiser
-tandem socorro               # junta tudo num arquivo para pedir ajuda
-tandem logs                  # mostra o registro mais recente
-```
+- **Ele analisa o pacote antes de instalar.** Um leitor de XML binário embutido — sem precisar do SDK do Android — extrai o nome do pacote, o `minSdkVersion` e as arquiteturas nativas, e compara com o Android em execução. Você é avisado: *"este app exige Android 15, o seu é 13"*, em vez de assistir a uma instalação falhar.
+- **Ele dá conta de pacote dividido.** `.xapk`, `.apks` e `.apkm` são extraídos e instalados pelo ADB com `install-multiple`, dados OBB incluídos. A maioria dos apps grandes vem assim, e um instalador comum não resolve.
+- **Ele lê o resultado de verdade.** O `waydroid app install` sai `0` mesmo falhando. O Tandem lê a saída e transforma `NO_MATCHING_ABIS` em *"este app é feito só para celular e não roda aqui"*.
+- **Ele espera o sinal certo.** `Session: RUNNING` significa que o gerenciador de sessão subiu, não que o Android terminou de ligar. O Tandem espera o `sys.boot_completed`.
 
-### Os seus arquivos não são o ambiente
+---
 
-O ambiente — o perfil, os componentes, os programas — o Tandem refaz em vinte
-minutos. O que você digitou dentro desses programas, não. O `tandem dados`
-separa as duas coisas, e todo caminho destrutivo (refazer um perfil pela
-metade, restaurar um backup, desinstalar um programa) passa a tirar uma cópia
-antes.
+## Comandos
 
-A promessa que isso existe para cumprir: *se você desistir do Linux, seus dados
-voltam com você.*
+Você quase não vai precisar disto — o normal é clicar duas vezes. Quando quiser a linha de comando:
 
-### Lista da comunidade
+| | |
+|---|---|
+| `tandem` | o painel |
+| `tandem install <arquivo>` | instala ou executa qualquer coisa |
+| `tandem preparar` | instala o que falta (Wine, Android, …) |
+| `tandem programas` | lista e abre os programas Windows instalados |
+| `tandem desinstalar` | remove um programa Windows instalado |
+| `tandem android` | abre a tela do Android |
+| `tandem doctor` | diagnóstico do ambiente — o que **existe** |
+| `tandem autoteste` | exercita aqui — o que **funciona** |
+| `tandem repair` | reaplica as associações de arquivo |
+| `tandem dados` | mostra os **seus** arquivos dentro do Windows |
+| `tandem backup` · `tandem restore` | salva e restaura o ambiente inteiro |
+| `tandem protect <caminho>` | marca um perfil Wine como intocável |
+| `tandem alternativas <nome>` | procura um programa de Linux que faça o mesmo |
+| `tandem receita <arquivo>` | exporta o que aprendeu, para mandar a alguém |
+| `tandem memoria` · `tandem esquecer <nome>` | vê e apaga o que ele aprendeu |
+| `tandem lista` · `tandem contribuir <arquivo>` | a lista da comunidade, nos dois sentidos |
+| `tandem socorro` | um arquivo só com tudo, para pedir ajuda |
+| `tandem logs` | o registro mais recente |
 
-O `tandem lista` baixa um arquivo de texto por HTTPS — o modelo das listas de
-filtro de bloqueador de anúncio, não um servidor: sem API, sem conta, sem
-uptime para pagar. Ela guarda de quais componentes do `winetricks` cada
-programa precisou, indexado por uma impressão digital do próprio arquivo.
+---
 
-Ler é automático depois que você pede. **Publicar não é**: o `tandem
-contribuir` monta a linha e mostra ela inteira — quem envia é você. A linha não
-carrega nome de arquivo, caminho, usuário, nome da máquina, IP nem log, e o
-gerador se recusa a produzi-la se alguma dessas coisas aparecer. O formato está
-em [docs/LIST-FORMAT.md](docs/LIST-FORMAT.md).
+## Três ideias que valem a leitura
 
-## Compilar
+### 💾 Os seus dados não são o seu ambiente
 
-Não precisa de máquina Debian nem do `dpkg-deb` — o empacotador escreve o
-arquivo `ar` diretamente:
+O ambiente — o perfil, os componentes, os programas — o Tandem refaz em vinte minutos. O que você *digitou dentro* desses programas, não.
+
+Nada neste projeto separava as duas coisas até a versão 3.4, e três caminhos apagavam dado do dono sem cópia. O `tandem dados` acha o que é seu (as pastas pessoais do Windows, mais os `.mdb`/`.fdb`/`.dbf` que software comercial larga ao lado do próprio executável) e copia só isso — pequeno o bastante para caber num e-mail.
 
 ```bash
-python3 build.py --check
+tandem dados            # o que aqui dentro é meu, e quanto pesa?
+tandem dados salvar     # copia só isso
+tandem dados restaurar  # devolve, sem nunca sobrescrever
 ```
 
-## Testes
+> **A promessa que isso existe para cumprir:** *se você desistir do Linux, seus dados voltam com você.*
 
-A suíte roda sem Wine, sem Waydroid e sem instalar o pacote: as bibliotecas de
-shell são carregadas direto de `src/lib` e os pacotes Android são sintéticos —
-inclusive com um `AndroidManifest.xml` binário de verdade, para que o leitor de
-manifesto seja exercitado no mesmo caminho de código de um APK real.
+### 🧠 Ele lembra, e nunca mente sobre o quanto tem certeza
 
-```bash
-bash tests/run.sh
-```
+O Tandem guarda o que cada programa precisou, indexado por uma impressão digital do **arquivo** — tamanho mais o primeiro e o último MiB — então a lição sobrevive a mudar de pasta e vale na máquina de outra pessoa.
 
-As ferramentas opcionais (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) são
-usadas quando existem e puladas quando não existem, então a suíte passa numa
-máquina sem nada instalado.
+Mas `exit 0` não é prova. O modo de falha característico do Wine com software comercial é **abrir e estar sutilmente errado**: cupom com acento quebrado, relatório em branco, data invertida. Então o Tandem pergunta a você, uma vez por programa, se funcionou de verdade — e toda lição que ele exporta sai marcada com a origem da confiança. "Uma pessoa olhou a tela" pesa diferente de "o processo saiu 0".
+
+### 🌐 Uma lista da comunidade, não um servidor
+
+O `tandem lista` baixa um arquivo de texto por HTTPS — o modelo das listas de filtro de bloqueador de anúncio. Sem API, sem conta, sem uptime para pagar; é por isso que o EasyList sobrevive há vinte anos com orçamento de voluntário.
+
+**Ler é automático. Publicar não.** O `tandem contribuir` monta a linha e mostra ela inteira — *você* envia. A linha leva uma impressão digital do arquivo, a arquitetura e os componentes que resolveram, e **mais nada**: sem nome de arquivo, caminho, usuário, nome da máquina, IP nem log. O gerador se recusa a produzi-la se alguma dessas coisas aparecer. [Formato completo →](docs/LIST-FORMAT.md)
+
+---
 
 ## O que nunca vai funcionar
 
-Ser honesto sobre isso desde o início economiza uma tarde:
+Ser honesto sobre isso desde o começo economiza uma tarde de todo mundo.
 
-- **Dispositivos USB dentro do Android.** O Waydroid não repassa USB.
-  Impressora térmica, pinpad, leitor de código de barras e balança não existem
-  dentro do contêiner. Nenhuma automação muda isso.
-- **Apps de banco e de maquininha.** O Play Integrity detecta o contêiner. Não
-  há contorno confiável.
-- **Programas Windows com driver de kernel.** Antivírus, alguns TEF, chaves de
-  proteção por hardware. O Wine roda em espaço de usuário.
-- **Licenciamento amarrado ao hardware.** O Wine devolve seriais de BIOS e disco
-  vazios ou sintéticos. Software que identifica a máquina pode se recusar a
-  ativar — ou travar na tela de ativação.
+| | Por quê |
+|---|---|
+| **Dispositivo USB dentro do Android** | O Waydroid não repassa USB. Impressora térmica, leitor de cartão, leitor de código de barras e balança não existem dentro do contêiner. Nenhuma automação muda isso. |
+| **App de banco e de pagamento** | O Play Integrity detecta o contêiner. Não há contorno confiável. |
+| **Programa Windows com driver de kernel** | Anti-cheat, alguns middlewares de pagamento de PDV, chave de proteção física. O Wine roda no espaço do usuário. |
+| **Licença amarrada ao hardware** | O Wine informa serial de BIOS e de disco vazio ou sintético. Software que identifica a máquina pode recusar a ativação — ou travar na tela de ativação. |
+
+O Tandem reconhece vários desses casos lendo o próprio executável, **antes de rodar**, e explica a falha em vez de mostrar um código de erro.
+
+---
 
 ## Como colaborar
 
-A contribuição mais valiosa não exige código. **Quase nenhum programa comercial
-de verdade jamais rodou nisto** — o laço de dependências foi exercitado contra
-binários de teste, não contra o sistema de uma loja em cima de um balcão.
+**A contribuição mais valiosa não exige código.**
 
-Se um programa funcionou, o `tandem contribuir <arquivo>` monta uma linha que
-você cola numa issue. Ela leva uma impressão digital do arquivo, a arquitetura e
-os componentes que resolveram — sem nome de arquivo, caminho, usuário, nome da
-máquina, IP nem log, e o gerador se recusa a produzi-la se alguma dessas coisas
-aparecer.
+O Tandem tem um problema honesto: quase nenhum programa comercial de verdade jamais rodou nele. O laço de dependências foi exercitado com Wine e `winetricks` reais — mas contra binários feitos para o teste, não contra o sistema de uma loja em cima de um balcão. Cada relato de programa real vale mais que uma funcionalidade nova.
 
-Se não funcionou, o `tandem socorro` junta num arquivo só tudo o que alguém
-perguntaria.
+| Deu certo | Não deu certo |
+|---|---|
+| `tandem contribuir <arquivo>` monta uma linha anônima — [cole numa issue](../../issues/new?template=list.yml) | `tandem socorro` junta num arquivo só tudo o que alguém perguntaria — [abra uma issue](../../issues/new?template=did-not-work.yml) |
 
-Os detalhes, as cinco regras que não se quebram e a régua de evidência estão em
-[CONTRIBUINDO.md](CONTRIBUINDO.md). Antes de propor coisa nova, dê uma olhada em
-[docs/IDEAS.md](docs/IDEAS.md) — 52 ideias com veredito, e as recusadas trazem
-o motivo escrito.
+As cinco regras que não se quebram, e a régua de evidência que "pronto" precisa alcançar, estão em **[CONTRIBUINDO.md](CONTRIBUINDO.md)**. Antes de propor coisa nova, dê uma olhada em **[docs/IDEAS.md](docs/IDEAS.md)** — 52 ideias com veredito, e as recusadas trazem o motivo escrito.
 
-## Licença
+<details>
+<summary><b>Compilar e testar</b></summary>
 
-MIT. Veja [LICENSE](LICENSE).
+<br>
+
+```bash
+python3 build.py --check   # empacota; sem Debian, sem dpkg-deb
+bash tests/run.sh          # 307 testes; sem Wine, sem Waydroid, sem instalar
+```
+
+A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android sintéticos com `AndroidManifest.xml` binário de verdade, então o leitor de manifesto roda no mesmo caminho de código de um APK real. Ferramenta opcional (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) é usada quando existe e pulada quando não existe, então a suíte passa numa máquina pelada.
+
+O CI ainda roda o `lintian` sem nenhum aviso, confere que a construção é byte a byte reprodutível, e faz um ciclo real de instalar–configurar–remover num Ubuntu 24.04.
+
+</details>
+
+---
+
+<div align="center">
+
+**MIT** · [LICENSE](LICENSE)
+
+<sub>Feito para um dono de loja que não é programador, e julgado por uma regra:<br>nenhum caminho de erro pode terminar em silêncio.</sub>
+
+</div>
