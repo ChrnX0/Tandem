@@ -665,7 +665,7 @@ t_receita_exporta() {
     [ -f "$arq" ] || return 1
     printf '# Receita do Tandem: o que este programa precisou para funcionar.\n'
     printf '# Pode ler, conferir e mandar para outra pessoa.\n'
-    printf '# Para usar:  tandem receita --importar <este arquivo>\n'
+    printf '# Para usar:  tandem receita --importar <este arquivo> <o programa>\n'
     printf 'TANDEM_RECEITA=1\n'
     printf 'IDENTIDADE=%s\n' "$(t_memoria_id "$prog")"
     printf 'ORIGEM=%s\n' "$( . /etc/os-release 2>/dev/null
@@ -915,10 +915,16 @@ t_lista_atualiza() {
     tmp="$(mktemp)" || return 2
     if command -v curl >/dev/null 2>&1; then
         curl -fsSL --max-time 30 -o "$tmp" "$TANDEM_LISTA_URL" 2>>"${LOG:-/dev/null}"
+        rc=$?
+        # 22 = o servidor respondeu com erro (404 e o caso comum: a lista
+        # ainda nao foi publicada). Mandar o dono conferir a internet por
+        # causa disso e o mandar procurar defeito numa maquina perfeita.
+        [ $rc -eq 22 ] && { rm -f "$tmp"; return 4; }
     else
         wget -q -T 30 -O "$tmp" "$TANDEM_LISTA_URL" 2>>"${LOG:-/dev/null}"
+        rc=$?
+        [ $rc -eq 8 ] && { rm -f "$tmp"; return 4; }
     fi
-    rc=$?
     if [ $rc -ne 0 ] || [ ! -s "$tmp" ]; then rm -f "$tmp"; return 1; fi
     if ! head -1 "$tmp" | grep -q "^# TANDEM-LISTA $TANDEM_LISTA_VERSAO\$"; then
         t_diz "lista baixada nao declara o formato esperado; descartada"

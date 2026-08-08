@@ -196,6 +196,65 @@ EOF
 Isso é erro meu, não da sua máquina: a tradução que eu uso para esses arquivos aponta para o pacote errado. Já anotei e não vou repetir a mesma instalação.' "$texto"
 }
 
+# O caminho inverso: dado um verbo, qual DLL ele deveria ter entregue?
+#
+# Serve ao atalho da memoria e da lista, onde o Tandem instala sem ter visto
+# nenhum erro do Wine - entao nao existe par dll/verbo vindo do log para
+# conferir. Sem uma resposta aqui, aquele caminho gravava recibo so com o
+# codigo de saida, contornando inteira a prova de entrega. Responder "nao sei"
+# e legitimo: ausencia de prova nao condena.
+t_dll_do_verbo() {
+    local v="$1"
+    [ -n "$v" ] || return 1
+    [ -n "${TANDEM_VERBOS_TSV:-}" ] && [ -f "$TANDEM_VERBOS_TSV" ] || return 1
+    awk -F'\t' -v alvo="$v" \
+        '$2 == alvo && $3 == "alta" { print $1; achou = 1; exit } END { exit !achou }' \
+        "$TANDEM_VERBOS_TSV"
+}
+
+# ------------------------------------------------------- verbo x bitola
+#
+# Continuacao do achado da bitola. Levantado do winetricks 20240105
+# instalado, verbo por verbo (ha um teste que refaz esse levantamento e
+# reprova se estas duas listas envelhecerem):
+#
+#   - a maioria dos verbos modernos JA instala as duas cargas sozinha. O
+#     vcrun2022, por exemplo, roda o vc_redist.x86 e, se o prefixo for win64,
+#     tambem o vc_redist.x64. Para esses nao ha nada a escolher.
+#   - UM unico verbo tem irmao de 64 bits explicito: xact -> xact_x64.
+#   - oito verbos so tem carga de 32 bits e nao tem irmao nenhum. Para um
+#     programa de 64 bits que precise deles, nao existe conserto - e dizer
+#     isso ANTES vale mais do que descobrir depois de meia hora de download.
+
+# O irmao de 64 bits deste verbo, se existir NESTE winetricks. Conferir no
+# arquivo instalado, e nao confiar na lista a mao, porque o winetricks e
+# atualizado por fora do Tandem.
+t_winetricks_tem_verbo() {
+    local wt
+    wt="$(command -v winetricks 2>/dev/null)" || return 1
+    [ -n "$wt" ] && [ -r "$wt" ] || return 1
+    grep -q "^load_${1}()" "$wt" 2>/dev/null
+}
+
+t_verbo_para_arquitetura() {
+    local verbo="$1" arch="${2:-}"
+    if [ "$arch" = 64 ]; then
+        case "$verbo" in
+            xact) t_winetricks_tem_verbo xact_x64 && { printf 'xact_x64'; return 0; } ;;
+        esac
+    fi
+    printf '%s' "$verbo"
+}
+
+# Verbos sem carga de 64 bits e sem irmao que tenha. Nao bloqueiam nada: o
+# Tandem avisa e deixa o dono decidir, do mesmo jeito que faz com limites.tsv.
+t_verbo_so_32() {
+    case "$1" in
+        dbghelp|mfc42|msxml3|msxml4|openal|riched20|vcrun2003|wsh57) return 0 ;;
+    esac
+    return 1
+}
+
 # O componente chegou, na bitola que este programa nao consegue usar.
 #
 # Nao e erro de traducao nem defeito da maquina: e limite de quem distribui o

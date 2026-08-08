@@ -1,4 +1,4 @@
-.TH TANDEM 1 "2025-01-01" "tandem 3.4" "Comandos do usuário"
+.TH TANDEM 1 "2026-08-08" "tandem 3.5" "Comandos do usuário"
 .SH NOME
 tandem \- roda programas Windows e aplicativos Android no Linux
 .SH SINOPSE
@@ -87,9 +87,18 @@ Procura um programa de Linux que faça o trabalho de um programa de Windows.
 Separa o que É o mesmo programa com versão oficial para Linux daquilo que
 apenas faz algo parecido, sempre dizendo o que muda.
 .TP
-.BI "tandem receita " programa
-Exporta o que o Tandem aprendeu sobre um programa, num arquivo de texto
-pequeno que pode ser conferido e enviado a outra pessoa.
+.BI "tandem receita " arquivo
+Escreve na saída padrão o que o Tandem aprendeu sobre um programa, em texto
+que cabe numa mensagem e pode ser conferido antes de enviar. Para guardar num
+arquivo, redirecione:
+.IP
+.EX
+tandem receita ~/Downloads/sistema.exe > receita.txt
+.EE
+.IP
+A receita sai marcada com a origem da confiança: uma lição que o dono
+confirmou na tela vale diferente de uma em que o programa apenas saiu sem
+erro.
 .TP
 .BI "tandem receita --importar " "receita programa"
 Usa a receita de outra pessoa. A receita é recusada se não se declarar como
@@ -164,6 +173,14 @@ antes de enviar.
 .TP
 .B tandem logs
 Mostra o registro técnico mais recente.
+.TP
+.B tandem version
+Mostra a versão instalada.
+.TP
+.B tandem help
+Mostra a lista de comandos. Sem sessão gráfica, é o que
+.B tandem
+sozinho faz.
 .SH PREFIXOS PROTEGIDOS
 Um prefixo Wine que o Tandem não criou é sempre tratado como somente
 leitura pela automação: o programa é executado lá dentro, o que falta é
@@ -200,6 +217,40 @@ Registros técnicos de cada comando.
 .I ~/.config/mimeapps.list
 Associações de arquivo aplicadas por
 .BR "tandem repair" .
+.TP
+.I ~/.local/share/tandem/memoria/
+O que o Tandem aprendeu sobre cada programa, um arquivo por programa,
+indexado por uma impressão digital do arquivo.
+.TP
+.I ~/.local/share/tandem/wine/.tandem-verbos
+Recibo dos componentes já instalados naquele perfil. Impede repetir uma
+instalação já paga.
+.TP
+.I ~/.local/state/tandem/lista.tsv
+A lista da comunidade, quando baixada por
+.BR "tandem lista atualizar" .
+.TP
+.I ~/.local/state/tandem/traducao-suspeita.tsv
+Componentes que o Tandem instalou e que não entregaram o arquivo pedido —
+ou seja, erro de tradução dele próprio.
+.TP
+.I ~/tandem-dados-*.tar.gz
+Cópias dos seus arquivos, feitas por
+.B tandem dados salvar
+e automaticamente antes de qualquer operação destrutiva.
+.SH VARIÁVEIS DE AMBIENTE
+.TP
+.B TANDEM_LIB
+Onde procurar as bibliotecas. Padrão:
+.IR /usr/lib/tandem .
+Existe para a suíte poder exercitar os executáveis sem instalar o pacote.
+.TP
+.B TANDEM_PREFIXO_PADRAO
+Perfil Wine usado para programas avulsos. Padrão:
+.IR ~/.local/share/tandem/wine .
+.TP
+.B TANDEM_LISTA_URL
+De onde baixar a lista da comunidade.
 .SH DIAGNÓSTICO
 Nenhum caminho de erro termina em silêncio. Quando há sessão gráfica, os
 erros aparecem em janela e notificação; sem ela, saem no terminal. Em

@@ -309,12 +309,29 @@ fi
 # O acoplamento declarado no portao tem que ser verdade: todo comando que o
 # programa oferece precisa estar no manual, senao o pacote documenta uma
 # coisa e faz outra.
-faltando_no_manual=""
-for c in preparar programas desinstalar doctor autoteste repair backup \
-         restore protect alternativas receita memoria esquecer logs; do
-    grep -q "tandem $c" "$RAIZ/man/tandem.1" || faltando_no_manual="$faltando_no_manual $c"
+# A lista de comandos e EXTRAIDA do case principal, nunca escrita a mao: com
+# lista fixa o teste passava verde enquanto quatro comandos novos (dados,
+# lista, contribuir, socorro) nao estavam em documento nenhum. Um teste que
+# so cobre o que alguem lembrou de adicionar nao cobre nada.
+#
+# So o PRIMEIRO nome de cada linha do case e cobrado. Os apelidos
+# (uninstall, diagnostico, meus-dados...) sao superficie deliberadamente nao
+# documentada; exigir documentacao deles encheria o manual de sinonimo.
+COMANDOS="$(sed -n '/^case /,/^esac$/p' "$RAIZ/src/bin/tandem" |
+            sed -n 's/^    \([^ )]*\)).*/\1/p' | sed 's/|.*//' |
+            grep -vxF -e '""' -e painel -e --primeira-vez -e version \
+                     -e help -e '*' -e '' | sort -u)"
+n_cmd="$(printf '%s\n' "$COMANDOS" | grep -c .)"
+if [ "$n_cmd" -ge 15 ]; then passou "extraiu $n_cmd comandos do case principal"
+else falhou "extraiu os comandos do case principal" ">=15" "$n_cmd"; fi
+
+for onde in man/tandem.1 README.md LEIAME.md; do
+    faltando=""
+    for c in $COMANDOS; do
+        grep -q "tandem $c" "$RAIZ/$onde" || faltando="$faltando $c"
+    done
+    igual "todo comando aparece em $onde" "" "$faltando"
 done
-igual "todo comando esta documentado no manual" "" "$faltando_no_manual"
 
 # E o contrario: o manual nao pode prometer comando que nao existe.
 promete_demais=""
@@ -984,6 +1001,26 @@ igual "o guarda barra um registro com IP" \
 igual "o guarda deixa passar um registro limpo" \
       "1" "$(t_lista_vaza "$REG_L"; echo $?)"
 
+# O documento do formato promete que todo verbo vindo de fora e validado antes
+# de virar argumento de comando. O atalho da memoria/lista gravava recibo e
+# chamava o winetricks sem passar por lugar nenhum de validacao - a receita
+# validava, a lista nao.
+igual "verbo com caractere fora do esperado e recusado" \
+      "1" "$(t_verbo_valido 'vcrun2022; rm -rf /'; echo $?)"
+igual "verbo com barra e recusado" "1" "$(t_verbo_valido '../../etc/passwd'; echo $?)"
+igual "verbo normal passa" "0" "$(t_verbo_valido vcrun2022; echo $?)"
+case "$(grep -c 't_verbo_valido' "$RAIZ/src/bin/tandem-exe")" in
+    0) falhou "o atalho da lista valida o verbo antes de usar" "t_verbo_valido" "ausente" ;;
+    *) passou "o atalho da lista valida o verbo antes de usar" ;;
+esac
+# E a prova de entrega tambem vale nesse atalho: era o unico caminho que
+# gravava recibo so com o codigo de saida.
+case "$(grep -c 't_dll_no_prefixo' "$RAIZ/src/bin/tandem-exe")" in
+    0|1) falhou "a prova de entrega cobre tambem o atalho da memoria" \
+                "dois usos de t_dll_no_prefixo" "menos que isso" ;;
+    *) passou "a prova de entrega cobre tambem o atalho da memoria" ;;
+esac
+
 # Programa sem licao nenhuma nao vira ruido na lista dos outros.
 t_memoria_esquece "$PROG_L" 2>/dev/null
 t_lista_registro "$PROG_L" >/dev/null 2>&1
@@ -1096,6 +1133,64 @@ case "$TXB" in
     *"Não é defeito da sua máquina"*) passou "a mensagem tira a culpa da maquina do dono" ;;
     *) falhou "a mensagem tira a culpa da maquina do dono" "Não é defeito da sua máquina" "$TXB" ;;
 esac
+
+secao "escolher o verbo pela bitola do programa"
+
+igual "programa de 32 bits fica com o verbo normal" \
+      "xact" "$(t_verbo_para_arquitetura xact 32)"
+igual "verbo sem irmao de 64 nao e trocado" \
+      "vcrun2022" "$(t_verbo_para_arquitetura vcrun2022 64)"
+igual "sem arquitetura conhecida, nao troca nada" \
+      "xact" "$(t_verbo_para_arquitetura xact '')"
+if t_winetricks_tem_verbo xact_x64; then
+    igual "programa de 64 bits ganha o irmao xact_x64" \
+          "xact_x64" "$(t_verbo_para_arquitetura xact 64)"
+else
+    # Winetricks antigo sem o irmao: melhor o verbo normal do que um nome
+    # de verbo que este winetricks nao conhece.
+    igual "sem o irmao neste winetricks, mantem o verbo normal" \
+          "xact" "$(t_verbo_para_arquitetura xact 64)"
+fi
+
+igual "mfc42 e reconhecido como so-32" "0" "$(t_verbo_so_32 mfc42; echo $?)"
+igual "vcrun2022 nao e so-32"          "1" "$(t_verbo_so_32 vcrun2022; echo $?)"
+
+# AUDITOR DA BITOLA. As duas listas acima foram levantadas do winetricks
+# 20240105 lendo verbo por verbo. Winetricks e atualizado por fora do Tandem:
+# sem este teste, o dia em que o projeto passar a instalar carga de 64 bits
+# para o mfc42 ninguem fica sabendo, e o Tandem continua avisando que nao tem
+# conserto para uma coisa que passou a ter.
+WT="$(command -v winetricks 2>/dev/null)"
+if [ -n "$WT" ] && [ -r "$WT" ]; then
+    divergiu=""
+    for v in dbghelp mfc42 msxml3 msxml4 openal riched20 vcrun2003 wsh57; do
+        if sed -n "/^load_${v}()/,/^}/p" "$WT" 2>/dev/null |
+           grep -qE 'x64|win64|W_SYSTEM64|amd64'; then
+            divergiu="$divergiu $v"
+        fi
+    done
+    # E o contrario: verbo que a tabela usa, cobre 64, e esta marcado como so-32.
+    for v in vcrun2022 vcrun2010 dotnet48 d3dx9 gdiplus xinput; do
+        t_verbo_so_32 "$v" && divergiu="$divergiu !$v"
+    done
+    if [ -z "$divergiu" ]; then
+        passou "a lista de verbos so-32 bate com o winetricks instalado"
+    else
+        falhou "a lista de verbos so-32 bate com o winetricks instalado" \
+               "(nenhuma divergencia)" "$divergiu"
+    fi
+    # E o irmao x64 existe mesmo? Prometer um verbo inexistente faria o
+    # winetricks falhar com um erro que o dono nao tem como entender.
+    if t_winetricks_tem_verbo xact_x64; then
+        passou "o irmao xact_x64 existe neste winetricks"
+    else
+        pulou "o irmao xact_x64" "winetricks sem esse verbo"
+    fi
+    igual "verbo inventado nao passa por existente" \
+          "1" "$(t_winetricks_tem_verbo naoexisteesteverbo; echo $?)"
+else
+    pulou "auditor da bitola" "winetricks nao instalado"
+fi
 
 secao "dados: o que se refaz e o que nao se refaz"
 

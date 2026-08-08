@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="3.4"
+VERSAO="3.5"
 
 uso() {
     cat <<'AJUDA'
@@ -35,7 +35,8 @@ Tandem - roda programas Windows e apps Android no Linux.
   tandem contribuir <arq>     monta a linha para voce mandar, se quiser
   tandem socorro              junta tudo num arquivo para pedir ajuda
   tandem logs                 mostra o log mais recente
-  tandem version
+  tandem version              mostra a versao instalada
+  tandem help                 mostra esta lista
 AJUDA
 }
 
@@ -760,6 +761,11 @@ Isso não instala nada. Quando você abrir um programa que está na lista,
 o Tandem vai PERGUNTAR se quer usar o que já funcionou para outras pessoas." ;;
                 1) t_erro "Não consegui baixar a lista. Verifique a internet." ;;
                 3) t_erro "O arquivo baixado não é uma lista do Tandem. Não usei." ;;
+                4) t_erro "A lista ainda não foi publicada.
+
+Isso não é problema da sua internet nem da sua máquina: o arquivo ainda
+não existe no endereço onde o Tandem procura. O resto continua
+funcionando normalmente." ;;
                 *) t_erro "Falta o curl ou o wget para baixar a lista." ;;
             esac
             return $c ;;

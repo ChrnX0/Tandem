@@ -1,0 +1,37 @@
+name: Ideia
+description: Sugerir alguma coisa nova
+title: "[ideia] "
+labels: ["ideia"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de escrever: [docs/IDEIAS.md](https://github.com/ChrnX0/Tandem/blob/main/docs/IDEIAS.md)
+        tem 52 ideias com veredito, e **as recusadas trazem o motivo escrito**.
+        Se a sua já está lá como recusada, ótimo — traga o argumento novo, que é
+        exatamente para isso que o motivo está escrito.
+  - type: textarea
+    id: problema
+    attributes:
+      label: Que problema isso resolve?
+      description: |
+        O critério do projeto: ideia que aumenta o que o Tandem EXPLICA vale mais
+        que ideia que aumenta o que ele executa. E funcionalidade que o dono da
+        loja não consegue nem perceber que existe não é funcionalidade.
+    validations:
+      required: true
+  - type: textarea
+    id: ideia
+    attributes:
+      label: A ideia
+    validations:
+      required: true
+  - type: textarea
+    id: contra
+    attributes:
+      label: Qual é o argumento CONTRA?
+      description: |
+        Toda ideia tem um. Escrever o contra-argumento você mesmo é o que separa
+        proposta de lista de desejos.
+    validations:
+      required: false

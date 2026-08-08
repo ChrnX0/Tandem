@@ -76,7 +76,7 @@ Build e verificação:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 277 testes, sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 294 testes, sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
@@ -218,7 +218,7 @@ root), não mais só por leitura:
 - Janelas do zenity abrem de fato (verificado sob Xvfb), inclusive com acento.
 - Wine 10.0 real instalado no container: prefixo `win64` criado do zero,
   7-Zip x64 instalado por `.exe` e por `.msi`, registro inspecionado à mão.
-- 277 testes automatizados em `tests/run.sh`; CI no GitHub Actions.
+- 294 testes automatizados em `tests/run.sh`; CI no GitHub Actions.
 
 Verificado **no Zorin 18.1 do usuário** (Wayland, Wine 10.0, Waydroid ativo):
 
@@ -253,7 +253,7 @@ da distro, Waydroid 1.6.2 MAINLINE com GAPPS e libhoudini, `binderfs` com nós
   Validado contra o `objdump` em 37 binários reais — saída idêntica nos 37.
 - **Veredito de impossibilidade** (`limites.tsv`): reconhece chave de proteção,
   driver de sistema e USB direto ANTES de rodar. Não bloqueia; explica a falha.
-- **Índice do winetricks** (`verbos.tsv`, 246 DLLs): gerado do `w_override_dlls`
+- **Índice do winetricks** (`verbos.tsv`, 274 DLLs): gerado do `w_override_dlls`
   de cada verbo. Só responde com confiança alta — 192 sim, 54 se calam.
   Usado sobretudo como AUDITOR da tabela à mão, e nessa função achou **seis
   erros de mapeamento** que instalavam a coisa errada e gravavam recibo.

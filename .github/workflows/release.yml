@@ -1,0 +1,106 @@
+name: Release
+
+# O README manda baixar o .deb em Releases, e por treze versões não havia
+# release nenhum: o link levava a uma pagina vazia. Empurrar uma tag passa a
+# construir o pacote e anexa-lo, com a suite e o lintian rodando antes - um
+# release que ninguem conferiu e pior que release nenhum.
+#
+#   git tag v3.5 && git push origin v3.5
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: "Versão a construir (ex: 3.5). Vazio = a do debian/control."
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ferramentas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck desktop-file-utils lintian winetricks
+
+      - name: A tag tem que bater com o debian/control
+        run: |
+          controle="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          if [ "${GITHUB_REF_TYPE:-}" = tag ]; then
+              tag="${GITHUB_REF_NAME#v}"
+              [ "$tag" = "$controle" ] || {
+                  echo "a tag diz $tag e o debian/control diz $controle"
+                  echo "publicar as duas coisas diferentes deixa o usuario sem saber o que instalou"
+                  exit 1; }
+          fi
+          echo "VERSAO=$controle" >> "$GITHUB_ENV"
+
+      - name: Suite de testes
+        run: bash tests/run.sh
+
+      - name: Empacotar
+        run: python3 build.py --check
+
+      - name: Lintian sem erro nem aviso
+        run: |
+          saida="$(lintian --fail-on warning "tandem_${VERSAO}_all.deb" 2>&1)" || {
+              echo "$saida"; exit 1; }
+          [ -z "$saida" ] || { echo "$saida"; exit 1; }
+
+      - name: Instalar e remover de verdade antes de publicar
+        run: |
+          sudo apt-get install -y -qq "./tandem_${VERSAO}_all.deb"
+          tandem version
+          tandem doctor > /tmp/diag.txt
+          test -s /tmp/diag.txt
+          sudo dpkg -P tandem
+
+      - name: Soma de verificação
+        run: |
+          sha256sum "tandem_${VERSAO}_all.deb" > "tandem_${VERSAO}_all.deb.sha256"
+          cat "tandem_${VERSAO}_all.deb.sha256"
+
+      - name: Notas a partir do changelog
+        run: |
+          # O changelog do Debian já é a nota de release; extrair a entrada
+          # desta versão evita escrever a mesma coisa duas vezes e divergir.
+          awk -v v="$VERSAO" '
+              $0 ~ "^tandem \\(" v "\\)" { dentro = 1; next }
+              dentro && /^tandem \(/ { exit }
+              dentro && /^ -- / { exit }
+              dentro { print }
+          ' debian/changelog | sed 's/^  \* /- /; s/^    / /' > notas.md
+          {
+            echo
+            echo "## Instalar"
+            echo
+            echo '```bash'
+            echo "sudo apt install ./tandem_${VERSAO}_all.deb"
+            echo '```'
+            echo
+            echo "Depois, para instalar o que faltar (Wine, winetricks, Android):"
+            echo
+            echo '```bash'
+            echo "tandem preparar"
+            echo '```'
+            echo
+            echo "SHA-256: \`$(cut -d' ' -f1 "tandem_${VERSAO}_all.deb.sha256")\`"
+          } >> notas.md
+          cat notas.md
+
+      - name: Publicar
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Tandem ${{ env.VERSAO }}"
+          body_path: notas.md
+          draft: false
+          files: |
+            tandem_${{ env.VERSAO }}_all.deb
+            tandem_${{ env.VERSAO }}_all.deb.sha256

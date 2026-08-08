@@ -11,7 +11,16 @@ about which `winetricks` verb you need.
 .apk .xapk  →  Android  — compatibility checked before installing, in plain language
 ```
 
-[Português](LEIAME.md)
+[![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
+![tests](https://img.shields.io/badge/tests-289-brightgreen)
+![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)
+![licence](https://img.shields.io/badge/licence-MIT-blue)
+
+[Português](LEIAME.md) · [Contributing](CONTRIBUTING.md) · [Idea ledger](docs/IDEIAS.md)
+
+<p align="center">
+  <img src="docs/imagens/painel.png" alt="Tandem panel" width="520">
+</p>
 
 ---
 
@@ -49,6 +58,25 @@ can act on.
   software are detected and refused with an explanation.
 - **Never fails silently.** Every failure path ends in a dialog. The original
   sin of "double-click and nothing happens" is treated as a bug.
+- **Checks that the fix actually arrived.** `winetricks` exiting 0 means *it*
+  finished, not that the missing file landed. Tandem verifies the DLL is there —
+  and in the right bitness — before recording the install as done. A 64-bit
+  program cannot load a 32-bit DLL out of `syswow64`, and half of `winetricks`'
+  verbs ship 32-bit payloads only. When that is the situation, it says so before
+  you spend the download:
+
+<p align="center">
+  <img src="docs/imagens/dependencia.png" alt="Dependency dialog warning that the component is 32-bit only" width="720">
+</p>
+
+- **Blames itself when it is at fault.** "I installed the dependencies and it
+  still does not open" sends a shop owner hunting for a defect in a machine that
+  is perfectly fine. Tandem says which file is still missing and whose fault
+  that is:
+
+<p align="center">
+  <img src="docs/imagens/bitola.png" alt="Error explaining the component only exists in 32-bit" width="720">
+</p>
 
 ### Android apps
 
@@ -86,7 +114,7 @@ tandem protect ~/.wine-something
 Download the `.deb` from [Releases](../../releases) and double-click it, or:
 
 ```bash
-sudo apt install ./tandem_3.4_all.deb
+sudo apt install ./tandem_3.5_all.deb
 ```
 
 Then check your environment:
@@ -95,8 +123,18 @@ Then check your environment:
 tandem doctor
 ```
 
-Tandem does not install Wine or Waydroid — it connects what you already have.
-`tandem doctor` tells you what is missing and how to get it.
+Anything missing, Tandem installs for you:
+
+```bash
+tandem preparar
+```
+
+That sets up Wine, `winetricks`, 32-bit support, `adb` and Waydroid — including
+the Waydroid repository and its signing key, in the right order — and asks for
+your password once. This cannot happen while the `.deb` installs: `dpkg` holds a
+lock during `postinst`, and an `apt-get` in there would wait forever. Double-
+clicking a `.exe` with no Wine present also offers to install it on the spot,
+because that is the moment you actually want it solved.
 
 ## Requirements
 
@@ -117,16 +155,54 @@ distribution with a freedesktop-compliant desktop.
 Mostly none — you double-click files. When you want the command line:
 
 ```bash
-tandem                    # panel
-tandem install file.xapk  # install or run anything
-tandem android            # open the Android screen
-tandem doctor             # environment diagnosis
-tandem repair             # re-apply file associations
-tandem backup             # save the Windows environment
-tandem restore            # restore it
-tandem protect <path>     # mark a Wine prefix as untouchable
-tandem logs               # show the latest log
+tandem                     # panel
+tandem install file.xapk   # install or run anything
+tandem preparar            # install what is missing (Wine, Android, ...)
+tandem programas           # list and open installed Windows programs
+tandem desinstalar         # remove an installed Windows program
+tandem android             # open the Android screen
+tandem doctor              # environment diagnosis — what EXISTS
+tandem autoteste           # exercise it here — what WORKS
+tandem repair              # re-apply file associations
+tandem dados               # show YOUR files inside Windows
+tandem dados salvar        # copy only your files (small and fast)
+tandem dados restaurar     # put them back, never overwriting
+tandem backup              # save the whole Windows environment
+tandem restore             # restore it
+tandem protect <path>      # mark a Wine prefix as untouchable
+tandem alternativas <name> # find a Linux program that does the same job
+tandem receita <file>      # export what it learned, to send to someone
+tandem lista               # what the community already figured out
+tandem lista atualizar     # fetch the list (sends nothing of yours)
+tandem memoria             # what Tandem learned about each program
+tandem esquecer <name>     # forget what it learned about one program
+tandem contribuir <file>   # build the line for you to send, if you want
+tandem socorro             # one file with everything, to ask for help
+tandem logs                # show the latest log
 ```
+
+### Your data is not the environment
+
+The environment — the prefix, the runtimes, the programs — Tandem rebuilds in
+twenty minutes. What you typed into those programs, it cannot. `tandem dados`
+separates the two, and every destructive path (rebuilding a broken prefix,
+restoring a backup, uninstalling a program) now takes a copy first.
+
+The promise this exists to keep: *if you give up on Linux, your data comes back
+with you.*
+
+### Community list
+
+`tandem lista` fetches a plain-text file over HTTPS — the ad-blocker filter-list
+model, not a server: no API, no account, no uptime to pay for. It records which
+`winetricks` components each program needed, keyed by a fingerprint of the file
+itself.
+
+Reading is automatic once you ask for it. **Publishing is not**: `tandem
+contribuir` builds the line and shows it to you in full — you send it. The line
+carries no filename, no path, no username, no machine name, no IP and no log,
+and the generator refuses to produce it if any of those appear. Format in
+[docs/FORMATO-LISTA.md](docs/FORMATO-LISTA.md).
 
 ## Build
 
@@ -165,6 +241,26 @@ Being honest about this up front saves everyone an afternoon:
 - **Hardware-locked licensing.** Wine reports empty or synthetic BIOS and disk
   serials. Software that fingerprints the machine may refuse to activate — or
   crash on the activation screen.
+
+## Contributing
+
+The most valuable contribution does not require code. **Almost no real
+commercial program has ever run on this** — the dependency loop has been
+exercised against synthetic binaries, not against a shop's point-of-sale system
+on a counter.
+
+If a program worked, `tandem contribuir <file>` builds a line you can paste into
+an issue. It carries a fingerprint of the file, the architecture and the
+components that fixed it — no filename, no path, no username, no machine name,
+no IP, no logs, and the generator refuses to produce it if any of those appear.
+
+If it failed, `tandem socorro` bundles everything a maintainer would ask for into
+one file.
+
+Details, the five rules that do not bend, and the evidence bar in
+[CONTRIBUTING.md](CONTRIBUTING.md). Before proposing a feature, check
+[docs/IDEIAS.md](docs/IDEIAS.md) — 52 ideas with a verdict each, and the
+rejected ones carry the written reason.
 
 ## Licence
 

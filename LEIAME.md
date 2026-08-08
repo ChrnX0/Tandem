@@ -11,7 +11,16 @@ precisar caçar em fórum qual pacote do `winetricks` está faltando.
 .apk .xapk  →  Android  — compatibilidade verificada antes, em português claro
 ```
 
-[English](README.md)
+[![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
+![testes](https://img.shields.io/badge/testes-289-brightgreen)
+![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)
+![licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)
+
+[English](README.md) · [Como colaborar](CONTRIBUINDO.md) · [Ideário](docs/IDEIAS.md)
+
+<p align="center">
+  <img src="docs/imagens/painel.png" alt="Painel do Tandem" width="520">
+</p>
 
 ---
 
@@ -50,6 +59,24 @@ qual dá para agir.
   ARM são detectados e recusados com explicação.
 - **Nunca falha calado.** Todo caminho de erro termina numa janela. "Cliquei
   duas vezes e não aconteceu nada" é tratado como defeito.
+- **Confere se o conserto chegou mesmo.** O `winetricks` sair 0 diz que *ele*
+  terminou, não que o arquivo que faltava chegou. O Tandem confere se a DLL
+  está lá — e na bitola certa — antes de dar a instalação por feita. Um
+  programa de 64 bits não carrega DLL de 32 bits de dentro da `syswow64`, e
+  metade dos pacotes do `winetricks` só tem carga de 32. Quando é esse o caso,
+  ele avisa antes de você gastar o download:
+
+<p align="center">
+  <img src="docs/imagens/dependencia.png" alt="Janela avisando que o componente só existe em 32 bits" width="720">
+</p>
+
+- **Assume a culpa quando a culpa é dele.** "Instalei as dependências e ainda
+  não abre" manda um dono de loja procurar defeito numa máquina que está
+  perfeita. O Tandem diz qual arquivo continua faltando e de quem é o problema:
+
+<p align="center">
+  <img src="docs/imagens/bitola.png" alt="Erro explicando que o componente só existe em 32 bits" width="720">
+</p>
 
 ### Aplicativos Android
 
@@ -90,7 +117,7 @@ tandem protect ~/.wine-alguma-coisa
 Baixe o `.deb` em [Releases](../../releases) e clique duas vezes, ou:
 
 ```bash
-sudo apt install ./tandem_3.4_all.deb
+sudo apt install ./tandem_3.5_all.deb
 ```
 
 Depois verifique o ambiente:
@@ -99,8 +126,18 @@ Depois verifique o ambiente:
 tandem doctor
 ```
 
-O Tandem não instala Wine nem Waydroid — ele conecta o que você já tem. O
-`tandem doctor` diz o que está faltando e como resolver.
+O que estiver faltando, o Tandem instala para você:
+
+```bash
+tandem preparar
+```
+
+Isso põe Wine, `winetricks`, suporte a 32 bits, `adb` e Waydroid no lugar —
+inclusive o repositório do Waydroid com a chave, na ordem certa — e pede a senha
+uma vez só. Isso não pode acontecer durante a instalação do `.deb`: o `dpkg`
+segura uma trava enquanto o `postinst` roda, e um `apt-get` lá dentro esperaria
+para sempre. O duplo clique num `.exe` sem Wine também oferece instalar na hora,
+porque é aí que a pessoa quer resolver.
 
 ## Requisitos
 
@@ -122,16 +159,55 @@ Quase nenhum — você clica duas vezes nos arquivos. Quando quiser a linha de
 comando:
 
 ```bash
-tandem                     # painel
+tandem                       # painel
 tandem install arquivo.xapk  # instala ou executa qualquer coisa
-tandem android             # abre a tela do Android
-tandem doctor              # diagnóstico do ambiente
-tandem repair              # reaplica as associações de arquivo
-tandem backup              # salva o ambiente Windows
-tandem restore             # restaura
-tandem protect <caminho>   # marca um perfil Wine como intocável
-tandem logs                # mostra o registro mais recente
+tandem preparar              # instala o que falta (Wine, Android, ...)
+tandem programas             # lista e abre os programas Windows instalados
+tandem desinstalar           # remove um programa Windows instalado
+tandem android               # abre a tela do Android
+tandem doctor                # diagnóstico do ambiente — o que EXISTE
+tandem autoteste             # exercita aqui — o que FUNCIONA
+tandem repair                # reaplica as associações de arquivo
+tandem dados                 # mostra os SEUS arquivos dentro do Windows
+tandem dados salvar          # copia só os seus arquivos (pequeno e rápido)
+tandem dados restaurar       # devolve, sem nunca sobrescrever
+tandem backup                # salva o ambiente Windows inteiro
+tandem restore               # restaura
+tandem protect <caminho>     # marca um perfil Wine como intocável
+tandem alternativas <nome>   # procura um programa de Linux que faça o mesmo
+tandem receita <arquivo>     # exporta o que aprendeu, para mandar a alguém
+tandem lista                 # o que a comunidade já descobriu
+tandem lista atualizar       # baixa a lista (não manda nada seu)
+tandem memoria               # o que o Tandem aprendeu sobre cada programa
+tandem esquecer <nome>       # apaga o que ele aprendeu sobre um programa
+tandem contribuir <arquivo>  # monta a linha para você mandar, se quiser
+tandem socorro               # junta tudo num arquivo para pedir ajuda
+tandem logs                  # mostra o registro mais recente
 ```
+
+### Os seus arquivos não são o ambiente
+
+O ambiente — o perfil, os componentes, os programas — o Tandem refaz em vinte
+minutos. O que você digitou dentro desses programas, não. O `tandem dados`
+separa as duas coisas, e todo caminho destrutivo (refazer um perfil pela
+metade, restaurar um backup, desinstalar um programa) passa a tirar uma cópia
+antes.
+
+A promessa que isso existe para cumprir: *se você desistir do Linux, seus dados
+voltam com você.*
+
+### Lista da comunidade
+
+O `tandem lista` baixa um arquivo de texto por HTTPS — o modelo das listas de
+filtro de bloqueador de anúncio, não um servidor: sem API, sem conta, sem
+uptime para pagar. Ela guarda de quais componentes do `winetricks` cada
+programa precisou, indexado por uma impressão digital do próprio arquivo.
+
+Ler é automático depois que você pede. **Publicar não é**: o `tandem
+contribuir` monta a linha e mostra ela inteira — quem envia é você. A linha não
+carrega nome de arquivo, caminho, usuário, nome da máquina, IP nem log, e o
+gerador se recusa a produzi-la se alguma dessas coisas aparecer. O formato está
+em [docs/FORMATO-LISTA.md](docs/FORMATO-LISTA.md).
 
 ## Compilar
 
@@ -171,6 +247,26 @@ Ser honesto sobre isso desde o início economiza uma tarde:
 - **Licenciamento amarrado ao hardware.** O Wine devolve seriais de BIOS e disco
   vazios ou sintéticos. Software que identifica a máquina pode se recusar a
   ativar — ou travar na tela de ativação.
+
+## Como colaborar
+
+A contribuição mais valiosa não exige código. **Quase nenhum programa comercial
+de verdade jamais rodou nisto** — o laço de dependências foi exercitado contra
+binários de teste, não contra o sistema de uma loja em cima de um balcão.
+
+Se um programa funcionou, o `tandem contribuir <arquivo>` monta uma linha que
+você cola numa issue. Ela leva uma impressão digital do arquivo, a arquitetura e
+os componentes que resolveram — sem nome de arquivo, caminho, usuário, nome da
+máquina, IP nem log, e o gerador se recusa a produzi-la se alguma dessas coisas
+aparecer.
+
+Se não funcionou, o `tandem socorro` junta num arquivo só tudo o que alguém
+perguntaria.
+
+Os detalhes, as cinco regras que não se quebram e a régua de evidência estão em
+[CONTRIBUINDO.md](CONTRIBUINDO.md). Antes de propor coisa nova, dê uma olhada em
+[docs/IDEIAS.md](docs/IDEIAS.md) — 52 ideias com veredito, e as recusadas trazem
+o motivo escrito.
 
 ## Licença
 

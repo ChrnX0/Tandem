@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Como colaborar
+    url: https://github.com/ChrnX0/Tandem/blob/main/CONTRIBUINDO.md
+    about: O que vale mais que código, e as regras que não se quebram.
+  - name: O que já foi recusado (e por quê)
+    url: https://github.com/ChrnX0/Tandem/blob/main/docs/IDEIAS.md
+    about: 52 ideias com veredito. Metade das ideias óbvias já tem motivo escrito.

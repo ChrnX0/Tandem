@@ -1,3 +1,49 @@
+tandem (3.5) unstable; urgency=medium
+
+  * O repositorio fica pronto para gente de fora: CONTRIBUINDO.md e
+    CONTRIBUTING.md com as cinco regras que nao se quebram e a regua de
+    evidencia; modelos de issue que ja pedem a saida do "tandem socorro" e a
+    linha do "tandem contribuir"; modelo de PR; e um fluxo de release que
+    constroi o .deb, roda a suite e o lintian, instala e remove de verdade, e
+    so entao publica. O README mandava baixar em Releases havia treze versoes,
+    e nao existia release nenhum.
+  * Capturas de tela reais das janelas do proprio programa no README e no
+    LEIAME, e os dois passam a listar os 20 comandos - eles ainda descreviam
+    9, e afirmavam que o Tandem nao instala Wine nem Waydroid, o que o
+    "tandem preparar" faz desde a 2.x.
+  * O verbo passa a ser escolhido pela bitola do programa. Levantamento verbo
+    por verbo do winetricks instalado: a maioria dos verbos modernos ja
+    instala as duas cargas sozinha, UM tem irmao de 64 bits (xact ->
+    xact_x64), e oito so tem carga de 32 sem irmao nenhum. Para esses oito,
+    num programa de 64 bits, o Tandem avisa ANTES de instalar que aquilo
+    provavelmente nao vai resolver - em vez de o dono descobrir depois de meia
+    hora de download. Nao bloqueia: explica e deixa decidir.
+  * A prova de entrega passa a valer no atalho da memoria e da lista, que era
+    o unico caminho que gravava recibo so com o codigo de saida do winetricks
+    - contornando inteira a tese da 3.3, e logo onde a licao vem de fora e
+    merece mais desconfianca, nao menos. O mesmo atalho ganhou o inibidor de
+    suspensao (ele tambem pode rodar o dotnet48, de meia hora) e a validacao
+    de nome de verbo que a receita ja tinha e a lista nao.
+  * A contagem de maquinas da lista chega ao usuario: "em 340 maquinas este
+    programa precisou destes componentes" e a unica coisa que a lista sabe e
+    que nenhum forum sabe. Estava especificada, lida por uma funcao, testada,
+    e nunca aparecia.
+  * Baixar a lista distingue "sem internet" de "a lista ainda nao existe". Um
+    404 mandava o dono conferir o roteador por causa de um arquivo que nao
+    foi publicado.
+  * O teste de deriva de documentacao passa a EXTRAIR os comandos do case
+    principal em vez de usar lista fixa. Com lista fixa ele passava verde
+    enquanto quatro comandos novos nao estavam em documento nenhum.
+  * A receita ensinava a sintaxe errada de importacao, e quem recebia caia num
+    erro de uso. O manual ganhou "version", "help", as cinco pastas que o
+    Tandem cria e as variaveis de ambiente; e a data dele, congelada em
+    2025-01-01 por treze versoes, passou a ser real.
+  * "curl | wget" entra em Recommends: a lista da comunidade depende de um
+    dos dois e nenhum estava declarado.
+  * 294 testes.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Sat, 08 Aug 2026 22:00:00 +0000
+
 tandem (3.4) unstable; urgency=medium
 
   * "tandem dados": AMBIENTE se refaz em vinte minutos, DADOS nunca. Nada no

@@ -1,0 +1,48 @@
+name: Deu certo — contribuir com a lista
+description: Um programa funcionou, e a lição pode ajudar outras pessoas
+title: "[lista] "
+labels: ["lista da comunidade"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado. Esta é a contribuição mais valiosa do projeto: quase nenhum
+        programa comercial de verdade jamais rodou no Tandem.
+
+        Rode isto e cole a linha abaixo:
+
+        ```bash
+        tandem contribuir /caminho/do/programa.exe
+        ```
+
+        A linha **não** carrega nome de arquivo, caminho, seu usuário, o nome do
+        computador, endereço de rede nem log — o Tandem se recusa a gerá-la se
+        alguma dessas coisas aparecer. O formato inteiro está em
+        [docs/FORMATO-LISTA.md](https://github.com/ChrnX0/Tandem/blob/main/docs/FORMATO-LISTA.md).
+  - type: textarea
+    id: registro
+    attributes:
+      label: A linha do "tandem contribuir"
+      description: Oito campos separados por TAB. Cole como veio.
+      render: text
+      placeholder: "9f2a...c1	64	vcrun2022,dotnet48	-	confirmado	1	2026-08	-"
+    validations:
+      required: true
+  - type: input
+    id: programa
+    attributes:
+      label: Que programa é? (opcional)
+      description: Só para dar contexto a quem lê. A linha acima não diz.
+      placeholder: "Sistema de PDV XYZ 4.2"
+    validations:
+      required: false
+  - type: textarea
+    id: observacao
+    attributes:
+      label: Alguma ressalva?
+      description: |
+        Funcionou inteiro, ou funcionou com alguma coisa estranha? Impressão,
+        acento, relatório — o modo típico de o Wine falhar é abrir e estar
+        sutilmente errado, então isso importa.
+    validations:
+      required: false
