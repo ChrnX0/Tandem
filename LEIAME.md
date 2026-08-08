@@ -124,13 +124,29 @@ tandem protect ~/.wine-pdv     # marca qualquer perfil como intocável
 
 ## Instalação
 
+Baixe o `.deb` em **[Releases](../../releases/latest)** e clique duas vezes. Ou, pelo terminal:
+
 ```bash
-git clone https://github.com/ChrnX0/Tandem && cd Tandem
-python3 build.py --check
+curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.6_all.deb
 sudo apt install ./tandem_3.6_all.deb
 ```
 
-Não precisa de máquina Debian nem do `dpkg-deb` — o empacotador escreve o arquivo `ar` sozinho, em qualquer sistema. Quando houver um release publicado, dará para baixar o `.deb` direto em [Releases](../../releases) e clicar duas vezes.
+<details>
+<summary>Compilar por conta própria, e conferir o que você baixou</summary>
+
+<br>
+
+A construção é reprodutível: o `.deb` anexado ao release é byte a byte idêntico ao que sai deste repositório, então você pode conferir em vez de confiar. Não precisa de máquina Debian nem do `dpkg-deb` — o empacotador escreve o arquivo `ar` sozinho, em qualquer sistema.
+
+```bash
+git clone https://github.com/ChrnX0/Tandem && cd Tandem
+python3 build.py --check
+sha256sum tandem_3.6_all.deb          # compare com o .sha256 do release
+```
+
+Todo release é construído pelo workflow em [`.github/workflows/release.yml`](.github/workflows/release.yml), que roda a suíte e o `lintian`, depois instala, configura e remove o pacote de verdade num Ubuntu 24.04 — e só publica se tudo isso passar.
+
+</details>
 
 Depois, deixe o Tandem instalar o que faltar:
 

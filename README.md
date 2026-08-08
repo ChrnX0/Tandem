@@ -124,13 +124,29 @@ tandem protect ~/.wine-pos     # mark any prefix untouchable, explicitly
 
 ## Install
 
+Download the `.deb` from **[Releases](../../releases/latest)** and double-click it. Or, from a terminal:
+
 ```bash
-git clone https://github.com/ChrnX0/Tandem && cd Tandem
-python3 build.py --check
+curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.6_all.deb
 sudo apt install ./tandem_3.6_all.deb
 ```
 
-No Debian host and no `dpkg-deb` needed — the packager writes the `ar` archive itself, on any OS. Once a release is published you will be able to grab the `.deb` straight from [Releases](../../releases) and double-click it.
+<details>
+<summary>Building it yourself instead, and checking what you downloaded</summary>
+
+<br>
+
+The build is reproducible: the `.deb` attached to the release is byte-for-byte identical to the one you get from this repository, so you can verify rather than trust. No Debian host and no `dpkg-deb` needed — the packager writes the `ar` archive itself, on any OS.
+
+```bash
+git clone https://github.com/ChrnX0/Tandem && cd Tandem
+python3 build.py --check
+sha256sum tandem_3.6_all.deb          # compare with the .sha256 on the release
+```
+
+Every release is built by the workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml), which runs the suite and `lintian`, then really installs, configures and purges the package on Ubuntu 24.04 — and only publishes if all of that passes.
+
+</details>
 
 Then let Tandem set up whatever is missing:
 

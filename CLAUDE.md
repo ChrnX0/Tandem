@@ -354,6 +354,23 @@ The queue, in order:
    now exists; what is missing is the care never to read from a protected prefix
    in use.
 
+## What an agent session cannot do here
+
+Verified, not assumed — the credential is not the limit, the proxy is. It
+authenticates as the repository owner, and these still fail:
+
+- `git push origin <tag>` and `git push origin --delete <branch>`: HTTP 403
+  from the git proxy. It allows updating an existing branch, not creating or
+  deleting a ref.
+- `POST`/`DELETE` on `/git/refs` via the API: HTTP 403, "Write access to this
+  GitHub API path is not permitted through this proxy."
+
+What works is the surface the MCP GitHub tools cover — merging a pull request,
+editing it, and `run_workflow`. Hence the release workflow accepting a
+`workflow_dispatch` and creating its own tag: that is the only route to a
+release from inside a session. Deleting a merged branch has no such route; it
+stays a click on the pull request page.
+
 ## Development machine environment
 
 Windows. Working copy at `C:\tandem`. `git push` works because the GitHub
