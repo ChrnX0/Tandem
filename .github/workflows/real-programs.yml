@@ -1,0 +1,62 @@
+name: Real programs
+
+# The project's largest uncertainty is that almost no real commercial program
+# has ever run on it. tests/run.sh proves the mechanism against a fake wine;
+# this proves it against binaries somebody else compiled, and looks at the
+# screen afterwards.
+#
+# Separate from CI on purpose: it needs network, Wine, an X server and several
+# minutes. Putting it in the fast suite would make every push slow and every
+# publisher's outage look like a regression in this repository.
+#
+# Runs weekly and on demand. Weekly matters more than it sounds: Wine, Ubuntu
+# and the programs themselves all move, and this is the only thing here that
+# would notice.
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tools
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          # wine32 is not a nicety: every real installer we tested is 32-bit,
+          # even the ones that install 64-bit software.
+          sudo apt-get install -y -qq wine wine32 wine64 winetricks \
+                                      xvfb xdotool imagemagick unzip binutils
+
+      - name: Cache the downloads
+        uses: actions/cache@v4
+        with:
+          # Keyed by the file that holds the URLs and checksums: change a
+          # program and the cache is rebuilt, leave them alone and the
+          # publishers are not hammered every week.
+          path: ~/.cache/tandem-real
+          key: real-programs-${{ hashFiles('tests/real-programs.sh') }}
+
+      - name: Run real Windows software through Tandem
+        env:
+          TANDEM_CACHE_REAIS: ~/.cache/tandem-real
+        run: |
+          mkdir -p ~/.cache/tandem-real
+          bash tests/real-programs.sh
+
+      - name: The screenshots, for a human to look at
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: tests/telas/
+          if-no-files-found: warn
+          retention-days: 30

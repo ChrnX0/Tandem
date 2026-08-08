@@ -78,15 +78,17 @@ equal "the case patterns still match the real Portuguese messages" \
       "2933457071 934" "$soma_padroes"
 
 section "script syntax"
-for f in src/bin/* src/lib/*.sh debian/postinst debian/postrm; do
+# The same set the evidence gate lints, tests/ included: a harness with a
+# syntax error is a harness that passes by never running.
+for f in src/bin/* src/lib/*.sh tests/*.sh debian/postinst debian/postrm; do
     if bash -n "$f" 2>/dev/null; then pass "bash -n $f"
     else fail "bash -n $f" "valid syntax" "syntax error"; fi
 done
 
 if command -v shellcheck >/dev/null 2>&1; then
-    output="$(LC_ALL=C.UTF-8 shellcheck --shell=bash --exclude=SC1091 \
+    output="$(LC_ALL=C.UTF-8 shellcheck --shell=bash --exclude=SC1091,SC2123 \
              --severity=warning --format=gcc \
-             src/bin/* src/lib/*.sh debian/postinst debian/postrm 2>&1)"
+             src/bin/* src/lib/*.sh tests/*.sh debian/postinst debian/postrm 2>&1)"
     if [ -z "$output" ]; then pass "shellcheck with no warnings"
     else fail "shellcheck with no warnings" "(nothing)" "$output"; fi
 else
@@ -862,7 +864,7 @@ equal "  and someone else's shortcut was preserved" \
 
 # Without wine on the PATH the listing fails without breaking the caller.
 equal "without wine, the listing degrades in controlled silence" \
-      "" "$(PATH=/nao/existe; t_programas_instalados 2>/dev/null)"
+      "" "$(PATH=/does/not/exist; export PATH; t_programas_instalados 2>/dev/null)"
 
 section "Wine architecture"
 t_tem_wine64; r64=$?
