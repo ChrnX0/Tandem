@@ -55,7 +55,22 @@ tandem (3.9) unstable; urgency=medium
     "while read" returns non-zero on it and the loop body never runs for the
     last byte.
   * .apkm, declared since 3.0 and never exercised, is now covered - see 3.8.
-  * 23 new tests, 496 total, including the record going over a real socket and
+  * The AppImage integration no longer executes the file in order to read it -
+    the one place the project was still breaking its own rule. Every other
+    reader here answers by reading; this one ran the downloaded binary to find
+    out its name, so if the owner's answer had been "do not run this", it had
+    already run. unsquashfs reads the payload at the offset already computed
+    from the ELF header. Verified by reading the author's name out of an
+    AppImage whose execute bit had been removed, which is proof it was not
+    run. Falls back to the runtime when squashfs-tools is absent, and the log
+    says which route it took, because that claim has to be checkable. Imported
+    from Gear Lever, which refuses to execute the payload for the same reason.
+  * And the name it reads is used in every message about the file, so a
+    failure says "Inkscape nao abriu" instead of "Inkscape-1.2-x86_64.AppImage
+    nao abriu" - a sentence about a program rather than about a filename.
+    Imported from appimaged, which falls back to the basename exactly this
+    way.
+  * 26 new tests, 499 total, including the record going over a real socket and
     arriving byte for byte.
 
  -- Paulo Eduardo <noreply@users.noreply.github.com>  Sun, 09 Aug 2026 07:00:00 +0000

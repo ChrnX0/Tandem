@@ -353,6 +353,29 @@ open(sys.argv[1], 'wb').write(base64.b64decode(
         [ "$(campo COMPLETO)" = 1 ] && pass "a complete AppImage is not called truncated" ||
             fail "a complete AppImage is not called truncated" "$info"
 
+        # Read the payload WITHOUT executing the file. This is the project's
+        # own rule, and until 3.9 the AppImage integration was the one place
+        # still breaking it - it ran the downloaded binary to find out its name.
+        # The offset comes from the ELF header, so unsquashfs reads the payload
+        # straight out of the file.
+        chmod -x "$TMP/loja-teste.AppImage"
+        nome_lido="$(env TANDEM_LIB="$ROOT/src/lib" bash -c \
+            '. "'"$ROOT"'/src/lib/common.sh"; t_appimage_nome "'"$TMP"'/loja-teste.AppImage"' \
+            2>/dev/null)"
+        if [ "$nome_lido" = "Loja Teste" ]; then
+            pass "the author's name is read from the payload without executing the file"
+        else
+            fail "the author's name is read without executing the file" \
+                 "expected \"Loja Teste\", got \"${nome_lido:-nothing}\""
+        fi
+        if [ -x "$TMP/loja-teste.AppImage" ]; then
+            fail "reading the name leaves the file non-executable" \
+                 "it became executable, so it may have been run"
+        else
+            pass "and the file is still not executable, so it cannot have been run"
+        fi
+        chmod +x "$TMP/loja-teste.AppImage"
+
         # The whole point: the browser leaves it without the execute bit, and
         # Tandem is what fixes that.
         CASA_AI="$TMP/casa-appimage"; mkdir -p "$CASA_AI"; : > "$CASA_AI/.primeira-vez"

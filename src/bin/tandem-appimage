@@ -97,6 +97,15 @@ somente-leitura. Copie o arquivo para a sua pasta pessoal e tente de novo."
     fi
 fi
 
+# The name its author gave it, read WITHOUT executing anything. Every message
+# from here on uses it, so a failure says "Inkscape não abriu" instead of
+# "Inkscape-1.2-x86_64.AppImage não abriu" - a sentence about a program rather
+# than about a filename. Borrowed from appimaged, which does the same and falls
+# back to the basename exactly like this.
+NOME_BONITO="$(t_appimage_nome "$PROG" 2>/dev/null)"
+[ -n "$NOME_BONITO" ] || NOME_BONITO="$(basename -- "${PROG%.*}")"
+t_diz "nome do programa: $NOME_BONITO"
+
 # --------------------------------------------- 3. What memory already knows
 # The only lesson worth keeping about an AppImage: whether this machine had to
 # take the slow road because it has no FUSE. Skipping the failed attempt saves
@@ -130,7 +139,7 @@ elif [ "$MODO" = extrair ]; then
 fi
 CONTORNOU=0
 while :; do
-    t_aviso "Abrindo $(basename -- "$PROG")..."
+    t_aviso "Abrindo $NOME_BONITO..."
     # The mark is taken AFTER the warning, and that order is not cosmetic:
     # t_aviso writes its own line to the log, and this is the one place in the
     # project that shows the tail of the log back to the owner. With the mark
@@ -193,7 +202,7 @@ Se não aparecer, saia e entre novamente na sua conta."
         PEDE="$(sed -n "s/.*GLIBC_\([0-9.]*\).*/\1/p" "$PARCIAL" | sort -V | tail -1)"
         rm -f "$PARCIAL"
         t_memoria_grava "$PROG" RESULTADO "sistema antigo" 2>/dev/null
-        t_erro "Este programa é mais novo que o seu sistema Linux.
+        t_erro "$NOME_BONITO é mais novo que o seu sistema Linux.
 
 Ele foi feito para uma versão mais recente das bibliotecas básicas${PEDE:+ (pede a GLIBC $PEDE)}.
 
@@ -208,7 +217,7 @@ mais antiga do programa, ou a versão marcada para a sua distribuição."
                  "$PARCIAL" | head -1)"
         rm -f "$PARCIAL"
         t_memoria_grava "$PROG" RESULTADO "falta biblioteca" 2>/dev/null
-        t_erro "Falta uma peça do sistema para este programa abrir:
+        t_erro "Falta uma peça do sistema para $NOME_BONITO abrir:
 
 ${FALTA:-uma biblioteca do sistema}
 
@@ -227,7 +236,7 @@ Procure no site de onde você baixou se há uma versão para a sua distribuiçã
            findmnt -no OPTIONS --target "$MONTAGEM" 2>/dev/null | grep -q noexec; then
             rm -f "$PARCIAL"
             t_memoria_grava "$PROG" RESULTADO "pasta sem permissao" 2>/dev/null
-            t_erro "Este programa está numa pasta onde o sistema não deixa executar nada.
+            t_erro "$NOME_BONITO está numa pasta onde o sistema não deixa executar nada.
 
 $MONTAGEM
 
@@ -246,7 +255,7 @@ pessoal e abra de lá."
     ULTIMAS="$(t_palavras_do_programa "$PARCIAL")"
     rm -f "$PARCIAL"
     t_memoria_grava "$PROG" RESULTADO "nao abriu" 2>/dev/null
-    t_erro "O programa fechou com erro (código $CODIGO).${ULTIMAS:+
+    t_erro "$NOME_BONITO fechou com erro (código $CODIGO).${ULTIMAS:+
 
 Foi isto que ele disse:
 

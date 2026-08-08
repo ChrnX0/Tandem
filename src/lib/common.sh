@@ -1561,21 +1561,70 @@ TANDEM_ICONES_NATIVOS="$HOME/.local/share/icons/hicolor/256x256/apps"
 # Runs the AppImage's own runtime to extract, which is fine: by this point we
 # have already decided to run it, and it is the only way in - reading the
 # squashfs would need unsquashfs, which is not installed on a normal machine.
-t_integra_appimage() {
-    local prog="$1" tmp dsk nome icone destino base
+# Extracts files out of an AppImage's payload WITHOUT EXECUTING IT.
+#
+# This is the project's own rule applied where it was still being broken. Every
+# other reader here - peinfo, apkinfo, jarinfo, debinfo, rpminfo - answers by
+# reading the file. The AppImage integration alone ran the downloaded binary in
+# order to find out its name, which means that if the owner's answer had been
+# "do not run this", it had already run.
+#
+# It costs nothing to do properly, because the offset is already computed from
+# the ELF header: unsquashfs reads the payload straight out of the file at that
+# offset. Borrowed from Gear Lever, which refuses to execute the payload for the
+# same reason.
+#
+# Falls back to the runtime's own --appimage-extract when squashfs-tools is
+# absent - that still works with no FUSE - and says in the log which route it
+# took, because "we did not execute it" is a claim that has to be checkable.
+t_appimage_extrai() {
+    local prog="$1" destino="$2" padrao="$3" info off carga
+    info="$(t_appimage_info "$prog")"
+    off="$(t_campo "$info" DESLOCAMENTO)"
+    carga="$(t_campo "$info" CARGA)"
+    if command -v unsquashfs >/dev/null 2>&1 &&
+       [ "$carga" = squashfs ] && [ -n "$off" ]; then
+        if timeout 120 unsquashfs -o "$off" -d "$destino/lido" -n -q \
+               "$prog" "$padrao" >/dev/null 2>&1; then
+            t_diz "appimage lido sem executar (unsquashfs em $off): $padrao"
+            return 0
+        fi
+        t_diz "unsquashfs falhou em $padrao; caindo para o runtime do proprio arquivo"
+    fi
     [ -x "$prog" ] || return 1
-    base="$(basename -- "${prog%.*}")"
-    destino="$TANDEM_ATALHOS_NATIVOS/tandem-appimage-$(printf '%s' "$prog" | cksum | tr -d ' ').desktop"
-    tmp="$(mktemp -d 2>/dev/null)" || return 1
     (
-        cd "$tmp" 2>/dev/null || exit 1
+        cd "$destino" 2>/dev/null || exit 1
         # --appimage-extract does not mount anything - the runtime reads the
         # squashfs itself - so this path also works on a machine with no FUSE,
         # which is exactly the machine that most needs the menu entry.
-        timeout 120 "$prog" --appimage-extract '*.desktop' >/dev/null 2>&1
-        timeout 120 "$prog" --appimage-extract '*.png' >/dev/null 2>&1
-        timeout 120 "$prog" --appimage-extract '*.svg' >/dev/null 2>&1
+        timeout 120 "$prog" --appimage-extract "$padrao" >/dev/null 2>&1
     )
+    return 0
+}
+
+# The name the AppImage's author gave it, read without running anything. Used in
+# every message about the file, so a failure says "Inkscape não abriu" instead of
+# "Inkscape-1.2-x86_64.AppImage não abriu" - the shape appimaged uses, and the
+# difference between a sentence about a program and a sentence about a filename.
+t_appimage_nome() {
+    local prog="$1" tmp dsk nome
+    tmp="$(mktemp -d 2>/dev/null)" || return 1
+    t_appimage_extrai "$prog" "$tmp" '*.desktop' >/dev/null 2>&1
+    dsk="$(find "$tmp" -name '*.desktop' -type f 2>/dev/null | head -1)"
+    [ -n "$dsk" ] && nome="$(sed -n 's/^Name=//p' "$dsk" | head -1)"
+    rm -rf -- "$tmp"
+    [ -n "$nome" ] || return 1
+    printf '%s' "$nome"
+}
+
+t_integra_appimage() {
+    local prog="$1" tmp dsk nome icone destino base
+    base="$(basename -- "${prog%.*}")"
+    destino="$TANDEM_ATALHOS_NATIVOS/tandem-appimage-$(printf '%s' "$prog" | cksum | tr -d ' ').desktop"
+    tmp="$(mktemp -d 2>/dev/null)" || return 1
+    t_appimage_extrai "$prog" "$tmp" '*.desktop' >/dev/null 2>&1
+    t_appimage_extrai "$prog" "$tmp" '*.png' >/dev/null 2>&1
+    t_appimage_extrai "$prog" "$tmp" '*.svg' >/dev/null 2>&1
     dsk="$(find "$tmp" -name '*.desktop' -type f 2>/dev/null | head -1)"
     if [ -z "$dsk" ]; then
         rm -rf -- "$tmp"

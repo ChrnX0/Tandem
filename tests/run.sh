@@ -73,7 +73,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3014960349 657" "$soma_esperados"
+      "1695872137 658" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
       "3777721855 1474" "$soma_padroes"
 
@@ -1162,6 +1162,25 @@ t_falha_fuse "$TMPROOT/fuse.log" && pass "recognizes the real FUSE failure" \
 printf 'Segmentation fault\nsome other problem entirely\n' > "$TMPROOT/outro.log"
 t_falha_fuse "$TMPROOT/outro.log" && fail "does not see FUSE where there is none" \
     "not recognized" "recognized" || pass "does not see FUSE where there is none"
+
+# Reading the payload WITHOUT executing the file. The synthetic headers above
+# carry no real squashfs, so what is checkable here is the CONTRACT: a file that
+# cannot be read yields nothing rather than something wrong, and nothing is
+# executed on the way. The real read is exercised against a genuine AppImage in
+# tests/real-programs.sh.
+t_appimage_nome "$AI_OK" >/dev/null 2>&1 &&
+    fail "a header with no payload yields no name" "nothing" "a name" ||
+    pass "a header with no payload yields no name, rather than a wrong one"
+t_appimage_nome "$TMPROOT/texto.AppImage" >/dev/null 2>&1 &&
+    fail "a text file yields no name" "nothing" "a name" ||
+    pass "a text file yields no name"
+# And the guard that matters: a file with no execute bit must never be run in
+# order to read it. If the extraction ever falls back to the runtime for a file
+# it cannot execute, this is where it shows up.
+chmod -x "$AI_OK" 2>/dev/null
+t_appimage_nome "$AI_OK" >/dev/null 2>&1
+equal "reading a name never marks the file executable" "" \
+      "$(find "$AI_OK" -perm -u+x 2>/dev/null)"
 
 # Menu entries: ours are pruned when the file disappears, and nobody else's is
 # ever touched.

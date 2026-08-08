@@ -4,7 +4,7 @@ Section: utils
 Priority: optional
 Architecture: all
 Depends: python3 (>= 3.8), zenity, desktop-file-utils, xdg-utils, unzip, libglib2.0-bin
-Recommends: libnotify-bin, wine, winetricks, waydroid, adb, curl | wget
+Recommends: libnotify-bin, wine, winetricks, waydroid, adb, curl | wget, squashfs-tools
 Suggests: default-jre, libfuse2t64 | libfuse2, openjfx, flatpak, snapd
 Maintainer: Paulo Eduardo <noreply@users.noreply.github.com>
 Homepage: https://github.com/ChrnX0/Tandem

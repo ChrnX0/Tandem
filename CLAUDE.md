@@ -135,7 +135,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 496 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 499 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -455,6 +455,14 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
 - **Android Translation Layer is WORSE here, not better.** No container, so the
   premise dissolves - but its `UsbManager.getDeviceList()` is a hard stub
   returning an empty map. Source-proven, not inferred.
+- **An AppImage can be read WITHOUT executing it**, and until 3.9 this was the
+  one place the project broke its own rule. `unsquashfs -o <offset>` reads the
+  payload straight out of the file at the offset already computed from the ELF
+  header - verified by reading the author's `Name=` out of an AppImage whose
+  execute bit had been removed, which is proof it was not run. Borrowed from Gear
+  Lever, which refuses to execute the payload for the same reason. Falls back to
+  the runtime's `--appimage-extract` when squashfs-tools is absent, and the log
+  says which route it took, because "we did not execute it" has to be checkable.
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.
@@ -489,7 +497,7 @@ root), no longer only by reading:
 - `tandem dados` listing and copying real files out of a prefix; `tandem socorro`
   producing its report; the bitness warning appearing in the dialog *before* the
   download.
-- 496 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 499 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The five remaining formats closed on real files**: a `.deb` built for an
   older release produced the release-mismatch verdict with `libssl1.1` and
   `libicu70` named and **no password asked**; an arm64 package produced the

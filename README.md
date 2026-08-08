@@ -445,7 +445,7 @@ The five rules that do not bend, and the evidence bar that "done" has to clear, 
 
 ```bash
 python3 build.py --check   # packages; no Debian host, no dpkg-deb
-bash tests/run.sh          # 473 tests; no Wine, no Waydroid, no install
+bash tests/run.sh          # 499 tests; no Wine, no Waydroid, no install
 ```
 
 The suite sources the shell libraries straight from `src/lib` and synthesises Android packages including a real binary `AndroidManifest.xml`, so the manifest parser runs on the same code path a real APK takes. Optional tools (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) are used when present and skipped when absent, so it passes on a bare machine.
