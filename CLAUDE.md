@@ -6,11 +6,12 @@ first time.
 
 ## What it is
 
-A `.deb` package that makes `.exe`, `.msi`, `.apk`, `.xapk`, `.AppImage` and
-`.jar` open with a **double click** on Linux. It is not a prefix manager and not
-a Bottles replacement: it is a **thin layer of decision, translation and
-diagnosis** on top of `wine`, `winetricks -q`, `waydroid`, the AppImage runtime
-and `java`.
+A `.deb` package that makes **nine install formats** open with a **double
+click** on Linux: `.exe`, `.msi`, `.apk`, `.xapk`, `.AppImage`, `.jar`, `.deb`,
+`.rpm`, `.flatpakref`, `.snap`, plus shell installers. It is not a prefix manager
+and not a Bottles replacement: it is a **thin layer of decision, translation and
+diagnosis** on top of `wine`, `winetricks -q`, `waydroid`, the AppImage runtime,
+`java`, `apt` and `flatpak`.
 
 The target user is not a programmer. The quality bar is: *no error path may end
 in silence.* "I double-clicked and nothing happened" is treated as a bug, not as
@@ -88,6 +89,9 @@ src/lib/appimageinfo.py   AppImage ELF header: generation, arch, payload offset,
                           and whether the download finished
 src/lib/jarinfo.py        jar manifest + bytecode major: is it a program, and
                           which Java does it need
+src/lib/debinfo.py        .deb control by hand (ar + tar, zstd via libzstd):
+                          name, arch, dependencies, and truncation
+src/lib/rpminfo.py        .rpm header: name, version, arch, distribution
 src/lib/verbos.tsv        GENERATED DLL->verb index; do not edit by hand
 src/lib/limites.tsv       signatures of what will never work (dongle, driver)
 src/lib/alternativas.tsv  Linux programs that do the same job
@@ -100,9 +104,16 @@ src/bin/tandem-exe        the run->detect->install->retry loop
 src/bin/tandem-apk        pre-flight + install; xapk/apks via adb install-multiple
 src/bin/tandem-appimage   exec bit, arch, truncation, FUSE workaround, menu entry
 src/bin/tandem-jar        program-or-library, Java version, Class-Path, JavaFX
+src/bin/tandem-deb        apt simulation BEFORE the password; release-mismatch
+                          verdict; removals and downgrades asked about
+src/bin/tandem-rpm        explains, never converts; finds the apt equivalent
+src/bin/tandem-flatpak    .flatpakref installs per-user; .flatpakrepo is a SOURCE
+src/bin/tandem-snap       local snap needs --dangerous, and says so
+src/bin/tandem-script     the one handler whose default answer is NOT to run
 src/bin/tandem-repair     the MIME association dispute
 src/polkit/               narrow rule: only start/restart of waydroid-container
-tests/run.sh              the suite; tests/mkapk.py generates the synthetic packages
+tests/run.sh              the suite; tests/mkapk.py and tests/mkdeb.py generate
+                          the synthetic packages, in the real binary formats
 tests/real-programs.sh    REAL software, weekly: PuTTY/Notepad++/7-Zip/WinMerge
                           pinned by sha256, window checked with xdotool; builds a
                           real AppImage with appimagetool and compiles a real jar
@@ -124,7 +135,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 364 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 463 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -309,6 +320,50 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
 - **`openjdk-<n>-java.desktop` owns `application/java-archive`** on any machine
   with a JRE installed. It is a real rival, unlike the AppImage case where the
   type usually has no owner at all.
+- **`apt-get install -s` RUNS UNPRIVILEGED** and returns apt's own authoritative
+  verdict, unmet dependency names included. Measured as a non-root user. This is
+  the single most important fact behind `tandem-deb`: the entire diagnosis happens
+  before the password is asked, so nobody types a password to be told no.
+- **NOBODY owns `.deb`, `.rpm`, `.flatpakref` or `.snap`** on the reference
+  machine - `xdg-mime query default` answers nothing for all four. The double
+  click does nothing at all, the AppImage situation exactly. On a full desktop a
+  store claims `.deb`; what the store handles badly is the third-party package
+  built for another release, which is the case that brings somebody here.
+- **Every current Ubuntu `.deb` uses `control.tar.zst`**, and neither the `zstd`
+  command nor `python3-zstandard` is installed by default - only `libzstd1`,
+  because **dpkg pre-depends on it**. So a pure-Python reader handles almost no
+  real package, and the way through is `ctypes` on `libzstd.so.1`
+  (`ZSTD_getFrameContentSize` + `ZSTD_decompress`); dpkg writes the content size
+  into the frame header, so the one-shot path is enough. Cap the declared size:
+  a decompressor told to allocate a hostile number takes the machine down.
+- **The real apt messages, copied off a terminal** (do not paraphrase these):
+  release mismatch is `Depends: libssl1.1 but it is not installable` +
+  `E: Unable to correct problems, you have held broken packages`; wrong
+  architecture is `package architecture (arm64) does not match system (amd64)`;
+  the lock is `E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by
+  process N` and dpkg's own wording is `dpkg frontend lock was locked by another
+  process with pid N`. **The lock has to be tested FIRST**: it appears together
+  with the broken-packages line, and it is the cause while the other is the
+  consequence.
+- **The lock is held with a POSIX lock, not flock.** `flock(1)` on
+  `/var/lib/dpkg/lock-frontend` does NOT stop apt; `fcntl.lockf` does. Getting
+  that wrong makes a lock test pass while proving nothing - it happened here.
+- **A `.deb` truncated exactly on a member boundary parses cleanly.** The ar walk
+  ends without error and the control it already read looks perfect. Requiring a
+  `data.tar*` member is what makes the truncation verdict a verdict rather than
+  luck about where the cut landed.
+- **Declaring a MimeType in a `.desktop` CLAIMS the type.** With no explicit
+  default recorded, the desktop database picks a handler from the declarations.
+  Measured: `application/x-shellscript` belonged to a text editor, and merely
+  naming it in `tandem-script.desktop` moved it to Tandem. That is why the file
+  has no `MimeType=` line and a comment saying why - the decision lives in the
+  absence of one line, which is exactly what somebody tidies up later. There is
+  a test.
+- **`t_pergunta` cannot tell "the owner said no" from "there was nobody to ask".**
+  Only the first may be silent. Three refusal paths in the new handlers exited 0
+  with zero bytes; the `.flatpakrepo` one was found by running every handler
+  against every fixture with no window and no terminal and demanding a sentence.
+  Guard every refusal with `t_tem_gui ||`.
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.
@@ -343,7 +398,19 @@ root), no longer only by reading:
 - `tandem dados` listing and copying real files out of a prefix; `tandem socorro`
   producing its report; the bitness warning appearing in the dialog *before* the
   download.
-- 364 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 463 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- **The five remaining formats closed on real files**: a `.deb` built for an
+  older release produced the release-mismatch verdict with `libssl1.1` and
+  `libicu70` named and **no password asked**; an arm64 package produced the
+  processor verdict; a truncated one the download verdict; a good one installed
+  through apt and was confirmed against dpkg's own database. A real Fedora
+  `hello-2.12.1-1.fc39.x86_64.rpm` produced "made by Fedora Project" plus
+  `sudo apt install hello`, because that package really is in Ubuntu. A real
+  Flathub `.flatpakref` and `.flatpakrepo` were read correctly and told apart.
+- **The upgrade path works on a real machine**: installing 3.8 over 3.7 claimed
+  the five new types and left `.exe`, `.apk`, `.AppImage` and `.jar` alone.
+- `tandem autoteste` on the installed package: **17 passed, 0 failed**, including
+  the association of all eight claimed types and "apt answers without a password".
 - **Real Windows software, run through Tandem, with the window checked on
   screen** (`tests/real-programs.sh`, 26 checks green): PuTTY and Notepad++ x64
   both opened a window with the expected title, screenshots taken; `peinfo.py`
@@ -458,14 +525,19 @@ The queue, in order:
    scratch (30 min, high failure rate) — delivery proof was the prerequisite and
    now exists; what is missing is the care never to read from a protected prefix
    in use.
-6. The next native formats, in the order `docs/IDEAS.md` argues for: `.deb` and
-   `.rpm` (a `.deb` double-clicked is a dependency problem with a bad error
-   message; an `.rpm` on Debian is a "this is for another distribution" verdict
-   that nothing gives today), then `.flatpakref`. `.msix` was rejected and the
-   reason is written down — do not reopen it without reading that first.
+6. **No format is queued.** All nine are done. `.msix` was rejected and the
+   reason is written down — do not reopen it without reading that first. The next
+   valuable work is not another format; it is field evidence for the ones that
+   exist.
+7. **Import what the prior-art search found worth importing.** A search across
+   eight ecosystems established that Tandem's dependency loop is genuinely
+   unoccupied ground, and that the AppImage execute-bit problem is solved by
+   three other projects in three different ways. See `docs/IDEAS.md` for what to
+   take from them and what to leave.
 
-**Done, do not redo:** `.AppImage` and `.jar` are implemented, tested and
-verified end to end on real files — see the State section for exactly what was
+**Done, do not redo:** all nine formats are implemented, tested and verified end
+to end on real files. `.AppImage` and `.jar` came in 3.7; `.deb`, `.rpm`,
+`.flatpakref`, `.snap` and shell installers in 3.8 — see the State section for exactly what was
 measured. The orphan-shortcut question is settled: it was never a defect. The
 real-program harness exists and is green. v3.6 is published — tag, `.deb` and `.sha256` attached,
 and the published artifact verified byte-for-byte identical to a local build.

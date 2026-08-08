@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Install with Tandem (Flatpak)
+Name[pt_BR]=Instalar com Tandem (Flatpak)
+Comment=Install this Flatpak program, or add its store
+Comment[pt_BR]=Instala este programa Flatpak, ou adiciona a loja dele
+Exec=/usr/bin/tandem-flatpak %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+MimeType=application/vnd.flatpak.ref;application/vnd.flatpak.repo;
+Categories=System;

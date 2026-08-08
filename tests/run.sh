@@ -73,9 +73,9 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3004592584 401" "$soma_esperados"
+      "677965117 521" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
-      "3823810213 1343" "$soma_padroes"
+      "543836661 1438" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1386,6 +1386,347 @@ equal "with no extension, a runnable jar is recognized by its manifest" \
 cp "$JARS/biblioteca.jar" "$TMPROOT/so-zip"
 equal "a zip with no Main-Class stays with Android" \
       "CHAMOU tandem-apk" "$(despachar "$TMPROOT/so-zip")"
+
+section "native packages: reading .deb and .rpm without installing"
+
+# Real ar archives with real gzipped control tarballs, written by tests/mkdeb.py
+# for the same reason tests/mkapk.py writes real binary manifests: a fixture that
+# only looks like the format proves nothing about the reader.
+DEBS="$TMPROOT/debs"; mkdir -p "$DEBS"
+python3 "$ROOT/tests/mkdeb.py" "$DEBS/simples.deb" >/dev/null
+python3 "$ROOT/tests/mkdeb.py" "$DEBS/velho.deb" Package=programa-antigo \
+        Depends='libssl1.1, libicu70, libc6 (>= 2.34)' >/dev/null
+python3 "$ROOT/tests/mkdeb.py" "$DEBS/arm.deb" Package=so-arm Architecture=arm64 >/dev/null
+python3 "$ROOT/tests/mkdeb.py" "$DEBS/xz.deb" Package=com-xz --compressao=xz >/dev/null
+python3 "$ROOT/tests/mkdeb.py" "$DEBS/alternativas.deb" Package=alt \
+        Depends='curl | wget, python3:any | python3.12, foo [amd64] <!nocheck>' >/dev/null
+
+info_deb="$(t_deb_info "$DEBS/simples.deb")"
+equal "reads the package name" "teste" "$(t_campo "$info_deb" PACOTE)"
+equal "reads the version" "1.0" "$(t_campo "$info_deb" VERSAO)"
+equal "reads the architecture" "all" "$(t_campo "$info_deb" ARQUITETURA)"
+equal "reads the short description without the long one leaking in" \
+      "pacote sintetico para teste" "$(t_campo "$info_deb" DESCRICAO)"
+equal "control.tar.xz is read the same as .gz" "com-xz" \
+      "$(t_campo "$(t_deb_info "$DEBS/xz.deb")" PACOTE)"
+
+# Debian dependency syntax reduced to something a shell can split, with the
+# architecture qualifier, the architecture restriction and the build profile all
+# dropped: they qualify WHICH BUILD needs the dependency, and by the time
+# somebody is double-clicking that question is already answered.
+equal "dependencies come out normalised, alternatives kept" \
+      "curl|wget;python3|python3.12;foo" \
+      "$(t_campo "$(t_deb_info "$DEBS/alternativas.deb")" DEPENDE)"
+equal "a version constraint stays attached to its name" \
+      "libssl1.1;libicu70;libc6(>= 2.34)" \
+      "$(t_campo "$(t_deb_info "$DEBS/velho.deb")" DEPENDE)"
+
+# A .deb whose ar header claims more bytes than the file has. Same verdict as a
+# truncated AppImage, same cause, and it is the reading that establishes it.
+#
+# Cut 20 bytes off the end rather than at a fixed offset: a cut that happens to
+# land on a member boundary leaves an archive that parses cleanly, and the first
+# version of this test passed for exactly that reason while proving nothing. The
+# reader now also refuses a package with no data member, so both shapes of
+# truncation are caught.
+head -c "$(( $(stat -c%s "$DEBS/simples.deb") - 20 ))" \
+     "$DEBS/simples.deb" > "$DEBS/cortado.deb"
+# And the other shape: cut exactly where the data member begins, so every header
+# that IS there is perfectly consistent and nothing looks wrong.
+python3 - "$DEBS/simples.deb" "$DEBS/cortado-limpo.deb" <<'PYCORTE'
+import sys
+d = open(sys.argv[1], "rb").read()
+p = 8
+while p + 60 <= len(d):
+    nome = d[p:p + 16].decode().strip().rstrip("/")
+    tam = int(d[p + 48:p + 58].decode().strip())
+    if nome.startswith("data.tar"):
+        open(sys.argv[2], "wb").write(d[:p])
+        break
+    p += 60 + tam + (tam % 2)
+PYCORTE
+case "$(t_campo "$(t_deb_info "$DEBS/cortado.deb")" ERRO)" in
+    arquivo\ incompleto*) pass "an interrupted .deb download is recognised as interrupted" ;;
+    *) fail "an interrupted .deb download is recognised as interrupted" \
+            "arquivo incompleto..." "$(t_campo "$(t_deb_info "$DEBS/cortado.deb")" ERRO)" ;;
+esac
+case "$(t_campo "$(t_deb_info "$DEBS/cortado-limpo.deb")" ERRO)" in
+    arquivo\ incompleto*)
+        pass "a .deb cut on a member boundary is still recognised as incomplete" ;;
+    *) fail "a .deb cut on a member boundary is still recognised as incomplete" \
+            "arquivo incompleto..." \
+            "$(t_campo "$(t_deb_info "$DEBS/cortado-limpo.deb")" ERRO)" ;;
+esac
+printf 'nao sou um pacote\n' > "$DEBS/texto.deb"
+case "$(t_campo "$(t_deb_info "$DEBS/texto.deb")" ERRO)" in
+    *assinatura\ ar*) pass "a text file is not taken for a package" ;;
+    *) fail "a text file is not taken for a package" "falta a assinatura ar" \
+            "$(t_campo "$(t_deb_info "$DEBS/texto.deb")" ERRO)" ;;
+esac
+
+# dpkg-deb has to accept what mkdeb.py writes. Without this the fixtures could
+# drift into a shape only our own reader understands, and the agreement between
+# the two would be an agreement about nothing.
+if command -v dpkg-deb >/dev/null 2>&1; then
+    for d in simples velho arm xz; do
+        equal "dpkg-deb agrees about $d.deb" \
+              "$(dpkg-deb -f "$DEBS/$d.deb" Package 2>/dev/null)" \
+              "$(t_campo "$(t_deb_info "$DEBS/$d.deb")" PACOTE)"
+    done
+else
+    skip "agreement with dpkg-deb" "dpkg-deb not installed"
+fi
+
+# Architecture. "all" fits anywhere; a foreign one counts only when dpkg was
+# told about it, which is the same switch that makes 32-bit Wine possible.
+t_deb_arch_serve all && pass "an architecture-independent package fits" \
+    || fail "an architecture-independent package fits" "serve" "recusado"
+t_deb_arch_serve "$(t_arch_sistema)" && pass "this machine's own architecture fits" \
+    || fail "this machine's own architecture fits" "serve" "recusado"
+t_deb_arch_serve arquitetura-que-nao-existe &&
+    fail "an unknown architecture is refused" "recusado" "aceito" ||
+    pass "an unknown architecture is refused"
+
+# The heuristic that separates two verdicts apt writes identically: a library
+# with a release welded to its name will never install here, while a plain
+# program name is a repository the machine has not been told about. Getting this
+# backwards sends the owner looking for a fix that does not exist.
+for n in libssl1.1 libicu70 libwebkit2gtk-4.0-37 libpython3.10 python3.10 libboost1.74.0; do
+    t_versao_de_sistema "$n" && pass "$n reads as welded to a release" \
+        || fail "$n reads as welded to a release" "sim" "nao"
+done
+for n in acme-driver zenity curl meu-programa-da-loja; do
+    t_versao_de_sistema "$n" && fail "$n does not read as a library version" "nao" "sim" \
+        || pass "$n does not read as a library version"
+done
+
+# apt's own words, parsed rather than re-derived. Reimplementing dependency
+# resolution in shell would be a second opinion that is wrong precisely when it
+# disagrees with the only one that counts.
+saida_apt="programa-antigo : Depends: libssl1.1 but it is not installable
+                   Depends: libicu70 but it is not installable
+E: Unable to correct problems, you have held broken packages."
+equal "the unsatisfiable names come out of apt's own output" \
+      "libicu70 libssl1.1" "$(t_deb_naoinstalaveis "$saida_apt" | tr '\n' ' ' | sed 's/ $//')"
+
+# The .rpm reader, on a header written here. The lead is 96 bytes, then a
+# signature header padded to an 8-byte boundary, then the real one - and that
+# padding is the step that turns a perfectly good file into "unrecognised
+# header" when it is skipped wrong.
+python3 - "$TMPROOT/teste.rpm" <<'PYFIM'
+import struct, sys
+
+def cabecalho(entradas, loja):
+    fora = b"\x8e\xad\xe8\x01" + b"\0" * 4
+    fora += struct.pack(">II", len(entradas), len(loja))
+    for tag, tipo, off, cont in entradas:
+        fora += struct.pack(">iiii", tag, tipo, off, cont)
+    return fora + loja
+
+loja = b""
+entradas = []
+def texto(tag, valor, tipo=6):
+    global loja, entradas
+    entradas.append((tag, tipo, len(loja), 1))
+    loja += valor.encode() + b"\0"
+
+texto(1000, "hello")            # NAME
+texto(1001, "2.12.1")           # VERSION
+texto(1002, "1.fc39")           # RELEASE
+texto(1004, "Prints a greeting", 9)   # SUMMARY, I18NSTRING
+texto(1010, "Fedora Project")   # DISTRIBUTION
+texto(1022, "x86_64")           # ARCH
+
+lead = b"\xed\xab\xee\xdb" + b"\x03\x00" + b"\0" * 90
+assinatura = cabecalho([], b"")
+pad = b"\0" * ((8 - (len(lead) + len(assinatura)) % 8) % 8)
+open(sys.argv[1], "wb").write(lead + assinatura + pad + cabecalho(entradas, loja))
+PYFIM
+info_rpm="$(t_rpm_info "$TMPROOT/teste.rpm")"
+equal "reads the rpm package name" "hello" "$(t_campo "$info_rpm" PACOTE)"
+equal "joins version and release the way rpm names them" "2.12.1-1.fc39" \
+      "$(t_campo "$info_rpm" VERSAO)"
+equal "reads the rpm architecture" "x86_64" "$(t_campo "$info_rpm" ARQUITETURA)"
+equal "reads which distribution built it" "Fedora Project" \
+      "$(t_campo "$info_rpm" DISTRIBUICAO)"
+equal "reads the summary out of an I18NSTRING" "Prints a greeting" \
+      "$(t_campo "$info_rpm" DESCRICAO)"
+head -c 120 "$TMPROOT/teste.rpm" > "$TMPROOT/curto.rpm"
+case "$(t_campo "$(t_rpm_info "$TMPROOT/curto.rpm")" ERRO)" in
+    *incompleto*) pass "a truncated .rpm is recognised as truncated" ;;
+    *) fail "a truncated .rpm is recognised as truncated" "incompleto" \
+            "$(t_campo "$(t_rpm_info "$TMPROOT/curto.rpm")" ERRO)" ;;
+esac
+equal "a .deb is not taken for an .rpm" "nao e um arquivo .rpm" \
+      "$(t_campo "$(t_rpm_info "$DEBS/simples.deb")" ERRO)"
+
+# Flatpak reference files are INI, and the two kinds mean different things: one
+# installs a program, the other changes where the machine gets programs from.
+cat > "$TMPROOT/prog.flatpakref" <<'FIMREF'
+[Flatpak Ref]
+Name=org.gnome.gedit
+Branch=stable
+Title=org.gnome.gedit from flathub
+Url=https://dl.flathub.org/repo/
+RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+FIMREF
+equal "reads the program name out of a .flatpakref" "org.gnome.gedit" \
+      "$(t_flatpak_campo "$TMPROOT/prog.flatpakref" Name)"
+equal "reads the runtime repository, which the install needs first" \
+      "https://dl.flathub.org/repo/flathub.flatpakrepo" \
+      "$(t_flatpak_campo "$TMPROOT/prog.flatpakref" RuntimeRepo)"
+equal "a key that is not there comes back empty, not wrong" "" \
+      "$(t_flatpak_campo "$TMPROOT/prog.flatpakref" NaoExiste)"
+
+# A script that is a payload behind a shell header is meant to be run; a small
+# plain script is far more likely something to look at first.
+printf '#!/bin/sh\necho ola\n' > "$TMPROOT/pequeno.sh"
+t_script_instalador "$TMPROOT/pequeno.sh" &&
+    fail "a small script is not treated as an installer" "nao" "sim" ||
+    pass "a small script is not treated as an installer"
+printf '#!/bin/sh\n# This script was generated using Makeself 2.4.5\n_ARCHIVE=1\n' \
+    > "$TMPROOT/makeself.sh"
+t_script_instalador "$TMPROOT/makeself.sh" &&
+    pass "a makeself installer is recognised" ||
+    fail "a makeself installer is recognised" "sim" "nao"
+{ printf '#!/bin/sh\n'; head -c 300000 /dev/zero | tr '\0' 'x'; } > "$TMPROOT/gordo.sh"
+t_script_instalador "$TMPROOT/gordo.sh" &&
+    pass "a megabyte of payload behind a shell header is an installer" ||
+    fail "a megabyte of payload behind a shell header is an installer" "sim" "nao"
+
+# apt and dpkg failures, translated from messages COPIED off a real terminal.
+# Every one of these was produced on purpose on an Ubuntu 24.04 and pasted here;
+# none was written from documentation.
+verifica_causa() {
+    printf '%s\n' "$2" > "$TMPROOT/causa.log"
+    local dito; dito="$(t_causa_apt "$TMPROOT/causa.log")"
+    case "$dito" in
+        *"$3"*) pass "$1" ;;
+        *) fail "$1" "algo com \"$3\"" "${dito:-nada}" ;;
+    esac
+}
+verifica_causa "the dpkg lock becomes a sentence about waiting" \
+  'E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 16003 (python3)' \
+  'já está instalando'
+verifica_causa "dpkg's own wording for the lock is recognised too" \
+  'dpkg: error: dpkg frontend lock was locked by another process with pid 16003' \
+  'já está instalando'
+verifica_causa "the architecture mismatch is recognised" \
+  ' package architecture (arm64) does not match system (amd64)' \
+  'outro tipo de processador'
+verifica_causa "held broken packages becomes a sentence about missing pieces" \
+  'E: Unable to correct problems, you have held broken packages.' \
+  'Faltam componentes'
+verifica_causa "a full disk says the disk is full" \
+  'dpkg: unrecoverable fatal error: No space left on device' \
+  'disco está cheio'
+verifica_causa "a file conflict names the risk to the other program" \
+  "dpkg: error processing archive: trying to overwrite '/usr/bin/foo', which is also in package outro" \
+  'sobrescrever'
+verifica_causa "no internet says no internet" \
+  'Err:1 http://archive.ubuntu.com/ubuntu noble InRelease
+  Temporary failure resolving archive.ubuntu.com' \
+  'internet'
+# The lock has to win over the broken-packages line when both appear, because it
+# is the cause and the other is the consequence.
+verifica_causa "the lock wins over the consequence when both appear" \
+  'E: Could not get lock /var/lib/dpkg/lock-frontend
+E: Unable to correct problems, you have held broken packages.' \
+  'já está instalando'
+printf 'nada de especial aqui\n' > "$TMPROOT/causa.log"
+t_causa_apt "$TMPROOT/causa.log" >/dev/null &&
+    fail "an unrecognised failure does not invent a cause" "nao reconhece" "inventou" ||
+    pass "an unrecognised failure does not invent a cause"
+
+# Declaring a MIME type is not neutral: with no explicit default recorded, the
+# desktop database picks a handler FROM the declarations, so naming a type takes
+# it. tandem-script must therefore name none - the decision not to steal
+# application/x-shellscript from a text editor lives in the absence of one line,
+# and an absence is exactly what somebody tidies up later.
+if grep -q '^MimeType=' "$ROOT/src/applications/tandem-script.desktop"; then
+    fail "tandem-script claims no MIME type" \
+         "no MimeType= line: declaring the type takes it" \
+         "$(grep '^MimeType=' "$ROOT/src/applications/tandem-script.desktop")"
+else
+    pass "tandem-script claims no MIME type, so .sh stays with the text editor"
+fi
+# And the reason has to stay written next to it, or the line comes back.
+if grep -q 'Open with' "$ROOT/src/applications/tandem-script.desktop"; then
+    pass "and the reason is written in the file"
+else
+    fail "and the reason is written in the file" "the explanation" "missing"
+fi
+# tandem-repair must not claim it either, from the other direction.
+if grep -q 'TIPOS_SCRIPT\|x-shellscript' "$ROOT/src/bin/tandem-repair"; then
+    grep -q 'application/x-shellscript is deliberately NOT' "$ROOT/src/bin/tandem-repair" &&
+        pass "tandem-repair mentions x-shellscript only to say it is left alone" ||
+        fail "tandem-repair mentions x-shellscript only to say it is left alone" \
+             "only the comment" "it appears in a claimed list"
+else
+    fail "tandem-repair records why x-shellscript is left alone" "the comment" "nothing"
+fi
+
+# Every format Tandem DOES claim needs a handler, and every handler it ships
+# needs to be reachable. A .desktop naming a type with no binary behind it is an
+# association that opens nothing.
+for d in "$ROOT"/src/applications/tandem-*.desktop; do
+    exe="$(sed -n 's/^Exec=//p' "$d" | head -1 | awk '{print $1}')"
+    base="$(basename -- "$exe")"
+    if [ -f "$ROOT/src/bin/$base" ]; then
+        pass "$(basename -- "$d") points at a binary that exists"
+    else
+        fail "$(basename -- "$d") points at a binary that exists" "src/bin/$base" "missing"
+    fi
+done
+
+section "native packages: every handler, every path, with nobody to ask"
+
+# The rule this section exists for: a refusal because the OWNER said no may be
+# silent; a refusal because THERE WAS NOBODY TO ASK may not. t_pergunta cannot
+# tell them apart, so every handler has to check t_tem_gui - and one of them did
+# not. A .flatpakrepo with no graphical session and no terminal exited 0 with
+# ZERO BYTES of output, which is the defect this project treats as the worst
+# kind. It was found by running exactly this, and nothing else would have.
+CASA_P="$TMPROOT/casa-pacotes"; mkdir -p "$CASA_P"
+: > "$CASA_P/.primeira-vez"
+sem_ninguem() {
+    env -i HOME="$CASA_P" PATH="/usr/bin:/bin" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+        timeout 120 bash "$ROOT/src/bin/$1" "$2" 2>&1
+}
+cat > "$TMPROOT/loja.flatpakrepo" <<'FIMREPO'
+[Flatpak Repo]
+Title=Flathub
+Url=https://dl.flathub.org/repo/
+FIMREPO
+for caso in \
+    "tandem-deb|$DEBS/velho.deb" \
+    "tandem-deb|$DEBS/arm.deb" \
+    "tandem-deb|$DEBS/cortado.deb" \
+    "tandem-deb|$DEBS/texto.deb" \
+    "tandem-deb|$TMPROOT/nao-existe.deb" \
+    "tandem-rpm|$TMPROOT/teste.rpm" \
+    "tandem-rpm|$TMPROOT/curto.rpm" \
+    "tandem-rpm|$TMPROOT/nao-existe.rpm" \
+    "tandem-flatpak|$TMPROOT/prog.flatpakref" \
+    "tandem-flatpak|$TMPROOT/loja.flatpakrepo" \
+    "tandem-flatpak|$DEBS/texto.deb" \
+    "tandem-flatpak|$TMPROOT/nao-existe.flatpakref" \
+    "tandem-snap|$TMPROOT/pequeno.sh" \
+    "tandem-snap|$TMPROOT/nao-existe.snap" \
+    "tandem-script|$TMPROOT/pequeno.sh" \
+    "tandem-script|$TMPROOT/makeself.sh" \
+    "tandem-script|$TMPROOT/nao-existe.sh" \
+    ; do
+    bin="${caso%%|*}"; alvo="${caso#*|}"
+    dito="$(sem_ninguem "$bin" "$alvo")"
+    if [ -n "$dito" ]; then
+        pass "$bin says something about $(basename -- "$alvo")"
+    else
+        fail "$bin says something about $(basename -- "$alvo")" \
+             "uma frase em português" "zero bytes"
+    fi
+done
 
 section "community list (modelled on filter lists)"
 

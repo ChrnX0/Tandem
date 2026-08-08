@@ -5,10 +5,12 @@ name: Real programs
 # this proves it against binaries somebody else compiled, and looks at the
 # screen afterwards.
 #
-# It also checks the two native-format readers against their own reference
-# implementations: the AppImage payload offset against the runtime's
-# --appimage-offset, and the Java version a .jar demands against a JVM that
-# refuses to load it.
+# It also checks every native-format reader against an independent authority: the
+# AppImage payload offset against the runtime's own --appimage-offset, the Java
+# version a .jar demands against a JVM that refuses to load it, the .deb fields
+# against dpkg-deb on packages Ubuntu itself built (every one of which uses
+# control.tar.zst, the case a fixture-only test never reaches), and the .rpm
+# fields against a filename Fedora's builders wrote.
 #
 # Separate from CI on purpose: it needs network, Wine, an X server and several
 # minutes. Putting it in the fast suite would make every push slow and every

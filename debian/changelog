@@ -1,3 +1,104 @@
+tandem (3.8) unstable; urgency=medium
+
+  * The five remaining install formats a person can double-click now open:
+    .deb, .rpm, .flatpakref/.flatpakrepo, .snap, and shell installers. With
+    the four from before and the two from 3.7 that is nine, which was the
+    point - "one handler for every install format a person can double-click"
+    is what docs/IDEAS.md argued the next real step was, and this is it.
+  * Measured first, on the machine this runs on: NOBODY owns .deb, .rpm,
+    .flatpakref or .snap there. The double click does nothing at all, exactly
+    like an AppImage. That is not a bad message being improved, it is a vacuum
+    being filled.
+  * The whole .deb diagnosis happens BEFORE the password is asked, and that is
+    a measured fact rather than a preference: "apt-get install -s" runs
+    unprivileged and returns apt's own authoritative verdict with the unmet
+    dependency names in it. There is no reason to make somebody type a
+    password to be told no.
+  * The message that case produces today is unusable, and it was copied off a
+    real terminal rather than imagined: "programa-antigo : Depends: libssl1.1
+    but it is not installable" followed by "E: Unable to correct problems, you
+    have held broken packages." The owner held nothing. He downloaded the file
+    the website offered him, and the real answer - built for a different
+    version of your system, go back and pick the other one - is in neither
+    line.
+  * Two verdicts apt writes identically and that mean opposite things to the
+    owner. A dependency with a release welded into its name (libssl1.1,
+    libicu70, libwebkit2gtk-4.0-37) will never install here and there is
+    nothing to try; a plain program name means a repository the machine has
+    not been told about, and the website he downloaded from has the
+    instructions. Telling him the wrong one costs him an afternoon.
+  * debinfo.py reads a .deb by walking the ar archive and the control tarball
+    by hand. build.py already writes that format without dpkg-deb, so reading
+    it back is symmetric. Checked field by field against dpkg-deb on three
+    real packages, including two current Ubuntu ones.
+  * Every current Ubuntu .deb uses control.tar.zst, which Python cannot read
+    on its own - and neither the zstd command nor python3-zstandard is
+    installed on a normal machine. A reader without it would handle almost no
+    real package. It goes through libzstd by ctypes instead: dpkg PRE-DEPENDS
+    on libzstd1, so on any machine where a .deb means anything the library is
+    there by construction. With a ceiling on the declared size, because a
+    decompressor told to allocate a hostile number takes the machine down
+    instead of reporting a bad file.
+  * A .deb cut short is reported as an interrupted download. Both shapes: one
+    where a member claims more bytes than the file has, and one cut exactly on
+    a member boundary, where every header present is consistent and nothing
+    looks wrong. The second was found by a test that passed for the wrong
+    reason - the reader now also refuses a package carrying no data member.
+  * A .deb that wants to REMOVE other programs asks first, with the list. That
+    is the one way this path can do real damage, and apt announces it in a
+    line the owner would scroll past.
+  * Downgrades ask too, and which version is newer is dpkg's call, not a
+    string comparison: Debian version ordering has epochs and tildes, and
+    shell gets it wrong.
+  * rpminfo.py reads the name, version, architecture and distribution out of
+    an .rpm header without rpm installed - the lead, then a signature header
+    padded to an eight-byte boundary, then the real one. With the name in hand
+    the answer stops being a refusal: the same program is looked for in the
+    machine's own repositories, and when it is there the owner gets "sudo apt
+    install hello" instead of "no". Verified against a real Fedora package.
+  * Converting an .rpm with alien is deliberately NOT offered, and the reason
+    is written down: a converted package carries dependency names that do not
+    exist here and skips the scripts that set the program up, producing
+    something that looks installed and is not. That is the exact failure this
+    project exists to prevent, so it is not offered even as a last resort.
+  * A .flatpakref installs for the user without a password; a .flatpakrepo
+    adds a SOURCE and installs nothing, and is said to be that in those words
+    - treating the two the same would promise an application and hand over a
+    repository.
+  * A loose .snap can only be installed with a flag literally named
+    --dangerous, and the owner is told so in his own language before it is
+    used. A tool that passes --dangerous quietly is making that decision for
+    him.
+  * Shell installers are the one handler whose default answer is NOT to run
+    the file. A script does anything its author wants; a makeself blob is
+    meant to be run and gets that offer, while a small plain script gets
+    offered as text first, because that is what somebody almost certainly
+    wants with a file he just downloaded. application/x-shellscript is the one
+    type tandem repair does NOT claim: opening a downloaded script in a text
+    editor is a defensible default, and Tandem does not take a type from a
+    handler already doing the right thing.
+  * A silent failure, found and fixed before it shipped. A .flatpakrepo with
+    no graphical session and no terminal exited 0 with ZERO BYTES of output.
+    The cause is a distinction t_pergunta cannot make: "the owner clicked
+    Cancel" may be silent, "there was nobody to ask" may not. Three refusal
+    paths in the new handlers had it wrong. There is now a test that runs
+    every handler against every fixture with no window and no terminal and
+    demands a sentence - it is what found this, and nothing else would have.
+  * apt and dpkg failures are translated from messages produced on purpose on
+    a real Ubuntu and pasted in, not written from documentation. The dpkg lock
+    is the one that matters most for a lay user: "Could not get lock
+    /var/lib/dpkg/lock-frontend. It is held by process 16003" becomes "the
+    computer is already installing something else, wait a minute". It is
+    ordered first because it is the cause and the broken-packages line is the
+    consequence.
+  * tandem doctor reports the package architecture, the extra architectures
+    dpkg was told about, flatpak and snap; the self-test exercises the .deb
+    reader on a real package and checks that apt answers without a password,
+    because the whole diagnosis rests on that.
+  * 77 new tests, 450 total.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Sun, 09 Aug 2026 05:00:00 +0000
+
 tandem (3.7) unstable; urgency=medium
 
   * Two formats Linux uses itself now open with a double click: .AppImage and

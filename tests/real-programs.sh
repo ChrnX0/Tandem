@@ -35,6 +35,10 @@ pass()    { OK=$((OK+1));           printf '  ok   %s\n' "$1"; }
 fail()    { FAILED=$((FAILED+1)); FAILURES+=("$1"); printf '  FAILED %s\n     %s\n' "$1" "${2:-}"; }
 skip()    { SKIPPED=$((SKIPPED+1)); printf '  --   %s (%s)\n' "$1" "$2"; }
 section() { printf '\n== %s ==\n' "$1"; }
+# equal <name> <expected> <obtained>
+equal_simples() {
+    if [ "$2" = "$3" ]; then pass "$1"; else fail "$1" "expected \"$2\", got \"$3\""; fi
+}
 
 # --------------------------------------------------------------- the catalogue
 #
@@ -70,6 +74,11 @@ INSTALLERS=(
 # worse: executing whatever arrives, or dropping the coverage without saying so.
 APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
 APPIMAGETOOL_SHA="a6d71e2b6cd66f8e8d16c37ad164658985e0cf5fcaa950c90a482890cb9d13e0"
+
+# A real package built by Fedora's builders, pinned. Koji keeps built packages
+# indefinitely, so unlike the AppImage build tool this URL does not move.
+RPM_URL="https://kojipkgs.fedoraproject.org/packages/hello/2.12.1/1.fc39/x86_64/hello-2.12.1-1.fc39.x86_64.rpm"
+RPM_SHA="353fcfa0c674a5a5d3fef963f2349981dee5dc1968192e996a155a7850e4c5de"
 
 if [ "${1:-}" = "--list" ]; then
     printf 'Programs run through Tandem and checked on screen:\n'
@@ -451,6 +460,135 @@ PYFIM
     fi
 else
     skip "real .jar" "no JDK on this machine"
+fi
+
+section "native packages: real .deb files from the distribution itself"
+
+# The synthetic packages in tests/run.sh prove the reader against a format
+# tests/mkdeb.py writes. What they cannot prove is that a package built by
+# Ubuntu's own build machinery reads the same way - and it does not, by default:
+# every current one uses control.tar.zst, which Python cannot read and which
+# Tandem goes through libzstd by hand to reach. A reader that only ever sees the
+# fixtures would look perfect and handle almost no real package.
+if command -v apt-get >/dev/null 2>&1 && command -v dpkg-deb >/dev/null 2>&1; then
+    mkdir -p "$TMP/debs"
+    baixados=0
+    for pkg in zenity gdebi-core unzip; do
+        if (cd "$TMP/debs" && apt-get download -q "$pkg" >/dev/null 2>&1); then
+            baixados=$((baixados+1))
+        fi
+    done
+    if [ "$baixados" -gt 0 ]; then
+        pass "downloaded $baixados real .deb files from the distribution"
+        zst=0; concordam=0; total=0
+        for d in "$TMP/debs"/*.deb; do
+            [ -f "$d" ] || continue
+            total=$((total+1))
+            ar t "$d" 2>/dev/null | grep -q 'control.tar.zst' && zst=$((zst+1))
+            nosso="$(python3 "$ROOT/src/lib/debinfo.py" "$d" | sed -n 's/^PACOTE=//p')"
+            deles="$(dpkg-deb -f "$d" Package 2>/dev/null)"
+            [ -n "$nosso" ] && [ "$nosso" = "$deles" ] && concordam=$((concordam+1))
+        done
+        printf '     %d of %d use control.tar.zst\n' "$zst" "$total"
+        if [ "$concordam" = "$total" ] && [ "$total" -gt 0 ]; then
+            pass "our reader agrees with dpkg-deb on all $total real packages"
+        else
+            fail "our reader agrees with dpkg-deb on all real packages" \
+                 "$concordam of $total agreed"
+        fi
+        # Every field, on one package, not just the name.
+        d="$(find "$TMP/debs" -name '*.deb' | head -1)"
+        errados=""
+        for par in PACOTE:Package VERSAO:Version ARQUITETURA:Architecture \
+                   TAMANHO:Installed-Size MANTENEDOR:Maintainer; do
+            k="${par%%:*}"; campo="${par##*:}"
+            a="$(python3 "$ROOT/src/lib/debinfo.py" "$d" | sed -n "s/^$k=//p")"
+            b="$(dpkg-deb -f "$d" "$campo" 2>/dev/null)"
+            [ "$a" = "$b" ] || errados="$errados $k(ours=$a dpkg=$b)"
+        done
+        if [ -z "$errados" ]; then
+            pass "every field matches dpkg-deb on $(basename -- "$d")"
+        else
+            fail "every field matches dpkg-deb" "$errados"
+        fi
+        # And the dependency list, name for name and in order.
+        nomes_nossos="$(python3 "$ROOT/src/lib/debinfo.py" "$d" |
+                        sed -n 's/^DEPENDE=//p' | tr ';' '\n' |
+                        sed 's/|.*//;s/(.*//' | grep -v '^$' | tr '\n' ' ')"
+        nomes_deles="$(dpkg-deb -f "$d" Depends 2>/dev/null | tr ',' '\n' |
+                       sed 's/|.*//;s/(.*//;s/:.*//;s/^ *//;s/ *$//' |
+                       grep -v '^$' | tr '\n' ' ')"
+        if [ "$nomes_nossos" = "$nomes_deles" ]; then
+            pass "the dependency names match dpkg-deb, in order"
+        else
+            fail "the dependency names match dpkg-deb, in order" \
+                 "ours: $nomes_nossos / dpkg: $nomes_deles"
+        fi
+    else
+        skip "real .deb files" "apt-get download could not fetch anything"
+    fi
+
+    # The claim the whole .deb path rests on: apt answers WITHOUT root. If this
+    # is ever false, the owner types a password only to be told no.
+    if [ "$(id -u)" = 0 ] && id provador >/dev/null 2>&1; then
+        # The package has to be somewhere the unprivileged user can READ it.
+        # mktemp -d creates a 700 directory, so testing inside it measured the
+        # directory permissions and called it an apt limitation.
+        um="$(find "$TMP/debs" -name '*.deb' | head -1)"
+        cp -f "$um" /tmp/tandem-prova.deb 2>/dev/null
+        chmod 644 /tmp/tandem-prova.deb 2>/dev/null
+        if su provador -c "apt-get install -s --no-install-recommends -- /tmp/tandem-prova.deb 2>&1" |
+                grep -qE 'Inst |newly installed|unmet dependencies'; then
+            pass "apt simulates as an unprivileged user (the diagnosis precedes the password)"
+        else
+            fail "apt simulates as an unprivileged user" \
+                 "the whole .deb diagnosis depends on this"
+        fi
+        rm -f /tmp/tandem-prova.deb
+    else
+        # Even as root the point can be checked: the simulation must change
+        # nothing, which is what makes it safe to run before asking.
+        antes="$(dpkg-query -f '${binary:Package}\n' -W 2>/dev/null | wc -l)"
+        apt-get install -s --no-install-recommends -- "$TMP/debs"/*.deb >/dev/null 2>&1
+        depois="$(dpkg-query -f '${binary:Package}\n' -W 2>/dev/null | wc -l)"
+        equal_simples "the simulation installs nothing" "$antes" "$depois"
+    fi
+else
+    skip "real .deb files" "no apt-get or dpkg-deb here"
+fi
+
+section "native packages: a real .rpm from Fedora"
+
+# The .rpm reader has no local authority to be checked against - there is no rpm
+# on a Debian machine - so it is checked against the FILENAME, which encodes the
+# same three fields independently, on a package built by Fedora's own builders.
+if fetch "$RPM_URL" "$RPM_SHA" "$CACHE/teste.rpm"; then
+    info="$(python3 "$ROOT/src/lib/rpminfo.py" "$CACHE/teste.rpm")"
+    campo_rpm() { printf '%s\n' "$info" | sed -n "s/^$1=//p"; }
+    equal_simples "the rpm name matches the filename" "hello" "$(campo_rpm PACOTE)"
+    equal_simples "the rpm version-release matches the filename" \
+                  "2.12.1-1.fc39" "$(campo_rpm VERSAO)"
+    equal_simples "the rpm architecture matches the filename" \
+                  "x86_64" "$(campo_rpm ARQUITETURA)"
+    equal_simples "and it says which distribution built it" \
+                  "Fedora Project" "$(campo_rpm DISTRIBUICAO)"
+    # The useful part: this package really is in Ubuntu, so the refusal turns
+    # into an instruction. If it ever stops being there the test says so rather
+    # than silently checking nothing.
+    if apt-cache policy hello 2>/dev/null | grep -q 'Candidate: [0-9]'; then
+        saida="$(env -i HOME="$TMP" PATH=/usr/bin:/bin TANDEM_LIB="$ROOT/src/lib" \
+                 timeout 120 bash "$ROOT/src/bin/tandem-rpm" "$CACHE/teste.rpm" 2>&1)"
+        case "$saida" in
+            *"sudo apt install hello"*)
+                pass "the .rpm refusal is answered with the equivalent from this system" ;;
+            *) fail "the .rpm refusal is answered with the equivalent" \
+                    "sudo apt install hello; got: $(printf '%s' "$saida" | tail -2 | tr '\n' ' ')" ;;
+        esac
+    else
+        skip "the .rpm equivalent lookup" "the package 'hello' is not in this machine's repositories"
+    fi
+else
+    skip "real .rpm" "could not download the pinned Fedora package"
 fi
 
 section "what the real binaries taught us"

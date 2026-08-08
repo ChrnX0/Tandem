@@ -1,0 +1,67 @@
+#!/bin/bash
+# Tandem - explains an .rpm, and never pretends to install one.
+#
+# On a Debian-based system an .rpm is a dead end, and today it is a SILENT dead
+# end: nothing owns the type, so the double click does nothing whatsoever. The
+# owner went to the program's website, where the .rpm sat next to the .deb under
+# headings he could not read, downloaded one of them, and now his computer is
+# ignoring him. He has no way of knowing he picked the wrong file.
+#
+# So this command exists to say one sentence and then do something useful with
+# the package's name: look for the same program in the machine's own
+# repositories. That turns "no" into "yes, like this", which is a different
+# conversation entirely.
+#
+# It does not offer to convert with alien, and that is a decision rather than an
+# omission. A converted package carries dependency names that do not exist here,
+# skips the scripts that set the program up, and puts files where this
+# distribution does not keep them. The result looks installed and is not - the
+# exact failure this whole project exists to prevent.
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
+
+t_log_init rpm "$*"
+
+BRUTO="${1:-}"
+[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+ARQ="$(readlink -f -- "$BRUTO" 2>/dev/null)"
+[ -n "$ARQ" ] && [ -f "$ARQ" ] || { t_erro "Arquivo não encontrado:
+$BRUTO"; exit 1; }
+
+INFO="$(t_rpm_info "$ARQ")"
+t_diz "$INFO"
+ERRO="$(t_campo "$INFO" ERRO)"
+NOME="$(t_campo "$INFO" PACOTE)"
+DIST="$(t_campo "$INFO" DISTRIBUICAO)"
+VERSAO="$(t_campo "$INFO" VERSAO)"
+
+case "$ERRO" in
+    '') ;;
+    arquivo\ incompleto*)
+        t_erro "O download deste arquivo não terminou.
+
+$(basename -- "$ARQ")
+
+Mas vale saber de qualquer jeito: arquivos .rpm são de outra família de Linux e
+não instalam no seu sistema. Procure o arquivo .deb no mesmo site."
+        exit 1 ;;
+    *)
+        t_erro "Não consegui ler este arquivo.
+
+$ERRO"
+        exit 1 ;;
+esac
+
+t_diz "rpm $NOME $VERSAO de ${DIST:-origem desconhecida}"
+
+# The name is the useful part. If the same program is packaged for this system,
+# the answer stops being a refusal.
+EQUIVALENTE=""
+if [ -n "$NOME" ] && t_apt_candidato "$NOME" >/dev/null 2>&1; then
+    EQUIVALENTE="$NOME"
+    t_diz "existe equivalente no apt: $NOME"
+fi
+
+t_memoria_grava "$ARQ" LIMITE "outra-familia|rpm nao instala aqui" 2>/dev/null
+t_memoria_grava "$ARQ" RESULTADO "outra familia de linux" 2>/dev/null
+t_erro "$(t_texto_rpm "$NOME" "$DIST" "$EQUIVALENTE")"
+exit 1

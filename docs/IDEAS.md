@@ -225,13 +225,15 @@ distribution, and it is the piece the eventual OS would have needed anyway.
 |---|---|---|
 | `.AppImage` | nothing — arrives without the executable bit | **DONE in 3.7** — chmod, arch, truncated download, FUSE worked around, menu entry from the image's own desktop file |
 | `.jar` | nothing, or an archive manager opens it | **DONE in 3.7** — program-or-library from the manifest, Java version from the bytecode, `Class-Path` checked against the folder |
-| `.flatpakref` / `.flatpakrepo` | handled only if a store is installed | **DEPOIS** |
-| `.deb` double-clicked | a store opens, or nothing; a missing dependency reads as a broken file | **DEPOIS** — the diagnosis Tandem is best at, applied to the format the distribution itself uses |
-| `.rpm` on a Debian system | nothing useful | **DEPOIS** — refuse with the reason, and name the equivalent |
+| `.deb` double-clicked | nothing at all on the reference machine; a store elsewhere, where a missing dependency reads as a broken file | **DONE in 3.8** — apt simulated before the password, and the release-mismatch verdict separated from the missing-repository one by the shape of the name |
+| `.rpm` on a Debian system | nothing useful | **DONE in 3.8** — explained, never converted, and answered with the equivalent from the machine's own repositories |
+| `.flatpakref` / `.flatpakrepo` | handled only if a store is installed | **DONE in 3.8** — installs per-user; a .flatpakrepo is called a SOURCE, not an application |
+| `.snap`, loose file | needs `--dangerous`, which no tool explains | **DONE in 3.8** — the flag is named to the owner before it is used |
+| `.sh` / `.run` installers | a text editor, or a "Run in Terminal" prompt showing nothing | **DONE in 3.8** — and the MIME type deliberately left with the text editor |
 | `.msix` / `.appx` | nothing | **REJECTED for now** — Wine support is not there; promising it would be a lie |
 | kernel work, own package manager, own desktop | — | **REJECTED** — this is where projects of this shape die |
 
-### What the two done ones taught, for whoever does the next
+### What the nine taught, for whoever adds a tenth
 
 Worth writing down, because both lessons generalise and neither was obvious
 before the work.
@@ -254,8 +256,31 @@ maintainer to remember anything.
 And one that cost a wrong answer before being caught: **the exceptions in a
 format are the whole job.** `META-INF/versions/` exists so a *newer* Java picks
 those classes up, so counting them announced "needs Java 30" for a jar that runs
-fine on 21. The next format will have its own version of that clause. Find it
+fine on 21. `.deb` had the same shape of trap twice: a package truncated exactly
+on a member boundary parses cleanly, and a dependency's architecture qualifier
+(`python3:any`) is not part of its name. Every format has one of these. Find it
 before shipping.
+
+**Ask the system, do not re-derive it.** The best single decision in the `.deb`
+work was not writing a dependency resolver: `apt-get install -s` runs
+unprivileged and answers authoritatively, so the resolution is apt's and only the
+TRANSLATION is ours. A resolver in shell would have been a second opinion, wrong
+exactly when it disagreed with the one that counts. The same test applies to the
+next format: what already knows the answer, and can it be asked without a
+password?
+
+**Two verdicts that a tool writes identically can be opposite for the owner.**
+apt says "not installable" for both "built for another release, nothing to try"
+and "needs a repository you have not added, here are the instructions". The
+distinction is not in apt's output at all — it is in the SHAPE OF THE NAME, a
+library with a release welded into it versus a plain program name. Finding that
+distinction is the work; the message is the easy part.
+
+**A refusal has two causes and only one may be silent.** "The owner clicked
+Cancel" and "there was nobody to ask" arrive at the same branch, and treating
+them the same produced a handler that exited 0 with zero bytes. Every new
+question needs `t_tem_gui ||` on its refusal path, and the test that catches it
+is running every handler with no window and no terminal and demanding a sentence.
 
 ## The queue
 
@@ -266,7 +291,8 @@ before shipping.
    `desinstalar`, `dados`, `socorro`, and a double-click on a real `.xapk`,
    `.AppImage` and `.jar`.
 3. **A real shop program** — see below.
-4. `.deb` and `.rpm`, then `.flatpakref`. See the table above for why that order.
+4. Nothing more to add: all nine formats are done. What is missing for them is
+   field evidence, not code.
 
 ## The question still without an answer
 

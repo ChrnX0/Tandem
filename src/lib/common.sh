@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="3.7"
+TANDEM_VERSAO="3.8"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1296,6 +1296,13 @@ t_script_instalacao() {
             winetricks) printf 'apt-get install -y winetricks\n' ;;
             adb)        printf 'apt-get install -y adb\n' ;;
             java)       printf 'apt-get update -q\napt-get install -y default-jre\n' ;;
+            # On demand only, and deliberately NOT in t_pecas_faltando. Java and
+            # FUSE are needed to DIAGNOSE a file the owner is likely to have -
+            # Brazilian fiscal and NFe tools are routinely .jar. A .flatpakref is
+            # an artefact of the Linux enthusiast world; making every shop owner
+            # download a store for a file he will probably never see would be
+            # spending his connection on our tidiness.
+            flatpak)    printf 'apt-get update -q\napt-get install -y flatpak\n' ;;
             java[0-9]*)
                 # The version comes from a file read off the disk, so it never
                 # reaches the script without being reduced to digits: this
@@ -1673,4 +1680,277 @@ t_texto_appimage_fuse() {
     printf 'Para deixar rápido de vez:\n\n'
     printf 'sudo apt install libfuse2t64\n\n'
     printf '(em sistemas mais antigos o nome é libfuse2)\n'
+}
+
+# --------------------------------------------------- packages of the system
+#
+# The formats a Linux distribution uses to install software. They fail on a
+# double click for a third set of reasons - not Wine, not the execute bit - and
+# the reasons are all announced in the vocabulary of a package manager.
+#
+# The single most important fact here, established by measurement: "apt-get
+# install -s" runs WITHOUT ROOT and gives apt's own authoritative verdict,
+# including which dependency cannot be satisfied. So the whole diagnosis happens
+# before the owner is ever asked for a password. Nothing else in this project
+# gets to be that certain that early.
+
+t_deb_info() {
+    command -v python3 >/dev/null 2>&1 || return 1
+    python3 "$TANDEM_LIB/debinfo.py" "$1" 2>/dev/null
+}
+
+t_rpm_info() {
+    command -v python3 >/dev/null 2>&1 || return 1
+    python3 "$TANDEM_LIB/rpminfo.py" "$1" 2>/dev/null
+}
+
+# This system's package architecture, in dpkg's vocabulary (amd64, arm64, i386).
+t_arch_sistema() {
+    if command -v dpkg >/dev/null 2>&1; then
+        dpkg --print-architecture 2>/dev/null && return 0
+    fi
+    case "$(uname -m 2>/dev/null)" in
+        x86_64) printf 'amd64' ;;
+        aarch64) printf 'arm64' ;;
+        i?86) printf 'i386' ;;
+        *) printf '%s' "$(uname -m 2>/dev/null)" ;;
+    esac
+}
+
+# Can this machine install a package built for this architecture? "all" is
+# architecture-independent; a foreign architecture counts only if dpkg was told
+# about it, which is the same mechanism that makes 32-bit Wine possible.
+t_deb_arch_serve() {
+    local a="$1" minha
+    [ -z "$a" ] && return 0
+    [ "$a" = all ] && return 0
+    minha="$(t_arch_sistema)"
+    [ "$a" = "$minha" ] && return 0
+    command -v dpkg >/dev/null 2>&1 &&
+        dpkg --print-foreign-architectures 2>/dev/null | grep -qx -- "$a" && return 0
+    return 1
+}
+
+# Is this package already installed, and in which version?
+t_deb_instalado() {
+    local nome="$1" estado
+    command -v dpkg-query >/dev/null 2>&1 || return 1
+    estado="$(dpkg-query -W -f='${db:Status-Status} ${Version}' -- "$nome" 2>/dev/null)"
+    case "$estado" in
+        installed\ *) printf '%s' "${estado#installed }"; return 0 ;;
+    esac
+    return 1
+}
+
+# apt's own simulation of installing this file, as the current user. No lock is
+# taken and nothing is written, so this is safe to run before asking anything.
+t_apt_simula() {
+    command -v apt-get >/dev/null 2>&1 || return 1
+    LC_ALL=C timeout 120 apt-get install -s --no-install-recommends -- "$1" 2>&1
+}
+
+# The dependency names apt says it cannot satisfy, one per line.
+#
+# Read out of apt's own words rather than resolved here: reimplementing
+# dependency resolution in shell would be a second opinion that is wrong
+# whenever it disagrees with the only one that matters.
+t_deb_naoinstalaveis() {
+    printf '%s\n' "$1" |
+        sed -n 's/.*Depends: \([^ ]*\) but it is not installable.*/\1/p
+                s/.*Depends: \([^ ]*\) but it is not going to be installed.*/\1/p' |
+        sort -u | grep -v '^$'
+}
+
+# Does this name look like a library version welded to a distribution release?
+#
+# This is the difference between two verdicts that look identical in apt's
+# output. "libssl1.1 is not installable" means the package was built for an
+# older Ubuntu and will never install here; "acme-driver is not installable"
+# means it needs a repository the machine does not have. The first has no fix
+# and the second does, and telling the owner the wrong one wastes his afternoon.
+t_versao_de_sistema() {
+    case "$1" in
+        libssl1.*|libssl0.*|libcrypto*|libicu[0-9]*|libpython3.[0-9]*|python3.[0-9]*)
+            return 0 ;;
+        libwebkit2gtk-4.[0-9]*|libwebkitgtk-*|libgtk[0-9]*|libqt[0-9]*|libboost*[0-9].[0-9]*)
+            return 0 ;;
+        libncurses[0-9]*|libreadline[0-9]*|libtinfo[0-9]*|libdb[0-9].[0-9]*)
+            return 0 ;;
+        # The general shape: a name that ends in a version number, which is how
+        # a distribution pins an ABI. A plain program name does not look like
+        # this, and the ones that do (libreoffice7.x) are still release-bound.
+        lib*[0-9]) return 0 ;;
+        lib*[0-9].[0-9]*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Is there a package with this name in the machine's own repositories?
+# Answers for virtual packages too, which are provided by another package and
+# have no version of their own.
+t_apt_candidato() {
+    local nome="$1" c
+    command -v apt-cache >/dev/null 2>&1 || return 1
+    c="$(LC_ALL=C apt-cache policy -- "$nome" 2>/dev/null |
+         sed -n 's/^  Candidate: //p' | head -1)"
+    case "$c" in
+        ''|'(none)') ;;
+        *) printf '%s' "$c"; return 0 ;;
+    esac
+    LC_ALL=C apt-cache showpkg -- "$nome" 2>/dev/null |
+        grep -q 'Reverse Provides' && { printf 'virtual'; return 0; }
+    return 1
+}
+
+# Why did apt or dpkg fail? One sentence, in Portuguese, from their own words.
+#
+# Each line here is a message that was PRODUCED on a real machine and copied
+# from the terminal, not one imagined from documentation. The order is most
+# specific first: several of these appear together, and the first one is the
+# cause while the rest are consequences.
+t_causa_apt() {
+    local log="$1"
+    if grep -qE 'Could not get lock|frontend lock was locked|is another process using it' \
+            "$log" 2>/dev/null; then
+        printf 'O computador já está instalando ou atualizando outra coisa.\n\n'
+        printf 'Espere um ou dois minutos e tente de novo. Não é defeito: dois programas\n'
+        printf 'não podem instalar ao mesmo tempo, então este esperou a vez dele e desistiu.'
+        return 0
+    fi
+    if grep -q 'does not match system' "$log" 2>/dev/null; then
+        printf 'Este pacote foi feito para outro tipo de processador.'
+        return 0
+    fi
+    if grep -q 'No space left on device' "$log" 2>/dev/null; then
+        printf 'O disco está cheio.'
+        return 0
+    fi
+    if grep -q 'trying to overwrite' "$log" 2>/dev/null; then
+        printf 'Este pacote quer sobrescrever um arquivo que pertence a outro programa\n'
+        printf 'já instalado. Instalar assim quebraria o outro, então não instalei.'
+        return 0
+    fi
+    if grep -qE 'Temporary failure resolving|Could not resolve|Network is unreachable|Connection timed out' \
+            "$log" 2>/dev/null; then
+        printf 'O computador não conseguiu acessar a internet para baixar o que falta.'
+        return 0
+    fi
+    if grep -qE 'is not valid yet|Release file.*not valid|certificate' "$log" 2>/dev/null; then
+        printf 'A data do computador parece errada, e isso derruba os downloads.\n'
+        printf 'Hoje o computador acha que é %s.' "$(date '+%d/%m/%Y')"
+        return 0
+    fi
+    if grep -qE 'NO_PUBKEY|not signed|GPG error' "$log" 2>/dev/null; then
+        printf 'Um dos repositórios desta máquina está sem a assinatura digital dele,\n'
+        printf 'e o sistema se recusa a baixar de uma fonte que não pode conferir.'
+        return 0
+    fi
+    if grep -qE 'dependency problems|unmet dependencies|held broken packages' "$log" 2>/dev/null; then
+        printf 'Faltam componentes que este pacote precisa, e eles não estão disponíveis\n'
+        printf 'nesta máquina.'
+        return 0
+    fi
+    return 1
+}
+
+# The .desktop files the system offers, one path per line. Used before and after
+# an install, to say WHERE the program went - the same service "tandem programas"
+# provides for Windows software, and for the same reason: on Wayland the menu
+# does not refresh, so a program the owner cannot find is a program he does not
+# have.
+t_atalhos_do_sistema() {
+    find /usr/share/applications /usr/local/share/applications \
+         -maxdepth 1 -name '*.desktop' -type f 2>/dev/null | sort
+}
+
+t_anuncia_atalhos_do_sistema() {
+    local antes="$1" novos nomes
+    novos="$(comm -13 <(printf '%s\n' "$antes") <(t_atalhos_do_sistema) 2>/dev/null)"
+    [ -n "$novos" ] || return 1
+    nomes="$(printf '%s\n' "$novos" | while IFS= read -r d; do
+        [ -f "$d" ] || continue
+        sed -n 's/^Name=//p' "$d" | head -1
+    done | grep -v '^$' | head -8)"
+    [ -n "$nomes" ] || return 1
+    printf '%s' "$nomes"
+    return 0
+}
+
+# A .flatpakref and a .flatpakrepo are both plain INI files. One field out of
+# one, without needing flatpak installed to read it.
+t_flatpak_campo() {
+    local arq="$1" chave="$2"
+    [ -f "$arq" ] || return 1
+    sed -n "s/^[[:space:]]*${chave}[[:space:]]*=[[:space:]]*//p" "$arq" | head -1
+}
+
+# Does this shell script look like a program INSTALLER, or like a script?
+#
+# The distinction decides what to offer the owner. A self-extracting installer -
+# makeself, shar, a vendor blob - is meant to be run, and running it is the
+# whole point of the double click. A plain script is much more likely something
+# he wants to LOOK at, and offering to execute it first would be teaching a
+# habit that gets people's machines broken.
+t_script_instalador() {
+    local f="$1"
+    head -c 8192 -- "$f" 2>/dev/null |
+        grep -qE 'makeself|Makeself|_ARCHIVE|^# This script was generated|shar|sfx|self-extract' &&
+        return 0
+    # A tiny script is a script. A megabyte of "shell script" is a payload with
+    # a shell header, which is exactly what a vendor installer is.
+    [ "$(stat -c%s -- "$f" 2>/dev/null || echo 0)" -gt 262144 ] && return 0
+    return 1
+}
+
+# ------------------------------------------- messages, in Portuguese
+
+t_texto_deb_versao_errada() {
+    local faltando="$1"
+    printf 'Este programa foi feito para uma versão diferente do seu sistema.\n\n'
+    printf 'Ele precisa destes componentes, e nenhum deles existe nesta máquina:\n'
+    printf '%s\n' "$(printf '%s\n' "$faltando" | sed 's/^/  - /')"
+    printf '\nNão é defeito da sua máquina nem do programa. Quem distribui esse pacote\n'
+    printf 'publicou uma versão para um sistema mais antigo (ou mais novo) que o seu.\n\n'
+    printf 'No site de onde você baixou, procure a versão que combina com o seu sistema.\n'
+}
+
+t_texto_deb_falta_repositorio() {
+    local faltando="$1"
+    printf 'Falta um componente que não está nos repositórios desta máquina:\n'
+    printf '%s\n' "$(printf '%s\n' "$faltando" | sed 's/^/  - /')"
+    printf '\nIsso costuma querer dizer que o programa espera que você adicione antes o\n'
+    printf 'repositório dele. Veja as instruções no site de onde você baixou o arquivo.\n'
+}
+
+t_texto_deb_arch() {
+    local do_pacote="$1" da_maquina="$2"
+    printf 'Este pacote foi feito para outro tipo de processador.\n\n'
+    printf 'Ele é para %s e este computador é %s.\n\n' "$do_pacote" "$da_maquina"
+    printf 'Procure no site de onde você baixou a versão para %s.\n' "$da_maquina"
+}
+
+t_texto_rpm() {
+    local nome="$1" dist="$2" equivalente="$3"
+    printf 'Este arquivo é um pacote de outra família de Linux.\n\n'
+    printf 'Arquivos .rpm são do Fedora, do openSUSE e parecidos.\n'
+    [ -n "$dist" ] && printf 'Este aqui foi feito por: %s\n' "$dist"
+    printf '\nO seu sistema usa arquivos .deb. Instalar este aqui não funciona, e nem\n'
+    printf 'convertendo: a conversão produz algo que parece instalado e não está.\n'
+    if [ -n "$equivalente" ]; then
+        printf '\nA boa notícia: o mesmo programa está no seu próprio sistema. Para instalar,\n'
+        printf 'abra o Terminal e execute:\n\n'
+        printf 'sudo apt install %s\n' "$equivalente"
+    elif [ -n "$nome" ]; then
+        printf '\nNo site de onde você baixou, procure o arquivo .deb%s.\n' \
+               "${nome:+ do \"$nome\"}"
+    fi
+}
+
+t_texto_script_perigo() {
+    local f="$1"
+    printf 'Este arquivo é um script: uma lista de comandos que o computador executa.\n\n'
+    printf '%s\n\n' "$(basename -- "$f")"
+    printf 'Um script pode fazer qualquer coisa que você pode fazer - inclusive apagar\n'
+    printf 'os seus arquivos. Só execute se você confia em quem mandou.\n\n'
+    printf 'Se você baixou de um site que não conhece, a resposta certa é não executar.\n'
 }

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Install with Tandem (Snap)
+Name[pt_BR]=Instalar com Tandem (Snap)
+Comment=Install this snap file, saying first that it cannot be verified
+Comment[pt_BR]=Instala este arquivo snap, avisando antes que ele não pode ser verificado
+Exec=/usr/bin/tandem-snap %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+MimeType=application/vnd.snap;
+Categories=System;

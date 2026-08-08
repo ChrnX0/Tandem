@@ -20,7 +20,8 @@ MAN = os.path.join(ROOT, "man")
 MTIME = 1735689600  # fixed, for reproducible builds
 
 MANPAGES = ["tandem", "tandem-exe", "tandem-apk", "tandem-android", "tandem-repair",
-            "tandem-appimage", "tandem-jar"]
+            "tandem-appimage", "tandem-jar", "tandem-deb", "tandem-rpm",
+            "tandem-flatpak", "tandem-snap", "tandem-script"]
 
 # path in package  <-  path in repo, mode
 LAYOUT = [
@@ -31,12 +32,19 @@ LAYOUT = [
     ("usr/bin/tandem-repair",    "bin/tandem-repair",    0o755),
     ("usr/bin/tandem-appimage",  "bin/tandem-appimage",  0o755),
     ("usr/bin/tandem-jar",       "bin/tandem-jar",       0o755),
+    ("usr/bin/tandem-deb",       "bin/tandem-deb",       0o755),
+    ("usr/bin/tandem-rpm",       "bin/tandem-rpm",       0o755),
+    ("usr/bin/tandem-flatpak",   "bin/tandem-flatpak",   0o755),
+    ("usr/bin/tandem-snap",      "bin/tandem-snap",      0o755),
+    ("usr/bin/tandem-script",    "bin/tandem-script",    0o755),
     ("usr/lib/tandem/common.sh",   "lib/common.sh",   0o644),
     ("usr/lib/tandem/winedeps.sh", "lib/winedeps.sh", 0o644),
     ("usr/lib/tandem/apkinfo.py",  "lib/apkinfo.py",  0o755),
     ("usr/lib/tandem/peinfo.py",   "lib/peinfo.py",   0o755),
     ("usr/lib/tandem/appimageinfo.py", "lib/appimageinfo.py", 0o755),
     ("usr/lib/tandem/jarinfo.py",  "lib/jarinfo.py",  0o755),
+    ("usr/lib/tandem/debinfo.py",  "lib/debinfo.py",  0o755),
+    ("usr/lib/tandem/rpminfo.py",  "lib/rpminfo.py",  0o755),
     ("usr/lib/tandem/verbos.tsv",  "lib/verbos.tsv",  0o644),
     ("usr/lib/tandem/limites.tsv", "lib/limites.tsv", 0o644),
     ("usr/lib/tandem/alternativas.tsv", "lib/alternativas.tsv", 0o644),
@@ -46,6 +54,11 @@ LAYOUT = [
     ("usr/share/applications/tandem-android.desktop", "applications/tandem-android.desktop", 0o644),
     ("usr/share/applications/tandem-appimage.desktop", "applications/tandem-appimage.desktop", 0o644),
     ("usr/share/applications/tandem-jar.desktop",      "applications/tandem-jar.desktop",      0o644),
+    ("usr/share/applications/tandem-deb.desktop",      "applications/tandem-deb.desktop",      0o644),
+    ("usr/share/applications/tandem-rpm.desktop",      "applications/tandem-rpm.desktop",      0o644),
+    ("usr/share/applications/tandem-flatpak.desktop",  "applications/tandem-flatpak.desktop",  0o644),
+    ("usr/share/applications/tandem-snap.desktop",     "applications/tandem-snap.desktop",     0o644),
+    ("usr/share/applications/tandem-script.desktop",   "applications/tandem-script.desktop",   0o644),
     ("usr/share/icons/hicolor/scalable/apps/tandem.svg", "icons/tandem.svg", 0o644),
     ("usr/share/polkit-1/rules.d/49-tandem.rules", "polkit/49-tandem.rules", 0o644),
     ("usr/share/mime/packages/tandem.xml", "mime/tandem.xml", 0o644),

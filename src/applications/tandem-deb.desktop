@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Install with Tandem
+Name[pt_BR]=Instalar com Tandem
+Comment=Install this system package, checking what it needs first
+Comment[pt_BR]=Instala este pacote do sistema, conferindo antes o que ele precisa
+Exec=/usr/bin/tandem-deb %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+MimeType=application/vnd.debian.binary-package;application/x-deb;application/x-debian-package;
+Categories=System;

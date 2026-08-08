@@ -4,10 +4,10 @@
 
 ### Double-click a file. It runs.
 
-**`.exe` · `.msi` · `.apk` · `.xapk` · `.AppImage` · `.jar` on Linux — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
+**Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-364-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-463-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -128,8 +128,8 @@ tandem protect ~/.wine-pos     # mark any prefix untouchable, explicitly
 Download the `.deb` from **[Releases](../../releases/latest)** and double-click it. Or, from a terminal:
 
 ```bash
-curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.7_all.deb
-sudo apt install ./tandem_3.7_all.deb
+curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.8_all.deb
+sudo apt install ./tandem_3.8_all.deb
 ```
 
 <details>
@@ -142,7 +142,7 @@ The build is reproducible: the `.deb` attached to the release is byte-for-byte i
 ```bash
 git clone https://github.com/ChrnX0/Tandem && cd Tandem
 python3 build.py --check
-sha256sum tandem_3.7_all.deb          # compare with the .sha256 on the release
+sha256sum tandem_3.8_all.deb          # compare with the .sha256 on the release
 ```
 
 Every release is built by the workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml), which runs the suite and `lintian`, then really installs, configures and purges the package on Ubuntu 24.04 — and only publishes if all of that passes.
@@ -177,6 +177,9 @@ This cannot happen while the `.deb` installs: `dpkg` holds a lock during `postin
 | Split packages (`.xapk`) | `adb` |
 | `.jar` programs | `java` — `default-jre` |
 | `.AppImage`, at full speed | `libfuse2t64` (without it Tandem unpacks instead, and says so) |
+| `.deb` packages | nothing — `apt` and `dpkg` are already there |
+| `.flatpakref` | `flatpak` — Tandem offers to install it when a file needs it |
+| `.snap` | `snapd` |
 | ARM-only apps on x86 | [libhoudini / libndk](https://github.com/casualsnek/waydroid_script) |
 
 Tested on Zorin OS 18.1 and Ubuntu 24.04. Should work on any Debian-based distribution with a freedesktop-compliant desktop.
@@ -194,7 +197,9 @@ Tested on Zorin OS 18.1 and Ubuntu 24.04. Should work on any Debian-based distri
 
 ## The formats Linux uses itself
 
-Two of them fail on a double click for reasons that have nothing to do with Wine, and everything to do with Linux. Tandem treats them the same way it treats an `.exe`: read the file first, explain in a sentence, fix what can be fixed.
+Five of them fail on a double click for reasons that have nothing to do with Wine, and everything to do with Linux. Tandem treats them the same way it treats an `.exe`: read the file first, explain in a sentence, fix what can be fixed.
+
+On the machine this project was born on, **nobody owned four of these types**. Not a bad message being improved — a vacuum. The double click did nothing at all.
 
 ### `.AppImage` — one file, no install, and a double click that does nothing
 
@@ -235,6 +240,58 @@ sudo apt install openjdk-22-jre
 Classes under `META-INF/versions/` are deliberately excluded from that calculation — they exist so a *newer* Java can pick them up, and counting them would demand a Java the program does not need. That claim is checked against a real JVM in CI: a jar is compiled, its version bumped by one, and the JVM has to refuse it with exactly the number Tandem predicted.
 
 It also unfolds the manifest's 72-byte line wrapping before checking a `Class-Path`, because a wrapped one splits file names down the middle — and reports the **file** that is missing rather than the class name Java would have named.
+
+### `.deb` — your own system's format, and the worst message of the lot
+
+A `.deb` from a website is the commonest thing a Linux beginner downloads, and the commonest way it fails. Here is what Ubuntu 24.04 actually says when the package was built for an older release — copied off a terminal, not paraphrased:
+
+```
+programa-antigo : Depends: libssl1.1 but it is not installable
+E: Unable to correct problems, you have held broken packages.
+```
+
+You held nothing. You downloaded the file the website offered you. And the one thing you needed to know — *this was built for a different version of your system; go back and pick the other one* — is in neither line.
+
+Tandem says that instead. **And it says it before asking for your password**, because `apt-get install -s` answers unprivileged: there is no reason to make somebody type a password to be told no.
+
+| What is wrong | What you are told |
+|---|---|
+| Built for another release | *"this program was made for a different version of your system"*, with the components named, and that there is nothing to try |
+| Needs a repository you don't have | *"look at the website's instructions"* — a different verdict, and it is the **name** that separates them: a library with a release welded into it (`libssl1.1`, `libicu70`) will never install here; a plain program name will |
+| Built for another processor | *"it is for `arm64` and this computer is `amd64`"* |
+| Would **remove** other programs | the list, and a question — this is the one path that can do real damage |
+| An older version than you have | a question, with dpkg deciding which is newer, because Debian version ordering has rules a string comparison gets wrong |
+| The download was cut short | *"the download did not finish"* |
+| Another install is already running | *"the computer is already installing something else — wait a minute"*, instead of `Could not get lock /var/lib/dpkg/lock-frontend` |
+
+> Every current Ubuntu `.deb` uses `control.tar.zst`, which Python cannot read and for which neither the `zstd` command nor `python3-zstandard` is installed by default. Tandem reads it through `libzstd` directly — the library `dpkg` itself pre-depends on, so on any machine where a `.deb` means anything, it is there by construction.
+
+### `.rpm` — a dead end, answered with the way out
+
+An `.rpm` will not install on a Debian-based system, and today nothing says so: no handler owns the type, so the double click does nothing. Tandem reads the name, version and distribution out of the header — no `rpm` needed — and then does the useful thing: **looks for the same program in your own repositories.**
+
+```
+Este arquivo é um pacote de outra família de Linux.
+Este aqui foi feito por: Fedora Project
+
+A boa notícia: o mesmo programa está no seu próprio sistema. Para instalar:
+
+sudo apt install hello
+```
+
+**Converting it with `alien` is deliberately not offered.** A converted package carries dependency names that do not exist here and skips the scripts that set the program up — it produces something that *looks* installed and is not, which is the exact failure this project exists to prevent.
+
+### `.flatpakref` · `.snap` — and one honest warning
+
+A `.flatpakref` installs for your user, no password. A `.flatpakrepo` adds a **source** and installs nothing, and is described in those words rather than dressed up as an application.
+
+A loose `.snap` can only be installed with a flag literally named `--dangerous`, because it carries no signature the system can check. Tandem tells you that, in your language, before using it. A tool that passes `--dangerous` quietly is making that decision on your behalf.
+
+### `.sh` · `.run` — the one case where the answer is *not* to run it
+
+A script does anything its author wants, including deleting everything you have. So this handler splits by what the file actually is: a vendor installer (makeself, a megabyte of payload behind a shell header) is *meant* to be run and gets that offer; a small plain script gets offered **as text first**, because that is almost certainly what you want with a file you just downloaded.
+
+And `application/x-shellscript` is the one type `tandem repair` deliberately **does not claim**. Opening a downloaded script in a text editor is a defensible default, and Tandem does not take a type away from a handler that is already doing the right thing. It stays reachable through "Open with" and `tandem install`.
 
 ---
 
@@ -329,7 +386,7 @@ The five rules that do not bend, and the evidence bar that "done" has to clear, 
 
 ```bash
 python3 build.py --check   # packages; no Debian host, no dpkg-deb
-bash tests/run.sh          # 364 tests; no Wine, no Waydroid, no install
+bash tests/run.sh          # 463 tests; no Wine, no Waydroid, no install
 ```
 
 The suite sources the shell libraries straight from `src/lib` and synthesises Android packages including a real binary `AndroidManifest.xml`, so the manifest parser runs on the same code path a real APK takes. Optional tools (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) are used when present and skipped when absent, so it passes on a bare machine.

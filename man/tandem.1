@@ -1,4 +1,4 @@
-.TH TANDEM 1 "2026-08-08" "tandem 3.7" "Comandos do usuário"
+.TH TANDEM 1 "2026-08-09" "tandem 3.8" "Comandos do usuário"
 .SH NOME
 tandem \- roda programas Windows, aplicativos Android e pacotes do Linux
 .SH SINOPSE
@@ -17,6 +17,21 @@ tandem \- roda programas Windows, aplicativos Android e pacotes do Linux
 .br
 .B tandem-jar
 .I arquivo.jar
+.br
+.B tandem-deb
+.I arquivo.deb
+.br
+.B tandem-rpm
+.I arquivo.rpm
+.br
+.B tandem-flatpak
+.I arquivo.flatpakref
+.br
+.B tandem-snap
+.I arquivo.snap
+.br
+.B tandem-script
+.I arquivo.sh
 .br
 .B tandem-android
 .br
@@ -58,21 +73,69 @@ carrega. Um
 saber de qual versão do Java ele precisa \(em de modo que
 .RB \(lq "class file version 65" \(rq
 seja respondido com \(lqisto precisa do Java 21\(rq.
+.PP
+Para os pacotes da própria distribuição, todo o diagnóstico acontece
+.B antes
+de pedir a senha. Isso não é preferência, é um fato medido: o
+.B apt-get install -s
+responde sem privilégio nenhum e já diz qual dependência não pode ser
+satisfeita. Um
+.I .deb
+feito para outra versão do sistema é relatado como exatamente isso, em vez de
+como \(lqlibssl1.1 but it is not installable\(rq \(em e a diferença entre esse
+caso e \(lqfalta um repositório que você precisa adicionar\(rq é decidida pelo
+nome: uma biblioteca com a versão soldada no nome nunca vai instalar aqui.
+.PP
+Um
+.I .rpm
+não instala neste sistema e o Tandem não oferece converter: um pacote convertido
+traz nomes de dependência que não existem aqui e pula os scripts de instalação,
+produzindo algo que parece instalado e não está. Em vez disso, o Tandem procura o
+mesmo programa nos repositórios da própria máquina e mostra o comando.
+.PP
+Um
+.I .sh
+é o único caso em que a resposta padrão do Tandem
+.B não
+é executar. Um script faz tudo o que o dono pode fazer, e a diferença entre um
+instalador de fabricante \(em makeself, um payload atrás de um cabeçalho de shell
+\(em e um script qualquer decide o que é oferecido primeiro: executar, ou ler.
+Por isso
+.I application/x-shellscript
+é o único tipo que o
+.B tandem repair
+deliberadamente
+.B não
+reivindica: abrir um script baixado num editor de texto é uma resposta melhor do
+que executá-lo, e o Tandem não tira um tipo de quem já está fazendo a coisa
+certa. O
+.B tandem-script
+continua alcançável pelo \(lqAbrir com\(rq e pelo
+.BR "tandem install" .
 .SH COMANDOS
 .TP
 .B tandem
 Abre o painel gráfico. Sem sessão gráfica, mostra esta ajuda.
 .TP
 .BI "tandem install " arquivo
-Instala ou executa o arquivo, escolhendo Wine, Android, AppImage ou Java
-pelo tipo. Quando o nome não diz nada, decide pelo conteúdo.
+Instala ou executa o arquivo, escolhendo entre os nove formatos pelo tipo.
+Quando o nome não diz nada, decide pelo conteúdo, sempre da marca mais
+específica para a mais genérica: todo AppImage é um ELF, todo
+.I .jar
+é um zip e todo
+.I .deb
+é um arquivo
+.BR ar .
 .TP
 .B tandem android
 Abre a tela do Android.
 .TP
 .B "tandem preparar"
 Instala o que falta — Wine, winetricks, suporte a 32 bits, adb, o Java, o
-FUSE e o Android (Waydroid) — e inicializa o Android. Pede a senha uma vez só. Isso não pode
+FUSE e o Android (Waydroid) — e inicializa o Android. O Flatpak fica de fora
+de propósito: ele é instalado na hora, se um
+.I .flatpakref
+aparecer. Pede a senha uma vez só. Isso não pode
 acontecer durante a instalação do pacote: o
 .BR dpkg (1)
 segura uma trava enquanto o
@@ -254,6 +317,16 @@ Atalhos de menu que o Tandem criou para AppImages, com a linha
 .I X-Tandem-AppImage
 apontando para o arquivo. Um atalho cujo arquivo desapareceu é apagado
 sozinho na próxima listagem.
+.TP
+.I ~/.config/tandem/tipos-aplicados.txt
+Os tipos de arquivo que o Tandem já reivindicou nesta máquina. Numa
+atualização, só os tipos ausentes desta lista são reivindicados de novo \(em um
+tipo que o dono nunca viu o Tandem assumir não carrega decisão dele para
+sobrescrever.
+.TP
+.I ~/.config/tandem/.primeira-vez
+Qual versão do Tandem fez o trabalho de primeira execução. Antes era um arquivo
+vazio, e por isso uma máquina atualizada nunca reivindicava os formatos novos.
 .TP
 .I ~/.local/state/tandem/lista.tsv
 A lista da comunidade, quando baixada por

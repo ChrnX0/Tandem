@@ -1,0 +1,265 @@
+#!/bin/bash
+# Tandem - installs a .deb, and says why when it cannot.
+#
+# This is the distribution's OWN format, and on the machine this project was
+# born on nothing owns the type: the double click does nothing at all, exactly
+# like an AppImage. When something does open it, the message for the commonest
+# failure is unusable. Measured on a real Ubuntu 24.04, installing a package
+# built for an older release:
+#
+#   programa-antigo : Depends: libssl1.1 but it is not installable
+#   E: Unable to correct problems, you have held broken packages.
+#
+# The owner held nothing. He downloaded the file the website offered him, and the
+# real answer - "this was built for a different version of your system, go back
+# and pick the other one" - appears nowhere in those two lines.
+#
+# The whole diagnosis happens BEFORE the password is asked. That is not a
+# preference, it is a measured fact: "apt-get install -s" runs unprivileged and
+# gives apt's own authoritative verdict, unmet dependency names included. There
+# is no reason to make somebody type a password to be told no.
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
+
+t_log_init deb "$*"
+
+BRUTO="${1:-}"
+[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+PACOTE_ARQ="$(readlink -f -- "$BRUTO" 2>/dev/null)"
+[ -n "$PACOTE_ARQ" ] && [ -f "$PACOTE_ARQ" ] || { t_erro "Arquivo não encontrado:
+$BRUTO"; exit 1; }
+
+# See the long comment in tandem-exe about the braces around exec.
+CHAVE="$(printf '%s' "$PACOTE_ARQ" | cksum | tr -d ' ')"
+if { exec 7> "$TANDEM_TRAVAS/deb-$CHAVE.lock"; } 2>/dev/null; then
+    flock -n 7 || { t_aviso "Este pacote já está sendo instalado..."; exit 0; }
+else
+    t_diz "nao consegui criar a trava; seguindo sem ela"
+fi
+
+# ------------------------------------------------- 1. Read it without root
+INFO="$(t_deb_info "$PACOTE_ARQ")"
+t_diz "$INFO"
+ERRO="$(t_campo "$INFO" ERRO)"
+NOME="$(t_campo "$INFO" PACOTE)"
+VERSAO="$(t_campo "$INFO" VERSAO)"
+ARCH="$(t_campo "$INFO" ARQUITETURA)"
+TAMANHO="$(t_campo "$INFO" TAMANHO)"
+DESCRICAO="$(t_campo "$INFO" DESCRICAO)"
+
+case "$ERRO" in
+    '') ;;
+    arquivo\ incompleto*)
+        t_memoria_grava "$PACOTE_ARQ" RESULTADO "incompleto" 2>/dev/null
+        t_erro "O download deste arquivo não terminou.
+
+$(basename -- "$PACOTE_ARQ")
+
+O pacote diz por dentro que deveria ser maior do que é. Baixe de novo e tente
+outra vez."
+        exit 1 ;;
+    *)
+        t_erro "Não consegui ler este pacote.
+
+$ERRO"
+        exit 1 ;;
+esac
+[ -n "$NOME" ] || { t_erro "Este arquivo não parece ser um pacote do sistema."; exit 1; }
+
+MAQUINA="$(t_arch_sistema)"
+t_diz "pacote $NOME $VERSAO ($ARCH), maquina $MAQUINA"
+t_memoria_grava "$PACOTE_ARQ" ARQUITETURA "$ARCH" 2>/dev/null
+
+# ------------------------------------------------------- 2. Wrong processor
+if ! t_deb_arch_serve "$ARCH"; then
+    t_memoria_grava "$PACOTE_ARQ" RESULTADO "arquitetura errada" 2>/dev/null
+    t_memoria_grava "$PACOTE_ARQ" LIMITE "arquitetura|$(t_texto_deb_arch "$ARCH" "$MAQUINA")" 2>/dev/null
+    t_erro "$(t_texto_deb_arch "$ARCH" "$MAQUINA")"
+    exit 1
+fi
+
+# ------------------------------------------------------ 3. Already there?
+if JA="$(t_deb_instalado "$NOME")"; then
+    if [ "$JA" = "$VERSAO" ]; then
+        t_ok "$NOME $VERSAO já está instalado nesta máquina.
+
+Não precisa instalar de novo. Procure o programa no menu de aplicativos."
+        exit 0
+    fi
+    # Which of the two is newer is dpkg's call, not ours: version comparison in
+    # Debian has rules (epochs, tildes, ~beta sorting before the release) that a
+    # string comparison in shell gets wrong.
+    if command -v dpkg >/dev/null 2>&1 && dpkg --compare-versions "$JA" gt "$VERSAO"; then
+        if ! t_pergunta "Você já tem uma versão MAIS NOVA deste programa instalada.
+
+Instalada:  $JA
+Este arquivo:  $VERSAO
+
+Instalar este vai voltar o programa para trás, e às vezes isso quebra os dados
+que ele já guardou. Quer mesmo?" "Voltar para a versão antiga" "Cancelar"; then
+            # A refusal with a window means the owner said no, and silence is
+            # right. A refusal with NO window means nobody was asked, and
+            # exiting quietly there is a double click that did nothing.
+            t_diz "downgrade recusado (ou nao houve como perguntar): $JA -> $VERSAO"
+            t_tem_gui || t_erro "Não instalei $NOME.
+
+Você já tem a versão $JA, que é mais nova que a $VERSAO deste arquivo, e não há
+janela nem terminal para eu perguntar se você quer voltar atrás.
+
+Pelo Terminal:  sudo apt install --allow-downgrades \"$PACOTE_ARQ\""
+            exit 0
+        fi
+        VOLTANDO=1
+    else
+        t_diz "atualizacao: $JA -> $VERSAO"
+    fi
+fi
+
+# --------------------------------------- 4. What apt says, with no password
+#
+# The one thing here that is certain, and it is certain before anything is
+# changed on the machine.
+SIMULACAO=""
+if command -v apt-get >/dev/null 2>&1; then
+    t_progresso_abre "Conferindo o que este pacote precisa..."
+    SIMULACAO="$(t_apt_simula "$PACOTE_ARQ")"
+    t_progresso_fecha
+    t_diz "--- simulacao do apt ---"
+    t_diz "$SIMULACAO"
+else
+    t_diz "sem apt-get: nao da para conferir as dependencias antes"
+fi
+
+FALTANDO="$(t_deb_naoinstalaveis "$SIMULACAO")"
+if [ -n "$FALTANDO" ]; then
+    # Two verdicts that look identical in apt's output and are completely
+    # different for the owner: one has no fix, the other has instructions on
+    # the website he downloaded from.
+    DE_SISTEMA=""
+    DE_TERCEIRO=""
+    while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        if t_versao_de_sistema "$f"; then DE_SISTEMA="${DE_SISTEMA:+$DE_SISTEMA
+}$f"
+        else DE_TERCEIRO="${DE_TERCEIRO:+$DE_TERCEIRO
+}$f"; fi
+    done <<FIM_FALTANDO
+$FALTANDO
+FIM_FALTANDO
+    t_memoria_grava "$PACOTE_ARQ" RESULTADO "faltam dependencias" 2>/dev/null
+    if [ -n "$DE_SISTEMA" ]; then
+        t_memoria_grava "$PACOTE_ARQ" LIMITE "versao-do-sistema|$(printf '%s' "$DE_SISTEMA" | tr '\n' ' ')" 2>/dev/null
+        t_erro "$(t_texto_deb_versao_errada "$DE_SISTEMA")"
+    else
+        t_erro "$(t_texto_deb_falta_repositorio "$DE_TERCEIRO")"
+    fi
+    exit 1
+fi
+
+# Installing a third-party .deb that wants to REMOVE things is the one way this
+# path can do real damage, and apt announces it in a line the owner would scroll
+# past. It is put in front of him, with the list.
+REMOVIDOS="$(printf '%s\n' "$SIMULACAO" |
+             sed -n '/The following packages will be REMOVED/,/^[A-Z0-9]/p' |
+             grep '^  ' | tr -s ' ' | sed 's/^ //')"
+if [ -n "$REMOVIDOS" ]; then
+    if ! t_pergunta "Para instalar este pacote, o sistema quer REMOVER estes programas:
+
+$(printf '%s\n' "$REMOVIDOS" | tr ' ' '\n' | grep -v '^$' | sed 's/^/  - /' | head -20)
+
+Isso pode desinstalar coisas que você usa. Quer continuar?" "Continuar assim mesmo" "Cancelar"; then
+        t_diz "instalacao recusada (ou nao houve como perguntar): removeria $REMOVIDOS"
+        t_tem_gui || t_erro "Não instalei $NOME.
+
+Para instalá-lo o sistema teria que REMOVER outros programas, e não há janela nem
+terminal para eu perguntar se você aceita isso."
+        exit 0
+    fi
+fi
+
+JUNTO="$(printf '%s\n' "$SIMULACAO" |
+         sed -n '/The following NEW packages will be installed/,/^[0-9]* upgraded/p' |
+         grep '^  ' | tr -s ' \n' ' ' | sed "s/^ //;s/ $//;s/\b$NOME\b//" |
+         tr -s ' ')"
+
+# ---------------------------------------------------------- 5. Ask, install
+PERGUNTA="Instalar este programa?
+
+$NOME $VERSAO${DESCRICAO:+
+$DESCRICAO}"
+[ -n "$TAMANHO" ] && PERGUNTA="$PERGUNTA
+
+Vai ocupar cerca de $(t_tamanho_amigavel $((TAMANHO * 1024)))."
+[ -n "$JUNTO" ] && PERGUNTA="$PERGUNTA
+
+Junto com ele vêm:$(printf '%s' " $JUNTO" | cut -c1-300)"
+PERGUNTA="$PERGUNTA
+
+Precisa da sua senha."
+
+if ! t_pergunta "$PERGUNTA" "Instalar" "Cancelar"; then
+    if [ -t 0 ]; then
+        printf '%s\n\nInstalar? [s/N] ' "$PERGUNTA"
+        read -r r
+        case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
+    else
+        # With no window and no terminal there is nobody to confirm to. Saying
+        # what would have been installed is the least this can do; installing
+        # without asking is not on the table.
+        t_erro "Não instalei $NOME: preciso de uma confirmação e não há janela nem
+terminal para perguntar.
+
+Pelo Terminal:  sudo apt install \"$PACOTE_ARQ\""
+        exit 1
+    fi
+fi
+
+ANTES_ATALHOS="$(t_atalhos_do_sistema)"
+MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+t_progresso_abre "Instalando $NOME. Não desligue o computador..."
+# apt and not "dpkg -i", on purpose: apt pulls the missing dependencies from the
+# repositories, and dpkg does not. With dpkg the commonest outcome is a package
+# left half-installed, which is a worse state than not installed at all.
+t_como_root "export DEBIAN_FRONTEND=noninteractive
+apt-get install -y ${VOLTANDO:+--allow-downgrades }-- '$PACOTE_ARQ'" >>"$LOG" 2>&1
+CODIGO=$?
+t_progresso_fecha
+
+if [ "$CODIGO" -eq 127 ]; then
+    t_erro "Não consegui pedir a sua senha para instalar.
+
+Abra o Terminal e execute:
+
+sudo apt install \"$PACOTE_ARQ\""
+    exit 1
+fi
+
+# The acid test is dpkg's own database, not the exit code: apt can return 0 with
+# a package left unconfigured, and it can return non-zero after the package is
+# already in. The question is whether it is installed, so that is the question
+# that gets asked.
+if AGORA="$(t_deb_instalado "$NOME")"; then
+    t_memoria_grava "$PACOTE_ARQ" RESULTADO instalado 2>/dev/null
+    t_memoria_grava "$PACOTE_ARQ" VISTO_EM "$(date +%F)" 2>/dev/null
+    ONDE="$(t_anuncia_atalhos_do_sistema "$ANTES_ATALHOS")"
+    t_ok "$NOME $AGORA instalado.${ONDE:+
+
+Procure no menu de aplicativos por:
+$(printf '%s\n' "$ONDE" | sed 's/^/  /')}${ONDE:+
+
+Se não aparecer, saia e entre novamente na sua conta.}"
+    exit 0
+fi
+
+PARCIAL="$TANDEM_TRAVAS/parcial-deb.$$"
+tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+PORQUE="$(t_causa_apt "$PARCIAL")"
+ULTIMAS="$(t_palavras_do_programa "$PARCIAL" 3)"
+rm -f "$PARCIAL"
+t_memoria_grava "$PACOTE_ARQ" RESULTADO "nao instalou" 2>/dev/null
+t_erro "Não consegui instalar $NOME.
+${PORQUE:+
+$PORQUE}${PORQUE:+}${ULTIMAS:+$([ -z "$PORQUE" ] && printf '\nFoi isto que o sistema disse:\n\n%s\n' "$ULTIMAS")}
+
+O registro completo está em:
+$LOG"
+exit "$CODIGO"

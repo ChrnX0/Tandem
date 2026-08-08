@@ -1,16 +1,18 @@
 Package: tandem
-Version: 3.7
+Version: 3.8
 Section: utils
 Priority: optional
 Architecture: all
 Depends: python3 (>= 3.8), zenity, desktop-file-utils, xdg-utils, unzip, libglib2.0-bin
 Recommends: libnotify-bin, wine, winetricks, waydroid, adb, curl | wget
-Suggests: default-jre, libfuse2t64 | libfuse2, openjfx
+Suggests: default-jre, libfuse2t64 | libfuse2, openjfx, flatpak, snapd
 Maintainer: Paulo Eduardo <noreply@users.noreply.github.com>
 Homepage: https://github.com/ChrnX0/Tandem
 Description: Run Windows, Android and Linux packages by double-clicking
- Tandem makes .exe, .msi, .apk, .xapk, .AppImage and .jar files behave
- like native applications on Linux. Double-click a file and it runs.
+ Tandem makes Windows, Android and Linux install files behave like
+ native applications on Linux: .exe, .msi, .apk, .xapk, .AppImage,
+ and .jar, plus the distribution's own .deb, .rpm, .flatpakref, .snap
+ and shell installers. Double-click a file and it runs.
  .
  For Windows programs it detects missing runtime libraries from Wine's
  own error output, maps them to winetricks packages, installs them and
@@ -28,6 +30,15 @@ Description: Run Windows, Android and Linux packages by double-clicking
  Main-Class, so a library is not reported as a broken program, and for
  the Java version its bytecode demands, so "class file version 65" is
  answered with "this needs Java 21".
+ .
+ For the distribution's own formats the whole diagnosis happens before a
+ password is asked, because apt can be asked to simulate unprivileged.
+ A package built for another release of the distribution is reported as
+ exactly that, instead of as "libssl1.1 but it is not installable".
+ An .rpm is
+ answered with the equivalent package from the machine's own repositories
+ when there is one, and never with a conversion that would look installed
+ without being installed.
  .
  Wine prefixes that Tandem did not create are treated as read-only,
  so production systems are never modified by the automation.

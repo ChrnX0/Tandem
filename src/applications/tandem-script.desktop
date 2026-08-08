@@ -1,0 +1,24 @@
+[Desktop Entry]
+Type=Application
+Name=View or run with Tandem
+Name[pt_BR]=Ver ou executar com Tandem
+Comment=Show what this script does before anything runs it
+Comment[pt_BR]=Mostra o que este script faz antes de qualquer coisa executá-lo
+Exec=/usr/bin/tandem-script %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+Categories=System;
+# There is deliberately NO MimeType line here, and removing one would be a
+# regression rather than a tidy-up.
+#
+# Declaring application/x-shellscript is not neutral: with no explicit default in
+# mimeapps.list the desktop database picks a handler FROM these lines, so merely
+# naming the type takes it. Measured on this machine - the type belonged to a text
+# editor, and after installing a build that named it here it belonged to Tandem.
+#
+# Opening a downloaded script in a text editor is a defensible default, and this
+# project does not take a type away from a handler already doing the right thing.
+# tandem-script stays reachable through "tandem install file.sh", through the
+# panel's file chooser, and through "Open with -> Other Application", which lists
+# every installed program regardless of what it declares.

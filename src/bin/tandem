@@ -12,8 +12,11 @@ uso() {
     cat <<'AJUDA'
 Tandem - roda programas Windows, apps Android e pacotes do Linux.
 
+  Formatos: .exe .msi  |  .apk .xapk .apks .apkm  |  .AppImage .jar
+            .deb .rpm .flatpakref .snap  |  .sh .run
+
   tandem                      abre o painel
-  tandem install <arquivo>    instala/executa (.exe .msi .apk .xapk .AppImage .jar)
+  tandem install <arquivo>    instala/executa qualquer um dos nove formatos
   tandem preparar             instala o que falta (Wine, Java, Android, ...)
   tandem programas [nome]     lista e abre os programas instalados
   tandem desinstalar [nome]   remove um programa Windows instalado
@@ -52,20 +55,34 @@ acao_install() {
         *.exe|*.msi|*.msp|*.lnk|*.bat|*.cmd|*.url) exec "$TANDEM_BIN"/tandem-exe "$f" ;;
         *.appimage) exec "$TANDEM_BIN"/tandem-appimage "$f" ;;
         *.jar)      exec "$TANDEM_BIN"/tandem-jar "$f" ;;
+        *.deb|*.udeb) exec "$TANDEM_BIN"/tandem-deb "$f" ;;
+        *.rpm)      exec "$TANDEM_BIN"/tandem-rpm "$f" ;;
+        *.flatpakref|*.flatpakrepo) exec "$TANDEM_BIN"/tandem-flatpak "$f" ;;
+        *.snap)     exec "$TANDEM_BIN"/tandem-snap "$f" ;;
+        *.sh|*.run|*.bin) exec "$TANDEM_BIN"/tandem-script "$f" ;;
         *)
-            # By content, when the name says nothing. The order matters: an
-            # AppImage is an ELF and a .jar is a zip, so the specific mark is
-            # looked for before the generic one - a zip that is not a jar is an
-            # Android package, and an ELF that is not an AppImage is an ordinary
-            # Linux program that needs nobody's help to run.
+            # By content, when the name says nothing. The order matters, and it
+            # is the specific mark before the generic one every time: an AppImage
+            # is an ELF, a .jar is a zip, a .deb is an ar archive. A zip that is
+            # not a jar is an Android package; an ELF that is not an AppImage is
+            # an ordinary Linux program that needs nobody's help to run.
             if head -c2 -- "$f" 2>/dev/null | grep -q MZ; then
                 exec "$TANDEM_BIN"/tandem-exe "$f"
+            elif head -c8 -- "$f" 2>/dev/null | grep -q '<arch>'; then
+                exec "$TANDEM_BIN"/tandem-deb "$f"
+            elif head -c4 -- "$f" 2>/dev/null | od -An -tx1 2>/dev/null |
+                 tr -d ' ' | grep -q '^edabeedb'; then
+                exec "$TANDEM_BIN"/tandem-rpm "$f"
             elif t_appimage_info "$f" 2>/dev/null | grep -q '^TIPO='; then
                 exec "$TANDEM_BIN"/tandem-appimage "$f"
             elif t_jar_info "$f" 2>/dev/null | grep -q '^PRINCIPAL=.'; then
                 exec "$TANDEM_BIN"/tandem-jar "$f"
+            elif grep -qi '^\[Flatpak Ref\]\|^\[Flatpak Repo\]' "$f" 2>/dev/null; then
+                exec "$TANDEM_BIN"/tandem-flatpak "$f"
             elif head -c2 -- "$f" 2>/dev/null | grep -q PK; then
                 exec "$TANDEM_BIN"/tandem-apk "$f"
+            elif head -c2 -- "$f" 2>/dev/null | grep -q '#!'; then
+                exec "$TANDEM_BIN"/tandem-script "$f"
             else t_erro "Não reconheci o tipo deste arquivo."; return 1
             fi ;;
     esac
@@ -123,9 +140,21 @@ acao_doctor() {
     t_tem_fuse2 &&
         out+="  FUSE: sim (AppImage abre direto)\n" ||
         out+="  FUSE: NÃO (AppImage abre pelo caminho lento, desempacotando)\n"
-    out+="  processador: $(t_maquina_arch)\n"
+    out+="  processador: $(t_maquina_arch) (pacotes: $(t_arch_sistema))\n"
     local n_ai; n_ai="$(t_atalhos_appimage | grep -c . 2>/dev/null)"
     out+="  AppImage no menu: ${n_ai:-0}\n"
+    command -v apt-get >/dev/null 2>&1 &&
+        out+="  pacotes .deb: sim (o Tandem confere as dependências antes de pedir a senha)\n" ||
+        out+="  pacotes .deb: NÃO (sem apt nesta máquina)\n"
+    command -v flatpak >/dev/null 2>&1 &&
+        out+="  flatpak: $(flatpak --version 2>/dev/null)\n" ||
+        out+="  flatpak: não instalado (o Tandem oferece instalar se precisar)\n"
+    command -v snap >/dev/null 2>&1 &&
+        out+="  snap: sim\n" || out+="  snap: não instalado\n"
+    local arqs_estrangeiras
+    arqs_estrangeiras="$(dpkg --print-foreign-architectures 2>/dev/null | tr '\n' ' ')"
+    [ -n "$arqs_estrangeiras" ] &&
+        out+="  arquiteturas extras: $arqs_estrangeiras\n"
 
     out+="\nPERFIS PROTEGIDOS\n"
     if [ -s "$TANDEM_PROTEGIDOS" ]; then
@@ -672,7 +701,11 @@ acao_autoteste() {
         for par in "application/x-ms-dos-executable|.exe|tandem-exe.desktop" \
                    "application/vnd.android.package-archive|.apk|tandem-apk.desktop" \
                    "application/vnd.appimage|.AppImage|tandem-appimage.desktop" \
-                   "application/java-archive|.jar|tandem-jar.desktop"; do
+                   "application/java-archive|.jar|tandem-jar.desktop" \
+                   "application/vnd.debian.binary-package|.deb|tandem-deb.desktop" \
+                   "application/x-rpm|.rpm|tandem-rpm.desktop" \
+                   "application/vnd.flatpak.ref|.flatpakref|tandem-flatpak.desktop" \
+                   "application/vnd.snap|.snap|tandem-snap.desktop"; do
             dono="$(xdg-mime query default "${par%%|*}" 2>/dev/null)"
             if [ "$dono" = "${par##*|}" ]; then
                 passa "o duplo clique num $(printf '%s' "$par" | cut -d'|' -f2) vem para o Tandem"
@@ -714,7 +747,39 @@ acao_autoteste() {
         saida="$saida  --      pré-voo do Java (nenhum .jar nesta máquina para exercitar)"$'\n'
     fi
 
-    # 10. Java is not required for Tandem to work, but if it IS here its version
+    # 10. The .deb reader, on a package written here and now. Every current
+    #     Ubuntu package uses control.tar.zst, which Python cannot read on its
+    #     own - it goes through libzstd by hand - so this is the check that would
+    #     notice a machine where that route is unavailable.
+    if [ -f "$TANDEM_LIB/../../tests/mkdeb.py" ] || command -v dpkg-deb >/dev/null 2>&1; then
+        local umdeb
+        umdeb="$(find /var/cache/apt/archives "$HOME/Downloads" -maxdepth 1 \
+                      -name '*.deb' -size -80M 2>/dev/null | head -1)"
+        if [ -n "$umdeb" ]; then
+            local lido_deb; lido_deb="$(t_deb_info "$umdeb")"
+            if [ -n "$(t_campo "$lido_deb" PACOTE)" ]; then
+                passa "o pré-voo lê um pacote .deb de verdade ($(t_campo "$lido_deb" PACOTE))"
+            else
+                falha "o pré-voo não conseguiu ler um .deb" \
+                      "$umdeb: $(t_campo "$lido_deb" ERRO)"
+            fi
+        else
+            saida="$saida  --      pré-voo do .deb (nenhum pacote nesta máquina para exercitar)"$'\n'
+        fi
+    fi
+
+    # 11. Can apt answer WITHOUT root? The whole .deb diagnosis rests on it:
+    #     if this fails, the owner gets asked for a password only to be told no.
+    if command -v apt-get >/dev/null 2>&1; then
+        if t_apt_simula /bin/true 2>&1 | grep -qiE 'Reading package lists|E: |Unable'; then
+            passa "o apt responde sem senha (o diagnóstico vem antes de pedi-la)"
+        else
+            falha "o apt não respondeu sem senha" \
+                  "sem isso o dono digita a senha só para ouvir não"
+        fi
+    fi
+
+    # 12. Java is not required for Tandem to work, but if it IS here its version
     #     has to be readable - the whole "needs a newer Java" diagnosis hangs on
     #     that one number, and Java writes it two different ways.
     if command -v java >/dev/null 2>&1; then
@@ -727,7 +792,7 @@ acao_autoteste() {
         saida="$saida  --      versão do Java (Java não instalado)"$'\n'
     fi
 
-    # 11. Is the protection of other people's prefixes in force? It exercises
+    # 13. Is the protection of other people's prefixes in force? It exercises
     #    the decision, not the list: it asks the code what it would do.
     local alheio protegidos=0 desprotegidos=""
     while IFS= read -r alheio; do
@@ -1010,7 +1075,7 @@ acao_painel() {
         esc="$(zenity --list --title="Tandem" --width=520 --height=400 \
             --text="O que você quer fazer?" \
             --column="Ação" --column="Descrição" --hide-header \
-            "instalar"  "Instalar ou abrir um arquivo (.exe .apk .AppImage .jar)" \
+            "instalar"  "Instalar ou abrir um arquivo (.exe .apk .AppImage .jar .deb)" \
             "preparar"  "Instalar o que falta (Wine, Java, Android...)" \
             "programas" "Abrir um programa já instalado" \
             "remover"   "Desinstalar um programa do Windows" \
@@ -1030,7 +1095,7 @@ acao_painel() {
             instalar)
                 local f
                 f="$(zenity --file-selection --title="Escolha o arquivo" \
-                     --file-filter="Programas e apps | *.exe *.msi *.apk *.xapk *.apks *.apkm *.AppImage *.appimage *.jar" \
+                     --file-filter="Programas e apps | *.exe *.msi *.apk *.xapk *.apks *.apkm *.AppImage *.appimage *.jar *.deb *.rpm *.flatpakref *.snap *.sh *.run" \
                      --file-filter="Todos | *" 2>/dev/null)" || continue
                 acao_install "$f" ;;
             preparar)  acao_preparar ;;

@@ -1,0 +1,156 @@
+#!/bin/bash
+# Tandem - shows what a downloaded script is, before anything runs it.
+#
+# This is the one handler in the project whose default answer is NOT to run the
+# file, and the reason is worth stating plainly: a shell script can do anything
+# the owner can do, including deleting everything he has. Every other format
+# here describes a program; this one describes instructions, and the instructions
+# arrived from a stranger.
+#
+# So the split is by what the file actually is. A vendor installer - makeself,
+# shar, a megabyte of payload behind a shell header - is meant to be run, and
+# running it is what the double click was for; it gets the execute bit and a
+# clear warning. A small plain script is far more likely something the owner
+# wants to LOOK at, and offering to execute it first would be teaching a habit
+# that gets machines broken. He is offered the text.
+#
+# What this replaces is not a good experience. On the machine this was written
+# on, application/x-shellscript belonged to a text editor - which is a defensible
+# default - and on a full desktop the double click produces a dialog offering to
+# "Run in Terminal" with no indication of what the script does. Neither tells
+# the owner anything he can use to decide.
+. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
+
+t_log_init script "$*"
+
+BRUTO="${1:-}"
+[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+SCRIPT="$(readlink -f -- "$BRUTO" 2>/dev/null)"
+[ -n "$SCRIPT" ] && [ -f "$SCRIPT" ] || { t_erro "Arquivo não encontrado:
+$BRUTO"; exit 1; }
+
+TAM="$(stat -c%s -- "$SCRIPT" 2>/dev/null || echo 0)"
+t_diz "script: $SCRIPT ($TAM bytes)"
+
+# The first lines, which is the only thing anybody can judge this by. Read as
+# text and truncated hard: a self-extracting installer has a binary payload two
+# lines down, and dumping it into a dialog would fill the screen with rubbish.
+CABECA="$(head -c 4096 -- "$SCRIPT" 2>/dev/null | head -20 |
+          tr -d '\000' | LC_ALL=C sed 's/[^[:print:][:space:]]/./g' | head -14)"
+
+if t_script_instalador "$SCRIPT"; then
+    # ------------------------------------------------ a vendor installer
+    QUAL="Este arquivo é um instalador de programa."
+    ACAO="Instalar"
+    t_diz "reconhecido como instalador"
+else
+    QUAL="Este arquivo é um script: uma lista de comandos."
+    ACAO="Executar"
+    t_diz "reconhecido como script comum"
+    # For a plain script the first offer is to READ it. Whoever wanted to run it
+    # says so on the second question, which is one click further away on purpose.
+    if t_pergunta "$(t_texto_script_perigo "$SCRIPT")
+
+Quer ver o que ele faz antes de decidir?" "Ver o conteúdo" "Não ver"; then
+        {
+            printf '%s\n\n' "$(basename -- "$SCRIPT")"
+            printf -- '----------------------------------------\n'
+            head -c 65536 -- "$SCRIPT" | tr -d '\000' |
+                LC_ALL=C sed 's/[^[:print:][:space:]]/./g'
+        } | t_texto "Tandem - $(basename -- "$SCRIPT")"
+    fi
+fi
+
+if ! t_pergunta "$QUAL
+
+$(basename -- "$SCRIPT")   ($(t_tamanho_amigavel "$TAM"))
+
+As primeiras linhas dele:
+$CABECA
+
+Um script faz tudo o que você pode fazer no computador. Só execute se confia em
+quem mandou." "$ACAO" "Cancelar"; then
+    if [ -t 0 ]; then
+        printf '%s\n\n%s [s/N] ' "$QUAL" "$ACAO?"
+        read -r r
+        case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
+    else
+        # No window, no terminal, and this is the one file type where carrying on
+        # without a confirmation is out of the question.
+        t_erro "Não executei este arquivo: preciso de uma confirmação e não há janela
+nem terminal para perguntar.
+
+Se você quer mesmo executar, abra o Terminal e veja o conteúdo primeiro:
+
+less \"$SCRIPT\""
+        exit 1
+    fi
+fi
+
+if [ ! -x "$SCRIPT" ]; then
+    chmod +x -- "$SCRIPT" 2>>"$LOG" ||
+        t_diz "nao consegui marcar como executavel; tentando pelo interpretador"
+fi
+
+INICIO=$SECONDS
+MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+t_aviso "Executando $(basename -- "$SCRIPT")..."
+(
+    cd -- "$(dirname -- "$SCRIPT")" || exit 1
+    # Never as root. A vendor installer that needs root asks for it itself, with
+    # its own explanation; handing it root because it happens to be a script
+    # would be granting more than the owner agreed to.
+    if [ -x "$SCRIPT" ]; then
+        "$SCRIPT" >>"$LOG" 2>&1
+    else
+        # A folder mounted noexec, a read-only stick: the interpreter can still
+        # read the file even when the kernel refuses to execute it.
+        sh -- "$SCRIPT" >>"$LOG" 2>&1
+    fi
+)
+CODIGO=$?
+
+if [ "$CODIGO" -eq 0 ]; then
+    t_memoria_grava "$SCRIPT" RESULTADO executou 2>/dev/null
+    t_memoria_grava "$SCRIPT" SEGUNDOS "$((SECONDS-INICIO))" 2>/dev/null
+    t_memoria_grava "$SCRIPT" VISTO_EM "$(date +%F)" 2>/dev/null
+    SAIU="$(t_palavras_do_programa "$LOG" 6)"
+    t_ok "Terminou sem erro.${SAIU:+
+
+Foi isto que ele disse:
+
+$SAIU}"
+    exit 0
+fi
+
+PARCIAL="$TANDEM_TRAVAS/parcial-script.$$"
+tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+PORQUE=""
+if grep -qiE 'Permission denied' "$PARCIAL" 2>/dev/null; then
+    PORQUE="Ele tentou mexer em algo que a sua conta não pode mexer. Instaladores
+assim geralmente precisam ser executados pelo Terminal com sudo, e o próprio
+site de onde você baixou deve dizer como."
+elif grep -qiE 'command not found' "$PARCIAL" 2>/dev/null; then
+    FALTA="$(sed -n 's/.*: \([^:]*\): command not found.*/\1/p' "$PARCIAL" | head -3 |
+             tr '\n' ' ')"
+    PORQUE="Ele precisa de um programa que não está instalado aqui:${FALTA:+ $FALTA}"
+elif grep -qi 'No space left on device' "$PARCIAL" 2>/dev/null; then
+    PORQUE="O disco está cheio."
+elif grep -qiE 'not found|No such file or directory' "$PARCIAL" 2>/dev/null; then
+    PORQUE="Ele procurou um arquivo que não existe. Isso costuma acontecer quando só
+o instalador foi copiado, sem a pasta completa que veio com ele."
+fi
+ULTIMAS="$(t_palavras_do_programa "$PARCIAL" 4)"
+rm -f "$PARCIAL"
+t_memoria_grava "$SCRIPT" RESULTADO "nao executou" 2>/dev/null
+t_erro "Terminou com erro (código $CODIGO).
+${PORQUE:+
+$PORQUE
+}${ULTIMAS:+
+Foi isto que ele disse:
+
+$ULTIMAS
+}
+O registro completo está em:
+$LOG"
+exit "$CODIGO"

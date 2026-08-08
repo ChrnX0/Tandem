@@ -50,6 +50,30 @@ TIPOS_APPIMAGE="application/vnd.appimage
 application/x-iso9660-appimage"
 TIPOS_JAR="application/java-archive
 application/x-java-archive"
+# The distribution's own formats. On the machine this was written on NOBODY owned
+# any of these four - the double click did nothing, exactly like an AppImage. On a
+# full desktop a store claims .deb, and losing to it is fine for a package from
+# the distribution's own repositories; what the store handles badly is the
+# third-party .deb built for another release, which is the case that brings
+# somebody here.
+TIPOS_DEB="application/vnd.debian.binary-package
+application/x-deb
+application/x-debian-package"
+TIPOS_RPM="application/x-rpm
+application/x-redhat-package-manager"
+TIPOS_FLATPAK="application/vnd.flatpak.ref
+application/vnd.flatpak.repo"
+TIPOS_SNAP="application/vnd.snap"
+
+# application/x-shellscript is deliberately NOT in this list.
+#
+# It is the one type where the existing default is defensible: opening a
+# downloaded script in a text editor is a better answer than running it, and a
+# machine with a folder full of .sh files would have every one of them routed
+# here. tandem-script is still reachable - it declares the type, so it appears
+# under "Open with", and "tandem install file.sh" goes straight to it - but
+# Tandem does not take a type away from a handler that is already doing the right
+# thing.
 
 # Who owned the types before? Zorin already installs "Windows App Support" and
 # Waydroid installs waydroid.app.install.desktop - both fight with Tandem.
@@ -57,10 +81,12 @@ ANTES_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)
 ANTES_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
 ANTES_APPIMAGE="$(xdg-mime query default application/vnd.appimage 2>/dev/null)"
 ANTES_JAR="$(xdg-mime query default application/java-archive 2>/dev/null)"
-t_diz "antes: exe=$ANTES_EXE apk=$ANTES_APK appimage=$ANTES_APPIMAGE jar=$ANTES_JAR"
+ANTES_DEB="$(xdg-mime query default application/vnd.debian.binary-package 2>/dev/null)"
+t_diz "antes: exe=$ANTES_EXE apk=$ANTES_APK appimage=$ANTES_APPIMAGE jar=$ANTES_JAR deb=$ANTES_DEB"
 
 # Which types this run is responsible for.
-TODOS="$TIPOS_APK $TIPOS_EXE $TIPOS_APPIMAGE $TIPOS_JAR"
+TODOS="$TIPOS_APK $TIPOS_EXE $TIPOS_APPIMAGE $TIPOS_JAR $TIPOS_DEB $TIPOS_RPM
+$TIPOS_FLATPAK $TIPOS_SNAP"
 TIPOS=""
 for t in $TODOS; do
     if [ "$SOMENTE_NOVOS" = 1 ] &&
@@ -112,6 +138,10 @@ dono_de() {
     for t in $TIPOS_EXE;      do [ "$t" = "$1" ] && { printf 'tandem-exe.desktop';      return 0; }; done
     for t in $TIPOS_APPIMAGE; do [ "$t" = "$1" ] && { printf 'tandem-appimage.desktop'; return 0; }; done
     for t in $TIPOS_JAR;      do [ "$t" = "$1" ] && { printf 'tandem-jar.desktop';      return 0; }; done
+    for t in $TIPOS_DEB;      do [ "$t" = "$1" ] && { printf 'tandem-deb.desktop';      return 0; }; done
+    for t in $TIPOS_RPM;      do [ "$t" = "$1" ] && { printf 'tandem-rpm.desktop';      return 0; }; done
+    for t in $TIPOS_FLATPAK;  do [ "$t" = "$1" ] && { printf 'tandem-flatpak.desktop';  return 0; }; done
+    for t in $TIPOS_SNAP;     do [ "$t" = "$1" ] && { printf 'tandem-snap.desktop';     return 0; }; done
     return 1
 }
 for t in $TIPOS; do
@@ -130,6 +160,7 @@ DEPOIS_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null
 DEPOIS_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
 DEPOIS_APPIMAGE="$(xdg-mime query default application/vnd.appimage 2>/dev/null)"
 DEPOIS_JAR="$(xdg-mime query default application/java-archive 2>/dev/null)"
+DEPOIS_DEB="$(xdg-mime query default application/vnd.debian.binary-package 2>/dev/null)"
 RES="  .exe        antes: ${ANTES_EXE:-nenhum}
               agora: ${DEPOIS_EXE:-nenhum}
 
@@ -140,7 +171,10 @@ RES="  .exe        antes: ${ANTES_EXE:-nenhum}
               agora: ${DEPOIS_APPIMAGE:-nenhum}
 
   .jar        antes: ${ANTES_JAR:-nenhum}
-              agora: ${DEPOIS_JAR:-nenhum}"
+              agora: ${DEPOIS_JAR:-nenhum}
+
+  .deb        antes: ${ANTES_DEB:-nenhum}
+              agora: ${DEPOIS_DEB:-nenhum}"
 t_diz "$RES"
 
 RELATORIO="Associações reaplicadas.

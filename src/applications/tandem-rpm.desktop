@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Explain with Tandem
+Name[pt_BR]=Explicar com Tandem
+Comment=Say why this package is not for this system, and what to do instead
+Comment[pt_BR]=Diz por que este pacote não é do seu sistema, e o que fazer no lugar
+Exec=/usr/bin/tandem-rpm %f
+Icon=tandem
+Terminal=false
+NoDisplay=false
+MimeType=application/x-rpm;application/x-redhat-package-manager;
+Categories=System;
