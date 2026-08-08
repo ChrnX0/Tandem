@@ -71,6 +71,25 @@ Se **não tiver como** funcionar, ele diz isso também — **antes** de você ga
 
 Wine, Bottles, Lutris e PlayOnLinux todos rodam programas Windows, e fazem isso bem. O que nenhum deles faz é **fechar o laço de diagnóstico para quem não sabe ler um log**. O Tandem é isso, e só isso.
 
+<details>
+<summary>Essa afirmação foi conferida no campo, e metade dela estava errada</summary>
+
+<br>
+
+**O Bottles detecta.** Desde a versão 61 (janeiro de 2026) ele traz um motor de análise chamado *Eagle* — 1145 linhas de `pefile` + 67 regras YARA + um banco de 6,3 MB — que lê a tabela de imports de um `.exe` desconhecido e **nomeia os componentes que faltam**, sem ninguém escolher de uma lista. Ele até extrai um instalador MSI ou Inno num sandbox para analisar os binários que *vão* ser instalados, o que é mais do que o `peinfo.py` do Tandem faz. As notas deste projeto afirmavam que ninguém fazia detecção automática. Estava errado, e está corrigido no `CLAUDE.md` com a evidência.
+
+**Ninguém fecha o laço.** O Eagle propõe e para: as sugestões aparecem numa linha que não clica, e a pessoa instala à mão. Uma busca de código no GitHub por `"winetricks" "import_dll" language:python` devolve **dois** arquivos em todo o GitHub — um abandonado em 2018, outro com uma tabela de três entradas atrás de uma janela de log e um botão. `import_dll` devolve zero no Bottles, no Lutris, no Heroic, no PortProton, no Faugus, no umu-launcher e no ProtonUp-Qt. O PortProton e o umu-protonfixes *instalam* sem perguntar — porque um humano já escolheu, jogo por jogo, em 204 arquivos de banco e 477 scripts escritos à mão indexados por AppID da Steam. Para um programa sem receita escrita, não existe resposta em lugar nenhum.
+
+Mais três coisas que a busca não encontrou ninguém fazendo, e que o Tandem faz:
+
+- **Conferir se o arquivo chegou.** O `winetricks` tem 568 verbos e 19 funções de verificação — todas `dotnet*`, todas atrás de uma opção que ninguém liga. O Bottles não tem nenhuma checagem depois de instalar.
+- **Comparar a bitola do DLL entregue com a do programa.** O `winetricks` entrega, sabendo, payloads de 32 bits no `syswow64` de um prefixo de 64, e nunca compara. Bottles e PortProtonQt leem o campo de arquitetura do PE e só imprimem.
+- **Lembrar pela identidade do arquivo.** Todo esquema encontrado indexa por ID de loja ou nome de arquivo, então a lição morre quando o arquivo muda de pasta e nunca vai para outra máquina.
+
+E do lado do AppImage, o placar honesto: a permissão de execução é resolvida por três projetos de três maneiras, e o atalho no menu é bem resolvido por dois. O contorno automático do FUSE, o veredito de download cortado, o diagnóstico de `noexec` e a explicação da GLIBC velha não apareceram em **nenhum** deles.
+
+</details>
+
 ### 🔁 Ele lê a saída de erro do próprio Wine e age
 
 Quando um programa falha, o Wine escreve `err:module:import_dll Library MSVCP140.dll not found`. O Tandem lê essas linhas, traduz cada DLL para o pacote que a fornece, instala e tenta de novo — é o laço que uma pessoa experiente faria à mão.

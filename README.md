@@ -71,6 +71,25 @@ If it *cannot* work, it says that too — **before** you spend half an hour down
 
 Wine, Bottles, Lutris and PlayOnLinux all run Windows programs, and they do it well. What none of them do is **close the diagnostic loop for someone who cannot read a log**. That is the whole of Tandem.
 
+<details>
+<summary>That claim was checked against the field, and one half of it turned out to be wrong</summary>
+
+<br>
+
+**Bottles detects.** Since release 61 (January 2026) it ships an analysis engine called *Eagle* — 1145 lines of `pefile` + 67 YARA rules + a 6.3 MB intelligence database — which reads an unknown `.exe`'s import table and **names the runtimes it needs**, with nobody picking from a list. It even extracts an MSI or Inno installer to a sandbox to analyse the binaries that *will* be installed, which is more than Tandem's `peinfo.py` does. An earlier version of this project's notes claimed nobody did automatic detection. That was wrong, and it is corrected in `CLAUDE.md` with the evidence.
+
+**Nobody closes the loop.** Eagle proposes and stops: the dependency suggestions render as a non-interactive row, and the human installs by hand. A GitHub code search for `"winetricks" "import_dll" language:python` returns **two** files on all of GitHub — one abandoned in 2018, one with a fix table of three entries behind a log window and a button. `import_dll` returns zero hits in Bottles, Lutris, Heroic, PortProton, Faugus, umu-launcher and ProtonUp-Qt. PortProton and umu-protonfixes *do* install without asking — because a human already chose, per game, across 204 database files and 477 hand-written scripts keyed by Steam AppID. For a program nobody has written a recipe for, there is no answer anywhere.
+
+Three more things the search found nobody doing, each of which Tandem does:
+
+- **Verifying the file arrived.** `winetricks` has 568 verbs and 19 verification functions — all `dotnet*`, all behind an opt-in flag. Bottles has no post-install existence check at all.
+- **Comparing the delivered DLL's bitness with the program's.** `winetricks` knowingly installs 32-bit payloads into `syswow64` of a 64-bit prefix and never compares. Bottles and PortProtonQt both read the PE machine field and only print it.
+- **Remembering by file identity.** Every scheme found keys on a store ID or a filename, so the lesson dies when the file moves and never transfers to another machine.
+
+And on the AppImage side, the honest scorecard: the execute bit is solved by three projects in three different ways, and menu integration is solved well by two. The automatic FUSE fallback, the truncated-download verdict, the `noexec` diagnosis and the GLIBC-too-old explanation were found in **none** of them.
+
+</details>
+
 ### 🔁 It reads Wine's own error output and acts on it
 
 When a program fails, Wine prints `err:module:import_dll Library MSVCP140.dll not found`. Tandem parses those lines, maps each DLL to the `winetricks` package that provides it, installs, and retries — the loop an experienced person performs by hand.

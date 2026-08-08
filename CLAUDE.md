@@ -162,11 +162,57 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
 
 ## Ecosystem facts already established (do not re-research)
 
-- **No project does automatic dependency detection for `.exe`.** Not Bottles,
-  not Lutris, not PlayOnLinux — all of them require a human picking from a list.
-  Tandem's loop is new work; calibrate your expectations of its hit rate.
+- **CORRECTED, 2026-08-08.** This file used to say "no project does automatic
+  dependency detection for `.exe`; not Bottles, not Lutris, not PlayOnLinux — all
+  of them require a human picking from a list." **That is now wrong about
+  Bottles.** Bottles shipped an analysis engine called *Eagle* in release 61
+  (January 2026), and tag 65.4 — dated two days before this correction — carries
+  `bottles/backend/managers/eagle.py`, 1145 lines of PE analysis using `pefile`
+  and YARA, 67 rules, and a 6.3 MB `data/eagle-intel.sqlite`. It reads an unknown
+  `.exe`'s import table (delay imports included), its Rich header, its COM
+  descriptor and the files beside it, and it **names the runtimes needed** —
+  "Visual C++ (VC++ 2015-22)", ".NET Framework", "Wine Mono" — with nobody
+  picking from a list. It also deep-scans INSTALLERS, extracting an MSI or Inno
+  setup to a sandbox to analyse the binaries that will be installed, which is
+  more than `peinfo.py` does.
+  **What survives, and it is the part that matters.** Eagle proposes and stops:
+  in `bottles/frontend/views/eagle.py` the dependency suggestions are a
+  non-interactive `Adw.ActionRow`, the view imports no dependency manager, and
+  the human still installs by hand. So the defensible claim is no longer "nobody
+  detects" but **nobody closes the loop**: run → read the actual failure → map
+  DLL to verb → install → verify delivery → retry → record. Established by search
+  rather than assumed: GitHub code search for `"winetricks" "import_dll"
+  language:python` returns exactly **two** files on all of GitHub — Vineyard
+  (abandoned 2018) and Deepin Wine Runner — and neither installs from what it
+  detected. `import_dll` scoped to bottlesdevs/Bottles, lutris/lutris,
+  HeroicGamesLauncher, PortWINE, faugus-launcher, umu-launcher and ProtonUp-Qt
+  returns zero hits in all of them.
+- **The four things nobody was found to do**, each with the search behind it, and
+  each one load-bearing for this project:
+  1. **Close the loop for an UNKNOWN program.** Deepin Wine Runner parses
+     `err:module:import_dll` and has a repair button — with a fix table of
+     exactly three entries (`mfc100`, `mfc42`, `msvbvm60`) and a human clicking
+     through a log window. PortProtonQt fires a compatibility report on a crash
+     within 5 s but re-reads the FILE, not Wine's output, and only prints
+     "Install X through Winetricks". PortProton and umu-protonfixes DO install
+     with no human choice — because a human already chose, per game, in 204
+     `.ppdb` files and 477 hand-written scripts keyed by Steam AppID. Unknown
+     program, no fix.
+  2. **Verify the requested DLL arrived** after the installer exited 0.
+     `winetricks` itself has 568 verbs and 19 `verify_*` functions, all `dotnet*`,
+     all driven by AutoHotkey, and all behind an opt-in `--verify` flag. Bottles'
+     `dependency.py` has no post-install existence check.
+  3. **Compare the delivered DLL's architecture with the caller's.** winetricks
+     knowingly sets `W_SYSTEM32_DLLS=$W_WINDIR_UNIX/syswow64` in a win64 prefix
+     and never compares that against the program's bitness. Bottles and
+     PortProtonQt both read the PE Machine field and only PRINT it.
+  4. **Key a memory of lessons to the FILE**, so it survives a move and transfers
+     to another machine. Every scheme found is store- or name-based: Steam AppID,
+     a `#name.exe` comment grepped out of a database file, or a sha256 read from a
+     shipped read-only DB with no local write-back.
 - **Bottles cannot install dependencies from the command line** (GUI only),
-  which rules it out as an engine.
+  which rules it out as an engine. Still true in 65.4, and Eagle does not change
+  it: Eagle only reports.
 - **Tandem enters an association dispute, not a vacuum.** Zorin 18 ships
   "Windows App Support" and Waydroid installs `waydroid.app.install.desktop`. If
   a double click opens an "Open with…" dialog, that is why — run `tandem repair`,
