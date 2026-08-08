@@ -5,7 +5,15 @@ name: Release
 # tag now builds the package and attaches it, with the suite and lintian running
 # first — a release nobody checked is worse than no release.
 #
-#   git tag v3.6 && git push origin v3.6
+# Two ways in, and both end in the same place:
+#
+#   git tag v3.6 && git push origin v3.6      # from a terminal
+#   Actions -> Release -> Run workflow        # from the browser
+#
+# The second one exists because pushing a tag needs a terminal with push rights,
+# and the person who maintains this is not always at one. On that path the
+# workflow CREATES the tag itself, at the commit it ran from, so the release and
+# the tag can never disagree.
 
 on:
   push:
@@ -30,17 +38,38 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq shellcheck desktop-file-utils lintian winetricks
 
-      - name: The tag must match debian/control
+      - name: The version has to agree with debian/control
         run: |
           control="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          asked="${{ inputs.version }}"
           if [ "${GITHUB_REF_TYPE:-}" = tag ]; then
               tag="${GITHUB_REF_NAME#v}"
               [ "$tag" = "$control" ] || {
                   echo "the tag says $tag and debian/control says $control"
                   echo "publishing two different things leaves the user unsure what they installed"
                   exit 1; }
+          elif [ -n "$asked" ]; then
+              # Typing a version by hand is how you publish the wrong thing:
+              # refuse rather than silently build something else.
+              [ "$asked" = "$control" ] || {
+                  echo "you asked for $asked and debian/control says $control"
+                  exit 1; }
           fi
           echo "VERSION=$control" >> "$GITHUB_ENV"
+          echo "TAG=v$control" >> "$GITHUB_ENV"
+
+      - name: This version was not published already
+        run: |
+          # Re-publishing over an existing release silently replaces a .deb that
+          # people may already have installed, under the same version number.
+          # Bump debian/control instead.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "release $TAG already exists"
+              echo "bump the version in debian/control and add a changelog entry"
+              exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Test suite
         run: bash tests/run.sh
@@ -98,6 +127,10 @@ jobs:
       - name: Publish
         uses: softprops/action-gh-release@v2
         with:
+          # Explicit, so the dispatch path works too: with no tag_name the
+          # action infers it from the ref, which on a branch run is the branch.
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
           name: "Tandem ${{ env.VERSION }}"
           body_path: notes.md
           draft: false
