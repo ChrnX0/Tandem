@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="3.8"
+TANDEM_VERSAO="3.9"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1044,6 +1044,11 @@ vazio - responda Não. O Tandem guarda isso e para de recomendar este
 caminho para outras pessoas." "Sim, funcionou" "Não, algo saiu errado"; then
         t_memoria_grava "$prog" CONFIRMADO sim
         t_diz "o dono confirmou que funcionou"
+        # The only moment in the whole program where a lesson is worth anything
+        # to anybody else: it worked, and a person said so. Asking about sending
+        # here means asking about a line that exists, on a program he just used,
+        # instead of asking abstractly at install time about data he cannot see.
+        t_envio_oferece "$prog" >/dev/null 2>&1
     else
         t_memoria_grava "$prog" CONFIRMADO nao
         t_diz "o dono disse que NAO funcionou direito"
@@ -1953,4 +1958,236 @@ t_texto_script_perigo() {
     printf 'Um script pode fazer qualquer coisa que você pode fazer - inclusive apagar\n'
     printf 'os seus arquivos. Só execute se você confia em quem mandou.\n\n'
     printf 'Se você baixou de um site que não conhece, a resposta certa é não executar.\n'
+}
+
+# ------------------------------------------------- sending, with permission
+#
+# Up to here the community list only ever pulled. That was the right default and
+# it had one measurable consequence: lista/lista.tsv is EMPTY. The mechanism
+# worked and collected nothing, because contributing meant reading a line off a
+# screen, copying it, opening a browser, creating an account on a site the owner
+# has never heard of, and pasting it into an issue. A shop owner does none of
+# that, and the project's own queue lists "fill the community list" as item one.
+#
+# So sending is automated - and the reason it can be is that the expensive half
+# was already built and tested. t_lista_registro produces eight fields and
+# t_lista_vaza REFUSES to emit them if a filename, a path, a username, a machine
+# name or an IP address appears anywhere in the line. There is nothing to
+# anonymise at send time because there was never anything identifying in it.
+#
+# Three rules that do not bend:
+#
+#   Off until the owner says otherwise, once, in his own language, looking at the
+#   actual line that would leave his machine. Not "anonymous usage data" - the
+#   eight fields, printed.
+#
+#   The sieve runs AGAIN at send time. Checking once at build time would trust
+#   that nothing touched the queue file in between, and a queue file is exactly
+#   the kind of thing that gets edited by hand.
+#
+#   Nothing blocks a double click. Sending is best-effort, in the background, and
+#   a machine with no internet queues the line and forgets about it.
+
+TANDEM_CONFIG="$HOME/.config/tandem/configuracao.txt"
+TANDEM_FILA="${TANDEM_FILA:-$TANDEM_ESTADO/enviar-fila.tsv}"
+# Where a contribution is posted. Empty in this build ON PURPOSE: an address
+# means somebody hosts it, moderates it and answers for the data, and that is a
+# decision with a cost attached rather than a line of code. Everything else is
+# built, so the day there is an address this becomes one assignment - and the
+# queue means the lines learned before that day are not lost.
+TANDEM_LISTA_ENVIO="${TANDEM_LISTA_ENVIO:-}"
+# A machine cannot become a firehose, whatever it decides to install.
+TANDEM_ENVIO_POR_DIA="${TANDEM_ENVIO_POR_DIA:-20}"
+
+# Percent-encoding, for putting a record into a prefilled form URL. The record
+# is TAB separated and a raw tab in a URL is not a tab by the time it arrives.
+t_url_escapa() {
+    local b
+    # A "for" over the unquoted substitution, not a "while read": the last line
+    # of od's output has no trailing newline, so read returns non-zero on it and
+    # the loop body never runs for the final byte. Measured - every escaped
+    # string came out one character short.
+    for b in $(printf '%s' "$1" | od -An -tx1 -v); do
+        case "$b" in
+            # Unreserved characters only: A-Z a-z 0-9 - . _ ~ . Everything else
+            # is encoded, including the slash, which the record should never
+            # carry anyway because t_lista_vaza refuses one.
+            2[dDeE]|3[0-9]|4[1-9a-fA-F]|5[0-9aAfF]|6[1-9a-fA-F]|7[0-9aAeE])
+                printf '%b' "\\x$b" ;;
+            *) printf '%%%s' "$(printf '%s' "$b" | tr 'a-f' 'A-F')" ;;
+        esac
+    done
+}
+
+t_config_le() {
+    [ -f "$TANDEM_CONFIG" ] || return 1
+    local v; v="$(sed -n "s/^$1=//p" "$TANDEM_CONFIG" | tail -1)"
+    [ -n "$v" ] || return 1
+    printf '%s' "$v"
+}
+
+t_config_grava() {
+    local chave="$1" valor="$2" tmp
+    mkdir -p "$(dirname -- "$TANDEM_CONFIG")" 2>/dev/null || return 1
+    [ -f "$TANDEM_CONFIG" ] || {
+        printf '# Configuração do Tandem. Pode ler, editar e apagar.\n' > "$TANDEM_CONFIG"; }
+    tmp="$TANDEM_CONFIG.novo"
+    {
+        grep -E '^(#|[A-Z_]+=)' "$TANDEM_CONFIG" 2>/dev/null | grep -v "^$chave="
+        printf '%s=%s\n' "$chave" "$valor"
+    } > "$tmp" 2>/dev/null && mv -f "$tmp" "$TANDEM_CONFIG"
+}
+
+# Has the owner decided? "sim", "nao", or failure when he was never asked.
+t_envio_ligado() {
+    [ "$(t_config_le ENVIAR 2>/dev/null)" = sim ]
+}
+
+t_envio_decidido() {
+    case "$(t_config_le ENVIAR 2>/dev/null)" in sim|nao) return 0 ;; esac
+    return 1
+}
+
+t_envio_define() {
+    t_config_grava ENVIAR "$1"
+    t_config_grava ENVIAR_DESDE "$(date +%F)"
+    t_config_grava ENVIAR_VERSAO "$TANDEM_VERSAO"
+    t_diz "envio automatico definido para: $1"
+}
+
+# The consent text. It shows the line, because a permission dialog that
+# describes a payload instead of displaying it is asking to be trusted rather
+# than asking a question.
+t_texto_pedir_envio() {
+    local reg="$1"
+    printf 'Posso mandar esta linha para a lista da comunidade?\n\n'
+    printf '%s\n\n' "$reg"
+    printf 'É isso, inteira. Não vai mais nada.\n\n'
+    printf 'Para que serve: quando outra pessoa abrir este mesmo programa, o Tandem dela\n'
+    printf 'já sabe o que ele precisa e não faz ela esperar para descobrir. Quanto mais\n'
+    printf 'gente manda, menos cada um precisa descobrir sozinho.\n\n'
+    printf 'NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do\n'
+    printf 'computador, endereço de rede, nem uma linha de registro. A primeira coluna é\n'
+    printf 'uma impressão digital do arquivo do programa, não sua nem da sua máquina, e\n'
+    printf 'não dá para voltar dela para nada.\n\n'
+    printf 'Você decide agora e pode mudar quando quiser:\n'
+    printf '  tandem enviar sim     ou     tandem enviar nao\n'
+    # If the machine has somebody else's Wine profile on it, it is plausibly a
+    # work machine, and the person clicking may not be the person who decides
+    # what leaves it. Saying so is not a veto - it is the information he needs.
+    if [ -s "$TANDEM_PROTEGIDOS" ]; then
+        printf '\nAtenção: este computador tem o ambiente de outro sistema instalado. Se ele\n'
+        printf 'for máquina de trabalho, confirme com quem cuida dela antes de ligar isto.\n'
+    fi
+}
+
+# Queues one record. Never sends from here: a double click is not the place to
+# wait for a network.
+t_envio_enfileira() {
+    local reg="$1"
+    [ -n "$reg" ] || return 1
+    t_lista_vaza "$reg" && { t_diz "fila: registro recusado pelo filtro"; return 1; }
+    mkdir -p "$(dirname -- "$TANDEM_FILA")" 2>/dev/null || return 1
+    # The same lesson twice is one lesson.
+    grep -qxF -- "$reg" "$TANDEM_FILA" 2>/dev/null && return 0
+    printf '%s\n' "$reg" >> "$TANDEM_FILA" 2>/dev/null || return 1
+    t_diz "fila: registro guardado para envio"
+    return 0
+}
+
+t_envio_pendentes() {
+    # awk and not "grep -c || echo 0": on an EMPTY file grep prints 0 and then
+    # exits 1, so the fallback fires too and the count comes out as "0" followed
+    # by "0". Which is what "tandem enviar" showed the owner.
+    [ -f "$TANDEM_FILA" ] || { printf '0'; return 0; }
+    awk 'END { print NR + 0 }' "$TANDEM_FILA" 2>/dev/null || printf '0'
+}
+
+# Sends what is queued, best effort. Returns the number sent.
+#
+# Every line is put through the sieve again here. Checking only when the record
+# was built would trust that nothing touched the queue in between, and a
+# plain-text file in the state directory is exactly the kind of thing that gets
+# edited by hand.
+t_envio_envia() {
+    local enviados=0 hoje contador reg resto
+    t_envio_ligado || return 0
+    [ -n "$TANDEM_LISTA_ENVIO" ] || return 0
+    [ -s "$TANDEM_FILA" ] || return 0
+    command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 0
+
+    hoje="$(date +%F)"
+    [ "$(t_config_le ENVIO_DIA 2>/dev/null)" = "$hoje" ] &&
+        contador="$(t_config_le ENVIO_HOJE 2>/dev/null)" || contador=0
+    case "$contador" in ''|*[!0-9]*) contador=0 ;; esac
+
+    resto="$TANDEM_FILA.resto"
+    : > "$resto" 2>/dev/null || return 0
+    while IFS= read -r reg; do
+        [ -n "$reg" ] || continue
+        if t_lista_vaza "$reg"; then
+            t_diz "envio: linha descartada pelo filtro"
+            continue
+        fi
+        if [ "$contador" -ge "$TANDEM_ENVIO_POR_DIA" ]; then
+            printf '%s\n' "$reg" >> "$resto"
+            continue
+        fi
+        if t_envio_posta "$reg"; then
+            enviados=$((enviados+1)); contador=$((contador+1))
+        else
+            printf '%s\n' "$reg" >> "$resto"
+        fi
+    done < "$TANDEM_FILA"
+    mv -f "$resto" "$TANDEM_FILA" 2>/dev/null
+    t_config_grava ENVIO_DIA "$hoje"
+    t_config_grava ENVIO_HOJE "$contador"
+    [ "$enviados" -gt 0 ] && t_diz "envio: $enviados linha(s) enviada(s)"
+    printf '%s' "$enviados"
+    return 0
+}
+
+t_envio_posta() {
+    local reg="$1"
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsS --max-time 20 -X POST \
+             -H 'Content-Type: text/plain' \
+             -H "User-Agent: tandem/$TANDEM_VERSAO" \
+             --data-binary "$reg" \
+             "$TANDEM_LISTA_ENVIO" >>"${LOG:-/dev/null}" 2>&1 && return 0
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q -T 20 -O /dev/null --header='Content-Type: text/plain' \
+             --post-data="$reg" "$TANDEM_LISTA_ENVIO" >>"${LOG:-/dev/null}" 2>&1 && return 0
+    fi
+    return 1
+}
+
+# Called after a program has worked and the owner has confirmed it. Asks once,
+# ever, and only when there is genuinely something to send - the question is
+# concrete then ("this line, about the program you just used") instead of
+# abstract at install time, when the owner has nothing to look at.
+t_envio_oferece() {
+    local prog="$1" reg
+    reg="$(t_lista_registro "$prog" 2>/dev/null)" || return 1
+    [ -n "$reg" ] || return 1
+    if ! t_envio_decidido; then
+        # With nobody to ask, the answer is no, and it is not recorded as a
+        # decision: the owner has not decided anything yet.
+        if ! t_tem_gui && [ ! -t 0 ]; then
+            t_diz "envio: ninguem para perguntar; nada enviado e nada decidido"
+            return 1
+        fi
+        if t_pergunta "$(t_texto_pedir_envio "$reg")" "Pode mandar" "Não mandar"; then
+            t_envio_define sim
+        else
+            t_envio_define nao
+            return 1
+        fi
+    fi
+    t_envio_ligado || return 1
+    t_envio_enfileira "$reg" || return 1
+    # In the background and detached: the owner closed his program, and he is not
+    # going to wait for a network round trip to find out he is free to go.
+    ( t_envio_envia >/dev/null 2>&1 & ) 2>/dev/null
+    return 0
 }

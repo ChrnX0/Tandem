@@ -336,6 +336,7 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem receita <file>` | export what it learned, to send to someone |
 | `tandem memoria` · `tandem esquecer <name>` | see and clear what it learned |
 | `tandem lista` · `tandem contribuir <file>` | the community list, both directions |
+| `tandem enviar [sim\|nao]` | send what it learns automatically — **off** until you say otherwise |
 | `tandem socorro` | one file with everything, to ask for help |
 | `tandem logs` | the latest log |
 
@@ -394,7 +395,29 @@ Tandem has an honest problem: almost no real *commercial* program has ever run o
 
 | It worked | It failed |
 |---|---|
-| `tandem contribuir <file>` builds an anonymous line — [paste it into an issue](../../issues/new?template=list.yml) | `tandem socorro` bundles everything a maintainer would ask for into one file — [open an issue](../../issues/new?template=did-not-work.yml) |
+| `tandem contribuir <file>` builds an anonymous line, copies it to your clipboard and offers to open the form already filled in | `tandem socorro` bundles everything a maintainer would ask for into one file — [open an issue](../../issues/new?template=did-not-work.yml) |
+
+**Or let it send by itself.** Until version 3.9 the list only ever pulled — the right default, with one measurable consequence: `lista/lista.tsv` is **empty**. The mechanism worked and collected nothing, because contributing meant five steps ending in an account on a site you had never heard of.
+
+```bash
+tandem enviar        # see the state, the queue, and where it would go
+tandem enviar sim    # on
+tandem enviar nao    # off
+```
+
+**Off until you say otherwise**, once, looking at the actual line — the eight fields printed, not a description of them:
+
+```
+126ec20a39ba617e20a9e995d439b59b   64   vcrun2022   -   confirmado   1   2026-08   -
+```
+
+That is the whole payload. A fingerprint of the *program's file* (size + first and last MiB — the same on any machine holding the same file, and not reversible), 32 or 64 bits read from the binary, the components that fixed it, the ones that did not, whether a **person** confirmed it worked, a machine count, and the year and month with no day, because a day identifies.
+
+Never sent: a filename, a folder, your username, your machine's name, a network address, or one line of log. The filter that guarantees it runs **twice** — when the line is built and again at the moment of sending, because the queue is a text file and text files get edited by hand.
+
+Nothing blocks a double click: the line is queued, sent detached in the background, capped at twenty a day, and a machine with no internet keeps it and forgets about it. With no window and no terminal to ask in, nothing is sent **and no decision is recorded** — writing "no" there would answer on your behalf and never ask again.
+
+> This build ships with **no address to send to**, and `tandem enviar` says so out loud rather than hiding it. An address means somebody hosts it, moderates it and answers for the data — a decision with a cost, not a line of code. Everything else is built and tested against a real socket, so the day there is one it is a single assignment, and the queue means nothing learned before that day is lost.
 
 The five rules that do not bend, and the evidence bar that "done" has to clear, are in **[CONTRIBUTING.md](CONTRIBUTING.md)**. Before proposing a feature, look at **[docs/IDEAS.md](docs/IDEAS.md)** — 52 ideas with a verdict each, and the rejected ones carry the written reason.
 

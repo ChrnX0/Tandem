@@ -1,3 +1,65 @@
+tandem (3.9) unstable; urgency=medium
+
+  * The community list can now send, with permission. Until here it only ever
+    pulled, which was the right default and had one measurable consequence:
+    lista/lista.tsv is EMPTY. The mechanism worked and collected nothing.
+  * The reason it collected nothing is not that people are unwilling. It is
+    that contributing meant reading a line off a screen, copying it, opening a
+    browser, creating an account on a site the owner has never heard of, and
+    pasting it into an issue form. A shop owner does none of those five
+    things, and an empty list is the measurement of how many did.
+  * What makes automating it defensible is that the expensive half was already
+    built and tested. t_lista_registro emits eight fields and t_lista_vaza
+    REFUSES to emit them if a filename, a path, a username, a machine name or
+    an IP address appears anywhere in the line. There is nothing to anonymise
+    at send time because there was never anything identifying in it.
+  * Off until the owner says otherwise, once, in his own language, looking at
+    the actual line that would leave his machine - the eight fields printed,
+    not a description of them. A permission dialog that describes a payload
+    instead of displaying it is asking to be trusted rather than asking a
+    question.
+  * Asked in two places, and neither of them is the postinst: dpkg holds a
+    lock while that runs, and a window waiting for a click there would hang
+    apt until somebody noticed. So "tandem preparar" asks, which is the
+    command the owner runs right after installing and where a dialog is
+    already normal; and if he skips it, the question comes back once at the
+    only moment it is concrete - just after he confirms that a program of his
+    actually worked. There is also "tandem enviar" and an entry in the panel,
+    because a decision he cannot find again is not a decision he made.
+  * The sieve runs AGAIN at send time. Checking only when the record was built
+    would trust that nothing touched the queue in between, and the queue is a
+    plain-text file in the state directory - exactly the kind of thing that
+    gets edited by hand.
+  * Nothing blocks a double click. The record is queued, the send happens
+    detached in the background, a machine with no internet keeps the line and
+    forgets about it, and at most twenty lines leave per day so a machine
+    cannot be turned into a firehose whatever it installs.
+  * With nobody to ask - no window and no terminal - nothing is sent AND NO
+    DECISION IS RECORDED. Writing "no" there would answer on the owner's
+    behalf and never ask him again.
+  * This build ships with no address to send to, on purpose, and says so out
+    loud in "tandem enviar" instead of hiding it in a comment. An address
+    means somebody hosts it, moderates it and answers for the data, which is a
+    decision with a cost rather than a line of code. Everything else is built
+    and tested against a real HTTP listener, so the day there is an address it
+    is one assignment - and the queue means the lines learned before that day
+    are not lost.
+  * Two shortcuts that need no server at all, for whoever prefers to send by
+    hand: "tandem contribuir" now copies the line to the clipboard and offers
+    to open the issue form already filled in. Five steps become one.
+  * A defect in the counter the owner is shown: "grep -c" on an EMPTY file
+    prints 0 and then exits 1, so the fallback fired as well and "tandem
+    enviar" reported the queue length as "0" followed by "0".
+  * And one in the URL escaper, which dropped the last character of everything
+    it encoded: the final line of od's output has no trailing newline, so
+    "while read" returns non-zero on it and the loop body never runs for the
+    last byte.
+  * .apkm, declared since 3.0 and never exercised, is now covered - see 3.8.
+  * 23 new tests, 496 total, including the record going over a real socket and
+    arriving byte for byte.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Sun, 09 Aug 2026 07:00:00 +0000
+
 tandem (3.8) unstable; urgency=medium
 
   * The five remaining install formats a person can double-click now open:

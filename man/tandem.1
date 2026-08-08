@@ -251,6 +251,38 @@ máquina, endereço de rede nem log; o gerador se recusa a produzi\-la se
 alguma dessas coisas aparecer. O formato está descrito em
 .IR docs/LIST\-FORMAT.md .
 .TP
+.BR "tandem enviar " [ sim | nao ]
+Liga ou desliga o envio automático do que o Tandem aprende para a lista da
+comunidade. Sem argumento, mostra o estado, quantas linhas estão guardadas na
+fila e para onde elas iriam.
+.PP
+Nasce
+.B desligado
+e assim continua até o dono dizer o contrário, uma vez, olhando a linha inteira
+que sairia da máquina dele \(em não uma descrição dela. A pergunta aparece no
+.B tandem preparar
+e, se ele não decidir lá, uma vez mais no momento em que existe algo concreto
+para mandar: logo depois de ele confirmar que um programa funcionou.
+.PP
+Por que isto existe: até a versão 3.8 a lista só descia, e a consequência era
+medível \(em ela estava
+.BR vazia .
+O caminho para contribuir era ler uma linha na tela, copiar, abrir um navegador,
+criar conta num site desconhecido e colar num formulário. Ninguém faz isso, e a
+lista vazia é a medida de quantos fizeram.
+.PP
+O que sai é uma linha de oito campos por programa, a mesma que o
+.B tandem contribuir
+mostra. O filtro que garante que ela não carrega nome de arquivo, pasta, nome de
+usuário, nome da máquina nem endereço de rede roda
+.B duas
+vezes: quando a linha é montada e outra vez na hora de mandar \(em porque a fila
+é um arquivo de texto, e arquivo de texto é exatamente o que alguém edita à mão.
+.PP
+Nada disso atrasa um duplo clique: o envio é feito em segundo plano, no máximo
+20 linhas por dia, e uma máquina sem internet guarda a linha e esquece o
+assunto.
+.TP
 .B tandem socorro
 Junta num arquivo único tudo o que alguém precisa para ajudar você à
 distância: diagnóstico, autoteste, o que o Tandem aprendeu e os registros

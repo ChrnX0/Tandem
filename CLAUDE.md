@@ -135,7 +135,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 473 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 496 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -417,6 +417,19 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   English about a missing password, which is exactly the shape of failure this
   project treats as a defect. `zipfile` cannot write one, so the fixture sets the
   flag by hand in both the local headers and the central directory.
+- **The list only ever pulled, and the measurable consequence is that
+  `lista/lista.tsv` is EMPTY.** Contributing meant five steps ending in a GitHub
+  account. Since 3.9 sending is automated, off by default, and the reason it can
+  be is that `t_lista_vaza` already refuses to emit a record carrying a filename,
+  a path, a username, a machine name or an IP - so there is nothing to anonymise
+  at send time. The sieve runs AGAIN before the POST, because the queue is a
+  plain-text file and those get edited by hand.
+- **`grep -c` on an EMPTY file prints 0 and then exits 1**, so `grep -c ... ||
+  echo 0` prints "0" twice. It reached the owner as a queue length of "0\n0".
+  Use `awk 'END { print NR + 0 }'`.
+- **A `while read` loop drops the last line of `od` output**, which has no
+  trailing newline - so the URL escaper cut the final character off everything.
+  Loop with `for` over the unquoted substitution instead.
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.
@@ -451,7 +464,7 @@ root), no longer only by reading:
 - `tandem dados` listing and copying real files out of a prefix; `tandem socorro`
   producing its report; the bitness warning appearing in the dialog *before* the
   download.
-- 473 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 496 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The five remaining formats closed on real files**: a `.deb` built for an
   older release produced the release-mismatch verdict with `libssl1.1` and
   `libicu70` named and **no password asked**; an arm64 package produced the
@@ -560,10 +573,12 @@ for a reason.
 
 The queue, in order:
 
-1. **Fill the community list.** The mechanism exists and is empty. Inventing a
-   line would be exactly the mistake the `confidence` field exists to prevent, so
-   it only fills with reports from real people. `tandem contribuir` builds the
-   line; the issue template receives it.
+1. **Fill the community list.** Half-solved in 3.9: the client side of automatic
+   sending is built, tested against a real socket, and off by default. What is
+   missing is not code - it is an ADDRESS. `TANDEM_LISTA_ENVIO` is empty because
+   an endpoint means somebody hosts it, moderates it and answers for the data.
+   That is the architect's call. Until then the queue keeps what it learns, and
+   `tandem enviar` says so out loud rather than pretending.
 2. **A real shop program.** `tests/real-programs.sh` now runs real Windows
    software weekly and checks the window on screen, which closes the "no real
    binary has ever run on it" gap. What it does NOT close is commercial software

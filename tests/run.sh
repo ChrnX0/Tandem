@@ -73,7 +73,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "661923334 580" "$soma_esperados"
+      "3014960349 657" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
       "3777721855 1474" "$soma_padroes"
 
@@ -1875,6 +1875,166 @@ else
     skip "list update" "no curl and no wget"
 fi
 unset TANDEM_LISTA
+
+section "sending: off until the owner says otherwise"
+
+# Everything about this is security-sensitive, so it gets the same treatment as
+# the recipe sieve: the default, the refusal path, the filter at send time, the
+# rate limit, and what actually goes over the wire.
+CASA_E="$TMPROOT/casa-envio"; mkdir -p "$CASA_E/.config/tandem"
+env_envio() {
+    env HOME="$CASA_E" TANDEM_LISTA_ENVIO="${TANDEM_LISTA_ENVIO_TESTE:-}" \
+        TANDEM_FILA="$CASA_E/fila.tsv" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1" 2>/dev/null
+}
+
+equal "out of the box, sending is off" "1" "$(env_envio 't_envio_ligado; echo $?')"
+equal "and \"nobody decided\" is not the same as \"decided no\"" \
+      "1" "$(env_envio 't_envio_decidido; echo $?')"
+env_envio 't_envio_define nao' >/dev/null
+equal "a recorded no reads as decided" "0" "$(env_envio 't_envio_decidido; echo $?')"
+equal "and still off" "1" "$(env_envio 't_envio_ligado; echo $?')"
+env_envio 't_envio_define sim' >/dev/null
+equal "a recorded yes reads as on" "0" "$(env_envio 't_envio_ligado; echo $?')"
+equal "the date of the decision is kept" "$(date +%F)" \
+      "$(env_envio 't_config_le ENVIAR_DESDE')"
+equal "and which version asked" "$(grep '^TANDEM_VERSAO=' "$ROOT/src/lib/common.sh" | cut -d'"' -f2)" \
+      "$(env_envio 't_config_le ENVIAR_VERSAO')"
+
+# The queue. A record is stored, never sent from the queueing path, and the same
+# lesson twice is one lesson.
+REG_BOM="$(printf 'abc123\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-')"
+env_envio "t_envio_enfileira \"\$(printf 'abc123\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-')\"" >/dev/null
+env_envio "t_envio_enfileira \"\$(printf 'abc123\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-')\"" >/dev/null
+# Same trap as the product had: grep -c on an empty file prints 0 AND exits 1.
+linhas_de() { [ -f "$1" ] && awk 'END { print NR + 0 }' "$1" || echo 0; }
+equal "the same record twice is stored once" "1" "$(linhas_de "$CASA_E/fila.tsv")"
+
+# The sieve, at the moment of queueing. Anything carrying a path, the home
+# folder, the username, the machine name or an IP address is refused - and it is
+# refused HERE rather than being caught later, so it never reaches the file.
+for veneno in \
+    "$(printf 'abc\t64\t/home/dono/nota.exe\t-\tconfirmado\t1\t2026-08\t-')" \
+    "$(printf 'abc\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t192.168.0.15')" \
+    ; do
+    antes="$(linhas_de "$CASA_E/fila.tsv")"
+    env_envio "t_envio_enfileira \"$veneno\"" >/dev/null 2>&1
+    depois="$(linhas_de "$CASA_E/fila.tsv")"
+    if [ "$antes" = "$depois" ]; then
+        pass "a record carrying machine data never reaches the queue"
+    else
+        fail "a record carrying machine data never reaches the queue" \
+             "refused" "it was stored"
+    fi
+done
+
+# With no address configured nothing goes anywhere, even switched on. This is the
+# state this build ships in, so it is the state that most needs a test.
+equal "with no address, nothing is sent and the queue is kept" "" \
+      "$(env_envio 't_envio_envia')"
+# The count the owner is shown has to be a number, not two of them.
+: > "$CASA_E/vazia.tsv"
+equal "an empty queue counts as one zero, not two" "0" \
+      "$(env HOME="$CASA_E" TANDEM_FILA="$CASA_E/vazia.tsv" \
+         bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_envio_pendentes')"
+equal "the queue survives having nowhere to go" "1" "$(linhas_de "$CASA_E/fila.tsv")"
+
+# And now over the wire, against a listener that records exactly what arrives.
+# A test that only checks the shell logic would never catch the line being
+# mangled between the queue and the socket.
+if command -v python3 >/dev/null 2>&1; then
+    RECEBIDO="$TMPROOT/recebido.txt"
+    PORTA_ARQ="$TMPROOT/porta.txt"
+    : > "$RECEBIDO"; : > "$PORTA_ARQ"
+    # The server picks its own free port and writes it down. Choosing one here
+    # from $$ picks a port that may be taken, and the first version of this test
+    # skipped itself for exactly that reason - a test that skips is a test that
+    # proves nothing while looking tidy.
+    cat > "$TMPROOT/servidor.py" <<'PYSERV'
+import http.server, sys, threading
+destino, porta_arq = sys.argv[1], sys.argv[2]
+class H(http.server.BaseHTTPRequestHandler):
+    def do_POST(self):
+        n = int(self.headers.get('Content-Length') or 0)
+        with open(destino, 'ab') as f:
+            f.write(self.rfile.read(n) + b'\n')
+        self.send_response(204); self.end_headers()
+    def log_message(self, *a): pass
+s = http.server.HTTPServer(('127.0.0.1', 0), H)
+with open(porta_arq, 'w') as f:
+    f.write(str(s.server_address[1]))
+s.serve_forever()
+PYSERV
+    python3 "$TMPROOT/servidor.py" "$RECEBIDO" "$PORTA_ARQ" >/dev/null 2>&1 &
+    SERVIDOR=$!
+    PORTA=""
+    for _ in $(seq 1 50); do
+        PORTA="$(cat "$PORTA_ARQ" 2>/dev/null)"
+        [ -n "$PORTA" ] && (exec 3<>/dev/tcp/127.0.0.1/"$PORTA") 2>/dev/null &&
+            { exec 3>&-; break; }
+        PORTA=""
+        command -v sleep >/dev/null 2>&1 && sleep 0.1
+    done
+    if [ -n "$PORTA" ]; then
+        enviados="$(TANDEM_LISTA_ENVIO_TESTE="http://127.0.0.1:$PORTA/" \
+                    env_envio 't_envio_envia')"
+        equal "one queued record is sent" "1" "${enviados:-0}"
+        equal "and the queue is empty afterwards" "0" "$(linhas_de "$CASA_E/fila.tsv")"
+        # The bytes that arrived have to be the record, and nothing else.
+        equal "what arrived is exactly the record, byte for byte" \
+              "$REG_BOM" "$(head -1 "$RECEBIDO" 2>/dev/null)"
+        # The rate limit: a machine cannot be turned into a firehose.
+        # Five DISTINCT records. The first version of this passed the counter as
+        # an extra argument to bash -c, where it became $0 instead of feeding the
+        # printf, so all five came out identical and the de-duplication stored
+        # one - and then the ceiling had nothing to hold back. The test measured
+        # its own bug.
+        for i in a b c d e; do
+            env_envio "t_envio_enfileira \"\$(printf 'lim$i\t64\tv\t-\tconfirmado\t1\t2026-08\t-')\"" >/dev/null
+        done
+        equal "five distinct records are five queue lines" "5" "$(linhas_de "$CASA_E/fila.tsv")"
+        n2="$(TANDEM_LISTA_ENVIO_TESTE="http://127.0.0.1:$PORTA/" TANDEM_ENVIO_POR_DIA=2 \
+              env_envio 't_envio_envia')"
+        if [ "${n2:-0}" -le 2 ]; then
+            pass "the daily ceiling is respected (sent ${n2:-0} with a limit of 2)"
+        else
+            fail "the daily ceiling is respected" "at most 2" "${n2:-0}"
+        fi
+        if [ "$(linhas_de "$CASA_E/fila.tsv")" -gt 0 ]; then
+            pass "what the ceiling held back stays in the queue"
+        else
+            fail "what the ceiling held back stays in the queue" "kept" "dropped"
+        fi
+    else
+        skip "sending over the wire" "could not open a local listener"
+    fi
+    kill "$SERVIDOR" 2>/dev/null; wait "$SERVIDOR" 2>/dev/null
+else
+    skip "sending over the wire" "no python3"
+fi
+
+# The offer, with nobody to ask. It must neither send nor RECORD A DECISION: the
+# owner has not decided anything, and writing "nao" would answer for him and
+# never ask again.
+CASA_E2="$TMPROOT/casa-envio-2"; mkdir -p "$CASA_E2"
+PROG_E="$ARTIFACTS/prog64.exe"
+env HOME="$CASA_E2" TANDEM_MEMORIA="$CASA_E2/mem" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_memoria_grava "'"$PROG_E"'" RESOLVERAM vcrun2022
+    t_memoria_grava "'"$PROG_E"'" CONFIRMADO sim
+    t_envio_oferece "'"$PROG_E"'"' >/dev/null 2>&1
+if [ -f "$CASA_E2/.config/tandem/configuracao.txt" ] &&
+   grep -q '^ENVIAR=' "$CASA_E2/.config/tandem/configuracao.txt" 2>/dev/null; then
+    fail "with nobody to ask, no decision is recorded" \
+         "no ENVIAR= line" "$(grep '^ENVIAR=' "$CASA_E2/.config/tandem/configuracao.txt")"
+else
+    pass "with nobody to ask, nothing is sent and no decision is recorded"
+fi
+
+# The URL escaper, which puts a TAB-separated record into a prefilled form.
+equal "a tab becomes %09, so the record survives a URL" "a%09b" "$(t_url_escapa "$(printf 'a\tb')")"
+equal "a space becomes %20" "a%20b" "$(t_url_escapa 'a b')"
+equal "letters, digits, dash and underscore are left alone" "Ab9-_" "$(t_url_escapa 'Ab9-_')"
 
 section "silent success: exiting 0 is not the same as having worked"
 

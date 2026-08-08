@@ -38,6 +38,7 @@ Tandem - roda programas Windows, apps Android e pacotes do Linux.
   tandem lista                o que a comunidade ja descobriu
   tandem lista atualizar      baixa a lista (nao manda nada seu)
   tandem contribuir <arq>     monta a linha para voce mandar, se quiser
+  tandem enviar [sim|nao]     mandar automaticamente o que aprende (padrao: nao)
   tandem socorro              junta tudo num arquivo para pedir ajuda
   tandem logs                 mostra o log mais recente
   tandem version              mostra a versao instalada
@@ -382,6 +383,40 @@ Abra o Terminal e execute:  sudo tandem preparar"
 tandem doctor"
         return 1
     fi
+    # The install-time question, asked at the only moment where a dialog is
+    # possible. It cannot be asked from the postinst: dpkg holds a lock while
+    # that runs, and a window waiting for a click there would hang apt until
+    # somebody noticed and clicked - the same reason "preparar" exists as a
+    # separate command at all.
+    #
+    # Asked here without a concrete line to show, so it describes rather than
+    # displays. If the owner skips it, the question comes back once with the
+    # real line, the first time a program of his actually works.
+    if ! t_envio_decidido; then
+        if t_pergunta "Uma última coisa, e é a única que sai desta máquina.
+
+Quando você confirma que um programa funcionou, o Tandem aprende o que ele
+precisava. Posso mandar essa lição para a lista da comunidade?
+
+Vai UMA LINHA por programa: uma impressão digital do arquivo do programa, 32 ou
+64 bits, e quais componentes resolveram. Nada mais.
+
+NÃO vai: nome de arquivo, pasta, seu nome de usuário, o nome do computador,
+endereço de rede, nem uma linha de registro.
+
+Para que serve: quem instalar o mesmo programa depois já encontra a resposta
+pronta, em vez de esperar o Tandem descobrir de novo.
+
+Você pode mudar quando quiser:  tandem enviar sim   /   tandem enviar nao" \
+                       "Pode mandar" "Não mandar"; then
+            t_envio_define sim
+            t_ok "Obrigado. Você pode ver o que sai com:  tandem enviar"
+        else
+            t_envio_define nao
+            t_diz "envio recusado no preparar"
+        fi
+    fi
+
     t_ok "Tudo pronto. Confira com: tandem doctor"
     return 0
 }
@@ -1006,6 +1041,115 @@ computador, endereço de rede, nem uma linha de log.
 
 Copie a linha acima e mande para:
 https://github.com/ChrnX0/Tandem/issues" | t_texto "Tandem - Contribuir"
+
+    # Copying a line off a screen, opening a browser, creating an account and
+    # pasting it into an issue form is five steps, and lista/lista.tsv being
+    # empty is the measurement of how many people take them. These two shortcuts
+    # need no server: the clipboard, and a form that arrives already filled in.
+    if t_tem_gui; then
+        if command -v xclip >/dev/null 2>&1; then
+            printf '%s' "$reg" | xclip -selection clipboard 2>/dev/null &&
+                t_ok "A linha já está copiada. Basta colar."
+        elif command -v wl-copy >/dev/null 2>&1; then
+            printf '%s' "$reg" | wl-copy 2>/dev/null &&
+                t_ok "A linha já está copiada. Basta colar."
+        fi
+        if command -v xdg-open >/dev/null 2>&1 &&
+           t_pergunta "Quer que eu abra o formulário já preenchido com esta linha?
+
+Você ainda confere e envia - o Tandem não manda nada sozinho por aqui.
+
+Se preferir que ele mande sozinho de agora em diante, é outra coisa:
+tandem enviar sim" "Abrir o formulário" "Não, obrigado"; then
+            setsid xdg-open "https://github.com/ChrnX0/Tandem/issues/new?template=list.yml&linha=$(t_url_escapa "$reg")" \
+                >/dev/null 2>&1 &
+        fi
+    fi
+
+    # And the offer that removes the five steps for good.
+    if ! t_envio_decidido && t_tem_gui; then
+        t_aviso "Se quiser, o Tandem pode mandar isso sozinho da próxima vez:
+tandem enviar sim"
+    fi
+    return 0
+}
+
+# ----------------------------------------------------------------- enviar
+#
+# The switch the owner controls. It exists as its own command and not only as a
+# dialog because a decision he cannot find again is not a decision he made - and
+# because the honest place to tell him the queue is not going anywhere yet is
+# here, in plain sight, rather than in a comment in the source.
+acao_enviar() {
+    local sub="${1:-}" fila
+    case "$sub" in
+        sim|ligar|on)
+            t_envio_define sim
+            t_ok "Ligado. O Tandem vai mandar a linha padronizada quando você confirmar
+que um programa funcionou.
+
+Para desligar:  tandem enviar nao"
+            acao_enviar agora >/dev/null 2>&1
+            return 0 ;;
+        nao|não|desligar|off)
+            t_envio_define nao
+            t_ok "Desligado. Nada sai desta máquina.
+
+O que já estava na fila continua guardado e não é enviado. Para apagar a fila:
+rm \"$TANDEM_FILA\""
+            return 0 ;;
+        agora|flush)
+            if ! t_envio_ligado; then
+                t_erro "O envio está desligado. Para ligar:  tandem enviar sim"
+                return 1
+            fi
+            if [ -z "$TANDEM_LISTA_ENVIO" ]; then
+                t_erro "Não há endereço para onde mandar nesta versão do Tandem.
+
+As linhas ficam guardadas na fila e vão junto quando existir um endereço.
+Nada é perdido, e nada é enviado."
+                return 1
+            fi
+            local n; n="$(t_envio_envia)"
+            t_ok "${n:-0} linha(s) enviada(s). Restam $(t_envio_pendentes) na fila."
+            return 0 ;;
+        ''|status|ver) ;;
+        *) t_erro "Não conheço \"tandem enviar $sub\".
+
+Use:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agora"
+           return 1 ;;
+    esac
+
+    fila="$(t_envio_pendentes)"
+    {
+        printf 'Mandar o que o Tandem aprende para a lista da comunidade\n\n'
+        if t_envio_ligado; then
+            printf 'Agora está: LIGADO   (desde %s)\n' "$(t_config_le ENVIAR_DESDE 2>/dev/null || echo '?')"
+        elif t_envio_decidido; then
+            printf 'Agora está: DESLIGADO   (você escolheu em %s)\n' \
+                   "$(t_config_le ENVIAR_DESDE 2>/dev/null || echo '?')"
+        else
+            printf 'Agora está: DESLIGADO   (ninguém decidiu ainda)\n'
+        fi
+        printf 'Linhas guardadas na fila: %s\n' "$fila"
+        if [ -n "$TANDEM_LISTA_ENVIO" ]; then
+            printf 'Endereço de envio: %s\n' "$TANDEM_LISTA_ENVIO"
+        else
+            printf 'Endereço de envio: NÃO EXISTE nesta versão.\n'
+            printf '  As linhas ficam na fila e vão junto quando existir um. Enquanto isso,\n'
+            printf '  nada sai desta máquina - nem se estiver ligado.\n'
+        fi
+        printf '\nO que sai, quando sai: uma linha de oito pedaços por programa, e só depois\n'
+        printf 'que VOCÊ confirmar que o programa funcionou. Veja a linha de um programa\n'
+        printf 'com:  tandem contribuir <arquivo>\n\n'
+        printf 'O que nunca sai: nome de arquivo, pasta, seu nome de usuário, o nome do\n'
+        printf 'computador, endereço de rede, nem uma linha de registro. O filtro que\n'
+        printf 'garante isso roda duas vezes: quando a linha é montada e outra vez na hora\n'
+        printf 'de mandar.\n\n'
+        printf 'Ligar:     tandem enviar sim\n'
+        printf 'Desligar:  tandem enviar nao\n'
+        printf 'Ver a fila inteira:  cat %s\n' "$TANDEM_FILA"
+    } | t_texto "Tandem - Enviar para a lista"
     return 0
 }
 
@@ -1088,6 +1232,7 @@ acao_painel() {
             "repair"    "Consertar a abertura de arquivos com dois cliques" \
             "memoria"   "Ver o que o Tandem aprendeu sobre os programas" \
             "lista"     "Baixar o que a comunidade já descobriu" \
+            "enviar"    "Mandar o que eu aprendo para a comunidade (liga/desliga)" \
             "socorro"   "Gerar um relatório para pedir ajuda" \
             "logs"      "Ver o registro técnico" \
             2>/dev/null)" || return 0
@@ -1110,6 +1255,7 @@ acao_painel() {
             repair)   "$TANDEM_BIN"/tandem-repair ;;
             memoria)  acao_memoria ;;
             lista)    acao_lista atualizar ;;
+            enviar)   acao_enviar ;;
             socorro)  acao_socorro ;;
             logs)     acao_logs ;;
             *)        return 0 ;;
@@ -1137,6 +1283,7 @@ case "${1:-}" in
     memoria|memória)      shift; acao_memoria "$@" ;;
     esquecer|esqueca)     shift; acao_esquecer "$@" ;;
     lista)                shift; acao_lista "$@" ;;
+    enviar|envio)         shift; acao_enviar "$@" ;;
     contribuir|contribuicao) shift; acao_contribuir "$@" ;;
     socorro|ajuda-tecnica) acao_socorro ;;
     logs|log)             acao_logs ;;

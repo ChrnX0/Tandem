@@ -314,6 +314,7 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem receita <arquivo>` | exporta o que aprendeu, para mandar a alguém |
 | `tandem memoria` · `tandem esquecer <nome>` | vê e apaga o que ele aprendeu |
 | `tandem lista` · `tandem contribuir <arquivo>` | a lista da comunidade, nos dois sentidos |
+| `tandem enviar [sim\|nao]` | manda sozinho o que ele aprende — **desligado** até você permitir |
 | `tandem socorro` | um arquivo só com tudo, para pedir ajuda |
 | `tandem logs` | o registro mais recente |
 
@@ -372,7 +373,29 @@ O Tandem tem um problema honesto: quase nenhum programa *comercial* de verdade j
 
 | Deu certo | Não deu certo |
 |---|---|
-| `tandem contribuir <arquivo>` monta uma linha anônima — [cole numa issue](../../issues/new?template=list.yml) | `tandem socorro` junta num arquivo só tudo o que alguém perguntaria — [abra uma issue](../../issues/new?template=did-not-work.yml) |
+| `tandem contribuir <arquivo>` monta a linha anônima, copia para a área de transferência e oferece abrir o formulário já preenchido | `tandem socorro` junta num arquivo só tudo o que alguém perguntaria — [abra uma issue](../../issues/new?template=did-not-work.yml) |
+
+**Ou deixe ele mandar sozinho.** Até a versão 3.9 a lista só descia — o padrão certo, com uma consequência medível: `lista/lista.tsv` está **vazia**. O mecanismo funcionava e não coletava nada, porque contribuir eram cinco passos terminando numa conta num site que você nunca ouviu falar.
+
+```bash
+tandem enviar        # ver o estado, a fila, e para onde iria
+tandem enviar sim    # ligar
+tandem enviar nao    # desligar
+```
+
+**Desligado até você permitir**, uma vez, olhando a linha de verdade — os oito campos impressos, não uma descrição deles:
+
+```
+126ec20a39ba617e20a9e995d439b59b   64   vcrun2022   -   confirmado   1   2026-08   -
+```
+
+É isso, inteiro. Uma impressão digital do *arquivo do programa* (tamanho + primeiro e último MiB — a mesma em qualquer máquina que tenha o mesmo arquivo, e não dá para voltar dela), 32 ou 64 bits lidos do binário, os componentes que resolveram, os que não, se uma **pessoa** confirmou que funcionou, uma contagem de máquinas, e o ano e mês sem o dia, porque dia identifica.
+
+Nunca sai: nome de arquivo, pasta, seu nome de usuário, o nome do computador, endereço de rede, nem uma linha de registro. O filtro que garante isso roda **duas vezes** — quando a linha é montada e outra vez na hora de mandar, porque a fila é um arquivo de texto e arquivo de texto é o que alguém edita à mão.
+
+Nada disso atrasa um duplo clique: a linha é guardada, mandada em segundo plano, no máximo vinte por dia, e uma máquina sem internet guarda e esquece. Sem janela e sem terminal para perguntar, nada é enviado **e nada é decidido** — escrever "não" ali seria responder no seu lugar e nunca mais perguntar.
+
+> Esta versão sai **sem endereço para onde mandar**, e o `tandem enviar` diz isso na cara em vez de esconder. Endereço significa alguém hospedando, moderando e respondendo pelos dados — uma decisão com custo, não uma linha de código. Todo o resto está construído e testado contra um socket de verdade, então no dia em que houver um endereço é uma atribuição só, e a fila garante que nada aprendido antes desse dia se perde.
 
 As cinco regras que não se quebram, e a régua de evidência que "pronto" precisa alcançar, estão em **[CONTRIBUINDO.md](CONTRIBUINDO.md)**. Antes de propor coisa nova, dê uma olhada em **[docs/IDEAS.md](docs/IDEAS.md)** — 52 ideias com veredito, e as recusadas trazem o motivo escrito.
 
