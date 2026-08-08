@@ -1118,9 +1118,8 @@ t_dados_total() {
     t_dados_lista "$1" 2>/dev/null | awk -F'\t' '{s += $3} END {print s + 0}'
 }
 
-# Packs exactly what t_dados_lista found. Returns 1 if there was nothing - and
-# "there was nothing" is NOT a failure: a freshly created prefix has no data
-# at all.
+# Packs exactly what t_dados_lista found. "There was nothing" is NOT a failure:
+# a freshly created prefix has no data at all.
 # 0 = copied, 2 = there was nothing to copy, 1 = there WAS data and the copy
 # failed. Those three used to be a single "return 1", which meant a full disk
 # and a fresh prefix were indistinguishable to the caller - and the caller is
@@ -1143,15 +1142,18 @@ t_dados_salva() {
     return 0
 }
 
-# Rescue copy before a destructive path. It never blocks the operation: if it
-# cannot save, it warns and carries on - locking the owner up in the middle of
-# a repair would be trading one problem for another. Prints the path of the
-# copy, if there was one.
-# Rescue copy before a destructive path. Same three outcomes as t_dados_salva,
-# and the distinction is the whole point: "there was nothing to save" is normal
-# and silent, while "there was data and I could not save it" has to stop the
-# caller before it deletes anything. Merging the two meant a full disk looked
-# exactly like an empty prefix, and the deletion went ahead either way.
+# Rescue copy before a destructive path. Prints the path of the copy, if there
+# was one.
+#
+# It used to say here that this never blocks the operation - that locking the
+# owner up in the middle of a repair would be trading one problem for another.
+# That was wrong, and it was wrong in the direction that loses data: the three
+# destructive callers went ahead deleting whether the copy had worked or not.
+# Same three outcomes as t_dados_salva, and the distinction is the whole point:
+# "there was nothing to save" is normal and silent, while "there was data and I
+# could not save it" has to stop the caller before it deletes anything. Merging
+# the two meant a full disk looked exactly like an empty prefix, and the
+# deletion went ahead either way.
 t_dados_resgate() {
     local pref="$1" motivo="${2:-resgate}" destino c
     [ -d "$pref/drive_c" ] || return 2

@@ -1,15 +1,15 @@
 #!/bin/bash
-# Tandem - suite de testes.
+# Tandem - test suite.
 #
-# Roda sem Wine, sem Waydroid e sem instalar o pacote: as bibliotecas sao
-# carregadas direto de src/lib e os pacotes Android sao sinteticos.
-# As ferramentas opcionais (shellcheck, dpkg-deb, lintian) sao usadas
-# quando existem e puladas quando nao existem, sem reprovar a suite.
+# Runs without Wine, without Waydroid and without installing the package: the
+# libraries are loaded straight from src/lib and the Android packages are
+# synthetic. The optional tools (shellcheck, dpkg-deb, lintian) are used when
+# present and skipped when absent, without failing the suite.
 #
-# Uso:  bash tests/run.sh
-# Saida: uma linha por teste; codigo 1 se qualquer um falhar.
+# Usage: bash tests/run.sh
+# Output: one line per test; exit code 1 if any of them fails.
 
-# Sem "set -e": varios testes esperam comandos que falham de proposito.
+# No "set -e": several tests expect commands that fail on purpose.
 cd "$(dirname -- "$0")/.." || exit 1
 RAIZ="$PWD"
 
@@ -17,61 +17,61 @@ OK=0; FALHOU=0; PULOU=0
 FALHAS=()
 
 passou()  { OK=$((OK+1));       printf '  ok   %s\n' "$1"; }
-falhou()  { FALHOU=$((FALHOU+1)); FALHAS+=("$1"); printf '  FALHOU %s\n     esperado: %s\n     obtido:   %s\n' "$1" "$2" "$3"; }
+falhou()  { FALHOU=$((FALHOU+1)); FALHAS+=("$1"); printf '  FAILED %s\n     expected: %s\n     got:      %s\n' "$1" "$2" "$3"; }
 pulou()   { PULOU=$((PULOU+1)); printf '  --   %s (%s)\n' "$1" "$2"; }
 secao()   { printf '\n== %s ==\n' "$1"; }
 
-# igual <nome> <esperado> <obtido>
+# igual <name> <expected> <obtained>
 igual() {
     if [ "$2" = "$3" ]; then passou "$1"; else falhou "$1" "$2" "$3"; fi
 }
 
-# Ambiente isolado: nada aqui pode tocar o HOME de quem roda os testes.
+# Isolated environment: nothing here may touch the HOME of whoever runs the tests.
 TMPRAIZ="$(mktemp -d)"
 trap 'rm -rf -- "$TMPRAIZ"' EXIT
 export HOME="$TMPRAIZ/casa"
 mkdir -p "$HOME"
-# Sem sessao grafica: e assim que os testes verificam o caminho de terminal.
+# No graphical session: this is how the tests exercise the terminal path.
 unset DISPLAY WAYLAND_DISPLAY
 
-# A suite testa o REPOSITORIO, nunca o pacote instalado. Sem isto as
-# bibliotecas resolviam para /usr/lib/tandem quando o Tandem estava
-# instalado na maquina, e a suite passava a conferir a versao antiga - um
-# teste que aprova o codigo errado e pior que teste nenhum.
+# The suite tests the REPOSITORY, never the installed package. Without this the
+# libraries resolved to /usr/lib/tandem whenever Tandem was installed on the
+# machine, and the suite ended up checking the old version - a test that
+# approves the wrong code is worse than no test at all.
 export TANDEM_LIB="$RAIZ/src/lib"
 export TANDEM_VERBOS_TSV="$RAIZ/src/lib/verbos.tsv"
 export TANDEM_LIMITES="$RAIZ/src/lib/limites.tsv"
 export TANDEM_ALTERNATIVAS="$RAIZ/src/lib/alternativas.tsv"
 
 ARTEFATOS="$TMPRAIZ/artefatos"
-python3 tests/mkapk.py "$ARTEFATOS" >/dev/null || { echo "nao consegui gerar os artefatos"; exit 1; }
+python3 tests/mkapk.py "$ARTEFATOS" >/dev/null || { echo "could not generate the artifacts"; exit 1; }
 
 # shellcheck source=../src/lib/common.sh
 . "$RAIZ/src/lib/common.sh"
 # shellcheck source=../src/lib/winedeps.sh
 . "$RAIZ/src/lib/winedeps.sh"
 
-# ---------------------------------------------------------------- sintaxe
+# ----------------------------------------------------------------- syntax
 
-secao "sintaxe dos scripts"
+secao "script syntax"
 for f in src/bin/* src/lib/*.sh debian/postinst debian/postrm; do
     if bash -n "$f" 2>/dev/null; then passou "bash -n $f"
-    else falhou "bash -n $f" "sintaxe valida" "erro de sintaxe"; fi
+    else falhou "bash -n $f" "valid syntax" "syntax error"; fi
 done
 
 if command -v shellcheck >/dev/null 2>&1; then
     saida="$(LC_ALL=C.UTF-8 shellcheck --shell=bash --exclude=SC1091 \
              --severity=warning --format=gcc \
              src/bin/* src/lib/*.sh debian/postinst debian/postrm 2>&1)"
-    if [ -z "$saida" ]; then passou "shellcheck sem avisos"
-    else falhou "shellcheck sem avisos" "(nada)" "$saida"; fi
+    if [ -z "$saida" ]; then passou "shellcheck with no warnings"
+    else falhou "shellcheck with no warnings" "(nothing)" "$saida"; fi
 else
-    pulou "shellcheck" "nao instalado"
+    pulou "shellcheck" "not installed"
 fi
 
-# ------------------------------------------------------ deteccao de DLL
+# ------------------------------------------------------- DLL detection
 
-secao "deteccao de dependencias do Wine"
+secao "Wine dependency detection"
 
 LOG_WINE="$TMPRAIZ/wine.log"
 cat > "$LOG_WINE" <<'EOF'
@@ -84,100 +84,100 @@ cat > "$LOG_WINE" <<'EOF'
 0024:err:module:import_dll Library MinhaLibPropria.dll (needed by Z:\p\a.exe) not found
 EOF
 
-igual "tres DLLs do VC++ viram um unico verbo" \
+igual "three VC++ DLLs become a single verb" \
       "d3dx9 dotnet48 vcrun2022" \
       "$(t_verbos_do_log "$LOG_WINE" | tr '\n' ' ' | sed 's/ $//')"
 
-igual "DLL que o proprio Wine implementa e ignorada" \
+igual "a DLL that Wine itself implements is ignored" \
       "" \
       "$(t_verbos_do_log "$LOG_WINE" | grep -c kernel32 | sed 's/^0$//')"
 
-igual "DLL do proprio programa nao vira dependencia do sistema" \
+igual "the program's own DLL does not become a system dependency" \
       "MinhaLibPropria.dll" \
       "$(t_dlls_sem_traducao "$LOG_WINE")"
 
-igual "log inexistente nao quebra" "" "$(t_verbos_do_log /nao/existe)"
-igual "log vazio nao produz verbo" "" "$(: > "$TMPRAIZ/v.log"; t_verbos_do_log "$TMPRAIZ/v.log")"
+igual "a missing log does not break anything" "" "$(t_verbos_do_log /nao/existe)"
+igual "an empty log yields no verb" "" "$(: > "$TMPRAIZ/v.log"; t_verbos_do_log "$TMPRAIZ/v.log")"
 
-igual "nome amigavel traduz o verbo" \
+igual "the friendly name translates the verb" \
       "Visual C++ 2015-2022" "$(t_verbo_amigavel vcrun2022)"
-igual "verbo desconhecido aparece como esta" \
+igual "an unknown verb shows up as-is" \
       "coisanova" "$(t_verbo_amigavel coisanova)"
 
-# minusculas e maiusculas nao podem mudar o resultado
-igual "traducao e insensivel a caixa" \
+# upper and lower case must not change the result
+igual "translation is case-insensitive" \
       "vcrun2022 vcrun2022" \
       "$(t_dll_para_verbo MSVCP140.DLL) $(t_dll_para_verbo msvcp140.dll)"
 
-# A ATL vem do runtime do Visual C++, nao do atmlib (Adobe Type Manager).
-# O erro instalava a coisa errada, gravava recibo, e na volta o Tandem dizia
-# "ja instalei o que este programa pedia" e desistia.
-igual "os seis mapeamentos que o auditor corrigiu" \
+# ATL comes from the Visual C++ runtime, not from atmlib (Adobe Type Manager).
+# The mistake installed the wrong thing, wrote a receipt, and on the next run
+# Tandem said "I already installed what this program asked for" and gave up.
+igual "the six mappings the auditor fixed" \
       "amstream d3dcompiler_46 wmp11 xinput vcrun2003 vcrun2019" \
       "$(for d in amstream.dll d3dcompiler_46.dll wmasf.dll xinput1_3.dll msvcr71.dll atl140.dll; do
              printf '%s ' "$(t_dll_para_verbo_tabela $d)"; done | sed 's/ $//')"
-# E os vizinhos que estavam CERTOS nao podem ter sido levados junto.
-igual "os vizinhos corretos continuam intactos" \
+# And the neighbours that were RIGHT must not have been dragged along.
+igual "the correct neighbours remain intact" \
       "quartz wmp9 xact d3dcompiler_47" \
       "$(for d in quartz.dll wmvcore.dll xaudio2_7.dll d3dcompiler_47.dll; do
              printf '%s ' "$(t_dll_para_verbo_tabela $d)"; done | sed 's/ $//')"
 
-igual "atl vem do Visual C++ do mesmo ano, nao do Adobe Type Manager" \
+igual "atl comes from the Visual C++ of the same year, not from Adobe Type Manager" \
       "vcrun2005 vcrun2008 vcrun2010 vcrun2012 vcrun2013 vcrun2019" \
       "$(for d in atl80 atl90 atl100 atl110 atl120 atl140; do
              printf '%s ' "$(t_dll_para_verbo_tabela $d.dll)"; done | sed 's/ $//')"
 
-secao "indice gerado do winetricks (segunda opiniao)"
+secao "index generated from winetricks (second opinion)"
 
-igual "a tabela a mao tem precedencia sobre o indice" \
+igual "the hand-written table takes precedence over the index" \
       "vcrun2022 dotnet48" \
       "$(t_dll_para_verbo msvcp140.dll) $(t_dll_para_verbo mscoree.dll)"
 
 if [ -f "$RAIZ/src/lib/verbos.tsv" ]; then
     n_ind="$(grep -vc '^#' "$RAIZ/src/lib/verbos.tsv")"
     if [ "$n_ind" -gt 150 ]; then
-        passou "o indice cobre $n_ind DLLs"
+        passou "the index covers $n_ind DLLs"
     else
-        falhou "o indice cobre mais de 150 DLLs" ">150" "$n_ind"
+        falhou "the index covers more than 150 DLLs" ">150" "$n_ind"
     fi
-    igual "o indice responde por DLL que a tabela a mao nao conhece" \
+    igual "the index answers for a DLL the hand-written table does not know" \
           "dsound" "$(t_dll_para_verbo dsound.dll)"
-    igual "DLL fora das duas continua sem traducao" \
+    igual "a DLL in neither of the two stays untranslated" \
           "" "$(t_dll_para_verbo MinhaLibPropria.dll)"
-    # O desempate tem que entender versao com ponto omitido: dotnet48 e 4.8,
-    # dotnet472 e 4.7.2. Comparar como inteiro daria 472 > 48.
-    igual "o desempate do indice escolhe a versao mais nova" \
+    # The tie-break has to understand versions with an omitted dot: dotnet48 is
+    # 4.8, dotnet472 is 4.7.2. Comparing as integers would give 472 > 48.
+    igual "the index tie-break picks the newest version" \
           "dotnet48" \
           "$(grep -m1 '^mscoree\.dll' "$RAIZ/src/lib/verbos.tsv" | cut -f2)"
 else
-    pulou "indice do winetricks" "verbos.tsv ausente"
+    pulou "winetricks index" "verbos.tsv missing"
 fi
 
-# AUDITOR. Em vez de o indice responder no lugar da tabela, ele CONFERE a
-# tabela: para cada DLL que os dois conhecem, o verbo prometido a mao tem que
-# estar entre os que o winetricks diz que entregam aquela DLL. Este teste
-# sozinho encontrou seis erros de mapeamento - atl->atmlib (Adobe Type
-# Manager!), msvcr71->vcrun6, amstream->quartz, d3dcompiler_46->_47,
-# wmasf->wmp9 e xinput->xact - cada um deles instalando a coisa errada e
-# gravando recibo, o que fazia o Tandem desistir na tentativa seguinte.
+# AUDITOR. Instead of the index answering in the table's place, it CHECKS the
+# table: for every DLL both know, the verb promised by hand has to be among the
+# ones winetricks says deliver that DLL. This test alone found six mapping
+# errors - atl->atmlib (Adobe Type Manager!), msvcr71->vcrun6,
+# amstream->quartz, d3dcompiler_46->_47, wmasf->wmp9 and xinput->xact - each of
+# them installing the wrong thing and writing a receipt, which made Tandem give
+# up on the next attempt.
 #
-# Divergencias DELIBERADAS ficam declaradas aqui, com o motivo. Sem esta
-# lista so restavam duas saidas ruins: apagar o teste (e perder o auditor) ou
-# ceder e trocar por uma traducao pior. Com ela, a divergencia conhecida passa
-# e qualquer divergencia NOVA continua reprovando.
+# DELIBERATE divergences are declared here, with the reason. Without this list
+# only two bad ways out were left: delete the test (and lose the auditor) or
+# give in and swap in a worse translation. With it, the known divergence passes
+# and any NEW divergence still fails.
 #
-#   mfc42.dll: o indice so conhece o vcrun6, porque o verbo "mfc42" declara a
-#   DLL no titulo em prosa ("...mfc42 library; part of vcrun6"), sem lista
-#   entre parenteses para o gerador ler. Escolher o vcrun6 instalaria o
-#   runtime inteiro do Visual C++ 6 para entregar um arquivo que o verbo
-#   estreito extrai sozinho com cabextract.
+#   mfc42.dll: the index only knows vcrun6, because the "mfc42" verb declares
+#   the DLL in prose in its title ("...mfc42 library; part of vcrun6"), with no
+#   parenthesised list for the generator to read. Picking vcrun6 would install
+#   the whole Visual C++ 6 runtime just to deliver a file that the narrow verb
+#   extracts on its own with cabextract.
 EXCECOES_AUDITOR="mfc42.dll"
 
 if [ -f "$RAIZ/src/lib/verbos.tsv" ]; then
     suspeitos=""
-    # A quinta coluna (fonte: override/titulo/ambos) precisa ser lida, senao
-    # o "read" joga ela dentro de a_todos e a comparacao de pertinencia falha
-    # para TODA linha - o auditor passa a acusar as 108 traducoes certas.
+    # The fifth column (source: override/title/both) has to be read, otherwise
+    # "read" dumps it inside a_todos and the membership comparison fails for
+    # EVERY line - the auditor starts accusing all 108 correct translations.
     while IFS=$'\t' read -r a_dll _ _ a_todos _; do
         case "$a_dll" in '#'*|'') continue ;; esac
         case " $EXCECOES_AUDITOR " in *" $a_dll "*) continue ;; esac
@@ -189,151 +189,151 @@ if [ -f "$RAIZ/src/lib/verbos.tsv" ]; then
         esac
     done < "$RAIZ/src/lib/verbos.tsv"
     if [ -z "$suspeitos" ]; then
-        passou "a tabela a mao so promete verbo que o winetricks confirma"
+        passou "the hand-written table only promises verbs winetricks confirms"
     else
-        falhou "a tabela a mao so promete verbo que o winetricks confirma" \
-               "(nenhum suspeito)" "$suspeitos"
+        falhou "the hand-written table only promises verbs winetricks confirms" \
+               "(no suspects)" "$suspeitos"
     fi
 fi
 
 if command -v winetricks >/dev/null 2>&1; then
     if python3 tools/indice-winetricks.py --conferir >/dev/null 2>&1; then
-        passou "o indice em disco bate com o winetricks instalado"
+        passou "the on-disk index matches the installed winetricks"
     else
-        pulou "indice em disco x winetricks instalado" "versoes diferentes do winetricks"
+        pulou "on-disk index vs installed winetricks" "different winetricks versions"
     fi
 else
-    pulou "regerar o indice" "winetricks nao instalado"
+    pulou "regenerate the index" "winetricks not installed"
 fi
 
-secao "alternativas de Linux"
+secao "Linux alternatives"
 
-igual "reconhece programa que TEM versao oficial para Linux" \
+igual "recognizes a program that HAS an official Linux version" \
       "nativo" "$(t_alternativas_para teamviewer | head -1 | cut -d'|' -f1)"
-igual "reconhece programa que so tem parecido" \
+igual "recognizes a program that only has a look-alike" \
       "parecido" "$(t_alternativas_para photoshop | head -1 | cut -d'|' -f1)"
-igual "a busca ignora maiuscula, espaco e hifen" \
+igual "the search ignores case, spaces and hyphens" \
       "nativo nativo nativo" \
       "$(for n in TeamViewer 'team viewer' team-viewer; do
              printf '%s ' "$(t_alternativas_para "$n" | head -1 | cut -d"|" -f1)"; done | sed 's/ $//')"
 t_alternativas_para "programa-que-ninguem-conhece" >/dev/null 2>&1
-igual "programa desconhecido falha sem inventar" "1" "$?"
+igual "an unknown program fails without making things up" "1" "$?"
 t_alternativas_para "" >/dev/null 2>&1
-igual "nome vazio falha sem quebrar" "1" "$?"
+igual "an empty name fails without breaking" "1" "$?"
 
-# A diferenca entre "nativo" e "parecido" e o coracao da honestidade aqui:
-# dizer que o GIMP e o Photoshop seria enganar o dono.
+# The difference between "nativo" and "parecido" is the heart of the honesty
+# here: saying GIMP is Photoshop would be deceiving the owner.
 texto_alt="$(t_texto_alternativas photoshop)"
 case "$texto_alt" in
-    *"faz um trabalho parecido"*"Atenção:"*) passou "alternativa parecida vem com a ressalva" ;;
-    *) falhou "alternativa parecida vem com a ressalva" "faz um trabalho parecido + Atenção" "$texto_alt" ;;
+    *"faz um trabalho parecido"*"Atenção:"*) passou "a look-alike alternative comes with the caveat" ;;
+    *) falhou "a look-alike alternative comes with the caveat" "faz um trabalho parecido + Atenção" "$texto_alt" ;;
 esac
 texto_nat="$(t_texto_alternativas teamviewer)"
 case "$texto_nat" in
-    *"feito para Linux"*) passou "alternativa nativa e apresentada como o mesmo programa" ;;
-    *) falhou "alternativa nativa e apresentada como o mesmo programa" "feito para Linux" "$texto_nat" ;;
+    *"feito para Linux"*) passou "a native alternative is presented as the same program" ;;
+    *) falhou "a native alternative is presented as the same program" "feito para Linux" "$texto_nat" ;;
 esac
 
-# Toda linha da tabela precisa das cinco colunas: uma linha malformada
-# apareceria como sugestao vazia na cara do dono.
+# Every line of the table needs its five columns: a malformed line would show
+# up as an empty suggestion right in the owner's face.
 malformadas="$(awk -F"\t" '!/^#/ && NF>0 && (NF!=5 || $3=="")' "$TANDEM_ALTERNATIVAS" | wc -l)"
-igual "toda linha da tabela tem as cinco colunas" "0" "$malformadas"
+igual "every line of the table has all five columns" "0" "$malformadas"
 
-secao "memoria: o que o Tandem aprende"
+secao "memory: what Tandem learns"
 
 MEM_A="$ARTEFATOS/imports64.exe"
 MEM_B="$ARTEFATOS/importslimpo.exe"
 
 id_a="$(t_memoria_id "$MEM_A")"
-igual "a identidade tem tamanho fixo" "32" "${#id_a}"
-igual "o mesmo arquivo tem sempre a mesma identidade" \
+igual "the identity has a fixed length" "32" "${#id_a}"
+igual "the same file always has the same identity" \
       "$id_a" "$(t_memoria_id "$MEM_A")"
 if [ "$id_a" = "$(t_memoria_id "$MEM_B")" ]; then
-    falhou "arquivos diferentes tem identidades diferentes" "diferentes" "iguais"
+    falhou "different files have different identities" "different" "equal"
 else
-    passou "arquivos diferentes tem identidades diferentes"
+    passou "different files have different identities"
 fi
-# A identidade segue o ARQUIVO, nao o caminho: uma receita aprendida aqui
-# tem que valer depois que o dono mover o programa de pasta.
+# The identity follows the FILE, not the path: a recipe learned here has to
+# still hold after the owner moves the program to another folder.
 cp "$MEM_A" "$TMPRAIZ/mudou-de-pasta.exe"
-igual "a identidade sobrevive a mudanca de pasta e de nome" \
+igual "the identity survives a change of folder and name" \
       "$id_a" "$(t_memoria_id "$TMPRAIZ/mudou-de-pasta.exe")"
 t_memoria_id /nao/existe >/dev/null 2>&1
-igual "arquivo inexistente nao tem identidade" "1" "$?"
+igual "a missing file has no identity" "1" "$?"
 
 t_memoria_grava "$MEM_A" RESULTADO abriu
-igual "grava e le de volta" "abriu" "$(t_memoria_le "$MEM_A" RESULTADO)"
+igual "writes and reads back" "abriu" "$(t_memoria_le "$MEM_A" RESULTADO)"
 t_memoria_grava "$MEM_A" RESULTADO "nao abriu"
-igual "gravar de novo substitui, nao duplica" \
+igual "writing again replaces, does not duplicate" \
       "nao abriu" "$(t_memoria_le "$MEM_A" RESULTADO)"
-igual "  e sobrou uma linha so" \
+igual "  and only one line is left" \
       "1" "$(grep -c '^RESULTADO=' "$(t_memoria_arquivo "$MEM_A")")"
 
 t_memoria_junta "$MEM_A" RESOLVERAM vcrun2022
 t_memoria_junta "$MEM_A" RESOLVERAM d3dx9
 t_memoria_junta "$MEM_A" RESOLVERAM vcrun2022
-igual "a lista acumula sem repetir" \
+igual "the list accumulates without repeating" \
       "vcrun2022 d3dx9" "$(t_memoria_le "$MEM_A" RESOLVERAM)"
 
-igual "o arquivo guarda o nome do programa, para o dono reconhecer" \
+igual "the file keeps the program name, so the owner recognizes it" \
       "imports64.exe" "$(t_memoria_le "$MEM_A" PROGRAMA)"
 if grep -q '^#' "$(t_memoria_arquivo "$MEM_A")"; then
-    passou "o arquivo se explica em texto legivel"
+    passou "the file explains itself in readable text"
 else
-    falhou "o arquivo se explica em texto legivel" "cabecalho com #" "ausente"
+    falhou "the file explains itself in readable text" "header with #" "missing"
 fi
 
-# Memoria de um programa nao pode vazar para outro.
-igual "cada programa tem a sua memoria" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
+# One program's memory must not leak into another's.
+igual "each program has its own memory" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
 
-secao "portao de evidencia (proofgate)"
+secao "evidence gate (proofgate)"
 
 if [ -f "$RAIZ/proofgate.json" ]; then
-    passou "o repositorio declara a propria stack para o portao"
-    # Sem isto o portao passa verde sem rodar teste nenhum: a deteccao
-    # automatica so conhece ecossistemas com manifesto, e shell nao tem.
+    passou "the repository declares its own stack to the gate"
+    # Without this the gate goes green without running any test: the automatic
+    # detection only knows ecosystems with a manifest, and shell has none.
     if grep -q '"test": *"bash tests/run.sh"' "$RAIZ/proofgate.json"; then
-        passou "o portao sabe rodar a suite deste projeto"
+        passou "the gate knows how to run this project's suite"
     else
-        falhou "o portao sabe rodar a suite deste projeto" "commands.test" "ausente"
+        falhou "the gate knows how to run this project's suite" "commands.test" "missing"
     fi
     if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$RAIZ/proofgate.json" 2>/dev/null; then
-        passou "proofgate.json e JSON valido"
+        passou "proofgate.json is valid JSON"
     else
-        falhou "proofgate.json e JSON valido" "JSON" "malformado"
+        falhou "proofgate.json is valid JSON" "JSON" "malformed"
     fi
 else
-    pulou "portao de evidencia" "proofgate.json ausente"
+    pulou "evidence gate" "proofgate.json missing"
 fi
 
-# O acoplamento declarado no portao tem que ser verdade: todo comando que o
-# programa oferece precisa estar no manual, senao o pacote documenta uma
-# coisa e faz outra.
-# A lista de comandos e EXTRAIDA do case principal, nunca escrita a mao: com
-# lista fixa o teste passava verde enquanto quatro comandos novos (dados,
-# lista, contribuir, socorro) nao estavam em documento nenhum. Um teste que
-# so cobre o que alguem lembrou de adicionar nao cobre nada.
+# The coupling declared in the gate has to be true: every command the program
+# offers must be in the manual, otherwise the package documents one thing and
+# does another.
+# The command list is EXTRACTED from the main case, never written by hand: with
+# a fixed list the test went green while four new commands (dados, lista,
+# contribuir, socorro) were in no document at all. A test that only covers what
+# someone remembered to add covers nothing.
 #
-# So o PRIMEIRO nome de cada linha do case e cobrado. Os apelidos
-# (uninstall, diagnostico, meus-dados...) sao superficie deliberadamente nao
-# documentada; exigir documentacao deles encheria o manual de sinonimo.
+# Only the FIRST name on each case line is required. The aliases (uninstall,
+# diagnostico, meus-dados...) are deliberately undocumented surface; demanding
+# documentation for them would fill the manual with synonyms.
 COMANDOS="$(sed -n '/^case /,/^esac$/p' "$RAIZ/src/bin/tandem" |
             sed -n 's/^    \([^ )]*\)).*/\1/p' | sed 's/|.*//' |
             grep -vxF -e '""' -e painel -e --primeira-vez -e version \
                      -e help -e '*' -e '' | sort -u)"
 n_cmd="$(printf '%s\n' "$COMANDOS" | grep -c .)"
-if [ "$n_cmd" -ge 15 ]; then passou "extraiu $n_cmd comandos do case principal"
-else falhou "extraiu os comandos do case principal" ">=15" "$n_cmd"; fi
+if [ "$n_cmd" -ge 15 ]; then passou "extracted $n_cmd commands from the main case"
+else falhou "extracted the commands from the main case" ">=15" "$n_cmd"; fi
 
 for onde in man/tandem.1 README.md LEIAME.md; do
     faltando=""
     for c in $COMANDOS; do
         grep -q "tandem $c" "$RAIZ/$onde" || faltando="$faltando $c"
     done
-    igual "todo comando aparece em $onde" "" "$faltando"
+    igual "every command shows up in $onde" "" "$faltando"
 done
 
-# E o contrario: o manual nao pode prometer comando que nao existe.
+# And the other way round: the manual must not promise a command that does not exist.
 promete_demais=""
 for c in $(grep -oE '^\.BI? "?tandem ([a-z]+)' "$RAIZ/man/tandem.1" |
            awk '{print $NF}' | tr -d '"' | sort -u); do
@@ -341,9 +341,9 @@ for c in $(grep -oE '^\.BI? "?tandem ([a-z]+)' "$RAIZ/man/tandem.1" |
         grep -qE "^    $c\||^    $c\)" "$RAIZ/src/bin/tandem" ||
         promete_demais="$promete_demais $c"
 done
-igual "o manual nao promete comando inexistente" "" "$promete_demais"
+igual "the manual does not promise a nonexistent command" "" "$promete_demais"
 
-secao "receitas: conhecimento coletivo sem servidor"
+secao "recipes: collective knowledge without a server"
 
 t_memoria_grava "$MEM_A" RESULTADO abriu
 t_memoria_grava "$MEM_A" RESOLVERAM "vcrun2022 msxml6"
@@ -351,118 +351,118 @@ REC="$TMPRAIZ/receita.txt"
 t_receita_exporta "$MEM_A" > "$REC"
 
 if grep -q '^TANDEM_RECEITA=1$' "$REC" && grep -q '^IDENTIDADE=' "$REC"; then
-    passou "a receita se declara e carrega a identidade do programa"
+    passou "the recipe declares itself and carries the program identity"
 else
-    falhou "a receita se declara e carrega a identidade do programa" \
+    falhou "the recipe declares itself and carries the program identity" \
            "TANDEM_RECEITA + IDENTIDADE" "$(cat "$REC")"
 fi
 if grep -q '^#.*mandar para outra pessoa' "$REC"; then
-    passou "a receita se explica para quem receber"
+    passou "the recipe explains itself to whoever receives it"
 else
-    falhou "a receita se explica para quem receber" "cabecalho explicativo" "ausente"
+    falhou "the recipe explains itself to whoever receives it" "explanatory header" "missing"
 fi
 
 t_memoria_esquece "$MEM_A" 2>/dev/null
 t_receita_importa "$REC" "$MEM_A"
-igual "receita legitima e aceita" "0" "$?"
-igual "  e vira memoria" "vcrun2022 msxml6" "$(t_memoria_le "$MEM_A" RESOLVERAM)"
+igual "a legitimate recipe is accepted" "0" "$?"
+igual "  and becomes memory" "vcrun2022 msxml6" "$(t_memoria_le "$MEM_A" RESOLVERAM)"
 
-# Uma receita e do ARQUIVO, nao do nome. Aplicar a de outro programa
-# ensinaria a licao errada, e ninguem perceberia.
+# A recipe belongs to the FILE, not to the name. Applying another program's
+# recipe would teach the wrong lesson, and nobody would notice.
 t_receita_importa "$REC" "$MEM_B" 2>/dev/null
-igual "receita de outro programa e recusada" "3" "$?"
-igual "  e nao contamina a memoria do outro" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
+igual "another program's recipe is refused" "3" "$?"
+igual "  and does not contaminate the other one's memory" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
 
-# A defesa que mais importa: o verbo de uma receita vira argumento de
-# "winetricks -q". Uma receita vinda de fora nao pode carregar comando.
+# The defence that matters most: a recipe's verb becomes an argument to
+# "winetricks -q". A recipe coming from outside must not carry a command.
 for veneno in 'vcrun2022 ;curl|sh' 'a$(rm -rf /)' '../../etc/passwd' 'a b`id`' 'a/b' 'a b c;d'; do
-    # Montado com grep+printf, nao com sed: o proprio veneno tem | e $ e
-    # quebraria o delimitador do sed antes de chegar ao codigo testado.
+    # Built with grep+printf, not with sed: the poison itself has | and $ and
+    # would break sed's delimiter before ever reaching the code under test.
     { grep -v '^RESOLVERAM=' "$REC"; printf 'RESOLVERAM=%s\n' "$veneno"; } > "$TMPRAIZ/veneno.txt"
     t_memoria_esquece "$MEM_A" 2>/dev/null
     t_receita_importa "$TMPRAIZ/veneno.txt" "$MEM_A" 2>/dev/null
     if [ "$?" = 4 ] && [ -z "$(t_memoria_le "$MEM_A" RESOLVERAM 2>/dev/null)" ]; then
-        passou "recusa receita com comando embutido: $veneno"
+        passou "refuses a recipe with an embedded command: $veneno"
     else
-        falhou "recusa receita com comando embutido: $veneno" "codigo 4 e nada gravado" \
+        falhou "refuses a recipe with an embedded command: $veneno" "code 4 and nothing written" \
                "$(t_memoria_le "$MEM_A" RESOLVERAM 2>/dev/null)"
     fi
 done
 
 printf 'isto nao e receita\n' > "$TMPRAIZ/naorec.txt"
 t_receita_importa "$TMPRAIZ/naorec.txt" "$MEM_A" 2>/dev/null
-igual "arquivo que nao se declara receita e recusado" "2" "$?"
+igual "a file that does not declare itself a recipe is refused" "2" "$?"
 t_receita_importa /nao/existe "$MEM_A" 2>/dev/null
-igual "receita inexistente falha sem quebrar" "1" "$?"
+igual "a missing recipe fails without breaking" "1" "$?"
 
-t_verbo_valido vcrun2022; igual "nome de verbo comum e aceito" "0" "$?"
-t_verbo_valido 'a;b';      igual "nome com ponto e virgula e recusado" "1" "$?"
-t_verbo_valido '';         igual "nome vazio e recusado" "1" "$?"
+t_verbo_valido vcrun2022; igual "an ordinary verb name is accepted" "0" "$?"
+t_verbo_valido 'a;b';      igual "a name with a semicolon is refused" "1" "$?"
+t_verbo_valido '';         igual "an empty name is refused" "1" "$?"
 t_verbo_valido "$(printf 'a%.0s' $(seq 1 60))"
-igual "nome absurdamente longo e recusado" "1" "$?"
+igual "an absurdly long name is refused" "1" "$?"
 
 t_memoria_esquece "$MEM_A" 2>/dev/null
 t_memoria_grava "$MEM_A" RESULTADO abriu
 
 t_memoria_esquece "$MEM_A"
-igual "esquecer apaga de verdade" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
+igual "forgetting really erases" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$MEM_A" 2>/dev/null
-igual "esquecer o que nao existe falha sem quebrar" "1" "$?"
+igual "forgetting what does not exist fails without breaking" "1" "$?"
 
-# ------------------------------------------------------- pre-voo do PE
+# -------------------------------------------------------- PE pre-flight
 
-secao "pre-voo: ler o .exe sem executar"
+secao "pre-flight: reading the .exe without running it"
 
 pecampo() { python3 src/lib/peinfo.py "$1" 2>/dev/null | grep "^$2=" | cut -d= -f2-; }
 
-igual "le a arquitetura de um PE de 64 bits" \
+igual "reads the architecture of a 64-bit PE" \
       "64" "$(pecampo "$ARTEFATOS/imports64.exe" ARQUITETURA)"
-igual "le a arquitetura de um PE de 32 bits" \
+igual "reads the architecture of a 32-bit PE" \
       "32" "$(pecampo "$ARTEFATOS/imports32.exe" ARQUITETURA)"
-igual "le a tabela de importacoes inteira" \
+igual "reads the whole import table" \
       "kernel32.dll,msvcp140.dll,vcruntime140.dll" \
       "$(pecampo "$ARTEFATOS/imports64.exe" DLLS)"
-igual "normaliza os nomes para minusculas" \
+igual "normalizes the names to lowercase" \
       "hasp_windows_x64.dll,kernel32.dll" \
       "$(pecampo "$ARTEFATOS/imports32.exe" DLLS)"
-igual "arquivo que nao e PE degrada com mensagem" \
+igual "a file that is not a PE degrades with a message" \
       "nao comeca com MZ" "$(pecampo "$ARTEFATOS/naoexe.exe" ERRO)"
-igual "arquivo inexistente degrada com mensagem" \
+igual "a missing file degrades with a message" \
       "arquivo nao encontrado" "$(pecampo /nao/existe.exe ERRO)"
 python3 src/lib/peinfo.py >/dev/null 2>&1
-igual "sem argumento devolve erro de uso" "2" "$?"
+igual "no argument returns a usage error" "2" "$?"
 
-# O que o pre-voo consegue provar sozinho: reconhecer, ANTES de rodar, um
-# programa que depende de coisa que nunca vai funcionar aqui.
+# What the pre-flight can prove on its own: recognizing, BEFORE running, a
+# program that depends on something that will never work here.
 TANDEM_LIB="$RAIZ/src/lib" TANDEM_LIMITES="$RAIZ/src/lib/limites.tsv" \
     bash -c '. "'"$RAIZ"'/src/lib/common.sh"; t_limite_do_programa "'"$ARTEFATOS"'/imports32.exe"' \
     > "$TMPRAIZ/lim.txt" 2>/dev/null
 case "$(cat "$TMPRAIZ/lim.txt")" in
-    dongle\|*chave\ física*) passou "reconhece proteção por chave física antes de rodar" ;;
-    *) falhou "reconhece proteção por chave física antes de rodar" \
+    dongle\|*chave\ física*) passou "recognizes hardware-key protection before running" ;;
+    *) falhou "recognizes hardware-key protection before running" \
               "dongle|...chave física..." "$(cat "$TMPRAIZ/lim.txt")" ;;
 esac
 
 TANDEM_LIB="$RAIZ/src/lib" TANDEM_LIMITES="$RAIZ/src/lib/limites.tsv" \
     bash -c '. "'"$RAIZ"'/src/lib/common.sh"; t_limite_do_programa "'"$ARTEFATOS"'/importslimpo.exe"' \
     > "$TMPRAIZ/lim2.txt" 2>/dev/null
-igual "programa comum nao recebe veredito de impossibilidade" \
+igual "an ordinary program gets no impossibility verdict" \
       "" "$(cat "$TMPRAIZ/lim2.txt")"
 
-# --------------------------------------------------------- leitura de PE
+# ------------------------------------------------------------ PE reading
 
-secao "arquitetura de executavel PE"
-igual "PE de 32 bits"  "32"    "$(t_pe_arch "$ARTEFATOS/prog32.exe")"
-igual "PE de 64 bits"  "64"    "$(t_pe_arch "$ARTEFATOS/prog64.exe")"
-igual "PE de ARM64"    "arm64" "$(t_pe_arch "$ARTEFATOS/progarm.exe")"
+secao "PE executable architecture"
+igual "32-bit PE"  "32"    "$(t_pe_arch "$ARTEFATOS/prog32.exe")"
+igual "64-bit PE"  "64"    "$(t_pe_arch "$ARTEFATOS/prog64.exe")"
+igual "ARM64 PE"   "arm64" "$(t_pe_arch "$ARTEFATOS/progarm.exe")"
 t_pe_arch "$ARTEFATOS/naoexe.exe" >/dev/null 2>&1
-igual "arquivo que nao e PE falha" "1" "$?"
+igual "a file that is not a PE fails" "1" "$?"
 t_pe_arch /nao/existe >/dev/null 2>&1
-igual "arquivo inexistente falha" "1" "$?"
+igual "a missing file fails" "1" "$?"
 
-# ------------------------------------------------------ prefixos Wine
+# ------------------------------------------------------- Wine prefixes
 
-secao "protecao de prefixos Wine"
+secao "Wine prefix protection"
 
 PREF_NOSSO="$HOME/.local/share/tandem/wine"
 PREF_ALHEIO="$HOME/.wine-pdv"
@@ -471,35 +471,35 @@ mkdir -p "$PREF_NOSSO/drive_c" "$PREF_ALHEIO/drive_c" "$PREF_MARCADO/drive_c"
 touch "$PREF_NOSSO/system.reg" "$PREF_ALHEIO/system.reg" "$PREF_MARCADO/system.reg"
 : > "$PREF_MARCADO/.tandem-prefixo"
 
-t_prefixo_protegido "$PREF_ALHEIO";  igual "prefixo de terceiro e protegido" "0" "$?"
-t_prefixo_protegido "$PREF_NOSSO";   igual "prefixo padrao nao e protegido" "1" "$?"
-t_prefixo_protegido "$PREF_MARCADO"; igual "prefixo com a marca nao e protegido" "1" "$?"
+t_prefixo_protegido "$PREF_ALHEIO";  igual "someone else's prefix is protected" "0" "$?"
+t_prefixo_protegido "$PREF_NOSSO";   igual "the default prefix is not protected" "1" "$?"
+t_prefixo_protegido "$PREF_MARCADO"; igual "a prefix carrying our mark is not protected" "1" "$?"
 t_prefixo_protegido "$HOME/.wine-que-nao-existe"
-igual "prefixo desconhecido e protegido" "0" "$?"
+igual "an unknown prefix is protected" "0" "$?"
 
-# A lista explicita do usuario tem que vencer ate a marca de propriedade.
+# The user's explicit list has to beat even the ownership mark.
 mkdir -p "$(dirname -- "$TANDEM_PROTEGIDOS")"
 printf '%s\n' "$PREF_MARCADO" > "$TANDEM_PROTEGIDOS"
 t_prefixo_protegido "$PREF_MARCADO"
-igual "tandem protect vence a marca do proprio Tandem" "0" "$?"
+igual "tandem protect beats Tandem's own mark" "0" "$?"
 printf '%s\n' "$PREF_NOSSO" > "$TANDEM_PROTEGIDOS"
 t_prefixo_protegido "$PREF_NOSSO"
-igual "tandem protect vale para o prefixo padrao" "0" "$?"
+igual "tandem protect also applies to the default prefix" "0" "$?"
 : > "$TANDEM_PROTEGIDOS"
 
-# Sobe a arvore ate achar a raiz do prefixo.
+# Walks up the tree until it finds the prefix root.
 mkdir -p "$PREF_ALHEIO/drive_c/Programas/Sistema"
 touch "$PREF_ALHEIO/drive_c/Programas/Sistema/pdv.exe"
-igual "acha a raiz do prefixo pelo caminho do arquivo" \
+igual "finds the prefix root from the file path" \
       "$PREF_ALHEIO" \
       "$(t_prefixo_do_arquivo "$PREF_ALHEIO/drive_c/Programas/Sistema/pdv.exe")"
 t_prefixo_do_arquivo "$TMPRAIZ/solto.exe" >/dev/null 2>&1
-igual "arquivo fora de qualquer prefixo falha" "1" "$?"
+igual "a file outside any prefix fails" "1" "$?"
 
-secao "varredura da primeira execucao"
+secao "first-run scan"
 
-# O cenario que falhou na maquina real: dois prefixos em ~/.wine* e a lista
-# de protegidos vazia porque o postinst nao descobriu quem tinha instalado.
+# The scenario that failed on the real machine: two prefixes under ~/.wine* and
+# an empty protected list because postinst never found out who had installed.
 : > "$TANDEM_PROTEGIDOS"
 PREF_FUNDO="$HOME/Programas/PDV/prefixo"
 mkdir -p "$PREF_FUNDO/drive_c"
@@ -509,97 +509,97 @@ t_procura_prefixos
 
 for esperado in "$PREF_ALHEIO" "$PREF_FUNDO"; do
     if grep -qxF -- "$esperado" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
-        passou "a varredura achou $esperado"
+        passou "the scan found $esperado"
     else
-        falhou "a varredura achou $esperado" "na lista" "ausente"
+        falhou "the scan found $esperado" "on the list" "missing"
     fi
 done
 
 if grep -qxF -- "$PREF_NOSSO" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
-    falhou "a varredura ignora o prefixo padrao do Tandem" "ausente" "na lista"
+    falhou "the scan ignores Tandem's default prefix" "missing" "on the list"
 else
-    passou "a varredura ignora o prefixo padrao do Tandem"
+    passou "the scan ignores Tandem's default prefix"
 fi
 if grep -qxF -- "$PREF_MARCADO" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
-    falhou "a varredura ignora prefixo com a marca do Tandem" "ausente" "na lista"
+    falhou "the scan ignores a prefix carrying Tandem's mark" "missing" "on the list"
 else
-    passou "a varredura ignora prefixo com a marca do Tandem"
+    passou "the scan ignores a prefix carrying Tandem's mark"
 fi
 
-# Diretorio com system.reg mas sem drive_c nao e prefixo Wine.
+# A directory with system.reg but no drive_c is not a Wine prefix.
 mkdir -p "$HOME/naoprefixo"; touch "$HOME/naoprefixo/system.reg"
 t_procura_prefixos
 if grep -qxF -- "$HOME/naoprefixo" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
-    falhou "system.reg sem drive_c nao conta como prefixo" "ausente" "na lista"
+    falhou "system.reg without drive_c does not count as a prefix" "missing" "on the list"
 else
-    passou "system.reg sem drive_c nao conta como prefixo"
+    passou "system.reg without drive_c does not count as a prefix"
 fi
 
 t_procura_prefixos
-igual "rodar duas vezes nao duplica a lista" \
+igual "running twice does not duplicate the list" \
       "0" "$(sort "$TANDEM_PROTEGIDOS" | uniq -d | wc -l)"
 
-t_protege "$PREF_ALHEIO"; igual "t_protege e idempotente" "0" "$?"
-t_protege "/caminho/que/nao/existe"; igual "t_protege recusa caminho invalido" "1" "$?"
+t_protege "$PREF_ALHEIO"; igual "t_protege is idempotent" "0" "$?"
+t_protege "/caminho/que/nao/existe"; igual "t_protege refuses an invalid path" "1" "$?"
 
-# A marca de primeira vez tem que impedir a repeticao.
+# The first-run marker has to prevent the repeat.
 MARCA_PV="$(dirname -- "$TANDEM_PROTEGIDOS")/.primeira-vez"
 rm -f "$MARCA_PV"
 t_primeira_vez
-igual "a primeira execucao deixa a marca" "0" "$([ -f "$MARCA_PV" ]; echo $?)"
+igual "the first run leaves the marker" "0" "$([ -f "$MARCA_PV" ]; echo $?)"
 : > "$TANDEM_PROTEGIDOS"
 t_primeira_vez
-igual "a segunda execucao nao varre de novo" "0" "$(wc -l < "$TANDEM_PROTEGIDOS")"
+igual "the second run does not scan again" "0" "$(wc -l < "$TANDEM_PROTEGIDOS")"
 rm -f "$MARCA_PV"; : > "$TANDEM_PROTEGIDOS"
 
-# ------------------------------------------------------------ mensagens
+# ------------------------------------------------------------- messages
 
-secao "nenhuma mensagem se perde"
+secao "no message gets lost"
 
-t_tem_gui; igual "sem DISPLAY nao ha interface grafica" "1" "$?"
+t_tem_gui; igual "without DISPLAY there is no graphical interface" "1" "$?"
 
 t_log_init teste "suite"
-igual "erro sem interface grafica sai no terminal" \
+igual "an error without a graphical interface goes to the terminal" \
       "Tandem: deu ruim" \
       "$(t_erro "deu ruim" 2>&1 1>/dev/null)"
-igual "aviso sem interface grafica sai no terminal" \
+igual "a warning without a graphical interface goes to the terminal" \
       "Tandem: atencao" \
       "$(t_aviso "atencao" 2>&1 1>/dev/null)"
-igual "sucesso sem interface grafica sai no terminal" \
+igual "a success without a graphical interface goes to the terminal" \
       "Tandem: pronto" \
       "$(t_ok "pronto" 2>&1 1>/dev/null)"
 
 t_erro "mensagem que precisa ficar registrada" >/dev/null 2>&1
 if grep -q "ERRO: mensagem que precisa ficar registrada" "$LOG" 2>/dev/null; then
-    passou "erro fica registrado no log para o pos-morte"
+    passou "the error is recorded in the log for the post-mortem"
 else
-    falhou "erro fica registrado no log para o pos-morte" "linha no log" "ausente"
+    falhou "the error is recorded in the log for the post-mortem" "line in the log" "missing"
 fi
 
 t_pergunta "posso?" >/dev/null 2>&1
-igual "pergunta sem interface grafica devolve nao" "1" "$?"
+igual "a question without a graphical interface answers no" "1" "$?"
 
-igual "texto longo cai na saida padrao sem interface grafica" \
+igual "long text falls back to standard output without a graphical interface" \
       "linha um" "$(printf 'linha um\n' | t_texto 'titulo')"
 
-# Com interface grafica, cano e arquivo continuam recebendo o texto: quem
-# escreve "tandem doctor > relatorio.txt" quer o relatorio, nao uma janela.
-igual "com display, o cano ainda recebe o texto" \
+# With a graphical interface, pipes and files still receive the text: whoever
+# writes "tandem doctor > relatorio.txt" wants the report, not a window.
+igual "with a display, the pipe still receives the text" \
       "conteudo" \
       "$(DISPLAY=:0 bash -c '. "'"$RAIZ"'/src/lib/common.sh"; printf "conteudo\n" | t_texto t' | cat)"
 DISPLAY=:0 bash -c '. "'"$RAIZ"'/src/lib/common.sh"; printf "conteudo\n" | t_texto t' > "$TMPRAIZ/redir.txt"
-igual "com display, o arquivo ainda recebe o texto" \
+igual "with a display, the file still receives the text" \
       "conteudo" "$(cat "$TMPRAIZ/redir.txt")"
 
-# printf do diagnostico nao pode interpretar % vindo de um caminho
-igual "porcento em texto nao quebra a saida" \
+# the diagnostics printf must not interpret a % coming from a path
+igual "a percent sign in text does not break the output" \
       "50% pronto" "$(printf '%b' "50% pronto")"
 
-secao "tipos MIME dos pacotes divididos"
+secao "MIME types of split packages"
 
-# Sem estes tipos o duplo clique num .xapk nunca chega ao Tandem: o
-# freedesktop nao conhece a extensao e o sistema ve so um ZIP generico.
-igual "o arquivo de tipos MIME e XML valido" "ok" \
+# Without these types a double click on a .xapk never reaches Tandem:
+# freedesktop does not know the extension and the system sees only a generic ZIP.
+igual "the MIME types file is valid XML" "ok" \
       "$(python3 -c 'import xml.dom.minidom,sys; xml.dom.minidom.parse(sys.argv[1]); print("ok")' \
          src/mime/tandem.xml 2>&1 | tail -1)"
 

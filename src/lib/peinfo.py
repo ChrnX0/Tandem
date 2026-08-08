@@ -6,7 +6,7 @@ the system for when it opens - the import table. Until now Tandem only found
 that out AFTER running and failing, by reading Wine's "err:module:import_dll".
 By reading the table beforehand, it knows what is going to be missing without
 ever having failed, and it can warn in two seconds that a program has no fix -
-instead of the owner finding out after half an hour of installing dependencies.
+instead of the owner finding out after half an hour installing dependencies.
 
 Usage:  peinfo.py <file.exe>
 Output: KEY=VALUE lines, the same contract as apkinfo.py
