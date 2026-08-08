@@ -41,9 +41,17 @@ debian/copyright          DEP-5; lintian exige
 debian/postinst           só atalho: o trabalho por-usuário é na 1ª execução
 man/tandem.1              manual; os outros quatro são stubs ".so"
 src/mime/tandem.xml       registra .xapk/.apks/.apkm como subclasse de zip
-src/lib/common.sh         log, mensagem, locale, progresso, prefixo, PE, waydroid
+src/lib/common.sh         log, mensagem, locale, progresso, prefixo, PE, waydroid,
+                          memoria, receitas, alternativas, pre-voo, preparar
 src/lib/winedeps.sh       DLL -> verbo do winetricks; DLLs sem tradução
 src/lib/apkinfo.py        leitor de AndroidManifest binário, Python puro
+src/lib/peinfo.py         leitor da tabela de importações do PE, sem executar
+src/lib/verbos.tsv        índice DLL->verbo GERADO; não editar à mão
+src/lib/limites.tsv       assinaturas do que nunca vai funcionar (dongle, driver)
+src/lib/alternativas.tsv  programas de Linux que fazem o mesmo trabalho
+tools/indice-winetricks.py  gera verbos.tsv lendo o winetricks instalado
+proofgate.json            portão de evidência: stack, arquivos acoplados
+.github/workflows/ci.yml  suíte + lintian + ciclo real de instalação
 src/bin/tandem            CLI + painel zenity; preparar/programas/desinstalar
 src/bin/tandem-exe        loop roda->detecta->instala->repete
 src/bin/tandem-apk        pré-voo + install; xapk/apks via adb install-multiple
@@ -55,15 +63,16 @@ tests/run.sh              suíte; tests/mkapk.py gera os pacotes sintéticos
 Comandos (`tandem --help` é a fonte da verdade):
 
 ```
-install    programas   desinstalar   preparar   android
-doctor     repair      backup        restore    protect    logs
+install    programas   desinstalar   preparar     android
+doctor     autoteste   repair        backup       restore
+protect    alternativas  receita     memoria      esquecer     logs
 ```
 
 Build e verificação:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 141 testes, sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 206 testes, sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
@@ -170,7 +179,7 @@ root), não mais só por leitura:
 - Janelas do zenity abrem de fato (verificado sob Xvfb), inclusive com acento.
 - Wine 10.0 real instalado no container: prefixo `win64` criado do zero,
   7-Zip x64 instalado por `.exe` e por `.msi`, registro inspecionado à mão.
-- 141 testes automatizados em `tests/run.sh`.
+- 206 testes automatizados em `tests/run.sh`; CI no GitHub Actions.
 
 Verificado **no Zorin 18.1 do usuário** (Wayland, Wine 10.0, Waydroid ativo):
 
@@ -199,11 +208,57 @@ noble), kernel 7.0, x86_64, Wayland/GNOME, 15 GB RAM, Wine 10.0 do repositório
 da distro, Waydroid 1.6.2 MAINLINE com GAPPS e libhoudini, `binderfs` com nós
 `anbox-*`.
 
+## O que foi construído depois da 2.1
+
+- **Pré-voo** (`peinfo.py`): lê a tabela de importações do `.exe` sem executar.
+  Validado contra o `objdump` em 37 binários reais — saída idêntica nos 37.
+- **Veredito de impossibilidade** (`limites.tsv`): reconhece chave de proteção,
+  driver de sistema e USB direto ANTES de rodar. Não bloqueia; explica a falha.
+- **Índice do winetricks** (`verbos.tsv`, 246 DLLs): gerado do `w_override_dlls`
+  de cada verbo. Só responde com confiança alta — 192 sim, 54 se calam.
+  Usado sobretudo como AUDITOR da tabela à mão, e nessa função achou **seis
+  erros de mapeamento** que instalavam a coisa errada e gravavam recibo.
+- **Memória e receitas**: o que cada programa pediu, indexado pelo ARQUIVO
+  (tamanho + primeiro e último MiB), então a lição sobrevive a mudar de pasta
+  e vale noutra máquina. Receita é arquivo de texto que o dono manda para
+  alguém. Só puxa, nunca empurra.
+- **`tandem autoteste`**: exercita em vez de listar. Onde não dá para
+  exercitar, diz que pulou.
+- **`tandem preparar`**, **`programas`**, **`desinstalar`**, **`alternativas`**.
+- **Portão de evidência e CI**, os dois primeiros do projeto.
+
 ## Próximos passos
 
-1. Testar em campo os três comandos novos: `tandem desinstalar` (remover o
-   7-Zip), `tandem programas` (abrir sem passar pelo menu do sistema) e
-   `tandem preparar` numa máquina sem tudo instalado.
+0. **A tese, e o item mais importante da lista: prova de entrega.** Hoje o
+   recibo `.tandem-verbos` é gravado quando `winetricks -q` sai 0, o que
+   mistura "o comando rodou" com "o componente certo chegou". Como a regra
+   nº 4 proíbe repetir, toda tradução errada vira beco permanente: o verbo
+   entra no recibo, na volta cai em REPETIDOS, e o dono lê "já instalei o que
+   este programa pedia" — mentira. Foi o que o `atl*` fez por seis versões.
+   O conserto: depois do `winetricks` sair 0 e ANTES de gravar o recibo,
+   conferir se a DLL que faltava apareceu no `system32`/`syswow64`. Se não
+   apareceu, não grava recibo e diz a verdade — "a tradução que eu uso para
+   esse arquivo provavelmente está errada; é problema meu". Isso torna o laço
+   auto-corretivo, e é pré-requisito de qualquer clone de prefixo.
+1. **`tandem dados`.** Nada no projeto separa AMBIENTE (reconstruível em 30
+   min) de DADOS (irreconstruíveis; NF-e tem guarda de 5 anos). Três caminhos
+   apagam dado do dono hoje sem cópia: `tandem-exe:83` (`rm -rf` do prefixo
+   incompleto), `acao_restore` (devolve o ambiente e leva as vendas do mês) e
+   o desinstalador do programa. O `backup` salva só o ambiente. A frase que
+   resume: *"se você desistir do Linux, seus dados voltam com você"* — é isso
+   que faz um dono de loja aceitar tentar.
+2. **Sucesso em silêncio.** `CODIGO -eq 0` é tratado como "funcionou", mas o
+   modo de falha típico do Wine com software comercial é abrir e estar
+   sutilmente errado: cupom com acento quebrado, relatório em branco, data
+   invertida. Tudo isso sai 0, o Tandem comemora, e a receita exporta a lição
+   errada. Um projeto cuja régua é "nenhum erro em silêncio" tem no centro um
+   sucesso em silêncio.
+3. O auditor tem um ponto cego confirmado: o gerador só lê `w_override_dlls`,
+   e verbos como o `vcrun2003` declaram as DLLs apenas no `title=`. Resultado:
+   zero entradas de `vcrun2003` no índice — ele era cego exatamente onde a
+   tabela errava. Ler também a lista entre parênteses do `title=`.
+4. Testar em campo os comandos novos: `desinstalar`, `programas`, `preparar`,
+   `autoteste`, `alternativas`, `receita`.
 2. Duplo clique num `.xapk` de verdade. Os tipos MIME agora estão registrados
    (`src/mime/tandem.xml`); antes o sistema via só um ZIP genérico e o suporte
    a pacotes divididos era inalcançável pelo duplo clique.
