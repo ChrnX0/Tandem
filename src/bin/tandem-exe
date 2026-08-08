@@ -175,6 +175,16 @@ LIMITE="$(t_limite_do_programa "$PROG" 2>/dev/null)"
 # ------------------------------------------------- memoria deste programa
 # O que o Tandem ja aprendeu sobre ESTE arquivo, aqui ou noutra maquina.
 SABIDOS="$(t_memoria_le "$PROG" RESOLVERAM 2>/dev/null)"
+# Se esta maquina ainda nao sabe nada deste programa, a lista da comunidade
+# pode saber. Ela nao decide nada: vira exatamente o mesmo tipo de sugestao
+# que a memoria local, e passa pela mesma pergunta.
+if [ -z "$SABIDOS" ]; then
+    DA_LISTA="$(t_lista_consulta "$PROG" 2>/dev/null)"
+    if [ -n "$DA_LISTA" ]; then
+        SABIDOS="$DA_LISTA"
+        t_diz "lista da comunidade conhece este programa ->$DA_LISTA"
+    fi
+fi
 LIMITE_LEMBRADO="$(t_memoria_le "$PROG" LIMITE 2>/dev/null)"
 [ -z "$LIMITE" ] && [ -n "$LIMITE_LEMBRADO" ] && LIMITE="$LIMITE_LEMBRADO"
 INICIO=$SECONDS
@@ -230,6 +240,8 @@ ATALHOS_ANTES="$(t_atalhos_wine)"
 INSTALADOS_AGORA=""
 # Pares "dll<TAB>verbo" que esta execucao ja provou nao entregues.
 SUSPEITAS=""
+# Pares que chegaram, na bitola que este programa nao consegue usar.
+BITOLA=""
 while :; do
     MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
     t_aviso "Abrindo $(basename -- "$PROG")..."
@@ -240,12 +252,29 @@ while :; do
         # resolveram. Guardar so os que vieram agora evita creditar a receita
         # com coisa que ja estava no prefixo por outro motivo.
         for v in $INSTALADOS_AGORA; do t_memoria_junta "$PROG" RESOLVERAM "$v"; done
+        DUROU=$((SECONDS-INICIO))
         t_memoria_grava "$PROG" RESULTADO abriu
-        t_memoria_grava "$PROG" SEGUNDOS "$((SECONDS-INICIO))"
+        t_memoria_grava "$PROG" SEGUNDOS "$DUROU"
         t_memoria_grava "$PROG" VISTO_EM "$(date +%F)"
         # Se era um instalador, apareceram atalhos: diga onde o programa foi
         # parar. Se era so um programa rodando, nada aparece e nada e dito.
         t_anuncia_atalhos "$ATALHOS_ANTES"
+
+        # ------------------------------------------- sucesso em silencio
+        #
+        # Codigo 0 diz que o processo terminou sem erro. Nao diz que o
+        # programa funcionou. O modo de falha caracteristico do Wine com
+        # software comercial nao e fechar com erro - e abrir e estar
+        # sutilmente errado: cupom com acento quebrado, relatorio em branco,
+        # data invertida, janela que nunca apareceu. Tudo isso sai 0. Um
+        # projeto cuja regua e "nenhum erro em silencio" tinha um sucesso em
+        # silencio no centro, e a receita exportava a licao errada com a
+        # mesma confianca de uma certa.
+        #
+        # A unica testemunha do que aconteceu na tela e o dono. Perguntamos
+        # UMA vez por programa - repetir a cada abertura viraria estorvo, e
+        # estorvo o usuario aprende a fechar sem ler.
+        t_confirma_funcionou "$PROG" "$DUROU"
         exit 0
     fi
 
@@ -259,6 +288,19 @@ while :; do
     # arquivo que faltava realmente chegou.
     PARES="$(t_pares_do_log "$PARCIAL")"
     rm -f "$PARCIAL"
+
+    # Conferido contra o DISCO a cada rodada, e nao acumulado da instalacao:
+    # assim a explicacao continua valendo na segunda vez que o dono abre o
+    # programa, quando o recibo ja existe e nada mais e instalado.
+    BITOLA=""
+    while IFS="$(printf '\t')" read -r _d _v; do
+        [ -n "$_d" ] && [ -n "$_v" ] || continue
+        t_dll_no_prefixo "$_d" "$ARCH"
+        [ $? = 2 ] && BITOLA="${BITOLA:+$BITOLA
+}$_d$(printf '\t')$_v"
+    done <<PARES_FIM
+$PARES
+PARES_FIM
 
     # Recibo: nunca repetir uma instalacao ja paga. O dotnet48 leva meia hora;
     # reinstalar por engano e o pior desperdicio possivel do tempo do usuario.
@@ -277,6 +319,13 @@ while :; do
         fi
     done
     VERBOS="$(printf '%s\n' $NOVOS)"
+
+    if [ -z "$VERBOS" ] && [ -n "$BITOLA" ]; then
+        t_memoria_grava "$PROG" RESULTADO "bitola errada"
+        t_memoria_grava "$PROG" LIMITE "bitola|$(t_texto_bitola "$BITOLA" "${ARCH:-64}")"
+        t_erro "$(t_texto_bitola "$BITOLA" "${ARCH:-64}")"
+        exit "$CODIGO"
+    fi
 
     if [ -z "$VERBOS" ] && [ -n "$REINCIDENTES" ]; then
         t_memoria_grava "$PROG" RESULTADO "nao abriu"
@@ -396,7 +445,16 @@ sudo apt install winetricks"; exit 1; }
             FALTOU=""
             for dll in $(printf '%s\n' "$PARES" |
                          awk -F'\t' -v alvo="$v" '$2 == alvo { print $1 }'); do
-                t_dll_no_prefixo "$dll" || FALTOU="$FALTOU $dll"
+                t_dll_no_prefixo "$dll" "$ARCH"
+                case $? in
+                    0) ;;
+                    2) # Chegou, na bitola errada. Nao e traducao errada - o
+                       # verbo fez o que prometeu -, entao o recibo vale: nao
+                       # adianta reinstalar. A rodada seguinte reconhece o
+                       # caso lendo o disco e explica ao dono.
+                       t_diz "!!! $v entregou $dll na bitola errada para um programa de ${ARCH:-?} bits" ;;
+                    *) FALTOU="$FALTOU $dll" ;;
+                esac
             done
             if [ -n "$FALTOU" ]; then
                 t_diz "!!! $v saiu 0 mas nao entregou:$FALTOU"

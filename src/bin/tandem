@@ -4,7 +4,7 @@
 t_log_init tandem "$*"
 t_primeira_vez
 
-VERSAO="3.3"
+VERSAO="3.4"
 
 uso() {
     cat <<'AJUDA'
@@ -30,6 +30,10 @@ Tandem - roda programas Windows e apps Android no Linux.
   tandem receita --importar <r> <arquivo>   usa a receita de outra pessoa
   tandem memoria [nome]       o que o Tandem aprendeu sobre os programas
   tandem esquecer <nome>      apaga o que ele aprendeu sobre um programa
+  tandem lista                o que a comunidade ja descobriu
+  tandem lista atualizar      baixa a lista (nao manda nada seu)
+  tandem contribuir <arq>     monta a linha para voce mandar, se quiser
+  tandem socorro              junta tudo num arquivo para pedir ajuda
   tandem logs                 mostra o log mais recente
   tandem version
 AJUDA
@@ -125,15 +129,15 @@ acao_dados_listar() {
     linhas="$(t_dados_lista "$p" 2>/dev/null)"
     total="$(printf '%s\n' "$linhas" | awk -F'\t' '{s += $3} END {print s + 0}')"
     if [ -z "$linhas" ]; then
-        t_texto "Seus arquivos dentro do Windows
+        printf '%s\n' "Seus arquivos dentro do Windows
 
 Não encontrei nenhum arquivo seu ainda - só o ambiente, que o Tandem
 sabe refazer sozinho em alguns minutos.
 
-Isso é normal se você ainda não usou nenhum programa para valer."
+Isso é normal se você ainda não usou nenhum programa para valer." | t_texto "Tandem - Seus arquivos"
         return 0
     fi
-    t_texto "Seus arquivos dentro do Windows
+    printf '%s\n' "Seus arquivos dentro do Windows
 
 Estes são os arquivos que VOCÊ criou. O resto (o Windows de mentira, os
 componentes, os programas) o Tandem refaz sozinho; isto aqui, não:
@@ -145,7 +149,7 @@ $(printf '%s\n' "$linhas" | sort -t"$(printf '\t')" -k3 -rn | head -40 |
 
 Total: $(t_tamanho_amigavel "$total") em $(printf '%s\n' "$linhas" | grep -c .) itens.
 
-Para guardar uma cópia só disso:   tandem dados salvar"
+Para guardar uma cópia só disso:   tandem dados salvar" | t_texto "Tandem - Seus arquivos"
 }
 
 acao_dados_salvar() {
@@ -207,8 +211,13 @@ acao_backup() {
     tar -C "$(dirname -- "$p")" -czf "$dest" "$(basename -- "$p")" 2>>"$LOG"
     local c=$?
     t_progresso_fecha
+    local so_dados; so_dados="$(t_dados_total "$p")"
     [ $c -eq 0 ] && t_ok "Backup salvo em:
-$dest" || t_erro "Não consegui salvar o backup."
+$dest
+
+Isto é o ambiente INTEIRO. Os seus arquivos são $(t_tamanho_amigavel "${so_dados:-0}")
+desse total - para levar só eles, que é rápido e cabe num e-mail:
+tandem dados salvar" || t_erro "Não consegui salvar o backup."
     return $c
 }
 
@@ -665,6 +674,16 @@ Receita vinda de fora não pode mandar o Tandem executar nada." ;;
 
 Exemplo:  tandem receita ~/Downloads/sistema.exe"; return 1; }
     [ -f "$prog" ] || { t_erro "Não achei o programa: $prog"; return 1; }
+    # Avisa ANTES, na saida de erro, para nao sujar a receita que sai no
+    # stdout e costuma ser redirecionada para um arquivo.
+    case "$(t_confianca_da_licao "$prog")" in
+        reprovado)
+            t_aviso "Atenção: você disse que este programa NÃO funcionou direito aqui.
+A receita vai sair marcada assim. Pense duas vezes antes de mandar para alguém." ;;
+        so-abriu)
+            t_aviso "Esta receita vale o que vale: o programa abriu sem erro, mas ninguém
+confirmou que funcionou de verdade. Ela sai marcada como \"so-abriu\"." ;;
+    esac
     if ! t_receita_exporta "$prog"; then
         t_erro "Ainda não aprendi nada sobre este programa.
 
@@ -723,6 +742,147 @@ acao_logs() {
     tail -n 400 "$l" | t_texto "Tandem - $(basename "$l")"
 }
 
+# ----------------------------------------------------------------- lista
+#
+# A ideia do dono, e ela e boa: em vez de um servidor-ponte entre todos os
+# Tandems, um ARQUIVO que cada instalacao baixa - o modelo das listas de
+# filtro de bloqueador de anuncio. Ver docs/FORMATO-LISTA.md.
+acao_lista() {
+    case "${1:-ver}" in
+        atualizar|baixar|sincronizar)
+            t_progresso_abre "Baixando a lista da comunidade..."
+            t_lista_atualiza; local c=$?
+            t_progresso_fecha
+            case $c in
+                0) t_ok "Lista atualizada: $(grep -vc '^#' "$TANDEM_LISTA" 2>/dev/null) programas conhecidos.
+
+Isso não instala nada. Quando você abrir um programa que está na lista,
+o Tandem vai PERGUNTAR se quer usar o que já funcionou para outras pessoas." ;;
+                1) t_erro "Não consegui baixar a lista. Verifique a internet." ;;
+                3) t_erro "O arquivo baixado não é uma lista do Tandem. Não usei." ;;
+                *) t_erro "Falta o curl ou o wget para baixar a lista." ;;
+            esac
+            return $c ;;
+        ver|"")
+            if [ ! -f "$TANDEM_LISTA" ]; then
+                printf '%s\n' "Lista da comunidade
+
+Você ainda não baixou a lista.
+
+Ela é um arquivo de texto público com o que já deu certo na máquina de
+outras pessoas: quais componentes do Windows cada programa precisou.
+Baixar não manda nada seu para lugar nenhum.
+
+Para baixar:   tandem lista atualizar" | t_texto "Tandem - Lista da comunidade"
+                return 1
+            fi
+            printf '%s\n' "Lista da comunidade
+
+$(grep -vc '^#' "$TANDEM_LISTA") programas conhecidos.
+Arquivo: $TANDEM_LISTA
+
+$(head -1 "$TANDEM_LISTA")" | t_texto "Tandem - Lista da comunidade"
+            return 0 ;;
+        *) t_erro "Use:  tandem lista  |  tandem lista atualizar"; return 1 ;;
+    esac
+}
+
+# Monta o registro para o dono conferir e mandar. NAO envia nada: a maquina de
+# uma loja nao fala com servidor nenhum por decisao de um automatismo.
+acao_contribuir() {
+    local prog="${1:-}" reg
+    [ -n "$prog" ] || { t_erro "Diga qual programa.
+
+Exemplo:  tandem contribuir ~/Downloads/sistema.exe"; return 1; }
+    [ -f "$prog" ] || { t_erro "Não achei o programa: $prog"; return 1; }
+    reg="$(t_lista_registro "$prog")" || {
+        t_erro "Ainda não aprendi nada útil sobre este programa.
+
+Abra ele pelo Tandem primeiro. Se ele já abriu, responda a pergunta
+\"funcionou como você esperava?\" - é ela que dá valor à lição."
+        return 1; }
+
+    printf '%s\n' "Contribuir com a lista da comunidade
+
+Esta é a linha inteira que sai daqui. Não tem mais nada:
+
+$reg
+
+O que cada pedaço quer dizer:
+  1. uma impressão digital DO ARQUIVO (tamanho + começo + fim). A mesma
+     em qualquer máquina do mundo que tenha esse mesmo arquivo. Não dá
+     para voltar dela para o arquivo, nem para você.
+  2. 32 ou 64 bits, lido do próprio programa.
+  3. os componentes do Windows que resolveram.
+  4. os que foram instalados e não resolveram.
+  5. se você confirmou que funcionou, ou só que abriu sem erro.
+  6. contagem de máquinas (aqui é sempre 1; quem junta é a lista).
+  7. ano e mês. Sem o dia, porque dia identifica.
+
+NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do
+computador, endereço de rede, nem uma linha de log.
+
+Copie a linha acima e mande para:
+https://github.com/ChrnX0/Tandem/issues" | t_texto "Tandem - Contribuir"
+    return 0
+}
+
+# ---------------------------------------------------------------- socorro
+#
+# Suporte remoto hoje e alguem ditando comandos por telefone para uma pessoa
+# que nao sabe onde fica o Terminal. Isto junta tudo o que quem entende vai
+# pedir num arquivo so, que o dono manda por WhatsApp e pronto.
+#
+# O arquivo diz na primeira linha o que tem dentro. Ele contem caminhos de
+# arquivo do dono, e caminho de arquivo as vezes tem nome de cliente - quem
+# decide mandar e ele, mas so decide de verdade se souber o que esta
+# mandando.
+acao_socorro() {
+    local arq l
+    arq="$HOME/tandem-socorro-$(date +%F-%H%M).txt"
+    {
+        printf 'RELATÓRIO DO TANDEM\n'
+        printf 'Gerado em %s\n\n' "$(date '+%d/%m/%Y às %H:%M')"
+        printf 'O que tem aqui dentro: a versão do Tandem, o que está instalado\n'
+        printf 'nesta máquina, os últimos registros técnicos e o que o Tandem\n'
+        printf 'aprendeu sobre os programas. Os registros mostram CAMINHOS DE\n'
+        printf 'ARQUIVO seus. Dê uma olhada antes de mandar para alguém.\n'
+        printf '\n========================= DIAGNÓSTICO =========================\n\n'
+        acao_doctor 2>&1
+        printf '\n========================= AUTOTESTE ===========================\n\n'
+        acao_autoteste 2>&1
+        printf '\n===================== TRADUÇÕES SUSPEITAS =====================\n\n'
+        if [ -s "$TANDEM_ESTADO/traducao-suspeita.tsv" ]; then
+            cat "$TANDEM_ESTADO/traducao-suspeita.tsv"
+        else
+            printf '(nenhuma)\n'
+        fi
+        printf '\n======================== O QUE APRENDI ========================\n\n'
+        acao_memoria 2>&1
+        printf '\n====================== REGISTROS TÉCNICOS =====================\n'
+        for l in "$TANDEM_ESTADO"/*.log; do
+            [ -f "$l" ] || continue
+            printf '\n--- %s (últimas 200 linhas) ---\n' "$(basename -- "$l")"
+            tail -n 200 "$l"
+        done
+    } > "$arq" 2>/dev/null
+
+    if [ -s "$arq" ]; then
+        t_ok "Relatório pronto:
+
+$arq
+
+Mande este arquivo para quem estiver ajudando você. Ele tem tudo o que
+essa pessoa vai perguntar - não precisa digitar nenhum comando.
+
+Antes de mandar, dê uma olhada: ele mostra nomes e caminhos de arquivos
+que estão nesta máquina."
+        return 0
+    fi
+    t_erro "Não consegui gerar o relatório."
+    return 1
+}
+
 acao_painel() {
     # Sem sessao grafica o painel nao tem como aparecer: mostre a ajuda em
     # vez de abrir e fechar uma janela invisivel sem dizer nada.
@@ -744,6 +904,8 @@ acao_painel() {
             "restore"   "Restaurar o ambiente Windows" \
             "repair"    "Consertar a abertura de arquivos com dois cliques" \
             "memoria"   "Ver o que o Tandem aprendeu sobre os programas" \
+            "lista"     "Baixar o que a comunidade já descobriu" \
+            "socorro"   "Gerar um relatório para pedir ajuda" \
             "logs"      "Ver o registro técnico" \
             2>/dev/null)" || return 0
         case "$esc" in
@@ -764,6 +926,8 @@ acao_painel() {
             restore)  acao_restore ;;
             repair)   /usr/bin/tandem-repair ;;
             memoria)  acao_memoria ;;
+            lista)    acao_lista atualizar ;;
+            socorro)  acao_socorro ;;
             logs)     acao_logs ;;
             *)        return 0 ;;
         esac
@@ -789,6 +953,9 @@ case "${1:-}" in
     receita|receitas)     shift; acao_receita "$@" ;;
     memoria|memória)      shift; acao_memoria "$@" ;;
     esquecer|esqueca)     shift; acao_esquecer "$@" ;;
+    lista)                shift; acao_lista "$@" ;;
+    contribuir|contribuicao) shift; acao_contribuir "$@" ;;
+    socorro|ajuda-tecnica) acao_socorro ;;
     logs|log)             acao_logs ;;
     # Uso interno do postinst: ja foi feito na chamada a t_primeira_vez
     # la em cima. Fica fora da ajuda de proposito.

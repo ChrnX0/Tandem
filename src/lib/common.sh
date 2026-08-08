@@ -154,7 +154,16 @@ t_pergunta() {
 # ai sim a janela e o unico jeito de a pessoa ver alguma coisa.
 t_texto() {
     local titulo="${1:-Tandem}" conteudo
-    conteudo="$(cat)"
+    # O conteudo vem da ENTRADA PADRAO; o argumento e so o titulo da janela.
+    # Quem esquece disso e passa o texto como argumento cai num "cat" que
+    # espera para sempre por um stdin que ninguem vai fechar - o comando
+    # congela no meio do duplo clique, sem janela e sem mensagem. Ja aconteceu
+    # em cinco comandos de uma vez. Com terminal na entrada, nao ha nada
+    # canalizado: seguimos sem travar.
+    if [ -t 0 ]; then conteudo=""; else conteudo="$(cat)"; fi
+    # E se ainda assim nao veio nada, o titulo aparece. Melhor uma linha
+    # pobre do que um comando que roda, sai com 0 e nao imprime nada.
+    [ -n "$conteudo" ] || conteudo="$titulo"
     if [ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]; then
         printf '%s\n' "$conteudo"
         return 0
@@ -661,6 +670,10 @@ t_receita_exporta() {
     printf 'IDENTIDADE=%s\n' "$(t_memoria_id "$prog")"
     printf 'ORIGEM=%s\n' "$( . /etc/os-release 2>/dev/null
                              printf '%s' "${PRETTY_NAME:-Linux}")"
+    # De onde vem a confianca desta licao. Sem esta linha, "o processo saiu
+    # 0" e "uma pessoa olhou a tela e disse que estava certo" chegavam do
+    # outro lado com exatamente o mesmo peso.
+    printf 'CONFIANCA=%s\n' "$(t_confianca_da_licao "$prog")"
     grep -v '^#' "$arq"
 }
 
@@ -711,14 +724,49 @@ t_memoria_esquece() {
 # O Wine grava os nomes em minusculas e o log dele traz "MSVCP140.dll", por
 # isso -iname. As duas visoes do system32 sao consultadas: instalador de 32
 # bits num prefixo win64 escreve em syswow64.
+# A DLL chegou onde este programa consegue carregar?
+#
+#   0 = chegou no lugar certo
+#   1 = nao chegou a lugar nenhum
+#   2 = chegou, mas na bitola errada - existe no prefixo e este programa
+#       nao consegue usar
+#
+# A distincao entre 1 e 2 nao e preciosismo: ela apareceu na primeira vez que
+# o laco rodou com winetricks de verdade. O verbo mfc42 SAIU 0 e entregou o
+# arquivo - em syswow64, que e a pasta de 32 bits. O programa era de 64 bits,
+# o Wine continuou dizendo "not found", e a prova de entrega (que olhava as
+# duas pastas) aprovou e gravou recibo. Resultado: o beco sem saida de novo,
+# com a causa intacta, so que agora com um recibo por cima. O winetricks ate
+# avisa disso em ingles no meio do log - "many verbs only install 32-bit
+# versions of packages" - que e exatamente o tipo de recado que o dono da
+# loja nunca vai ler.
+#
+# Num prefixo win64 o Wine segue a convencao do Windows: system32 guarda as
+# DLLs de 64 bits e syswow64 as de 32. Num prefixo win32 so existe system32,
+# e ela e de 32 bits.
 t_dll_no_prefixo() {
-    local dll="$1" d
+    local dll="$1" arch="${2:-}" c s32 s64 tem32=1 tem64=1
     [ -n "$dll" ] && [ -n "${WINEPREFIX:-}" ] || return 1
-    for d in "$WINEPREFIX/drive_c/windows/system32" \
-             "$WINEPREFIX/drive_c/windows/syswow64"; do
-        [ -d "$d" ] || continue
-        find "$d" -maxdepth 1 -iname "$dll" -print -quit 2>/dev/null | grep -q . && return 0
-    done
+    c="$WINEPREFIX/drive_c/windows"
+    s64="$c/system32"; s32="$c/syswow64"
+    # Sem syswow64, o prefixo e de 32 bits: system32 guarda as de 32.
+    [ -d "$s32" ] || { s32="$c/system32"; s64=""; }
+
+    _t_acha_dll() {
+        [ -n "$1" ] && [ -d "$1" ] || return 1
+        find "$1" -maxdepth 1 -iname "$dll" -print -quit 2>/dev/null | grep -q .
+    }
+    _t_acha_dll "$s32" && tem32=0
+    _t_acha_dll "$s64" && tem64=0
+    unset -f _t_acha_dll
+
+    case "$arch" in
+        64) [ "$tem64" = 0 ] && return 0; [ "$tem32" = 0 ] && return 2 ;;
+        32) [ "$tem32" = 0 ] && return 0; [ "$tem64" = 0 ] && return 2 ;;
+        # Sem saber a arquitetura do programa, qualquer uma serve: e melhor
+        # nao condenar do que condenar por engano.
+        *)  { [ "$tem32" = 0 ] || [ "$tem64" = 0 ]; } && return 0 ;;
+    esac
     return 1
 }
 
@@ -786,6 +834,157 @@ t_tem_wine64() {
 # Executa um script como root: direto se ja somos root, sudo se ha terminal,
 # pkexec se ha sessao grafica. A ordem poe o terminal na frente porque nele
 # o usuario VE o apt trabalhando; o pkexec mostra so o pedido de senha.
+# ================================================= LISTA DA COMUNIDADE
+#
+# O modelo e o das listas de filtro de bloqueador de anuncio: um arquivo de
+# texto estatico, buscado por HTTPS, que cada instalacao le e mescla no que ja
+# sabe. E por isso que o EasyList sobrevive ha vinte anos com orcamento de
+# voluntario e um servico proprio nao sobreviveria - arquivo estatico nao tem
+# servidor caindo, nem conta, nem banco, nem custo por usuario, e qualquer um
+# pode espelhar.
+#
+# As duas metades sao ASSIMETRICAS de proposito:
+#   descer  - automatico quando o dono liga; e so um GET de arquivo publico
+#   subir   - o Tandem MONTA o registro, quem envia e o dono
+# Contribuicao automatica seria uma maquina de producao mandando dados para
+# fora sem ninguem pedir. E a regra numero 1 aplicada a rede.
+#
+# O formato completo esta em docs/FORMATO-LISTA.md.
+
+TANDEM_LISTA_URL="${TANDEM_LISTA_URL:-https://raw.githubusercontent.com/ChrnX0/Tandem/main/lista/lista.tsv}"
+TANDEM_LISTA="${TANDEM_LISTA:-$TANDEM_ESTADO/lista.tsv}"
+TANDEM_LISTA_VERSAO=1
+
+# Campos que jamais podem sair desta maquina. Nao e recomendacao: e o teste
+# que o gerador de contribuicao roda contra o proprio texto antes de mostrar.
+t_lista_vaza() {
+    local reg="$1"
+    # Caminho, nome de maquina, usuario, IP, e qualquer coisa com barra.
+    case "$reg" in
+        */*|*"$HOME"*|*"$(id -un)"*) return 0 ;;
+    esac
+    [ -n "${HOSTNAME:-}" ] && case "$reg" in *"$HOSTNAME"*) return 0 ;; esac
+    printf '%s' "$reg" | grep -qE '[0-9]{1,3}(\.[0-9]{1,3}){3}' && return 0
+    return 1
+}
+
+# Monta o registro padronizado deste programa. Vazio = nao ha o que contribuir.
+t_lista_registro() {
+    local prog="$1" id arch verbos reprovados conf reg
+    id="$(t_memoria_id "$prog" 2>/dev/null)" || return 1
+    [ -n "$id" ] || return 1
+    arch="$(t_memoria_le "$prog" ARQUITETURA 2>/dev/null)"
+    verbos="$(t_memoria_le "$prog" RESOLVERAM 2>/dev/null | tr ' ' ',')"
+    reprovados="$(t_memoria_le "$prog" NAO_RESOLVERAM 2>/dev/null | tr ' ' ',')"
+    conf="$(t_confianca_da_licao "$prog")"
+    # Sem nenhuma licao, contribuir seria so ruido na lista dos outros.
+    [ -n "$verbos" ] || [ -n "$reprovados" ] || [ "$conf" = reprovado ] || return 1
+    reg="$(printf '%s\t%s\t%s\t%s\t%s\t1\t%s\t-' \
+        "$id" "${arch:--}" "${verbos:--}" "${reprovados:--}" "$conf" "$(date +%Y-%m)")"
+    # Data com DIA identifica; ano e mes, nao. E a barra de um caminho que
+    # entrasse por engano derruba o registro inteiro em vez de vazar.
+    t_lista_vaza "$reg" && { t_diz "registro recusado: continha dado da maquina"; return 1; }
+    printf '%s\n' "$reg"
+}
+
+# Le a lista baixada e devolve os verbos conhecidos para este programa.
+# So responde quando a licao vem confirmada por gente: e a diferenca entre
+# espalhar conhecimento e espalhar engano com a mesma eficiencia.
+t_lista_consulta() {
+    local prog="$1" id
+    [ -f "$TANDEM_LISTA" ] || return 1
+    id="$(t_memoria_id "$prog" 2>/dev/null)" || return 1
+    [ -n "$id" ] || return 1
+    awk -F'\t' -v alvo="$id" '
+        /^#/ { next }
+        $1 == alvo && $5 == "confirmado" && $3 != "-" { print $3; achou = 1; exit }
+        END { exit !achou }' "$TANDEM_LISTA" | tr ',' ' '
+}
+
+t_lista_maquinas() {
+    [ -f "$TANDEM_LISTA" ] || return 1
+    awk -F'\t' -v alvo="$1" '/^#/ {next} $1 == alvo { print $6; exit }' "$TANDEM_LISTA"
+}
+
+# Baixa a lista. Arquivo malformado NAO substitui o bom que ja esta em disco:
+# lista quebrada calaria a segunda opiniao sem ninguem perceber.
+t_lista_atualiza() {
+    local tmp rc
+    command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 2
+    [ -n "$TANDEM_ESTADO" ] || return 2
+    tmp="$(mktemp)" || return 2
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL --max-time 30 -o "$tmp" "$TANDEM_LISTA_URL" 2>>"${LOG:-/dev/null}"
+    else
+        wget -q -T 30 -O "$tmp" "$TANDEM_LISTA_URL" 2>>"${LOG:-/dev/null}"
+    fi
+    rc=$?
+    if [ $rc -ne 0 ] || [ ! -s "$tmp" ]; then rm -f "$tmp"; return 1; fi
+    if ! head -1 "$tmp" | grep -q "^# TANDEM-LISTA $TANDEM_LISTA_VERSAO\$"; then
+        t_diz "lista baixada nao declara o formato esperado; descartada"
+        rm -f "$tmp"; return 3
+    fi
+    mv -f "$tmp" "$TANDEM_LISTA" || { rm -f "$tmp"; return 2; }
+    t_diz "lista atualizada: $(grep -vc '^#' "$TANDEM_LISTA") programas"
+    return 0
+}
+
+# =============================================== SUCESSO EM SILENCIO
+#
+# Ver o comentario longo no tandem-exe. Aqui fica o mecanismo: perguntar uma
+# vez por programa, guardar a resposta, e - o mais importante - nunca deixar
+# "saiu 0" se passar por "funcionou" na hora de exportar a licao.
+
+# Uma saida rapida e sem nada na tela merece desconfianca. Instalador demora;
+# programa de verdade fica aberto enquanto a pessoa usa. Fechar sozinho em
+# poucos segundos e o retrato do executavel que morreu calado.
+TANDEM_SEGUNDOS_SUSPEITO="${TANDEM_SEGUNDOS_SUSPEITO:-3}"
+
+t_saida_suspeita() {
+    [ "${1:-0}" -lt "$TANDEM_SEGUNDOS_SUSPEITO" ] 2>/dev/null
+}
+
+# Pergunta ao dono se funcionou, e grava CONFIRMADO=sim|nao na memoria.
+# Sem janela nao pergunta nada: inventar uma resposta seria pior que nao ter.
+t_confirma_funcionou() {
+    local prog="$1" durou="${2:-0}" ja
+    ja="$(t_memoria_le "$prog" CONFIRMADO 2>/dev/null)"
+    [ -n "$ja" ] && return 0
+
+    if t_saida_suspeita "$durou"; then
+        # Aqui nem da para comemorar: o programa fechou sozinho antes de
+        # qualquer pessoa conseguir usar. Dizer "abriu!" seria mentira.
+        t_memoria_grava "$prog" RESULTADO "fechou sozinho"
+        t_aviso "O programa abriu e fechou sozinho em $durou segundo(s), sem dar tempo de usar."
+    fi
+
+    t_tem_gui || return 0
+    command -v zenity >/dev/null 2>&1 || return 0
+    if t_pergunta "O programa funcionou como você esperava?
+
+Se alguma coisa saiu errada - tela em branco, acento quebrado, relatório
+vazio - responda Não. O Tandem guarda isso e para de recomendar este
+caminho para outras pessoas." "Sim, funcionou" "Não, algo saiu errado"; then
+        t_memoria_grava "$prog" CONFIRMADO sim
+        t_diz "o dono confirmou que funcionou"
+    else
+        t_memoria_grava "$prog" CONFIRMADO nao
+        t_diz "o dono disse que NAO funcionou direito"
+        t_aviso "Anotado. Não vou exportar este caminho como se tivesse dado certo."
+    fi
+    return 0
+}
+
+# O grau de confianca de uma licao, em uma palavra. E o que separa "uma
+# pessoa olhou e disse que funciona" de "o processo terminou sem erro".
+t_confianca_da_licao() {
+    case "$(t_memoria_le "$1" CONFIRMADO 2>/dev/null)" in
+        sim) printf 'confirmado' ;;
+        nao) printf 'reprovado' ;;
+        *)   printf 'so-abriu' ;;
+    esac
+}
+
 # ============================================================== DADOS
 #
 # A distincao que faltava no projeto inteiro: AMBIENTE se reconstroi em vinte

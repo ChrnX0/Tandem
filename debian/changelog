@@ -1,3 +1,51 @@
+tandem (3.4) unstable; urgency=medium
+
+  * "tandem dados": AMBIENTE se refaz em vinte minutos, DADOS nunca. Nada no
+    projeto separava as duas coisas, e tres caminhos apagavam dado do dono
+    sem copia - o rm -rf do prefixo incompleto, o restore e o desinstalador
+    do programa. Os tres agora salvam antes. O criterio nao adivinha: pastas
+    pessoais do usuario Windows, mais arquivos de dados largados dentro da
+    pasta do programa, que e onde software comercial brasileiro guarda o
+    banco. Devolver nunca sobrescreve o que ja existe.
+  * Sucesso em silencio. Codigo 0 dizia "funcionou", mas o modo de falha
+    caracteristico do Wine com software comercial e abrir e estar sutilmente
+    errado. Agora o Tandem pergunta uma vez por programa, guarda a resposta,
+    e a receita sai marcada com a origem da confianca: "confirmado" por
+    gente vale diferente de "so-abriu". Saida em menos de tres segundos
+    deixa de ser comemorada.
+  * Bitola. Na primeira vez que o laco rodou com winetricks DE VERDADE, o
+    verbo mfc42 saiu 0, entregou o arquivo - em syswow64, a pasta de 32
+    bits - e o programa de 64 bits continuou sem achar nada. A prova de
+    entrega da 3.3 olhava as duas pastas, aprovou e gravou recibo: beco sem
+    saida de novo, agora com recibo por cima. A conferencia passa a ser por
+    arquitetura, e existe um terceiro desfecho com mensagem propria: chegou,
+    na bitola que este programa nao usa. Nao e defeito da maquina - e limite
+    de quem distribui o componente.
+  * O ponto cego do auditor, fechado. O gerador so lia w_override_dlls, e o
+    vcrun2003 declara mfc71, msvcp71 e msvcr71 apenas no title=. O indice
+    era cego exatamente onde a tabela errava. Vai de 246 para 274 DLLs.
+  * exec SEM COMANDO aplica as redirecoes ao shell inteiro. "exec 7> arq
+    2>/dev/null" nao calava o exec: calava o stderr de todo o resto do
+    programa. Sem sessao grafica, o laco detectava, traduzia e montava a
+    mensagem certa - e saia com codigo 53 e zero byte. Quatro ocorrencias.
+  * systemd-inhibit existe e nao funciona sem D-Bus, e levava o winetricks
+    junto; o dono era mandado conferir uma internet que estava perfeita.
+    Presenca nao e funcionamento.
+  * Lista da comunidade, no modelo das listas de filtro de bloqueador de
+    anuncio: um arquivo de texto estatico buscado por HTTPS, sem servidor,
+    sem conta, sem custo por usuario. Descer e automatico; SUBIR nao -
+    "tandem contribuir" monta a linha padronizada e mostra ela inteira, e
+    quem envia e o dono. O registro nao carrega caminho, usuario, nome de
+    maquina, IP nem log, e o gerador se recusa a produzi-lo se algo disso
+    aparecer. Formato em docs/FORMATO-LISTA.md.
+  * "tandem socorro": um arquivo unico com diagnostico, autoteste, o que foi
+    aprendido e os registros, para mandar a quem entende. Suporte remoto
+    deixa de depender de ditar comando por telefone.
+  * Os executaveis respeitam TANDEM_LIB, o que permitiu exercitar o laco
+    inteiro em teste. 271 testes.
+
+ -- Paulo Eduardo <noreply@users.noreply.github.com>  Sat, 08 Aug 2026 20:00:00 +0000
+
 tandem (3.3) unstable; urgency=medium
 
   * Prova de entrega. O winetricks sair 0 diz que ELE terminou, nao que o

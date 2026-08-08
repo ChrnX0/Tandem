@@ -1,0 +1,9 @@
+# TANDEM-LISTA 1
+# Lista da comunidade do Tandem. Um programa por linha, campos separados por TAB.
+# Formato completo: docs/FORMATO-LISTA.md
+#
+# identidade	arch	verbos	reprovados	confianca	maquinas	visto	nota
+#
+# Ainda vazia. Ela so pode ser preenchida por relatos de gente que rodou o
+# programa de verdade - inventar linha aqui seria exatamente o engano que o
+# campo "confianca" existe para impedir.

@@ -46,10 +46,10 @@ Pior: existem hoje **três caminhos que apagam dados do usuário sem cópia**.
 
 | Ideia | Veredito |
 |---|---|
-| **`tandem dados`** — separar, na cabeça do programa e na do dono, *ambiente* (reconstruível) de *dados* (insubstituíveis). Listar o que cada programa instalado escreve, onde, e com que tamanho. | **PRÓXIMO** — é o item 1 da fila |
-| **Cópia obrigatória antes de todo caminho destrutivo.** `rm -rf` de prefixo incompleto, `tandem desinstalar`, `tandem restore` sobrescrevendo. Nenhum deles pergunta hoje. | **PRÓXIMO** — junto com o `dados` |
-| **`tandem backup` separar os dois volumes.** Hoje ele empacota o prefixo inteiro num `.tar.gz`: o `.NET` de 30 minutos e o cadastro de clientes no mesmo arquivo, com o mesmo peso. Backup que demora demais não é feito. | **PRÓXIMO** |
-| **Achar o que é dado sem adivinhar**: `Documents`, `AppData/Roaming`, e — o caso que importa — arquivos alterados dentro da pasta do programa depois da instalação. `.mdb`, `.fdb`, `.gdb`, `.dbf`, `.sqlite` num diretório de programa são dados de gente. | **PRÓXIMO** — é o mecanismo do `tandem dados` |
+| **`tandem dados`** — separar, na cabeça do programa e na do dono, *ambiente* (reconstruível) de *dados* (insubstituíveis). Listar o que cada programa instalado escreve, onde, e com que tamanho. | **FEITO** — v3.4 |
+| **Cópia obrigatória antes de todo caminho destrutivo.** `rm -rf` de prefixo incompleto, `tandem desinstalar`, `tandem restore` sobrescrevendo. | **FEITO** — v3.4; a cópia nunca impede a operação, só antecede |
+| **`tandem backup` separar os dois volumes.** O `.NET` de 30 minutos e o cadastro de clientes no mesmo `.tar.gz`, com o mesmo peso. Backup que demora demais não é feito. | **FEITO** — v3.4: `tandem dados salvar` é o volume leve, e o `backup` passa a dizer quanto do total são os seus arquivos |
+| **Achar o que é dado sem adivinhar**: `Documents`, `AppData/Roaming`, e — o caso que importa — `.mdb`, `.fdb`, `.dbf`, `.sqlite` dentro da pasta do programa, que é onde software comercial brasileiro guarda o banco. | **FEITO** — v3.4 |
 | Backup automático agendado | **RECUSADO** — agendamento silencioso enche o disco de uma máquina de loja sem ninguém perceber, e disco cheio é uma das causas de falha que o próprio Tandem diagnostica. Cópia sob comando, com o tamanho dito antes. |
 | Sincronizar dados para a nuvem | **RECUSADO** — dado de cliente de loja saindo da máquina por decisão de um automatismo. Não é nossa decisão a tomar. |
 
@@ -63,9 +63,9 @@ a máquina do vizinho.
 
 | Ideia | Veredito |
 |---|---|
-| **Distinguir "o processo saiu 0" de "o programa funcionou".** Saiu em menos de 2 s sem abrir janela nenhuma não é sucesso: é o instalador que morreu calado. Dá para conferir com `xdotool`/`wmctrl` quando existem, e pelo tempo de vida quando não existem. | **PRÓXIMO** — item 2 da fila |
-| **Perguntar, uma vez só, depois de fechar:** "o programa funcionou como você esperava?" A resposta é o único sinal E4 que existe — e é ela que deveria decidir se a receita vale a pena ser exportada. | **PRÓXIMO** — casa com a memória que já existe |
-| **Marcar a receita com a origem da confiança**: "isto funcionou aqui e o dono confirmou" pesa diferente de "o processo saiu 0". | **PRÓXIMO** |
+| **Distinguir "o processo saiu 0" de "o programa funcionou".** Saída em poucos segundos sem nada na tela não é sucesso: é o executável que morreu calado. | **FEITO** — v3.4, pelo tempo de vida. `xdotool`/`wmctrl` foram descartados: não existem numa máquina de loja |
+| **Perguntar, uma vez só, depois de fechar:** "o programa funcionou como você esperava?" A resposta é o único sinal E4 que existe. | **FEITO** — v3.4. Uma vez por programa; repetir viraria estorvo, e estorvo se aprende a fechar sem ler |
+| **Marcar a receita com a origem da confiança**: "o dono confirmou" pesa diferente de "o processo saiu 0". | **FEITO** — v3.4, campo `CONFIANCA` |
 | **Testar impressão explicitamente.** Para software de loja, imprimir *é* o programa. Wine + CUPS funciona; Wine + impressora térmica por USB, quase nunca. | **DEPOIS** — precisa de um programa de loja real primeiro |
 | Captura de tela automática da janela aberta | **RECUSADO** — tela de sistema de PDV tem dado de cliente. Não se guarda isso sem pedir. |
 
@@ -92,7 +92,7 @@ implementação de servidor é que é cara e arriscada. O painel achou o meio-te
 | **Receita: um arquivo de texto exportável com o que aquele programa precisou.** `tandem receita` exporta, importa e valida. Conhecimento coletivo por WhatsApp, sem servidor, sem conta, sem CNPJ, sem LGPD. | **FEITO** |
 | **Validar tudo que entra.** Receita é conteúdo de terceiro: verbo só passa se existir na lista conhecida do winetricks. Sem isso, receita vira execução remota de comando. | **FEITO** |
 | **Receita não carrega caminho nem nome de máquina.** Só o par programa/verbos. | **FEITO** |
-| **Servidor-ponte de verdade**, com agregação: "em 340 máquinas este programa precisou destes três componentes; em 12 não funcionou de jeito nenhum". Esse número é uma informação que nenhum fórum tem. | **DEPOIS** — o formato de receita já é o protocolo; o que falta é o servidor. Só vale a pena depois que houver Tandems suficientes para o número significar algo, e o custo real é moderação de conteúdo hostil, não código |
+| **Servidor-ponte de verdade**, com agregação: "em 340 máquinas este programa precisou destes três componentes". | **FEITO de outra forma** — v3.4. O dono propôs o modelo certo: em vez de servidor, **um arquivo de texto estático buscado por HTTPS**, como as listas de filtro de bloqueador de anúncio. É por isso que o EasyList sobrevive há vinte anos com orçamento de voluntário. Descer é automático; **subir não** — `tandem contribuir` monta a linha e quem envia é o dono. Formato em `docs/FORMATO-LISTA.md` |
 | Sincronização automática ao instalar | **RECUSADO** — a máquina de uma loja não fala com servidor nenhum sem o dono mandar. |
 
 ## 5. Alternativas nativas
@@ -114,7 +114,7 @@ Onde o projeto de fato ganha da concorrência.
 | **Ler o motivo da falha nas palavras do winetricks** em vez de despejar o log: disco cheio, data errada do relógio, DNS, checksum, falta `cabextract`. | **FEITO** |
 | **Prova de entrega** — conferir se a DLL chegou, em vez de confiar no código de saída. | **FEITO** — v3.3 |
 | **O índice do winetricks como auditor da tabela escrita à mão.** Inverter o `w_override_dlls` do próprio winetricks e comparar. Achou seis erros de tradução, um deles mandando instalar um gerenciador de fontes da Adobe no lugar do runtime do Visual C++. | **FEITO** |
-| **O auditor tem um ponto cego declarado**: ele só lê `w_override_dlls`. Verbos que declaram as DLLs apenas no `title=` — o `vcrun2003` é um — têm zero entradas no índice. O gerador precisa ler também a lista entre parênteses do título. | **PRÓXIMO** — item 3 da fila |
+| **O ponto cego do auditor**: ele só lia `w_override_dlls`, e o `vcrun2003` declara `mfc71`, `msvcp71` e `msvcr71` apenas no `title=` — era cego exatamente onde a tabela errava. | **FEITO** — v3.4: lê também o título, com dois filtros estreitos. 246 → 274 DLLs |
 | **Guardar as traduções suspeitas num arquivo** em vez de só reclamar na tela: é a lista de trabalho para consertar a tabela. | **FEITO** — v3.3 |
 | **`tandem logs`** que abre o log mais recente sem o dono saber onde ele mora. | **FEITO** |
 | Enviar o log para análise automática | **RECUSADO** — log de Wine contém caminhos, nomes de arquivo e às vezes nome de cliente. |
@@ -151,7 +151,7 @@ Onde o projeto de fato ganha da concorrência.
 | **Assumir a culpa quando a culpa é nossa.** "Instalei as dependências e ainda não abre" manda o dono procurar defeito numa máquina perfeita. | **FEITO** — v3.3 |
 | **Dizer o tempo antes de gastar.** `.NET` leva meia hora; a pessoa precisa saber disso *antes* de clicar, não depois. | **FEITO** — está no nome amigável do verbo |
 | **Impedir a máquina de suspender no meio de uma instalação longa** — suspender no meio corrompe o prefixo. | **FEITO** — `systemd-inhibit` |
-| **Um botão "me manda o diagnóstico"** que gera um arquivo único para o dono mandar por WhatsApp para quem entende. | **PRÓXIMO** — é barato e resolve o suporte remoto, que hoje depende de ditar comandos por telefone |
+| **Um botão "me manda o diagnóstico"** que gera um arquivo único para o dono mandar para quem entende. | **FEITO** — v3.4, `tandem socorro`. Diz na primeira linha o que tem dentro, porque mostra caminhos de arquivo do dono |
 | Assistente de primeira execução com várias telas | **RECUSADO** — a promessa do produto é *dois cliques*. Um assistente de boas-vindas é a negação dela. |
 
 ## 10. Engenharia
@@ -168,21 +168,41 @@ Onde o projeto de fato ganha da concorrência.
 
 ---
 
+## O que a execução em Linux real acrescentou
+
+Nada disto estava nos dois painéis. Apareceu rodando o laço com Wine 9.0,
+`winetricks` de verdade e um usuário comum num Ubuntu 24.04 — a mesma base do
+Zorin 18.
+
+| Achado | Veredito |
+|---|---|
+| **`exec` sem comando aplica as redireções ao shell inteiro.** `exec 7> arq 2>/dev/null` não cala o `exec`: cala o stderr de todo o resto do programa. Sem sessão gráfica, o laço detectava a DLL certa, traduzia certo, montava a mensagem certa — e saía com código 53 e **zero byte**. Escondido dentro do código escrito para consertar um erro em silêncio. | **FEITO** — quatro ocorrências |
+| **Bitola.** O `winetricks` entregou `mfc42.dll` em `syswow64` (32 bits) para um programa de 64 bits. A prova de entrega olhava as duas pastas, aprovou e gravou recibo: beco sem saída de novo, agora com recibo por cima. Metade dos verbos só tem carga de 32 bits, e o `winetricks` avisa isso em inglês no meio do log. | **FEITO** — conferência por arquitetura, e um terceiro desfecho com mensagem própria |
+| **`systemd-inhibit` existe e não funciona.** Sem D-Bus ele sai 1 e leva o `winetricks` embrulhado junto — e o dono era mandado conferir uma internet que estava perfeita. Presença não é funcionamento. | **FEITO** — exercita antes de usar; e a causa provável só é afirmada com sinal de download tentado |
+| **`t_texto` lê o conteúdo da entrada padrão; o argumento é o título.** Cinco comandos novos passaram o texto como argumento: rodavam, saíam com 0 e não imprimiam uma linha. Nenhum teste pegava porque todos exercitavam bibliotecas, nunca o comando inteiro. | **FEITO** — e agora um teste roda cada comando e exige saída |
+| **Os executáveis respeitarem `TANDEM_LIB`.** Com o caminho fixo não havia como exercitar o laço sem instalar o pacote — e era justamente o laço que nunca tinha rodado. | **FEITO** |
+| **Escolher o verbo `_x64` quando o programa é de 64 bits.** O `xact` e o `xact_x64` entregam as mesmas DLLs em bitolas diferentes, e o pré-voo já sabe a arquitetura do programa. | **PRÓXIMO** — é a continuação natural do achado da bitola |
+
 ## A fila, em ordem
 
-1. **`tandem dados`** e a cópia obrigatória antes dos três caminhos destrutivos.
-2. **Sucesso em silêncio**: parar de tratar `exit 0` como "funcionou".
-3. **Ponto cego do auditor**: ler também as DLLs declaradas no `title=`.
-4. **Botão de diagnóstico** para mandar por WhatsApp.
-5. Testar em campo o que ainda não rodou na máquina do dono: `preparar`,
-   `desinstalar`, duplo clique num `.xapk` de verdade, e — o que mais importa —
-   **um `.exe` que realmente falte alguma coisa**, para o laço
-   roda→detecta→instala trabalhar pela primeira vez fora do teste.
+Os quatro primeiros itens desta lista foram feitos na 3.4. O que sobrou:
+
+1. **Escolher o verbo `_x64`** quando o pré-voo diz que o programa é de 64
+   bits. É a continuação do achado da bitola, e transforma um "não tem
+   conserto" em conserto numa parte dos casos.
+2. **Encher a lista da comunidade.** O mecanismo existe e está vazio, e
+   inventar linha seria exatamente o engano que o campo `confianca` existe
+   para impedir. Ela só enche com relato de gente.
+3. Testar em campo o que ainda não rodou na máquina do dono: `preparar`,
+   `desinstalar`, `dados`, `socorro`, e duplo clique num `.xapk` de verdade.
+4. **Um programa de loja de verdade** — ver abaixo.
 
 ## A pergunta que continua sem resposta
 
-**Nenhum programa de loja de verdade jamais rodou nisto.** O único programa
-instalado em campo foi o 7-Zip, que não depende de nada — por isso o laço
-principal nunca precisou agir. Todo o resto deste documento é bem fundamentado e
-bem testado, e nada disso substitui um sistema comercial real abrindo, ou não
-abrindo, numa máquina de verdade.
+**Nenhum programa de loja de verdade jamais rodou nisto.** O laço principal já
+trabalhou ponta a ponta com Wine e `winetricks` reais — mas contra um `.exe`
+forjado para faltar uma DLL, num container, não contra um sistema comercial na
+máquina de uma loja. Esse teste sintético já pagou por si: encontrou quatro
+defeitos em uma tarde, dois deles apagando mensagens inteiras em silêncio.
+Ainda assim, ele prova que o mecanismo funciona, não que o produto serve. A
+diferença continua sendo a maior incerteza do projeto.

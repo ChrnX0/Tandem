@@ -890,6 +890,213 @@ igual "sem argumento devolve erro de uso" "2" "$?"
 
 # ------------------------------------------------------------- pacote
 
+secao "nenhum comando sai mudo"
+
+# t_texto le o CONTEUDO da entrada padrao e usa o argumento como TITULO.
+# Cinco comandos novos passaram o texto como argumento e leram um stdin
+# vazio: rodavam, saiam com 0 e nao imprimiam UMA LINHA. Nenhum teste pegava
+# porque todos exercitavam funcoes de biblioteca, nunca o comando inteiro.
+# Descoberto rodando "tandem dados" num Ubuntu de verdade.
+CASA_C="$TMPRAIZ/cli"; mkdir -p "$CASA_C/.local/share/tandem/wine/drive_c/windows"
+: > "$CASA_C/.local/share/tandem/wine/system.reg"
+: > "$CASA_C/.local/share/tandem/wine/.tandem-prefixo"
+: > "$CASA_C/.primeira-vez"
+for cmd in "dados" "lista" "doctor" "--help" "version"; do
+    saida="$(env -i HOME="$CASA_C" PATH="/usr/bin:/bin" TANDEM_LIB="$RAIZ/src/lib" \
+             bash "$RAIZ/src/bin/tandem" $cmd 2>&1)"
+    if [ -n "$saida" ]; then passou "\"tandem $cmd\" imprime alguma coisa"
+    else falhou "\"tandem $cmd\" imprime alguma coisa" "qualquer texto" "zero byte"; fi
+done
+
+# E o uso errado tem que degradar, nunca sair mudo: sem nada na entrada,
+# t_texto imprime pelo menos o titulo.
+igual "t_texto sem conteudo imprime o titulo" \
+      "Titulo qualquer" "$(t_texto "Titulo qualquer" < /dev/null)"
+# A guarda contra congelar so da para exercitar onde existe terminal.
+if [ -c /dev/tty ] && (exec < /dev/tty) 2>/dev/null; then
+    timeout 5 bash -c '. "'"$RAIZ"'/src/lib/common.sh"; t_texto "T" < /dev/tty' >/dev/null 2>&1
+    igual "t_texto com terminal na entrada nao trava" "0" "$?"
+else
+    pulou "t_texto com terminal na entrada" "a suite roda sem terminal de controle"
+fi
+
+secao "lista da comunidade (modelo das listas de filtro)"
+
+PROG_L="$ARTEFATOS/prog64.exe"
+ID_L="$(t_memoria_id "$PROG_L")"
+export TANDEM_LISTA="$TMPRAIZ/lista.tsv"
+
+# Sem lista baixada, nao ha o que consultar - e isso nao e erro.
+rm -f "$TANDEM_LISTA"
+igual "sem lista baixada, a consulta cala" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf '%s\t64\tvcrun2022,dotnet48\t-\tconfirmado\t340\t2026-08\t-\n' "$ID_L"
+  printf 'aaaa\t64\tvcrun2010\t-\tso-abriu\t2\t2026-07\t-\n'
+} > "$TANDEM_LISTA"
+igual "acha o programa pela impressao digital do arquivo" \
+      "vcrun2022 dotnet48" "$(t_lista_consulta "$PROG_L")"
+igual "a contagem de maquinas vem junto" "340" "$(t_lista_maquinas "$ID_L")"
+
+# Licao sem gente confirmando NAO e espalhada. Espalhar engano e mais facil
+# que espalhar acerto: erro nao da trabalho de produzir.
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf '%s\t64\tvcrun2022\t-\tso-abriu\t9\t2026-08\t-\n' "$ID_L"
+} > "$TANDEM_LISTA"
+igual "licao nao confirmada nao e sugerida" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+
+# O registro que sai desta maquina.
+t_memoria_esquece "$PROG_L" 2>/dev/null
+t_memoria_grava "$PROG_L" ARQUITETURA 64
+t_memoria_junta "$PROG_L" RESOLVERAM vcrun2022
+t_memoria_grava "$PROG_L" CONFIRMADO sim
+REG_L="$(t_lista_registro "$PROG_L")"
+igual "o registro tem os oito campos do formato" \
+      "8" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
+case "$REG_L" in
+    "$ID_L"*) passou "o registro comeca pela identidade do arquivo" ;;
+    *) falhou "o registro comeca pela identidade do arquivo" "$ID_L..." "$REG_L" ;;
+esac
+case "$REG_L" in
+    *confirmado*) passou "o registro carrega a origem da confianca" ;;
+    *) falhou "o registro carrega a origem da confianca" "confirmado" "$REG_L" ;;
+esac
+# O que NUNCA pode sair: caminho, usuario, maquina, IP, dia do mes.
+case "$REG_L" in
+    */*) falhou "o registro nao carrega caminho nenhum" "sem barra" "$REG_L" ;;
+    *) passou "o registro nao carrega caminho nenhum" ;;
+esac
+case "$REG_L" in
+    *"$(id -un)"*) falhou "o registro nao carrega o nome do usuario" "sem usuario" "$REG_L" ;;
+    *) passou "o registro nao carrega o nome do usuario" ;;
+esac
+case "$REG_L" in
+    *"$(date +%Y-%m-%d)"*) falhou "a data nao tem o dia" "so ano-mes" "$REG_L" ;;
+    *) passou "a data nao tem o dia" ;;
+esac
+# E o guarda funciona mesmo se alguem estragar o gerador no futuro.
+igual "o guarda barra um registro com caminho" \
+      "0" "$(t_lista_vaza "abc	64	/home/alguem/x	-	confirmado	1	2026-08	-"; echo $?)"
+igual "o guarda barra um registro com IP" \
+      "0" "$(t_lista_vaza "abc	64	vcrun2022	-	confirmado	1	2026-08	192.168.0.7"; echo $?)"
+igual "o guarda deixa passar um registro limpo" \
+      "1" "$(t_lista_vaza "$REG_L"; echo $?)"
+
+# Programa sem licao nenhuma nao vira ruido na lista dos outros.
+t_memoria_esquece "$PROG_L" 2>/dev/null
+t_lista_registro "$PROG_L" >/dev/null 2>&1
+igual "sem licao, nao ha o que contribuir" "1" "$?"
+
+# Arquivo que nao se declara como lista NAO substitui o bom que ja esta em
+# disco. Uma lista quebrada calaria a segunda opiniao sem ninguem perceber -
+# e "parou de sugerir" e o tipo de defeito que ninguem nota.
+printf '# TANDEM-LISTA 1\nboa\t64\tx\t-\tconfirmado\t1\t2026-08\t-\n' > "$TANDEM_LISTA"
+printf 'nao sou uma lista do Tandem\n' > "$TMPRAIZ/intruso.txt"
+if command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1; then
+    TANDEM_LISTA_URL="file://$TMPRAIZ/intruso.txt" t_lista_atualiza >/dev/null 2>&1
+    igual "arquivo sem cabecalho valido e recusado" "3" "$?"
+    igual "  e a lista boa continua em disco" "1" "$(grep -c '^boa' "$TANDEM_LISTA")"
+    igual "  sem deixar o intruso entrar" "0" "$(grep -c 'nao sou uma lista' "$TANDEM_LISTA")"
+    # E o caminho feliz: um arquivo bem formado substitui.
+    printf '# TANDEM-LISTA 1\nnova\t64\ty\t-\tconfirmado\t5\t2026-08\t-\n' > "$TMPRAIZ/boa.tsv"
+    TANDEM_LISTA_URL="file://$TMPRAIZ/boa.tsv" t_lista_atualiza >/dev/null 2>&1
+    igual "arquivo bem formado substitui" "1" "$(grep -c '^nova' "$TANDEM_LISTA")"
+else
+    pulou "atualizacao da lista" "sem curl nem wget"
+fi
+unset TANDEM_LISTA
+
+secao "sucesso em silencio: sair 0 nao e ter funcionado"
+
+igual "saida instantanea e suspeita" "0" "$(t_saida_suspeita 1; echo $?)"
+igual "programa que ficou aberto nao e suspeito" "1" "$(t_saida_suspeita 40; echo $?)"
+
+PROG_S="$ARTEFATOS/prog64.exe"
+t_memoria_esquece "$PROG_S" 2>/dev/null
+igual "sem resposta do dono, a licao vale menos" \
+      "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
+t_memoria_grava "$PROG_S" CONFIRMADO sim
+igual "com o dono confirmando, a licao vale mais" \
+      "confirmado" "$(t_confianca_da_licao "$PROG_S")"
+t_memoria_grava "$PROG_S" CONFIRMADO nao
+igual "com o dono reprovando, a licao fica marcada como reprovada" \
+      "reprovado" "$(t_confianca_da_licao "$PROG_S")"
+
+# A receita tem que carregar a origem da confianca. Sem esta linha, "o
+# processo saiu 0" e "uma pessoa olhou a tela" chegavam do outro lado com
+# exatamente o mesmo peso - e a segunda pessoa nao tinha como saber.
+case "$(t_receita_exporta "$PROG_S")" in
+    *"CONFIANCA=reprovado"*) passou "a receita sai marcada com a confianca" ;;
+    *) falhou "a receita sai marcada com a confianca" "CONFIANCA=reprovado" \
+              "$(t_receita_exporta "$PROG_S" | head -8)" ;;
+esac
+
+# Sem janela nao ha como perguntar - e inventar uma resposta seria pior do
+# que nao ter resposta nenhuma.
+t_memoria_esquece "$PROG_S" 2>/dev/null
+( unset DISPLAY WAYLAND_DISPLAY; t_confirma_funcionou "$PROG_S" 30 ) >/dev/null 2>&1
+igual "sem janela, nao inventa confirmacao" \
+      "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
+t_memoria_esquece "$PROG_S" 2>/dev/null
+
+secao "bitola: chegar nao e chegar no lugar que este programa usa"
+
+# Prefixo win64 do jeito que o Wine monta: system32 tem as DLLs de 64 bits e
+# syswow64 as de 32. Este teste existe porque a primeira execucao do laco com
+# winetricks DE VERDADE terminou assim: o verbo mfc42 saiu 0, entregou o
+# arquivo em syswow64, a prova de entrega olhou as duas pastas, aprovou, e o
+# programa de 64 bits continuou sem achar nada.
+PB="$TMPRAIZ/pref64"
+mkdir -p "$PB/drive_c/windows/system32" "$PB/drive_c/windows/syswow64"
+(
+  export WINEPREFIX="$PB"
+  : > "$PB/drive_c/windows/syswow64/mfc42.dll"       # so 32 bits
+  : > "$PB/drive_c/windows/system32/msvcp140.dll"    # so 64 bits
+  : > "$PB/drive_c/windows/syswow64/gdiplus.dll"     # as duas
+  : > "$PB/drive_c/windows/system32/gdiplus.dll"
+
+  t_dll_no_prefixo mfc42.dll 64;    echo "a $?"
+  t_dll_no_prefixo mfc42.dll 32;    echo "b $?"
+  t_dll_no_prefixo msvcp140.dll 64; echo "c $?"
+  t_dll_no_prefixo msvcp140.dll 32; echo "d $?"
+  t_dll_no_prefixo gdiplus.dll 64;  echo "e $?"
+  t_dll_no_prefixo sumiu.dll 64;    echo "f $?"
+  t_dll_no_prefixo mfc42.dll "";    echo "g $?"
+) > "$TMPRAIZ/bit.txt"
+igual "programa de 64 bits, DLL so em syswow64: bitola errada" \
+      "2" "$(awk '$1=="a"{print $2}' "$TMPRAIZ/bit.txt")"
+igual "programa de 32 bits, a mesma DLL serve" \
+      "0" "$(awk '$1=="b"{print $2}' "$TMPRAIZ/bit.txt")"
+igual "programa de 64 bits, DLL em system32: serve" \
+      "0" "$(awk '$1=="c"{print $2}' "$TMPRAIZ/bit.txt")"
+igual "programa de 32 bits, DLL so em system32: bitola errada" \
+      "2" "$(awk '$1=="d"{print $2}' "$TMPRAIZ/bit.txt")"
+igual "DLL nas duas pastas serve para os dois" \
+      "0" "$(awk '$1=="e"{print $2}' "$TMPRAIZ/bit.txt")"
+igual "DLL ausente continua ausente" \
+      "1" "$(awk '$1=="f"{print $2}' "$TMPRAIZ/bit.txt")"
+# Sem saber a arquitetura, condenar seria pior do que nao saber.
+igual "sem arquitetura conhecida, nao condena" \
+      "0" "$(awk '$1=="g"{print $2}' "$TMPRAIZ/bit.txt")"
+
+# Prefixo win32: so existe system32, e ela e de 32 bits.
+PB32="$TMPRAIZ/pref32"; mkdir -p "$PB32/drive_c/windows/system32"
+: > "$PB32/drive_c/windows/system32/mfc42.dll"
+igual "prefixo de 32 bits: system32 serve a programa de 32" \
+      "0" "$(WINEPREFIX="$PB32"; export WINEPREFIX; t_dll_no_prefixo mfc42.dll 32; echo $?)"
+
+TXB="$(t_texto_bitola "$(printf 'mfc42.dll\tmfc42')" 64)"
+case "$TXB" in
+    *"64 bits"*"32 bits"*mfc42.dll*) passou "a mensagem diz as duas bitolas e o arquivo" ;;
+    *) falhou "a mensagem diz as duas bitolas e o arquivo" "64/32/mfc42.dll" "$TXB" ;;
+esac
+case "$TXB" in
+    *"Não é defeito da sua máquina"*) passou "a mensagem tira a culpa da maquina do dono" ;;
+    *) falhou "a mensagem tira a culpa da maquina do dono" "Não é defeito da sua máquina" "$TXB" ;;
+esac
+
 secao "dados: o que se refaz e o que nao se refaz"
 
 # Um prefixo com as duas coisas misturadas, que e como todo prefixo real e.

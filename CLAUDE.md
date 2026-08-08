@@ -59,21 +59,24 @@ src/bin/tandem-repair     disputa de associação MIME
 src/polkit/               regra estreita: só start/restart do waydroid-container
 tests/run.sh              suíte; tests/mkapk.py gera os pacotes sintéticos
 docs/IDEIAS.md            ideário com veredito; as recusadas com o motivo
+docs/FORMATO-LISTA.md     o registro da lista da comunidade, campo a campo
+lista/lista.tsv           a lista publicada; vazia até haver relato de gente
 ```
 
 Comandos (`tandem --help` é a fonte da verdade):
 
 ```
 install    programas   desinstalar   preparar     android
-doctor     autoteste   repair        backup       restore
+doctor     autoteste   repair        backup       restore      dados
 protect    alternativas  receita     memoria      esquecer     logs
+lista      contribuir  socorro
 ```
 
 Build e verificação:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 218 testes, sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 277 testes, sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android
@@ -158,6 +161,28 @@ t_verbos_do_log /tmp/w.log     # espera: vcrun2022
   arquivo também não são terminal, e mandar o diagnóstico para uma janela fazia
   `tandem doctor > relatorio.txt` gravar zero bytes. Teste os três:
   `[ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]`.
+- **`exec` SEM COMANDO aplica as redireções ao shell inteiro, e para sempre.**
+  Escrito `exec 7> arq 2>/dev/null`, aquele `2>/dev/null` não cala o `exec`:
+  cala o stderr de **todo o resto do programa**. Medido num Ubuntu 24.04 sem
+  sessão gráfica: o laço detectava a DLL certa, traduzia certo, montava a
+  mensagem certa com o comando certo — e devolvia código 53 com **zero byte**
+  de saída. Estava escondido dentro do código escrito para consertar um erro
+  em silêncio. A forma correta é `{ exec 7> arq; } 2>/dev/null`: o descritor
+  persiste, o desvio morre no fim do grupo.
+- **Chegar não é chegar na bitola certa.** Num prefixo `win64`, `system32`
+  guarda as DLLs de 64 bits e `syswow64` as de 32. O verbo `mfc42` sai 0 e
+  entrega em `syswow64`; um programa de 64 bits continua sem achar. A prova de
+  entrega da 3.3 olhava as duas pastas e aprovava — beco sem saída com recibo
+  por cima. Confira **por arquitetura**. Metade dos verbos do winetricks só
+  tem carga de 32 bits, e ele avisa isso em inglês no meio do log.
+- **`systemd-inhibit` existe e não funciona sem D-Bus.** Sai 1 e leva junto o
+  comando que embrulha; o `winetricks` nem chegou a rodar. Exercite antes de
+  usar (`t_inibidor`), não pergunte se o binário existe.
+- **`t_texto` lê o conteúdo da ENTRADA PADRÃO**; o argumento é só o título da
+  janela. Passar o texto como argumento faz o comando rodar, sair com 0 e não
+  imprimir nada — aconteceu em cinco comandos de uma vez, e nenhum teste pegou
+  porque todos exercitavam bibliotecas, nunca o comando inteiro. Há um teste
+  agora que roda cada comando e exige saída.
 - **`winetricks -q` sair 0 não significa que o arquivo chegou.** Ele reporta
   que *ele* terminou. Com uma tradução errada na tabela, o verbo instalava
   outra coisa, saía 0, e o recibo era gravado igual a uma instalação certa —
@@ -193,7 +218,7 @@ root), não mais só por leitura:
 - Janelas do zenity abrem de fato (verificado sob Xvfb), inclusive com acento.
 - Wine 10.0 real instalado no container: prefixo `win64` criado do zero,
   7-Zip x64 instalado por `.exe` e por `.msi`, registro inspecionado à mão.
-- 218 testes automatizados em `tests/run.sh`; CI no GitHub Actions.
+- 277 testes automatizados em `tests/run.sh`; CI no GitHub Actions.
 
 Verificado **no Zorin 18.1 do usuário** (Wayland, Wine 10.0, Waydroid ativo):
 

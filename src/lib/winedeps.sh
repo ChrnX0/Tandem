@@ -196,6 +196,28 @@ EOF
 Isso é erro meu, não da sua máquina: a tradução que eu uso para esses arquivos aponta para o pacote errado. Já anotei e não vou repetir a mesma instalação.' "$texto"
 }
 
+# O componente chegou, na bitola que este programa nao consegue usar.
+#
+# Nao e erro de traducao nem defeito da maquina: e limite de quem distribui o
+# componente. Metade dos verbos do winetricks so tem carga de 32 bits - o
+# proprio winetricks avisa isso em ingles no meio do log, onde ninguem le.
+t_texto_bitola() {
+    local linhas="$1" arch="${2:-64}" outra dll verbo texto=""
+    [ "$arch" = 32 ] && outra=64 || outra=32
+    while IFS="$(printf '\t')" read -r dll verbo; do
+        [ -n "$dll" ] && [ -n "$verbo" ] || continue
+        texto="$texto
+- $(t_verbo_amigavel "$verbo") instalou $dll, mas só na versão de $outra bits"
+    done <<EOF
+$linhas
+EOF
+    printf 'Este programa é de %s bits, e o componente que ele pede só existe em %s bits:
+%s
+
+Não é defeito da sua máquina nem falta de instalação: quem distribui esse componente nunca publicou a versão de %s bits. Se existir uma versão de %s bits deste mesmo programa, ela deve funcionar aqui.' \
+        "$arch" "$outra" "$texto" "$arch" "$outra"
+}
+
 # Le um log e imprime as DLLs que faltaram e NAO tem traducao conhecida
 # (normalmente sao bibliotecas que o proprio programa deveria trazer junto).
 t_dlls_sem_traducao() {

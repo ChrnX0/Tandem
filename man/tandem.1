@@ -1,4 +1,4 @@
-.TH TANDEM 1 "2025-01-01" "tandem 3.3" "Comandos do usuário"
+.TH TANDEM 1 "2025-01-01" "tandem 3.4" "Comandos do usuário"
 .SH NOME
 tandem \- roda programas Windows e aplicativos Android no Linux
 .SH SINOPSE
@@ -138,6 +138,29 @@ Restaura o ambiente Windows a partir do backup mais recente.
 .BI "tandem protect " caminho
 Marca um perfil Wine como intocável. O Tandem nunca instala nem altera
 nada dentro de um perfil protegido.
+.TP
+.B tandem lista
+Mostra a lista da comunidade: o que já deu certo na máquina de outras
+pessoas, por programa.
+.TP
+.B tandem lista atualizar
+Baixa a lista. É um arquivo de texto público, buscado por HTTPS — o modelo
+das listas de filtro de bloqueador de anúncio. Nada desta máquina é enviado,
+e nada é instalado: a lista vira sugestão, e o Tandem continua perguntando.
+.TP
+.BI "tandem contribuir " programa
+Monta a linha padronizada com o que este Tandem aprendeu e mostra ela
+inteira, para você conferir e enviar se quiser. O Tandem nunca envia
+sozinho. A linha não carrega nome de arquivo, pasta, usuário, nome da
+máquina, endereço de rede nem log; o gerador se recusa a produzi\-la se
+alguma dessas coisas aparecer. O formato está descrito em
+.IR docs/FORMATO\-LISTA.md .
+.TP
+.B tandem socorro
+Junta num arquivo único tudo o que alguém precisa para ajudar você à
+distância: diagnóstico, autoteste, o que o Tandem aprendeu e os registros
+técnicos. O arquivo mostra caminhos de arquivos desta máquina — confira
+antes de enviar.
 .TP
 .B tandem logs
 Mostra o registro técnico mais recente.
