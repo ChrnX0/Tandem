@@ -297,6 +297,27 @@ t_msg() {
     printf '%s' "$texto"
 }
 
+# Is this "program" actually a web page?
+#
+# A download that goes wrong rarely produces nothing: the site answers with an
+# error page, a login wall or a "are you a robot" interstitial, and the browser
+# saves that HTML under the name the link promised. The result is a file called
+# programa.deb whose first bytes are <!DOCTYPE html>, and every reader in this
+# project then reports its own local disappointment - "no ar signature", "not a
+# zip", "bad ELF header" - which is true, useless, and sends the owner looking
+# for a defect in the wrong place.
+#
+# Leading whitespace is skipped before looking, because a served error page
+# often starts with a blank line or a byte-order mark.
+t_parece_pagina_web() {
+    local inicio
+    inicio="$(head -c 512 -- "$1" 2>/dev/null | tr -d '\000' | tr '[:upper:]' '[:lower:]')"
+    case "$inicio" in
+        *'<!doctype html'*|*'<html'*|*'<head>'*|*'<title>'*) return 0 ;;
+    esac
+    return 1
+}
+
 # Does this machine have letters for that language at all?
 #
 # Same lesson as the zenity accents, one alphabet further out. Choosing a

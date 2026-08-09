@@ -1,5 +1,27 @@
 tandem (4.1) unstable; urgency=medium
 
+  * A file that is not there is no longer reported as a file whose type is
+    unknown. Found on a photograph of a real screen: the owner got "I did not
+    recognise the type of this file" and went hunting for a defect in Tandem's
+    format support. There was no file. acao_install routed by extension and,
+    when the name said nothing, sniffed the contents with "head ...
+    2>/dev/null" - so a path that does not exist failed every test in silence
+    and landed on the last else. Naming the WRONG cause is worse than naming
+    none.
+  * A mistyped command now says so. The case at the bottom of the script sends
+    every unrecognised word to acao_install, so "tandem intalar" was answered
+    with a complaint about file types. A word with no slash, no dot and no
+    match on disk is almost never a file.
+  * A folder, and a file with no read permission, each get their own sentence.
+  * An error page saved under a program's name is called what it is. A
+    download that goes wrong rarely produces nothing: the site answers with a
+    404 or a login wall and the browser saves that HTML as programa.deb. Every
+    reader here would otherwise report its own local disappointment - "no ar
+    signature" - which is true, useless, jargon, and points at the wrong
+    place.
+  * The unknown-type message now names the file and lists what Tandem can
+    actually open, so it is a sentence somebody can act on.
+
   * Tandem speaks seven languages. Until here every sentence was a Portuguese
     literal sitting inside the script that printed it, which was right while
     the product had one owner in one country and stopped being right the

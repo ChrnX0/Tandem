@@ -445,3 +445,44 @@ This package was made for a development mode and does not install this way.
 
 @snap_porque_servico
 The service that looks after snaps is not running on this machine.
+
+@informe_arquivo
+Name the file.
+
+@comando_desconhecido
+I do not know the command "{1}", and there is no file by that name here.
+
+The list of commands is in:  tandem --help
+
+@e_uma_pasta
+This is a folder, not an installation file:
+{1}
+
+Go into the folder and pick the file you want to open.
+
+@sem_permissao_ler
+I do not have permission to read this file:
+{1}
+
+@baixou_pagina_web
+This is not a program: it is a web page saved under a program's name.
+
+{1}
+
+Almost always that means the download went wrong and the site handed back an
+error or login page instead of the file. Download it again, straight from the
+official site.
+
+@tipo_desconhecido
+I did not recognise the type of this file.
+
+{1}
+
+Tandem opens .exe, .msi, .apk, .xapk, .AppImage, .jar, .deb, .rpm,
+.flatpakref, .snap and .sh installers. If this file was meant to be one of
+those, the download may have come through half-finished - download it again.
+
+@nao_consegui_ler_pacote
+I could not read this package.
+
+{1}

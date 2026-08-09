@@ -421,3 +421,43 @@ sudo snap install --dangerous "{1}"
 
 @snap_porque_servico
 管理 snap 的服务在这台机器上没有运行。
+
+@informe_arquivo
+请指明文件。
+
+@comando_desconhecido
+我不认识“{1}”这个命令，这里也没有叫这个名字的文件。
+
+命令清单在：  tandem --help
+
+@e_uma_pasta
+这是一个文件夹，不是安装文件：
+{1}
+
+请进入文件夹，挑出您想打开的那个文件。
+
+@sem_permissao_ler
+我没有读取这个文件的权限：
+{1}
+
+@baixou_pagina_web
+这不是程序：这是一个网页，只是用程序的名字存了下来。
+
+{1}
+
+这几乎总是说明下载出了岔子，网站把一个报错页或登录页当成文件给了您。
+请到官方网站重新下载。
+
+@tipo_desconhecido
+我认不出这个文件的类型。
+
+{1}
+
+Tandem 能打开 .exe、.msi、.apk、.xapk、.AppImage、.jar、.deb、.rpm、
+.flatpakref、.snap 和 .sh 安装脚本。如果这个文件本该是其中之一，
+那可能是没下载完 —— 请重新下载。
+
+@nao_consegui_ler_pacote
+无法读取这个软件包。
+
+{1}

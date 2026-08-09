@@ -54,7 +54,31 @@ AJUDA
 
 acao_install() {
     local f="$1"
-    [ -n "$f" ] || { t_erro "Informe o arquivo."; return 1; }
+    [ -n "$f" ] || { t_erro "$(t_msg informe_arquivo)"; return 1; }
+    # Before anything else: is the file there at all?
+    #
+    # It was not checked, and the consequence reached a real machine. The
+    # routing below falls back to sniffing the contents with "head ...
+    # 2>/dev/null" when the name says nothing, so a file that does not exist
+    # fails every test in silence and lands on the last else - and the owner
+    # was told "I did not recognise the type of this file" about a file that
+    # was simply not there. Naming the wrong cause is worse than naming none:
+    # they went looking for a defect in Tandem's format support while the real
+    # answer was that they were in the wrong folder.
+    #
+    # And a word with no slash and no dot that matches nothing on disk is
+    # almost never a file - it is a mistyped command, because the case at the
+    # bottom of this script sends every unrecognised word here. Those two
+    # mistakes wear the same shape and deserve opposite answers.
+    if [ ! -e "$f" ]; then
+        case "$f" in
+            */*|*.*) t_erro "$(t_msg arquivo_sumiu "$f")" ;;
+            *)       t_erro "$(t_msg comando_desconhecido "$f")" ;;
+        esac
+        return 1
+    fi
+    [ -d "$f" ] && { t_erro "$(t_msg e_uma_pasta "$f")"; return 1; }
+    [ -r "$f" ] || { t_erro "$(t_msg sem_permissao_ler "$f")"; return 1; }
     case "${f,,}" in
         *.apk|*.xapk|*.apks|*.apkm) exec "$TANDEM_BIN"/tandem-apk "$f" ;;
         *.exe|*.msi|*.msp|*.lnk|*.bat|*.cmd|*.url) exec "$TANDEM_BIN"/tandem-exe "$f" ;;
@@ -88,7 +112,10 @@ acao_install() {
                 exec "$TANDEM_BIN"/tandem-apk "$f"
             elif head -c2 -- "$f" 2>/dev/null | grep -q '#!'; then
                 exec "$TANDEM_BIN"/tandem-script "$f"
-            else t_erro "Não reconheci o tipo deste arquivo."; return 1
+            elif t_parece_pagina_web "$f"; then
+                t_erro "$(t_msg baixou_pagina_web "$(basename -- "$f")")"; return 1
+            else
+                t_erro "$(t_msg tipo_desconhecido "$(basename -- "$f")")"; return 1
             fi ;;
     esac
 }

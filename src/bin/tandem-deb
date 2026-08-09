@@ -57,9 +57,15 @@ O pacote diz por dentro que deveria ser maior do que é. Baixe de novo e tente
 outra vez."
         exit 1 ;;
     *)
-        t_erro "Não consegui ler este pacote.
-
-$ERRO"
+        # The reader's own complaint - "no ar signature" - is true and useless
+        # when the file is an error page the site handed back instead of the
+        # package. Name that first: it is both the likelier cause and the one
+        # the owner can act on.
+        if t_parece_pagina_web "$PACOTE_ARQ"; then
+            t_erro "$(t_msg baixou_pagina_web "$(basename -- "$PACOTE_ARQ")")"
+        else
+            t_erro "$(t_msg nao_consegui_ler_pacote "$ERRO")"
+        fi
         exit 1 ;;
 esac
 [ -n "$NOME" ] || { t_erro "Este arquivo não parece ser um pacote do sistema."; exit 1; }

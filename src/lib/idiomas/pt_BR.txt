@@ -445,3 +445,43 @@ Este pacote foi feito para um modo de desenvolvimento e não instala assim.
 
 @snap_porque_servico
 O serviço que cuida dos snaps não está funcionando nesta máquina.
+
+@informe_arquivo
+Informe o arquivo.
+
+@comando_desconhecido
+Não conheço o comando "{1}", e não existe nenhum arquivo com esse nome aqui.
+
+A lista de comandos está em:  tandem --help
+
+@e_uma_pasta
+Isto é uma pasta, não um arquivo de instalação:
+{1}
+
+Entre na pasta e escolha o arquivo que você quer abrir.
+
+@sem_permissao_ler
+Não tenho permissão para ler este arquivo:
+{1}
+
+@baixou_pagina_web
+Isto não é um programa: é uma página da internet salva com o nome de um.
+
+{1}
+
+Quase sempre quer dizer que o download deu errado e o site devolveu uma página
+de erro ou de login no lugar do arquivo. Baixe de novo, direto do site oficial.
+
+@tipo_desconhecido
+Não reconheci o tipo deste arquivo.
+
+{1}
+
+O Tandem abre .exe, .msi, .apk, .xapk, .AppImage, .jar, .deb, .rpm,
+.flatpakref, .snap e instaladores .sh. Se este arquivo deveria ser um deles,
+o download pode ter vindo pela metade — baixe de novo.
+
+@nao_consegui_ler_pacote
+Não consegui ler este pacote.
+
+{1}

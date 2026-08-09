@@ -1207,6 +1207,103 @@ t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
 equal "a serial that already exists is never overwritten" \
       "DEADBEEF" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
 
+section "install: name the right cause, or say nothing at all"
+
+# All of this comes from one photograph of a real screen. The owner got a
+# dialog saying "I did not recognise the type of this file" and went looking
+# for a defect in Tandem's format support. There was no file: the word they
+# typed was a mistyped command, and the case at the bottom of the script sends
+# every unrecognised word to acao_install, which sniffed the contents of a
+# path that does not exist with "head ... 2>/dev/null", failed every test in
+# silence, and blamed the file type.
+#
+# Naming the WRONG cause is worse than naming none. These tests exist so that
+# each of these mistakes keeps its own answer.
+
+CASO="$TMPROOT/instalar"
+mkdir -p "$CASO"
+# The repository tracks src/bin as non-executable - build.py is what stamps
+# 0755 into the package - so routing by extension, which is an "exec", needs a
+# bin directory the kernel will actually run. Copy once, here.
+BIN_EXEC="$TMPROOT/bin-exec"
+mkdir -p "$BIN_EXEC"
+cp "$ROOT"/src/bin/* "$BIN_EXEC"/ 2>/dev/null
+chmod +x "$BIN_EXEC"/* 2>/dev/null
+inst() {
+    env HOME="$TMPROOT/h-inst" PATH="$PATH" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$BIN_EXEC" \
+        bash "$ROOT/src/bin/tandem" install "$@" 2>&1
+}
+
+contem "a mistyped command is a mistyped command, not a file type" \
+       "tandem --help" "$(env HOME="$TMPROOT/h-inst" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_BIN="$ROOT/src/bin" bash "$ROOT/src/bin/tandem" intalar 2>&1)"
+naocontem "and it is not reported as an unrecognised file type" \
+       "tipo deste arquivo" "$(env HOME="$TMPROOT/h-inst" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_BIN="$ROOT/src/bin" bash "$ROOT/src/bin/tandem" intalar 2>&1)"
+
+# A path that does not exist is a missing file whether or not its name carries
+# an extension Tandem knows. The extension-less case is the one that used to
+# fall through to content sniffing.
+contem "a missing .deb says the file is missing" \
+       "não encontrado" "$(inst "$CASO/nao-existe.deb")"
+contem "a missing file with no extension says the same" \
+       "não encontrado" "$(inst "$CASO/nao-existe")"
+naocontem "and neither blames the file type" \
+       "tipo deste arquivo" "$(inst "$CASO/nao-existe")"
+
+# A folder is not a half-readable file: say which mistake it is.
+contem "a folder is reported as a folder" "pasta" "$(inst "$CASO")"
+
+# The download that goes wrong rarely produces nothing. The site answers with
+# an error page or a login wall and the browser saves that HTML under the name
+# the link promised - so the file really is called programa.deb and really does
+# start with <!DOCTYPE html>. Every reader in this project would otherwise
+# report its own local disappointment ("no ar signature"), which is true,
+# useless, and sends the owner looking in the wrong place.
+printf '<!DOCTYPE html>\n<html><head><title>404</title></head><body>x</body></html>\n' \
+    > "$CASO/pagina.deb"
+cp "$CASO/pagina.deb" "$CASO/pagina-sem-extensao"
+contem "an error page saved as .deb is called a web page" \
+       "página da internet" "$(inst "$CASO/pagina.deb")"
+naocontem "and the ar jargon does not reach the owner" \
+       "assinatura ar" "$(inst "$CASO/pagina.deb")"
+contem "the same page with no extension is caught too" \
+       "página da internet" "$(inst "$CASO/pagina-sem-extensao")"
+
+# Uppercase, and a page that begins with a blank line, are the same page.
+printf '\n\n<HTML><HEAD><TITLE>Login</TITLE></HEAD></HTML>\n' > "$CASO/maiuscula.deb"
+contem "an uppercase page after blank lines is still a web page" \
+       "página da internet" "$(inst "$CASO/maiuscula.deb")"
+
+# And a real unknown type still says so - but now it says WHICH file, and what
+# Tandem can actually open, so the sentence is actionable.
+printf 'lixo\000\001\002binario' > "$CASO/estranho"
+saida_estranho="$(inst "$CASO/estranho")"
+contem "an unknown type still says it did not recognise the type" \
+       "Não reconheci o tipo" "$saida_estranho"
+contem "and names the file it is talking about" "estranho" "$saida_estranho"
+contem "and lists what Tandem does open" ".flatpakref" "$saida_estranho"
+
+# The guard on the whole point: a real package must still be routed. If the
+# new checks ever reject a good file, that is a far worse bug than the one
+# they were written for.
+deb_bom="$(ls -1 "$ROOT"/tandem_*_all.deb 2>/dev/null | head -1)"
+if [ -z "$deb_bom" ]; then
+    python3 "$ROOT/build.py" >/dev/null 2>&1
+    deb_bom="$(ls -1 "$ROOT"/tandem_*_all.deb 2>/dev/null | head -1)"
+fi
+if true; then
+    if [ -n "$deb_bom" ]; then
+        naocontem "a real .deb is not mistaken for a web page" \
+                  "página da internet" "$(inst "$deb_bom")"
+        naocontem "a real .deb is not mistaken for an unknown type" \
+                  "Não reconheci o tipo" "$(inst "$deb_bom")"
+    else
+        skip "a real .deb still routes" "no package could be built here"
+    fi
+fi
+
 section "language: the messages are data, not code"
 
 # Every sentence in this program used to be a Portuguese literal inside the
