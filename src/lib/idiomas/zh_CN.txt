@@ -268,3 +268,156 @@ sudo apt install winetricks
 
 @porque_cabextract
 缺少 cabextract 程序。请执行：sudo apt install cabextract
+
+@abrindo_android
+正在打开 Android……
+
+@download_incompleto
+这个文件没有下载完。
+
+{1}
+
+请重新下载，等下载完成后再打开。
+
+@script_sem_confirmacao
+我没有运行这个文件：需要您确认，但既没有窗口也没有终端可以问。
+
+如果您确实想运行，请打开终端，先看看里面写了什么：
+
+less "{1}"
+
+@script_executando
+正在运行 {1}……
+
+@script_ok
+运行结束，没有出错。
+
+@script_disse
+它是这么说的：
+
+@script_erro
+运行出错结束了（代码 {1}）。
+
+@registro_completo_em
+完整记录在：
+{1}
+
+@snap_incompleto
+这个文件看起来不是完整的 snap 包。
+
+{1}
+
+下载可能中途停了。请重新下载。
+
+@snap_falta_snapd
+要安装这个文件，缺少 snapd —— 它是管理 snap 包的程序。
+
+请打开终端并执行：
+
+sudo apt install snapd
+
+不过先想一想：几乎所有 snap 程序都能从商店直接装，根本不用下载文件。
+在软件中心里搜索“{1}”。
+
+@snap_ja_instalado
+“{1}”在这台机器上已经装好了。
+
+请到应用程序菜单里找。
+
+@snap_pergunta
+要从这个文件安装“{1}”吗？
+
+{2}
+
+从商店之外下载的 snap 没有经过商店的检查，会以“未验证”的身份装进来。
+只有在您信得过发来的人时才继续。
+
+@snap_sem_confirmacao
+我没有安装“{1}”：这个文件无法验证，而我需要您确认，却既没有窗口
+也没有终端可以问。
+
+@snap_instalando
+正在安装 {1}……
+
+@snap_sem_senha
+我没能向您索要安装所需的密码。
+
+请打开终端并执行：
+
+sudo snap install --dangerous "{1}"
+
+@snap_instalado
+{1} 已安装。
+
+@procure_no_menu_por
+请到应用程序菜单里找：
+
+@snap_nao_instalou
+没能安装 {1}。
+
+@rpm_download_incompleto
+这个文件没有下载完。
+
+{1}
+
+不过还是要说清楚：.rpm 文件属于另一支 Linux，在您的系统上装不了。
+请到同一个网站上找 .deb 文件。
+
+@snap_nao_e_pacote
+这个文件看起来不是完整的 snap 包。
+
+{1}
+
+如果您刚下载完，多半是下载中途断了。
+
+@script_qual_instalador
+这个文件是一个程序安装包。
+
+@script_qual_script
+这个文件是一个脚本：一串命令。
+
+@script_ver_antes
+要不要先看看它做什么再决定？
+
+@botao_ver_conteudo
+看看内容
+
+@botao_nao_ver
+不用看
+
+@script_aviso_poder
+脚本能做的事，跟您本人在这台电脑上能做的一样多。只有信得过发来的人
+才运行它。
+
+@script_porque_permissao
+它想动一些您的账号动不了的东西。这类安装包通常要在终端里用 sudo 运行，
+下载它的网站上应该有说明。
+
+@script_porque_falta_programa
+它需要一个这里没有装的程序：{1}
+
+@script_porque_sem_arquivo
+它去找一个不存在的文件。这通常是因为只复制了安装包，没把随它一起的
+整个文件夹带上。
+
+@snap_aviso_sem_assinatura
+注意：这个文件没有系统能核对的签名。snap 包一般来自商店，在那里会经过
+验证；这一个是散着来的。装它，就等于信任发来文件的人。
+
+如果您本来想装的是个知名程序，到软件中心里按名字搜索，比装这个文件安全。
+
+@botao_instalar_assim_mesmo
+仍然安装
+
+@snap_confirma_terminal
+这个文件无法验证。仍然安装吗？[y/N] 
+
+@snap_porque_classic
+这个程序要求对系统的完全访问权，而散着来的文件拿不到这种权限。
+请到软件中心里找这个程序。
+
+@snap_porque_devmode
+这个包是给开发模式用的，这样装不上。
+
+@snap_porque_servico
+管理 snap 的服务在这台机器上没有运行。

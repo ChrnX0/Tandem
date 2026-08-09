@@ -3,7 +3,7 @@
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 t_log_init android
 
-t_progresso_abre "Abrindo o Android..."
+t_progresso_abre "$(t_msg abrindo_android)"
 t_wd_garantir || exit 1
 t_progresso_fecha
 

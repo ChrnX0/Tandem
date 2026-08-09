@@ -277,3 +277,165 @@ Le fichier téléchargé est arrivé corrompu. Réessayez plus tard.
 
 @porque_cabextract
 Le programme cabextract manque. Installez-le avec : sudo apt install cabextract
+
+@abrindo_android
+Ouverture d'Android...
+
+@download_incompleto
+Le téléchargement de ce fichier ne s'est pas terminé.
+
+{1}
+
+Retéléchargez-le, et attendez la fin avant de l'ouvrir.
+
+@script_sem_confirmacao
+Je n'ai pas exécuté ce fichier : il me faut une confirmation et il n'y a
+ni fenêtre ni terminal pour la demander.
+
+Si vous voulez vraiment l'exécuter, ouvrez le Terminal et lisez-le d'abord :
+
+less "{1}"
+
+@script_executando
+Exécution de {1}...
+
+@script_ok
+Il s'est terminé sans erreur.
+
+@script_disse
+Voici ce qu'il a dit :
+
+@script_erro
+Il s'est terminé sur une erreur (code {1}).
+
+@registro_completo_em
+Le journal complet est dans :
+{1}
+
+@snap_incompleto
+Ce fichier ne ressemble pas à un paquet snap complet.
+
+{1}
+
+Le téléchargement s'est peut-être arrêté en route. Retéléchargez-le.
+
+@snap_falta_snapd
+Pour installer ce fichier, snapd manque : c'est le programme qui s'occupe
+des paquets snap.
+
+Ouvrez le Terminal et lancez :
+
+sudo apt install snapd
+
+Mais réfléchissez-y d'abord : presque tous les programmes en snap s'installent
+depuis la logithèque, sans aucun fichier à télécharger. Cherchez « {1} ».
+
+@snap_ja_instalado
+« {1} » est déjà installé sur cette machine.
+
+Cherchez-le dans le menu des applications.
+
+@snap_pergunta
+Installer « {1} » à partir de ce fichier ?
+
+{2}
+
+Un snap téléchargé hors de la logithèque ne passe pas ses vérifications : il
+entre marqué « non vérifié ». Ne continuez que si vous faites confiance à
+celui qui vous l'a envoyé.
+
+@snap_sem_confirmacao
+Je n'ai pas installé « {1} » : ce fichier ne peut pas être vérifié, et il me
+faut une confirmation que je n'ai aucun moyen de demander sans fenêtre ni
+terminal.
+
+@snap_instalando
+Installation de {1}...
+
+@snap_sem_senha
+Je n'ai pas pu vous demander votre mot de passe pour installer.
+
+Ouvrez le Terminal et lancez :
+
+sudo snap install --dangerous "{1}"
+
+@snap_instalado
+{1} installé.
+
+@procure_no_menu_por
+Cherchez dans le menu des applications :
+
+@snap_nao_instalou
+Je n'ai pas pu installer {1}.
+
+@rpm_download_incompleto
+Le téléchargement de ce fichier ne s'est pas terminé.
+
+{1}
+
+À savoir de toute façon : les fichiers .rpm appartiennent à une autre famille
+de Linux et ne s'installent pas sur votre système. Cherchez le fichier .deb
+sur le même site.
+
+@snap_nao_e_pacote
+Ce fichier ne ressemble pas à un paquet snap complet.
+
+{1}
+
+Si vous venez de le télécharger, le téléchargement a sans doute été coupé.
+
+@script_qual_instalador
+Ce fichier est un installateur de programme.
+
+@script_qual_script
+Ce fichier est un script : une liste de commandes.
+
+@script_ver_antes
+Voulez-vous voir ce qu'il fait avant de décider ?
+
+@botao_ver_conteudo
+Voir le contenu
+
+@botao_nao_ver
+Non merci
+
+@script_aviso_poder
+Un script peut faire tout ce que vous pouvez faire sur cet ordinateur. Ne
+l'exécutez que si vous faites confiance à celui qui vous l'a envoyé.
+
+@script_porque_permissao
+Il a tenté de toucher à quelque chose que votre compte n'a pas le droit de
+toucher. Ce genre d'installateur doit en général être lancé depuis le Terminal
+avec sudo, et le site d'où vous l'avez téléchargé devrait l'expliquer.
+
+@script_porque_falta_programa
+Il a besoin d'un programme qui n'est pas installé ici :{1}
+
+@script_porque_sem_arquivo
+Il a cherché un fichier qui n'existe pas. Cela arrive souvent quand seul
+l'installateur a été copié, sans le dossier complet qui l'accompagnait.
+
+@snap_aviso_sem_assinatura
+ATTENTION : ce fichier ne porte aucune signature que le système puisse
+vérifier. Les paquets snap viennent normalement de la logithèque, où ils sont
+vérifiés ; celui-ci est arrivé seul. L'installer, c'est faire confiance à celui
+qui a envoyé le fichier.
+
+Si vous attendiez un programme connu, chercher son nom dans la logithèque est
+plus sûr que d'installer ce fichier.
+
+@botao_instalar_assim_mesmo
+Installer quand même
+
+@snap_confirma_terminal
+Ce fichier ne peut pas être vérifié. Installer quand même ? [o/N] 
+
+@snap_porque_classic
+Ce programme demande un accès total au système, et un fichier isolé ne peut
+pas recevoir cet accès. Cherchez le programme dans la logithèque.
+
+@snap_porque_devmode
+Ce paquet a été fait pour un mode de développement et ne s'installe pas ainsi.
+
+@snap_porque_servico
+Le service qui s'occupe des snaps ne fonctionne pas sur cette machine.

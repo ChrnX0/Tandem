@@ -287,3 +287,161 @@ The downloaded file arrived corrupted. Try again later.
 
 @porque_cabextract
 The cabextract program is missing. Install it with: sudo apt install cabextract
+
+@abrindo_android
+Opening Android...
+
+@download_incompleto
+The download of this file did not finish.
+
+{1}
+
+Download it again, and wait for it to finish before opening it.
+
+@script_sem_confirmacao
+I did not run this file: I need a confirmation and there is no window
+and no terminal to ask in.
+
+If you really want to run it, open the Terminal and read it first:
+
+less "{1}"
+
+@script_executando
+Running {1}...
+
+@script_ok
+It finished with no error.
+
+@script_disse
+This is what it said:
+
+@script_erro
+It finished with an error (code {1}).
+
+@registro_completo_em
+The full log is in:
+{1}
+
+@snap_incompleto
+This file does not look like a complete snap package.
+
+{1}
+
+The download may have stopped halfway. Download it again.
+
+@snap_falta_snapd
+To install this file, snapd is missing - it is the program that looks after
+snap packages.
+
+Open the Terminal and run:
+
+sudo apt install snapd
+
+But it is worth a thought first: almost every snap program installs from the
+store, with no file to download. Look for "{1}" in the Software centre.
+
+@snap_ja_instalado
+"{1}" is already installed on this machine.
+
+Look for it in the applications menu.
+
+@snap_pergunta
+Install "{1}" from this file?
+
+{2}
+
+A snap downloaded outside the store does not go through its checks, so it goes
+in marked "unverified". Only continue if you trust whoever sent it.
+
+@snap_sem_confirmacao
+I did not install "{1}": this file cannot be verified, and I need a
+confirmation I have no way to ask for without a window or a terminal.
+
+@snap_instalando
+Installing {1}...
+
+@snap_sem_senha
+I could not ask for your password in order to install it.
+
+Open the Terminal and run:
+
+sudo snap install --dangerous "{1}"
+
+@snap_instalado
+{1} installed.
+
+@procure_no_menu_por
+Look in the applications menu for:
+
+@snap_nao_instalou
+I could not install {1}.
+
+@rpm_download_incompleto
+The download of this file did not finish.
+
+{1}
+
+Worth knowing either way: .rpm files belong to another family of Linux and do
+not install on your system. Look for the .deb file on the same site.
+
+@snap_nao_e_pacote
+This file does not look like a complete snap package.
+
+{1}
+
+If you have just downloaded it, the download was probably cut off halfway.
+
+@script_qual_instalador
+This file is a program installer.
+
+@script_qual_script
+This file is a script: a list of commands.
+
+@script_ver_antes
+Do you want to see what it does before deciding?
+
+@botao_ver_conteudo
+Show me
+
+@botao_nao_ver
+No need
+
+@script_aviso_poder
+A script can do anything you can do on this computer. Only run it if you trust
+whoever sent it.
+
+@script_porque_permissao
+It tried to touch something your account is not allowed to touch. Installers
+like this usually have to be run from the Terminal with sudo, and the site you
+downloaded it from should say how.
+
+@script_porque_falta_programa
+It needs a program that is not installed here:{1}
+
+@script_porque_sem_arquivo
+It looked for a file that is not there. That usually happens when only the
+installer was copied, without the whole folder that came with it.
+
+@snap_aviso_sem_assinatura
+WARNING: this file carries no signature the system can check. Snap packages
+normally come from the store, where they are verified; this one came loose.
+Installing it means trusting whoever sent the file.
+
+If you were expecting a well-known program, searching for its name in the
+Software centre is safer than installing this file.
+
+@botao_instalar_assim_mesmo
+Install anyway
+
+@snap_confirma_terminal
+This file cannot be verified. Install anyway? [y/N] 
+
+@snap_porque_classic
+This program asks for full access to the system, and a loose file cannot be
+given that access. Look for the program in the Software centre.
+
+@snap_porque_devmode
+This package was made for a development mode and does not install this way.
+
+@snap_porque_servico
+The service that looks after snaps is not running on this machine.

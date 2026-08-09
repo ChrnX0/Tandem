@@ -287,3 +287,161 @@ O arquivo baixado veio corrompido. Tente de novo mais tarde.
 
 @porque_cabextract
 Falta o programa cabextract. Instale com: sudo apt install cabextract
+
+@abrindo_android
+Abrindo o Android...
+
+@download_incompleto
+O download deste arquivo não terminou.
+
+{1}
+
+Baixe de novo, e espere terminar antes de abrir.
+
+@script_sem_confirmacao
+Não executei este arquivo: preciso de uma confirmação e não há janela
+nem terminal para perguntar.
+
+Se você quer mesmo executar, abra o Terminal e veja o conteúdo primeiro:
+
+less "{1}"
+
+@script_executando
+Executando {1}...
+
+@script_ok
+Terminou sem erro.
+
+@script_disse
+Foi isto que ele disse:
+
+@script_erro
+Terminou com erro (código {1}).
+
+@registro_completo_em
+O registro completo está em:
+{1}
+
+@snap_incompleto
+Este arquivo não parece ser um pacote snap completo.
+
+{1}
+
+O download pode ter parado no meio. Baixe de novo.
+
+@snap_falta_snapd
+Para instalar este arquivo falta o snapd, que é o programa que cuida
+dos pacotes snap.
+
+Abra o Terminal e execute:
+
+sudo apt install snapd
+
+Mas vale pensar antes: quase todos os programas em snap se instalam pela loja,
+sem baixar arquivo nenhum. Procure o nome "{1}" na Central de Programas.
+
+@snap_ja_instalado
+"{1}" já está instalado nesta máquina.
+
+Procure no menu de aplicativos.
+
+@snap_pergunta
+Instalar "{1}" a partir deste arquivo?
+
+{2}
+
+Um snap baixado fora da loja não passa pela conferência dela, então ele entra
+com a marca de "não verificado". Só continue se você confia em quem mandou.
+
+@snap_sem_confirmacao
+Não instalei "{1}": este arquivo não pode ser verificado, e preciso
+de uma confirmação que não tenho como pedir sem janela nem terminal.
+
+@snap_instalando
+Instalando {1}...
+
+@snap_sem_senha
+Não consegui pedir a sua senha para instalar.
+
+Abra o Terminal e execute:
+
+sudo snap install --dangerous "{1}"
+
+@snap_instalado
+{1} instalado.
+
+@procure_no_menu_por
+Procure no menu de aplicativos por:
+
+@snap_nao_instalou
+Não consegui instalar {1}.
+
+@rpm_download_incompleto
+O download deste arquivo não terminou.
+
+{1}
+
+Mas vale saber de qualquer jeito: arquivos .rpm são de outra família de Linux e
+não instalam no seu sistema. Procure o arquivo .deb no mesmo site.
+
+@snap_nao_e_pacote
+Este arquivo não parece ser um pacote snap completo.
+
+{1}
+
+Se você acabou de baixar, o download provavelmente foi cortado no meio.
+
+@script_qual_instalador
+Este arquivo é um instalador de programa.
+
+@script_qual_script
+Este arquivo é um script: uma lista de comandos.
+
+@script_ver_antes
+Quer ver o que ele faz antes de decidir?
+
+@botao_ver_conteudo
+Ver o conteúdo
+
+@botao_nao_ver
+Não ver
+
+@script_aviso_poder
+Um script faz tudo o que você pode fazer no computador. Só execute se confia em
+quem mandou.
+
+@script_porque_permissao
+Ele tentou mexer em algo que a sua conta não pode mexer. Instaladores
+assim geralmente precisam ser executados pelo Terminal com sudo, e o próprio
+site de onde você baixou deve dizer como.
+
+@script_porque_falta_programa
+Ele precisa de um programa que não está instalado aqui:{1}
+
+@script_porque_sem_arquivo
+Ele procurou um arquivo que não existe. Isso costuma acontecer quando só
+o instalador foi copiado, sem a pasta completa que veio com ele.
+
+@snap_aviso_sem_assinatura
+ATENÇÃO: este arquivo não tem assinatura que o sistema possa conferir. Pacotes
+snap normalmente vêm da loja, onde são verificados; este veio solto. Instalar
+significa confiar em quem mandou o arquivo.
+
+Se você esperava um programa conhecido, procurar o nome na Central de Programas
+é mais seguro do que instalar este arquivo.
+
+@botao_instalar_assim_mesmo
+Instalar assim mesmo
+
+@snap_confirma_terminal
+Este arquivo não pode ser verificado. Instalar assim mesmo? [s/N] 
+
+@snap_porque_classic
+Este programa pede acesso total ao sistema, e um arquivo solto não pode
+receber esse acesso. Procure o programa na Central de Programas.
+
+@snap_porque_devmode
+Este pacote foi feito para um modo de desenvolvimento e não instala assim.
+
+@snap_porque_servico
+O serviço que cuida dos snaps não está funcionando nesta máquina.

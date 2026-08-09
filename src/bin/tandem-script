@@ -39,18 +39,18 @@ CABECA="$(head -c 4096 -- "$SCRIPT" 2>/dev/null | head -20 |
 
 if t_script_instalador "$SCRIPT"; then
     # ------------------------------------------------ a vendor installer
-    QUAL="Este arquivo é um instalador de programa."
+    QUAL="$(t_msg script_qual_instalador)"
     ACAO="Instalar"
     t_diz "reconhecido como instalador"
 else
-    QUAL="Este arquivo é um script: uma lista de comandos."
+    QUAL="$(t_msg script_qual_script)"
     ACAO="Executar"
     t_diz "reconhecido como script comum"
     # For a plain script the first offer is to READ it. Whoever wanted to run it
     # says so on the second question, which is one click further away on purpose.
     if t_pergunta "$(t_texto_script_perigo "$SCRIPT")
 
-Quer ver o que ele faz antes de decidir?" "Ver o conteúdo" "Não ver"; then
+$(t_msg script_ver_antes)" "$(t_msg botao_ver_conteudo)" "$(t_msg botao_nao_ver)"; then
         {
             printf '%s\n\n' "$(basename -- "$SCRIPT")"
             printf -- '----------------------------------------\n'
@@ -67,8 +67,7 @@ $(basename -- "$SCRIPT")   ($(t_tamanho_amigavel "$TAM"))
 As primeiras linhas dele:
 $CABECA
 
-Um script faz tudo o que você pode fazer no computador. Só execute se confia em
-quem mandou." "$ACAO" "Cancelar"; then
+$(t_msg script_aviso_poder)" "$ACAO" "Cancelar"; then
     if [ -t 0 ]; then
         printf '%s\n\n%s [s/N] ' "$QUAL" "$ACAO?"
         read -r r
@@ -76,12 +75,7 @@ quem mandou." "$ACAO" "Cancelar"; then
     else
         # No window, no terminal, and this is the one file type where carrying on
         # without a confirmation is out of the question.
-        t_erro "Não executei este arquivo: preciso de uma confirmação e não há janela
-nem terminal para perguntar.
-
-Se você quer mesmo executar, abra o Terminal e veja o conteúdo primeiro:
-
-less \"$SCRIPT\""
+        t_erro "$(t_msg script_sem_confirmacao "$SCRIPT")"
         exit 1
     fi
 fi
@@ -93,7 +87,7 @@ fi
 
 INICIO=$SECONDS
 MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
-t_aviso "Executando $(basename -- "$SCRIPT")..."
+t_aviso "$(t_msg script_executando "$(basename -- "$SCRIPT")")"
 (
     cd -- "$(dirname -- "$SCRIPT")" || exit 1
     # Never as root. A vendor installer that needs root asks for it itself, with
@@ -114,9 +108,9 @@ if [ "$CODIGO" -eq 0 ]; then
     t_memoria_grava "$SCRIPT" SEGUNDOS "$((SECONDS-INICIO))" 2>/dev/null
     t_memoria_grava "$SCRIPT" VISTO_EM "$(date +%F)" 2>/dev/null
     SAIU="$(t_palavras_do_programa "$LOG" 6)"
-    t_ok "Terminou sem erro.${SAIU:+
+    t_ok "$(t_msg script_ok)${SAIU:+
 
-Foi isto que ele disse:
+$(t_msg script_disse)
 
 $SAIU}"
     exit 0
@@ -126,30 +120,26 @@ PARCIAL="$TANDEM_TRAVAS/parcial-script.$$"
 tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
 PORQUE=""
 if grep -qiE 'Permission denied' "$PARCIAL" 2>/dev/null; then
-    PORQUE="Ele tentou mexer em algo que a sua conta não pode mexer. Instaladores
-assim geralmente precisam ser executados pelo Terminal com sudo, e o próprio
-site de onde você baixou deve dizer como."
+    PORQUE="$(t_msg script_porque_permissao)"
 elif grep -qiE 'command not found' "$PARCIAL" 2>/dev/null; then
     FALTA="$(sed -n 's/.*: \([^:]*\): command not found.*/\1/p' "$PARCIAL" | head -3 |
              tr '\n' ' ')"
-    PORQUE="Ele precisa de um programa que não está instalado aqui:${FALTA:+ $FALTA}"
+    PORQUE="$(t_msg script_porque_falta_programa "${FALTA:+ $FALTA}")"
 elif grep -qi 'No space left on device' "$PARCIAL" 2>/dev/null; then
-    PORQUE="O disco está cheio."
+    PORQUE="$(t_msg porque_disco_cheio)"
 elif grep -qiE 'not found|No such file or directory' "$PARCIAL" 2>/dev/null; then
-    PORQUE="Ele procurou um arquivo que não existe. Isso costuma acontecer quando só
-o instalador foi copiado, sem a pasta completa que veio com ele."
+    PORQUE="$(t_msg script_porque_sem_arquivo)"
 fi
 ULTIMAS="$(t_palavras_do_programa "$PARCIAL" 4)"
 rm -f "$PARCIAL"
 t_memoria_grava "$SCRIPT" RESULTADO "nao executou" 2>/dev/null
-t_erro "Terminou com erro (código $CODIGO).
+t_erro "$(t_msg script_erro "$CODIGO")
 ${PORQUE:+
 $PORQUE
 }${ULTIMAS:+
-Foi isto que ele disse:
+$(t_msg script_disse)
 
 $ULTIMAS
 }
-O registro completo está em:
-$LOG"
+$(t_msg registro_completo_em "$LOG")"
 exit "$CODIGO"

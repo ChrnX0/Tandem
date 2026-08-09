@@ -29,31 +29,17 @@ t_diz "snap local: $ARQ (nome provavel: $NOME)"
 # applies - and here it is the whole verdict, because a short snap is the most
 # likely reason somebody has a loose .snap that will not install.
 if ! head -c 4 -- "$ARQ" 2>/dev/null | grep -q 'hsqs'; then
-    t_erro "Este arquivo não parece ser um pacote snap completo.
-
-$(basename -- "$ARQ")
-
-Se você acabou de baixar, o download provavelmente foi cortado no meio."
+    t_erro "$(t_msg snap_nao_e_pacote "$(basename -- "$ARQ")")"
     exit 1
 fi
 
 if ! command -v snap >/dev/null 2>&1; then
-    t_erro "Para instalar este arquivo falta o snapd, que é o programa que cuida
-dos pacotes snap.
-
-Abra o Terminal e execute:
-
-sudo apt install snapd
-
-Mas vale pensar antes: quase todos os programas em snap se instalam pela loja,
-sem baixar arquivo nenhum. Procure o nome \"$NOME\" na Central de Programas."
+    t_erro "$(t_msg snap_falta_snapd "$NOME")"
     exit 1
 fi
 
 if snap list "$NOME" >/dev/null 2>&1; then
-    t_ok "\"$NOME\" já está instalado nesta máquina.
-
-Procure no menu de aplicativos."
+    t_ok "$(t_msg snap_ja_instalado "$NOME")"
     exit 0
 fi
 
@@ -61,45 +47,35 @@ if ! t_pergunta "Instalar \"$NOME\" a partir deste arquivo?
 
 $(basename -- "$ARQ")
 
-ATENÇÃO: este arquivo não tem assinatura que o sistema possa conferir. Pacotes
-snap normalmente vêm da loja, onde são verificados; este veio solto. Instalar
-significa confiar em quem mandou o arquivo.
-
-Se você esperava um programa conhecido, procurar o nome na Central de Programas
-é mais seguro do que instalar este arquivo." "Instalar assim mesmo" "Cancelar"; then
+$(t_msg snap_aviso_sem_assinatura)" "$(t_msg botao_instalar_assim_mesmo)" "$(t_msg botao_cancelar)"; then
     if [ -t 0 ]; then
-        printf 'Este arquivo não pode ser verificado. Instalar assim mesmo? [s/N] '
+        printf '%s' "$(t_msg snap_confirma_terminal)"
         read -r r
         case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
     else
-        t_erro "Não instalei \"$NOME\": este arquivo não pode ser verificado, e preciso
-de uma confirmação que não tenho como pedir sem janela nem terminal."
+        t_erro "$(t_msg snap_sem_confirmacao "$NOME")"
         exit 1
     fi
 fi
 
 ANTES_ATALHOS="$(t_atalhos_do_sistema)"
 MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
-t_progresso_abre "Instalando $NOME..."
+t_progresso_abre "$(t_msg snap_instalando "$NOME")"
 t_como_root "snap install --dangerous -- '$ARQ'" >>"$LOG" 2>&1
 CODIGO=$?
 t_progresso_fecha
 
 if [ "$CODIGO" -eq 127 ]; then
-    t_erro "Não consegui pedir a sua senha para instalar.
-
-Abra o Terminal e execute:
-
-sudo snap install --dangerous \"$ARQ\""
+    t_erro "$(t_msg snap_sem_senha "$ARQ")"
     exit 1
 fi
 
 if snap list "$NOME" >/dev/null 2>&1; then
     t_memoria_grava "$ARQ" RESULTADO instalado 2>/dev/null
     ONDE="$(t_anuncia_atalhos_do_sistema "$ANTES_ATALHOS")"
-    t_ok "$NOME instalado.${ONDE:+
+    t_ok "$(t_msg snap_instalado "$NOME")${ONDE:+
 
-Procure no menu de aplicativos por:
+$(t_msg procure_no_menu_por)
 $(printf '%s\n' "$ONDE" | sed 's/^/  /')}"
     exit 0
 fi
@@ -108,22 +84,20 @@ PARCIAL="$TANDEM_TRAVAS/parcial-snap.$$"
 tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
 PORQUE=""
 if grep -qi 'classic confinement' "$PARCIAL" 2>/dev/null; then
-    PORQUE="Este programa pede acesso total ao sistema, e um arquivo solto não pode
-receber esse acesso. Procure o programa na Central de Programas."
+    PORQUE="$(t_msg snap_porque_classic)"
 elif grep -qi 'cannot install.*devmode\|snap is not compatible' "$PARCIAL" 2>/dev/null; then
-    PORQUE="Este pacote foi feito para um modo de desenvolvimento e não instala assim."
+    PORQUE="$(t_msg snap_porque_devmode)"
 elif grep -qi 'No space left on device' "$PARCIAL" 2>/dev/null; then
-    PORQUE="O disco está cheio."
+    PORQUE="$(t_msg porque_disco_cheio)"
 elif grep -qiE 'system does not fully support snapd|cannot communicate with server' "$PARCIAL" 2>/dev/null; then
-    PORQUE="O serviço que cuida dos snaps não está funcionando nesta máquina."
+    PORQUE="$(t_msg snap_porque_servico)"
 fi
 ULTIMAS="$(t_palavras_do_programa "$PARCIAL" 3)"
 rm -f "$PARCIAL"
 t_memoria_grava "$ARQ" RESULTADO "nao instalou" 2>/dev/null
-t_erro "Não consegui instalar $NOME.
+t_erro "$(t_msg snap_nao_instalou "$NOME")
 ${PORQUE:+
 $PORQUE
 }${ULTIMAS:+$([ -z "$PORQUE" ] && printf '\nFoi isto que o sistema disse:\n\n%s\n' "$ULTIMAS")}
-O registro completo está em:
-$LOG"
+$(t_msg registro_completo_em "$LOG")"
 exit "$CODIGO"
