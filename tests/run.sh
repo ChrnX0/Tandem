@@ -2783,6 +2783,24 @@ else
     skip "desktop-file-validate" "not installed"
 fi
 
+section "the badge on the front page does not lie"
+
+# It drifted twice, in both directions, because nothing checked it: the README
+# announced 473 tests while the suite ran 499, and then 499 while it ran 547.
+# A number on the front page that nobody verifies is a claim like any other,
+# and this project's whole argument is that claims get checked.
+#
+# The two assertions below count themselves - they are tests too - so the
+# badge states the number of checks that pass when everything passes. When it
+# fails, the message says exactly which number to write.
+ESPERADO_BADGE=$((OK + 2))
+for par in "README.md|tests" "LEIAME.md|testes"; do
+    arq="${par%%|*}"; rotulo="${par#*|}"
+    achado="$(sed -n "s|.*badge/$rotulo-\([0-9]*\)-.*|\1|p" "$ROOT/$arq" | head -1)"
+    equal "$arq announces the number of tests it actually has" \
+          "$ESPERADO_BADGE" "$achado"
+done
+
 # ------------------------------------------------------------- summary
 
 printf '\n────────────────────────────────────────\n'
