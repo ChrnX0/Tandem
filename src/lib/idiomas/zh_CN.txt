@@ -61,3 +61,210 @@ tandem idioma <代码>
 无法保存您选择的语言。
 
 通常是配置目录没有写入权限，或者磁盘已满。
+
+# ------------------------------------------------------- Windows 程序
+
+@wine_faltando_pergunta
+运行 Windows 程序所需的 Wine 尚未安装。
+
+现在安装吗？需要联网和您的密码。
+
+@wine_instalando
+正在安装 Wine，可能需要几分钟……
+
+@wine_faltando_erro
+Wine 尚未安装。
+
+请从软件中心安装，或者执行：
+sudo apt install wine
+
+也可以让 Tandem 一次装好：  tandem preparar
+
+@wine_instalado
+Wine 已安装。
+
+@ja_abrindo
+这个程序已经在打开了……
+
+@ambiente_pela_metade
+Windows 环境只装了一半，将会重做。
+您的文件我保存在：
+{1}
+
+如果这里有程序已经激活过，那份激活会留在旧环境里，可能需要重新激活。
+
+@primeira_vez_ambiente
+第一次运行：正在准备 Windows 环境……
+
+@ambiente_falhou
+无法准备 Windows 环境。
+
+@ambiente_pronto
+Windows 环境已就绪。
+
+@bits32_pergunta
+这个程序是 32 位的，而 Wine 里缺少 32 位支持。
+
+现在安装吗？需要联网和您的密码。
+
+@bits32_instalando
+正在安装 32 位支持……
+
+@bits32_erro
+这个程序是 32 位的，而 Wine 里缺少 32 位支持。
+
+请打开终端并执行：
+
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install wine32
+
+也可以让 Tandem 来装：  tandem preparar
+
+@bits32_instalado
+32 位支持已安装。
+
+@arm_nao_roda
+这个程序是给 ARM 版 Windows 用的，在这台电脑上无法运行。
+
+@licao_pergunta
+{1}以下 Windows 组件：
+
+{2}
+
+要不要在尝试打开之前先装好？
+
+@licao_instalando
+正在安装这个程序以前要过的东西……
+
+@instalando_componente
+正在安装 {1}……
+
+@abrindo
+正在打开 {1}……
+
+@ja_instalei_e_nao_abre
+这个程序要的东西我已经装了：{1}
+
+它还是打不开。多半是依赖了 Wine 还不支持的东西，或者缺了本该随它一起来的文件。
+
+@faltam_arquivos_junto
+程序没有打开，因为缺少本该随它一起来的文件：
+
+{1}
+
+这通常是因为只复制了可执行文件，没有把程序的整个文件夹带过来。
+
+@nao_e_programa_windows
+这个文件不是兼容的 Windows 程序。
+
+@conflito_bits
+这个环境里出现了 Windows 32 位与 64 位的冲突。
+
+@limite_sem_saida_txt
+这个程序没能打开，而 Wine 也没有办法解决：
+
+{1}
+
+这是 Wine 的限制，不是您电脑的毛病，也不是 Tandem 的。
+
+@limite_no_lugar
+可以改用这些：
+
+@limite_com_caminho
+这个程序没能打开，不过原因是有办法的：
+
+{1}
+
+这不是您电脑的毛病，也不是 Tandem 的。
+
+@fechou_com_erro
+程序出错退出了（代码 {1}）。
+
+@faltam_componentes_protegido
+这个程序缺少一些 Windows 组件：
+
+{1}
+
+Tandem 不会在这个环境里自动装任何东西，因为它属于别的系统，改动可能把它弄坏。
+
+@instalei_e_nao_abre
+依赖装好了，但程序还是打不开。
+
+@componentes_pergunta
+程序需要以下 Windows 组件：
+
+{1}{2}
+
+现在安装吗？
+
+@componentes_sem_janela
+程序需要以下 Windows 组件：
+
+{1}
+
+没有窗口就没法征求您的同意。请用这些命令安装：
+{2}
+
+@falta_winetricks
+缺少 winetricks，依赖要靠它来装。
+
+sudo apt install winetricks
+
+@instalando_componentes
+正在安装 Windows 组件，可能要一会儿。请不要关闭这个窗口。
+
+@nao_consegui_instalar
+没能安装：
+{1}
+
+@botao_instalar
+安装
+
+@botao_agora_nao
+暂时不用
+
+@botao_cancelar
+取消
+
+@botao_tentar_sem_instalar
+不装也试试
+
+@licao_origem_local
+上次这个程序需要
+
+@licao_origem_lista
+在 {1} 台机器上，这个程序需要
+
+@ressalva_so32
+
+
+提醒：这个程序是 64 位的，而下面这些只有 32 位版本：{1}
+
+装了多半也解决不了。这不是您电脑的毛病：发布这个组件的人从来没有出过 64 位版。
+
+@porque_internet
+请检查电脑是否连上了网络。
+
+@porque_desconhecido
+我没能找出原因。技术细节在：
+{1}
+
+@porque_dbus
+缺少一个系统服务（D-Bus）。重启电脑通常就好了。
+
+@porque_disco_cheio
+磁盘满了。
+
+@porque_relogio
+电脑的日期看起来不对，下载会因此失败。
+电脑现在以为今天是 {1}。
+
+@porque_sem_rede
+电脑连不上网络。
+
+@porque_corrompido
+下载下来的文件是坏的。请稍后再试。
+
+@porque_cabextract
+缺少 cabextract 程序。请执行：sudo apt install cabextract

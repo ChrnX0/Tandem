@@ -79,3 +79,211 @@ I could not save your choice of language.
 
 That is usually the configuration folder having no write permission, or a
 full disk.
+
+# ----------------------------------------------------- Windows programs
+
+@wine_faltando_pergunta
+Wine, which runs Windows programs, is not installed.
+
+May I install it now? It needs the internet and your password.
+
+@wine_instalando
+Installing Wine. This may take a few minutes...
+
+@wine_faltando_erro
+Wine is not installed.
+
+Install it from the Software centre, or with:
+sudo apt install wine
+
+Or let Tandem install everything:  tandem preparar
+
+@wine_instalado
+Wine installed.
+
+@ja_abrindo
+This program is already opening...
+
+@ambiente_pela_metade
+The Windows environment was half-finished and is being remade.
+I kept your files in:
+{1}
+
+If a program in here had already been activated, that activation is left
+behind and you may have to activate it again.
+
+@primeira_vez_ambiente
+First time: preparing the Windows environment...
+
+@ambiente_falhou
+I could not prepare the Windows environment.
+
+@ambiente_pronto
+The Windows environment is ready.
+
+@bits32_pergunta
+This program is 32-bit and that support is missing from Wine.
+
+May I install it now? It needs the internet and your password.
+
+@bits32_instalando
+Installing 32-bit support...
+
+@bits32_erro
+This program is 32-bit and that support is missing from Wine.
+
+Open the Terminal and run:
+
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install wine32
+
+Or let Tandem install it:  tandem preparar
+
+@bits32_instalado
+32-bit support installed.
+
+@arm_nao_roda
+This program is for Windows on ARM and will not run on this computer.
+
+@licao_pergunta
+{1} these Windows components:
+
+{2}
+
+May I install them before trying to open it?
+
+@licao_instalando
+Installing what this program has asked for before...
+
+@instalando_componente
+Installing {1}...
+
+@abrindo
+Opening {1}...
+
+@ja_instalei_e_nao_abre
+I already installed what this program was asking for:{1}
+
+And it still does not open. It probably depends on something Wine does not support yet, or on a file that should have come with it.
+
+@faltam_arquivos_junto
+The program did not open because files it should have brought with it are missing:
+
+{1}
+
+That usually happens when only the executable was copied, without the program's whole folder.
+
+@nao_e_programa_windows
+This file is not a compatible Windows program.
+
+@conflito_bits
+Windows environment conflict (32 vs 64-bit) in this profile.
+
+@limite_sem_saida_txt
+This program did not open, and Wine has no way to fix it:
+
+{1}
+
+That is a limit of Wine, not a fault of your machine or of Tandem.
+
+@limite_no_lugar
+What you can do instead:
+
+@limite_com_caminho
+This program did not open, and the reason has a way out:
+
+{1}
+
+That is not a fault of your machine or of Tandem.
+
+@fechou_com_erro
+The program closed with an error (code {1}).
+
+@faltam_componentes_protegido
+This program is missing some Windows components:
+
+{1}
+
+Tandem installs nothing automatically in this profile, because it belongs to another system and the change could break it.
+
+@instalei_e_nao_abre
+I installed the dependencies but the program still does not open.
+
+@componentes_pergunta
+The program needs these Windows components:
+
+{1}{2}
+
+May I install them now?
+
+@componentes_sem_janela
+The program needs these Windows components:
+
+{1}
+
+There is no way to ask without a window. Install them with:
+{2}
+
+@falta_winetricks
+winetricks is missing, and it is what installs the dependencies.
+
+sudo apt install winetricks
+
+@instalando_componentes
+Installing Windows components. This may take a while. Do not close this window.
+
+@nao_consegui_instalar
+I could not install:
+{1}
+
+@botao_instalar
+Install
+
+@botao_agora_nao
+Not now
+
+@botao_cancelar
+Cancel
+
+@botao_tentar_sem_instalar
+Try without installing
+
+@licao_origem_local
+Last time, this program needed
+
+@licao_origem_lista
+On {1} machines this program needed
+
+@ressalva_so32
+
+
+Warning: this program is 64-bit, and this only exists in 32-bit:{1}
+
+Installing will probably not fix it. It is not a fault of your machine: whoever distributes that component never published a 64-bit version.
+
+@porque_internet
+Check that the computer is connected to the internet.
+
+@porque_desconhecido
+I could not identify the cause. The technical details are in:
+{1}
+
+@porque_dbus
+A system service (D-Bus) is missing. Restarting the computer usually fixes it.
+
+@porque_disco_cheio
+The disk is full.
+
+@porque_relogio
+The computer's date looks wrong, and that breaks downloads.
+Today the computer thinks it is {1}.
+
+@porque_sem_rede
+The computer could not reach the internet.
+
+@porque_corrompido
+The downloaded file arrived corrupted. Try again later.
+
+@porque_cabextract
+The cabextract program is missing. Install it with: sudo apt install cabextract

@@ -68,3 +68,211 @@ No pude guardar tu elección de idioma.
 
 Suele ser que la carpeta de configuración no tiene permiso de escritura, o
 que el disco está lleno.
+
+# --------------------------------------------------- programas Windows
+
+@wine_faltando_pergunta
+Wine, que ejecuta los programas de Windows, no está instalado.
+
+¿Lo instalo ahora? Hace falta internet y tu contraseña.
+
+@wine_instalando
+Instalando Wine. Puede tardar unos minutos...
+
+@wine_faltando_erro
+Wine no está instalado.
+
+Instálalo desde el centro de software, o con:
+sudo apt install wine
+
+O deja que Tandem lo instale todo:  tandem preparar
+
+@wine_instalado
+Wine instalado.
+
+@ja_abrindo
+Este programa ya se está abriendo...
+
+@ambiente_pela_metade
+El entorno de Windows estaba a medias y se va a rehacer.
+Guardé tus archivos en:
+{1}
+
+Si algún programa de aquí ya estaba activado, esa activación se queda atrás
+y puede que haya que activarlo otra vez.
+
+@primeira_vez_ambiente
+Primera vez: preparando el entorno de Windows...
+
+@ambiente_falhou
+No pude preparar el entorno de Windows.
+
+@ambiente_pronto
+El entorno de Windows está listo.
+
+@bits32_pergunta
+Este programa es de 32 bits y falta ese soporte en Wine.
+
+¿Lo instalo ahora? Hace falta internet y tu contraseña.
+
+@bits32_instalando
+Instalando el soporte de 32 bits...
+
+@bits32_erro
+Este programa es de 32 bits y falta ese soporte en Wine.
+
+Abre la Terminal y ejecuta:
+
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install wine32
+
+O deja que Tandem lo instale:  tandem preparar
+
+@bits32_instalado
+Soporte de 32 bits instalado.
+
+@arm_nao_roda
+Este programa es para Windows ARM y no funciona en este ordenador.
+
+@licao_pergunta
+{1} estos componentes de Windows:
+
+{2}
+
+¿Los instalo antes de intentar abrirlo?
+
+@licao_instalando
+Instalando lo que este programa ya pidió antes...
+
+@instalando_componente
+Instalando {1}...
+
+@abrindo
+Abriendo {1}...
+
+@ja_instalei_e_nao_abre
+Ya instalé lo que este programa pedía:{1}
+
+Y sigue sin abrir. Probablemente depende de algo que Wine todavía no admite, o de un archivo que debería venir con él.
+
+@faltam_arquivos_junto
+El programa no abrió porque faltan archivos que debería traer consigo:
+
+{1}
+
+Suele pasar cuando solo se copió el ejecutable, sin la carpeta completa del programa.
+
+@nao_e_programa_windows
+Este archivo no es un programa de Windows compatible.
+
+@conflito_bits
+Conflicto de entorno de Windows (32 contra 64 bits) en este perfil.
+
+@limite_sem_saida_txt
+Este programa no abrió, y Wine no tiene cómo resolverlo:
+
+{1}
+
+Es un límite de Wine, no un defecto de tu máquina ni de Tandem.
+
+@limite_no_lugar
+Lo que puedes hacer en su lugar:
+
+@limite_com_caminho
+Este programa no abrió, y el motivo tiene salida:
+
+{1}
+
+No es un defecto de tu máquina ni de Tandem.
+
+@fechou_com_erro
+El programa se cerró con un error (código {1}).
+
+@faltam_componentes_protegido
+A este programa le faltan componentes de Windows:
+
+{1}
+
+Tandem no instala nada automáticamente en este perfil, porque pertenece a otro sistema y el cambio podría romperlo.
+
+@instalei_e_nao_abre
+Instalé las dependencias pero el programa sigue sin abrir.
+
+@componentes_pergunta
+El programa necesita estos componentes de Windows:
+
+{1}{2}
+
+¿Los instalo ahora?
+
+@componentes_sem_janela
+El programa necesita estos componentes de Windows:
+
+{1}
+
+No hay forma de preguntar sin una ventana. Instálalos con:
+{2}
+
+@falta_winetricks
+Falta winetricks, que es lo que instala las dependencias.
+
+sudo apt install winetricks
+
+@instalando_componentes
+Instalando componentes de Windows. Puede tardar. No cierres esta ventana.
+
+@nao_consegui_instalar
+No pude instalar:
+{1}
+
+@botao_instalar
+Instalar
+
+@botao_agora_nao
+Ahora no
+
+@botao_cancelar
+Cancelar
+
+@botao_tentar_sem_instalar
+Probar sin instalar
+
+@licao_origem_local
+La última vez, este programa necesitó
+
+@licao_origem_lista
+En {1} máquinas este programa necesitó
+
+@ressalva_so32
+
+
+Aviso: este programa es de 64 bits, y esto solo existe en 32:{1}
+
+Instalarlo probablemente no lo resuelva. No es un defecto de tu máquina: quien distribuye ese componente nunca publicó la versión de 64 bits.
+
+@porque_internet
+Comprueba que el ordenador esté conectado a internet.
+
+@porque_desconhecido
+No pude identificar la causa. Los detalles técnicos están en:
+{1}
+
+@porque_dbus
+Falta un servicio del sistema (D-Bus). Reiniciar el ordenador suele resolverlo.
+
+@porque_disco_cheio
+El disco está lleno.
+
+@porque_relogio
+La fecha del ordenador parece incorrecta, y eso tumba las descargas.
+Hoy el ordenador cree que es {1}.
+
+@porque_sem_rede
+El ordenador no pudo acceder a internet.
+
+@porque_corrompido
+El archivo descargado vino dañado. Inténtalo más tarde.
+
+@porque_cabextract
+Falta el programa cabextract. Instálalo con: sudo apt install cabextract
