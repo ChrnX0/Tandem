@@ -461,3 +461,15 @@ Tandem 能打开 .exe、.msi、.apk、.xapk、.AppImage、.jar、.deb、.rpm、
 无法读取这个软件包。
 
 {1}
+
+@portas_fantasma_faixa
+{1}：{2}
+  这些接口 Linux 总会创建，而这台机器一个都没有。它们仍然占用 Wine 的编号 ——
+  正是这一点把您的设备挤到了很靠后的口。
+
+@portas_seu_aparelho
+<-- 您的设备
+
+@portas_nenhuma_real
+这台电脑上没有真正的串口。刷卡机、电子秤或小票打印机得通过 USB 转接头接入 ——
+  接上以后就会在这里显示为 /dev/ttyUSB0。

@@ -485,3 +485,17 @@ o download pode ter vindo pela metade — baixe de novo.
 Não consegui ler este pacote.
 
 {1}
+
+@portas_fantasma_faixa
+{1}: {2}
+  Esses encaixes o Linux cria sempre, e esta máquina não tem nenhum deles de
+  verdade. Mesmo assim eles contam na numeração do Wine — é isso que empurra o
+  seu aparelho para uma porta alta.
+
+@portas_seu_aparelho
+<-- o seu aparelho
+
+@portas_nenhuma_real
+Nenhuma porta serial de verdade neste computador. Um pinpad, uma balança ou
+  uma impressora de cupom precisa entrar por um adaptador USB — e aí ele
+  aparece aqui como /dev/ttyUSB0.

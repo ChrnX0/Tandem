@@ -476,3 +476,17 @@ la descarga puede haber venido a medias: descárgalo otra vez.
 No pude leer este paquete.
 
 {1}
+
+@portas_fantasma_faixa
+{1}: {2}
+  Linux crea siempre estos conectores, y esta máquina no tiene ninguno de
+  verdad. Aun así cuentan en la numeración de Wine: eso es lo que empuja tu
+  aparato a un puerto alto.
+
+@portas_seu_aparelho
+<-- tu aparato
+
+@portas_nenhuma_real
+Ningún puerto serie de verdad en este ordenador. Un pinpad, una balanza o una
+  impresora de tickets tiene que entrar por un adaptador USB, y entonces
+  aparece aquí como /dev/ttyUSB0.

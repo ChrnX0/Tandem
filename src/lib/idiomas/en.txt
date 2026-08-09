@@ -486,3 +486,17 @@ those, the download may have come through half-finished - download it again.
 I could not read this package.
 
 {1}
+
+@portas_fantasma_faixa
+{1}: {2}
+  Linux always creates these sockets, and this machine has none of them for
+  real. They still count in Wine's numbering — that is what pushes your device
+  up to a high port.
+
+@portas_seu_aparelho
+<-- your device
+
+@portas_nenhuma_real
+No real serial port on this computer. A pinpad, a scale or a receipt printer
+  has to come in through a USB adapter — and then it shows up here as
+  /dev/ttyUSB0.

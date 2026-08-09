@@ -481,3 +481,17 @@ d'eux, le téléchargement est peut-être incomplet - retéléchargez-le.
 Je n'ai pas pu lire ce paquet.
 
 {1}
+
+@portas_fantasma_faixa
+{1} : {2}
+  Linux crée toujours ces prises, et cette machine n'en a aucune pour de vrai.
+  Elles comptent malgré tout dans la numérotation de Wine — c'est ce qui pousse
+  votre appareil vers un port élevé.
+
+@portas_seu_aparelho
+<-- votre appareil
+
+@portas_nenhuma_real
+Aucun port série réel sur cet ordinateur. Un TPE, une balance ou une
+  imprimante à tickets doit passer par un adaptateur USB — et il apparaît alors
+  ici sous /dev/ttyUSB0.

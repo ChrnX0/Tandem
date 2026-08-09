@@ -1,5 +1,23 @@
 tandem (4.1) unstable; urgency=medium
 
+  * "tandem portas" no longer offers a shopkeeper 32 sockets this machine does
+    not have. Found on a photograph of a real counter: the list ran COM1 to
+    COM32 and put the shop's one real device, a USB adapter, on COM33. The
+    source said "a PC already has three or four /dev/ttyS*". It has
+    THIRTY-TWO - the kernel's 8250 driver registers 32 lines whether or not
+    any serial hardware exists, and a modern PC has none of them.
+  * serial_core publishes the UART type at /sys/class/tty/ttySN/type, mode
+    444, so no privilege is needed: 0 is PORT_UNKNOWN, meaning the kernel
+    probed that line and found nothing. A run of those now collapses into one
+    line that says what they are, and the device the shop actually owns is
+    marked so the eye lands on it. The report went from 35 lines to 12.
+  * The numbering still counts the phantoms, because Wine counts them. The
+    tempting fix - renumber the device to COM1 - would print a port the
+    program is never told about.
+  * Being unable to inspect a port means treating it as real. Hiding one that
+    exists would break the only thing this section is for, and that is worse
+    than printing a line too many.
+
   * A file that is not there is no longer reported as a file whose type is
     unknown. Found on a photograph of a real screen: the owner got "I did not
     recognise the type of this file" and went hunting for a defect in Tandem's

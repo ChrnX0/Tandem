@@ -1718,8 +1718,39 @@ t_placas_de_rede() {
 #
 # Neither produces a message worth reading. This does.
 
+# Is this /dev/ttyS* an actual piece of hardware?
+#
+# Written after a photograph of a real counter: the list showed COM1 to COM32
+# and put the shop's one real device, a USB adapter, on COM33. The comment
+# above used to say "a PC already has three or four /dev/ttyS*". It has
+# THIRTY-TWO. The kernel's 8250 driver registers 32 lines whether or not any
+# serial hardware exists, udev makes a node for each, and a modern PC has none
+# of them - the port disappeared from motherboards years ago.
+#
+# So the list was telling a shopkeeper there were 32 places to plug a pinpad
+# into, on a machine that has zero, and burying the one line that mattered
+# under 32 that did not.
+#
+# serial_core exposes the UART type at /sys/class/tty/ttySN/type, mode 444, so
+# no privilege is needed: 0 is PORT_UNKNOWN, which means the kernel probed
+# that line and found nothing. Anything else is a real chip.
+#
+# Being UNABLE to tell means real. Hiding a port that exists would break the
+# one thing this whole section is for, and that is a far worse failure than
+# printing a line too many.
+TANDEM_SYS="${TANDEM_SYS:-/sys}"
+t_porta_fantasma() {
+    local nome tipo
+    case "$1" in /dev/ttyS[0-9]*) nome="${1#/dev/}" ;; *) return 1 ;; esac
+    tipo="$(cat "$TANDEM_SYS/class/tty/$nome/type" 2>/dev/null)" || return 1
+    [ "$tipo" = "0" ]
+}
+
 # In the exact order Wine scans, because that order is what decides the
-# number each port gets.
+# number each port gets. The phantom ones are LISTED and not skipped: Wine
+# counts them too, so dropping them here would print a COM number that does
+# not match the one the program will ask for. They are marked at display
+# time instead - see t_texto_portas.
 t_portas_seriais() {
     local fam p
     for fam in ttyS ttyUSB ttyACM; do
@@ -1936,18 +1967,47 @@ t_texto_portas() {
     saida="Portas onde a loja liga pinpad, balança, impressora e leitor:
 "
 
+    # A run of phantom ports collapses into ONE line. Printing 32 of them
+    # buried the single line that mattered, and every one of the 32 was an
+    # invitation to plug a pinpad into a socket this machine does not have.
+    # The numbering still counts them, because Wine counts them.
+    local f_ini="" f_fim="" f_dev_ini="" f_dev_fim="" fantasmas=0
+    fecha_faixa() {
+        [ -n "$f_ini" ] || return 0
+        local faixa dev
+        if [ "$f_ini" = "$f_fim" ]; then faixa="$f_ini"; dev="$f_dev_ini"
+        else faixa="$f_ini a $f_fim"; dev="$f_dev_ini a $f_dev_fim"; fi
+        saida="$saida
+  $(t_msg portas_fantasma_faixa "$faixa" "$dev")"
+        f_ini=""
+    }
     n=0
     while IFS= read -r p; do
         [ -n "$p" ] || continue
         n=$((n + 1))
+        if t_porta_fantasma "$p"; then
+            fantasmas=$((fantasmas + 1))
+            [ -n "$f_ini" ] || { f_ini="COM$n"; f_dev_ini="$p"; }
+            f_fim="COM$n"; f_dev_fim="$p"
+            continue
+        fi
+        fecha_faixa
         case "$p" in
-            /dev/ttyACM*|/dev/ttyUSB*) saida="$saida$(t_linha_id "COM$n" "$p   (aparelho USB)")" ;;
+            /dev/ttyACM*|/dev/ttyUSB*) saida="$saida$(t_linha_id "COM$n" "$p   (aparelho USB)  $(t_msg portas_seu_aparelho)")" ;;
             *)                         saida="$saida$(t_linha_id "COM$n" "$p")" ;;
         esac
         [ "$n" -gt 4 ] && case "$p" in /dev/ttyACM*|/dev/ttyUSB*) alto="COM$n|$p" ;; esac
     done <<< "$(t_portas_seriais)"
+    fecha_faixa
+    unset -f fecha_faixa
     [ "$n" = 0 ] && saida="$saida
     (nenhuma porta serial neste computador)"
+    # Every socket on the list turned out to be one the kernel invents. Saying
+    # so is the whole point: otherwise the owner reads 32 lines as 32 places to
+    # plug a pinpad into, on a machine that has none.
+    [ "$n" -gt 0 ] && [ "$fantasmas" = "$n" ] && saida="$saida
+
+  $(t_msg portas_nenhuma_real)"
 
     n=0
     while IFS= read -r p; do

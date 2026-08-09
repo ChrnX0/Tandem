@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2710966936 752" "$soma_esperados"
+      "3484173973 760" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
       "2310912825 1467" "$soma_padroes"
 
@@ -1206,6 +1206,95 @@ printf 'DEADBEEF\n' > "$PREF_FIX/drive_c/.windows-serial"
 t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
 equal "a serial that already exists is never overwritten" \
       "DEADBEEF" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
+
+section "serial ports: 32 sockets this machine does not have"
+
+# From a photograph of a real counter. "tandem portas" listed COM1 through
+# COM32 and put the shop's one real device - a USB adapter - on COM33. The
+# comment in the source said "a PC already has three or four /dev/ttyS*". It
+# has THIRTY-TWO: the kernel's 8250 driver registers 32 lines whether or not
+# any serial hardware exists, and a modern PC has none of them.
+#
+# So the list told a shopkeeper there were 32 places to plug a pinpad into, on
+# a machine with zero, and buried the one line that mattered under 32 that did
+# not.
+
+SYSFAKE="$TMPROOT/sysfake"
+mkdir -p "$SYSFAKE/class/tty"
+for i in $(seq 0 31); do
+    mkdir -p "$SYSFAKE/class/tty/ttyS$i"
+    printf '0\n' > "$SYSFAKE/class/tty/ttyS$i/type"      # PORT_UNKNOWN
+done
+mkdir -p "$SYSFAKE/class/tty/ttyS40"; printf '4\n' > "$SYSFAKE/class/tty/ttyS40/type"
+mkdir -p "$SYSFAKE/class/tty/ttyS41"                       # no "type" at all
+
+portas() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_SYS="$SYSFAKE" \
+    TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_portas_seriais() { '"$1"'; }
+        t_portas_paralelas() { :; }
+        t_no_grupo() { return 0; }
+        t_texto_portas ""' 2>/dev/null
+}
+
+equal "a kernel line with no UART behind it is a phantom" "0" \
+      "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_SYS="$SYSFAKE" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_porta_fantasma /dev/ttyS0; echo $?')"
+equal "a real 16550A is not a phantom" "1" \
+      "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_SYS="$SYSFAKE" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_porta_fantasma /dev/ttyS40; echo $?')"
+# Being unable to tell has to mean real. Hiding a port that exists breaks the
+# only thing this section is for, which is worse than printing a line too many.
+equal "a port we cannot inspect counts as real" "1" \
+      "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_SYS="$SYSFAKE" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_porta_fantasma /dev/ttyS41; echo $?')"
+equal "a USB adapter is never called a phantom" "1" \
+      "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_SYS="$SYSFAKE" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_porta_fantasma /dev/ttyUSB0; echo $?')"
+
+BALCAO='for i in $(seq 0 31); do echo /dev/ttyS$i; done; echo /dev/ttyUSB0'
+saida_balcao="$(portas "$BALCAO")"
+
+# The numbering must stay faithful to Wine, which counts the phantoms too.
+# Renumbering the device to COM1 here would print a port the program will
+# never be told about.
+contem "the device keeps the number Wine will really give it" \
+       "COM33" "$saida_balcao"
+contem "and it is pointed at, so the eye lands on it" \
+       "o seu aparelho" "$saida_balcao"
+contem "the 32 phantoms collapse into one range" \
+       "COM1 a COM32" "$saida_balcao"
+naocontem "so the middle of the run never reaches the screen" \
+       "COM17" "$saida_balcao"
+naocontem "nor does its device node" "/dev/ttyS16" "$saida_balcao"
+contem "the advice that actually fixes it is still there" \
+       "tandem portas fixar COM2 /dev/ttyUSB0" "$saida_balcao"
+
+# 33 lines of ports became a handful. That compression IS the fix: the owner
+# was reading a wall.
+linhas_balcao="$(printf '%s\n' "$saida_balcao" | awk 'END { print NR }')"
+if [ "$linhas_balcao" -lt 20 ]; then
+    pass "the whole report fits on a screen ($linhas_balcao lines)"
+else
+    fail "the whole report fits on a screen" "under 20 lines" "$linhas_balcao"
+fi
+
+# A machine whose every socket is invented should be told so plainly,
+# otherwise the range line reads as 32 places to plug something into.
+saida_vazio="$(portas 'for i in $(seq 0 31); do echo /dev/ttyS$i; done')"
+contem "a machine with only phantoms says it has no real port" \
+       "Nenhuma porta serial de verdade" "$saida_vazio"
+contem "and points at the USB adapter as the way in" \
+       "adaptador USB" "$saida_vazio"
+
+# The guard that matters most: a real port must never be swallowed by the
+# phantom filter. A shop with a genuine COM1 has to keep seeing it.
+saida_real="$(portas 'echo /dev/ttyS40; echo /dev/ttyUSB0')"
+contem "a real serial port is still listed one by one" "/dev/ttyS40" "$saida_real"
+naocontem "and is not folded into the phantom range" "sempre" "$saida_real"
+naocontem "a machine with a real port is not told it has none" \
+          "Nenhuma porta serial de verdade" "$saida_real"
 
 section "install: name the right cause, or say nothing at all"
 
