@@ -1491,6 +1491,97 @@ t_no_grupo() {
     id -nG 2>/dev/null | tr ' ' '\n' | grep -qxF "$1"
 }
 
+# ------------------------------------------------ the hardware key pre-flight
+#
+# The Sentinel route works because the key is never touched from the Windows
+# side: a Linux daemon owns the USB key and the program's DLL reaches the
+# licence manager over the machine's own network, on TCP 1947. CodeMeter is
+# the same shape on 22350.
+#
+# Which means the single most useful thing Tandem can check is whether that
+# daemon is here at all - and it can check it by reading, before anything is
+# downloaded and before any password is asked, in the style of the
+# "apt-get install -s" trick in tandem-deb. Without it, the owner meets this
+# as "the program says I have no licence", which reads as a broken program and
+# sends him to reinstall things. With it, the sentence is "the key's service
+# is not installed on this machine, and that is the one thing missing".
+
+# Is anything LISTENING on this port? Read out of the kernel's socket table -
+# no connection is opened, so nothing can hang and nothing is disturbed.
+# Returns 2 for "cannot tell", which the message has to respect: answering
+# "not running" when we could not look is the kind of confident wrongness this
+# project treats as worse than silence.
+t_porta_escutando() {
+    command -v ss >/dev/null 2>&1 || return 2
+    ss -H -ltn 2>/dev/null |
+        awk -v p=":$1" '$4 ~ p "$" { achou = 1 } END { exit !achou }'
+}
+
+t_servico_vivo() {
+    pgrep -x "$1" >/dev/null 2>&1 && return 0
+    command -v systemctl >/dev/null 2>&1 || return 1
+    [ "$(systemctl is-active "$1" 2>/dev/null)" = active ]
+}
+
+# familia: sentinel | codemeter. Prints SERVICO= and PORTA=, each sim/nao/?.
+t_chave_estado() {
+    local servicos porta s r
+    case "$1" in
+        sentinel)  servicos="aksusbd hasplmd"; porta=1947 ;;
+        codemeter) servicos="CodeMeter CodeMeterLin"; porta=22350 ;;
+        *) return 1 ;;
+    esac
+    r=nao
+    for s in $servicos; do t_servico_vivo "$s" && { r=sim; break; }; done
+    printf 'SERVICO=%s\n' "$r"
+    t_porta_escutando "$porta"
+    case $? in
+        0) printf 'PORTA=sim\n' ;;
+        2) printf 'PORTA=?\n' ;;
+        *) printf 'PORTA=nao\n' ;;
+    esac
+}
+
+# The sentence appended to a hardware-key verdict once the program has failed.
+# It is the difference between a diagnosis and a shrug.
+t_texto_chave() {
+    local familia="$1" estado servico porta nome pacote
+    estado="$(t_chave_estado "$familia")" || return 1
+    servico="$(t_campo "$estado" SERVICO)"
+    porta="$(t_campo "$estado" PORTA)"
+    case "$familia" in
+        sentinel)  nome="Sentinel/HASP"
+                   pacote="Sentinel LDK Run-time Environment for Linux" ;;
+        codemeter) nome="CodeMeter"
+                   pacote="CodeMeter Runtime for Linux" ;;
+        *) return 1 ;;
+    esac
+
+    if [ "$servico" = sim ] || [ "$porta" = sim ]; then
+        printf '%s' "Uma coisa a seu favor: o serviço da chave $nome JÁ ESTÁ rodando nesta
+  máquina. Então não é ele que falta. O que sobra para conferir é se a chave
+  está espetada, e se o programa é de 64 bits — nesse caso existe uma falha
+  conhecida em que ele acusa \"depurador detectado\" mesmo sem nenhum, e quem
+  conserta é a empresa que fez o programa, não você e não o Tandem."
+        return 0
+    fi
+
+    if [ "$porta" = '?' ] && [ "$servico" = nao ]; then
+        printf '%s' "Não consegui conferir se o serviço da chave $nome está rodando aqui
+  (falta a ferramenta \"ss\" nesta máquina). Se o programa reclamar de licença,
+  é esse serviço que vale conferir primeiro."
+        return 0
+    fi
+
+    printf '%s' "E encontrei o provável motivo: o serviço da chave $nome NÃO está
+  rodando nesta máquina. É ele que conversa com a chave USB pelo lado do
+  Linux — sem ele, o programa procura a licença e não acha nada, do mesmo
+  jeito que aconteceria sem a chave espetada.
+
+  Quem instala é um técnico, uma vez só, e é de graça: procure por
+  \"$pacote\" no site do fabricante."
+}
+
 # --------------------------------------- the road that starts where Wine ends
 #
 # There is a second family of tools for running Windows software on Linux, and

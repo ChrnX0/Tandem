@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-549-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-562-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -218,7 +218,18 @@ Tested on Zorin OS 18.1 and Ubuntu 24.04. Should work on any Debian-based distri
 
 Five of them fail on a double click for reasons that have nothing to do with Wine, and everything to do with Linux. Tandem treats them the same way it treats an `.exe`: read the file first, explain in a sentence, fix what can be fixed.
 
-On the machine this project was born on, **nobody owned four of these types**. Not a bad message being improved — a vacuum. The double click did nothing at all.
+On the machine this project was born on, `.deb`, `.rpm` and `.snap` had **no owner at all** — not a bad message being improved, a vacuum. `.flatpakref` is worse than a vacuum: it is declared a subclass of `text/plain`, so a double click hands it to a **text editor**, which opens four lines of INI and explains nothing. And `.deb` on Zorin is not empty either — Zorin's own documentation tells you to double-click it and get the Software store, so that is a dispute, exactly like `.exe`.
+
+<details>
+<summary>This paragraph used to say all four were a vacuum, and the instrument was wrong</summary>
+
+<br>
+
+The claim came from `xdg-mime query default`, which answers nothing for all four. But **Nautilus does not use `xdg-mime`** — it uses GIO, and GIO resolves the MIME **subclass chain** while `xdg-mime` does not. Proven on a type Tandem never touches: `gio mime text/sgml` answers `vim.desktop`; `xdg-mime query default text/sgml` answers nothing at all. So the tool used to measure the vacuum could not see the handler that was there.
+
+There is a second incumbent, and it ships on the reference machine: **`zorin-exec-guard`**, two `NoDisplay=true` handlers claiming `.exe/.msi/.msix` and `.deb/.AppImage`, backed by a database of 240+ apps translated into 90 languages, pt_BR included. It matches installer filenames with regexes and suggests a native alternative — it never runs anything, never diagnoses and never fixes. Tandem is not entering a vacuum on Zorin; it is entering a four-way dispute where the incumbent's Portuguese is already written.
+
+</details>
 
 ### `.AppImage` — one file, no install, and a double click that does nothing
 

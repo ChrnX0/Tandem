@@ -476,9 +476,21 @@ $ALTERNATIVA}${MAQUINA:+
 
 $MAQUINA}"
             else
+                # For a hardware key the route is only half the answer. The
+                # other half is checkable right here, without downloading
+                # anything: is the key's Linux daemon even running? Without
+                # it the program looks for a licence and finds nothing, which
+                # to the owner is indistinguishable from a broken program.
+                CHAVE=""
+                case "${LIMITE%%|*}" in
+                    dongle-sentinel)  CHAVE="$(t_texto_chave sentinel 2>/dev/null)" ;;
+                    dongle-codemeter) CHAVE="$(t_texto_chave codemeter 2>/dev/null)" ;;
+                esac
                 t_erro "Este programa não abriu, e o motivo tem caminho:
 
-${LIMITE#*|}
+${LIMITE#*|}${CHAVE:+
+
+  $CHAVE}
 
 Isso não é defeito da sua máquina nem do Tandem."
             fi

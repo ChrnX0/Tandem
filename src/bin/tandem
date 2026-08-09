@@ -193,6 +193,17 @@ acao_doctor() {
             out+="  identidade da máquina: solta (ambiente antigo) — veja: tandem identidade\n"
     fi
 
+    # Only shown when there is something to show. A shop with no hardware key
+    # does not need a line about hardware keys in its diagnosis, and a
+    # diagnosis nobody reads to the end diagnoses nothing.
+    local fam
+    for fam in sentinel codemeter; do
+        case "$(t_chave_estado "$fam" | tr '\n' ' ')" in
+            *SERVICO=sim*|*PORTA=sim*)
+                out+="  chave de proteção ($fam): serviço rodando nesta máquina\n" ;;
+        esac
+    done
+
     # Where Wine ends, a real Windows in a virtual machine begins - and it is
     # the only route to a kernel driver or a legacy dongle. Tandem does not
     # install one; it says whether this machine could carry one, because

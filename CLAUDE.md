@@ -480,6 +480,20 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   (Wine plus hand-written per-program scripts) and its own README points at a
   successor that has been "under development" for years. Parallels is
   macOS-only; Parallels Workstation for Linux was discontinued in 2013.
+- **`apkfile` DOES read minSdkVersion and the native ABIs** before installing
+  (`david-lev/apkfile`, on PyPI: it calls `install_apks(check=True)`, reads
+  `ro.build.version.sdk` and `ro.product.cpu.abilist` off the device and
+  filters base and split APKs against both). So "nobody checks" is false. What
+  it does when the check fails is `continue  # skip device if no compatible
+  apks found` — it exits **silently, with no output at all**. The one project
+  that had the data in hand commits the exact silence this project calls a
+  bug. The defensible claim is **nobody turns the check into a sentence**.
+- **The `.jar` rival on Ubuntu changed under us.** `openjdk-NN-java.desktop`
+  runs `cautious-launcher %f /usr/bin/java -jar`, and `cautious-launcher` was
+  **rewritten on 2026-07-08** (USN-8518-1 / CVE-2026-10037, CVSS 8.8). The
+  rewrite **deletes the executable-bit test** the old 17-line version had. Any
+  description of that handler written before July 2026 is stale — check the
+  shipped file, not an article.
 - **`xdg-mime` IS THE WRONG INSTRUMENT for "who owns this type".** Nautilus uses
   GIO, and GIO resolves the MIME **subclass chain** while `xdg-mime` does not.
   Proven on a type Tandem never touches: `gio mime text/sgml` answers

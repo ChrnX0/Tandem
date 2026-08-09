@@ -1207,6 +1207,59 @@ t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
 equal "a serial that already exists is never overwritten" \
       "DEADBEEF" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
 
+section "the hardware key pre-flight"
+
+# The Sentinel route works because a Linux daemon owns the USB key and the
+# Windows program reaches it over TCP 1947. So the most useful thing to check
+# is whether that daemon is here - by reading, before any download and before
+# any password, the way tandem-deb reads apt's verdict.
+
+CHAVE_S="$(t_chave_estado sentinel)"
+contem "the state names the service" "SERVICO=" "$CHAVE_S"
+contem "and the port" "PORTA=" "$CHAVE_S"
+equal "an unknown family is refused rather than guessed at" \
+      "1" "$(t_chave_estado sozinho >/dev/null 2>&1; echo $?)"
+
+# "I could not look" is a third answer and must never be flattened into "it is
+# not running". Answering confidently from a check that did not happen is the
+# failure mode this project treats as worse than saying nothing.
+NAO_SEI="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_servico_vivo() { return 1; }
+    t_porta_escutando() { return 2; }
+    t_texto_chave sentinel' 2>/dev/null)"
+contem "not being able to check says so, instead of condemning" \
+       "Não consegui conferir" "$NAO_SEI"
+
+PARADO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_servico_vivo() { return 1; }
+    t_porta_escutando() { return 1; }
+    t_texto_chave sentinel' 2>/dev/null)"
+contem "a daemon that is really absent gets the probable cause" \
+       "NÃO está" "$PARADO"
+contem "and the exact thing to look for" "Run-time Environment" "$PARADO"
+
+RODANDO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_servico_vivo() { return 0; }
+    t_porta_escutando() { return 0; }
+    t_texto_chave sentinel' 2>/dev/null)"
+contem "a daemon that IS running rules itself out instead of being repeated" \
+       "JÁ ESTÁ" "$RODANDO"
+contem "and names the one thing the shop cannot fix itself" \
+       "empresa que fez o programa" "$RODANDO"
+
+# Two families, two runtimes. Pasting the Sentinel installer name into the
+# CodeMeter message would send somebody to the wrong vendor's site.
+CM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_servico_vivo() { return 1; }
+    t_porta_escutando() { return 1; }
+    t_texto_chave codemeter' 2>/dev/null)"
+contem "CodeMeter is sent to CodeMeter's runtime" "CodeMeter Runtime" "$CM"
+naocontem "and never to Sentinel's" "Sentinel LDK" "$CM"
+
 section "the road that starts where Wine ends"
 
 # WinApps and WinBoat boot a real Windows in QEMU/KVM and composite one
@@ -2793,12 +2846,29 @@ section "the badge on the front page does not lie"
 # The two assertions below count themselves - they are tests too - so the
 # badge states the number of checks that pass when everything passes. When it
 # fails, the message says exactly which number to write.
-ESPERADO_BADGE=$((OK + 2))
+# It cannot be an exact comparison, and the first version of this check found
+# that out by blocking a release: how many checks RUN depends on which optional
+# tools the machine has. This container skips one, CI skips two and runs two
+# others that do not exist here, so "passed" differs by a handful between the
+# two and neither number is wrong.
+#
+# So the guard is one-sided plus a ceiling. The badge may never claim FEWER
+# tests than actually ran - which is the drift that happened twice, and both
+# times by tens - and it may not run away upwards either. The slack is for
+# optional tooling, nothing else.
+TOTAL_AQUI=$((OK + FAILED + SKIPPED + 2))   # +2: the two checks below count
+FOLGA=15
 for par in "README.md|tests" "LEIAME.md|testes"; do
     arq="${par%%|*}"; rotulo="${par#*|}"
     achado="$(sed -n "s|.*badge/$rotulo-\([0-9]*\)-.*|\1|p" "$ROOT/$arq" | head -1)"
-    equal "$arq announces the number of tests it actually has" \
-          "$ESPERADO_BADGE" "$achado"
+    if [ -n "$achado" ] && [ "$achado" -ge "$TOTAL_AQUI" ] 2>/dev/null &&
+       [ "$achado" -le "$((TOTAL_AQUI + FOLGA))" ] 2>/dev/null; then
+        pass "$arq does not undercount the tests it has"
+    else
+        fail "$arq does not undercount the tests it has" \
+             "between $TOTAL_AQUI and $((TOTAL_AQUI + FOLGA)) — write $TOTAL_AQUI" \
+             "${achado:-no badge found}"
+    fi
 done
 
 # ------------------------------------------------------------- summary
