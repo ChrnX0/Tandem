@@ -691,10 +691,22 @@ The queue, in order:
 to end on real files. `.AppImage` and `.jar` came in 3.7; `.deb`, `.rpm`,
 `.flatpakref`, `.snap` and shell installers in 3.8 — see the State section for exactly what was
 measured. The orphan-shortcut question is settled: it was never a defect. The
-real-program harness exists and is green. v3.6 is published — tag, `.deb` and `.sha256` attached,
-and the published artifact verified byte-for-byte identical to a local build.
-The next release goes out the same way; see the section below for why the
+real-program harness exists and is green. **v4.0 is published** — tag, `.deb`
+and `.sha256` attached, and the published artifact verified byte-for-byte
+identical to a local build (sha256 `82544a90…`). 3.7 through 3.9 were never
+released, so 4.0 is the first package the public gets with all nine formats in
+it. The next release goes out the same way; see the section below for why the
 browser path exists.
+
+**Two guards were added because the release itself found the defects**, and
+both are in the suite now rather than in a failed workflow: the newest
+changelog entry must be dated after the one below it (lintian refuses
+otherwise, and it has caught this project twice — both times because an
+*earlier* entry carried a timestamp in the future), and the test-count badge
+must be within 15 of what the suite actually runs. The first version of that
+badge guard was itself one-sided and blocked a good release, because CI runs
+two more checks than a bare container: **a guard that stops a good release is
+worse than the drift it was written for.**
 
 ## What an agent session cannot do here
 
