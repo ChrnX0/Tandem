@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1776903002 699" "$soma_esperados"
+      "3355190966 700" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
       "2310912825 1467" "$soma_padroes"
 
@@ -1206,6 +1206,54 @@ printf 'DEADBEEF\n' > "$PREF_FIX/drive_c/.windows-serial"
 t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
 equal "a serial that already exists is never overwritten" \
       "DEADBEEF" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
+
+section "the road that starts where Wine ends"
+
+# WinApps and WinBoat boot a real Windows in QEMU/KVM and composite one
+# window onto the Linux desktop with FreeRDP RemoteApp. That reaches exactly
+# what Wine cannot - a real kernel for a .sys, USB passthrough for a legacy
+# dongle - so a dead-end verdict that does not mention it is not the whole
+# truth. What Tandem must never do is promise it on a machine that cannot
+# carry one, or on a case where it does not help.
+VM_VEREDITO="$(t_vm_possivel)"
+equal "the verdict is one of the four known answers" \
+      "sim" "$(case "${VM_VEREDITO%%|*}" in sim|apertado|bios|nao) echo sim ;; *) echo "nao (${VM_VEREDITO%%|*})" ;; esac)"
+equal "and it carries the memory and the free disk it judged on" \
+      "3" "$(printf '%s' "$VM_VEREDITO" | awk -F'|' '{ print NF }')"
+
+# A processor that cannot virtualise gets no paragraph at all. Describing a
+# road that does not leave from here is padding a bad answer, not answering.
+SEM_VM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_vm_possivel() { printf "nao|16000000|90000000"; }
+    t_texto_maquina_virtual' 2>/dev/null)"
+equal "no virtualisation in the processor means no offer" "" "$SEM_VM"
+
+COM_VM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_vm_possivel() { printf "sim|16000000|90000000"; }
+    t_texto_maquina_virtual' 2>/dev/null)"
+contem "a machine that can carry one is told the two programs by name" \
+       "WinBoat" "$COM_VM"
+contem "and the licence cost, which is the detail that decides it" \
+       "Pro" "$COM_VM"
+contem "and that Tandem is not going to install it" \
+       "não instala isso" "$COM_VM"
+
+BIOS_VM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_vm_possivel() { printf "bios|16000000|90000000"; }
+    t_texto_maquina_virtual' 2>/dev/null)"
+contem "virtualisation switched off in the BIOS is named as such, not as a no" \
+       "BIOS" "$BIOS_VM"
+
+# Anti-cheat refuses virtual machines by design. Offering the route there
+# would cost somebody an afternoon and a Windows licence for nothing.
+naocontem "the dead-end branch excludes anti-cheat from the offer" \
+          "t_texto_maquina_virtual" \
+          "$(grep -A 1 'MAQUINA=""' "$ROOT/src/bin/tandem-exe" | head -1)"
+contem "and does it by testing the class, not by hoping" \
+       'anticheat' "$(grep -A 2 'MAQUINA=""' "$ROOT/src/bin/tandem-exe")"
 
 section "ports: where the pinpad and the scale ended up"
 

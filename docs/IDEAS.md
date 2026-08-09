@@ -282,6 +282,68 @@ them the same produced a handler that exited 0 with zero bytes. Every new
 question needs `t_tem_gui ||` on its refusal path, and the test that catches it
 is running every handler with no window and no terminal and demanding a sentence.
 
+## The other family: a real Windows in a virtual machine
+
+Checked in August 2026, on the sources rather than on memory, because the
+question "is somebody already doing this better?" deserves a real answer.
+
+There are two families of tools for running Windows software on Linux, and
+they are not competing — they answer different questions.
+
+| | What runs the program | Where the window comes from |
+|---|---|---|
+| Wine, Bottles, **PlayOnLinux**, Proton, CrossOver | Wine reimplements the Windows API. No Windows anywhere. | Wine draws it natively |
+| **WinApps**, **WinBoat**, **Dockur/windows** | A real Windows, in QEMU/KVM | RDP: real Windows draws it, FreeRDP RemoteApp composites the single window onto the Linux desktop |
+
+**What the second family reaches that Wine cannot**, and this is the whole
+reason the row exists: a real Windows has a real kernel. A `.sys` driver
+loads for real. A legacy HASP4 dongle is handed to the guest with QEMU's
+`-device usb-host,vendorid=…,productid=…` and talks to its own driver. Those
+are precisely the dead ends this project declares — and a dead-end message
+that does not mention them is true about Wine and false about the machine.
+
+**What it costs, and the item every article omits:** the guest must be
+Windows **Pro or Enterprise**. Home cannot host Remote Desktop at all, so the
+OEM licence on a counter machine does not serve. Plus KVM enabled in the
+BIOS, ~4 GB of RAM and ~32 GB of disk that stop being yours.
+
+| Idea | Verdict |
+|---|---|
+| **Name the route at the dead end.** When the verdict is `driver` or a legacy `dongle`, say that a real Windows in a VM does reach it, check first whether this machine could carry one, and state the Pro-licence cost. | **DONE** — v4.0, `t_texto_maquina_virtual`. Said LAST, after the explanation: offered first it would read as giving up early, which for most programs is wrong advice. |
+| **A pre-flight for that route**, in the style of the `apt-get -s` trick: `vmx`/`svm` in `/proc/cpuinfo`, `/dev/kvm`, RAM, free disk — so "buy a Windows Pro licence" is never said to somebody whose BIOS has virtualisation switched off. | **DONE** — v4.0, `t_vm_possivel`, four verdicts, also a line in `tandem doctor` |
+| Exclude anti-cheat from the offer | **DONE** — kernel anti-cheat refuses virtual machines by design. Offering it there costs an afternoon and a Windows licence for nothing. |
+| **Tandem installing or managing the VM itself** | **REJECTED** — this project is a thin layer of decision, translation and diagnosis. Installing Windows in a container is none of the three, it needs a licence Tandem cannot supply, and it would double the surface for the audience least able to maintain it. Tandem points, the way `tandem alternativas` points. |
+| Importing WinApps' app discovery (scan the Windows registry for installed `.exe`) | **REJECTED as new work** — `tandem programas` already does exactly this by reading `system.reg`, and for the same reason WinApps does: convergent design, nothing to take. |
+| **Parallels** | **NOT APPLICABLE** — Parallels Desktop is macOS-only. Parallels Workstation for Windows and Linux hosts was discontinued in 2013. Its "Coherence" mode is the same idea as RemoteApp, so it is worth knowing as prior art for the *shape*, and it is not a route on this machine. |
+| **PlayOnLinux** | **NOT A RIVAL, AND MOSTLY DEAD** — it is Wine plus per-program install scripts written by hand, the model this project rejected: it works only for programs somebody already wrote a script for. POL-POM-4's own README points at Phoenicis (PlayOnLinux 5), which has been "under development" for years. |
+
+The forged-DMI spoofer belongs in this section too, and it is rejected for a
+different reason — see below.
+
+## The hardware identity spoof, rejected
+
+Measured and it works: `unshare -m`, a tmpfs over `/sys/class`, a bind-mount
+of a directory of hand-written DMI files, and Wine reports whatever
+manufacturer, model and serial you put there — in the registry and in WMI
+alike. It is the only lever that moves `GetSystemFirmwareTable`; editing
+`HKLM\HARDWARE\DESCRIPTION\System\BIOS` does not, because the key is
+`REG_OPTION_VOLATILE` and WMI never reads it anyway.
+
+**REJECTED.** It is a hardware-identity forger. It works exactly as well for
+defeating a licence as for honouring one, it needs privileges this project
+deliberately keeps narrow — the polkit rule is scoped to
+`waydroid-container` alone — and shipping it would put Tandem in the business
+of manufacturing machine identities. It is written down here so that a later
+session rediscovers the reason along with the trick.
+
+What Tandem does instead, and the distinction is the whole point: it
+**stabilises** an identity rather than inventing one. The volume serial of C:
+and `MachineGuid` are derived from this machine's own `machine-id`, so a
+prefix destroyed and remade comes back as the same computer. Same for the
+Windows `ProductId`: Tandem reports that Wine's default is shared by every
+Wine install on Earth, and does **not** invent a replacement, because that
+would be forging a Microsoft licence identifier.
+
 ## The queue
 
 1. **Fill the community list.** The mechanism exists and is empty, and inventing

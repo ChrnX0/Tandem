@@ -463,6 +463,41 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   Lever, which refuses to execute the payload for the same reason. Falls back to
   the runtime's `--appimage-extract` when squashfs-tools is absent, and the log
   says which route it took, because "we did not execute it" has to be checkable.
+- **There is a SECOND family of tools, and it is not a rival — it is the exit
+  from our dead ends.** WinApps, WinBoat and Dockur/windows boot a **real
+  Windows in QEMU/KVM** (in a Docker/Podman container, or under libvirt) and use
+  **FreeRDP + the RemoteApp protocol** to composite one application's window
+  onto the Linux desktop. Because the kernel is real, a `.sys` driver loads for
+  real and a legacy dongle can be handed over with QEMU's
+  `-device usb-host,vendorid=…,productid=…`. That is exactly what `limites.tsv`
+  calls impossible. **The cost every article omits: the guest must be Windows
+  Pro or Enterprise** — Home cannot host Remote Desktop at all, so the OEM
+  licence on a counter machine does not serve — plus KVM enabled in the BIOS,
+  ~4 GB RAM and ~32 GB disk. Since 4.0 Tandem NAMES this route at a dead end,
+  after checking whether the machine could carry one (`t_vm_possivel`), and
+  excludes anti-cheat, which refuses VMs by design. **Tandem will not install
+  or manage one** — see `docs/IDEAS.md`. PlayOnLinux is in the *first* family
+  (Wine plus hand-written per-program scripts) and its own README points at a
+  successor that has been "under development" for years. Parallels is
+  macOS-only; Parallels Workstation for Linux was discontinued in 2013.
+- **`xdg-mime` IS THE WRONG INSTRUMENT for "who owns this type".** Nautilus uses
+  GIO, and GIO resolves the MIME **subclass chain** while `xdg-mime` does not.
+  Proven on a type Tandem never touches: `gio mime text/sgml` answers
+  `vim.desktop`, `xdg-mime query default text/sgml` answers nothing.
+  `application/vnd.flatpak.ref` is declared `sub-class-of text/plain`, so with
+  Tandem's association removed a double-clicked `.flatpakref` **opens in a text
+  editor** — not "does nothing", which is a different and worse failure.
+  `.deb`, `.rpm` and `.snap` are not subclasses of `text/plain` and really do
+  answer nothing. **And Zorin is not a vacuum for `.deb`**: Zorin's own
+  documentation tells the user to double-click it and get the Software store,
+  so that is a dispute, exactly like `.exe`.
+- **The closest competitor is already installed on the reference machine.**
+  `zorin-exec-guard` ships two `NoDisplay=true` MIME handlers — one claiming
+  `.exe/.msi/.msix`, one claiming `.deb/.AppImage` — backed by an `app_db.json`
+  of 240+ apps, translated into 90 languages including pt_BR. It matches
+  installer filenames with regexes and suggests a native alternative. It never
+  runs anything, never diagnoses and never fixes. So on Zorin the association
+  dispute has four sides, and the incumbent's Portuguese is already written.
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.

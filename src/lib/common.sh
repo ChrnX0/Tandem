@@ -1491,6 +1491,105 @@ t_no_grupo() {
     id -nG 2>/dev/null | tr ' ' '\n' | grep -qxF "$1"
 }
 
+# --------------------------------------- the road that starts where Wine ends
+#
+# There is a second family of tools for running Windows software on Linux, and
+# it is not a competitor to Wine - it is the answer to exactly the cases Wine
+# cannot reach. WinApps and WinBoat boot a REAL Windows in QEMU/KVM (inside a
+# Docker or Podman container, or under libvirt) and then use FreeRDP with the
+# RemoteApp protocol to composite one application's window onto the Linux
+# desktop, so it looks native without Wine being involved at any point.
+#
+# Why that matters here, and only here: a real Windows has a real kernel. A
+# .sys driver loads for real, a HASP4 dongle is handed to the guest with
+# QEMU's usb-host passthrough and speaks to its own driver, a serial pinpad
+# can be passed through the same way. Those are the four dead ends this
+# project has been declaring - and until now the message ended at "there is no
+# fix", which is true of Wine and not true of the machine.
+#
+# What Tandem does NOT do is become that. This project is a thin layer of
+# decision, translation and diagnosis; installing Windows in a container is
+# none of those, and it needs a licence Tandem cannot supply. So Tandem points
+# - exactly the way "tandem alternativas" points at a native Linux program -
+# and it points HONESTLY, which means checking first whether this machine
+# could even carry one, and saying the price out loud:
+#
+#   * a Windows licence, and it has to be Pro or Enterprise. Home cannot host
+#     Remote Desktop at all, so the cheap OEM licence on a counter machine
+#     does not serve. This is the detail that decides it for most shops and
+#     the one every article leaves out.
+#   * virtualisation turned on in the BIOS, which is off by default on plenty
+#     of machines and is a reboot plus a menu, not a download.
+#   * about 32 GB of disk and 4 GB of RAM that stop being yours.
+#
+# And one case where it is NOT the answer, so nobody is sent on that errand:
+# kernel anti-cheat refuses virtual machines by design.
+
+# Can this machine carry one at all? Answered by reading, like everything else
+# here: no download, no password, nothing installed.
+t_vm_possivel() {
+    local flag=0 kvm=0 mem_kb livre_kb
+    grep -qE '^flags.*[[:space:]](vmx|svm)[[:space:]]' /proc/cpuinfo 2>/dev/null && flag=1
+    [ -e /dev/kvm ] && kvm=1
+    mem_kb="$(sed -n 's/^MemTotal:[[:space:]]*\([0-9]*\).*/\1/p' /proc/meminfo 2>/dev/null)"
+    livre_kb="$(df -Pk "$HOME" 2>/dev/null | awk 'NR == 2 { print $4 }')"
+
+    if [ "$flag" = 0 ]; then printf 'nao|%s|%s' "${mem_kb:-0}" "${livre_kb:-0}"; return 0; fi
+    if [ "$kvm" = 0 ]; then printf 'bios|%s|%s' "${mem_kb:-0}" "${livre_kb:-0}"; return 0; fi
+    if [ "${mem_kb:-0}" -lt 8000000 ] 2>/dev/null ||
+       [ "${livre_kb:-0}" -lt 40000000 ] 2>/dev/null; then
+        printf 'apertado|%s|%s' "${mem_kb:-0}" "${livre_kb:-0}"; return 0
+    fi
+    printf 'sim|%s|%s' "${mem_kb:-0}" "${livre_kb:-0}"
+}
+
+# The paragraph appended to a dead-end verdict. It is deliberately the LAST
+# thing said, after the explanation of why Wine cannot: offered first it would
+# read as Tandem giving up early, which for most programs would be wrong
+# advice.
+t_texto_maquina_virtual() {
+    local v mem livre cabe
+    v="$(t_vm_possivel)"
+    mem="$(printf '%s' "$v" | cut -d'|' -f2)"
+    livre="$(printf '%s' "$v" | cut -d'|' -f3)"
+
+    case "${v%%|*}" in
+        nao)
+            # The processor cannot do it at all. Describing a road that does
+            # not leave from here would be padding a bad answer with a
+            # paragraph, which is the opposite of the point.
+            return 1 ;;
+        bios)
+            cabe="Este computador tem o recurso, mas ele está DESLIGADO na BIOS. Ligar
+  é entrar na BIOS ao ligar a máquina e procurar por \"virtualization\", \"VT-x\"
+  ou \"SVM\". Não instala nada e não apaga nada." ;;
+        apertado)
+            cabe="Este computador aguenta, mas apertado: tem $(t_tamanho_amigavel "$((mem * 1024))") de memória
+  e $(t_tamanho_amigavel "$((livre * 1024))") livres no disco. O Windows de dentro quer uns 4 GB de memória
+  e 32 GB de disco só para ele." ;;
+        *)
+            cabe="Este computador aguenta: tem $(t_tamanho_amigavel "$((mem * 1024))") de memória e
+  $(t_tamanho_amigavel "$((livre * 1024))") livres no disco." ;;
+    esac
+
+    printf '%s' "Existe um caminho mais pesado, e para um caso como este ele funciona:
+
+  rodar um Windows DE VERDADE dentro do Linux, e deixar só a janela do
+  programa aparecer aqui na tela, como se fosse um programa daqui. Os dois
+  programas que fazem isso são o WinBoat e o WinApps, os dois de graça.
+  Como é um Windows de verdade, driver de sistema funciona, e a chave USB de
+  proteção pode ser entregue para ele.
+
+  $cabe
+
+  O que custa, e é bom saber antes: precisa de uma licença do Windows, e tem
+  que ser a versão Pro — a Home não serve, porque ela não deixa a janela sair
+  para fora. E o Windows de dentro ocupa disco e memória o tempo todo.
+
+  O Tandem não instala isso e não vai instalar: é outro tipo de programa. Mas
+  era desonesto dizer \"não tem jeito\" sem dizer que esse jeito existe."
+}
+
 t_texto_portas() {
     local prefixo="$1" saida n p alto="" fixadas="" usblp
     saida="Portas onde a loja liga pinpad, balança, impressora e leitor:

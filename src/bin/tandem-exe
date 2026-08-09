@@ -455,14 +455,26 @@ Isso costuma acontecer quando só o executável foi copiado, sem a pasta complet
                 # is not suggesting a switch: it is the one moment where
                 # keeping quiet would leave the owner with no way out at all.
                 ALTERNATIVA="$(t_texto_alternativas "$(basename -- "${PROG%.*}")" 2>/dev/null)"
-                t_erro "Este programa não abriu, e provavelmente não tem conserto:
+                # A real Windows in a virtual machine reaches exactly what
+                # Wine cannot: a kernel driver loads, and a USB dongle can be
+                # handed straight to the guest. It costs a Windows Pro licence
+                # and a third of a disk, so it is said LAST and only when this
+                # machine could actually carry one. Anti-cheat is excluded on
+                # purpose: it refuses virtual machines by design, and sending
+                # somebody down that road would waste an afternoon.
+                MAQUINA=""
+                [ "${LIMITE%%|*}" != anticheat ] &&
+                    MAQUINA="$(t_texto_maquina_virtual 2>/dev/null)"
+                t_erro "Este programa não abriu, e o Wine não tem como resolver:
 
 ${LIMITE#*|}
 
 Isso é limite do Wine, não defeito da sua máquina nem do Tandem.${ALTERNATIVA:+
 
 O que dá para fazer no lugar:
-$ALTERNATIVA}"
+$ALTERNATIVA}${MAQUINA:+
+
+$MAQUINA}"
             else
                 t_erro "Este programa não abriu, e o motivo tem caminho:
 

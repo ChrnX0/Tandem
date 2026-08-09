@@ -193,6 +193,18 @@ acao_doctor() {
             out+="  identidade da máquina: solta (ambiente antigo) — veja: tandem identidade\n"
     fi
 
+    # Where Wine ends, a real Windows in a virtual machine begins - and it is
+    # the only route to a kernel driver or a legacy dongle. Tandem does not
+    # install one; it says whether this machine could carry one, because
+    # "buy a Windows Pro licence" is bad advice on a machine whose BIOS has
+    # virtualisation switched off.
+    case "$(t_vm_possivel)" in
+        sim*)      out+="  Windows em máquina virtual: cabe aqui (é a saída para driver e chave antiga)\n" ;;
+        apertado*) out+="  Windows em máquina virtual: cabe apertado (pouca memória ou disco)\n" ;;
+        bios*)     out+="  Windows em máquina virtual: o processador aceita, mas está desligado na BIOS\n" ;;
+        *)         out+="  Windows em máquina virtual: este processador não faz\n" ;;
+    esac
+
     out+="\nPERFIS PROTEGIDOS\n"
     if [ -s "$TANDEM_PROTEGIDOS" ]; then
         while read -r l; do [ -n "$l" ] && out+="  $l\n"; done < "$TANDEM_PROTEGIDOS"
