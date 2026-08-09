@@ -2783,6 +2783,26 @@ PACOTE_DEB="$ROOT/tandem_${VERSAO_DEB}_all.deb"
 equal "the version in control matches the one in the executable" \
       "$VERSAO_DEB" "$(grep '^TANDEM_VERSAO=' src/lib/common.sh | cut -d'"' -f2)"
 
+equal "the changelog's newest entry is the version being built" \
+      "$VERSAO_DEB" "$(sed -n '1s/^tandem (\([^)]*\)).*/\1/p' debian/changelog)"
+
+# lintian refuses a release whose newest changelog entry is not dated after the
+# one below it, and it has caught this project twice - both times because an
+# earlier entry carried a timestamp in the FUTURE, so a correctly dated new
+# entry sorted behind it. Both times the discovery was a failed release rather
+# than a failed test, which is the wrong order to find it in.
+DATA_1="$(grep -m1 '^ -- ' debian/changelog | sed 's/^ -- [^>]*>  //')"
+DATA_2="$(grep '^ -- ' debian/changelog | sed -n '2s/^ -- [^>]*>  //p')"
+if [ -z "$DATA_2" ]; then
+    pass "the newest changelog entry is dated after the one before it"
+elif [ "$(date -d "$DATA_1" +%s 2>/dev/null || echo 0)" \
+       -gt "$(date -d "$DATA_2" +%s 2>/dev/null || echo 1)" ]; then
+    pass "the newest changelog entry is dated after the one before it"
+else
+    fail "the newest changelog entry is dated after the one before it" \
+         "newer than $DATA_2" "$DATA_1"
+fi
+
 if [ -f "$PACOTE_DEB" ]; then
     pass "the .deb was generated"
     if command -v dpkg-deb >/dev/null 2>&1; then
@@ -2852,21 +2872,25 @@ section "the badge on the front page does not lie"
 # others that do not exist here, so "passed" differs by a handful between the
 # two and neither number is wrong.
 #
-# So the guard is one-sided plus a ceiling. The badge may never claim FEWER
-# tests than actually ran - which is the drift that happened twice, and both
-# times by tens - and it may not run away upwards either. The slack is for
-# optional tooling, nothing else.
+# So the tolerance is symmetric, and the first one-sided version of this check
+# proves why: written as "never fewer than ran here" it blocked the release
+# from CI, where two more checks run than in this container. A guard that stops
+# a good release is worse than the drift it was written for.
+#
+# Fifteen either way. The two drifts that actually happened were 26 and 48 -
+# whole features' worth of tests - so the slack costs nothing real and no
+# difference in optional tooling can hold a release hostage again.
 TOTAL_AQUI=$((OK + FAILED + SKIPPED + 2))   # +2: the two checks below count
 FOLGA=15
 for par in "README.md|tests" "LEIAME.md|testes"; do
     arq="${par%%|*}"; rotulo="${par#*|}"
     achado="$(sed -n "s|.*badge/$rotulo-\([0-9]*\)-.*|\1|p" "$ROOT/$arq" | head -1)"
-    if [ -n "$achado" ] && [ "$achado" -ge "$TOTAL_AQUI" ] 2>/dev/null &&
-       [ "$achado" -le "$((TOTAL_AQUI + FOLGA))" ] 2>/dev/null; then
-        pass "$arq does not undercount the tests it has"
+    dist=$(( ${achado:-0} - TOTAL_AQUI )); [ "$dist" -lt 0 ] && dist=$(( -dist ))
+    if [ -n "$achado" ] && [ "$dist" -le "$FOLGA" ] 2>/dev/null; then
+        pass "$arq does not misstate how many tests it has"
     else
-        fail "$arq does not undercount the tests it has" \
-             "between $TOTAL_AQUI and $((TOTAL_AQUI + FOLGA)) — write $TOTAL_AQUI" \
+        fail "$arq does not misstate how many tests it has" \
+             "within $FOLGA of $TOTAL_AQUI — write $TOTAL_AQUI" \
              "${achado:-no badge found}"
     fi
 done
