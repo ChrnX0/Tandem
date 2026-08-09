@@ -512,6 +512,26 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   installer filenames with regexes and suggests a native alternative. It never
   runs anything, never diagnoses and never fixes. So on Zorin the association
   dispute has four sides, and the incumbent's Portuguese is already written.
+- **A modern PC has THIRTY-TWO serial ports and none of them are real.**
+  Measured on the reference counter, not deduced: `grep -h .
+  /sys/class/tty/ttyS*/type | sort | uniq -c` answered `32 0`. The kernel's
+  8250 driver registers 32 lines whether or not any UART sits behind them,
+  udev makes a node for each, and `0` is `PORT_UNKNOWN` - the kernel probed
+  and found nothing. `src/lib/common.sh` used to say "a PC already has three
+  or four `/dev/ttyS*`", and that wrong number is why `tandem portas` listed
+  32 sockets a shopkeeper could plug a pinpad into on a machine that has zero,
+  and put the shop's one real device - a USB adapter - on **COM33**.
+  The discriminator needs no privilege: `/sys/class/tty/ttySN/type` is mode
+  444. **Wine counts the phantoms too**, so the report must keep the high
+  number rather than renumbering to COM1 - verified against real Wine, whose
+  `wineboot` created `com1 -> /dev/ttyS0` on a machine whose one `ttyS` is
+  genuine. What moves the device is `tandem portas fixar COM2 /dev/ttyUSB0`.
+- **`E: Unsupported file X given on commandline` from apt means the file is
+  NOT THERE**, not that the package is broken. Measured against a real apt:
+  a valid `.deb` installs, a truncated one and an HTML error page both give
+  `Could not read meta data`, and only a missing path (or an unrecognised
+  extension) gives `Unsupported file`. Cost a field session to a package that
+  was intact all along.
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.
