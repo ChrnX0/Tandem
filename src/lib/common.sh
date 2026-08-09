@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="3.9"
+TANDEM_VERSAO="4.0"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -307,6 +307,137 @@ t_procura_prefixos() {
         [ "$p" = "$TANDEM_PREFIXO_PADRAO" ] && continue
         t_protege "$p"
     done
+    return 0
+}
+
+# ------------------------------------------- the machine's identity
+#
+# Software that ties its licence to the machine mostly WORKS under Wine, which
+# is the opposite of what this project used to say. Since Wine 3.13 the
+# manufacturer, model, BIOS version, board, CPU, RAM and MAC that a program
+# reads are the real ones, taken from /sys/class/dmi/id and /proc.
+#
+# What actually goes wrong is narrower and meaner: two of the identifiers live
+# INSIDE the prefix and are invented at random when the prefix is made. The
+# volume serial of C: and HKLM\...\Cryptography\MachineGuid change every time
+# the environment is rebuilt - and the owner, who did nothing but ask for a
+# repair, is told to activate again. The field reports describe losing an
+# activation far more often than failing to get one.
+#
+# So Tandem freezes them, and freezes them to a value DERIVED FROM THIS
+# MACHINE rather than to a random one. The difference matters: a derived value
+# comes back identical after the prefix is destroyed and remade, which is
+# exactly the case that was breaking. It is also the honest version - the
+# identity is the machine's own, not one borrowed from somewhere else.
+#
+# What Tandem will NOT do, and the line is deliberate: it does not forge. It
+# never invents a Windows ProductId (that is a Microsoft licence identifier),
+# and it never fakes the DMI table. Faking DMI is possible - a bind-mount over
+# /sys/class/dmi/id makes Wine report anything you like - and it is rejected in
+# docs/IDEAS.md with the reason, because a tool that forges hardware identity
+# is a licence-defeating tool no matter what it was written for.
+
+# The seed. /var/lib/dbus/machine-id first because that is the file Wine
+# itself reads to build the SMBIOS UUID, so an identity derived from it moves
+# together with what the program already sees.
+t_maquina_semente() {
+    local s="" f
+    for f in /var/lib/dbus/machine-id /etc/machine-id; do
+        [ -r "$f" ] && s="$(tr -d '[:space:]' < "$f" 2>/dev/null)" && [ -n "$s" ] && break
+        s=""
+    done
+    if [ -z "$s" ]; then
+        # No machine-id at all: a container, or a system installed by hand.
+        # Falling back to something is better than giving up, but it is worth
+        # a log line, because a hostname change would then move the identity.
+        s="$(hostname 2>/dev/null)-$(id -u 2>/dev/null)"
+        t_diz "sem machine-id; identidade derivada do nome da maquina"
+    fi
+    printf '%s' "$s"
+}
+
+t_identidade_hash() {
+    printf '%s:%s' "$1" "$(t_maquina_semente)" | sha256sum 2>/dev/null | cut -c1-32
+}
+
+# The volume serial of C:, as Wine wants it in .windows-serial: eight hex
+# digits. Zero is avoided because a program that reads 00000000 usually treats
+# it as "could not read".
+t_identidade_serial() {
+    local h; h="$(t_identidade_hash volume)"
+    h="$(printf '%s' "$h" | cut -c1-8 | tr 'a-f' 'A-F')"
+    case "$h" in ''|00000000) h="1A2B3C4D" ;; esac
+    printf '%s' "$h"
+}
+
+t_identidade_guid() {
+    local h; h="$(t_identidade_hash machineguid)"
+    [ "${#h}" = 32 ] || { printf ''; return 1; }
+    printf '%s-%s-%s-%s-%s' \
+        "$(printf '%s' "$h" | cut -c1-8)"   "$(printf '%s' "$h" | cut -c9-12)" \
+        "$(printf '%s' "$h" | cut -c13-16)" "$(printf '%s' "$h" | cut -c17-20)" \
+        "$(printf '%s' "$h" | cut -c21-32)"
+}
+
+# Reads a registry value straight out of system.reg, without starting Wine.
+# Fast, and it works on a prefix that is not running - which is what every
+# report command here needs.
+t_reg_valor() {
+    local prefixo="$1" chave="$2" nome="$3"
+    local arq="$prefixo/system.reg"
+    [ -f "$arq" ] || return 1
+    # The key name goes through the ENVIRONMENT and not through "awk -v",
+    # which processes escape sequences in what it is given: registry paths in
+    # system.reg carry doubled backslashes, and -v would eat exactly half of
+    # them, so the key would never match and every value would read as absent.
+    T_CHAVE="[$chave]" T_NOME="\"$nome\"=" awk '
+        BEGIN { chave = ENVIRON["T_CHAVE"]; nome = ENVIRON["T_NOME"] }
+        index($0, chave) == 1 { dentro = 1; next }
+        substr($0, 1, 1) == "[" { dentro = 0 }
+        dentro && index($0, nome) == 1 {
+            v = substr($0, length(nome) + 1)
+            sub(/^"/, "", v); sub(/"$/, "", v)
+            print v; exit
+        }' "$arq" 2>/dev/null
+}
+
+# Freezes the two identifiers, ONCE, in a prefix of ours. Never touches one
+# that already has a value: a program may already have activated against it,
+# and changing it afterwards is precisely the loss this function exists to
+# prevent.
+#
+# Callers must check t_prefixo_protegido first. Rule number 1 has no exception
+# here just because the write is small.
+t_identidade_fixa() {
+    local prefixo="$1" serial guid marca
+    [ -d "$prefixo/drive_c" ] || return 1
+    marca="$prefixo/.tandem-identidade"
+
+    serial="$(t_identidade_serial)"
+    if [ ! -f "$prefixo/drive_c/.windows-serial" ] && [ -n "$serial" ]; then
+        printf '%s\n' "$serial" > "$prefixo/drive_c/.windows-serial" 2>/dev/null &&
+            t_diz "serial do volume C: fixado em $serial"
+    fi
+
+    guid="$(t_identidade_guid)"
+    if [ -n "$guid" ] && [ -z "$(t_reg_valor "$prefixo" 'Software\\Microsoft\\Cryptography' MachineGuid)" ]; then
+        # Wine's advapi32 only writes MachineGuid when the value is absent, so
+        # one written here is never overwritten later.
+        if WINEPREFIX="$prefixo" WINEDEBUG=-all wine reg add \
+             'HKLM\Software\Microsoft\Cryptography' /v MachineGuid /t REG_SZ \
+             /d "$guid" /f >/dev/null 2>&1; then
+            t_diz "MachineGuid fixado em $guid"
+        fi
+    fi
+
+    # The seed goes on record. If an OS reinstall regenerates machine-id, both
+    # identifiers move and nothing on screen explains why; with the old value
+    # on file the reactivation becomes diagnosable instead of mysterious.
+    {
+        printf 'SEMENTE=%s\n' "$(t_maquina_semente)"
+        printf 'SERIAL=%s\n' "$serial"
+        printf 'MACHINEGUID=%s\n' "$guid"
+    } > "$marca" 2>/dev/null
     return 0
 }
 
@@ -848,24 +979,73 @@ t_pe_dlls() {
         sed -n -e 's/^DLLS=//p' -e 's/^ATRASADAS=//p' | tr ',' '\n' | grep -v '^$'
 }
 
-# Returns "class|sentence" of the first permanent limit recognized, or nothing.
+# Classes with no way out. Everything NOT listed here has a fourth column in
+# limites.tsv saying what to try, and gets a different message: the difference
+# between "this has no fix" and "this has a fix and here it is" is the whole
+# reason the table grew a fourth column. Getting this list wrong in the
+# permissive direction promises something that does not exist; getting it wrong
+# in the strict direction is what the 4.0 correction was about.
+t_limite_sem_saida() {
+    case "$1" in
+        dongle|driver|anticheat|usb) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Returns "class|sentence" of the first limit recognized, or nothing. When the
+# row carries a way out, it comes after the sentence separated by a blank line,
+# so everything downstream - the message, the memory, the recipe - keeps
+# treating it as one block of text.
+#
 # The table lives in limites.tsv and grows without touching code.
 t_limite_do_programa() {
-    local tabela dll padrao classe frase
+    local tabela dll padrao classe frase saida
     tabela="${TANDEM_LIMITES:-${TANDEM_LIB:-/usr/lib/tandem}/limites.tsv}"
     [ -f "$tabela" ] || return 1
     local dlls; dlls="$(t_pe_dlls "$1")"
     [ -n "$dlls" ] || return 1
-    while IFS=$'\t' read -r padrao classe frase; do
+    while IFS=$'\t' read -r padrao classe frase saida; do
         case "$padrao" in ''|'#'*) continue ;; esac
         [ -n "$frase" ] || continue
         while IFS= read -r dll; do
             # The pattern comes from the table and uses * on purpose, so it
             # cannot be quoted.
             # shellcheck disable=SC2254
-            case "$dll" in $padrao) printf '%s|%s' "$classe" "$frase"; return 0 ;; esac
+            case "$dll" in
+                $padrao)
+                    printf '%s|%s' "$classe" "$frase"
+                    [ -n "$saida" ] && printf '\n\n%s' "$saida"
+                    return 0 ;;
+            esac
         done <<< "$dlls"
     done < "$tabela"
+    return 1
+}
+
+# The same verdict, but PROVEN instead of guessed - read out of the log after
+# the program has already run and failed.
+#
+# limites.tsv guesses from the import table, which is honest but static: a
+# program can import ntoskrnl.exe in a component it never loads. These lines
+# are Wine telling us it actually happened. They matter most in the case the
+# table cannot reach at all: a driver that LOADS - Wine's load_driver() takes
+# any .sys with LoadLibraryExW into winedevice.exe, an ordinary user process -
+# and then finds the hardware underneath is hollow. MmMapIoSpace is a stub
+# returning NULL, the port I/O helpers return zeros and discard writes. So the
+# program starts, reads zeros, and misbehaves in a way that looks like a bug in
+# the program. That is the silent failure this project exists to catch, and the
+# log is the only place it is visible.
+t_limite_do_log() {
+    local log="$1"
+    [ -f "$log" ] || return 1
+    if grep -qE 'MmMapIoSpace|READ_PORT_|WRITE_PORT_|IoConnectInterrupt' "$log" 2>/dev/null; then
+        printf 'driver|este programa tentou falar direto com o hardware, do jeito que só um driver de sistema pode. O Wine deixou ele começar e devolveu zeros, e é por isso que ele abre e depois se comporta de um jeito estranho'
+        return 0
+    fi
+    if grep -qE 'ZwLoadDriver|err:winedevice|failed to load driver' "$log" 2>/dev/null; then
+        printf 'driver|este programa tentou carregar um driver de sistema, e o Wine roda fora do núcleo do Linux'
+        return 0
+    fi
     return 1
 }
 
@@ -1218,6 +1398,274 @@ Isso costuma ser disco cheio ou pasta pessoal sem permissão de escrita.
 
 Se continuar, esses arquivos vão ser apagados e não há como recuperar. O
 mais seguro é parar, liberar espaço, e tentar de novo.'
+}
+
+# ------------------------------------------- the identity, written out
+#
+# A shop owner whose program says "activate again" has no way at all to find
+# out which of his machine's identifiers moved. This prints them side by side
+# with a verdict on each: it comes from your real machine / it is a constant
+# that every Wine install on Earth reports / it lives inside the environment
+# and Tandem is holding it still.
+#
+# It is only reading. It changes nothing, needs no password, and does not even
+# start Wine - every value here comes out of /sys, /proc or system.reg.
+
+t_dmi() {
+    local v=""
+    [ -r "/sys/class/dmi/id/$1" ] && v="$(tr -d '\000' < "/sys/class/dmi/id/$1" 2>/dev/null | head -1)"
+    printf '%s' "$v"
+}
+
+# The newline goes at the FRONT, not at the end. Several of these are pasted
+# together inside one command substitution, and a substitution strips trailing
+# newlines - written the other way round the whole report came out on a single
+# line, with the labels padded neatly and nothing else right about it.
+t_linha_id() {
+    local v n pad
+    v="$(printf '%s' "$2" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    [ -n "$v" ] || return 0
+    # printf pads by BYTES, and half these labels are accented, so "memória"
+    # counted as nine and came out two columns short of everything else. The
+    # continuation bytes of a UTF-8 character all sit in 0x80-0xBF: drop them
+    # and what is left is one byte per visible character.
+    n="$(printf '%s' "$1" | LC_ALL=C tr -d '\200-\277' | wc -c)"
+    pad=$(( 26 - n )); [ "$pad" -lt 1 ] && pad=1
+    printf '\n    %s%*s%s' "$1" "$pad" "" "$v"
+}
+
+# The network adapters, and whether there is more than one - which is the
+# quiet cause of half the lost activations. A program that hashes the MAC and
+# a laptop whose Wi-Fi comes and goes are a bad pair, and the owner finds out
+# months later.
+t_placas_de_rede() {
+    local d n
+    for d in /sys/class/net/*/; do
+        n="$(basename -- "${d%/}")"
+        [ "$n" = lo ] && continue
+        [ -r "$d/address" ] || continue
+        printf '%s\t%s\n' "$n" "$(cat "$d/address" 2>/dev/null)"
+    done
+}
+
+# ------------------------------------------- serial and parallel ports
+#
+# Wine reaches a pinpad, a scale, a non-fiscal printer and a serial barcode
+# scanner without anything being installed: it maps /dev/ttyS*, /dev/ttyUSB*
+# and /dev/ttyACM* to COM ports and /dev/lp* to LPT, by itself. This is not a
+# limit of the project, it is one of the places where everything already works
+# and nobody knows.
+#
+# Two things break it, both invisible, and both of them look to the owner like
+# "the printer is not there":
+#
+#   1. The NUMBER. Wine hands out COM1, COM2, ... in the order it scans, and a
+#      PC already has three or four /dev/ttyS* whether or not anything is
+#      plugged into them. So the pinpad that arrived on /dev/ttyACM0 becomes
+#      COM5 - and old point-of-sale software only accepts COM1 to COM4.
+#   2. The PERMISSION. Without membership of the "dialout" group the device is
+#      right there and simply refuses to open.
+#
+# Neither produces a message worth reading. This does.
+
+# In the exact order Wine scans, because that order is what decides the
+# number each port gets.
+t_portas_seriais() {
+    local fam p
+    for fam in ttyS ttyUSB ttyACM; do
+        for p in $(ls -1 -d /dev/${fam}[0-9]* 2>/dev/null | sort -V); do
+            [ -c "$p" ] || continue
+            printf '%s\n' "$p"
+        done
+    done
+}
+
+t_portas_paralelas() {
+    local p
+    for p in $(ls -1 -d /dev/lp[0-9]* 2>/dev/null | sort -V); do
+        [ -c "$p" ] && printf '%s\n' "$p"
+    done
+}
+
+t_no_grupo() {
+    id -nG 2>/dev/null | tr ' ' '\n' | grep -qxF "$1"
+}
+
+t_texto_portas() {
+    local prefixo="$1" saida n p alto="" fixadas="" usblp
+    saida="Portas onde a loja liga pinpad, balança, impressora e leitor:
+"
+
+    n=0
+    while IFS= read -r p; do
+        [ -n "$p" ] || continue
+        n=$((n + 1))
+        case "$p" in
+            /dev/ttyACM*|/dev/ttyUSB*) saida="$saida$(t_linha_id "COM$n" "$p   (aparelho USB)")" ;;
+            *)                         saida="$saida$(t_linha_id "COM$n" "$p")" ;;
+        esac
+        [ "$n" -gt 4 ] && case "$p" in /dev/ttyACM*|/dev/ttyUSB*) alto="COM$n|$p" ;; esac
+    done <<< "$(t_portas_seriais)"
+    [ "$n" = 0 ] && saida="$saida
+    (nenhuma porta serial neste computador)"
+
+    n=0
+    while IFS= read -r p; do
+        [ -n "$p" ] || continue
+        n=$((n + 1))
+        saida="$saida$(t_linha_id "LPT$n" "$p")"
+    done <<< "$(t_portas_paralelas)"
+
+    usblp="$(ls -1 -d /dev/usblp[0-9]* 2>/dev/null | head -3)"
+    if [ -n "$usblp" ]; then
+        saida="$saida
+
+  Impressora USB encontrada em: $(printf '%s' "$usblp" | tr '\n' ' ')
+  O Wine NÃO acha essa sozinho - ela só aparece para o programa se for
+  apontada à mão. Para deixar ela como LPT1:
+
+      tandem portas fixar LPT1 $(printf '%s' "$usblp" | head -1)"
+    fi
+
+    if [ -n "$alto" ]; then
+        saida="$saida
+
+  ATENÇÃO: o aparelho USB ${alto#*|} ficou na ${alto%%|*}, e muito programa de
+  loja antigo só aceita de COM1 a COM4. Se o programa disser que não achou o
+  aparelho, é quase certo que é isso. Para prender ele numa porta baixa:
+
+      tandem portas fixar COM2 ${alto#*|}"
+    fi
+
+    if ! t_no_grupo dialout; then
+        saida="$saida
+
+  ATENÇÃO: o seu usuário não está no grupo \"dialout\", e sem isso o aparelho
+  aparece na lista e não abre. Para resolver, uma vez só:
+
+      sudo usermod -aG dialout $(id -un)
+
+  Depois é preciso sair e entrar de novo na sua conta."
+    fi
+
+    if [ -d "$prefixo/drive_c" ]; then
+        fixadas="$(t_reg_lista_valores "$prefixo" 'Software\\Wine\\Ports')"
+        [ -n "$fixadas" ] && saida="$saida
+
+  Já presas por você neste ambiente Windows:
+$(printf '%s' "$fixadas" | sed 's/^/    /')"
+    fi
+
+    printf '%s\n' "$saida"
+}
+
+# Every "name = value" of one registry key, straight out of system.reg.
+t_reg_lista_valores() {
+    local prefixo="$1" chave="$2"
+    local arq="$prefixo/system.reg"
+    [ -f "$arq" ] || return 1
+    T_CHAVE="[$chave]" awk '
+        BEGIN { chave = ENVIRON["T_CHAVE"] }
+        index($0, chave) == 1 { dentro = 1; next }
+        substr($0, 1, 1) == "[" { dentro = 0 }
+        dentro && substr($0, 1, 1) == "\"" {
+            linha = $0
+            gsub(/"/, "", linha)
+            sub(/=/, " = ", linha)
+            print linha
+        }' "$arq" 2>/dev/null
+}
+
+t_texto_identidade() {
+    local prefixo="$1" saida="" guid pid serial semente marca
+    local so_leitura="" placas conta n m f kb
+
+    kb="$(sed -n 's/^MemTotal:[[:space:]]*\([0-9]*\).*/\1/p' /proc/meminfo 2>/dev/null)"
+
+    saida="O que um programa vê quando amarra a licença a este computador:
+
+  VEM DA SUA MÁQUINA DE VERDADE (igual ao que ele veria no Windows)$(
+      t_linha_id "fabricante" "$(t_dmi sys_vendor)")$(
+      t_linha_id "modelo" "$(t_dmi product_name)")$(
+      t_linha_id "placa-mãe" "$(t_dmi board_name)")$(
+      t_linha_id "BIOS" "$(t_dmi bios_version) $(t_dmi bios_date)")$(
+      t_linha_id "processador" "$(sed -n 's/^model name[[:space:]]*: //p' /proc/cpuinfo 2>/dev/null | head -1)")$(
+      t_linha_id "memória" "${kb:+$(t_tamanho_amigavel "$(( kb * 1024 ))")}")"
+
+    placas="$(t_placas_de_rede)"
+    conta="$(printf '%s' "$placas" | awk 'END { print NR + 0 }')"
+    while IFS=$'\t' read -r n m; do
+        [ -n "$n" ] || continue
+        saida="$saida$(t_linha_id "rede ($n)" "$m")"
+    done <<< "$placas"
+
+    # Three DMI fields the kernel keeps for root only. Wine cannot read them
+    # either, and puts a stable substitute in their place - so this is not a
+    # failure, it is a difference worth naming.
+    for f in product_serial board_serial chassis_serial; do
+        if [ -e "/sys/class/dmi/id/$f" ] && [ ! -r "/sys/class/dmi/id/$f" ]; then
+            so_leitura="sim"
+        fi
+    done
+
+    saida="$saida
+
+  NÃO VEM, E NÃO TEM COMO VIR
+    número de série da BIOS    o Wine responde sempre a mesma coisa, igual
+                               em todo computador que usa Wine no mundo
+    número de série do disco   idem${so_leitura:+
+    número de série de fábrica o Linux só deixa o administrador ler esse
+                               número, então o Wine põe no lugar um
+                               identificador fixo desta máquina}
+
+  Se o programa recusar a ativação, é quase certo que ele viu um desses. Isso
+  não é defeito da sua máquina: é o Wine sendo honesto sobre o que ele é. Quem
+  pode liberar é a empresa que fez o programa."
+
+    if [ -d "$prefixo/drive_c" ]; then
+        serial="$(cat "$prefixo/drive_c/.windows-serial" 2>/dev/null)"
+        guid="$(t_reg_valor "$prefixo" 'Software\\Microsoft\\Cryptography' MachineGuid)"
+        pid="$(t_reg_valor "$prefixo" 'Software\\Microsoft\\Windows NT\\CurrentVersion' ProductId)"
+        marca="$prefixo/.tandem-identidade"
+        semente=""
+        [ -f "$marca" ] && semente="$(sed -n 's/^SEMENTE=//p' "$marca" 2>/dev/null)"
+
+        saida="$saida
+
+  FICA PARADO, PORQUE O TANDEM SEGURA
+  (estes moram dentro do ambiente Windows e, sem isso, mudariam toda vez que o
+   ambiente fosse refeito - é a causa mais comum de \"ative de novo\")$(
+      t_linha_id "serial do disco C:" "${serial:-o Wine escolhe sozinho}")$(
+      t_linha_id "identificador da máquina" "${guid:-ainda não existe}")$(
+      t_linha_id "ProductId do Windows" "$pid")"
+
+        case "$pid" in
+            12345-oem-0000001-54321)
+                saida="$saida
+
+  O ProductId acima é o que vem de fábrica no Wine, igual em toda máquina que
+  usa Wine. O Tandem não inventa outro: número de licença da Microsoft não se
+  fabrica." ;;
+        esac
+
+        if [ -n "$semente" ] && [ "$semente" != "$(t_maquina_semente)" ]; then
+            saida="$saida
+
+  ATENÇÃO: a identidade desta máquina mudou desde que o ambiente foi criado.
+  Isso acontece quando o Linux é reinstalado ou o disco é clonado. É a
+  explicação para um programa pedir ativação sem nada mais ter mudado."
+        fi
+    fi
+
+    if [ "${conta:-0}" -gt 1 ]; then
+        saida="$saida
+
+  ATENÇÃO: esta máquina tem $conta placas de rede. Muitos programas usam o
+  número da placa como parte da identidade, e se uma delas for Wi-Fi que
+  liga e desliga, a identidade muda junto. Deixe a rede sempre ligada."
+    fi
+
+    printf '%s\n' "$saida"
 }
 
 # Returns the command prefix that keeps the machine from suspending during a

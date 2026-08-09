@@ -30,6 +30,9 @@ Tandem - roda programas Windows, apps Android e pacotes do Linux.
   tandem backup               salva o ambiente Windows
   tandem restore              restaura o ambiente Windows
   tandem protect <caminho>    protege um perfil Wine contra alteracoes
+  tandem identidade           o que o programa ve da sua maquina (licenca)
+  tandem portas               pinpad, balanca, impressora: em que COM ficaram
+  tandem portas fixar <p> <d> prende um aparelho numa porta (ex.: COM2)
   tandem alternativas <nome>  procura um programa de Linux que faca o mesmo
   tandem receita <arquivo>    exporta o que aprendeu, para mandar a alguem
   tandem receita --importar <r> <arquivo>   usa a receita de outra pessoa
@@ -171,6 +174,25 @@ acao_doctor() {
     [ -n "$arqs_estrangeiras" ] &&
         out+="  arquiteturas extras: $arqs_estrangeiras\n"
 
+    # The counter's hardware. Wine already reaches all of it and the two ways
+    # it goes wrong - a number above COM4, and the dialout group - are silent,
+    # so they belong in the diagnosis and not in a forum thread.
+    out+="\nAPARELHOS DA LOJA\n"
+    local n_ser n_par
+    n_ser="$(t_portas_seriais | awk 'END { print NR + 0 }')"
+    n_par="$(t_portas_paralelas | awk 'END { print NR + 0 }')"
+    out+="  portas seriais: $n_ser (pinpad, balança, leitor)   paralelas: $n_par\n"
+    t_no_grupo dialout &&
+        out+="  grupo dialout: sim\n" ||
+        out+="  grupo dialout: NÃO (o aparelho aparece e não abre) — tandem portas\n"
+    if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ]; then
+        local id_serial
+        id_serial="$(cat "$TANDEM_PREFIXO_PADRAO/drive_c/.windows-serial" 2>/dev/null)"
+        [ -n "$id_serial" ] &&
+            out+="  identidade da máquina: presa (licenças sobrevivem a refazer o ambiente)\n" ||
+            out+="  identidade da máquina: solta (ambiente antigo) — veja: tandem identidade\n"
+    fi
+
     out+="\nPERFIS PROTEGIDOS\n"
     if [ -s "$TANDEM_PROTEGIDOS" ]; then
         while read -r l; do [ -n "$l" ] && out+="  $l\n"; done < "$TANDEM_PROTEGIDOS"
@@ -307,7 +329,9 @@ acao_restore() {
 
 $(basename -- "$arq")
 
-O ambiente atual será substituído." "Restaurar" "Cancelar" || return 1
+O ambiente atual será substituído. Se algum programa daqui foi ativado com
+licença amarrada a este computador, ele volta a ser o de quando a cópia foi
+feita — e pode pedir ativação de novo." "Restaurar" "Cancelar" || return 1
     # Before swapping the whole environment, save what cannot be remade.
     # Without this the command gave back last week's environment and took the
     # month's sales along with it - silently, and with no chance to undo.
@@ -962,6 +986,67 @@ acao_esquecer() {
     t_ok "Esqueci o que sabia sobre $n programa(s). Da próxima vez ele descobre de novo."
 }
 
+# ------------------------------------------------------ identity and ports
+#
+# Both are pure diagnosis: they read /sys, /proc and system.reg, start no
+# Wine, ask for no password and change nothing unless asked to in so many
+# words. They exist because the two questions they answer - "which of my
+# machine's numbers did the program see?" and "which COM did my pinpad get?" -
+# had no answer at all before, and the owner met them as "activate again" and
+# "the printer is not there".
+acao_identidade() {
+    t_texto_identidade "$TANDEM_PREFIXO_PADRAO" | t_texto "Tandem - identidade da máquina"
+}
+
+acao_portas() {
+    local p="$TANDEM_PREFIXO_PADRAO"
+    case "${1:-}" in
+        fixar|prender)
+            local porta="${2:-}" caminho="${3:-}"
+            case "$porta" in
+                COM[0-9]|COM[0-9][0-9]|LPT[0-9]) ;;
+                *) t_erro "Diga qual porta, assim:
+
+tandem portas fixar COM2 /dev/ttyACM0"; return 1 ;;
+            esac
+            [ -e "$caminho" ] || { t_erro "Não existe nenhum aparelho em:
+$caminho"; return 1; }
+            [ -f "$p/system.reg" ] || { t_erro "Ainda não há um ambiente Windows aqui.
+
+Abra um programa .exe uma vez e ele é criado."; return 1; }
+            # Rule number 1: this writes into a prefix, so it may only ever be
+            # one of ours.
+            if t_prefixo_protegido "$p"; then
+                t_erro "Este ambiente Windows não foi criado pelo Tandem, então ele não mexe aqui."
+                return 1
+            fi
+            if WINEPREFIX="$p" WINEDEBUG=-all wine reg add 'HKLM\Software\Wine\Ports' \
+                 /v "$porta" /t REG_SZ /d "$caminho" /f >>"$LOG" 2>&1; then
+                t_ok "Pronto: $caminho agora é a $porta para os programas Windows.
+
+Abra o programa de novo e escolha a $porta na configuração dele."
+            else
+                t_erro "Não consegui prender a porta. Veja: tandem logs"
+                return 1
+            fi ;;
+        soltar|liberar)
+            local porta="${2:-}"
+            [ -n "$porta" ] || { t_erro "Diga qual porta soltar. Exemplo: tandem portas soltar COM2"; return 1; }
+            WINEPREFIX="$p" WINEDEBUG=-all wine reg delete 'HKLM\Software\Wine\Ports' \
+                /v "$porta" /f >>"$LOG" 2>&1
+            t_ok "A $porta voltou a ser escolhida sozinha pelo Wine." ;;
+        ""|ver|listar)
+            t_texto_portas "$p" | t_texto "Tandem - portas dos aparelhos" ;;
+        *)
+            t_erro "Não conheço \"$1\".
+
+tandem portas                        mostra as portas
+tandem portas fixar COM2 /dev/ttyACM0   prende um aparelho numa porta
+tandem portas soltar COM2               desfaz"
+            return 1 ;;
+    esac
+}
+
 acao_logs() {
     local l; l="$(ls -1t "$TANDEM_ESTADO"/*.log 2>/dev/null | head -1)"
     [ -n "$l" ] || { t_erro "Ainda não há registros."; return 1; }
@@ -1241,6 +1326,8 @@ acao_painel() {
             "doctor"    "Ver o diagnóstico do ambiente" \
             "autoteste" "Testar de verdade se tudo funciona aqui" \
             "dados"     "Ver e copiar os SEUS arquivos" \
+            "portas"    "Pinpad, balança, impressora: em que porta ficaram" \
+            "identidade" "O que o programa vê da sua máquina (licença)" \
             "backup"    "Salvar o ambiente Windows" \
             "restore"   "Restaurar o ambiente Windows" \
             "repair"    "Consertar a abertura de arquivos com dois cliques" \
@@ -1264,6 +1351,8 @@ acao_painel() {
             doctor)   acao_doctor ;;
             autoteste) acao_autoteste ;;
             dados)    acao_dados ;;
+            portas)   acao_portas ;;
+            identidade) acao_identidade ;;
             backup)   acao_backup ;;
             restore)  acao_restore ;;
             repair)   "$TANDEM_BIN"/tandem-repair ;;
@@ -1292,6 +1381,8 @@ case "${1:-}" in
     backup)               acao_backup ;;
     restore|restaurar)    acao_restore ;;
     protect|proteger)     shift; acao_protect "$@" ;;
+    identidade|fingerprint) acao_identidade ;;
+    portas|ports)         shift; acao_portas "$@" ;;
     alternativas|alternativa) shift; acao_alternativas "$@" ;;
     receita|receitas)     shift; acao_receita "$@" ;;
     memoria|memória)      shift; acao_memoria "$@" ;;

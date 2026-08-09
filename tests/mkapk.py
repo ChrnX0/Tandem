@@ -270,6 +270,18 @@ def main():
     pe_com_imports(j("imports32.exe"), 0x014C,
                    ("kernel32.dll", "hasp_windows_x64.dll"))
     pe_com_imports(j("importslimpo.exe"), 0x8664, ("KERNEL32.dll", "USER32.dll"))
+    # The split that arrived in 4.0: two hardware keys of the same family,
+    # one of which the manufacturer documents working under Wine and the
+    # other of which it does not. Before the split both got the same
+    # "impossible" verdict, and one of those two verdicts was a lie.
+    pe_com_imports(j("hasplegado.exe"), 0x014C,
+                   ("kernel32.dll", "haspms32.dll"))
+    # A file that IS a driver: it imports the Windows kernel itself.
+    pe_com_imports(j("driver.exe"), 0x8664,
+                   ("ntoskrnl.exe", "HAL.dll"))
+    # Brazilian card middleware: not a limit at all, a lever.
+    pe_com_imports(j("tef.exe"), 0x014C,
+                   ("kernel32.dll", "CliSiTef32I.dll"))
 
     print("generated in %s" % destino)
 

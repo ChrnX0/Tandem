@@ -76,7 +76,14 @@ else
 fi
 t_prefixo_protegido "$WINEPREFIX" && PROTEGIDO=1 || PROTEGIDO=0
 
-export WINEDEBUG=fixme-all
+# fixme-all silences Wine's noisiest class, which is what makes the log
+# readable. The two exceptions are re-enabled on purpose: ntoskrnl and hal are
+# where a Windows driver finds out the hardware underneath is hollow, and
+# those two lines are the only evidence that the program was let in and then
+# handed zeros. Without them t_limite_do_log has nothing to read and the
+# owner gets "the program closed with error (code N)" for a cause Wine
+# actually printed. Wine reads the list left to right, so -all then +channel.
+export WINEDEBUG=fixme-all,fixme+ntoskrnl,fixme+hal
 # Wine uses the locale to choose the language of the Windows program. Setting
 # pt_BR.UTF-8 without checking was dangerous: on a system where that locale
 # was not generated (a Zorin installed in English, for instance) glib falls
@@ -100,7 +107,10 @@ if [ "$NOSSO" = 1 ] && [ ! -f "$WINEPREFIX/system.reg" ]; then
         case $C_RESGATE in
             0) t_aviso "O ambiente Windows estava pela metade e vai ser refeito.
 Guardei os seus arquivos em:
-$RESGATE" ;;
+$RESGATE
+
+Se algum programa daqui já tinha sido ativado, a ativação dele fica para
+trás e pode ser preciso ativar outra vez." ;;
             1) # There is data here and the copy failed. This runs inside a
                # double click, so there is nobody watching a terminal: refusing
                # is the only honest move. Deleting anyway would be the exact
@@ -126,6 +136,12 @@ $RESGATE" ;;
     fi
     : > "$WINEPREFIX/.tandem-prefixo"
     PROTEGIDO=0
+    # Before anything is installed: freeze the two identifiers Wine would
+    # otherwise invent at random, so that a program which ties its licence to
+    # this machine sees the same machine after the environment is remade. It
+    # has to happen here, at creation - doing it later, when something has
+    # already activated, would change the identity instead of holding it.
+    t_identidade_fixa "$WINEPREFIX"
     t_ok "Ambiente Windows pronto."
 fi
 # On an already existing prefix, setting WINEARCH makes Wine refuse to start.
@@ -331,6 +347,16 @@ while :; do
     # The same pairs, kept: they are what lets us check afterwards whether the
     # missing file actually arrived.
     PARES="$(t_pares_do_log "$PARCIAL")"
+    # A verdict PROVEN by this run outranks the one guessed from the import
+    # table, and it reaches a case the table cannot: the driver that loads
+    # into user space, reads zeros off hollow hardware APIs and makes the
+    # program look merely buggy. Wine says so in the log and nowhere else.
+    PROVADO="$(t_limite_do_log "$PARCIAL" 2>/dev/null)"
+    if [ -n "$PROVADO" ]; then
+        LIMITE="$PROVADO"
+        t_diz "limite provado pelo log -> $LIMITE"
+        t_memoria_grava "$PROG" LIMITE "$LIMITE" 2>/dev/null
+    fi
     rm -f "$PARCIAL"
 
     # A single verb has a 64-bit sibling (xact -> xact_x64), and it is only
@@ -418,12 +444,18 @@ Isso costuma acontecer quando só o executável foi copiado, sem a pasta complet
             # instead of a number, the owner gets the cause and knows there
             # is no point insisting nor looking for a defect in his machine.
             #
-            # And here, only here, Tandem offers an alternative path. It is
-            # not suggesting a switch: it is the one moment where keeping
-            # quiet would leave the owner with no way out at all, because
-            # this program is not going to work no matter how hard he tries.
-            ALTERNATIVA="$(t_texto_alternativas "$(basename -- "${PROG%.*}")" 2>/dev/null)"
-            t_erro "Este programa não abriu, e provavelmente não tem conserto:
+            # Or he gets the opposite, which until 4.0 he never did. Half the
+            # signatures in limites.tsv have a documented way out, and telling
+            # a shop owner with a Sentinel key that his case is hopeless -
+            # when the key's own manufacturer publishes the recipe for the
+            # very Wine version on his machine - is the same failure as
+            # showing him an exit code, only more convincing.
+            if t_limite_sem_saida "${LIMITE%%|*}"; then
+                # Here, and only here, Tandem offers a different program. It
+                # is not suggesting a switch: it is the one moment where
+                # keeping quiet would leave the owner with no way out at all.
+                ALTERNATIVA="$(t_texto_alternativas "$(basename -- "${PROG%.*}")" 2>/dev/null)"
+                t_erro "Este programa não abriu, e provavelmente não tem conserto:
 
 ${LIMITE#*|}
 
@@ -431,6 +463,13 @@ Isso é limite do Wine, não defeito da sua máquina nem do Tandem.${ALTERNATIVA
 
 O que dá para fazer no lugar:
 $ALTERNATIVA}"
+            else
+                t_erro "Este programa não abriu, e o motivo tem caminho:
+
+${LIMITE#*|}
+
+Isso não é defeito da sua máquina nem do Tandem."
+            fi
         else
             t_erro "O programa fechou com erro (código $CODIGO)."
         fi

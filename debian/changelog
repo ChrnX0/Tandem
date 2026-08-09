@@ -1,3 +1,49 @@
+tandem (4.0) unstable; urgency=medium
+
+  * Two of the four rows in "what will never work" were checked against
+    primary sources and did not survive. This release is the correction, and
+    the correction is bigger than the wording: it changes what a shop owner is
+    told when the answer is not "no".
+  * Hardware keys are no longer one verdict. Thales publishes "Supporting
+    Protected Applications Under Wine" saying both SL and HL Sentinel keys
+    have been tested, naming Wine 10.0 - the exact Wine on the reference
+    machine - once the Linux Run-time Environment is installed. The key is
+    never touched from the Windows side: a Linux daemon owns it and the
+    program reaches it over the machine's own network. Tandem was telling
+    those owners their case was impossible. HASP4 and Hardlock, which the
+    manufacturer itself excludes, keep the old verdict and are now told apart
+    by name.
+  * limites.tsv gained a fourth column: the way out. A row without one is a
+    dead end and is still said plainly. A row with one produces a different
+    message - "this has a way", followed by the way. CodeMeter, Rockey, PC/SC
+    card readers and the Brazilian TEF libraries all landed in the second
+    group, each with its confidence stated rather than implied.
+  * The verdict can now be PROVEN instead of guessed. A driver that Wine loads
+    lands in an ordinary user process where the hardware calls are stubs: it
+    starts, reads zeros, and the program misbehaves in a way that looks like
+    its own bug. Wine prints that and only that. Tandem now reads it, and the
+    two debug channels carrying it were re-enabled by name, because the log
+    setting that keeps the log readable was switching off the evidence.
+  * The machine's identity is held still. Under Wine most of what licensing
+    software fingerprints is already the real machine, so the failure people
+    actually report is not being refused - it is losing an activation when the
+    environment is rebuilt, because the volume serial and MachineGuid are
+    invented at random per prefix. Tandem now derives both from this machine
+    and writes them at creation, so a rebuilt environment comes back as the
+    same computer. It does not forge: no invented Windows ProductId, and the
+    DMI spoof that would work is refused on the record in docs/IDEAS.md.
+  * New command "tandem identidade": every identifier a program can read,
+    side by side, each labelled - it is your real machine / it is a constant
+    every Wine install reports / Tandem is holding it still. It reads /sys,
+    /proc and system.reg and does not start Wine.
+  * New command "tandem portas": where the pinpad, the scale, the printer and
+    the serial scanner ended up. Wine reaches all of them already, and the two
+    things that silently break it - a port numbered above COM4, which old
+    point-of-sale software refuses, and missing dialout group membership - now
+    have a message and a one-line fix each.
+
+ -- ChrnX0 <rockx0@gmail.com>  Sun, 09 Aug 2026 05:38:04 +0000
+
 tandem (3.9) unstable; urgency=medium
 
   * The community list can now send, with permission. Until here it only ever

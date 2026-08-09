@@ -332,6 +332,8 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem dados` | show **your** files inside Windows |
 | `tandem backup` · `tandem restore` | save and restore the whole environment |
 | `tandem protect <path>` | mark a Wine prefix untouchable |
+| `tandem identidade` | what a program reads about this machine when it locks a licence to it |
+| `tandem portas` | which COM the pinpad, scale or printer landed on — and how to move it |
 | `tandem alternativas <name>` | find a Linux program that does the same job |
 | `tandem receita <file>` | export what it learned, to send to someone |
 | `tandem memoria` · `tandem esquecer <name>` | see and clear what it learned |
@@ -379,11 +381,49 @@ Being honest about this up front saves everyone an afternoon.
 | | Why |
 |---|---|
 | **Shop hardware inside Android** | **Your barcode scanner already works** — it is a keyboard, and Waydroid gets its keystrokes from the compositor like any other. For a thermal printer, a pinpad or a scale, nobody anywhere has ever reported one working inside Waydroid, and Tandem will not send you down that road. Keep them on Linux, where all four are better supported than in the container — `tandem alternativas` shows how. |
-| **Banking and payment apps** | Play Integrity detects the container. There is no reliable workaround. |
-| **Windows software with kernel drivers** | Anti-cheat, some POS payment middleware, hardware dongles. Wine runs in user space. |
-| **Hardware-locked licensing** | Wine reports empty or synthetic BIOS and disk serials. Software that fingerprints the machine may refuse to activate — or crash on the activation screen. |
+| **Windows software that ships a kernel driver** | Wine loads a `.sys` with `LoadLibraryExW` into `winedevice.exe`, an ordinary user process, and the hardware calls underneath are stubs: `MmMapIoSpace` returns NULL, port I/O returns zeros. Kernel anti-cheat is the clean case — and the EAC/BattlEye exception is a switch the **game's developer** flips, not you. **Needing hardware is a different thing, and usually fine** — see the row below. |
+| **Play Integrity, for banking and payment apps** | Not "it detects the container" — it fails to find something a container cannot have. Hardware attestation needs a key burned into a real phone's secure element; Waydroid has no secure element to burn one into. Brazilian banks refuse on their own root detection before Google is even asked. |
 
 Tandem recognises several of these from the executable itself, **before running it**, and explains the failure instead of showing you an exit code.
+
+### And two things that were on this list until 4.0, wrongly
+
+Both were checked against primary sources. Both moved.
+
+| | What is actually true |
+|---|---|
+| **Hardware keys (dongles)** | **A Sentinel HL or SL key works.** Thales publishes [Supporting Protected Applications Under Wine](https://docs.sentinel.thalesgroup.com/ldk/LDKdocs/GSG/GSG_Linux_HTML/GSG_Guides/Linux/Support_under_Wine.htm) — both key types *"have been tested"*, on **Wine 10.0**, once the Sentinel Linux Run-time Environment is installed. The Windows side never touches the key: `aksusbd` owns it on Linux and the program reaches the licence manager over the local network. **HASP4 and Hardlock do not work** — the vendor excludes them by name. Tandem now tells the two apart from the import table and answers with the right one of the two. |
+| **Hardware-locked licensing** | **Usually works.** Since Wine 3.13 the manufacturer, model, BIOS, board, CPU, RAM and MAC a program reads are your real machine's, out of `/sys/class/dmi/id`. The real failure is not being refused — it is **losing** an activation later, because the C: volume serial and `MachineGuid` are invented at random *per prefix* and change when the environment is rebuilt. Tandem derives both from this machine and freezes them at creation, so a rebuilt environment comes back as the same computer. Run `tandem identidade` to see every identifier and where each one comes from. |
+
+**Where the line is.** Tandem stabilises an identity and explains what the software sees. It does not forge one. It will never invent a Windows ProductId, and it will never fake the DMI table — [that spoof works](docs/IDEAS.md), which is exactly why it is refused on the record.
+
+<details>
+<summary>What the dongle row used to say, and what checking it cost</summary>
+
+<br>
+
+It read: *"Anti-cheat, some POS payment middleware, hardware dongles. Wine runs in user space."* The mechanism was right and the examples were wrong, in a way that is worse than being vague.
+
+- **The row conflated two different things.** "The program ships a kernel driver" and "the program needs hardware" are not the same claim. Wine maps serial, USB-serial and parallel ports (`/dev/ttyS*`, `/dev/ttyUSB*`, `/dev/ttyACM*`, `/dev/lp*`), exposes every HID device, backs WinUSB with libusb, and forwards smartcards straight to PC/SC. A point-of-sale program talking to a pinpad has no ring-0 problem to begin with.
+- **"Hardware dongles" was false for the largest family on the market**, and the manufacturer's own documentation says so, for the exact Wine version on the reference machine.
+- **The Brazilian TEF examples were wrong too.** CliSiTef ships `libclisitef.so`, PayGo ships `PGWebLib.so` in 32 and 64-bit, ACBrLib compiles to `.so`. None of them is a kernel driver. Tandem now recognises those imports and says the honest thing: *the library your system already uses has a Linux version — ask your supplier*, because only the supplier can act on it.
+
+**What survives:** a real third-party `.sys` that touches I/O ports, MMIO or interrupts is a dead end, and the dangerous part is not the verdict — it is that such a driver often **loads** and returns zeros, so the program starts and then misbehaves in a way that looks like its own bug. Wine prints `fixme:ntoskrnl:MmMapIoSpace stub` and `fixme:hal:READ_PORT_UCHAR stub!` when that happens. Since 4.0 Tandem reads those lines and turns them into a sentence — and had to re-enable the two debug channels by name, because the setting that keeps the log readable was switching off the evidence.
+
+</details>
+
+<details>
+<summary>The licensing row said "empty or synthetic serials", and that was measured false</summary>
+
+<br>
+
+Measured on Wine, unprivileged, with a bind-mounted `/sys/class/dmi/id`: `SystemManufacturer=Dell Inc.`, `SystemProductName=OptiPlex 3070`, `BaseBoardProduct=0K240Y`, `BIOSVersion=2.21.0` — the real values, and `wmic` agreed. CPU ID and CPU name matched `/proc/cpuinfo` byte for byte.
+
+- **Exactly four DMI fields are degraded**, and only because the Linux kernel keeps them at mode `0400`: the product, board and chassis serials and the product UUID. Wine substitutes an identifier derived from `machine-id` — stable across reboots and unique per machine, which is what a fingerprint needs.
+- **Three values genuinely are constants**, shared by every Wine install on Earth: the WMI BIOS serial (`Serial number`), the disk serial (`WINEHDISK`) and the default ProductId. If a licence check refuses, it almost certainly saw one of those. `tandem identidade` names them so the owner can put it in a ticket to their own vendor.
+- **Two dead ends, both measured, so nobody rediscovers them.** Editing `HKLM\HARDWARE\DESCRIPTION\System\BIOS` looks like it worked and is gone at the next launch — the key is created `REG_OPTION_VOLATILE` — and even while it is live it never reaches WMI, which calls `GetSystemFirmwareTable` directly. There is no environment variable or winecfg option that overrides SMBIOS data; searching for one and finding nothing is the whole result.
+
+</details>
 
 <details>
 <summary>The first row used to say something stronger, and checking it showed the mechanism was wrong</summary>

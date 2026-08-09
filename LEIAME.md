@@ -310,6 +310,8 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem dados` | mostra os **seus** arquivos dentro do Windows |
 | `tandem backup` · `tandem restore` | salva e restaura o ambiente inteiro |
 | `tandem protect <caminho>` | marca um perfil Wine como intocável |
+| `tandem identidade` | o que um programa lê desta máquina quando amarra a licença a ela |
+| `tandem portas` | em que COM o pinpad, a balança ou a impressora caíram — e como mudar |
 | `tandem alternativas <nome>` | procura um programa de Linux que faça o mesmo |
 | `tandem receita <arquivo>` | exporta o que aprendeu, para mandar a alguém |
 | `tandem memoria` · `tandem esquecer <nome>` | vê e apaga o que ele aprendeu |
@@ -357,11 +359,36 @@ Ser honesto sobre isso desde o começo economiza uma tarde de todo mundo.
 | | Por quê |
 |---|---|
 | **Hardware de loja dentro do Android** | **O seu leitor de código de barras já funciona** — ele é um teclado, e o Waydroid recebe as teclas dele pelo compositor como recebe de qualquer outro. Para impressora térmica, pinpad ou balança, ninguém no mundo relatou funcionar dentro do Waydroid, e o Tandem não vai mandar você por esse caminho. Deixe esses aparelhos no Linux, onde os quatro têm suporte melhor do que dentro do contêiner — o `tandem alternativas` mostra como. |
-| **App de banco e de pagamento** | O Play Integrity detecta o contêiner. Não há contorno confiável. |
-| **Programa Windows com driver de kernel** | Anti-cheat, alguns middlewares de pagamento de PDV, chave de proteção física. O Wine roda no espaço do usuário. |
-| **Licença amarrada ao hardware** | O Wine informa serial de BIOS e de disco vazio ou sintético. Software que identifica a máquina pode recusar a ativação — ou travar na tela de ativação. |
+| **Programa Windows que traz driver de kernel junto** | O Wine carrega o `.sys` dentro de um processo comum de usuário, e as chamadas de hardware ali embaixo são ocas: devolvem zero. Anti-trapaça de jogo é o caso limpo — e a exceção do EAC/BattlEye é uma chave que **a empresa do jogo** liga, não você. **Precisar de aparelho é outra coisa, e costuma funcionar** — veja a linha abaixo. |
+| **Play Integrity, para app de banco e de pagamento** | Não é "ele detecta o contêiner": é que falta uma coisa que contêiner nenhum pode ter. A prova de integridade de hardware exige uma chave gravada dentro do chip de um celular de verdade, e o Waydroid não tem esse chip. Banco brasileiro costuma recusar antes disso, pela verificação de root dele mesmo. |
 
 O Tandem reconhece vários desses casos lendo o próprio executável, **antes de rodar**, e explica a falha em vez de mostrar um código de erro.
+
+### E duas coisas que estavam nesta lista até a 4.0, erradas
+
+As duas foram conferidas na fonte. As duas mudaram de lugar.
+
+| | O que é verdade |
+|---|---|
+| **Chave física de proteção (dongle)** | **Chave Sentinel HL ou SL funciona.** A Thales publica que os dois tipos *"foram testados"*, no **Wine 10.0**, com o "Sentinel LDK Run-time Environment for Linux" instalado. O lado Windows nunca encosta na chave: quem cuida dela é um programa do Linux, e o programa Windows fala com ele pela rede da própria máquina. **HASP4 e Hardlock não funcionam** — o próprio fabricante exclui essas. O Tandem agora separa as duas lendo o executável e responde a certa para cada uma. |
+| **Licença amarrada ao hardware** | **Costuma funcionar.** Desde o Wine 3.13, o fabricante, o modelo, a BIOS, a placa-mãe, o processador, a memória e a placa de rede que o programa lê são os da sua máquina de verdade. O problema real não é ele recusar a ativação — é **perder** a ativação depois, porque o serial do disco C: e o identificador da máquina são sorteados na hora em que o ambiente é criado e mudam quando ele é refeito. O Tandem agora deriva os dois desta máquina e prende no momento da criação, então o ambiente refeito volta sendo o mesmo computador. Rode `tandem identidade` para ver cada número e de onde ele vem. |
+
+**Onde está a linha.** O Tandem segura uma identidade e explica o que o programa está vendo. Ele não fabrica identidade. Nunca vai inventar um número de licença da Microsoft, e nunca vai falsificar os dados de fábrica da máquina — [essa falsificação funciona](docs/IDEAS.md), e é exatamente por isso que ela fica recusada por escrito.
+
+<details>
+<summary>O que a linha do dongle dizia, e o que conferir custou</summary>
+
+<br>
+
+Ela dizia: *"Anti-cheat, alguns middlewares de pagamento de PDV, chave de proteção física. O Wine roda no espaço do usuário."* O mecanismo estava certo e os exemplos estavam errados, de um jeito pior do que estar vago.
+
+- **A linha misturava duas coisas diferentes.** "O programa traz um driver de kernel" e "o programa precisa de um aparelho" não são a mesma afirmação. O Wine entrega porta serial, serial-por-USB e paralela, mostra todo aparelho do tipo teclado, fala USB cru por libusb e repassa leitora de cartão direto para o Linux. Um sistema de vendas conversando com pinpad não tem problema nenhum de kernel para começo de conversa.
+- **"Chave física" era falso para a maior família do mercado**, e quem diz isso é a documentação do próprio fabricante, para a mesma versão do Wine que roda na máquina de referência.
+- **Os exemplos brasileiros de TEF também estavam errados.** O CliSiTef tem `libclisitef.so`, a PayGo tem `PGWebLib.so` em 32 e 64 bits, a ACBrLib compila para `.so`. Nenhum deles é driver de kernel. O Tandem agora reconhece essas bibliotecas e diz a coisa honesta: *a biblioteca que o seu sistema já usa tem versão de Linux — peça ao seu fornecedor*, porque só ele pode fazer isso.
+
+**O que sobrevive:** um `.sys` de verdade, de terceiro, que mexe direto no hardware, não tem caminho — e o perigo não é o veredito, é que um driver desses muitas vezes **carrega** e devolve zeros, então o programa abre e depois se comporta de um jeito estranho que parece defeito dele. O Wine escreve isso no registro técnico. Desde a 4.0 o Tandem lê essas linhas e transforma em frase.
+
+</details>
 
 <details>
 <summary>A primeira linha dizia algo mais forte, e conferir mostrou que o mecanismo estava errado</summary>

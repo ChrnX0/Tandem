@@ -234,6 +234,30 @@ Restaura o ambiente Windows a partir do backup mais recente.
 Marca um perfil Wine como intocável. O Tandem nunca instala nem altera
 nada dentro de um perfil protegido.
 .TP
+.B tandem identidade
+Mostra, lado a lado, tudo o que um programa consegue ler sobre este
+computador quando amarra a licença a ele, e diz de onde cada coisa vem: da
+sua máquina de verdade, de um valor fixo que todo Wine do mundo responde
+igual, ou de dentro do ambiente Windows. É só leitura: não abre o Wine, não
+pede senha e não altera nada. Serve para responder à pergunta que aparece
+quando um programa pede ativação de novo sem nada ter mudado.
+.TP
+.B tandem portas
+Lista em que porta COM ou LPT cada aparelho ligado à máquina vai aparecer
+para os programas Windows — pinpad, balança, impressora, leitor de código de
+barras em modo serial. Avisa nos dois casos que quebram isso em silêncio: o
+aparelho que caiu numa porta acima da COM4, que muito programa de loja
+antigo recusa, e a falta do grupo
+.BR dialout ,
+sem o qual o aparelho aparece na lista e não abre.
+.TP
+.BI "tandem portas fixar " "porta caminho"
+Prende um aparelho numa porta escolhida por você, por exemplo
+.BR "tandem portas fixar COM2 /dev/ttyACM0" .
+Só funciona em ambiente criado pelo Tandem.
+.BR "tandem portas soltar " porta
+desfaz.
+.TP
 .B tandem lista
 Mostra a lista da comunidade: o que já deu certo na máquina de outras
 pessoas, por programa.

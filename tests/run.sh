@@ -26,6 +26,16 @@ equal() {
     if [ "$2" = "$3" ]; then pass "$1"; else fail "$1" "$2" "$3"; fi
 }
 
+# contem <name> <fragment> <text> - for the cases where the whole text is a
+# paragraph written for a person and pinning it word for word would turn every
+# wording fix into a test failure.
+contem() {
+    case "$3" in *"$2"*) pass "$1" ;; *) fail "$1" "...$2..." "$3" ;; esac
+}
+naocontem() {
+    case "$3" in *"$2"*) fail "$1" "without \"$2\"" "$3" ;; *) pass "$1" ;; esac
+}
+
 # Isolated environment: nothing here may touch the HOME of whoever runs the tests.
 TMPROOT="$(mktemp -d)"
 trap 'rm -rf -- "$TMPROOT"' EXIT
@@ -73,9 +83,9 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1695872137 658" "$soma_esperados"
+      "1776903002 699" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
-      "3777721855 1474" "$soma_padroes"
+      "2310912825 1467" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -458,22 +468,71 @@ equal "a missing file degrades with a message" \
 python3 src/lib/peinfo.py >/dev/null 2>&1
 equal "no argument returns a usage error" "2" "$?"
 
-# What the pre-flight can prove on its own: recognizing, BEFORE running, a
-# program that depends on something that will never work here.
-TANDEM_LIB="$ROOT/src/lib" TANDEM_LIMITES="$ROOT/src/lib/limites.tsv" \
-    bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_limite_do_programa "'"$ARTIFACTS"'/imports32.exe"' \
-    > "$TMPROOT/lim.txt" 2>/dev/null
-case "$(cat "$TMPROOT/lim.txt")" in
-    dongle\|*chave\ física*) pass "recognizes hardware-key protection before running" ;;
-    *) fail "recognizes hardware-key protection before running" \
-              "dongle|...chave física..." "$(cat "$TMPROOT/lim.txt")" ;;
-esac
+# What the pre-flight can prove on its own: recognizing, BEFORE running, what
+# the program depends on - and, since 4.0, whether that has a way out. Until
+# then every signature here produced the same "this has no fix", including for
+# the largest dongle family on the market, whose manufacturer publishes the
+# recipe for the exact Wine version this project targets.
+limite() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_LIMITES="$ROOT/src/lib/limites.tsv" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_limite_do_programa "'"$1"'"' 2>/dev/null
+}
+semsaida() {
+    TANDEM_LIB="$ROOT/src/lib" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_limite_sem_saida "'"$1"'" && echo sim || echo nao' 2>/dev/null
+}
 
-TANDEM_LIB="$ROOT/src/lib" TANDEM_LIMITES="$ROOT/src/lib/limites.tsv" \
-    bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_limite_do_programa "'"$ARTIFACTS"'/importslimpo.exe"' \
-    > "$TMPROOT/lim2.txt" 2>/dev/null
+LIM_SENTINEL="$(limite "$ARTIFACTS/imports32.exe")"
+equal "a modern Sentinel key is recognized as Sentinel, not as impossible" \
+      "dongle-sentinel" "${LIM_SENTINEL%%|*}"
+contem "and the owner is told what to install for it" \
+       "Run-time Environment" "$LIM_SENTINEL"
+equal "a Sentinel verdict is NOT a dead end" "nao" "$(semsaida dongle-sentinel)"
+
+LIM_LEGADO="$(limite "$ARTIFACTS/hasplegado.exe")"
+equal "an old HASP4 key stays impossible, and is told apart" \
+      "dongle" "${LIM_LEGADO%%|*}"
+equal "a HASP4 verdict IS a dead end" "sim" "$(semsaida dongle)"
+naocontem "and it offers no way out, because there is none" \
+          "Run-time Environment" "$LIM_LEGADO"
+
+LIM_DRIVER="$(limite "$ARTIFACTS/driver.exe")"
+equal "a file that imports the Windows kernel is a driver" \
+      "driver" "${LIM_DRIVER%%|*}"
+equal "a driver verdict IS a dead end" "sim" "$(semsaida driver)"
+
+LIM_TEF="$(limite "$ARTIFACTS/tef.exe")"
+equal "Brazilian card middleware is recognized" "tef" "${LIM_TEF%%|*}"
+contem "and answered with the native library, which is the real lever" \
+       "Linux" "$LIM_TEF"
+equal "a TEF verdict is NOT a dead end" "nao" "$(semsaida tef)"
+
+equal "an unknown class is treated as having a way out, never as hopeless" \
+      "nao" "$(semsaida classe-que-nao-existe)"
+
 equal "an ordinary program gets no impossibility verdict" \
-      "" "$(cat "$TMPROOT/lim2.txt")"
+      "" "$(limite "$ARTIFACTS/importslimpo.exe")"
+
+# The verdict PROVEN by the log outranks the one guessed from the file. It is
+# also the only way to catch the worst case: a driver that loads into user
+# space, reads zeros off hollow hardware APIs, and makes the program look
+# merely buggy.
+printf '0009:fixme:ntoskrnl:MmMapIoSpace stub: 1000 4096 0\n' > "$TMPROOT/drv.log"
+LIM_LOG="$(TANDEM_LIB="$ROOT/src/lib" bash -c \
+    '. "'"$ROOT"'/src/lib/common.sh"; t_limite_do_log "'"$TMPROOT"'/drv.log"' 2>/dev/null)"
+equal "a stubbed hardware call in the log proves a driver" "driver" "${LIM_LOG%%|*}"
+contem "and says why the program opens and then misbehaves" \
+       "devolveu zeros" "$LIM_LOG"
+printf '0009:err:module:import_dll Library FOO.dll not found\n' > "$TMPROOT/nodrv.log"
+equal "an ordinary log proves nothing about drivers" "" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_limite_do_log "'"$TMPROOT"'/nodrv.log"' 2>/dev/null)"
+
+# The channels those lines arrive on are switched OFF by the WINEDEBUG the
+# runner sets, so they have to be switched back on by name. Getting this wrong
+# makes every test above pass and the feature never fire on a real machine.
+contem "the runner re-enables the two channels that carry the proof" \
+       "fixme+ntoskrnl" "$(grep '^export WINEDEBUG' "$ROOT/src/bin/tandem-exe")"
 
 # ------------------------------------------------------------ PE reading
 
@@ -1047,7 +1106,7 @@ CASA_C="$TMPROOT/cli"; mkdir -p "$CASA_C/.local/share/tandem/wine/drive_c/window
 : > "$CASA_C/.local/share/tandem/wine/system.reg"
 : > "$CASA_C/.local/share/tandem/wine/.tandem-prefixo"
 : > "$CASA_C/.primeira-vez"
-for cmd in "dados" "lista" "doctor" "--help" "version"; do
+for cmd in "dados" "lista" "doctor" "identidade" "portas" "--help" "version"; do
     output="$(env -i HOME="$CASA_C" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
              bash "$ROOT/src/bin/tandem" $cmd 2>&1)"
     if [ -n "$output" ]; then pass "\"tandem $cmd\" prints something"
@@ -1065,6 +1124,119 @@ if [ -c /dev/tty ] && (exec < /dev/tty) 2>/dev/null; then
 else
     skip "t_texto with a terminal on the input" "the suite runs without a controlling terminal"
 fi
+
+section "the machine's identity, held still"
+
+# Nothing here starts Wine. Every value is read out of /sys, /proc or
+# system.reg, which is what makes the diagnosis instant and safe to run on a
+# counter in the middle of a working day.
+
+SER1="$(t_identidade_serial)"
+SER2="$(t_identidade_serial)"
+equal "the volume serial is eight hex digits" \
+      "sim" "$(case "$SER1" in [0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]) echo sim ;; *) echo "nao ($SER1)" ;; esac)"
+equal "and it is the same every time it is asked" "$SER1" "$SER2"
+# The whole point: it is derived from the machine, not drawn at random. A
+# prefix destroyed and remade has to come back as the same computer, because
+# losing an activation on a rebuild is the failure people actually report.
+naocontem "the serial is not the placeholder unless there is no seed" \
+          "00000000" "$SER1"
+
+GUID1="$(t_identidade_guid)"
+equal "the machine identifier has the shape of a GUID" \
+      "sim" "$(case "$GUID1" in
+                 [0-9a-f]????????-????-????-????-???????????) echo nao ;;
+                 ????????-????-????-????-????????????) echo sim ;;
+                 *) echo "nao ($GUID1)" ;; esac)"
+equal "and it is stable too" "$GUID1" "$(t_identidade_guid)"
+equal "the two are not the same number wearing two hats" \
+      "diferentes" "$(case "$GUID1" in "$SER1"*) echo iguais ;; *) echo diferentes ;; esac)"
+
+# A synthetic system.reg in the shape Wine actually writes: keys carry DOUBLED
+# backslashes. That detail is the whole test - passing the key through
+# "awk -v" eats half of them, the key never matches, and every value reads as
+# absent while the code looks correct.
+PREF_ID="$TMPROOT/prefixo-id"
+mkdir -p "$PREF_ID/drive_c"
+cat > "$PREF_ID/system.reg" <<'REG'
+WINE REGISTRY Version 2
+
+[Software\\Microsoft\\Cryptography] 1700000000
+#time=1d000000000
+"MachineGuid"="11112222-3333-4444-5555-666677778888"
+
+[Software\\Microsoft\\Windows NT\\CurrentVersion] 1700000000
+"ProductId"="12345-oem-0000001-54321"
+"ProductName"="Microsoft Windows 10"
+
+[Software\\Wine\\Ports] 1700000000
+"COM2"="/dev/ttyACM0"
+REG
+equal "reads a value out of system.reg without starting Wine" \
+      "11112222-3333-4444-5555-666677778888" \
+      "$(t_reg_valor "$PREF_ID" 'Software\\Microsoft\\Cryptography' MachineGuid)"
+equal "and one from a key whose name has a space in it" \
+      "12345-oem-0000001-54321" \
+      "$(t_reg_valor "$PREF_ID" 'Software\\Microsoft\\Windows NT\\CurrentVersion' ProductId)"
+equal "a value that is not there reads as empty, not as the next key's" \
+      "" "$(t_reg_valor "$PREF_ID" 'Software\\Microsoft\\Cryptography' NaoExiste)"
+equal "lists every value of one key" \
+      "COM2 = /dev/ttyACM0" \
+      "$(t_reg_lista_valores "$PREF_ID" 'Software\\Wine\\Ports')"
+
+TEXTO_ID="$(t_texto_identidade "$PREF_ID")"
+contem "the report names the constant every Wine install reports" \
+       "igual" "$TEXTO_ID"
+contem "and says the ProductId is Wine's own, not this machine's" \
+       "não inventa outro" "$TEXTO_ID"
+contem "and shows the frozen identifier" \
+       "11112222-3333-4444-5555-666677778888" "$TEXTO_ID"
+
+# Freezing is done ONCE, at creation. A prefix where something has already
+# activated must not have its identity moved underneath it - that is the very
+# loss the feature exists to prevent, and doing it late causes it.
+PREF_FIX="$TMPROOT/prefixo-fixa"
+mkdir -p "$PREF_FIX/drive_c"
+t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
+equal "freezing writes the volume serial into the drive root" \
+      "$SER1" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
+contem "and records the seed, so a machine-id change becomes diagnosable" \
+       "SEMENTE=" "$(cat "$PREF_FIX/.tandem-identidade" 2>/dev/null)"
+printf 'DEADBEEF\n' > "$PREF_FIX/drive_c/.windows-serial"
+t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
+equal "a serial that already exists is never overwritten" \
+      "DEADBEEF" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
+
+section "ports: where the pinpad and the scale ended up"
+
+TEXTO_PORTAS="$(t_texto_portas "$PREF_ID")"
+contem "the report says what it is for, in the owner's words" \
+       "pinpad" "$TEXTO_PORTAS"
+contem "and shows what was already pinned in this environment" \
+       "/dev/ttyACM0" "$TEXTO_PORTAS"
+if t_no_grupo dialout; then
+    skip "warns about the dialout group" "whoever runs the suite is in it"
+else
+    contem "warns about the dialout group, which is the silent killer" \
+           "dialout" "$TEXTO_PORTAS"
+fi
+
+# Wine hands out COM1, COM2, ... in the order it scans, and it scans ttyS
+# first. That order is not cosmetic: it is why a USB pinpad lands above COM4
+# on a machine with four onboard serial ports, and why old point-of-sale
+# software then says the device is not there.
+ORDEM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_portas_seriais() { printf "/dev/ttyS0\n/dev/ttyS1\n/dev/ttyS2\n/dev/ttyS3\n/dev/ttyACM0\n"; }
+    t_portas_paralelas() { :; }
+    t_no_grupo() { return 0; }
+    t_texto_portas /naoexiste' 2>/dev/null)"
+contem "the fifth port is COM5, which is the whole problem" \
+       "COM5" "$ORDEM"
+contem "and the USB device above COM4 gets a warning of its own" \
+       "só aceita de COM1 a COM4" "$ORDEM"
+contem "with the exact command that moves it" \
+       "tandem portas fixar COM2 /dev/ttyACM0" "$ORDEM"
 
 section "native packages: AppImage"
 
