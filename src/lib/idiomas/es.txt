@@ -1,0 +1,70 @@
+# Tandem - catálogo de mensajes, español.
+# Formato: @clave abre un mensaje; {1} {2} son las partes variables;
+# una # al principio de línea es un comentario. Este archivo NUNCA se ejecuta.
+# Una clave que falte aquí cae al original en portugués.
+#
+# REVISADO=nao
+
+@sem_arquivo
+No se indicó ningún archivo.
+
+@arquivo_sumiu
+Archivo no encontrado:
+{1}
+
+@ja_instalando
+Ya hay otra instalación en curso.
+
+@nao_consegui_ler
+No pude leer este archivo.
+
+{1}
+
+@idioma_atual
+Idioma de Tandem: {1}
+
+Para cambiarlo:  tandem idioma <código>
+
+@idioma_lista_titulo
+Idiomas disponibles:
+
+@idioma_trocado
+Listo. Tandem ahora habla {1}.
+
+@idioma_desconhecido
+No conozco el idioma "{1}".
+
+Consulta la lista con:  tandem idioma
+
+@idioma_nao_revisado
+Aviso honesto: esta traducción todavía no la ha revisado alguien que hable
+{1} como lengua materna. Se hizo con cuidado, pero puede tener algún error
+que suene a traducción y no a {1}.
+
+Si encuentras uno, avísanos: es la contribución más fácil de hacer en este
+proyecto, porque el archivo es texto puro y está en /usr/lib/tandem/idiomas.
+
+@idioma_pergunta
+¿En qué idioma quieres usar Tandem?
+
+Tandem eligió {1} porque es el idioma de este ordenador. Puedes cambiarlo
+cuando quieras con:  tandem idioma <código>
+
+@idioma_sem_letra
+Tu sistema no tiene instaladas las letras de {1}, así que la pantalla se
+llenaría de cuadraditos. Sigo en {2}.
+
+Para instalar las letras que faltan, busca el paquete de fuentes de ese
+idioma en el centro de software.
+
+@idioma_rodape
+(*) Estas traducciones todavía no las ha revisado alguien que hable el idioma
+    como lengua materna. Se hicieron con cuidado, pero pueden tener algún
+    error. Si encuentras uno, avísanos: el archivo es texto puro y está en
+    /usr/lib/tandem/idiomas.
+
+@idioma_nao_gravou
+No pude guardar tu elección de idioma.
+
+Suele ser que la carpeta de configuración no tiene permiso de escritura, o
+que el disco está lleno.

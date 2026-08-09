@@ -1,4 +1,4 @@
-.TH TANDEM 1 "2026-08-09" "tandem 3.8" "Comandos do usuário"
+.TH TANDEM 1 "2026-08-09" "tandem 4.1" "Comandos do usuário"
 .SH NOME
 tandem \- roda programas Windows, aplicativos Android e pacotes do Linux
 .SH SINOPSE
@@ -233,6 +233,18 @@ Restaura o ambiente Windows a partir do backup mais recente.
 .BI "tandem protect " caminho
 Marca um perfil Wine como intocável. O Tandem nunca instala nem altera
 nada dentro de um perfil protegido.
+.TP
+.BI "tandem idioma " [código]
+Sem argumento, mostra em que idioma o Tandem está falando e a lista dos que
+existem. Com um código
+.RB ( pt_BR ", " en ", " es ", " fr ", " zh_CN ", " hi ", " ar ),
+troca para ele e guarda a escolha.
+.IP
+O Tandem não pergunta o idioma durante a instalação do pacote: ele segue o
+idioma que o Linux já está configurado para usar, e avisa qual escolheu na
+primeira vez que roda. Traduções ainda não conferidas por quem fala o idioma
+de berço são marcadas com um asterisco na lista, e o Tandem diz isso na cara
+de quem escolhe uma delas.
 .TP
 .B tandem identidade
 Mostra, lado a lado, tudo o que um programa consegue ler sobre este

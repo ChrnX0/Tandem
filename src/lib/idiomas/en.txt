@@ -1,0 +1,81 @@
+# Tandem - message catalogue, English.
+#
+# FORMAT
+#   @key          opens a message; everything until the next @key is the text
+#   {1} {2} {3}   where the variable parts go (a path, a name, a number)
+#   # at line start   a comment
+#   \@ \#         for a message that must begin with @ or #
+#
+# This file is NEVER executed. A dollar sign, a backtick or $(...) in here is
+# text and stays text. You do not need to know how to program to translate it.
+#
+# A key missing from this file falls back to the Portuguese original, so a
+# half-finished translation still says something readable.
+#
+# REVISADO=sim
+
+# ---------------------------------------------------------- shared entry
+@sem_arquivo
+No file was given.
+
+@arquivo_sumiu
+File not found:
+{1}
+
+@ja_instalando
+Another installation is already running.
+
+@nao_consegui_ler
+I could not read this file.
+
+{1}
+
+# ------------------------------------------------------------- language
+@idioma_atual
+Tandem language: {1}
+
+To change it:  tandem idioma <code>
+
+@idioma_lista_titulo
+Available languages:
+
+@idioma_trocado
+Done. Tandem now speaks {1}.
+
+@idioma_desconhecido
+I do not know the language "{1}".
+
+See the list with:  tandem idioma
+
+@idioma_nao_revisado
+An honest warning: this translation has not yet been checked by somebody who
+speaks {1} as their first language. It was made with care, but it may hold a
+mistake that reads like a translation rather than like {1}.
+
+If you find one, say so — it is the easiest contribution to make to this
+project: the file is plain text and lives in /usr/lib/tandem/idiomas.
+
+@idioma_pergunta
+Which language do you want to use Tandem in?
+
+Tandem picked {1} because that is what this computer is set to. You can
+change it whenever you like with:  tandem idioma <code>
+
+@idioma_sem_letra
+Your system does not have the letters for {1} installed, so the screen would
+fill with little boxes. Staying in {2}.
+
+To install the missing letters, look for that language's font package in the
+Software centre.
+
+@idioma_rodape
+(*) These translations have not yet been checked by somebody who speaks the
+    language as their first. They were made with care, but they may hold a
+    mistake. If you find one, say so: the file is plain text and lives in
+    /usr/lib/tandem/idiomas.
+
+@idioma_nao_gravou
+I could not save your choice of language.
+
+That is usually the configuration folder having no write permission, or a
+full disk.

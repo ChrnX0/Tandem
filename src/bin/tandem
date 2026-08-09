@@ -33,6 +33,7 @@ Tandem - roda programas Windows, apps Android e pacotes do Linux.
   tandem identidade           o que o programa ve da sua maquina (licenca)
   tandem portas               pinpad, balanca, impressora: em que COM ficaram
   tandem portas fixar <p> <d> prende um aparelho numa porta (ex.: COM2)
+  tandem idioma [codigo]      em que idioma o Tandem fala (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <nome>  procura um programa de Linux que faca o mesmo
   tandem receita <arquivo>    exporta o que aprendeu, para mandar a alguem
   tandem receita --importar <r> <arquivo>   usa a receita de outra pessoa
@@ -1070,6 +1071,50 @@ tandem portas soltar COM2               desfaz"
     esac
 }
 
+# ----------------------------------------------------------------- idioma
+#
+# The question is asked on FIRST RUN and not during the package install, and
+# the reason is written down at t_primeira_vez: dpkg holds a lock while
+# postinst runs, the graphical installer runs it in a daemon with no terminal
+# and no session, and the per-user work has no reliable way to know who the
+# user even is. Debconf could ask, at the cost of a dependency and a screen
+# shown before the program exists. Following the system's own language and
+# saying which one was picked costs nothing and is right far more often.
+acao_idioma() {
+    local escolha="${1:-}" c
+    if [ -z "$escolha" ]; then
+        {
+            t_msg idioma_atual "$(t_idioma_nome "$TANDEM_IDIOMA")"; printf '\n\n'
+            t_msg idioma_lista_titulo; printf '\n'
+            for c in $TANDEM_IDIOMAS; do
+                printf '  %-6s %s' "$c" "$(t_idioma_nome "$c")"
+                [ "$c" = "$TANDEM_IDIOMA" ] && printf '   <--'
+                t_idioma_revisado "$c" || printf '   (*)'
+                printf '\n'
+            done
+            printf '\n'; t_msg idioma_rodape; printf '\n'
+        } | t_texto "Tandem - idioma"
+        return 0
+    fi
+
+    for c in $TANDEM_IDIOMAS; do
+        if [ "$c" = "$escolha" ]; then
+            if ! t_idioma_tem_letras "$c"; then
+                t_erro "$(t_msg idioma_sem_letra "$(t_idioma_nome "$c")" \
+                                                 "$(t_idioma_nome "$TANDEM_IDIOMA")")"
+                return 1
+            fi
+            t_idioma_grava "$c" || { t_erro "$(t_msg idioma_nao_gravou)"; return 1; }
+            t_ok "$(t_msg idioma_trocado "$(t_idioma_nome "$c")")"
+            t_idioma_revisado "$c" ||
+                t_aviso "$(t_msg idioma_nao_revisado "$(t_idioma_nome "$c")")"
+            return 0
+        fi
+    done
+    t_erro "$(t_msg idioma_desconhecido "$escolha")"
+    return 1
+}
+
 acao_logs() {
     local l; l="$(ls -1t "$TANDEM_ESTADO"/*.log 2>/dev/null | head -1)"
     [ -n "$l" ] || { t_erro "Ainda não há registros."; return 1; }
@@ -1406,6 +1451,7 @@ case "${1:-}" in
     protect|proteger)     shift; acao_protect "$@" ;;
     identidade|fingerprint) acao_identidade ;;
     portas|ports)         shift; acao_portas "$@" ;;
+    idioma|language|lang) shift; acao_idioma "$@" ;;
     alternativas|alternativa) shift; acao_alternativas "$@" ;;
     receita|receitas)     shift; acao_receita "$@" ;;
     memoria|memória)      shift; acao_memoria "$@" ;;

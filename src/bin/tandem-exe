@@ -9,10 +9,9 @@ t_log_init exe "$*"
 t_primeira_vez
 
 BRUTO="${1:-}"
-[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+[ -n "$BRUTO" ] || { t_erro "$(t_msg sem_arquivo)"; exit 1; }
 PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
-[ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "Arquivo não encontrado:
-$BRUTO"; exit 1; }
+[ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "$(t_msg arquivo_sumiu "$BRUTO")"; exit 1; }
 
 # Without Wine, the click cannot die on a warning: we offer to install it now.
 if ! command -v wine >/dev/null 2>&1; then

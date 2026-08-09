@@ -1,0 +1,71 @@
+# Tandem - catalogue de messages, français.
+# Format : @clé ouvre un message ; {1} {2} sont les parties variables ;
+# un # en début de ligne est un commentaire. Ce fichier n'est JAMAIS exécuté.
+# Une clé absente ici retombe sur l'original en portugais.
+#
+# REVISADO=nao
+
+@sem_arquivo
+Aucun fichier n'a été indiqué.
+
+@arquivo_sumiu
+Fichier introuvable :
+{1}
+
+@ja_instalando
+Une autre installation est déjà en cours.
+
+@nao_consegui_ler
+Je n'ai pas pu lire ce fichier.
+
+{1}
+
+@idioma_atual
+Langue de Tandem : {1}
+
+Pour la changer :  tandem idioma <code>
+
+@idioma_lista_titulo
+Langues disponibles :
+
+@idioma_trocado
+C'est fait. Tandem parle maintenant {1}.
+
+@idioma_desconhecido
+Je ne connais pas la langue « {1} ».
+
+Voir la liste avec :  tandem idioma
+
+@idioma_nao_revisado
+Un avertissement honnête : cette traduction n'a pas encore été relue par une
+personne dont {1} est la langue maternelle. Elle a été faite avec soin, mais
+elle peut contenir une tournure qui sonne comme une traduction.
+
+Si vous en trouvez une, dites-le : c'est la contribution la plus simple à
+apporter ici, le fichier est du texte brut et se trouve dans
+/usr/lib/tandem/idiomas.
+
+@idioma_pergunta
+Dans quelle langue voulez-vous utiliser Tandem ?
+
+Tandem a choisi {1} parce que c'est la langue de cet ordinateur. Vous pouvez
+en changer quand vous voulez avec :  tandem idioma <code>
+
+@idioma_sem_letra
+Votre système n'a pas les lettres de {1} installées : l'écran se remplirait
+de petits carrés. Je reste en {2}.
+
+Pour installer les lettres manquantes, cherchez le paquet de polices de
+cette langue dans la logithèque.
+
+@idioma_rodape
+(*) Ces traductions n'ont pas encore été relues par une personne dont c'est
+    la langue maternelle. Elles ont été faites avec soin, mais elles peuvent
+    contenir une erreur. Si vous en trouvez une, dites-le : le fichier est du
+    texte brut et se trouve dans /usr/lib/tandem/idiomas.
+
+@idioma_nao_gravou
+Je n'ai pas pu enregistrer votre choix de langue.
+
+C'est en général le dossier de configuration qui n'est pas accessible en
+écriture, ou le disque qui est plein.

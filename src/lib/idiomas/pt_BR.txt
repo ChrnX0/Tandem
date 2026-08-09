@@ -1,0 +1,81 @@
+# Tandem - catálogo de mensagens, português do Brasil.
+#
+# ESTE É O ORIGINAL. Toda outra tradução responde a este arquivo, e toda chave
+# que falte numa tradução cai aqui. Uma frase perdida numa edição vira uma
+# frase em português, nunca uma tela vazia.
+#
+# FORMATO
+#   @chave        abre uma mensagem; tudo até a próxima @chave é o texto
+#   {1} {2} {3}   onde entram os pedaços variáveis (caminho, nome, número)
+#   # no começo   comentário, quando está fora de uma mensagem
+#   \@ \#         para uma mensagem que precisa começar com @ ou #
+#
+# Este arquivo NUNCA é executado. Cifrão, crase e $(...) aqui dentro são texto
+# e continuam texto. Você não precisa saber programar para traduzir.
+#
+# REVISADO=sim  (é o idioma em que o programa foi escrito)
+
+# ---------------------------------------------------------- entrada comum
+@sem_arquivo
+Nenhum arquivo foi informado.
+
+@arquivo_sumiu
+Arquivo não encontrado:
+{1}
+
+@ja_instalando
+Outra instalação já está em andamento.
+
+@nao_consegui_ler
+Não consegui ler este arquivo.
+
+{1}
+
+# ------------------------------------------------------------- idioma
+@idioma_atual
+Idioma do Tandem: {1}
+
+Para trocar:  tandem idioma <código>
+
+@idioma_lista_titulo
+Idiomas disponíveis:
+
+@idioma_trocado
+Pronto. O Tandem passa a falar {1}.
+
+@idioma_desconhecido
+Não conheço o idioma "{1}".
+
+Veja a lista com:  tandem idioma
+
+@idioma_nao_revisado
+Aviso honesto: esta tradução ainda não foi conferida por alguém que fale
+{1} de berço. Ela foi feita com cuidado, mas pode ter erro de português
+disfarçado de {1}.
+
+Se encontrar um, avise — é a contribuição mais fácil de fazer neste projeto:
+o arquivo é texto puro e fica em /usr/lib/tandem/idiomas.
+
+@idioma_pergunta
+Em que idioma você quer usar o Tandem?
+
+O Tandem escolheu {1} porque é o idioma deste computador. Você pode trocar
+quando quiser com:  tandem idioma <código>
+
+@idioma_sem_letra
+O seu sistema não tem as letras de {1} instaladas, então a tela ficaria
+cheia de quadradinhos. Continuo em {2}.
+
+Para instalar as letras que faltam, procure pelo pacote de fontes do idioma
+na Central de Programas.
+
+@idioma_rodape
+(*) Estas traduções ainda não foram conferidas por quem fala o idioma de
+    berço. Foram feitas com cuidado, mas podem ter erro. Se encontrar um,
+    avise: o arquivo é texto puro e fica em /usr/lib/tandem/idiomas.
+
+@idioma_nao_gravou
+Não consegui guardar a sua escolha de idioma.
+
+Isso costuma ser a pasta de configuração sem permissão de escrita, ou o
+disco cheio.

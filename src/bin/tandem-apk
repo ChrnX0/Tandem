@@ -5,10 +5,9 @@
 t_log_init apk "$*"
 
 BRUTO="${1:-}"
-[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+[ -n "$BRUTO" ] || { t_erro "$(t_msg sem_arquivo)"; exit 1; }
 APK="$(readlink -f -- "$BRUTO" 2>/dev/null)"
-[ -n "$APK" ] && [ -f "$APK" ] || { t_erro "Arquivo não encontrado:
-$BRUTO"; exit 1; }
+[ -n "$APK" ] && [ -f "$APK" ] || { t_erro "$(t_msg arquivo_sumiu "$BRUTO")"; exit 1; }
 
 TMP=""
 limpar() {
@@ -25,7 +24,7 @@ trap limpar EXIT INT TERM
 # tandem-exe: without them, every error path with no graphical session ends
 # in zero bytes of output.
 if { exec 9> "$TANDEM_TRAVAS/apk.lock"; } 2>/dev/null; then
-    flock -w 900 9 || { t_erro "Outra instalação já está em andamento."; exit 1; }
+    flock -w 900 9 || { t_erro "$(t_msg ja_instalando)"; exit 1; }
 else
     t_diz "nao consegui criar a trava de instalacao; seguindo sem ela"
 fi

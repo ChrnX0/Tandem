@@ -1,0 +1,63 @@
+# Tandem - 消息目录，简体中文。
+# 格式：@键 开始一条消息；{1} {2} 是可变部分；行首的 # 是注释。
+# 本文件永远不会被执行。此处缺少的键会回退到葡萄牙语原文。
+#
+# REVISADO=nao
+
+@sem_arquivo
+没有指定文件。
+
+@arquivo_sumiu
+找不到文件：
+{1}
+
+@ja_instalando
+已经有另一个安装正在进行中。
+
+@nao_consegui_ler
+无法读取这个文件。
+
+{1}
+
+@idioma_atual
+Tandem 界面语言：{1}
+
+更换语言：  tandem idioma <代码>
+
+@idioma_lista_titulo
+可用的语言：
+
+@idioma_trocado
+好了。Tandem 现在使用{1}。
+
+@idioma_desconhecido
+我不认识“{1}”这个语言。
+
+用这个命令查看列表：  tandem idioma
+
+@idioma_nao_revisado
+坦白说明：这份翻译还没有经过以{1}为母语的人校对。它是用心做的，但可能
+有些地方读起来像翻译腔，而不像地道的{1}。
+
+如果您发现了，请告诉我们 —— 这是本项目里最容易做的贡献：文件是纯文本，
+放在 /usr/lib/tandem/idiomas 目录下。
+
+@idioma_pergunta
+您想用哪种语言使用 Tandem？
+
+Tandem 选了{1}，因为这台电脑就是这个语言。您随时可以更换：
+tandem idioma <代码>
+
+@idioma_sem_letra
+您的系统没有安装{1}的字体，屏幕上会显示成一个个小方块。继续使用{2}。
+
+要安装缺少的字体，请在软件中心里搜索该语言的字体包。
+
+@idioma_rodape
+(*) 这些翻译还没有经过以该语言为母语的人校对。它们是用心做的，但可能有错。
+    如果您发现了，请告诉我们：文件是纯文本，放在 /usr/lib/tandem/idiomas。
+
+@idioma_nao_gravou
+无法保存您选择的语言。
+
+通常是配置目录没有写入权限，或者磁盘已满。

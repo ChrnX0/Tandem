@@ -16,10 +16,9 @@
 t_log_init snap "$*"
 
 BRUTO="${1:-}"
-[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+[ -n "$BRUTO" ] || { t_erro "$(t_msg sem_arquivo)"; exit 1; }
 ARQ="$(readlink -f -- "$BRUTO" 2>/dev/null)"
-[ -n "$ARQ" ] && [ -f "$ARQ" ] || { t_erro "Arquivo não encontrado:
-$BRUTO"; exit 1; }
+[ -n "$ARQ" ] && [ -f "$ARQ" ] || { t_erro "$(t_msg arquivo_sumiu "$BRUTO")"; exit 1; }
 
 NOME="$(basename -- "${ARQ%.snap}")"
 # The name a snap file carries is name_revision; the revision is not part of it.

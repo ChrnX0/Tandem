@@ -1,3 +1,49 @@
+tandem (4.1) unstable; urgency=medium
+
+  * Tandem speaks seven languages. Until here every sentence was a Portuguese
+    literal sitting inside the script that printed it, which was right while
+    the product had one owner in one country and stopped being right the
+    moment somebody elsewhere installed it.
+  * The messages are DATA, not code, and the format is built so they cannot be
+    anything else. A catalogue is parsed by "read" and never evaluated, so a
+    dollar sign, a backtick or a $(...) inside a translation is text and stays
+    text. Translation files will one day arrive from strangers, and a
+    translator is not somebody who should have to know what a subshell is.
+  * Substitution is {1} {2} and deliberately not printf's %s. Paths and
+    versions carry percent signs, and this project has been bitten by a format
+    string before; there is a test with a folder called "50% off" in it.
+  * A key missing from a translation falls back to the Portuguese original -
+    never to the key name, never to nothing. A half-finished translation still
+    says something a person can read. There is also a test that every key
+    exists in every catalogue, so half-finished does not become permanent by
+    accident.
+  * Which language: TANDEM_IDIOMA in the environment, then the owner's choice,
+    then the system's own locale, then Portuguese. pt_PT gets the Portuguese
+    catalogue and es_AR the Spanish one, because the country is not the
+    language. Anything unrecognised stays on Portuguese rather than changing
+    language under the people already using it.
+  * Reading the system's language had to be moved to the very top of the
+    library. The charmap fixup below it exports LC_ALL so zenity can print an
+    accent, and that overwrote the only evidence of what language the machine
+    was in: on any computer with no pt_BR locale generated - which is most of
+    them outside Brazil - every user looked like they had asked for C.
+  * The question is asked on FIRST RUN, not during the package install. dpkg
+    holds a lock while postinst runs, the graphical installer runs it in a
+    daemon with no terminal, and the per-user work has no reliable way to know
+    who the user is. Following the language the system is already set to costs
+    nothing and is right far more often than a dialog nobody sees.
+  * A language whose script has no font installed is refused with a sentence,
+    not accepted into a screen of empty boxes - the zenity-accents lesson, one
+    alphabet further out. Being unable to check means going ahead: refusing on
+    a machine we could not inspect would be worse.
+  * The five translations nobody has reviewed yet say so, on the list and
+    again when you pick one. Shipping a translation no speaker has read is
+    defensible; shipping it without saying so is not.
+  * Languages: Portuguese (the original), English, Spanish, French, Simplified
+    Chinese, Hindi and Arabic.
+
+ -- ChrnX0 <rockx0@gmail.com>  Sun, 09 Aug 2026 09:00:00 +0000
+
 tandem (4.0) unstable; urgency=medium
 
   * Two of the four rows in "what will never work" were checked against

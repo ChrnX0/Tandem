@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.0"
+TANDEM_VERSAO="4.1"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -96,10 +96,239 @@ t_locale_utf8() {
     printf 'C.UTF-8'
 }
 
+# The language the SYSTEM asked for, captured before anything here touches it.
+# The charmap fixup just below exports LC_ALL to keep zenity able to print an
+# accent, and that overwrote the only evidence of what language the machine is
+# in: on any computer without a pt_BR locale generated - which is most of them
+# outside Brazil - the fixup fired first and every user looked like they had
+# asked for C. Read it now, use it later.
+TANDEM_LANG_SISTEMA="${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}"
+
 if [ "$(locale charmap 2>/dev/null)" != "UTF-8" ]; then
     TANDEM_LOCALE="$(t_locale_utf8 pt_BR.UTF-8)"
     export LC_ALL="$TANDEM_LOCALE"
 fi
+
+# ============================================================= LANGUAGE
+#
+# Until 4.1 every sentence in this program was a Portuguese literal sitting
+# inside the script that printed it. That was right while the product had one
+# owner in one country, and it stops being right the moment somebody in
+# another one installs it.
+#
+# THE MESSAGES ARE DATA, NOT CODE, and the format is built so that they cannot
+# be anything else. A catalog is parsed by "read" and never evaluated, so a
+# dollar sign, a backtick or a $(...) inside a translation is text and stays
+# text. A translator is not a person who should have to know what a subshell
+# is, and a translation file must not be able to run anything.
+#
+# Substitution is {1} {2} {3} and deliberately NOT printf's %s. This project
+# has already been bitten by percent signs: paths and versions carry them, and
+# a message built with a format string breaks on a folder called "50% off".
+#
+# The fallback is Portuguese, always. A key missing from a translation prints
+# the Portuguese sentence - never the key name, never an empty string. That is
+# rule number 2 applied to its own machinery: a half-translated program still
+# has to say something a person can read.
+
+TANDEM_IDIOMAS="pt_BR en es fr zh_CN hi ar"
+TANDEM_IDIOMA_PADRAO=pt_BR
+TANDEM_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/tandem"
+
+declare -gA T_MSG=()
+declare -gA T_MSG_BASE=()
+
+# The language a name belongs to, in that language, plus its English name so
+# somebody who cannot read the script can still find their line.
+t_idioma_nome() {
+    case "$1" in
+        pt_BR) printf 'Português (Brasil)' ;;
+        en)    printf 'English' ;;
+        es)    printf 'Español (Spanish)' ;;
+        fr)    printf 'Français (French)' ;;
+        zh_CN) printf '简体中文 (Chinese, simplified)' ;;
+        hi)    printf 'हिन्दी (Hindi)' ;;
+        ar)    printf 'العربية (Arabic)' ;;
+        *)     printf '%s' "$1" ;;
+    esac
+}
+
+# Arabic is written right to left. Every aligned report in this program pads a
+# label to a fixed column, and padding runs the wrong way in a right-to-left
+# script: the value ends up inside the label. So the reports ask before they
+# align, and print a plain "label: value" instead.
+t_idioma_rtl() {
+    case "${TANDEM_IDIOMA:-}" in ar|fa|he|ur) return 0 ;; *) return 1 ;; esac
+}
+
+# Reads one catalog into the array named by $2. Pure "read": no eval anywhere
+# on this path, on purpose.
+#
+# Format:
+#   @key
+#   the sentence, which may
+#   run over as many lines as it needs
+#   @next-key
+#
+# A line starting with "#" outside a message is a comment. To begin a message
+# with a literal "@" or "#", the catalog writes "\@" or "\#".
+t_catalogo_le() {
+    local arq="$1" chave="" linha primeiro=1 nl=$'\n' 
+    # A nameref, and not a dynamic "printf -v ${name}[key]": the dynamic form
+    # worked, and it made shellcheck lose track of which variables are arrays
+    # badly enough that it reported a bogus warning three hundred lines away.
+    # Code that confuses the checker will confuse the next reader too.
+    local -n catalogo_alvo="$2"
+    [ -f "$arq" ] || return 1
+    while IFS= read -r linha || [ -n "$linha" ]; do
+        case "$linha" in
+            '@'*)
+                chave="${linha#@}"
+                if [ -n "$chave" ]; then catalogo_alvo["$chave"]=""; primeiro=1; fi
+                continue ;;
+            # A "#" at the start of a line is ALWAYS a comment, including
+            # between the lines of a message. Written the other way round -
+            # "a comment only when no message is open" - the separator
+            # comments in the middle of the catalogue were swallowed by
+            # whatever entry came before them, and printed to the user.
+            '#'*) continue ;;
+            '\@'*|'\#'*) linha="${linha#\\}" ;;
+        esac
+        [ -n "$chave" ] || continue
+        if [ "$primeiro" = 1 ]; then
+            catalogo_alvo["$chave"]="$linha"
+            primeiro=0
+        else
+            catalogo_alvo["$chave"]="${catalogo_alvo[$chave]}"$'\n'"$linha"
+        fi
+    done < "$arq"
+    # The blank lines BETWEEN entries are what makes a catalogue readable, so
+    # they are allowed and trimmed here, once, rather than at every lookup.
+    # Blank lines INSIDE a message are paragraph breaks and survive: most of
+    # these are three paragraphs written for somebody having a bad afternoon.
+    local k
+    for k in "${!catalogo_alvo[@]}"; do
+        while [ -n "${catalogo_alvo[$k]}" ] &&
+              [ "${catalogo_alvo[$k]: -1}" = "$nl" ]; do
+            catalogo_alvo["$k"]="${catalogo_alvo[$k]%"$nl"}"
+        done
+    done
+    return 0
+}
+
+# Which language to speak, in order of who gets to decide:
+#   1. TANDEM_IDIOMA in the environment  - for tests, and for one-off runs
+#   2. what the owner chose              - a file, written by "tandem idioma"
+#   3. what the system is already set to - LC_ALL, LC_MESSAGES, LANG
+#   4. Portuguese
+#
+# Number 3 matters more than it looks: a machine whose Linux is in Spanish
+# should not have to be told twice. And number 4 is Portuguese rather than
+# English on purpose - it is what this program did before it could speak
+# anything else, and an unrecognised locale must not silently change the
+# language on the people already using it.
+t_idioma_escolhe() {
+    local escolhido="" sistema base
+    if [ -n "${TANDEM_IDIOMA_FORCADO:-}" ]; then
+        escolhido="$TANDEM_IDIOMA_FORCADO"
+    elif [ -r "$TANDEM_CONFIG/idioma" ]; then
+        escolhido="$(tr -d '[:space:]' < "$TANDEM_CONFIG/idioma" 2>/dev/null)"
+    fi
+    if [ -z "$escolhido" ]; then
+        sistema="$TANDEM_LANG_SISTEMA"
+        sistema="${sistema%%.*}"; sistema="${sistema%%@*}"
+        base="${sistema%%_*}"
+        for c in $TANDEM_IDIOMAS; do
+            [ "$c" = "$sistema" ] && { escolhido="$c"; break; }
+        done
+        # pt_PT, es_AR, zh_TW: the country is not the language. Falling back to
+        # the base code is what makes this work outside the one country each
+        # catalog was written in.
+        if [ -z "$escolhido" ] && [ -n "$base" ]; then
+            for c in $TANDEM_IDIOMAS; do
+                [ "${c%%_*}" = "$base" ] && { escolhido="$c"; break; }
+            done
+        fi
+    fi
+    for c in $TANDEM_IDIOMAS; do
+        [ "$c" = "$escolhido" ] && { printf '%s' "$c"; return 0; }
+    done
+    printf '%s' "$TANDEM_IDIOMA_PADRAO"
+}
+
+t_idioma_carrega() {
+    local dir="${TANDEM_IDIOMAS_DIR:-$TANDEM_LIB/idiomas}"
+    TANDEM_IDIOMA="$(t_idioma_escolhe)"
+    # Portuguese first and always: it is the fallback for every key a
+    # translation has not caught up with yet.
+    t_catalogo_le "$dir/$TANDEM_IDIOMA_PADRAO.txt" T_MSG_BASE
+    if [ "$TANDEM_IDIOMA" != "$TANDEM_IDIOMA_PADRAO" ]; then
+        t_catalogo_le "$dir/$TANDEM_IDIOMA.txt" T_MSG
+    fi
+    return 0
+}
+
+# t_msg <key> [arg1 arg2 ...] - the sentence, with {1}..{9} replaced.
+#
+# An unknown key returns the key name ONLY as a last resort, and says so in the
+# log. It cannot return nothing: a silent message is the one bug this whole
+# program exists to prevent, and a translation catalog is exactly the kind of
+# file where a line gets lost in an edit.
+t_msg() {
+    local chave="$1"; shift
+    local texto="${T_MSG[$chave]:-}"
+    [ -n "$texto" ] || texto="${T_MSG_BASE[$chave]:-}"
+    if [ -z "$texto" ]; then
+        t_diz "FALTA a mensagem '$chave' no catalogo"
+        printf '%s' "$chave"
+        return 1
+    fi
+    # Blank lines BETWEEN entries are what makes a catalog readable, so they
+    # are allowed and then trimmed here. Blank lines INSIDE a message are
+    # paragraph breaks and survive - most of these messages are three
+    # paragraphs written for somebody who is having a bad afternoon.
+    local nl=$'\n'
+    while [ -n "$texto" ] && [ "${texto: -1}" = "$nl" ]; do texto="${texto%"$nl"}"; done
+    local i=1 a
+    for a in "$@"; do
+        texto="${texto//\{$i\}/$a}"
+        i=$((i + 1))
+    done
+    printf '%s' "$texto"
+}
+
+# Does this machine have letters for that language at all?
+#
+# Same lesson as the zenity accents, one alphabet further out. Choosing a
+# language whose script has no font installed does not fail: it draws a screen
+# of empty boxes, which is a working program that cannot be read. fontconfig
+# answers this directly, and answering "I cannot tell" (no fc-list here) has to
+# mean "go ahead" - refusing on a machine we were unable to inspect would be
+# worse than the boxes.
+t_idioma_tem_letras() {
+    local lang="$1"
+    case "$lang" in pt_BR|en|es|fr) return 0 ;; esac   # Latin: always present
+    command -v fc-list >/dev/null 2>&1 || return 0
+    [ -n "$(fc-list ":lang=${lang%%_*}" 2>/dev/null | head -1)" ]
+}
+
+# Was this catalogue checked by somebody who speaks the language? The header
+# carries REVISADO=sim/nao and the answer is shown to whoever picks it.
+# Shipping a translation nobody has reviewed is defensible; shipping it
+# without saying so is not.
+t_idioma_revisado() {
+    local dir="${TANDEM_IDIOMAS_DIR:-$TANDEM_LIB/idiomas}"
+    grep -qi '^# *REVISADO=sim' "$dir/$1.txt" 2>/dev/null
+}
+
+t_idioma_grava() {
+    mkdir -p "$TANDEM_CONFIG" 2>/dev/null || return 1
+    printf '%s\n' "$1" > "$TANDEM_CONFIG/idioma" 2>/dev/null || return 1
+    T_MSG=()
+    t_idioma_carrega
+}
+
+t_idioma_carrega
 
 t_aviso() {
     t_diz "aviso: $1"

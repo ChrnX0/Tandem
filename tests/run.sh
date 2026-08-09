@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3355190966 700" "$soma_esperados"
+      "2710966936 752" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
       "2310912825 1467" "$soma_padroes"
 
@@ -1206,6 +1206,157 @@ printf 'DEADBEEF\n' > "$PREF_FIX/drive_c/.windows-serial"
 t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
 equal "a serial that already exists is never overwritten" \
       "DEADBEEF" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
+
+section "language: the messages are data, not code"
+
+# Every sentence in this program used to be a Portuguese literal inside the
+# script that printed it. That was right while the product had one owner in
+# one country and stopped being right the moment somebody elsewhere installed
+# it.
+
+IDIOMAS_DIR="$ROOT/src/lib/idiomas"
+LINGUAS="pt_BR en es fr zh_CN hi ar"
+
+for l in $LINGUAS; do
+    if [ -f "$IDIOMAS_DIR/$l.txt" ]; then pass "the $l catalogue exists"
+    else fail "the $l catalogue exists" "$IDIOMAS_DIR/$l.txt" "missing"; fi
+done
+
+# The load path must never evaluate a catalogue. A translator is not somebody
+# who should have to know what a subshell is, and a translation file must not
+# be able to run anything: these files will one day arrive from strangers.
+CAT_MAU="$TMPROOT/mau.txt"
+printf '@perigo\nvalor $HOME e $(touch %s/EXECUTOU) e `id`\n' "$TMPROOT" > "$CAT_MAU"
+declare -A T_TESTE_CAT=()
+t_catalogo_le "$CAT_MAU" T_TESTE_CAT
+equal "a dollar sign in a translation is text, not an expansion" \
+      'valor $HOME e $(touch '"$TMPROOT"'/EXECUTOU) e `id`' "${T_TESTE_CAT[perigo]}"
+if [ -e "$TMPROOT/EXECUTOU" ]; then
+    fail "a catalogue cannot run anything" "no side effect" "the file was created"
+else
+    pass "a catalogue cannot run anything"
+fi
+
+# A comment between entries is a comment, not the tail of the entry above it.
+# Written the other way round it printed the separator lines to the user.
+printf '@um\ntexto um\n\n# separador\n\n@dois\ntexto dois\n' > "$TMPROOT/com.txt"
+declare -A T_COM=(); t_catalogo_le "$TMPROOT/com.txt" T_COM
+equal "a comment between entries does not leak into the message" \
+      "texto um" "${T_COM[um]}"
+equal "and the entry after it is intact" "texto dois" "${T_COM[dois]}"
+
+# Blank lines BETWEEN entries are trimmed; blank lines INSIDE a message are
+# paragraph breaks and must survive - most of these are three paragraphs
+# written for somebody having a bad afternoon.
+equal "a paragraph break inside a message survives" \
+      "Não consegui ler este arquivo.
+
+XPTO" "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_msg nao_consegui_ler XPTO')"
+
+# Every key in the original has to exist in every translation, or fall back to
+# it. The fallback is what makes a half-finished translation safe; the test is
+# what stops one from staying half-finished by accident.
+CHAVES_PT="$(grep -c '^@' "$IDIOMAS_DIR/pt_BR.txt")"
+for l in $LINGUAS; do
+    faltando=""
+    while IFS= read -r k; do
+        grep -qxF "$k" "$IDIOMAS_DIR/$l.txt" || faltando="$faltando ${k#@}"
+    done < <(grep '^@' "$IDIOMAS_DIR/pt_BR.txt")
+    equal "$l has every key the original has ($CHAVES_PT)" "" "$faltando"
+done
+
+# An empty value is worse than a missing one: a missing key falls back to
+# Portuguese, an empty one prints nothing at all.
+for l in $LINGUAS; do
+    vazias="$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_IDIOMA_FORCADO="$l" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        for k in "${!T_MSG_BASE[@]}"; do
+            v="$(t_msg "$k")"
+            [ -n "$v" ] || printf "%s " "$k"
+        done' 2>/dev/null)"
+    equal "$l has no empty message" "" "$vazias"
+done
+
+# The fallback itself, exercised: a key the translation does not carry has to
+# come back in Portuguese - never blank, and never the key name.
+printf '@sem_arquivo\nOnly this one is translated\n' > "$TMPROOT/meio.txt"
+cp "$IDIOMAS_DIR/pt_BR.txt" "$TMPROOT/pt_BR.txt"
+MEIO="$(TANDEM_IDIOMAS_DIR="$TMPROOT" TANDEM_LIB="$ROOT/src/lib" \
+    TANDEM_IDIOMA_FORCADO=meio bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"; TANDEM_IDIOMAS="pt_BR meio"
+    TANDEM_IDIOMA=meio; T_MSG=(); t_catalogo_le "'"$TMPROOT"'/meio.txt" T_MSG
+    t_msg sem_arquivo; printf "|"; t_msg ja_instalando' 2>/dev/null)"
+equal "a translated key uses the translation" \
+      "Only this one is translated" "${MEIO%%|*}"
+equal "a key the translation lacks falls back to Portuguese, not to blank" \
+      "Outra instalação já está em andamento." "${MEIO#*|}"
+
+# An unknown key must not print nothing. A silent message is the one bug this
+# whole program exists to prevent, and a catalogue is exactly the sort of file
+# where a line goes missing in an edit.
+equal "an unknown key returns something rather than nothing" \
+      "chave_que_nao_existe" \
+      "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_msg chave_que_nao_existe' 2>/dev/null)"
+
+# Substitution is {1} {2}, deliberately not printf's %s: paths and versions
+# carry percent signs, and this project has been bitten by that before.
+equal "a value with a percent sign in it survives substitution" \
+      "Arquivo não encontrado:
+/mnt/50% off/x.exe" \
+      "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_msg arquivo_sumiu "/mnt/50% off/x.exe"')"
+
+# Picking the language: the environment beats the file, the file beats the
+# system, and anything unrecognised lands on Portuguese rather than changing
+# language under the people already using it.
+escolhe() {
+    TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" \
+    XDG_CONFIG_HOME="$TMPROOT/cfg-idioma" LC_ALL="" LC_MESSAGES="" LANG="$1" \
+    TANDEM_IDIOMA_FORCADO="${2:-}" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; printf "%s" "$TANDEM_IDIOMA"'
+}
+equal "a Spanish system gets Spanish"          "es"    "$(escolhe es_ES.UTF-8)"
+equal "a Chinese system gets Chinese"          "zh_CN" "$(escolhe zh_CN.UTF-8)"
+# pt_PT, es_AR, zh_TW: the country is not the language, and falling back to the
+# base code is what makes each catalogue work outside the one country it was
+# written in.
+equal "Portugal gets the Portuguese catalogue" "pt_BR" "$(escolhe pt_PT.UTF-8)"
+equal "Argentina gets the Spanish one"         "es"    "$(escolhe es_AR.UTF-8)"
+equal "an unknown locale stays on Portuguese"  "pt_BR" "$(escolhe fi_FI.UTF-8)"
+equal "no locale at all stays on Portuguese"   "pt_BR" "$(escolhe "")"
+equal "the environment overrides the system"   "fr"    "$(escolhe zh_CN.UTF-8 fr)"
+
+# Latin scripts are always present; the guard is for the ones that are not.
+# Refusing on a machine we could not inspect would be worse than the boxes.
+for l in pt_BR en es fr; do
+    equal "$l never needs a font check" "0" \
+          "$(TANDEM_LIB="$ROOT/src/lib" bash -c \
+             '. "'"$ROOT"'/src/lib/common.sh"; t_idioma_tem_letras '"$l"'; echo $?')"
+done
+
+# Which catalogues claim to have been reviewed by a speaker. Shipping one that
+# has not is defensible; shipping it without saying so is not.
+equal "the original counts as reviewed" "0" \
+      "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_idioma_revisado pt_BR; echo $?')"
+for l in es fr zh_CN hi ar; do
+    equal "$l is marked as not yet reviewed by a speaker" "1" \
+          "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
+             '. "'"$ROOT"'/src/lib/common.sh"; t_idioma_revisado '"$l"'; echo $?')"
+done
+
+# And the whole point, end to end: the same error, in each language, out of
+# the real executable.
+for l in en es fr zh_CN hi ar; do
+    saida="$(env -i HOME="$TMPROOT/cli-idioma" PATH="/usr/bin:/bin" \
+             TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" \
+             TANDEM_IDIOMA_FORCADO="$l" bash "$ROOT/src/bin/tandem-jar" 2>&1)"
+    naocontem "tandem-jar with no argument answers in $l, not in Portuguese" \
+              "Nenhum arquivo" "$saida"
+done
 
 section "the hardware key pre-flight"
 

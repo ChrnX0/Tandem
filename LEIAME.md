@@ -7,7 +7,7 @@
 **Nove formatos. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![testes](https://img.shields.io/badge/testes-562-brightgreen)](tests/run.sh)
+[![testes](https://img.shields.io/badge/testes-615-brightgreen)](tests/run.sh)
 [![programas reais](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
 [![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
@@ -321,6 +321,7 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem dados` | mostra os **seus** arquivos dentro do Windows |
 | `tandem backup` · `tandem restore` | salva e restaura o ambiente inteiro |
 | `tandem protect <caminho>` | marca um perfil Wine como intocável |
+| `tandem idioma [código]` | em que idioma o Tandem fala — `pt_BR` `en` `es` `fr` `zh_CN` `hi` `ar` |
 | `tandem identidade` | o que um programa lê desta máquina quando amarra a licença a ela |
 | `tandem portas` | em que COM o pinpad, a balança ou a impressora caíram — e como mudar |
 | `tandem alternativas <nome>` | procura um programa de Linux que faça o mesmo |

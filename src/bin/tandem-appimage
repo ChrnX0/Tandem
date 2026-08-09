@@ -16,10 +16,9 @@
 t_log_init appimage "$*"
 
 BRUTO="${1:-}"
-[ -n "$BRUTO" ] || { t_erro "Nenhum arquivo foi informado."; exit 1; }
+[ -n "$BRUTO" ] || { t_erro "$(t_msg sem_arquivo)"; exit 1; }
 PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
-[ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "Arquivo não encontrado:
-$BRUTO"; exit 1; }
+[ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "$(t_msg arquivo_sumiu "$BRUTO")"; exit 1; }
 
 # Same reasoning as in tandem-exe, including the braces: "exec" with no command
 # applies its redirections to the whole shell, permanently, and a 2>/dev/null

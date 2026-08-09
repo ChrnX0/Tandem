@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-562-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-615-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -343,6 +343,7 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem dados` | show **your** files inside Windows |
 | `tandem backup` · `tandem restore` | save and restore the whole environment |
 | `tandem protect <path>` | mark a Wine prefix untouchable |
+| `tandem idioma [code]` | which language Tandem speaks — `pt_BR` `en` `es` `fr` `zh_CN` `hi` `ar` |
 | `tandem identidade` | what a program reads about this machine when it locks a licence to it |
 | `tandem portas` | which COM the pinpad, scale or printer landed on — and how to move it |
 | `tandem alternativas <name>` | find a Linux program that does the same job |
