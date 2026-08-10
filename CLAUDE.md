@@ -95,6 +95,7 @@ src/lib/rpminfo.py        .rpm header: name, version, arch, distribution
 src/lib/verbos.tsv        GENERATED DLL->verb index; do not edit by hand
 src/lib/limites.tsv       signatures of what will never work (dongle, driver)
 src/lib/alternativas.tsv  Linux programs that do the same job
+src/lib/idiomas/*.txt     the message catalogues, one per language (7)
 tools/indice-winetricks.py  generates verbos.tsv by reading the installed winetricks
 proofgate.json            evidence gate: stack, coupled files
 .github/workflows/ci.yml  suite + lintian + a real install cycle
@@ -128,6 +129,7 @@ Commands (`tandem --help` is the source of truth):
 install    programas   desinstalar   preparar     android
 doctor     autoteste   repair        backup       restore      dados
 protect    alternativas  receita     memoria      esquecer     logs
+idioma     portas      identidade
 lista      contribuir  socorro
 ```
 
@@ -666,6 +668,78 @@ repository, Waydroid 1.6.2 MAINLINE with GAPPS and libhoudini, `binderfs` with
   **`socorro`**, **`contribuir`**.
 - **Evidence gate, CI and a release pipeline.**
 
+## The language system (4.1)
+
+Seven languages: `pt_BR` (the original), `en`, `es`, `fr`, `zh_CN`, `hi`, `ar`.
+Read this before touching a message anywhere in the tree.
+
+- **The messages are DATA, not code, and the format is built so they cannot be
+  anything else.** A catalogue is parsed by `read` and never evaluated, so a
+  `$`, a backtick or a `$(...)` in a translation is text and stays text. There
+  is a test that hands the loader a catalogue trying to touch a file and proves
+  it cannot. These files will one day arrive from strangers, and a translator
+  is not somebody who should have to know what a subshell is.
+- **Substitution is `{1} {2}`, deliberately NOT printf's `%s`.** Paths and
+  versions carry percent signs; there is a test with a folder called `50% off`.
+- **A key missing from a translation falls back to Portuguese** - never to the
+  key name, never to nothing. A test demands every key in every catalogue, so
+  half-finished cannot become permanent by accident.
+- **Where the language comes from**, in order: `TANDEM_IDIOMA_FORCADO`, the
+  owner's choice in `~/.config/tandem/idioma`, the system locale, Portuguese.
+  `pt_PT` gets the Portuguese catalogue and `es_AR` the Spanish one, because
+  the country is not the language.
+- **`TANDEM_LANG_SISTEMA` is read at the very top of `common.sh`, before the
+  charmap fixup below it exports `LC_ALL`.** That fixup overwrote the only
+  evidence of what language the machine was in: on any computer with no
+  `pt_BR` locale generated - most of them outside Brazil - it fired first and
+  every user looked like they had asked for `C`. Do not move that line down.
+- **The question is asked on first run, not during the package install**, for
+  the reason already at `t_primeira_vez`: dpkg holds a lock, the graphical
+  installer has no terminal, and the per-user work cannot tell who the user is.
+- **A language whose script has no font installed is refused with a sentence**
+  (`t_idioma_tem_letras`, via `fc-list`) rather than accepted into a screen of
+  empty boxes. Being unable to check means going ahead.
+- **Five catalogues carry `REVISADO=nao`** and say so, on the list and again
+  when you pick one. Shipping a translation no speaker has read is defensible;
+  shipping it without saying so is not. Getting those reviewed is the easiest
+  contribution to ask for.
+
+### What is migrated, and what is not
+
+Done end to end: `tandem-exe` (the whole run-detect-install-verify-retry
+loop), `tandem-script`, `tandem-snap`, `tandem-rpm`, `tandem-android`, plus
+the shared entry errors in all nine handlers and everything added in 4.1.
+
+**239 messages are still Portuguese literals in the code**, counted with the
+regex below:
+
+```
+src/bin/tandem      119   src/bin/tandem-flatpak  17
+src/bin/tandem-apk   28   src/lib/common.sh       16
+src/bin/tandem-jar   20   src/bin/tandem-appimage 13
+src/bin/tandem-deb   18   leftovers in the "done"  8
+```
+
+Suggested order: `tandem-deb` -> `apk` -> `jar` -> `flatpak` -> `appimage` ->
+`common.sh` -> the CLI last, because it is the biggest and the least used by
+somebody who only double-clicks.
+
+**Do not use "no accented characters left" as the completeness check.** It is
+what this session used, and it declared `tandem-snap` finished while
+`Instalar "$NOME" a partir deste arquivo?` was still a literal - accent-free
+Portuguese walks straight through it. That one line is still there. Count call
+sites instead, and **turn this into a test** so the next migration cannot
+declare itself done by the same wrong measure:
+
+```python
+re.compile(r't_(erro|aviso|ok|pergunta|texto|progresso_abre|progresso_texto)'
+           r'\s+"((?:[^"\\]|\\.)*)"', re.S)   # count matches NOT starting with $(t_msg
+```
+
+Of the 8 leftovers, 6 are pass-throughs to `t_texto_*` functions whose text
+lives in `common.sh` and is counted there, 1 is a window title, and 1 is the
+real `tandem-snap` line above.
+
 ## Next steps
 
 The full idea ledger — the 52 ideas from both panels, each with a verdict, and
@@ -674,6 +748,12 @@ it before proposing anything new; half the obvious ideas were already turned dow
 for a reason.
 
 The queue, in order:
+
+0. **Finish the translation, and field-test 4.1 on the counter.** Both are
+   written up in the section above. The field half needs the owner's machine
+   and nothing else: `tandem portas` (32 phantom sockets collapsed into one
+   line), `tandem intalar` (must say "I do not know that command", not
+   "unrecognised file type"), and `tandem idioma`.
 
 1. **Fill the community list.** Half-solved in 3.9: the client side of automatic
    sending is built, tested against a real socket, and off by default. What is
