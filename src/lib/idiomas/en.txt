@@ -1168,3 +1168,143 @@ This program is {1}-bit, and the component it asks for only exists in {2}-bit:
 {3}
 
 It is not a fault of your machine, nor a missing install: whoever distributes that component never published a {1}-bit version. If a {2}-bit version of this same program exists, it should work here.
+
+@pedir_envio
+May I send this line to the community list?
+
+{1}
+
+That is it, the whole thing. Nothing else goes.
+
+What it is for: when somebody else opens this same program, their Tandem
+already knows what it needs and does not make them wait to find out. The more
+people send, the less each one has to work out alone.
+
+What does NOT leave here: a file name, a folder, your user name, the
+computer's name, a network address, or a single line of log. The first column
+is a fingerprint of the program's file - not of you, not of your machine - and
+there is no way back from it to anything.
+
+You decide now and can change it whenever you like:
+  tandem enviar sim     or     tandem enviar nao
+
+@pedir_envio_maquina_de_trabalho
+Note: this computer has another system's environment installed on it. If it
+is a work machine, check with whoever looks after it before turning this on.
+
+@portas_titulo
+Ports where the shop plugs in the pinpad, the scale, the printer and the scanner:
+
+@portas_nenhuma
+(no serial port on this computer)
+
+@portas_impressora_usb
+USB printer found at: {1}
+  Wine does NOT find that one by itself - it only appears to the program if it
+  is pointed at by hand. To make it LPT1:
+
+      tandem portas fixar LPT1 {2}
+
+@portas_aviso_alto
+NOTE: the USB device {1} landed on {2}, and a lot of old shop software only
+  accepts COM1 to COM4. If the program says it cannot find the device, that is
+  almost certainly why. To pin it to a low port:
+
+      tandem portas fixar COM2 {1}
+
+@portas_aviso_dialout
+NOTE: your user is not in the "dialout" group, and without that the device
+  shows up on the list and refuses to open. To fix it, once:
+
+      sudo usermod -aG dialout {1}
+
+  After that you have to log out of your account and back in.
+
+@portas_ja_presas
+Already pinned by you in this Windows environment:
+
+@alternativa_nativa
+• {1} — made for Linux
+  {2}
+  How to get it: {3}
+
+@alternativa_parecida
+• {1} — does a similar job
+  Note: {2}
+  How to get it: {3}
+
+@id_titulo
+What a program sees when it ties a licence to this computer:
+
+@id_vem_da_maquina
+COMES FROM YOUR REAL MACHINE (the same as it would see under Windows)
+
+@id_fabricante
+manufacturer
+
+@id_modelo
+model
+
+@id_placa_mae
+motherboard
+
+@id_processador
+processor
+
+@id_memoria
+memory
+
+@id_rede
+network ({1})
+
+@id_nao_vem
+DOES NOT COME, AND CANNOT
+    BIOS serial number         Wine always answers the same thing, identical
+                               on every computer running Wine in the world
+    disk serial number         the same{1}
+
+  If the program refuses to activate, it almost certainly saw one of these.
+  That is not a fault of your machine: it is Wine being honest about what it
+  is. The one who can unblock it is the company that made the program.
+
+@id_serial_de_fabrica
+
+    factory serial number      Linux only lets the administrator read that
+                               number, so Wine puts a fixed identifier for
+                               this machine in its place
+
+@id_fica_parado
+HELD STILL, BECAUSE TANDEM HOLDS IT
+  (these live inside the Windows environment and, without this, would change
+   every time the environment was remade - the commonest cause of "activate
+   again")
+
+@id_serial_disco_c
+C: drive serial
+
+@id_wine_escolhe
+Wine picks it by itself
+
+@id_identificador_maquina
+machine identifier
+
+@id_ainda_nao_existe
+does not exist yet
+
+@id_productid
+Windows ProductId
+
+@id_productid_de_fabrica
+The ProductId above is Wine's factory default, identical on every machine
+  running Wine. Tandem does not invent another one: a Microsoft licence number
+  is not something you manufacture.
+
+@id_identidade_mudou
+NOTE: this machine's identity has changed since the environment was created.
+  That happens when Linux is reinstalled or the disk is cloned. It is the
+  explanation for a program asking to be activated when nothing else changed.
+
+@id_varias_placas
+NOTE: this machine has {1} network cards. Many programs use a card's number
+  as part of the identity, and if one of them is Wi-Fi that goes on and off,
+  the identity changes with it. Leave the network always on.

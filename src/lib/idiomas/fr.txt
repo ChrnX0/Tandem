@@ -1175,3 +1175,149 @@ Ce programme est en {1} bits, et le composant qu'il demande n'existe qu'en {2} b
 {3}
 
 Ce n'est un défaut ni de votre machine ni d'une installation manquante : celui qui distribue ce composant n'a jamais publié de version {1} bits. S'il existe une version {2} bits de ce même programme, elle devrait fonctionner ici.
+
+@pedir_envio
+Puis-je envoyer cette ligne à la liste de la communauté ?
+
+{1}
+
+C'est tout, la ligne entière. Rien d'autre ne part.
+
+À quoi cela sert : quand quelqu'un d'autre ouvrira ce même programme, son
+Tandem saura déjà ce dont il a besoin et ne le fera pas attendre pour le
+découvrir. Plus il y a de gens qui envoient, moins chacun a à découvrir seul.
+
+Ce qui ne part PAS d'ici : un nom de fichier, un dossier, votre nom
+d'utilisateur, le nom de l'ordinateur, une adresse réseau, ni une seule ligne
+de journal. La première colonne est une empreinte du fichier du programme, pas
+de vous ni de votre machine, et on ne peut en revenir à rien.
+
+Vous décidez maintenant et pouvez changer quand vous voulez :
+  tandem enviar sim     ou     tandem enviar nao
+
+@pedir_envio_maquina_de_trabalho
+Attention : cet ordinateur a l'environnement d'un autre système installé. S'il
+s'agit d'une machine de travail, vérifiez auprès de celui qui s'en occupe avant
+d'activer ceci.
+
+@portas_titulo
+Ports où la boutique branche le TPE, la balance, l'imprimante et le lecteur :
+
+@portas_nenhuma
+(aucun port série sur cet ordinateur)
+
+@portas_impressora_usb
+Imprimante USB trouvée sur : {1}
+  Wine ne la trouve PAS tout seul - elle n'apparaît au programme que si on la
+  désigne à la main. Pour en faire LPT1 :
+
+      tandem portas fixar LPT1 {2}
+
+@portas_aviso_alto
+ATTENTION : l'appareil USB {1} s'est retrouvé sur {2}, et beaucoup de
+  logiciels de caisse anciens n'acceptent que COM1 à COM4. Si le programme dit
+  qu'il ne trouve pas l'appareil, c'est presque sûrement pour cela. Pour le
+  fixer sur un port bas :
+
+      tandem portas fixar COM2 {1}
+
+@portas_aviso_dialout
+ATTENTION : votre utilisateur n'est pas dans le groupe « dialout », et sans
+  cela l'appareil apparaît dans la liste et refuse de s'ouvrir. Pour y
+  remédier, une seule fois :
+
+      sudo usermod -aG dialout {1}
+
+  Ensuite il faut vous déconnecter et vous reconnecter.
+
+@portas_ja_presas
+Déjà fixés par vous dans cet environnement Windows :
+
+@alternativa_nativa
+• {1} — fait pour Linux
+  {2}
+  Comment l'obtenir : {3}
+
+@alternativa_parecida
+• {1} — fait un travail similaire
+  Attention : {2}
+  Comment l'obtenir : {3}
+
+@id_titulo
+Ce qu'un programme voit quand il lie une licence à cet ordinateur :
+
+@id_vem_da_maquina
+VIENT DE VOTRE VRAIE MACHINE (identique à ce qu'il verrait sous Windows)
+
+@id_fabricante
+fabricant
+
+@id_modelo
+modèle
+
+@id_placa_mae
+carte mère
+
+@id_processador
+processeur
+
+@id_memoria
+mémoire
+
+@id_rede
+réseau ({1})
+
+@id_nao_vem
+NE VIENT PAS, ET NE PEUT PAS VENIR
+    numéro de série du BIOS    Wine répond toujours la même chose, identique
+                               sur tout ordinateur utilisant Wine au monde
+    numéro de série du disque  idem{1}
+
+  Si le programme refuse l'activation, il a presque sûrement vu l'un de
+  ceux-là. Ce n'est pas un défaut de votre machine : c'est Wine qui est honnête
+  sur ce qu'il est. Celui qui peut débloquer, c'est l'entreprise qui a fait le
+  programme.
+
+@id_serial_de_fabrica
+
+    numéro de série d'usine    Linux ne laisse que l'administrateur lire ce
+                               numéro, donc Wine met à sa place un
+                               identifiant fixe de cette machine
+
+@id_fica_parado
+RESTE FIXE, PARCE QUE TANDEM LE TIENT
+  (ceux-ci vivent dans l'environnement Windows et, sans cela, changeraient à
+   chaque fois que l'environnement serait refait - c'est la cause la plus
+   fréquente de « réactivez »)
+
+@id_serial_disco_c
+numéro de série du disque C:
+
+@id_wine_escolhe
+Wine le choisit tout seul
+
+@id_identificador_maquina
+identifiant de la machine
+
+@id_ainda_nao_existe
+n'existe pas encore
+
+@id_productid
+ProductId de Windows
+
+@id_productid_de_fabrica
+Le ProductId ci-dessus est celui d'origine de Wine, identique sur toute
+  machine utilisant Wine. Tandem n'en invente pas un autre : un numéro de
+  licence Microsoft, cela ne se fabrique pas.
+
+@id_identidade_mudou
+ATTENTION : l'identité de cette machine a changé depuis la création de
+  l'environnement. Cela arrive quand Linux est réinstallé ou le disque cloné.
+  C'est l'explication d'un programme qui redemande une activation sans que rien
+  d'autre n'ait changé.
+
+@id_varias_placas
+ATTENTION : cette machine a {1} cartes réseau. Beaucoup de programmes
+  utilisent le numéro d'une carte comme partie de l'identité, et si l'une
+  d'elles est un Wi-Fi qui s'allume et s'éteint, l'identité change avec.
+  Laissez le réseau toujours allumé.

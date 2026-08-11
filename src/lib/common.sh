@@ -965,14 +965,10 @@ t_texto_alternativas() {
         [ -n "$nome" ] || continue
         if [ "$classe" = nativo ]; then
             saida="$saida
-• $nome — feito para Linux
-  $muda
-  Como obter: $como"
+$(t_msg alternativa_nativa "$nome" "$muda" "$como")"
         else
             saida="$saida
-• $nome — faz um trabalho parecido
-  Atenção: $muda
-  Como obter: $como"
+$(t_msg alternativa_parecida "$nome" "$muda" "$como")"
         fi
     done <<< "$linhas"
     [ -n "$saida" ] || return 1
@@ -1953,7 +1949,7 @@ t_texto_maquina_virtual() {
 
 t_texto_portas() {
     local prefixo="$1" saida n p alto="" fixadas="" usblp
-    saida="Portas onde a loja liga pinpad, balança, impressora e leitor:
+    saida="$(t_msg portas_titulo)
 "
 
     # A run of phantom ports collapses into ONE line. Printing 32 of them
@@ -1990,7 +1986,7 @@ t_texto_portas() {
     fecha_faixa
     unset -f fecha_faixa
     [ "$n" = 0 ] && saida="$saida
-    (nenhuma porta serial neste computador)"
+    $(t_msg portas_nenhuma)"
     # Every socket on the list turned out to be one the kernel invents. Saying
     # so is the whole point: otherwise the owner reads 32 lines as 32 places to
     # plug a pinpad into, on a machine that has none.
@@ -2009,39 +2005,27 @@ t_texto_portas() {
     if [ -n "$usblp" ]; then
         saida="$saida
 
-  Impressora USB encontrada em: $(printf '%s' "$usblp" | tr '\n' ' ')
-  O Wine NÃO acha essa sozinho - ela só aparece para o programa se for
-  apontada à mão. Para deixar ela como LPT1:
-
-      tandem portas fixar LPT1 $(printf '%s' "$usblp" | head -1)"
+  $(t_msg portas_impressora_usb "$(printf '%s' "$usblp" | tr '\n' ' ')" \
+                                "$(printf '%s' "$usblp" | head -1)")"
     fi
 
     if [ -n "$alto" ]; then
         saida="$saida
 
-  ATENÇÃO: o aparelho USB ${alto#*|} ficou na ${alto%%|*}, e muito programa de
-  loja antigo só aceita de COM1 a COM4. Se o programa disser que não achou o
-  aparelho, é quase certo que é isso. Para prender ele numa porta baixa:
-
-      tandem portas fixar COM2 ${alto#*|}"
+  $(t_msg portas_aviso_alto "${alto#*|}" "${alto%%|*}")"
     fi
 
     if ! t_no_grupo dialout; then
         saida="$saida
 
-  ATENÇÃO: o seu usuário não está no grupo \"dialout\", e sem isso o aparelho
-  aparece na lista e não abre. Para resolver, uma vez só:
-
-      sudo usermod -aG dialout $(id -un)
-
-  Depois é preciso sair e entrar de novo na sua conta."
+  $(t_msg portas_aviso_dialout "$(id -un)")"
     fi
 
     if [ -d "$prefixo/drive_c" ]; then
         fixadas="$(t_reg_lista_valores "$prefixo" 'Software\\Wine\\Ports')"
         [ -n "$fixadas" ] && saida="$saida
 
-  Já presas por você neste ambiente Windows:
+  $(t_msg portas_ja_presas)
 $(printf '%s' "$fixadas" | sed 's/^/    /')"
     fi
 
@@ -2071,21 +2055,21 @@ t_texto_identidade() {
 
     kb="$(sed -n 's/^MemTotal:[[:space:]]*\([0-9]*\).*/\1/p' /proc/meminfo 2>/dev/null)"
 
-    saida="O que um programa vê quando amarra a licença a este computador:
+    saida="$(t_msg id_titulo)
 
-  VEM DA SUA MÁQUINA DE VERDADE (igual ao que ele veria no Windows)$(
-      t_linha_id "fabricante" "$(t_dmi sys_vendor)")$(
-      t_linha_id "modelo" "$(t_dmi product_name)")$(
-      t_linha_id "placa-mãe" "$(t_dmi board_name)")$(
+  $(t_msg id_vem_da_maquina)$(
+      t_linha_id "$(t_msg id_fabricante)" "$(t_dmi sys_vendor)")$(
+      t_linha_id "$(t_msg id_modelo)" "$(t_dmi product_name)")$(
+      t_linha_id "$(t_msg id_placa_mae)" "$(t_dmi board_name)")$(
       t_linha_id "BIOS" "$(t_dmi bios_version) $(t_dmi bios_date)")$(
-      t_linha_id "processador" "$(sed -n 's/^model name[[:space:]]*: //p' /proc/cpuinfo 2>/dev/null | head -1)")$(
-      t_linha_id "memória" "${kb:+$(t_tamanho_amigavel "$(( kb * 1024 ))")}")"
+      t_linha_id "$(t_msg id_processador)" "$(sed -n 's/^model name[[:space:]]*: //p' /proc/cpuinfo 2>/dev/null | head -1)")$(
+      t_linha_id "$(t_msg id_memoria)" "${kb:+$(t_tamanho_amigavel "$(( kb * 1024 ))")}")"
 
     placas="$(t_placas_de_rede)"
     conta="$(printf '%s' "$placas" | awk 'END { print NR + 0 }')"
     while IFS=$'\t' read -r n m; do
         [ -n "$n" ] || continue
-        saida="$saida$(t_linha_id "rede ($n)" "$m")"
+        saida="$saida$(t_linha_id "$(t_msg id_rede "$n")" "$m")"
     done <<< "$placas"
 
     # Three DMI fields the kernel keeps for root only. Wine cannot read them
@@ -2099,17 +2083,7 @@ t_texto_identidade() {
 
     saida="$saida
 
-  NÃO VEM, E NÃO TEM COMO VIR
-    número de série da BIOS    o Wine responde sempre a mesma coisa, igual
-                               em todo computador que usa Wine no mundo
-    número de série do disco   idem${so_leitura:+
-    número de série de fábrica o Linux só deixa o administrador ler esse
-                               número, então o Wine põe no lugar um
-                               identificador fixo desta máquina}
-
-  Se o programa recusar a ativação, é quase certo que ele viu um desses. Isso
-  não é defeito da sua máquina: é o Wine sendo honesto sobre o que ele é. Quem
-  pode liberar é a empresa que fez o programa."
+  $(t_msg id_nao_vem "${so_leitura:+$(t_msg id_serial_de_fabrica)}")"
 
     if [ -d "$prefixo/drive_c" ]; then
         serial="$(cat "$prefixo/drive_c/.windows-serial" 2>/dev/null)"
@@ -2121,37 +2095,29 @@ t_texto_identidade() {
 
         saida="$saida
 
-  FICA PARADO, PORQUE O TANDEM SEGURA
-  (estes moram dentro do ambiente Windows e, sem isso, mudariam toda vez que o
-   ambiente fosse refeito - é a causa mais comum de \"ative de novo\")$(
-      t_linha_id "serial do disco C:" "${serial:-o Wine escolhe sozinho}")$(
-      t_linha_id "identificador da máquina" "${guid:-ainda não existe}")$(
-      t_linha_id "ProductId do Windows" "$pid")"
+  $(t_msg id_fica_parado)$(
+      t_linha_id "$(t_msg id_serial_disco_c)" "${serial:-$(t_msg id_wine_escolhe)}")$(
+      t_linha_id "$(t_msg id_identificador_maquina)" "${guid:-$(t_msg id_ainda_nao_existe)}")$(
+      t_linha_id "$(t_msg id_productid)" "$pid")"
 
         case "$pid" in
             12345-oem-0000001-54321)
                 saida="$saida
 
-  O ProductId acima é o que vem de fábrica no Wine, igual em toda máquina que
-  usa Wine. O Tandem não inventa outro: número de licença da Microsoft não se
-  fabrica." ;;
+  $(t_msg id_productid_de_fabrica)" ;;
         esac
 
         if [ -n "$semente" ] && [ "$semente" != "$(t_maquina_semente)" ]; then
             saida="$saida
 
-  ATENÇÃO: a identidade desta máquina mudou desde que o ambiente foi criado.
-  Isso acontece quando o Linux é reinstalado ou o disco é clonado. É a
-  explicação para um programa pedir ativação sem nada mais ter mudado."
+  $(t_msg id_identidade_mudou)"
         fi
     fi
 
     if [ "${conta:-0}" -gt 1 ]; then
         saida="$saida
 
-  ATENÇÃO: esta máquina tem $conta placas de rede. Muitos programas usam o
-  número da placa como parte da identidade, e se uma delas for Wi-Fi que
-  liga e desliga, a identidade muda junto. Deixe a rede sempre ligada."
+  $(t_msg id_varias_placas "$conta")"
     fi
 
     printf '%s\n' "$saida"
@@ -3013,25 +2979,17 @@ t_envio_define() {
 # than asking a question.
 t_texto_pedir_envio() {
     local reg="$1"
-    printf 'Posso mandar esta linha para a lista da comunidade?\n\n'
-    printf '%s\n\n' "$reg"
-    printf 'É isso, inteira. Não vai mais nada.\n\n'
-    printf 'Para que serve: quando outra pessoa abrir este mesmo programa, o Tandem dela\n'
-    printf 'já sabe o que ele precisa e não faz ela esperar para descobrir. Quanto mais\n'
-    printf 'gente manda, menos cada um precisa descobrir sozinho.\n\n'
-    printf 'NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do\n'
-    printf 'computador, endereço de rede, nem uma linha de registro. A primeira coluna é\n'
-    printf 'uma impressão digital do arquivo do programa, não sua nem da sua máquina, e\n'
-    printf 'não dá para voltar dela para nada.\n\n'
-    printf 'Você decide agora e pode mudar quando quiser:\n'
-    printf '  tandem enviar sim     ou     tandem enviar nao\n'
+    t_msg pedir_envio "$reg"
     # If the machine has somebody else's Wine profile on it, it is plausibly a
     # work machine, and the person clicking may not be the person who decides
     # what leaves it. Saying so is not a veto - it is the information he needs.
     if [ -s "$TANDEM_PROTEGIDOS" ]; then
-        printf '\nAtenção: este computador tem o ambiente de outro sistema instalado. Se ele\n'
-        printf 'for máquina de trabalho, confirme com quem cuida dela antes de ligar isto.\n'
+        printf '
+
+'; t_msg pedir_envio_maquina_de_trabalho
     fi
+    printf '
+'
 }
 
 # Queues one record. Never sends from here: a double click is not the place to

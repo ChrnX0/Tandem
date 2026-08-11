@@ -32,7 +32,7 @@ ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + sorted(RAIZ.glob("src/lib/*.sh"))
 # declaring it done, and --migrados then refuses to let it slip back.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
-    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak", "tandem-jar", "tandem-appimage", "winedeps.sh",
+    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak", "tandem-jar", "tandem-appimage", "winedeps.sh", "common.sh",
 }
 
 CHAMADA = re.compile(
@@ -95,6 +95,12 @@ def e_literal(argumento):
     what matters is not the shape of the whole argument but whether any letter
     survives once the expansions are removed.
     """
+    # A capture with an unbalanced ${ is not a value, it is the regex having
+    # stopped at a quote that lives INSIDE a parameter expansion -
+    # texto="${texto%"$nl"}" captures only '${texto%'. Reporting that as a
+    # message sends somebody looking for prose in a string-trimming line.
+    if argumento.count("${") != argumento.count("}"):
+        return False
     resto = sem_expansoes(argumento).strip()
     # A single token starting with a dash is a command-line flag, not a
     # sentence: EXTRA="--appimage-extract-and-run" has letters in it and is

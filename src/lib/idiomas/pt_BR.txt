@@ -1159,3 +1159,142 @@ Este programa é de {1} bits, e o componente que ele pede só existe em {2} bits
 {3}
 
 Não é defeito da sua máquina nem falta de instalação: quem distribui esse componente nunca publicou a versão de {1} bits. Se existir uma versão de {2} bits deste mesmo programa, ela deve funcionar aqui.
+
+@pedir_envio
+Posso mandar esta linha para a lista da comunidade?
+
+{1}
+
+É isso, inteira. Não vai mais nada.
+
+Para que serve: quando outra pessoa abrir este mesmo programa, o Tandem dela
+já sabe o que ele precisa e não faz ela esperar para descobrir. Quanto mais
+gente manda, menos cada um precisa descobrir sozinho.
+
+NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do
+computador, endereço de rede, nem uma linha de registro. A primeira coluna é
+uma impressão digital do arquivo do programa, não sua nem da sua máquina, e
+não dá para voltar dela para nada.
+
+Você decide agora e pode mudar quando quiser:
+  tandem enviar sim     ou     tandem enviar nao
+
+@pedir_envio_maquina_de_trabalho
+Atenção: este computador tem o ambiente de outro sistema instalado. Se ele
+for máquina de trabalho, confirme com quem cuida dela antes de ligar isto.
+
+@portas_titulo
+Portas onde a loja liga pinpad, balança, impressora e leitor:
+
+@portas_nenhuma
+(nenhuma porta serial neste computador)
+
+@portas_impressora_usb
+Impressora USB encontrada em: {1}
+  O Wine NÃO acha essa sozinho - ela só aparece para o programa se for
+  apontada à mão. Para deixar ela como LPT1:
+
+      tandem portas fixar LPT1 {2}
+
+@portas_aviso_alto
+ATENÇÃO: o aparelho USB {1} ficou na {2}, e muito programa de
+  loja antigo só aceita de COM1 a COM4. Se o programa disser que não achou o
+  aparelho, é quase certo que é isso. Para prender ele numa porta baixa:
+
+      tandem portas fixar COM2 {1}
+
+@portas_aviso_dialout
+ATENÇÃO: o seu usuário não está no grupo "dialout", e sem isso o aparelho
+  aparece na lista e não abre. Para resolver, uma vez só:
+
+      sudo usermod -aG dialout {1}
+
+  Depois é preciso sair e entrar de novo na sua conta.
+
+@portas_ja_presas
+Já presas por você neste ambiente Windows:
+
+@alternativa_nativa
+• {1} — feito para Linux
+  {2}
+  Como obter: {3}
+
+@alternativa_parecida
+• {1} — faz um trabalho parecido
+  Atenção: {2}
+  Como obter: {3}
+
+@id_titulo
+O que um programa vê quando amarra a licença a este computador:
+
+@id_vem_da_maquina
+VEM DA SUA MÁQUINA DE VERDADE (igual ao que ele veria no Windows)
+
+@id_fabricante
+fabricante
+
+@id_modelo
+modelo
+
+@id_placa_mae
+placa-mãe
+
+@id_processador
+processador
+
+@id_memoria
+memória
+
+@id_rede
+rede ({1})
+
+@id_nao_vem
+NÃO VEM, E NÃO TEM COMO VIR
+    número de série da BIOS    o Wine responde sempre a mesma coisa, igual
+                               em todo computador que usa Wine no mundo
+    número de série do disco   idem{1}
+
+  Se o programa recusar a ativação, é quase certo que ele viu um desses. Isso
+  não é defeito da sua máquina: é o Wine sendo honesto sobre o que ele é. Quem
+  pode liberar é a empresa que fez o programa.
+
+@id_serial_de_fabrica
+
+    número de série de fábrica o Linux só deixa o administrador ler esse
+                               número, então o Wine põe no lugar um
+                               identificador fixo desta máquina
+
+@id_fica_parado
+FICA PARADO, PORQUE O TANDEM SEGURA
+  (estes moram dentro do ambiente Windows e, sem isso, mudariam toda vez que o
+   ambiente fosse refeito - é a causa mais comum de "ative de novo")
+
+@id_serial_disco_c
+serial do disco C:
+
+@id_wine_escolhe
+o Wine escolhe sozinho
+
+@id_identificador_maquina
+identificador da máquina
+
+@id_ainda_nao_existe
+ainda não existe
+
+@id_productid
+ProductId do Windows
+
+@id_productid_de_fabrica
+O ProductId acima é o que vem de fábrica no Wine, igual em toda máquina que
+  usa Wine. O Tandem não inventa outro: número de licença da Microsoft não se
+  fabrica.
+
+@id_identidade_mudou
+ATENÇÃO: a identidade desta máquina mudou desde que o ambiente foi criado.
+  Isso acontece quando o Linux é reinstalado ou o disco é clonado. É a
+  explicação para um programa pedir ativação sem nada mais ter mudado.
+
+@id_varias_placas
+ATENÇÃO: esta máquina tem {1} placas de rede. Muitos programas usam o
+  número da placa como parte da identidade, e se uma delas for Wi-Fi que
+  liga e desliga, a identidade muda junto. Deixe a rede sempre ligada.

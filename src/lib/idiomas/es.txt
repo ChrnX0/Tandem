@@ -1155,3 +1155,143 @@ Este programa es de {1} bits, y el componente que pide solo existe en {2} bits:
 {3}
 
 No es un defecto de tu máquina ni falta de instalación: quien distribuye ese componente nunca publicó la versión de {1} bits. Si existe una versión de {2} bits de este mismo programa, debería funcionar aquí.
+
+@pedir_envio
+¿Puedo mandar esta línea a la lista de la comunidad?
+
+{1}
+
+Eso es todo, entera. No va nada más.
+
+Para qué sirve: cuando otra persona abra este mismo programa, su Tandem ya
+sabe lo que necesita y no la hace esperar para averiguarlo. Cuanta más gente
+manda, menos tiene que averiguar cada uno por su cuenta.
+
+NO sale de aquí: nombre de archivo, carpeta, tu nombre de usuario, el nombre
+del ordenador, dirección de red, ni una línea de registro. La primera columna
+es una huella del archivo del programa, no tuya ni de tu máquina, y no se
+puede volver de ella a nada.
+
+Tú decides ahora y puedes cambiarlo cuando quieras:
+  tandem enviar sim     o     tandem enviar nao
+
+@pedir_envio_maquina_de_trabalho
+Atención: este ordenador tiene instalado el entorno de otro sistema. Si es
+máquina de trabajo, confírmalo con quien la cuida antes de activar esto.
+
+@portas_titulo
+Puertos donde la tienda conecta pinpad, balanza, impresora y lector:
+
+@portas_nenhuma
+(ningún puerto serie en este ordenador)
+
+@portas_impressora_usb
+Impresora USB encontrada en: {1}
+  Wine NO encuentra esa por sí solo: solo aparece para el programa si se le
+  apunta a mano. Para dejarla como LPT1:
+
+      tandem portas fixar LPT1 {2}
+
+@portas_aviso_alto
+ATENCIÓN: el aparato USB {1} quedó en {2}, y mucho programa de tienda antiguo
+  solo acepta de COM1 a COM4. Si el programa dice que no encontró el aparato,
+  es casi seguro que es eso. Para fijarlo en un puerto bajo:
+
+      tandem portas fixar COM2 {1}
+
+@portas_aviso_dialout
+ATENCIÓN: tu usuario no está en el grupo "dialout", y sin eso el aparato
+  aparece en la lista y no se abre. Para resolverlo, una sola vez:
+
+      sudo usermod -aG dialout {1}
+
+  Después hay que cerrar la sesión y volver a entrar.
+
+@portas_ja_presas
+Ya fijados por ti en este entorno de Windows:
+
+@alternativa_nativa
+• {1} — hecho para Linux
+  {2}
+  Cómo obtenerlo: {3}
+
+@alternativa_parecida
+• {1} — hace un trabajo parecido
+  Atención: {2}
+  Cómo obtenerlo: {3}
+
+@id_titulo
+Lo que un programa ve cuando amarra la licencia a este ordenador:
+
+@id_vem_da_maquina
+VIENE DE TU MÁQUINA DE VERDAD (igual a lo que vería en Windows)
+
+@id_fabricante
+fabricante
+
+@id_modelo
+modelo
+
+@id_placa_mae
+placa base
+
+@id_processador
+procesador
+
+@id_memoria
+memoria
+
+@id_rede
+red ({1})
+
+@id_nao_vem
+NO VIENE, Y NO HAY CÓMO
+    número de serie de la BIOS el Wine responde siempre lo mismo, igual en
+                               todo ordenador que usa Wine en el mundo
+    número de serie del disco ídem{1}
+
+  Si el programa rechaza la activación, es casi seguro que vio uno de estos. No
+  es un defecto de tu máquina: es Wine siendo honesto sobre lo que es. Quien
+  puede liberarlo es la empresa que hizo el programa.
+
+@id_serial_de_fabrica
+
+    número de serie de fábrica Linux solo deja que el administrador lea ese
+                               número, así que Wine pone en su lugar un
+                               identificador fijo de esta máquina
+
+@id_fica_parado
+SE QUEDA QUIETO, PORQUE TANDEM LO SUJETA
+  (estos viven dentro del entorno de Windows y, sin esto, cambiarían cada vez
+   que el entorno se rehiciera: es la causa más común de "actívalo de nuevo")
+
+@id_serial_disco_c
+serial del disco C:
+
+@id_wine_escolhe
+Wine lo elige solo
+
+@id_identificador_maquina
+identificador de la máquina
+
+@id_ainda_nao_existe
+todavía no existe
+
+@id_productid
+ProductId de Windows
+
+@id_productid_de_fabrica
+El ProductId de arriba es el que viene de fábrica en Wine, igual en toda
+  máquina que usa Wine. Tandem no se inventa otro: un número de licencia de
+  Microsoft no se fabrica.
+
+@id_identidade_mudou
+ATENCIÓN: la identidad de esta máquina cambió desde que se creó el entorno.
+  Eso pasa cuando se reinstala Linux o se clona el disco. Es la explicación de
+  que un programa pida activación sin que nada más haya cambiado.
+
+@id_varias_placas
+ATENCIÓN: esta máquina tiene {1} tarjetas de red. Muchos programas usan el
+  número de la tarjeta como parte de la identidad, y si una de ellas es Wi-Fi
+  que se enciende y se apaga, la identidad cambia con ella. Deja la red siempre
+  encendida.

@@ -1110,3 +1110,132 @@ sudo apt install {1}
 {3}
 
 这不是您电脑的毛病，也不是漏装了什么：发布这个组件的人从来没有出过 {1} 位版。如果这个程序本身有 {2} 位的版本，那个在这里应该能用。
+
+@pedir_envio
+我可以把这一行发到社区清单里吗？
+
+{1}
+
+就这些，整整一行。别的什么都不发。
+
+这有什么用：当别人打开同一个程序时，他们的 Tandem 已经知道它需要什么，
+不用让他们等着一点点摸索。发的人越多，每个人要自己摸索的就越少。
+
+不会从这里出去的东西：文件名、文件夹、您的用户名、电脑名、网络地址，
+以及任何一行日志。第一列是程序文件的指纹 —— 不是您的，也不是您电脑的 ——
+而且没法从它反推出任何东西。
+
+现在由您决定，而且随时可以更改：
+  tandem enviar sim     或     tandem enviar nao
+
+@pedir_envio_maquina_de_trabalho
+请注意：这台电脑上装着另一个系统的环境。如果它是工作用机，开启这个之前
+请先跟负责它的人确认。
+
+@portas_titulo
+店里接刷卡机、电子秤、打印机和扫码枪的接口：
+
+@portas_nenhuma
+（这台电脑上没有串口）
+
+@portas_impressora_usb
+在这里发现 USB 打印机：{1}
+  Wine 自己找不到它 —— 只有手工指定，程序才看得见。要把它设成 LPT1：
+
+      tandem portas fixar LPT1 {2}
+
+@portas_aviso_alto
+注意：USB 设备 {1} 落在了 {2}，而很多老的店面软件只认 COM1 到 COM4。
+  如果程序说找不到设备，几乎肯定就是这个原因。把它固定到靠前的口：
+
+      tandem portas fixar COM2 {1}
+
+@portas_aviso_dialout
+注意：您的用户不在 "dialout" 组里，没有这个，设备会出现在列表上却打不开。
+  只需做一次：
+
+      sudo usermod -aG dialout {1}
+
+  之后需要注销账号再登录一次。
+
+@portas_ja_presas
+您已经在这个 Windows 环境里固定好的：
+
+@alternativa_nativa
+• {1} — 专为 Linux 做的
+  {2}
+  获取方式：{3}
+
+@alternativa_parecida
+• {1} — 做的是类似的活
+  注意：{2}
+  获取方式：{3}
+
+@id_titulo
+程序把授权绑到这台电脑上时，它看到的是：
+
+@id_vem_da_maquina
+来自您真实的机器（和它在 Windows 下看到的一样）
+
+@id_fabricante
+厂商
+
+@id_modelo
+型号
+
+@id_placa_mae
+主板
+
+@id_processador
+处理器
+
+@id_memoria
+内存
+
+@id_rede
+网络（{1}）
+
+@id_nao_vem
+拿不到，也没办法拿到
+    BIOS 序列号            Wine 永远回答同一个值，全世界用 Wine 的电脑都一样
+    硬盘序列号             同上{1}
+
+  如果程序拒绝激活，几乎肯定是看到了这里面的某一项。这不是您电脑的毛病：
+  是 Wine 对自己的身份很诚实。能放行的是做这个程序的公司。
+
+@id_serial_de_fabrica
+
+    出厂序列号             Linux 只允许管理员读这个号，所以 Wine 用一个
+                           固定的本机标识替代它
+
+@id_fica_parado
+被固定住了，因为 Tandem 按着它
+  （这些存在 Windows 环境里面，不这么做的话，环境每重建一次它们就变一次 ——
+   这是“请重新激活”最常见的原因）
+
+@id_serial_disco_c
+C: 盘序列号
+
+@id_wine_escolhe
+由 Wine 自己挑
+
+@id_identificador_maquina
+机器标识
+
+@id_ainda_nao_existe
+还不存在
+
+@id_productid
+Windows 的 ProductId
+
+@id_productid_de_fabrica
+上面那个 ProductId 是 Wine 出厂就带的，所有用 Wine 的机器都一样。
+  Tandem 不会另编一个：微软的授权号不是能造出来的东西。
+
+@id_identidade_mudou
+注意：自从这个环境建立以来，这台机器的身份变了。重装 Linux 或者克隆硬盘
+  都会这样。这就是为什么别的都没变，程序却要求重新激活。
+
+@id_varias_placas
+注意：这台机器有 {1} 张网卡。很多程序把网卡的编号当成身份的一部分，
+  如果其中一张是会开会关的 Wi-Fi，身份就会跟着变。请让网络一直开着。
