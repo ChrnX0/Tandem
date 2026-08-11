@@ -35,102 +35,71 @@ REPO_RUNTIME="$(t_flatpak_campo "$ARQ" RuntimeRepo)"
 t_diz "flatpak ref: nome=$NOME titulo=$TITULO url=$URL ramo=$RAMO repo=$EH_REPO"
 
 if [ -z "$NOME" ] && [ -z "$URL" ]; then
-    t_erro "Este arquivo não parece ser um atalho de instalação do Flatpak.
-
-Ele deveria trazer por dentro o nome do programa e o endereço de onde baixar, e
-não traz nenhum dos dois. O download pode ter vindo incompleto."
+    t_erro "$(t_msg flatpak_ref_ruim)"
     exit 1
 fi
 
-AMIGAVEL="${TITULO:-${NOME:-este programa}}"
+AMIGAVEL="${TITULO:-${NOME:-$(t_msg este_programa)}}"
 
 # ------------------------------------------------------- 1. Is flatpak here?
 if ! command -v flatpak >/dev/null 2>&1; then
-    if t_pergunta "Para instalar \"$AMIGAVEL\" falta o Flatpak, que é a loja de
-programas que este arquivo usa.
-
-Posso instalar agora? Precisa de internet e da sua senha." "Instalar" "Agora não"; then
-        t_progresso_abre "Instalando o Flatpak..."
+    if t_pergunta "$(t_msg flatpak_falta_pergunta "$AMIGAVEL")" "Instalar" "Agora não"; then
+        t_progresso_abre "$(t_msg flatpak_instalando_flatpak)"
         t_como_root "$(t_script_instalacao flatpak)" >>"$LOG" 2>&1
         t_progresso_fecha
     fi
     command -v flatpak >/dev/null 2>&1 || {
-        t_erro "Falta o Flatpak para abrir este arquivo.
-
-Abra o Terminal e execute:
-
-sudo apt install flatpak
-
-Ou deixe o Tandem instalar:  tandem preparar"
+        t_erro "$(t_msg flatpak_falta_erro)"
         exit 1; }
-    t_ok "Flatpak instalado."
+    t_ok "$(t_msg flatpak_instalado_ok)"
 fi
 
 # ---------------------------------------------------------- 2. A repository
 if [ "$EH_REPO" = 1 ]; then
-    if ! t_pergunta "Este arquivo não instala um programa: ele adiciona uma LOJA de
-programas ao seu sistema.
-
-${AMIGAVEL}${URL:+
-$URL}
-
-Depois de adicionar, os programas dessa loja passam a aparecer para instalar.
-Só adicione se você confia em quem mandou o arquivo." "Adicionar a loja" "Cancelar"; then
+    if ! t_pergunta "$(t_msg flatpak_e_uma_loja "${AMIGAVEL}${URL:+
+$URL}")" "Adicionar a loja" "Cancelar"; then
         # This branch used to be a bare "exit 0", and with no graphical session
         # it produced exit code 0 and ZERO BYTES of output - the exact silent
         # failure this project treats as a defect. Found by running every new
         # handler with no window and no terminal and demanding a sentence.
         if [ -t 0 ]; then
-            printf 'Adicionar a loja "%s"? [s/N] ' "$AMIGAVEL"
+            printf "$(t_msg flatpak_loja_terminal)" "$AMIGAVEL"
             read -r r
             case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
         else
-            t_tem_gui || t_erro "Não adicionei a loja \"$AMIGAVEL\": isto muda de onde o seu
-computador baixa programas, e não há janela nem terminal para eu perguntar se
-você aceita.
-
-Pelo Terminal:  flatpak remote-add --from \"$ARQ\""
+            t_tem_gui || t_erro "$(t_msg flatpak_loja_sem_janela "$AMIGAVEL" "$ARQ")"
             exit 0
         fi
     fi
-    t_progresso_abre "Adicionando a loja..."
+    t_progresso_abre "$(t_msg flatpak_adicionando_loja)"
     t_como_root "flatpak remote-add --if-not-exists --from '$ARQ'" >>"$LOG" 2>&1
     C=$?
     t_progresso_fecha
     if [ "$C" -eq 0 ]; then
-        t_ok "Loja adicionada. Os programas dela já podem ser instalados."
+        t_ok "$(t_msg flatpak_loja_adicionada)"
         exit 0
     fi
-    t_erro "Não consegui adicionar esta loja.
+    t_erro "$(t_msg flatpak_loja_falhou)
 
-O registro completo está em:
-$LOG"
+$(t_msg registro_completo_em "$LOG")"
     exit "$C"
 fi
 
 # ------------------------------------------------------------ 3. A program
 if [ -n "$NOME" ] && flatpak info "$NOME" >/dev/null 2>&1; then
-    t_ok "\"$AMIGAVEL\" já está instalado nesta máquina.
-
-Procure no menu de aplicativos."
+    t_ok "$(t_msg flatpak_ja_instalado "$AMIGAVEL")"
     exit 0
 fi
 
-if ! t_pergunta "Instalar \"$AMIGAVEL\"?${URL:+
+if ! t_pergunta "$(t_msg flatpak_instalar_pergunta "$AMIGAVEL" "${URL:+
 
-Vem de: $URL}
-
-O Flatpak baixa o programa e o que ele precisa para funcionar. Na primeira vez
-costuma baixar bastante, porque vem também a base compartilhada." "Instalar" "Cancelar"; then
+$(t_msg flatpak_vem_de "$URL")}")" "Instalar" "Cancelar"; then
     if [ -t 0 ]; then
-        printf 'Instalar "%s"? [s/N] ' "$AMIGAVEL"
+        printf "$(t_msg flatpak_instalar_terminal)" "$AMIGAVEL"
         read -r r
         case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
     else
-        t_erro "Não instalei \"$AMIGAVEL\": preciso de uma confirmação e não há janela
-nem terminal para perguntar.
-
-Pelo Terminal:  flatpak install --from \"$ARQ\""
+        t_erro "$(t_msg flatpak_sem_confirmacao "$AMIGAVEL" "$ARQ")"
         exit 1
     fi
 fi
@@ -144,7 +113,7 @@ if [ -n "$REPO_RUNTIME" ]; then
 fi
 
 MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
-t_progresso_abre "Instalando $AMIGAVEL. Pode demorar na primeira vez..."
+t_progresso_abre "$(t_msg flatpak_instalando "$AMIGAVEL")"
 # Installed for this user, without a password. That is not a shortcut: a program
 # installed system-wide asks for a password the owner may not have, and a
 # per-user install is what he wanted anyway.
@@ -154,7 +123,7 @@ t_progresso_fecha
 
 if [ "$CODIGO" -ne 0 ] && [ -n "$NOME" ]; then
     t_diz "instalacao por usuario falhou ($CODIGO); tentando para o sistema"
-    t_progresso_abre "Tentando instalar para todos os usuários..."
+    t_progresso_abre "$(t_msg flatpak_tentando_todos)"
     t_como_root "flatpak install --noninteractive --assumeyes --from '$ARQ'" >>"$LOG" 2>&1
     CODIGO=$?
     t_progresso_fecha
@@ -162,10 +131,7 @@ fi
 
 if [ "$CODIGO" -eq 0 ] || { [ -n "$NOME" ] && flatpak info "$NOME" >/dev/null 2>&1; }; then
     t_memoria_grava "$ARQ" RESULTADO instalado 2>/dev/null
-    t_ok "$AMIGAVEL instalado.
-
-Procure no menu de aplicativos. Se não aparecer, saia e entre novamente na sua
-conta."
+    t_ok "$(t_msg flatpak_instalado "$AMIGAVEL")"
     exit 0
 fi
 
@@ -174,22 +140,20 @@ tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
 PORQUE=""
 if grep -qiE 'Could not resolve|Temporary failure|network is unreachable|Connection timed out' \
         "$PARCIAL" 2>/dev/null; then
-    PORQUE="O computador não conseguiu acessar a internet."
+    PORQUE="$(t_msg porque_sem_rede)"
 elif grep -qi 'No space left on device' "$PARCIAL" 2>/dev/null; then
-    PORQUE="O disco está cheio."
+    PORQUE="$(t_msg porque_disco_cheio)"
 elif grep -qiE 'runtime.*not found|Unable to load summary|remote.*not found' "$PARCIAL" 2>/dev/null; then
-    PORQUE="A loja de onde este programa vem não respondeu, ou não está mais no ar."
+    PORQUE="$(t_msg flatpak_porque_loja_muda)"
 elif grep -qiE 'no such ref|not available|Nothing matches' "$PARCIAL" 2>/dev/null; then
-    PORQUE="Este programa não está mais disponível no endereço que o arquivo aponta.
-O arquivo pode ser antigo."
+    PORQUE="$(t_msg flatpak_porque_sumiu)"
 fi
 ULTIMAS="$(t_palavras_do_programa "$PARCIAL" 3)"
 rm -f "$PARCIAL"
 t_memoria_grava "$ARQ" RESULTADO "nao instalou" 2>/dev/null
-t_erro "Não consegui instalar $AMIGAVEL.
+t_erro "$(t_msg flatpak_nao_instalou "$AMIGAVEL")
 ${PORQUE:+
 $PORQUE
-}${ULTIMAS:+$([ -z "$PORQUE" ] && printf '\nFoi isto que o Flatpak disse:\n\n%s\n' "$ULTIMAS")}
-O registro completo está em:
-$LOG"
+}${ULTIMAS:+$([ -z "$PORQUE" ] && printf '\n%s\n\n%s\n' "$(t_msg flatpak_disse)" "$ULTIMAS")}
+$(t_msg registro_completo_em "$LOG")"
 exit "$CODIGO"

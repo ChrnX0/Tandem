@@ -40,11 +40,11 @@ CABECA="$(head -c 4096 -- "$SCRIPT" 2>/dev/null | head -20 |
 if t_script_instalador "$SCRIPT"; then
     # ------------------------------------------------ a vendor installer
     QUAL="$(t_msg script_qual_instalador)"
-    ACAO="Instalar"
+    ACAO="$(t_msg botao_instalar)"
     t_diz "reconhecido como instalador"
 else
     QUAL="$(t_msg script_qual_script)"
-    ACAO="Executar"
+    ACAO="$(t_msg botao_executar)"
     t_diz "reconhecido como script comum"
     # For a plain script the first offer is to READ it. Whoever wanted to run it
     # says so on the second question, which is one click further away on purpose.

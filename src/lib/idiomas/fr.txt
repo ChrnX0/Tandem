@@ -709,3 +709,118 @@ Copie des fichiers de données de l'application...
 
 @apk_instalando
 Installation de {1}...
+
+@flatpak_ref_ruim
+Ce fichier ne ressemble pas à un raccourci d'installation Flatpak.
+
+Il devrait contenir le nom du programme et l'adresse de téléchargement, et il ne
+contient ni l'un ni l'autre. Le téléchargement est peut-être incomplet.
+
+@flatpak_falta_pergunta
+Pour installer « {1} », Flatpak manque : c'est la logithèque que ce fichier
+utilise.
+
+Je l'installe maintenant ? Il faut internet et votre mot de passe.
+
+@flatpak_instalando_flatpak
+Installation de Flatpak...
+
+@flatpak_falta_erro
+Flatpak manque, et c'est lui qui ouvre ce fichier.
+
+Ouvrez le Terminal et lancez :
+
+sudo apt install flatpak
+
+Ou laissez Tandem l'installer :  tandem preparar
+
+@flatpak_instalado_ok
+Flatpak installé.
+
+@flatpak_e_uma_loja
+Ce fichier n'installe pas un programme : il ajoute une LOGITHÈQUE à votre
+système.
+
+{1}
+
+Une fois ajoutée, les programmes de cette logithèque apparaissent à installer.
+Ne l'ajoutez que si vous faites confiance à celui qui vous a envoyé le fichier.
+
+@flatpak_loja_sem_janela
+Je n'ai pas ajouté la logithèque « {1} » : cela change l'endroit d'où votre
+ordinateur télécharge ses programmes, et il n'y a ni fenêtre ni terminal pour
+vous demander si vous l'acceptez.
+
+Depuis le Terminal :  flatpak remote-add --from "{2}"
+
+@flatpak_adicionando_loja
+Ajout de la logithèque...
+
+@flatpak_loja_adicionada
+Logithèque ajoutée. Ses programmes peuvent maintenant être installés.
+
+@flatpak_loja_falhou
+Je n'ai pas pu ajouter cette logithèque.
+
+@flatpak_ja_instalado
+« {1} » est déjà installé sur cette machine.
+
+Cherchez-le dans le menu des applications.
+
+@flatpak_instalar_pergunta
+Installer « {1} » ?{2}
+
+Flatpak télécharge le programme et ce dont il a besoin pour fonctionner. La
+première fois, il télécharge souvent beaucoup, car la base partagée vient avec.
+
+@flatpak_vem_de
+Il vient de : {1}
+
+@flatpak_sem_confirmacao
+Je n'ai pas installé « {1} » : il me faut une confirmation et il n'y a ni
+fenêtre ni terminal pour la demander.
+
+Depuis le Terminal :  flatpak install --from "{2}"
+
+@flatpak_instalando
+Installation de {1}. La première fois peut être longue...
+
+@flatpak_tentando_todos
+Tentative d'installation pour tous les utilisateurs...
+
+@flatpak_instalado
+{1} installé.
+
+Cherchez-le dans le menu des applications. S'il n'apparaît pas, déconnectez-vous
+et reconnectez-vous.
+
+@flatpak_nao_instalou
+Je n'ai pas pu installer {1}.
+
+@programa_disse
+Voici ce qu'il a dit :
+
+@flatpak_loja_terminal
+Ajouter la logithèque « %s » ? [o/N] 
+
+@flatpak_instalar_terminal
+Installer « %s » ? [o/N] 
+
+@este_programa
+ce programme
+
+@flatpak_disse
+Voici ce que Flatpak a dit :
+
+@precisa_da_senha
+Votre mot de passe est nécessaire.
+
+@botao_executar
+Exécuter
+
+@flatpak_porque_loja_muda
+La logithèque d'où vient ce programme n'a pas répondu, ou n'existe plus.
+
+@flatpak_porque_sumiu
+Ce programme n'est plus disponible à l'adresse indiquée par le fichier.
+Le fichier est peut-être ancien.

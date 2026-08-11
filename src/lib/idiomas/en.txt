@@ -712,3 +712,117 @@ Copying the app's data files...
 
 @apk_instalando
 Installing {1}...
+
+@flatpak_ref_ruim
+This file does not look like a Flatpak install shortcut.
+
+It should carry inside it the program's name and the address to download from,
+and it carries neither. The download may have come through incomplete.
+
+@flatpak_falta_pergunta
+To install "{1}", Flatpak is missing - it is the program store this file
+uses.
+
+May I install it now? It needs the internet and your password.
+
+@flatpak_instalando_flatpak
+Installing Flatpak...
+
+@flatpak_falta_erro
+Flatpak is missing, and it is what opens this file.
+
+Open the Terminal and run:
+
+sudo apt install flatpak
+
+Or let Tandem install it:  tandem preparar
+
+@flatpak_instalado_ok
+Flatpak installed.
+
+@flatpak_e_uma_loja
+This file does not install a program: it adds a program STORE to your system.
+
+{1}
+
+Once it is added, that store's programs start showing up to install. Only add
+it if you trust whoever sent you the file.
+
+@flatpak_loja_sem_janela
+I did not add the store "{1}": this changes where your computer downloads
+programs from, and there is no window and no terminal for me to ask whether you
+accept that.
+
+From the Terminal:  flatpak remote-add --from "{2}"
+
+@flatpak_adicionando_loja
+Adding the store...
+
+@flatpak_loja_adicionada
+Store added. Its programs can be installed now.
+
+@flatpak_loja_falhou
+I could not add this store.
+
+@flatpak_ja_instalado
+"{1}" is already installed on this machine.
+
+Look for it in the applications menu.
+
+@flatpak_instalar_pergunta
+Install "{1}"?{2}
+
+Flatpak downloads the program and what it needs to run. The first time it
+usually downloads a lot, because the shared base comes with it.
+
+@flatpak_vem_de
+It comes from: {1}
+
+@flatpak_sem_confirmacao
+I did not install "{1}": I need a confirmation and there is no window and no
+terminal to ask in.
+
+From the Terminal:  flatpak install --from "{2}"
+
+@flatpak_instalando
+Installing {1}. The first time can be slow...
+
+@flatpak_tentando_todos
+Trying to install it for all users...
+
+@flatpak_instalado
+{1} installed.
+
+Look for it in the applications menu. If it does not show up, log out of your
+account and back in.
+
+@flatpak_nao_instalou
+I could not install {1}.
+
+@programa_disse
+This is what it said:
+
+@flatpak_loja_terminal
+Add the store "%s"? [y/N] 
+
+@flatpak_instalar_terminal
+Install "%s"? [y/N] 
+
+@este_programa
+this program
+
+@flatpak_disse
+This is what Flatpak said:
+
+@precisa_da_senha
+It needs your password.
+
+@botao_executar
+Run
+
+@flatpak_porque_loja_muda
+The store this program comes from did not answer, or is no longer up.
+
+@flatpak_porque_sumiu
+This program is no longer available at the address the file points to.
+The file may be old.

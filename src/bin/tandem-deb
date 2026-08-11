@@ -175,7 +175,7 @@ $(t_msg deb_vai_ocupar "$(t_tamanho_amigavel $((TAMANHO * 1024)))")"
 $(t_msg deb_junto_vem "$(printf '%s' " $JUNTO" | cut -c1-300)")"
 PERGUNTA="$PERGUNTA
 
-Precisa da sua senha."
+$(t_msg precisa_da_senha)"
 
 if ! t_pergunta "$PERGUNTA" "Instalar" "Cancelar"; then
     if [ -t 0 ]; then

@@ -688,3 +688,113 @@ sudo apt install adb
 
 @apk_instalando
 جارٍ تثبيت {1}…
+
+@flatpak_ref_ruim
+لا يبدو هذا الملف اختصار تثبيت خاصًّا بـFlatpak.
+
+كان ينبغي أن يحمل في داخله اسم البرنامج وعنوان التنزيل، وهو لا يحمل أيًّا
+منهما. ربما وصل التنزيل ناقصًا.
+
+@flatpak_falta_pergunta
+لتثبيت "{1}" ينقص Flatpak، وهو متجر البرامج الذي يستخدمه هذا الملف.
+
+هل أُثبّته الآن؟ يحتاج إلى الإنترنت وإلى كلمة مرورك.
+
+@flatpak_instalando_flatpak
+جارٍ تثبيت Flatpak…
+
+@flatpak_falta_erro
+ينقص Flatpak، وهو ما يفتح هذا الملف.
+
+افتح الطرفية ونفِّذ:
+
+sudo apt install flatpak
+
+أو دع Tandem يثبّته:  tandem preparar
+
+@flatpak_instalado_ok
+تمّ تثبيت Flatpak.
+
+@flatpak_e_uma_loja
+هذا الملف لا يثبّت برنامجًا: إنه يضيف متجرَ برامج إلى نظامك.
+
+{1}
+
+بعد الإضافة تبدأ برامج ذلك المتجر بالظهور للتثبيت. لا تُضِفه إلا إذا كنت تثق
+بمن أرسل إليك الملف.
+
+@flatpak_loja_sem_janela
+لم أُضِف المتجر "{1}": هذا يغيّر المكان الذي ينزّل منه حاسوبك البرامج، ولا
+توجد نافذة ولا طرفية لأسألك إن كنت تقبل ذلك.
+
+من الطرفية:  flatpak remote-add --from "{2}"
+
+@flatpak_adicionando_loja
+جارٍ إضافة المتجر…
+
+@flatpak_loja_adicionada
+أُضيف المتجر. يمكن الآن تثبيت برامجه.
+
+@flatpak_loja_falhou
+لم أتمكّن من إضافة هذا المتجر.
+
+@flatpak_ja_instalado
+"{1}" مثبَّت بالفعل على هذا الجهاز.
+
+ابحث عنه في قائمة التطبيقات.
+
+@flatpak_instalar_pergunta
+أأثبّت "{1}"؟{2}
+
+ينزّل Flatpak البرنامج وما يحتاجه للعمل. في المرّة الأولى ينزّل عادةً قدرًا
+كبيرًا، لأنّ القاعدة المشتركة تأتي معه.
+
+@flatpak_vem_de
+يأتي من: {1}
+
+@flatpak_sem_confirmacao
+لم أثبّت "{1}": أحتاج إلى تأكيد، ولا توجد نافذة ولا طرفية لأسأل فيها.
+
+من الطرفية:  flatpak install --from "{2}"
+
+@flatpak_instalando
+جارٍ تثبيت {1}. قد تطول المرّة الأولى…
+
+@flatpak_tentando_todos
+جارٍ محاولة التثبيت لجميع المستخدمين…
+
+@flatpak_instalado
+تمّ تثبيت {1}.
+
+ابحث عنه في قائمة التطبيقات. إن لم يظهر، فاخرج من حسابك ثم عُد إليه.
+
+@flatpak_nao_instalou
+لم أتمكّن من تثبيت {1}.
+
+@programa_disse
+هذا ما قاله:
+
+@flatpak_loja_terminal
+أأضيف المتجر "%s"؟ [y/N] 
+
+@flatpak_instalar_terminal
+أأثبّت "%s"؟ [y/N] 
+
+@este_programa
+هذا البرنامج
+
+@flatpak_disse
+هذا ما قاله Flatpak:
+
+@precisa_da_senha
+يحتاج إلى كلمة مرورك.
+
+@botao_executar
+تشغيل
+
+@flatpak_porque_loja_muda
+لم يستجب المتجر الذي يأتي منه هذا البرنامج، أو لم يعد متاحًا.
+
+@flatpak_porque_sumiu
+لم يعد هذا البرنامج متاحًا في العنوان الذي يشير إليه الملف.
+قد يكون الملف قديمًا.

@@ -678,3 +678,112 @@ sudo apt install adb
 
 @apk_instalando
 正在安装 {1}……
+
+@flatpak_ref_ruim
+这个文件看起来不是 Flatpak 的安装快捷方式。
+
+它里面本该写着程序的名字和下载地址，可两样都没有。可能是没下载完。
+
+@flatpak_falta_pergunta
+要安装“{1}”，缺少 Flatpak —— 这个文件用的就是它这个程序商店。
+
+现在安装吗？需要联网和您的密码。
+
+@flatpak_instalando_flatpak
+正在安装 Flatpak……
+
+@flatpak_falta_erro
+缺少 Flatpak，这个文件要靠它来打开。
+
+请打开终端并执行：
+
+sudo apt install flatpak
+
+也可以让 Tandem 来装：  tandem preparar
+
+@flatpak_instalado_ok
+Flatpak 已安装。
+
+@flatpak_e_uma_loja
+这个文件不是装一个程序：它是往您的系统里添加一个程序商店。
+
+{1}
+
+添加之后，那个商店里的程序就会出现在可安装的列表里。只有在您信得过发来
+文件的人时才添加。
+
+@flatpak_loja_sem_janela
+我没有添加“{1}”这个商店：这会改变您的电脑从哪里下载程序，而我既没有窗口
+也没有终端来问您是否接受。
+
+在终端里：  flatpak remote-add --from "{2}"
+
+@flatpak_adicionando_loja
+正在添加商店……
+
+@flatpak_loja_adicionada
+商店已添加。里面的程序现在可以安装了。
+
+@flatpak_loja_falhou
+没能添加这个商店。
+
+@flatpak_ja_instalado
+“{1}”在这台机器上已经装好了。
+
+请到应用程序菜单里找。
+
+@flatpak_instalar_pergunta
+要安装“{1}”吗？{2}
+
+Flatpak 会把程序和它运行所需的东西一起下载。第一次通常下得比较多，
+因为共享的底层也要一起来。
+
+@flatpak_vem_de
+来源：{1}
+
+@flatpak_sem_confirmacao
+我没有安装“{1}”：需要您确认，但既没有窗口也没有终端可以问。
+
+在终端里：  flatpak install --from "{2}"
+
+@flatpak_instalando
+正在安装 {1}。第一次可能会慢……
+
+@flatpak_tentando_todos
+正在尝试为所有用户安装……
+
+@flatpak_instalado
+{1} 已安装。
+
+请到应用程序菜单里找。如果没出现，请注销账号再登录一次。
+
+@flatpak_nao_instalou
+没能安装 {1}。
+
+@programa_disse
+它是这么说的：
+
+@flatpak_loja_terminal
+要添加“%s”这个商店吗？[y/N] 
+
+@flatpak_instalar_terminal
+要安装“%s”吗？[y/N] 
+
+@este_programa
+这个程序
+
+@flatpak_disse
+Flatpak 是这么说的：
+
+@precisa_da_senha
+需要您的密码。
+
+@botao_executar
+运行
+
+@flatpak_porque_loja_muda
+这个程序所在的商店没有回应，或者已经不在了。
+
+@flatpak_porque_sumiu
+这个程序在文件所指的地址上已经没有了。
+文件可能已经过时。

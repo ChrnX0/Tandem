@@ -28,12 +28,22 @@ ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + [RAIZ / "src/lib/common.sh"]
 # declaring it done, and --migrados then refuses to let it slip back.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
-    "tandem-android", "tandem-deb", "tandem-apk",
+    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak",
 }
 
 CHAMADA = re.compile(
     r"t_(?:erro|aviso|ok|pergunta|texto|progresso_abre|progresso_texto)"
     r'\s+"((?:[^"\\]|\\.)*)"',
+    re.S,
+)
+# A message does not always reach t_erro as a literal argument: half of them are
+# assembled into a variable first and the variable is passed. Those assignments
+# are invisible to the pattern above, and four of them survived a file that had
+# just been declared finished - the same class of miss as the accent grep, one
+# level of indirection further out.
+ATRIBUICAO = re.compile(
+    r"\b(?:PORQUE|QUAL|PERGUNTA|ACAO|RESSALVA|ORIGEM_LICAO|MOTIVO|AVISO|EXTRA)"
+    r'=\s*"((?:[^"\\]|\\.)*)"',
     re.S,
 )
 VARIAVEL = re.compile(r"\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*")
@@ -79,8 +89,9 @@ def e_literal(argumento):
 
 def literais(caminho):
     texto = caminho.read_text(encoding="utf-8")
-    return [m.group(1) for m in CHAMADA.finditer(texto)
-            if e_literal(m.group(1))]
+    achados = [m.group(1) for m in CHAMADA.finditer(texto)]
+    achados += [m.group(1) for m in ATRIBUICAO.finditer(texto)]
+    return [a for a in achados if e_literal(a)]
 
 
 def main():

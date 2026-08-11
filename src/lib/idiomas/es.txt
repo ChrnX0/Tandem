@@ -702,3 +702,117 @@ Copiando los archivos de datos de la app...
 
 @apk_instalando
 Instalando {1}...
+
+@flatpak_ref_ruim
+Este archivo no parece un atajo de instalación de Flatpak.
+
+Debería traer por dentro el nombre del programa y la dirección de descarga, y no
+trae ninguno de los dos. La descarga puede haber venido incompleta.
+
+@flatpak_falta_pergunta
+Para instalar "{1}" falta Flatpak, que es la tienda de programas que usa este
+archivo.
+
+¿Lo instalo ahora? Hace falta internet y tu contraseña.
+
+@flatpak_instalando_flatpak
+Instalando Flatpak...
+
+@flatpak_falta_erro
+Falta Flatpak para abrir este archivo.
+
+Abre la Terminal y ejecuta:
+
+sudo apt install flatpak
+
+O deja que Tandem lo instale:  tandem preparar
+
+@flatpak_instalado_ok
+Flatpak instalado.
+
+@flatpak_e_uma_loja
+Este archivo no instala un programa: añade una TIENDA de programas a tu
+sistema.
+
+{1}
+
+Una vez añadida, los programas de esa tienda empiezan a aparecer para instalar.
+Añádela solo si confías en quien te envió el archivo.
+
+@flatpak_loja_sem_janela
+No añadí la tienda "{1}": esto cambia de dónde descarga programas tu
+ordenador, y no hay ventana ni terminal para preguntarte si lo aceptas.
+
+Desde la Terminal:  flatpak remote-add --from "{2}"
+
+@flatpak_adicionando_loja
+Añadiendo la tienda...
+
+@flatpak_loja_adicionada
+Tienda añadida. Ya se pueden instalar sus programas.
+
+@flatpak_loja_falhou
+No pude añadir esta tienda.
+
+@flatpak_ja_instalado
+"{1}" ya está instalado en esta máquina.
+
+Búscalo en el menú de aplicaciones.
+
+@flatpak_instalar_pergunta
+¿Instalar "{1}"?{2}
+
+Flatpak descarga el programa y lo que necesita para funcionar. La primera vez
+suele descargar bastante, porque viene también la base compartida.
+
+@flatpak_vem_de
+Viene de: {1}
+
+@flatpak_sem_confirmacao
+No instalé "{1}": necesito una confirmación y no hay ventana ni terminal
+donde preguntar.
+
+Desde la Terminal:  flatpak install --from "{2}"
+
+@flatpak_instalando
+Instalando {1}. La primera vez puede tardar...
+
+@flatpak_tentando_todos
+Intentando instalarlo para todos los usuarios...
+
+@flatpak_instalado
+{1} instalado.
+
+Búscalo en el menú de aplicaciones. Si no aparece, cierra la sesión y vuelve a
+entrar.
+
+@flatpak_nao_instalou
+No pude instalar {1}.
+
+@programa_disse
+Esto es lo que dijo:
+
+@flatpak_loja_terminal
+¿Añadir la tienda "%s"? [s/N] 
+
+@flatpak_instalar_terminal
+¿Instalar "%s"? [s/N] 
+
+@este_programa
+este programa
+
+@flatpak_disse
+Esto es lo que dijo Flatpak:
+
+@precisa_da_senha
+Hace falta tu contraseña.
+
+@botao_executar
+Ejecutar
+
+@flatpak_porque_loja_muda
+La tienda de donde viene este programa no respondió, o ya no está en línea.
+
+@flatpak_porque_sumiu
+Este programa ya no está disponible en la dirección a la que apunta el archivo.
+El archivo puede ser antiguo.
