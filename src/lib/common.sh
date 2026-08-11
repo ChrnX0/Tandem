@@ -1636,12 +1636,7 @@ t_dados_resgate() {
 # about to be deleted anyway. Separated out because all three destructive
 # paths need exactly the same wording.
 t_texto_resgate_falhou() {
-    printf 'Encontrei arquivos seus aqui dentro e NÃO consegui fazer uma cópia deles.
-
-Isso costuma ser disco cheio ou pasta pessoal sem permissão de escrita.
-
-Se continuar, esses arquivos vão ser apagados e não há como recuperar. O
-mais seguro é parar, liberar espaço, e tentar de novo.'
+    t_msg resgate_falhou
 }
 
 # ------------------------------------------- the identity, written out
@@ -2637,66 +2632,35 @@ t_palavras_do_programa() {
 # --------------------------------------------------- messages, in Portuguese
 
 t_texto_java_falta() {
-    printf 'Este programa é feito em Java, e o Java não está instalado.\n\n'
-    printf 'Instale pela Central de Programas procurando por "Java", ou no Terminal:\n\n'
-    printf 'sudo apt install default-jre\n\n'
-    printf 'Ou deixe o Tandem instalar:  tandem preparar\n'
+    t_msg java_falta
 }
 
 t_texto_java_antigo() {
-    local pede="$1" tem="$2"
-    printf 'Este programa precisa de uma versão mais nova do Java.\n\n'
-    printf 'Ele pede o Java %s e o instalado aqui é o %s.\n\n' "$pede" "$tem"
-    printf 'Para instalar a versão que ele pede:\n\n'
-    printf 'sudo apt install openjdk-%s-jre\n\n' "$pede"
-    printf 'Não é defeito da sua máquina nem do programa: o Java se recusa a abrir\n'
-    printf 'um programa feito para uma versão posterior à dele.\n'
+    t_msg java_antigo "$1" "$2"
 }
 
 t_texto_jar_biblioteca() {
-    printf 'Este arquivo é uma peça de um programa, não um programa.\n\n'
-    printf 'Arquivos .jar servem para as duas coisas, e por fora são iguais. Este\n'
-    printf 'aqui não tem ponto de partida: ele é feito para ser usado por outro\n'
-    printf 'programa, não para abrir sozinho.\n\n'
-    printf 'Se você esperava um programa, procure no site de onde baixou um arquivo\n'
-    printf 'marcado como "executável", "runnable" ou "with dependencies".\n'
+    t_msg jar_e_biblioteca
 }
 
 t_texto_jar_agente() {
-    printf 'Este arquivo é um acessório de outro programa Java, e não abre sozinho.\n\n'
-    printf 'Ele é feito para ser acoplado a um programa que já esteja rodando.\n'
+    t_msg jar_e_agente
 }
 
 t_texto_jar_javafx() {
-    printf 'Este programa usa o JavaFX, que não vem junto com o Java.\n\n'
-    printf 'Para instalar:\n\n'
-    printf 'sudo apt install openjfx\n'
+    t_msg jar_precisa_javafx
 }
 
 t_texto_appimage_incompleto() {
-    local prog="$1"
-    printf 'O download deste arquivo não terminou.\n\n'
-    printf '%s\n\n' "$(basename -- "$prog")"
-    printf 'O arquivo diz por dentro que deveria ser maior do que é. Não é defeito\n'
-    printf 'do programa: a transferência foi cortada no meio.\n\n'
-    printf 'Baixe de novo e tente outra vez.\n'
+    t_msg appimage_incompleto "$(basename -- "$1")"
 }
 
 t_texto_appimage_arch() {
-    local do_arquivo="$1" da_maquina="$2"
-    printf 'Este programa foi feito para outro tipo de processador.\n\n'
-    printf 'Ele é para %s e este computador é %s.\n\n' "$do_arquivo" "$da_maquina"
-    printf 'Procure no site de onde você baixou a versão para %s.\n' "$da_maquina"
+    t_msg appimage_arch "$1" "$2"
 }
 
 t_texto_appimage_fuse() {
-    printf 'Este programa precisa de uma peça do sistema para se abrir (o FUSE),\n'
-    printf 'e ela não está instalada.\n\n'
-    printf 'O Tandem já contornou isso desta vez, abrindo o programa por outro\n'
-    printf 'caminho - um pouco mais lento, mas funciona.\n\n'
-    printf 'Para deixar rápido de vez:\n\n'
-    printf 'sudo apt install libfuse2t64\n\n'
-    printf '(em sistemas mais antigos o nome é libfuse2)\n'
+    t_msg appimage_fuse
 }
 
 # --------------------------------------------------- packages of the system
@@ -2827,45 +2791,33 @@ t_apt_candidato() {
 # cause while the rest are consequences.
 t_causa_apt() {
     local log="$1"
+    # The lock has to be tested FIRST: it shows up together with the broken
+    # packages line, and it is the cause while the other is the consequence.
     if grep -qE 'Could not get lock|frontend lock was locked|is another process using it' \
             "$log" 2>/dev/null; then
-        printf 'O computador já está instalando ou atualizando outra coisa.\n\n'
-        printf 'Espere um ou dois minutos e tente de novo. Não é defeito: dois programas\n'
-        printf 'não podem instalar ao mesmo tempo, então este esperou a vez dele e desistiu.'
-        return 0
+        t_msg apt_trava; return 0
     fi
     if grep -q 'does not match system' "$log" 2>/dev/null; then
-        printf 'Este pacote foi feito para outro tipo de processador.'
-        return 0
+        t_msg apt_arch; return 0
     fi
     if grep -q 'No space left on device' "$log" 2>/dev/null; then
-        printf 'O disco está cheio.'
-        return 0
+        t_msg porque_disco_cheio; return 0
     fi
     if grep -q 'trying to overwrite' "$log" 2>/dev/null; then
-        printf 'Este pacote quer sobrescrever um arquivo que pertence a outro programa\n'
-        printf 'já instalado. Instalar assim quebraria o outro, então não instalei.'
-        return 0
+        t_msg apt_sobrescreve; return 0
     fi
     if grep -qE 'Temporary failure resolving|Could not resolve|Network is unreachable|Connection timed out' \
             "$log" 2>/dev/null; then
-        printf 'O computador não conseguiu acessar a internet para baixar o que falta.'
-        return 0
+        t_msg apt_sem_internet; return 0
     fi
     if grep -qE 'is not valid yet|Release file.*not valid|certificate' "$log" 2>/dev/null; then
-        printf 'A data do computador parece errada, e isso derruba os downloads.\n'
-        printf 'Hoje o computador acha que é %s.' "$(date '+%d/%m/%Y')"
-        return 0
+        t_msg porque_relogio "$(date '+%d/%m/%Y')"; return 0
     fi
     if grep -qE 'NO_PUBKEY|not signed|GPG error' "$log" 2>/dev/null; then
-        printf 'Um dos repositórios desta máquina está sem a assinatura digital dele,\n'
-        printf 'e o sistema se recusa a baixar de uma fonte que não pode conferir.'
-        return 0
+        t_msg apt_sem_assinatura; return 0
     fi
     if grep -qE 'dependency problems|unmet dependencies|held broken packages' "$log" 2>/dev/null; then
-        printf 'Faltam componentes que este pacote precisa, e eles não estão disponíveis\n'
-        printf 'nesta máquina.'
-        return 0
+        t_msg apt_faltam_componentes; return 0
     fi
     return 1
 }
@@ -2922,54 +2874,43 @@ t_script_instalador() {
 # ------------------------------------------- messages, in Portuguese
 
 t_texto_deb_versao_errada() {
-    local faltando="$1"
-    printf 'Este programa foi feito para uma versão diferente do seu sistema.\n\n'
-    printf 'Ele precisa destes componentes, e nenhum deles existe nesta máquina:\n'
-    printf '%s\n' "$(printf '%s\n' "$faltando" | sed 's/^/  - /')"
-    printf '\nNão é defeito da sua máquina nem do programa. Quem distribui esse pacote\n'
-    printf 'publicou uma versão para um sistema mais antigo (ou mais novo) que o seu.\n\n'
-    printf 'No site de onde você baixou, procure a versão que combina com o seu sistema.\n'
+    t_msg deb_versao_errada "$(printf '%s
+' "$1" | sed 's/^/  - /')"
 }
 
 t_texto_deb_falta_repositorio() {
-    local faltando="$1"
-    printf 'Falta um componente que não está nos repositórios desta máquina:\n'
-    printf '%s\n' "$(printf '%s\n' "$faltando" | sed 's/^/  - /')"
-    printf '\nIsso costuma querer dizer que o programa espera que você adicione antes o\n'
-    printf 'repositório dele. Veja as instruções no site de onde você baixou o arquivo.\n'
+    t_msg deb_falta_repositorio "$(printf '%s
+' "$1" | sed 's/^/  - /')"
 }
 
 t_texto_deb_arch() {
-    local do_pacote="$1" da_maquina="$2"
-    printf 'Este pacote foi feito para outro tipo de processador.\n\n'
-    printf 'Ele é para %s e este computador é %s.\n\n' "$do_pacote" "$da_maquina"
-    printf 'Procure no site de onde você baixou a versão para %s.\n' "$da_maquina"
+    t_msg deb_arch "$1" "$2"
 }
 
 t_texto_rpm() {
     local nome="$1" dist="$2" equivalente="$3"
-    printf 'Este arquivo é um pacote de outra família de Linux.\n\n'
-    printf 'Arquivos .rpm são do Fedora, do openSUSE e parecidos.\n'
-    [ -n "$dist" ] && printf 'Este aqui foi feito por: %s\n' "$dist"
-    printf '\nO seu sistema usa arquivos .deb. Instalar este aqui não funciona, e nem\n'
-    printf 'convertendo: a conversão produz algo que parece instalado e não está.\n'
+    t_msg rpm_outra_familia
+    [ -n "$dist" ] && { printf '
+'; t_msg rpm_feito_por "$dist"; }
+    printf '
+
+'
+    t_msg rpm_nao_converte
     if [ -n "$equivalente" ]; then
-        printf '\nA boa notícia: o mesmo programa está no seu próprio sistema. Para instalar,\n'
-        printf 'abra o Terminal e execute:\n\n'
-        printf 'sudo apt install %s\n' "$equivalente"
+        printf '
+
+'; t_msg rpm_boa_noticia "$equivalente"
     elif [ -n "$nome" ]; then
-        printf '\nNo site de onde você baixou, procure o arquivo .deb%s.\n' \
-               "${nome:+ do \"$nome\"}"
+        printf '
+
+'; t_msg rpm_procure_deb "$(t_msg rpm_do_nome "$nome")"
     fi
+    printf '
+'
 }
 
 t_texto_script_perigo() {
-    local f="$1"
-    printf 'Este arquivo é um script: uma lista de comandos que o computador executa.\n\n'
-    printf '%s\n\n' "$(basename -- "$f")"
-    printf 'Um script pode fazer qualquer coisa que você pode fazer - inclusive apagar\n'
-    printf 'os seus arquivos. Só execute se você confia em quem mandou.\n\n'
-    printf 'Se você baixou de um site que não conhece, a resposta certa é não executar.\n'
+    t_msg script_perigo "$(basename -- "$1")"
 }
 
 # ------------------------------------------------- sending, with permission

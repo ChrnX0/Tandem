@@ -981,3 +981,197 @@ Attente de la fin du démarrage d'Android...
 
 @waydroid_nao_ficou_pronto
 Android a démarré mais n'a pas été prêt à temps.
+
+# ------------------------------------- les verdicts longs (t_texto_*)
+
+@resgate_falhou
+J'ai trouvé des fichiers à vous ici et je n'ai PAS pu en faire une copie.
+
+C'est en général un disque plein, ou un dossier personnel sans droit
+d'écriture.
+
+Si je continue, ces fichiers seront supprimés sans possibilité de les
+récupérer. Le plus sûr est de s'arrêter, de libérer de la place, et de
+réessayer.
+
+@java_falta
+Ce programme est écrit en Java, et Java n'est pas installé.
+
+Installez-le depuis la logithèque en cherchant « Java », ou dans le Terminal :
+
+sudo apt install default-jre
+
+Ou laissez Tandem l'installer :  tandem preparar
+
+@java_antigo
+Ce programme a besoin d'une version plus récente de Java.
+
+Il demande Java {1} et celui installé ici est le {2}.
+
+Pour installer la version demandée :
+
+sudo apt install openjdk-{1}-jre
+
+Ce n'est un défaut ni de votre machine ni du programme : Java refuse d'ouvrir
+un programme conçu pour une version postérieure à la sienne.
+
+@jar_e_biblioteca
+Ce fichier est une pièce de programme, pas un programme.
+
+Les fichiers .jar servent aux deux et se ressemblent de l'extérieur. Celui-ci
+n'a pas de point de départ : il est fait pour être utilisé par un autre
+programme, pas pour s'ouvrir seul.
+
+Si vous attendiez un programme, cherchez sur le site d'où vous l'avez
+téléchargé un fichier marqué « executable », « runnable » ou « with
+dependencies ».
+
+@jar_e_agente
+Ce fichier est un accessoire d'un autre programme Java, et ne s'ouvre pas
+seul.
+
+Il est fait pour être rattaché à un programme déjà en cours d'exécution.
+
+@jar_precisa_javafx
+Ce programme utilise JavaFX, qui ne vient pas avec Java.
+
+Pour l'installer :
+
+sudo apt install openjfx
+
+@appimage_incompleto
+Le téléchargement de ce fichier ne s'est pas terminé.
+
+{1}
+
+Le fichier indique en interne qu'il devrait être plus gros qu'il ne l'est. Ce
+n'est pas un défaut du programme : le transfert a été coupé en route.
+
+Retéléchargez-le et réessayez.
+
+@appimage_arch
+Ce programme a été conçu pour un autre type de processeur.
+
+Il est pour {1} et cet ordinateur est {2}.
+
+Cherchez sur le site d'où vous l'avez téléchargé la version pour {2}.
+
+@appimage_fuse
+Ce programme a besoin d'une pièce du système pour s'ouvrir (FUSE), et elle
+n'est pas installée.
+
+Tandem a contourné le problème cette fois, en ouvrant le programme par une
+autre voie - un peu plus lente, mais qui fonctionne.
+
+Pour que ce soit rapide définitivement :
+
+sudo apt install libfuse2t64
+
+(sur les systèmes plus anciens le nom est libfuse2)
+
+@script_perigo
+Ce fichier est un script : une liste de commandes que l'ordinateur exécute.
+
+{1}
+
+Un script peut faire tout ce que vous pouvez faire - y compris supprimer vos
+fichiers. Ne l'exécutez que si vous faites confiance à celui qui l'a envoyé.
+
+Si vous l'avez téléchargé depuis un site que vous ne connaissez pas, la bonne
+réponse est de ne pas l'exécuter.
+
+@apt_trava
+L'ordinateur est déjà en train d'installer ou de mettre à jour autre chose.
+
+Attendez une ou deux minutes et réessayez. Ce n'est pas un défaut : deux
+programmes ne peuvent pas installer en même temps, donc celui-ci a attendu son
+tour et a renoncé.
+
+@apt_arch
+Ce paquet a été conçu pour un autre type de processeur.
+
+@apt_sobrescreve
+Ce paquet veut écraser un fichier appartenant à un autre programme déjà
+installé. L'installer ainsi casserait l'autre, donc je ne l'ai pas installé.
+
+@apt_sem_internet
+L'ordinateur n'a pas pu accéder à internet pour télécharger ce qui manque.
+
+@apt_sem_assinatura
+L'un des dépôts de cette machine n'a pas sa signature numérique, et le système
+refuse de télécharger depuis une source qu'il ne peut pas vérifier.
+
+@apt_faltam_componentes
+Des composants dont ce paquet a besoin manquent, et ils ne sont pas
+disponibles sur cette machine.
+
+@rpm_outra_familia
+Ce fichier est un paquet d'une autre famille de Linux.
+
+Les fichiers .rpm appartiennent à Fedora, openSUSE et compagnie.
+
+@rpm_feito_por
+Celui-ci a été fait par : {1}
+
+@rpm_nao_converte
+Votre système utilise des fichiers .deb. Installer celui-ci ne fonctionne pas,
+et le convertir non plus : la conversion produit quelque chose qui a l'air
+installé et ne l'est pas.
+
+@rpm_boa_noticia
+La bonne nouvelle : le même programme est dans votre propre système. Pour
+l'installer, ouvrez le Terminal et lancez :
+
+sudo apt install {1}
+
+@rpm_procure_deb
+Sur le site d'où vous l'avez téléchargé, cherchez le fichier .deb{1}.
+
+@rpm_do_nome
+ de « {1} »
+
+@deb_arch
+Ce paquet a été conçu pour un autre type de processeur.
+
+Il est pour {1} et cet ordinateur est {2}.
+
+Cherchez sur le site d'où vous l'avez téléchargé la version pour {2}.
+
+@deb_versao_errada
+Ce programme a été conçu pour une version différente de votre système.
+
+Il a besoin de ces composants, et aucun n'existe sur cette machine :
+{1}
+
+Ce n'est un défaut ni de votre machine ni du programme. Celui qui distribue ce
+paquet a publié une version pour un système plus ancien (ou plus récent) que le
+vôtre.
+
+Sur le site d'où vous l'avez téléchargé, cherchez la version qui correspond à
+votre système.
+
+@deb_falta_repositorio
+Un composant manque, et il n'est pas dans les dépôts de cette machine :
+{1}
+
+Cela veut souvent dire que le programme attend que vous ajoutiez d'abord son
+propre dépôt. Voyez les instructions sur le site d'où vous avez téléchargé le
+fichier.
+
+@suspeitas_linha
+- j'ai installé {1}, mais {2} manque toujours
+
+@suspeitas
+Le programme a demandé des fichiers que j'ai essayé d'installer, et ils ne sont pas arrivés :
+{1}
+
+C'est mon erreur, pas celle de votre machine : la correspondance que j'utilise pour ces fichiers pointe vers le mauvais paquet. Je l'ai noté et je ne répéterai pas la même installation.
+
+@bitola_linha
+- {1} a installé {2}, mais seulement en version {3} bits
+
+@bitola
+Ce programme est en {1} bits, et le composant qu'il demande n'existe qu'en {2} bits :
+{3}
+
+Ce n'est un défaut ni de votre machine ni d'une installation manquante : celui qui distribue ce composant n'a jamais publié de version {1} bits. S'il existe une version {2} bits de ce même programme, elle devrait fonctionner ici.

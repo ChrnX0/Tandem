@@ -975,3 +975,187 @@ Aguardando o Android terminar de iniciar...
 
 @waydroid_nao_ficou_pronto
 O Android iniciou mas não ficou pronto a tempo.
+
+# ---------------------------------------- diagnosticos longos (t_texto_*)
+
+@resgate_falhou
+Encontrei arquivos seus aqui dentro e NÃO consegui fazer uma cópia deles.
+
+Isso costuma ser disco cheio ou pasta pessoal sem permissão de escrita.
+
+Se continuar, esses arquivos vão ser apagados e não há como recuperar. O
+mais seguro é parar, liberar espaço, e tentar de novo.
+
+@java_falta
+Este programa é feito em Java, e o Java não está instalado.
+
+Instale pela Central de Programas procurando por "Java", ou no Terminal:
+
+sudo apt install default-jre
+
+Ou deixe o Tandem instalar:  tandem preparar
+
+@java_antigo
+Este programa precisa de uma versão mais nova do Java.
+
+Ele pede o Java {1} e o instalado aqui é o {2}.
+
+Para instalar a versão que ele pede:
+
+sudo apt install openjdk-{1}-jre
+
+Não é defeito da sua máquina nem do programa: o Java se recusa a abrir
+um programa feito para uma versão posterior à dele.
+
+@jar_e_biblioteca
+Este arquivo é uma peça de um programa, não um programa.
+
+Arquivos .jar servem para as duas coisas, e por fora são iguais. Este
+aqui não tem ponto de partida: ele é feito para ser usado por outro
+programa, não para abrir sozinho.
+
+Se você esperava um programa, procure no site de onde baixou um arquivo
+marcado como "executável", "runnable" ou "with dependencies".
+
+@jar_e_agente
+Este arquivo é um acessório de outro programa Java, e não abre sozinho.
+
+Ele é feito para ser acoplado a um programa que já esteja rodando.
+
+@jar_precisa_javafx
+Este programa usa o JavaFX, que não vem junto com o Java.
+
+Para instalar:
+
+sudo apt install openjfx
+
+@appimage_incompleto
+O download deste arquivo não terminou.
+
+{1}
+
+O arquivo diz por dentro que deveria ser maior do que é. Não é defeito
+do programa: a transferência foi cortada no meio.
+
+Baixe de novo e tente outra vez.
+
+@appimage_arch
+Este programa foi feito para outro tipo de processador.
+
+Ele é para {1} e este computador é {2}.
+
+Procure no site de onde você baixou a versão para {2}.
+
+@appimage_fuse
+Este programa precisa de uma peça do sistema para se abrir (o FUSE),
+e ela não está instalada.
+
+O Tandem já contornou isso desta vez, abrindo o programa por outro
+caminho - um pouco mais lento, mas funciona.
+
+Para deixar rápido de vez:
+
+sudo apt install libfuse2t64
+
+(em sistemas mais antigos o nome é libfuse2)
+
+@script_perigo
+Este arquivo é um script: uma lista de comandos que o computador executa.
+
+{1}
+
+Um script pode fazer qualquer coisa que você pode fazer - inclusive apagar
+os seus arquivos. Só execute se você confia em quem mandou.
+
+Se você baixou de um site que não conhece, a resposta certa é não executar.
+
+@apt_trava
+O computador já está instalando ou atualizando outra coisa.
+
+Espere um ou dois minutos e tente de novo. Não é defeito: dois programas
+não podem instalar ao mesmo tempo, então este esperou a vez dele e desistiu.
+
+@apt_arch
+Este pacote foi feito para outro tipo de processador.
+
+@apt_sobrescreve
+Este pacote quer sobrescrever um arquivo que pertence a outro programa
+já instalado. Instalar assim quebraria o outro, então não instalei.
+
+@apt_sem_internet
+O computador não conseguiu acessar a internet para baixar o que falta.
+
+@apt_sem_assinatura
+Um dos repositórios desta máquina está sem a assinatura digital dele,
+e o sistema se recusa a baixar de uma fonte que não pode conferir.
+
+@apt_faltam_componentes
+Faltam componentes que este pacote precisa, e eles não estão disponíveis
+nesta máquina.
+
+@rpm_outra_familia
+Este arquivo é um pacote de outra família de Linux.
+
+Arquivos .rpm são do Fedora, do openSUSE e parecidos.
+
+@rpm_feito_por
+Este aqui foi feito por: {1}
+
+@rpm_nao_converte
+O seu sistema usa arquivos .deb. Instalar este aqui não funciona, e nem
+convertendo: a conversão produz algo que parece instalado e não está.
+
+@rpm_boa_noticia
+A boa notícia: o mesmo programa está no seu próprio sistema. Para instalar,
+abra o Terminal e execute:
+
+sudo apt install {1}
+
+@rpm_procure_deb
+No site de onde você baixou, procure o arquivo .deb{1}.
+
+@rpm_do_nome
+ do "{1}"
+
+@deb_arch
+Este pacote foi feito para outro tipo de processador.
+
+Ele é para {1} e este computador é {2}.
+
+Procure no site de onde você baixou a versão para {2}.
+
+@deb_versao_errada
+Este programa foi feito para uma versão diferente do seu sistema.
+
+Ele precisa destes componentes, e nenhum deles existe nesta máquina:
+{1}
+
+Não é defeito da sua máquina nem do programa. Quem distribui esse pacote
+publicou uma versão para um sistema mais antigo (ou mais novo) que o seu.
+
+No site de onde você baixou, procure a versão que combina com o seu sistema.
+
+@deb_falta_repositorio
+Falta um componente que não está nos repositórios desta máquina:
+{1}
+
+Isso costuma querer dizer que o programa espera que você adicione antes o
+repositório dele. Veja as instruções no site de onde você baixou o arquivo.
+
+@suspeitas_linha
+- instalei {1}, mas {2} continua faltando
+
+@suspeitas
+O programa pediu arquivos que eu tentei instalar, e eles não chegaram:
+{1}
+
+Isso é erro meu, não da sua máquina: a tradução que eu uso para esses arquivos aponta para o pacote errado. Já anotei e não vou repetir a mesma instalação.
+
+@bitola_linha
+- {1} instalou {2}, mas só na versão de {3} bits
+
+@bitola
+Este programa é de {1} bits, e o componente que ele pede só existe em {2} bits:
+{3}
+
+Não é defeito da sua máquina nem falta de instalação: quem distribui esse componente nunca publicou a versão de {1} bits. Se existir uma versão de {2} bits deste mesmo programa, ela deve funcionar aqui.

@@ -22,13 +22,17 @@ import sys
 import pathlib
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
-ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + [RAIZ / "src/lib/common.sh"]
+# Every shell file that can talk to a person. It listed only src/bin plus
+# common.sh, so winedeps.sh - which holds the bitness dead end and the
+# suspicious-DLL verdict, both printed straight to the owner by tandem-exe -
+# was never even opened. Fifth time this measure was narrower than reality.
+ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + sorted(RAIZ.glob("src/lib/*.sh"))
 
 # Files whose migration is finished. Adding a name here IS the act of
 # declaring it done, and --migrados then refuses to let it slip back.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
-    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak", "tandem-jar", "tandem-appimage",
+    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak", "tandem-jar", "tandem-appimage", "winedeps.sh",
 }
 
 CHAMADA = re.compile(

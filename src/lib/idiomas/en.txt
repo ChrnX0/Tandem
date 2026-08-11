@@ -979,3 +979,192 @@ Waiting for Android to finish starting...
 
 @waydroid_nao_ficou_pronto
 Android started but was not ready in time.
+
+# ------------------------------------------- the long verdicts (t_texto_*)
+
+@resgate_falhou
+I found files of yours in here and could NOT make a copy of them.
+
+That is usually a full disk, or a home folder with no write permission.
+
+If I carry on, those files will be deleted and there is no getting them back.
+The safest thing is to stop, free up space, and try again.
+
+@java_falta
+This program is written in Java, and Java is not installed.
+
+Install it from the Software centre by searching for "Java", or in the
+Terminal:
+
+sudo apt install default-jre
+
+Or let Tandem install it:  tandem preparar
+
+@java_antigo
+This program needs a newer version of Java.
+
+It asks for Java {1} and the one installed here is {2}.
+
+To install the version it asks for:
+
+sudo apt install openjdk-{1}-jre
+
+It is not a fault of your machine or of the program: Java refuses to open a
+program built for a version later than its own.
+
+@jar_e_biblioteca
+This file is a piece of a program, not a program.
+
+.jar files serve both purposes and look identical from outside. This one has
+no starting point: it is made to be used by another program, not to open on
+its own.
+
+If you were expecting a program, look on the site you downloaded it from for a
+file marked "executable", "runnable" or "with dependencies".
+
+@jar_e_agente
+This file is an add-on for another Java program, and does not open on its own.
+
+It is made to be attached to a program that is already running.
+
+@jar_precisa_javafx
+This program uses JavaFX, which does not come with Java.
+
+To install it:
+
+sudo apt install openjfx
+
+@appimage_incompleto
+The download of this file did not finish.
+
+{1}
+
+The file says inside that it should be bigger than it is. It is not a fault of
+the program: the transfer was cut off halfway.
+
+Download it again and try once more.
+
+@appimage_arch
+This program was built for a different kind of processor.
+
+It is for {1} and this computer is {2}.
+
+Look on the site you downloaded it from for the {2} version.
+
+@appimage_fuse
+This program needs a piece of the system in order to open (FUSE), and it is
+not installed.
+
+Tandem worked around it this time, opening the program by another route -
+a little slower, but it works.
+
+To make it fast for good:
+
+sudo apt install libfuse2t64
+
+(on older systems the name is libfuse2)
+
+@script_perigo
+This file is a script: a list of commands the computer runs.
+
+{1}
+
+A script can do anything you can do - including deleting your files. Only run
+it if you trust whoever sent it.
+
+If you downloaded it from a site you do not know, the right answer is not to
+run it.
+
+@apt_trava
+The computer is already installing or updating something else.
+
+Wait a minute or two and try again. It is not a fault: two programs cannot
+install at the same time, so this one waited its turn and gave up.
+
+@apt_arch
+This package was built for a different kind of processor.
+
+@apt_sobrescreve
+This package wants to overwrite a file belonging to another program that is
+already installed. Installing it that way would break the other one, so I did
+not install it.
+
+@apt_sem_internet
+The computer could not reach the internet to download what is missing.
+
+@apt_sem_assinatura
+One of this machine's repositories is missing its digital signature, and the
+system refuses to download from a source it cannot check.
+
+@apt_faltam_componentes
+Components this package needs are missing, and they are not available on this
+machine.
+
+@rpm_outra_familia
+This file is a package from another family of Linux.
+
+.rpm files belong to Fedora, openSUSE and the like.
+
+@rpm_feito_por
+This one was made by: {1}
+
+@rpm_nao_converte
+Your system uses .deb files. Installing this one does not work, and neither
+does converting it: the conversion produces something that looks installed and
+is not.
+
+@rpm_boa_noticia
+The good news: the same program is in your own system. To install it, open the
+Terminal and run:
+
+sudo apt install {1}
+
+@rpm_procure_deb
+On the site you downloaded it from, look for the .deb file{1}.
+
+@rpm_do_nome
+ for "{1}"
+
+@deb_arch
+This package was built for a different kind of processor.
+
+It is for {1} and this computer is {2}.
+
+Look on the site you downloaded it from for the {2} version.
+
+@deb_versao_errada
+This program was built for a different version of your system.
+
+It needs these components, and none of them exists on this machine:
+{1}
+
+It is not a fault of your machine or of the program. Whoever distributes that
+package published a version for a system older (or newer) than yours.
+
+On the site you downloaded it from, look for the version that matches your
+system.
+
+@deb_falta_repositorio
+A component is missing that is not in this machine's repositories:
+{1}
+
+That usually means the program expects you to add its own repository first.
+See the instructions on the site you downloaded the file from.
+
+@suspeitas_linha
+- I installed {1}, but {2} is still missing
+
+@suspeitas
+The program asked for files I tried to install, and they did not arrive:
+{1}
+
+That is my mistake, not your machine's: the translation I use for those files points at the wrong package. I have noted it and will not repeat the same install.
+
+@bitola_linha
+- {1} installed {2}, but only the {3}-bit version
+
+@bitola
+This program is {1}-bit, and the component it asks for only exists in {2}-bit:
+{3}
+
+It is not a fault of your machine, nor a missing install: whoever distributes that component never published a {1}-bit version. If a {2}-bit version of this same program exists, it should work here.

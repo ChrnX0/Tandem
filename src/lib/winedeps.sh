@@ -195,14 +195,11 @@ t_texto_suspeitas() {
     while IFS="$(printf '\t')" read -r dll verbo; do
         [ -n "$dll" ] && [ -n "$verbo" ] || continue
         texto="$texto
-- instalei $(t_verbo_amigavel "$verbo"), mas $dll continua faltando"
+$(t_msg suspeitas_linha "$(t_verbo_amigavel "$verbo")" "$dll")"
     done <<EOF
 $linhas
 EOF
-    printf 'O programa pediu arquivos que eu tentei instalar, e eles não chegaram:
-%s
-
-Isso é erro meu, não da sua máquina: a tradução que eu uso para esses arquivos aponta para o pacote errado. Já anotei e não vou repetir a mesma instalação.' "$texto"
+    t_msg suspeitas "$texto"
 }
 
 # The inverse path: given a verb, which DLL should it have delivered?
@@ -303,15 +300,11 @@ t_texto_bitola() {
     while IFS="$(printf '\t')" read -r dll verbo; do
         [ -n "$dll" ] && [ -n "$verbo" ] || continue
         texto="$texto
-- $(t_verbo_amigavel "$verbo") instalou $dll, mas só na versão de $outra bits"
+$(t_msg bitola_linha "$(t_verbo_amigavel "$verbo")" "$dll" "$outra")"
     done <<EOF
 $linhas
 EOF
-    printf 'Este programa é de %s bits, e o componente que ele pede só existe em %s bits:
-%s
-
-Não é defeito da sua máquina nem falta de instalação: quem distribui esse componente nunca publicou a versão de %s bits. Se existir uma versão de %s bits deste mesmo programa, ela deve funcionar aqui.' \
-        "$arch" "$outra" "$texto" "$arch" "$outra"
+    t_msg bitola "$arch" "$outra" "$texto"
 }
 
 # Reads a log and prints the DLLs that were missing and have NO known
