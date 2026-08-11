@@ -26,7 +26,7 @@ PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 # See the long comment in tandem-exe about the braces around exec.
 CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
 if { exec 7> "$TANDEM_TRAVAS/jar-$CHAVE.lock"; } 2>/dev/null; then
-    flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
+    flock -n 7 || { t_aviso "$(t_msg ja_abrindo)"; exit 0; }
 else
     t_diz "nao consegui criar a trava; seguindo sem ela"
 fi
@@ -46,18 +46,11 @@ if [ "$ERRO" = "zip invalido ou incompleto" ]; then
     # download always breaks it here - and it breaks looking like a corrupt
     # program rather than like a partial transfer.
     t_memoria_grava "$PROG" RESULTADO "incompleto" 2>/dev/null
-    t_erro "Este arquivo está incompleto ou não é um programa Java.
-
-$(basename -- "$PROG")
-
-Se você acabou de baixar, o download provavelmente foi cortado no meio.
-Baixe de novo e tente outra vez."
+    t_erro "$(t_msg jar_incompleto "$(basename -- "$PROG")")"
     exit 1
 fi
 if [ -n "$ERRO" ]; then
-    t_erro "Não consegui ler este arquivo.
-
-$ERRO"
+    t_erro "$(t_msg nao_consegui_ler "$ERRO")"
     exit 1
 fi
 
@@ -76,15 +69,13 @@ t_diz "classe principal: $PRINCIPAL, pede java ${PEDE:-?}"
 
 # --------------------------------------------------------------- 3. The Java
 if ! command -v java >/dev/null 2>&1; then
-    if t_pergunta "Este programa é feito em Java, e o Java não está instalado.
-
-Posso instalar agora? Precisa de internet e da sua senha." "Instalar" "Agora não"; then
-        t_progresso_abre "Instalando o Java. Pode demorar alguns minutos..."
+    if t_pergunta "$(t_msg jar_falta_java_pergunta)" "Instalar" "Agora não"; then
+        t_progresso_abre "$(t_msg jar_instalando_java)"
         t_como_root "$(t_script_instalacao java)" >>"$LOG" 2>&1
         t_progresso_fecha
     fi
     command -v java >/dev/null 2>&1 || { t_erro "$(t_texto_java_falta)"; exit 1; }
-    t_ok "Java instalado."
+    t_ok "$(t_msg jar_java_instalado)"
 fi
 TEM="$(t_java_versao)"
 t_diz "java instalado: ${TEM:-nao identificado}"
@@ -98,7 +89,7 @@ if [ -n "$PEDE" ] && [ -n "$TEM" ] && [ "$PEDE" -gt "$TEM" ] 2>/dev/null; then
     if t_pergunta "$(t_texto_java_antigo "$PEDE" "$TEM")
 
 Posso instalar o Java $PEDE agora?" "Instalar" "Agora não"; then
-        t_progresso_abre "Instalando o Java $PEDE..."
+        t_progresso_abre "$(t_msg jar_instalando_java_versao "$PEDE")"
         t_como_root "$(t_script_instalacao "java$PEDE")" >>"$LOG" 2>&1
         t_progresso_fecha
         TEM="$(t_java_versao)"
@@ -107,7 +98,7 @@ Posso instalar o Java $PEDE agora?" "Instalar" "Agora não"; then
         t_erro "$(t_texto_java_antigo "$PEDE" "$TEM")"
         exit 1
     fi
-    t_ok "Java $PEDE instalado."
+    t_ok "$(t_msg jar_java_versao_instalado "$PEDE")"
 fi
 [ -n "$PEDE" ] && t_memoria_grava "$PROG" JAVA "$PEDE" 2>/dev/null
 
@@ -124,7 +115,7 @@ if [ -n "$DEPS" ]; then
 fi
 
 INICIO=$SECONDS
-t_aviso "Abrindo $(basename -- "$PROG")..."
+t_aviso "$(t_msg abrindo "$(basename -- "$PROG")")"
 MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
 (
     cd -- "$(dirname -- "$PROG")" || exit 1
@@ -168,26 +159,19 @@ if [ -n "$SEM_DEPS" ] &&
    grep -q 'NoClassDefFoundError\|ClassNotFoundException' "$PARCIAL" 2>/dev/null; then
     rm -f "$PARCIAL"
     t_memoria_grava "$PROG" RESULTADO "faltam arquivos" 2>/dev/null
-    t_erro "Faltam arquivos que deveriam estar na mesma pasta deste programa:
-$(for d in $SEM_DEPS; do printf -- '\n- %s' "$d"; done)
-
-Isso costuma acontecer quando só um arquivo foi copiado, sem a pasta completa.
-Baixe o programa inteiro, ou procure a versão marcada como \"with dependencies\"."
+    t_erro "$(t_msg jar_faltam_dependencias "$(for d in $SEM_DEPS; do printf -- '\n- %s' "$d"; done)")"
     exit "$CODIGO"
 fi
 
 if grep -q 'HeadlessException\|No X11 DISPLAY\|Can.t connect to X11' "$PARCIAL" 2>/dev/null; then
     rm -f "$PARCIAL"
-    t_erro "Este programa precisa de uma tela para abrir, e está sendo executado
-sem interface gráfica."
+    t_erro "$(t_msg jar_precisa_tela)"
     exit "$CODIGO"
 fi
 
 if grep -q 'Unable to access jarfile' "$PARCIAL" 2>/dev/null; then
     rm -f "$PARCIAL"
-    t_erro "O Java não conseguiu ler este arquivo.
-
-Verifique se ele não está numa pasta protegida ou num pendrive retirado."
+    t_erro "$(t_msg jar_java_nao_leu)"
     exit "$CODIGO"
 fi
 
@@ -196,12 +180,11 @@ fi
 ULTIMAS="$(t_palavras_do_programa "$PARCIAL")"
 rm -f "$PARCIAL"
 t_memoria_grava "$PROG" RESULTADO "nao abriu" 2>/dev/null
-t_erro "O programa fechou com erro (código $CODIGO).${ULTIMAS:+
+t_erro "$(t_msg fechou_com_erro "$CODIGO")${ULTIMAS:+
 
-Foi isto que ele disse:
+$(t_msg programa_disse)
 
 $ULTIMAS}
 
-O registro completo está em:
-$LOG"
+$(t_msg registro_completo_em "$LOG")"
 exit "$CODIGO"

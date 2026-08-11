@@ -787,3 +787,94 @@ Flatpak 是这么说的：
 @flatpak_porque_sumiu
 这个程序在文件所指的地址上已经没有了。
 文件可能已经过时。
+
+@jar_incompleto
+这个文件不完整，或者它不是 Java 程序。
+
+{1}
+
+如果您刚下载完，多半是下载中途断了。请重新下载后再试。
+
+@jar_falta_java_pergunta
+这个程序是用 Java 写的，而 Java 没有安装。
+
+现在安装吗？需要联网和您的密码。
+
+@jar_instalando_java
+正在安装 Java，可能需要几分钟……
+
+@jar_java_instalado
+Java 已安装。
+
+@jar_instalando_java_versao
+正在安装 Java {1}……
+
+@jar_java_versao_instalado
+Java {1} 已安装。
+
+@jar_faltam_dependencias
+本该和这个程序在同一个文件夹里的文件不见了：{1}
+
+这通常是因为只复制了一个文件，没有把整个文件夹带过来。请下载完整的程序，
+或者找标着 "with dependencies" 的那个版本。
+
+@jar_precisa_tela
+这个程序需要有屏幕才能打开，而现在是在没有图形界面的环境里运行的。
+
+@jar_java_nao_leu
+Java 读不了这个文件。
+
+请检查它是不是在受保护的文件夹里，或者在一个已经拔掉的 U 盘上。
+
+@appimage_nao_e_appimage
+这个文件不是 AppImage，尽管名字是这样。
+
+它是一个普通的 Linux 程序。要打开它，在终端里：
+
+chmod +x "{1}"
+"{1}"
+
+@appimage_sem_permissao
+我没能把这个文件标记为可执行。
+
+{1}
+
+这通常是因为文件在 U 盘上，或者在只读的文件夹里。请把文件复制到您的主目录
+再试一次。
+
+@appimage_no_menu
+{1} 现在已经在您的应用程序菜单里了。
+
+如果没出现，请注销账号再登录一次。
+
+@appimage_mais_novo_que_o_sistema
+{1} 比您的 Linux 系统更新。
+
+它是为更新版本的基础库做的{2}。
+
+装什么都解决不了：请到下载它的网站上找这个程序的旧版本，或者标明适用于
+您这个发行版的版本。
+
+@appimage_pede_glibc
+（它要求 GLIBC {1}）
+
+@appimage_falta_biblioteca
+{1} 打不开，因为系统里缺了一块东西：
+
+{2}
+
+这说明程序需要的东西，您这个版本的 Linux 没带。请到下载它的网站上看看有没有
+针对您这个发行版的版本。
+
+@appimage_uma_biblioteca
+一个系统库
+
+@appimage_pasta_sem_exec
+{1} 所在的文件夹被系统禁止运行任何东西。
+
+{2}
+
+这通常是 U 盘或外接硬盘。请把文件复制到您的主目录，从那里打开。
+
+@appimage_fechou_com_erro
+{1} 出错退出了（代码 {2}）。

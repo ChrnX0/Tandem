@@ -824,3 +824,101 @@ La logithèque d'où vient ce programme n'a pas répondu, ou n'existe plus.
 @flatpak_porque_sumiu
 Ce programme n'est plus disponible à l'adresse indiquée par le fichier.
 Le fichier est peut-être ancien.
+
+@jar_incompleto
+Ce fichier est incomplet, ou ce n'est pas un programme Java.
+
+{1}
+
+Si vous venez de le télécharger, le téléchargement a sans doute été coupé en
+route. Retéléchargez-le et réessayez.
+
+@jar_falta_java_pergunta
+Ce programme est écrit en Java, et Java n'est pas installé.
+
+Je l'installe maintenant ? Il faut internet et votre mot de passe.
+
+@jar_instalando_java
+Installation de Java. Cela peut prendre quelques minutes...
+
+@jar_java_instalado
+Java installé.
+
+@jar_instalando_java_versao
+Installation de Java {1}...
+
+@jar_java_versao_instalado
+Java {1} installé.
+
+@jar_faltam_dependencias
+Des fichiers qui devraient être dans le même dossier que ce programme
+manquent :{1}
+
+Cela arrive souvent quand un seul fichier a été copié, sans le dossier complet.
+Téléchargez le programme entier, ou cherchez la version marquée « with
+dependencies ».
+
+@jar_precisa_tela
+Ce programme a besoin d'un écran pour s'ouvrir, et il est lancé sans interface
+graphique.
+
+@jar_java_nao_leu
+Java n'a pas pu lire ce fichier.
+
+Vérifiez qu'il n'est pas dans un dossier protégé ou sur une clé USB retirée.
+
+@appimage_nao_e_appimage
+Ce fichier n'est pas un AppImage, malgré son nom.
+
+C'est un programme Linux ordinaire. Pour l'ouvrir, dans le Terminal :
+
+chmod +x "{1}"
+"{1}"
+
+@appimage_sem_permissao
+Je n'ai pas pu marquer ce fichier comme exécutable.
+
+{1}
+
+Cela arrive souvent quand le fichier est sur une clé USB ou dans un dossier en
+lecture seule. Copiez-le dans votre dossier personnel et réessayez.
+
+@appimage_no_menu
+{1} est maintenant dans votre menu des applications.
+
+S'il n'apparaît pas, déconnectez-vous et reconnectez-vous.
+
+@appimage_mais_novo_que_o_sistema
+{1} est plus récent que votre système Linux.
+
+Il a été conçu pour une version plus récente des bibliothèques de base{2}.
+
+Installer quelque chose n'y changera rien : cherchez sur le site d'où vous
+l'avez téléchargé une version plus ancienne, ou la version prévue pour votre
+distribution.
+
+@appimage_pede_glibc
+ (il demande la GLIBC {1})
+
+@appimage_falta_biblioteca
+Une pièce du système manque pour que {1} s'ouvre :
+
+{2}
+
+Cela veut dire que le programme attend quelque chose que votre version de Linux
+n'apporte pas. Cherchez sur le site d'où vous l'avez téléchargé s'il existe une
+version pour votre distribution.
+
+@appimage_uma_biblioteca
+une bibliothèque du système
+
+@appimage_pasta_sem_exec
+{1} est dans un dossier où le système n'autorise aucune exécution.
+
+{2}
+
+C'est en général une clé USB ou un disque externe. Copiez le fichier dans votre
+dossier personnel et ouvrez-le de là.
+
+@appimage_fechou_com_erro
+{1} s'est fermé sur une erreur (code {2}).

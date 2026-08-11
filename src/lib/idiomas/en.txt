@@ -826,3 +826,99 @@ The store this program comes from did not answer, or is no longer up.
 @flatpak_porque_sumiu
 This program is no longer available at the address the file points to.
 The file may be old.
+
+@jar_incompleto
+This file is incomplete, or it is not a Java program.
+
+{1}
+
+If you have just downloaded it, the download was probably cut off halfway.
+Download it again and try once more.
+
+@jar_falta_java_pergunta
+This program is written in Java, and Java is not installed.
+
+May I install it now? It needs the internet and your password.
+
+@jar_instalando_java
+Installing Java. This may take a few minutes...
+
+@jar_java_instalado
+Java installed.
+
+@jar_instalando_java_versao
+Installing Java {1}...
+
+@jar_java_versao_instalado
+Java {1} installed.
+
+@jar_faltam_dependencias
+Files that should be in the same folder as this program are missing:{1}
+
+That usually happens when only one file was copied, without the whole folder.
+Download the entire program, or look for the version marked "with dependencies".
+
+@jar_precisa_tela
+This program needs a screen to open, and it is being run with no graphical
+interface.
+
+@jar_java_nao_leu
+Java could not read this file.
+
+Check that it is not in a protected folder, or on a USB stick that has been
+removed.
+
+@appimage_nao_e_appimage
+This file is not an AppImage, despite the name.
+
+It is an ordinary Linux program. To open it, in the Terminal:
+
+chmod +x "{1}"
+"{1}"
+
+@appimage_sem_permissao
+I could not mark this file as executable.
+
+{1}
+
+That usually happens when the file is on a USB stick or in a read-only folder.
+Copy the file to your home folder and try again.
+
+@appimage_no_menu
+{1} is now in your applications menu.
+
+If it does not show up, log out of your account and back in.
+
+@appimage_mais_novo_que_o_sistema
+{1} is newer than your Linux system.
+
+It was built for a more recent version of the base libraries{2}.
+
+Installing something will not fix this: look on the site you downloaded it from
+for an older version of the program, or the version marked for your
+distribution.
+
+@appimage_pede_glibc
+ (it asks for GLIBC {1})
+
+@appimage_falta_biblioteca
+A piece of the system is missing for {1} to open:
+
+{2}
+
+That means the program expects something your version of Linux does not carry.
+Look on the site you downloaded it from for a version for your distribution.
+
+@appimage_uma_biblioteca
+a system library
+
+@appimage_pasta_sem_exec
+{1} is in a folder where the system does not allow anything to run.
+
+{2}
+
+That is usually a USB stick or an external disk. Copy the file to your home
+folder and open it from there.
+
+@appimage_fechou_com_erro
+{1} closed with an error (code {2}).

@@ -28,7 +28,7 @@ ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + [RAIZ / "src/lib/common.sh"]
 # declaring it done, and --migrados then refuses to let it slip back.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
-    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak",
+    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak", "tandem-jar", "tandem-appimage",
 }
 
 CHAMADA = re.compile(
@@ -42,7 +42,7 @@ CHAMADA = re.compile(
 # just been declared finished - the same class of miss as the accent grep, one
 # level of indirection further out.
 ATRIBUICAO = re.compile(
-    r"\b(?:PORQUE|QUAL|PERGUNTA|ACAO|RESSALVA|ORIGEM_LICAO|MOTIVO|AVISO|EXTRA)"
+    r"\b(?:PORQUE|QUAL|PERGUNTA|ACAO|RESSALVA|ORIGEM_LICAO|MOTIVO|AVISO)"
     r'=\s*"((?:[^"\\]|\\.)*)"',
     re.S,
 )
@@ -84,7 +84,13 @@ def e_literal(argumento):
     what matters is not the shape of the whole argument but whether any letter
     survives once the expansions are removed.
     """
-    return bool(LETRA.search(sem_expansoes(argumento)))
+    resto = sem_expansoes(argumento).strip()
+    # A single token starting with a dash is a command-line flag, not a
+    # sentence: EXTRA="--appimage-extract-and-run" has letters in it and is
+    # nobody's message.
+    if resto.startswith("-") and " " not in resto:
+        return False
+    return bool(LETRA.search(resto))
 
 
 def literais(caminho):

@@ -816,3 +816,98 @@ La tienda de donde viene este programa no respondió, o ya no está en línea.
 @flatpak_porque_sumiu
 Este programa ya no está disponible en la dirección a la que apunta el archivo.
 El archivo puede ser antiguo.
+
+@jar_incompleto
+Este archivo está incompleto, o no es un programa Java.
+
+{1}
+
+Si acabas de descargarlo, seguramente la descarga se cortó a la mitad.
+Descárgalo otra vez e inténtalo de nuevo.
+
+@jar_falta_java_pergunta
+Este programa está hecho en Java, y Java no está instalado.
+
+¿Lo instalo ahora? Hace falta internet y tu contraseña.
+
+@jar_instalando_java
+Instalando Java. Puede tardar unos minutos...
+
+@jar_java_instalado
+Java instalado.
+
+@jar_instalando_java_versao
+Instalando Java {1}...
+
+@jar_java_versao_instalado
+Java {1} instalado.
+
+@jar_faltam_dependencias
+Faltan archivos que deberían estar en la misma carpeta que este programa:{1}
+
+Suele pasar cuando solo se copió un archivo, sin la carpeta completa. Descarga el
+programa entero, o busca la versión marcada como "with dependencies".
+
+@jar_precisa_tela
+Este programa necesita una pantalla para abrirse, y se está ejecutando sin
+interfaz gráfica.
+
+@jar_java_nao_leu
+Java no pudo leer este archivo.
+
+Comprueba que no esté en una carpeta protegida o en un pendrive que se haya
+retirado.
+
+@appimage_nao_e_appimage
+Este archivo no es un AppImage, aunque se llame así.
+
+Es un programa de Linux normal. Para abrirlo, en la Terminal:
+
+chmod +x "{1}"
+"{1}"
+
+@appimage_sem_permissao
+No pude marcar este archivo como ejecutable.
+
+{1}
+
+Suele pasar cuando el archivo está en un pendrive o en una carpeta de solo
+lectura. Copia el archivo a tu carpeta personal e inténtalo de nuevo.
+
+@appimage_no_menu
+{1} ya está en tu menú de aplicaciones.
+
+Si no aparece, cierra la sesión y vuelve a entrar.
+
+@appimage_mais_novo_que_o_sistema
+{1} es más nuevo que tu sistema Linux.
+
+Fue hecho para una versión más reciente de las bibliotecas básicas{2}.
+
+No se arregla instalando nada: busca en el sitio de donde lo descargaste una
+versión más antigua del programa, o la versión marcada para tu distribución.
+
+@appimage_pede_glibc
+ (pide la GLIBC {1})
+
+@appimage_falta_biblioteca
+Falta una pieza del sistema para que {1} se abra:
+
+{2}
+
+Eso significa que el programa espera algo que tu versión de Linux no trae. Busca
+en el sitio de donde lo descargaste si hay una versión para tu distribución.
+
+@appimage_uma_biblioteca
+una biblioteca del sistema
+
+@appimage_pasta_sem_exec
+{1} está en una carpeta donde el sistema no deja ejecutar nada.
+
+{2}
+
+Suele ser un pendrive o un disco externo. Copia el archivo a tu carpeta personal
+y ábrelo desde allí.
+
+@appimage_fechou_com_erro
+{1} se cerró con un error (código {2}).

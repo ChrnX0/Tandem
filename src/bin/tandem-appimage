@@ -27,7 +27,7 @@ PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 # different cases: the first one stops, the second one carries on without it.
 CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
 if { exec 7> "$TANDEM_TRAVAS/appimage-$CHAVE.lock"; } 2>/dev/null; then
-    flock -n 7 || { t_aviso "Este programa já está abrindo..."; exit 0; }
+    flock -n 7 || { t_aviso "$(t_msg ja_abrindo)"; exit 0; }
 else
     t_diz "nao consegui criar a trava; seguindo sem ela"
 fi
@@ -45,16 +45,9 @@ if [ -n "$ERRO" ]; then
     # to be named .AppImage. Saying "this is not an AppImage" would be true and
     # useless; what the owner needs to know is that it can still be run.
     if [ "$ERRO" = "nao tem a marca AI do AppImage" ]; then
-        t_erro "Este arquivo não é um AppImage, mesmo com esse nome.
-
-Ele é um programa de Linux comum. Para abrir, no Terminal:
-
-chmod +x \"$PROG\"
-\"$PROG\""
+        t_erro "$(t_msg appimage_nao_e_appimage "$PROG")"
     else
-        t_erro "Não consegui ler este arquivo.
-
-$ERRO"
+        t_erro "$(t_msg nao_consegui_ler "$ERRO")"
     fi
     exit 1
 fi
@@ -86,12 +79,7 @@ if [ ! -x "$PROG" ]; then
     if chmod +x -- "$PROG" 2>>"$LOG"; then
         t_diz "permissao de execucao aplicada em $PROG"
     else
-        t_erro "Não consegui marcar este arquivo como executável.
-
-$PROG
-
-Isso costuma acontecer quando o arquivo está num pendrive ou numa pasta
-somente-leitura. Copie o arquivo para a sua pasta pessoal e tente de novo."
+        t_erro "$(t_msg appimage_sem_permissao "$PROG")"
         exit 1
     fi
 fi
@@ -138,7 +126,7 @@ elif [ "$MODO" = extrair ]; then
 fi
 CONTORNOU=0
 while :; do
-    t_aviso "Abrindo $NOME_BONITO..."
+    t_aviso "$(t_msg abrindo "$NOME_BONITO")"
     # The mark is taken AFTER the warning, and that order is not cosmetic:
     # t_aviso writes its own line to the log, and this is the one place in the
     # project that shows the tail of the log back to the owner. With the mark
@@ -161,9 +149,7 @@ while :; do
         # here it has a real fix: the AppImage carries its own desktop entry.
         NOME="$(t_integra_appimage "$PROG" 2>/dev/null)"
         if [ -n "$NOME" ]; then
-            t_ok "$NOME está agora no seu menu de aplicativos.
-
-Se não aparecer, saia e entre novamente na sua conta."
+            t_ok "$(t_msg appimage_no_menu "$NOME")"
         fi
         # Only after the program worked: telling the owner to install libfuse
         # while the program is broken for another reason would send him after
@@ -201,12 +187,7 @@ Se não aparecer, saia e entre novamente na sua conta."
         PEDE="$(sed -n "s/.*GLIBC_\([0-9.]*\).*/\1/p" "$PARCIAL" | sort -V | tail -1)"
         rm -f "$PARCIAL"
         t_memoria_grava "$PROG" RESULTADO "sistema antigo" 2>/dev/null
-        t_erro "$NOME_BONITO é mais novo que o seu sistema Linux.
-
-Ele foi feito para uma versão mais recente das bibliotecas básicas${PEDE:+ (pede a GLIBC $PEDE)}.
-
-Não tem conserto instalando nada: procure no site de onde baixou uma versão
-mais antiga do programa, ou a versão marcada para a sua distribuição."
+        t_erro "$(t_msg appimage_mais_novo_que_o_sistema "$NOME_BONITO" "${PEDE:+$(t_msg appimage_pede_glibc "$PEDE")}")"
         exit "$CODIGO"
     fi
 
@@ -216,12 +197,7 @@ mais antiga do programa, ou a versão marcada para a sua distribuição."
                  "$PARCIAL" | head -1)"
         rm -f "$PARCIAL"
         t_memoria_grava "$PROG" RESULTADO "falta biblioteca" 2>/dev/null
-        t_erro "Falta uma peça do sistema para $NOME_BONITO abrir:
-
-${FALTA:-uma biblioteca do sistema}
-
-Isso quer dizer que o programa espera algo que a sua versão do Linux não traz.
-Procure no site de onde você baixou se há uma versão para a sua distribuição."
+        t_erro "$(t_msg appimage_falta_biblioteca "$NOME_BONITO" "${FALTA:-$(t_msg appimage_uma_biblioteca)}")"
         exit "$CODIGO"
     fi
 
@@ -235,12 +211,7 @@ Procure no site de onde você baixou se há uma versão para a sua distribuiçã
            findmnt -no OPTIONS --target "$MONTAGEM" 2>/dev/null | grep -q noexec; then
             rm -f "$PARCIAL"
             t_memoria_grava "$PROG" RESULTADO "pasta sem permissao" 2>/dev/null
-            t_erro "$NOME_BONITO está numa pasta onde o sistema não deixa executar nada.
-
-$MONTAGEM
-
-Costuma ser um pendrive ou um disco externo. Copie o arquivo para a sua pasta
-pessoal e abra de lá."
+            t_erro "$(t_msg appimage_pasta_sem_exec "$NOME_BONITO" "$MONTAGEM")"
             exit "$CODIGO"
         fi
     fi
@@ -254,13 +225,12 @@ pessoal e abra de lá."
     ULTIMAS="$(t_palavras_do_programa "$PARCIAL")"
     rm -f "$PARCIAL"
     t_memoria_grava "$PROG" RESULTADO "nao abriu" 2>/dev/null
-    t_erro "$NOME_BONITO fechou com erro (código $CODIGO).${ULTIMAS:+
+    t_erro "$(t_msg appimage_fechou_com_erro "$NOME_BONITO" "$CODIGO")${ULTIMAS:+
 
-Foi isto que ele disse:
+$(t_msg programa_disse)
 
 $ULTIMAS}
 
-O registro completo está em:
-$LOG"
+$(t_msg registro_completo_em "$LOG")"
     exit "$CODIGO"
 done
