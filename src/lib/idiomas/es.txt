@@ -1467,3 +1467,140 @@ No conozco "{1}".
 tandem portas                        muestra los puertos
 tandem portas fixar COM2 /dev/ttyACM0   fija un aparato en un puerto
 tandem portas soltar COM2               lo deshace
+
+@rec_uso_importar
+Uso:  tandem receita --importar <receta.txt> <programa.exe>
+
+@nao_achei_o_programa
+No encontré el programa: {1}
+
+@rec_aplicada
+Receta aplicada.
+
+Tandem ahora sabe lo que este programa pidió en la máquina de quien la envió.
+Va a PREGUNTAR antes de instalar cualquier cosa: una receta no es una orden.
+
+@rec_nao_e_receita
+Este archivo no es una receta de Tandem.
+
+@rec_outro_programa
+Esta receta es de otro programa, o de otra versión de él.
+
+Aplicarla enseñaría la lección equivocada, así que no la apliqué.
+
+@rec_suspeita
+Rechacé la receta: trae un nombre de componente sospechoso.
+
+Una receta venida de fuera no puede hacer que Tandem ejecute nada.
+
+@rec_nao_consegui_ler
+No pude leer esta receta.
+
+@rec_diga_qual_programa
+Di qué programa.
+
+Ejemplo:  tandem receita ~/Downloads/sistema.exe
+
+@rec_marcada_reprovado
+Atención: dijiste que este programa NO funcionó bien aquí.
+La receta saldrá marcada así. Piénsalo dos veces antes de mandársela a alguien.
+
+@rec_so_abriu
+Esta receta vale lo que vale: el programa abrió sin error, pero nadie confirmó
+que funcionara de verdad. Sale marcada como "so-abriu".
+
+@rec_nada_aprendido
+Todavía no aprendí nada sobre este programa.
+
+Ábrelo una vez por Tandem y la receta se forma sola.
+
+@lista_baixando
+Descargando la lista de la comunidad...
+
+@lista_atualizada
+Lista actualizada: {1} programas conocidos.
+
+Esto no instala nada. Cuando abras un programa que está en la lista, Tandem
+PREGUNTARÁ si quieres usar lo que ya funcionó para otras personas.
+
+@lista_nao_baixou
+No pude descargar la lista. Comprueba internet.
+
+@lista_nao_e_lista
+El archivo descargado no es una lista de Tandem. No lo usé.
+
+@lista_nao_publicada
+La lista todavía no se ha publicado.
+
+Eso no es problema de tu internet ni de tu máquina: el archivo aún no existe
+en la dirección donde Tandem busca. El resto sigue funcionando normalmente.
+
+@lista_falta_curl
+Falta curl o wget para descargar la lista.
+
+@lista_titulo
+Tandem - Lista de la comunidad
+
+@lista_uso
+Usa:  tandem lista  |  tandem lista atualizar
+
+@contrib_diga_qual
+Di qué programa.
+
+Ejemplo:  tandem contribuir ~/Downloads/sistema.exe
+
+@contrib_nada_util
+Todavía no aprendí nada útil sobre este programa.
+
+Ábrelo por Tandem primero. Si ya abrió, responde a la pregunta "¿funcionó como
+esperabas?": es ella la que da valor a la lección.
+
+@contrib_titulo
+Tandem - Contribuir
+
+@contrib_copiada
+La línea ya está copiada. Solo pégala.
+
+@contrib_abrir_formulario
+¿Quieres que abra el formulario ya rellenado con esta línea?
+
+Tú aún lo compruebas y lo envías: Tandem no manda nada solo por aquí.
+
+Si prefieres que lo mande solo de ahora en adelante, es otra cosa:
+tandem enviar sim
+
+@contrib_pode_mandar_sozinho
+Si quieres, Tandem puede mandar esto solo la próxima vez:
+tandem enviar sim
+
+@env_ligado
+Activado. Tandem mandará la línea estándar cuando confirmes que un programa
+funcionó.
+
+Para desactivarlo:  tandem enviar nao
+
+@env_desligado
+Desactivado. Nada sale de esta máquina.
+
+Lo que ya estaba en la cola sigue guardado y no se envía. Para borrar la cola:
+rm "{1}"
+
+@env_esta_desligado
+El envío está desactivado. Para activarlo:  tandem enviar sim
+
+@env_sem_endereco
+No hay dirección a donde mandar en esta versión de Tandem.
+
+Las líneas se quedan en la cola y van cuando exista una dirección. Nada se
+pierde, y nada se envía.
+
+@env_enviadas
+{1} línea(s) enviada(s). Quedan {2} en la cola.
+
+@env_nao_conheco
+No conozco "tandem enviar {1}".
+
+Usa:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agora
+
+@env_titulo
+Tandem - Enviar a la lista

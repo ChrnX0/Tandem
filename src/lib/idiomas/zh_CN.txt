@@ -1410,3 +1410,138 @@ Tandem - 设备接口
 tandem portas                        显示各个口
 tandem portas fixar COM2 /dev/ttyACM0   把设备固定到某个口
 tandem portas soltar COM2               撤销
+
+@rec_uso_importar
+用法：  tandem receita --importar <配方.txt> <程序.exe>
+
+@nao_achei_o_programa
+我没找到这个程序：{1}
+
+@rec_aplicada
+配方已应用。
+
+Tandem 现在知道这个程序在发来的人那台机器上要过什么了。
+它在装任何东西之前都会先问 —— 配方是建议，不是命令。
+
+@rec_nao_e_receita
+这个文件不是 Tandem 的配方。
+
+@rec_outro_programa
+这个配方是给另一个程序、或者它的另一个版本的。
+
+套上去会学到错的东西，所以我没有套。
+
+@rec_suspeita
+我拒绝了这个配方：里面有个可疑的组件名。
+
+外面来的配方不能让 Tandem 去执行任何东西。
+
+@rec_nao_consegui_ler
+我读不了这个配方。
+
+@rec_diga_qual_programa
+请说明是哪个程序。
+
+例如：  tandem receita ~/Downloads/system.exe
+
+@rec_marcada_reprovado
+注意：您说过这个程序在这里没有正常工作。
+配方会带着这个标记发出去。发给别人之前请再想一想。
+
+@rec_so_abriu
+这个配方的分量就这么多：程序打开时没报错，但没人确认它真的能用。
+它会带着 "so-abriu" 的标记发出去。
+
+@rec_nada_aprendido
+关于这个程序我还什么都没学到。
+
+用 Tandem 打开它一次，配方就会自己成形。
+
+@lista_baixando
+正在下载社区清单……
+
+@lista_atualizada
+清单已更新：{1} 个已知程序。
+
+这不会安装任何东西。当您打开清单里的某个程序时，Tandem 会先问您，
+要不要用别人那里已经奏效的做法。
+
+@lista_nao_baixou
+我没能下载清单。请检查网络。
+
+@lista_nao_e_lista
+下载下来的文件不是 Tandem 的清单。我没有用它。
+
+@lista_nao_publicada
+清单还没有发布。
+
+这不是您的网络或电脑的问题：Tandem 查找的那个地址上，文件还不存在。
+其余部分照常工作。
+
+@lista_falta_curl
+缺少 curl 或 wget，下载清单需要其中之一。
+
+@lista_titulo
+Tandem - 社区清单
+
+@lista_uso
+用法：  tandem lista  |  tandem lista atualizar
+
+@contrib_diga_qual
+请说明是哪个程序。
+
+例如：  tandem contribuir ~/Downloads/system.exe
+
+@contrib_nada_util
+关于这个程序我还没学到有用的东西。
+
+先用 Tandem 打开它。如果已经打开过了，请回答“表现和您预想的一样吗？”——
+正是这个回答让这条经验有分量。
+
+@contrib_titulo
+Tandem - 参与贡献
+
+@contrib_copiada
+这一行已经复制好了，直接粘贴就行。
+
+@contrib_abrir_formulario
+要我把表单打开、并且这一行已经填好吗？
+
+检查和提交还是您来 —— 在这条路上 Tandem 不会自己发送任何东西。
+
+如果您希望它从现在起自己发，那是另一回事：
+tandem enviar sim
+
+@contrib_pode_mandar_sozinho
+如果您愿意，下次 Tandem 可以自己发：
+tandem enviar sim
+
+@env_ligado
+已开启。当您确认某个程序能用时，Tandem 就会发出那一行标准记录。
+
+要关闭：  tandem enviar nao
+
+@env_desligado
+已关闭。什么都不会离开这台机器。
+
+已经排在队列里的内容仍然保存着，不会发送。要清空队列：
+rm "{1}"
+
+@env_esta_desligado
+发送功能是关着的。要开启：  tandem enviar sim
+
+@env_sem_endereco
+这个版本的 Tandem 里没有可发送的地址。
+
+这些记录留在队列里，等有了地址再一起发出去。什么都不会丢，也什么都不会发。
+
+@env_enviadas
+已发送 {1} 行。队列里还剩 {2} 行。
+
+@env_nao_conheco
+我不认识 "tandem enviar {1}"。
+
+用法：  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agora
+
+@env_titulo
+Tandem - 发送到清单

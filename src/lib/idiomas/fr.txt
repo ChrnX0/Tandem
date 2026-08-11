@@ -1494,3 +1494,147 @@ Je ne connais pas « {1} ».
 tandem portas                        montre les ports
 tandem portas fixar COM2 /dev/ttyACM0   fixe un appareil sur un port
 tandem portas soltar COM2               annule
+
+@rec_uso_importar
+Usage :  tandem receita --importar <recette.txt> <programme.exe>
+
+@nao_achei_o_programa
+Je n'ai pas trouvé le programme : {1}
+
+@rec_aplicada
+Recette appliquée.
+
+Tandem sait maintenant ce que ce programme a demandé sur la machine de celui
+qui l'a envoyée. Il DEMANDERA avant d'installer quoi que ce soit — une recette
+n'est pas un ordre.
+
+@rec_nao_e_receita
+Ce fichier n'est pas une recette Tandem.
+
+@rec_outro_programa
+Cette recette est pour un autre programme, ou une autre version de celui-ci.
+
+L'appliquer enseignerait la mauvaise leçon, donc je ne l'ai pas fait.
+
+@rec_suspeita
+J'ai refusé la recette : elle porte un nom de composant suspect.
+
+Une recette venue de l'extérieur ne peut pas faire exécuter quoi que ce soit à
+Tandem.
+
+@rec_nao_consegui_ler
+Je n'ai pas pu lire cette recette.
+
+@rec_diga_qual_programa
+Indiquez quel programme.
+
+Exemple :  tandem receita ~/Downloads/systeme.exe
+
+@rec_marcada_reprovado
+Attention : vous avez dit que ce programme n'a PAS bien fonctionné ici.
+La recette sortira marquée ainsi. Réfléchissez avant de l'envoyer à quelqu'un.
+
+@rec_so_abriu
+Cette recette vaut ce qu'elle vaut : le programme s'est ouvert sans erreur,
+mais personne n'a confirmé qu'il fonctionnait vraiment. Elle sort marquée
+« so-abriu ».
+
+@rec_nada_aprendido
+Je n'ai encore rien appris sur ce programme.
+
+Ouvrez-le une fois via Tandem et la recette se forme d'elle-même.
+
+@lista_baixando
+Téléchargement de la liste de la communauté...
+
+@lista_atualizada
+Liste mise à jour : {1} programmes connus.
+
+Cela n'installe rien. Quand vous ouvrirez un programme qui figure sur la liste,
+Tandem DEMANDERA si vous voulez utiliser ce qui a déjà fonctionné pour
+d'autres.
+
+@lista_nao_baixou
+Je n'ai pas pu télécharger la liste. Vérifiez internet.
+
+@lista_nao_e_lista
+Le fichier téléchargé n'est pas une liste Tandem. Je ne l'ai pas utilisé.
+
+@lista_nao_publicada
+La liste n'a pas encore été publiée.
+
+Ce n'est pas un problème de votre internet ni de votre machine : le fichier
+n'existe pas encore à l'adresse où Tandem regarde. Le reste continue de
+fonctionner normalement.
+
+@lista_falta_curl
+curl ou wget manque pour télécharger la liste.
+
+@lista_titulo
+Tandem - Liste de la communauté
+
+@lista_uso
+Utilisez :  tandem lista  |  tandem lista atualizar
+
+@contrib_diga_qual
+Indiquez quel programme.
+
+Exemple :  tandem contribuir ~/Downloads/systeme.exe
+
+@contrib_nada_util
+Je n'ai encore rien appris d'utile sur ce programme.
+
+Ouvrez-le d'abord via Tandem. S'il s'est déjà ouvert, répondez à la question
+« a-t-il fonctionné comme vous l'attendiez ? » - c'est elle qui donne sa valeur
+à la leçon.
+
+@contrib_titulo
+Tandem - Contribuer
+
+@contrib_copiada
+La ligne est déjà copiée. Il n'y a plus qu'à la coller.
+
+@contrib_abrir_formulario
+Voulez-vous que j'ouvre le formulaire déjà rempli avec cette ligne ?
+
+Vous vérifiez et envoyez vous-même - Tandem n'envoie rien tout seul par ici.
+
+Si vous préférez qu'il envoie seul désormais, c'est autre chose :
+tandem enviar sim
+
+@contrib_pode_mandar_sozinho
+Si vous voulez, Tandem peut l'envoyer tout seul la prochaine fois :
+tandem enviar sim
+
+@env_ligado
+Activé. Tandem enverra la ligne standard quand vous confirmerez qu'un
+programme a fonctionné.
+
+Pour désactiver :  tandem enviar nao
+
+@env_desligado
+Désactivé. Rien ne quitte cette machine.
+
+Ce qui était déjà en file reste stocké et n'est pas envoyé. Pour supprimer la
+file :
+rm "{1}"
+
+@env_esta_desligado
+L'envoi est désactivé. Pour l'activer :  tandem enviar sim
+
+@env_sem_endereco
+Il n'y a pas d'adresse où envoyer dans cette version de Tandem.
+
+Les lignes restent en file et partiront quand une adresse existera. Rien n'est
+perdu, et rien n'est envoyé.
+
+@env_enviadas
+{1} ligne(s) envoyée(s). Il reste {2} en file.
+
+@env_nao_conheco
+Je ne connais pas « tandem enviar {1} ».
+
+Utilisez :  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agora
+
+@env_titulo
+Tandem - Envoyer à la liste

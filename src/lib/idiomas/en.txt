@@ -1480,3 +1480,141 @@ I do not know "{1}".
 tandem portas                        shows the ports
 tandem portas fixar COM2 /dev/ttyACM0   pins a device to a port
 tandem portas soltar COM2               undoes it
+
+@rec_uso_importar
+Usage:  tandem receita --importar <recipe.txt> <program.exe>
+
+@nao_achei_o_programa
+I did not find the program: {1}
+
+@rec_aplicada
+Recipe applied.
+
+Tandem now knows what this program asked for on the machine of whoever sent it.
+It will ASK before installing anything — a recipe is not an order.
+
+@rec_nao_e_receita
+This file is not a Tandem recipe.
+
+@rec_outro_programa
+This recipe is for another program, or another version of it.
+
+Applying it would teach the wrong lesson, so I did not.
+
+@rec_suspeita
+I refused the recipe: it carries a suspicious component name.
+
+A recipe from outside cannot make Tandem run anything.
+
+@rec_nao_consegui_ler
+I could not read this recipe.
+
+@rec_diga_qual_programa
+Say which program.
+
+Example:  tandem receita ~/Downloads/system.exe
+
+@rec_marcada_reprovado
+Note: you said this program did NOT work properly here.
+The recipe goes out marked that way. Think twice before sending it to somebody.
+
+@rec_so_abriu
+This recipe is worth what it is worth: the program opened with no error, but
+nobody confirmed it actually worked. It goes out marked "so-abriu".
+
+@rec_nada_aprendido
+I have not learnt anything about this program yet.
+
+Open it once through Tandem and the recipe forms on its own.
+
+@lista_baixando
+Downloading the community list...
+
+@lista_atualizada
+List updated: {1} known programs.
+
+This installs nothing. When you open a program that is on the list, Tandem will
+ASK whether you want to use what already worked for other people.
+
+@lista_nao_baixou
+I could not download the list. Check the internet.
+
+@lista_nao_e_lista
+The downloaded file is not a Tandem list. I did not use it.
+
+@lista_nao_publicada
+The list has not been published yet.
+
+That is not a problem with your internet or your machine: the file does not
+exist yet at the address Tandem looks in. Everything else carries on working
+normally.
+
+@lista_falta_curl
+curl or wget is missing, and one of them is needed to download the list.
+
+@lista_titulo
+Tandem - Community list
+
+@lista_uso
+Use:  tandem lista  |  tandem lista atualizar
+
+@contrib_diga_qual
+Say which program.
+
+Example:  tandem contribuir ~/Downloads/system.exe
+
+@contrib_nada_util
+I have not learnt anything useful about this program yet.
+
+Open it through Tandem first. If it already opened, answer the question "did it
+work the way you expected?" - that is what gives the lesson its worth.
+
+@contrib_titulo
+Tandem - Contribute
+
+@contrib_copiada
+The line is already copied. Just paste it.
+
+@contrib_abrir_formulario
+Shall I open the form already filled in with this line?
+
+You still check it and send it - Tandem sends nothing by itself here.
+
+If you would rather it sent on its own from now on, that is a different thing:
+tandem enviar sim
+
+@contrib_pode_mandar_sozinho
+If you like, Tandem can send this by itself next time:
+tandem enviar sim
+
+@env_ligado
+On. Tandem will send the standard line whenever you confirm that a program
+worked.
+
+To turn it off:  tandem enviar nao
+
+@env_desligado
+Off. Nothing leaves this machine.
+
+What was already queued stays stored and is not sent. To delete the queue:
+rm "{1}"
+
+@env_esta_desligado
+Sending is off. To turn it on:  tandem enviar sim
+
+@env_sem_endereco
+There is no address to send to in this version of Tandem.
+
+The lines stay in the queue and go along once an address exists. Nothing is
+lost, and nothing is sent.
+
+@env_enviadas
+{1} line(s) sent. {2} left in the queue.
+
+@env_nao_conheco
+I do not know "tandem enviar {1}".
+
+Use:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agora
+
+@env_titulo
+Tandem - Send to the list

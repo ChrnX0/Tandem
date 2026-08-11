@@ -1470,3 +1470,141 @@ Não conheço "{1}".
 tandem portas                        mostra as portas
 tandem portas fixar COM2 /dev/ttyACM0   prende um aparelho numa porta
 tandem portas soltar COM2               desfaz
+
+@rec_uso_importar
+Uso:  tandem receita --importar <receita.txt> <programa.exe>
+
+@nao_achei_o_programa
+Não achei o programa: {1}
+
+@rec_aplicada
+Receita aplicada.
+
+O Tandem agora sabe o que este programa pediu na máquina de quem mandou.
+Ele vai PERGUNTAR antes de instalar qualquer coisa — receita não é ordem.
+
+@rec_nao_e_receita
+Este arquivo não é uma receita do Tandem.
+
+@rec_outro_programa
+Esta receita é de outro programa, ou de outra versão dele.
+
+Aplicar ensinaria a lição errada, então não apliquei.
+
+@rec_suspeita
+Recusei a receita: ela traz um nome de componente suspeito.
+
+Receita vinda de fora não pode mandar o Tandem executar nada.
+
+@rec_nao_consegui_ler
+Não consegui ler esta receita.
+
+@rec_diga_qual_programa
+Diga qual programa.
+
+Exemplo:  tandem receita ~/Downloads/sistema.exe
+
+@rec_marcada_reprovado
+Atenção: você disse que este programa NÃO funcionou direito aqui.
+A receita vai sair marcada assim. Pense duas vezes antes de mandar para alguém.
+
+@rec_so_abriu
+Esta receita vale o que vale: o programa abriu sem erro, mas ninguém
+confirmou que funcionou de verdade. Ela sai marcada como "so-abriu".
+
+@rec_nada_aprendido
+Ainda não aprendi nada sobre este programa.
+
+Abra ele uma vez pelo Tandem e a receita se forma sozinha.
+
+@lista_baixando
+Baixando a lista da comunidade...
+
+@lista_atualizada
+Lista atualizada: {1} programas conhecidos.
+
+Isso não instala nada. Quando você abrir um programa que está na lista,
+o Tandem vai PERGUNTAR se quer usar o que já funcionou para outras pessoas.
+
+@lista_nao_baixou
+Não consegui baixar a lista. Verifique a internet.
+
+@lista_nao_e_lista
+O arquivo baixado não é uma lista do Tandem. Não usei.
+
+@lista_nao_publicada
+A lista ainda não foi publicada.
+
+Isso não é problema da sua internet nem da sua máquina: o arquivo ainda
+não existe no endereço onde o Tandem procura. O resto continua
+funcionando normalmente.
+
+@lista_falta_curl
+Falta o curl ou o wget para baixar a lista.
+
+@lista_titulo
+Tandem - Lista da comunidade
+
+@lista_uso
+Use:  tandem lista  |  tandem lista atualizar
+
+@contrib_diga_qual
+Diga qual programa.
+
+Exemplo:  tandem contribuir ~/Downloads/sistema.exe
+
+@contrib_nada_util
+Ainda não aprendi nada útil sobre este programa.
+
+Abra ele pelo Tandem primeiro. Se ele já abriu, responda a pergunta
+"funcionou como você esperava?" - é ela que dá valor à lição.
+
+@contrib_titulo
+Tandem - Contribuir
+
+@contrib_copiada
+A linha já está copiada. Basta colar.
+
+@contrib_abrir_formulario
+Quer que eu abra o formulário já preenchido com esta linha?
+
+Você ainda confere e envia - o Tandem não manda nada sozinho por aqui.
+
+Se preferir que ele mande sozinho de agora em diante, é outra coisa:
+tandem enviar sim
+
+@contrib_pode_mandar_sozinho
+Se quiser, o Tandem pode mandar isso sozinho da próxima vez:
+tandem enviar sim
+
+@env_ligado
+Ligado. O Tandem vai mandar a linha padronizada quando você confirmar
+que um programa funcionou.
+
+Para desligar:  tandem enviar nao
+
+@env_desligado
+Desligado. Nada sai desta máquina.
+
+O que já estava na fila continua guardado e não é enviado. Para apagar a fila:
+rm "{1}"
+
+@env_esta_desligado
+O envio está desligado. Para ligar:  tandem enviar sim
+
+@env_sem_endereco
+Não há endereço para onde mandar nesta versão do Tandem.
+
+As linhas ficam guardadas na fila e vão junto quando existir um endereço.
+Nada é perdido, e nada é enviado.
+
+@env_enviadas
+{1} linha(s) enviada(s). Restam {2} na fila.
+
+@env_nao_conheco
+Não conheço "tandem enviar {1}".
+
+Use:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agora
+
+@env_titulo
+Tandem - Enviar para a lista

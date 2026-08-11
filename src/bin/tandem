@@ -919,46 +919,33 @@ acao_receita() {
     if [ "${1:-}" = "--importar" ]; then
         local rec="${2:-}" prog="${3:-}"
         [ -n "$rec" ] && [ -n "$prog" ] || {
-            t_erro "Uso:  tandem receita --importar <receita.txt> <programa.exe>"; return 1; }
-        [ -f "$prog" ] || { t_erro "Não achei o programa: $prog"; return 1; }
+            t_erro "$(t_msg rec_uso_importar)"; return 1; }
+        [ -f "$prog" ] || { t_erro "$(t_msg nao_achei_o_programa "$prog")"; return 1; }
         t_receita_importa "$rec" "$prog"
         case $? in
-            0) t_ok "Receita aplicada.
-
-O Tandem agora sabe o que este programa pediu na máquina de quem mandou.
-Ele vai PERGUNTAR antes de instalar qualquer coisa — receita não é ordem."
+            0) t_ok "$(t_msg rec_aplicada)"
                return 0 ;;
-            2) t_erro "Este arquivo não é uma receita do Tandem." ;;
-            3) t_erro "Esta receita é de outro programa, ou de outra versão dele.
-
-Aplicar ensinaria a lição errada, então não apliquei." ;;
-            4) t_erro "Recusei a receita: ela traz um nome de componente suspeito.
-
-Receita vinda de fora não pode mandar o Tandem executar nada." ;;
-            *) t_erro "Não consegui ler esta receita." ;;
+            2) t_erro "$(t_msg rec_nao_e_receita)" ;;
+            3) t_erro "$(t_msg rec_outro_programa)" ;;
+            4) t_erro "$(t_msg rec_suspeita)" ;;
+            *) t_erro "$(t_msg rec_nao_consegui_ler)" ;;
         esac
         return 1
     fi
 
     local prog="${1:-}"
-    [ -n "$prog" ] || { t_erro "Diga qual programa.
-
-Exemplo:  tandem receita ~/Downloads/sistema.exe"; return 1; }
-    [ -f "$prog" ] || { t_erro "Não achei o programa: $prog"; return 1; }
+    [ -n "$prog" ] || { t_erro "$(t_msg rec_diga_qual_programa)"; return 1; }
+    [ -f "$prog" ] || { t_erro "$(t_msg nao_achei_o_programa "$prog")"; return 1; }
     # Warn BEFOREHAND, on the error output, so as not to dirty the recipe that
     # goes out on stdout and is usually redirected into a file.
     case "$(t_confianca_da_licao "$prog")" in
         reprovado)
-            t_aviso "Atenção: você disse que este programa NÃO funcionou direito aqui.
-A receita vai sair marcada assim. Pense duas vezes antes de mandar para alguém." ;;
+            t_aviso "$(t_msg rec_marcada_reprovado)" ;;
         so-abriu)
-            t_aviso "Esta receita vale o que vale: o programa abriu sem erro, mas ninguém
-confirmou que funcionou de verdade. Ela sai marcada como \"so-abriu\"." ;;
+            t_aviso "$(t_msg rec_so_abriu)" ;;
     esac
     if ! t_receita_exporta "$prog"; then
-        t_erro "Ainda não aprendi nada sobre este programa.
-
-Abra ele uma vez pelo Tandem e a receita se forma sozinha."
+        t_erro "$(t_msg rec_nada_aprendido)"
         return 1
     fi
     return 0
@@ -1115,22 +1102,16 @@ acao_logs() {
 acao_lista() {
     case "${1:-ver}" in
         atualizar|baixar|sincronizar)
-            t_progresso_abre "Baixando a lista da comunidade..."
+            t_progresso_abre "$(t_msg lista_baixando)"
             t_lista_atualiza; local c=$?
             t_progresso_fecha
             case $c in
-                0) t_ok "Lista atualizada: $(grep -vc '^#' "$TANDEM_LISTA" 2>/dev/null) programas conhecidos.
-
-Isso não instala nada. Quando você abrir um programa que está na lista,
-o Tandem vai PERGUNTAR se quer usar o que já funcionou para outras pessoas." ;;
-                1) t_erro "Não consegui baixar a lista. Verifique a internet." ;;
-                3) t_erro "O arquivo baixado não é uma lista do Tandem. Não usei." ;;
-                4) t_erro "A lista ainda não foi publicada.
-
-Isso não é problema da sua internet nem da sua máquina: o arquivo ainda
-não existe no endereço onde o Tandem procura. O resto continua
-funcionando normalmente." ;;
-                *) t_erro "Falta o curl ou o wget para baixar a lista." ;;
+                0) t_ok "$(t_msg lista_atualizada \
+                        "$(grep -vc '^#' "$TANDEM_LISTA" 2>/dev/null)")" ;;
+                1) t_erro "$(t_msg lista_nao_baixou)" ;;
+                3) t_erro "$(t_msg lista_nao_e_lista)" ;;
+                4) t_erro "$(t_msg lista_nao_publicada)" ;;
+                *) t_erro "$(t_msg lista_falta_curl)" ;;
             esac
             return $c ;;
         ver|"")
@@ -1143,7 +1124,7 @@ Ela é um arquivo de texto público com o que já deu certo na máquina de
 outras pessoas: quais componentes do Windows cada programa precisou.
 Baixar não manda nada seu para lugar nenhum.
 
-Para baixar:   tandem lista atualizar" | t_texto "Tandem - Lista da comunidade"
+Para baixar:   tandem lista atualizar" | t_texto "$(t_msg lista_titulo)"
                 return 1
             fi
             printf '%s\n' "Lista da comunidade
@@ -1151,9 +1132,9 @@ Para baixar:   tandem lista atualizar" | t_texto "Tandem - Lista da comunidade"
 $(grep -vc '^#' "$TANDEM_LISTA") programas conhecidos.
 Arquivo: $TANDEM_LISTA
 
-$(head -1 "$TANDEM_LISTA")" | t_texto "Tandem - Lista da comunidade"
+$(head -1 "$TANDEM_LISTA")" | t_texto "$(t_msg lista_titulo)"
             return 0 ;;
-        *) t_erro "Use:  tandem lista  |  tandem lista atualizar"; return 1 ;;
+        *) t_erro "$(t_msg lista_uso)"; return 1 ;;
     esac
 }
 
@@ -1161,15 +1142,10 @@ $(head -1 "$TANDEM_LISTA")" | t_texto "Tandem - Lista da comunidade"
 # shop's machine does not talk to any server by decision of an automation.
 acao_contribuir() {
     local prog="${1:-}" reg
-    [ -n "$prog" ] || { t_erro "Diga qual programa.
-
-Exemplo:  tandem contribuir ~/Downloads/sistema.exe"; return 1; }
-    [ -f "$prog" ] || { t_erro "Não achei o programa: $prog"; return 1; }
+    [ -n "$prog" ] || { t_erro "$(t_msg contrib_diga_qual)"; return 1; }
+    [ -f "$prog" ] || { t_erro "$(t_msg nao_achei_o_programa "$prog")"; return 1; }
     reg="$(t_lista_registro "$prog")" || {
-        t_erro "Ainda não aprendi nada útil sobre este programa.
-
-Abra ele pelo Tandem primeiro. Se ele já abriu, responda a pergunta
-\"funcionou como você esperava?\" - é ela que dá valor à lição."
+        t_erro "$(t_msg contrib_nada_util)"
         return 1; }
 
     printf '%s\n' "Contribuir com a lista da comunidade
@@ -1193,7 +1169,7 @@ NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do
 computador, endereço de rede, nem uma linha de log.
 
 Copie a linha acima e mande para:
-https://github.com/ChrnX0/Tandem/issues" | t_texto "Tandem - Contribuir"
+https://github.com/ChrnX0/Tandem/issues" | t_texto "$(t_msg contrib_titulo)"
 
     # Copying a line off a screen, opening a browser, creating an account and
     # pasting it into an issue form is five steps, and lista/lista.tsv being
@@ -1202,18 +1178,13 @@ https://github.com/ChrnX0/Tandem/issues" | t_texto "Tandem - Contribuir"
     if t_tem_gui; then
         if command -v xclip >/dev/null 2>&1; then
             printf '%s' "$reg" | xclip -selection clipboard 2>/dev/null &&
-                t_ok "A linha já está copiada. Basta colar."
+                t_ok "$(t_msg contrib_copiada)"
         elif command -v wl-copy >/dev/null 2>&1; then
             printf '%s' "$reg" | wl-copy 2>/dev/null &&
-                t_ok "A linha já está copiada. Basta colar."
+                t_ok "$(t_msg contrib_copiada)"
         fi
         if command -v xdg-open >/dev/null 2>&1 &&
-           t_pergunta "Quer que eu abra o formulário já preenchido com esta linha?
-
-Você ainda confere e envia - o Tandem não manda nada sozinho por aqui.
-
-Se preferir que ele mande sozinho de agora em diante, é outra coisa:
-tandem enviar sim" "Abrir o formulário" "Não, obrigado"; then
+           t_pergunta "$(t_msg contrib_abrir_formulario)" "Abrir o formulário" "Não, obrigado"; then
             setsid xdg-open "https://github.com/ChrnX0/Tandem/issues/new?template=list.yml&linha=$(t_url_escapa "$reg")" \
                 >/dev/null 2>&1 &
         fi
@@ -1221,8 +1192,7 @@ tandem enviar sim" "Abrir o formulário" "Não, obrigado"; then
 
     # And the offer that removes the five steps for good.
     if ! t_envio_decidido && t_tem_gui; then
-        t_aviso "Se quiser, o Tandem pode mandar isso sozinho da próxima vez:
-tandem enviar sim"
+        t_aviso "$(t_msg contrib_pode_mandar_sozinho)"
     fi
     return 0
 }
@@ -1238,38 +1208,27 @@ acao_enviar() {
     case "$sub" in
         sim|ligar|on)
             t_envio_define sim
-            t_ok "Ligado. O Tandem vai mandar a linha padronizada quando você confirmar
-que um programa funcionou.
-
-Para desligar:  tandem enviar nao"
+            t_ok "$(t_msg env_ligado)"
             acao_enviar agora >/dev/null 2>&1
             return 0 ;;
         nao|não|desligar|off)
             t_envio_define nao
-            t_ok "Desligado. Nada sai desta máquina.
-
-O que já estava na fila continua guardado e não é enviado. Para apagar a fila:
-rm \"$TANDEM_FILA\""
+            t_ok "$(t_msg env_desligado "$TANDEM_FILA")"
             return 0 ;;
         agora|flush)
             if ! t_envio_ligado; then
-                t_erro "O envio está desligado. Para ligar:  tandem enviar sim"
+                t_erro "$(t_msg env_esta_desligado)"
                 return 1
             fi
             if [ -z "$TANDEM_LISTA_ENVIO" ]; then
-                t_erro "Não há endereço para onde mandar nesta versão do Tandem.
-
-As linhas ficam guardadas na fila e vão junto quando existir um endereço.
-Nada é perdido, e nada é enviado."
+                t_erro "$(t_msg env_sem_endereco)"
                 return 1
             fi
             local n; n="$(t_envio_envia)"
-            t_ok "${n:-0} linha(s) enviada(s). Restam $(t_envio_pendentes) na fila."
+            t_ok "$(t_msg env_enviadas "${n:-0}" "$(t_envio_pendentes)")"
             return 0 ;;
         ''|status|ver) ;;
-        *) t_erro "Não conheço \"tandem enviar $sub\".
-
-Use:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agora"
+        *) t_erro "$(t_msg env_nao_conheco "$sub")"
            return 1 ;;
     esac
 
@@ -1302,7 +1261,7 @@ Use:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agor
         printf 'Ligar:     tandem enviar sim\n'
         printf 'Desligar:  tandem enviar nao\n'
         printf 'Ver a fila inteira:  cat %s\n' "$TANDEM_FILA"
-    } | t_texto "Tandem - Enviar para a lista"
+    } | t_texto "$(t_msg env_titulo)"
     return 0
 }
 

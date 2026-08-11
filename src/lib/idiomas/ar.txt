@@ -1435,3 +1435,138 @@ Tandem - منافذ الأجهزة
 tandem portas                        يعرض المنافذ
 tandem portas fixar COM2 /dev/ttyACM0   يثبّت جهازًا على منفذ
 tandem portas soltar COM2               يلغي التثبيت
+
+@rec_uso_importar
+الاستخدام:  tandem receita --importar <وصفة.txt> <برنامج.exe>
+
+@nao_achei_o_programa
+لم أجد البرنامج: {1}
+
+@rec_aplicada
+طُبِّقت الوصفة.
+
+يعرف Tandem الآن ما طلبه هذا البرنامج على جهاز من أرسلها.
+وسيسأل قبل تثبيت أي شيء — الوصفة ليست أمرًا.
+
+@rec_nao_e_receita
+هذا الملف ليس وصفة من Tandem.
+
+@rec_outro_programa
+هذه الوصفة تخصّ برنامجًا آخر، أو إصدارًا آخر منه.
+
+تطبيقها سيُلقّن الدرس الخطأ، فلم أطبّقها.
+
+@rec_suspeita
+رفضت الوصفة: تحمل اسم مكوّن مُريب.
+
+الوصفة الواردة من الخارج لا تستطيع أن تجعل Tandem ينفّذ أي شيء.
+
+@rec_nao_consegui_ler
+لم أتمكّن من قراءة هذه الوصفة.
+
+@rec_diga_qual_programa
+حدِّد البرنامج.
+
+مثال:  tandem receita ~/Downloads/system.exe
+
+@rec_marcada_reprovado
+تنبيه: قلت إنّ هذا البرنامج لم يعمل كما ينبغي هنا.
+ستخرج الوصفة موسومة بذلك. فكّر مرّتين قبل إرسالها إلى أحد.
+
+@rec_so_abriu
+لهذه الوصفة قيمتها بقدرها: فُتح البرنامج دون خطأ، لكن لم يؤكّد أحد أنه عمل
+فعلًا. تخرج موسومة بـ"so-abriu".
+
+@rec_nada_aprendido
+لم أتعلّم شيئًا عن هذا البرنامج بعد.
+
+افتحه مرّة عبر Tandem فتتشكّل الوصفة من تلقاء نفسها.
+
+@lista_baixando
+جارٍ تنزيل قائمة المجتمع…
+
+@lista_atualizada
+حُدِّثت القائمة: {1} برنامجًا معروفًا.
+
+لا يثبّت هذا شيئًا. عندما تفتح برنامجًا موجودًا في القائمة، سيسألك Tandem إن
+كنت تريد استخدام ما نجح مع أشخاص آخرين.
+
+@lista_nao_baixou
+لم أتمكّن من تنزيل القائمة. تحقّق من الإنترنت.
+
+@lista_nao_e_lista
+الملف المُنزَّل ليس قائمة Tandem. لم أستخدمه.
+
+@lista_nao_publicada
+لم تُنشَر القائمة بعد.
+
+ليست هذه مشكلة في إنترنتك ولا في جهازك: الملف لا وجود له بعد في العنوان الذي
+يبحث فيه Tandem. وكل ما عدا ذلك يعمل كالمعتاد.
+
+@lista_falta_curl
+ينقص curl أو wget لتنزيل القائمة.
+
+@lista_titulo
+Tandem - قائمة المجتمع
+
+@lista_uso
+الاستخدام:  tandem lista  |  tandem lista atualizar
+
+@contrib_diga_qual
+حدِّد البرنامج.
+
+مثال:  tandem contribuir ~/Downloads/system.exe
+
+@contrib_nada_util
+لم أتعلّم شيئًا مفيدًا عن هذا البرنامج بعد.
+
+افتحه عبر Tandem أولًا. وإن كان قد فُتح فعلًا، فأجب على سؤال "هل عمل كما
+توقّعت؟" — فهو ما يمنح الدرس قيمته.
+
+@contrib_titulo
+Tandem - المساهمة
+
+@contrib_copiada
+السطر مُنسَخ بالفعل. الصِقه فقط.
+
+@contrib_abrir_formulario
+أأفتح الاستمارة معبّأةً بهذا السطر؟
+
+التحقّق والإرسال يبقيان لك — لا يُرسل Tandem شيئًا من تلقاء نفسه من هنا.
+
+وإن كنت تفضّل أن يُرسل وحده من الآن، فذلك أمر آخر:
+tandem enviar sim
+
+@contrib_pode_mandar_sozinho
+إن شئت، يمكن لـTandem أن يُرسل هذا وحده في المرّة القادمة:
+tandem enviar sim
+
+@env_ligado
+مُفعَّل. سيُرسل Tandem السطر القياسي عندما تؤكّد أنّ برنامجًا قد عمل.
+
+للتعطيل:  tandem enviar nao
+
+@env_desligado
+مُعطَّل. لا يخرج شيء من هذا الجهاز.
+
+ما كان في الطابور يبقى محفوظًا ولا يُرسَل. لحذف الطابور:
+rm "{1}"
+
+@env_esta_desligado
+الإرسال مُعطَّل. للتفعيل:  tandem enviar sim
+
+@env_sem_endereco
+لا يوجد عنوان للإرسال إليه في هذه النسخة من Tandem.
+
+تبقى السطور في الطابور وتُرسَل عند وجود عنوان. لا يُفقد شيء، ولا يُرسَل شيء.
+
+@env_enviadas
+أُرسل {1} من السطور. تبقّى {2} في الطابور.
+
+@env_nao_conheco
+لا أعرف "tandem enviar {1}".
+
+الاستخدام:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agora
+
+@env_titulo
+Tandem - الإرسال إلى القائمة
