@@ -1321,3 +1321,176 @@ ATTENTION : cette machine a {1} cartes réseau. Beaucoup de programmes
   utilisent le numéro d'une carte comme partie de l'identité, et si l'une
   d'elles est un Wi-Fi qui s'allume et s'éteint, l'identité change avec.
   Laissez le réseau toujours allumé.
+
+# ------------------------------------------------------ le panneau et CLI
+
+@prep_nada_falta
+Rien ne manque : cette machine a déjà tout ce que Tandem utilise.
+
+@prep_pergunta
+Tandem peut installer ce qui manque :
+{1}
+
+Il faut internet et votre mot de passe. Je continue ?
+
+@prep_sem_confirmacao
+Je n'ai rien installé : il me faut une confirmation et il n'y a ni fenêtre ni terminal pour la demander.
+
+@prep_instalando
+Installation de ce qui manque. Cela peut être long - n'éteignez pas l'ordinateur.
+
+@prep_sem_senha
+Je n'ai pas pu vous demander votre mot de passe pour installer.
+
+Ouvrez le Terminal et lancez :  sudo tandem preparar
+
+@prep_nao_terminou
+L'installation ne s'est pas bien terminée. Voyez ce qui manque avec :
+
+tandem doctor
+
+@prep_convite_envio
+Une dernière chose, et c'est la seule qui quitte cette machine.
+
+Quand vous confirmez qu'un programme a fonctionné, Tandem apprend ce dont il
+avait besoin. Puis-je envoyer cette leçon à la liste de la communauté ?
+
+UNE LIGNE par programme part : une empreinte du fichier du programme, 32 ou 64
+bits, et quels composants ont réglé la chose. Rien d'autre.
+
+Ce qui ne part PAS : un nom de fichier, un dossier, votre nom d'utilisateur, le
+nom de l'ordinateur, une adresse réseau, ni une seule ligne de journal.
+
+À quoi cela sert : celui qui installera le même programme plus tard trouvera la
+réponse prête, au lieu d'attendre que Tandem la retrouve.
+
+Vous pouvez changer quand vous voulez :  tandem enviar sim   /   tandem enviar nao
+
+@prep_obrigado
+Merci. Vous pouvez voir ce qui part avec :  tandem enviar
+
+@prep_tudo_pronto
+Tout est prêt. Vérifiez avec : tandem doctor
+
+@desinst_nenhum_ainda
+Tandem n'a encore installé aucun programme Windows.
+
+@desinst_nenhum_para_remover
+Je n'ai trouvé aucun programme Windows à supprimer.
+
+Les programmes qui n'apportent pas leur propre désinstalleur n'apparaissent pas
+dans cette liste.
+
+@wine_nao_instalado
+Wine n'est pas installé.
+
+@desinst_pergunta
+Supprimer ce programme Windows ?
+
+{1}
+
+Ses fichiers seront effacés.
+
+@desinst_sem_confirmacao
+Je n'ai pas supprimé {1} : il me faut une confirmation et il n'y a ni fenêtre ni terminal pour la demander.
+
+@desinst_copia_guardada
+Avant de le supprimer, j'ai gardé une copie de vos fichiers dans :
+{1}
+
+@desinst_remover_mesmo_assim
+Supprimer quand même ?
+
+@desinst_removendo
+Suppression de {1}...
+
+@desinst_janela_propria
+La fenêtre de suppression propre à {1} va s'ouvrir. Confirmez-y.
+
+@desinst_nao_removeu
+Je n'ai pas pu supprimer {1}.
+
+Le désinstalleur du programme n'a pas abouti. Réessayez, ou supprimez-le depuis la fenêtre du programme lui-même.
+
+@desinst_removido
+{1} a été supprimé.
+
+@botao_pode_mandar
+Vous pouvez l'envoyer
+
+@botao_nao_mandar
+Ne pas envoyer
+
+@auto_ignore
+autotest : ignorez ce message
+
+@auto_depois_de_fechada
+après sa fermeture
+
+@auto_titulo
+Tandem - Autotest
+
+@auto_passa
+RÉUSSI
+
+@auto_falha
+ÉCHEC
+
+@auto_pulou_progresso
+barre de progression (pas de session graphique pour l'exercer)
+
+@auto_pulou_pe
+le pré-vol du PE (aucun programme Windows encore installé)
+
+@auto_pulou_java
+le pré-vol Java (aucun .jar sur cette machine pour l'exercer)
+
+@auto_pulou_deb
+le pré-vol .deb (aucun paquet sur cette machine pour l'exercer)
+
+@auto_pulou_java_versao
+la version de Java (Java non installé)
+
+@auto_pulou_protecao
+la protection des profils (aucun profil tiers sur cette machine)
+
+@portas_diga_qual
+Indiquez quel port, comme ceci :
+
+tandem portas fixar COM2 /dev/ttyACM0
+
+@portas_sem_aparelho
+Il n'y a aucun appareil sur :
+{1}
+
+@portas_sem_ambiente
+Il n'y a pas encore d'environnement Windows ici.
+
+Ouvrez un programme .exe une fois et il est créé.
+
+@portas_ambiente_de_terceiro
+Cet environnement Windows n'a pas été créé par Tandem, donc Tandem n'y touche pas.
+
+@portas_fixada
+C'est fait : {1} est maintenant {2} pour les programmes Windows.
+
+Ouvrez de nouveau le programme et choisissez {2} dans sa configuration.
+
+@portas_nao_fixou
+Je n'ai pas pu fixer le port. Voyez : tandem logs
+
+@portas_diga_qual_soltar
+Indiquez quel port libérer. Exemple : tandem portas soltar COM2
+
+@portas_soltada
+{1} est de nouveau choisi par Wine tout seul.
+
+@portas_titulo_janela
+Tandem - ports des appareils
+
+@portas_nao_conheco
+Je ne connais pas « {1} ».
+
+tandem portas                        montre les ports
+tandem portas fixar COM2 /dev/ttyACM0   fixe un appareil sur un port
+tandem portas soltar COM2               annule

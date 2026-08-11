@@ -1263,3 +1263,175 @@ ProductId الخاص بـWindows
 تنبيه: يحتوي هذا الجهاز على {1} من بطاقات الشبكة. تستخدم برامج كثيرة رقم
   البطاقة كجزء من الهوية، وإن كانت إحداها Wi-Fi تُفتح وتُغلق، تغيّرت الهوية
   معها. اترك الشبكة مفتوحة دائمًا.
+
+# ------------------------------------------------------- اللوحة وسطر الأوامر
+
+@prep_nada_falta
+لا ينقص شيء: هذا الجهاز يملك بالفعل كل ما يستخدمه Tandem.
+
+@prep_pergunta
+يستطيع Tandem تثبيت ما ينقص:
+{1}
+
+يحتاج إلى الإنترنت وإلى كلمة مرورك. أأتابع؟
+
+@prep_sem_confirmacao
+لم أثبّت شيئًا: أحتاج إلى تأكيد، ولا توجد نافذة ولا طرفية لأسأل فيها.
+
+@prep_instalando
+جارٍ تثبيت ما ينقص. قد يطول الأمر كثيرًا — لا تُطفئ الحاسوب.
+
+@prep_sem_senha
+لم أتمكّن من طلب كلمة مرورك للتثبيت.
+
+افتح الطرفية ونفِّذ:  sudo tandem preparar
+
+@prep_nao_terminou
+لم تنتهِ عملية التثبيت على خير. اطّلع على ما نقص عبر:
+
+tandem doctor
+
+@prep_convite_envio
+أمر أخير، وهو الوحيد الذي يخرج من هذا الجهاز.
+
+عندما تؤكّد أنّ برنامجًا قد عمل، يتعلّم Tandem ما كان يحتاجه. هل أُرسل هذا
+الدرس إلى قائمة المجتمع؟
+
+يُرسل سطر واحد لكل برنامج: بصمة لملف البرنامج، و٣٢ أو ٦٤ بت، وأي المكوّنات
+حلّت المشكلة. لا شيء غير ذلك.
+
+ما لا يُرسل: اسم ملف، أو مجلّد، أو اسم مستخدمك، أو اسم الحاسوب، أو عنوان
+شبكة، ولا سطر واحد من السجل.
+
+ما الغاية منه: من يثبّت البرنامج نفسه لاحقًا يجد الجواب جاهزًا، بدلًا من
+انتظار Tandem ليكتشفه من جديد.
+
+يمكنك التغيير متى شئت:  tandem enviar sim   /   tandem enviar nao
+
+@prep_obrigado
+شكرًا. يمكنك رؤية ما يُرسَل عبر:  tandem enviar
+
+@prep_tudo_pronto
+كل شيء جاهز. تحقّق عبر: tandem doctor
+
+@desinst_nenhum_ainda
+لم يثبّت Tandem أي برنامج Windows بعد.
+
+@desinst_nenhum_para_remover
+لم أجد أي برنامج Windows لإزالته.
+
+البرامج التي لا تأتي بأداة إزالة خاصة بها لا تظهر في هذه القائمة.
+
+@wine_nao_instalado
+Wine غير مثبَّت.
+
+@desinst_pergunta
+أأُزيل برنامج Windows هذا؟
+
+{1}
+
+ستُحذف ملفاته.
+
+@desinst_sem_confirmacao
+لم أُزِل {1}: أحتاج إلى تأكيد، ولا توجد نافذة ولا طرفية لأسأل فيها.
+
+@desinst_copia_guardada
+قبل الإزالة، حفظت نسخة من ملفاتك في:
+{1}
+
+@desinst_remover_mesmo_assim
+أأُزيله رغم ذلك؟
+
+@desinst_removendo
+جارٍ إزالة {1}…
+
+@desinst_janela_propria
+ستُفتح نافذة الإزالة الخاصة بـ{1}. أكّد من هناك.
+
+@desinst_nao_removeu
+لم أتمكّن من إزالة {1}.
+
+لم تكتمل أداة الإزالة الخاصة بالبرنامج. أعد المحاولة، أو أزِله من نافذة البرنامج نفسه.
+
+@desinst_removido
+أُزيل {1}.
+
+@botao_pode_mandar
+أرسِلها
+
+@botao_nao_mandar
+لا تُرسِل
+
+@auto_ignore
+اختبار ذاتي: تجاهل هذه الرسالة
+
+@auto_depois_de_fechada
+بعد إغلاقها
+
+@auto_titulo
+Tandem - اختبار ذاتي
+
+@auto_passa
+نجح
+
+@auto_falha
+فشل
+
+@auto_pulou_progresso
+شريط التقدّم (لا جلسة رسومية لاختباره)
+
+@auto_pulou_pe
+الفحص المسبق لملفات PE (لا برنامج Windows مثبَّت بعد)
+
+@auto_pulou_java
+الفحص المسبق لـJava (لا ملف .jar على هذا الجهاز لاختباره)
+
+@auto_pulou_deb
+الفحص المسبق لـ.deb (لا حزمة على هذا الجهاز لاختباره)
+
+@auto_pulou_java_versao
+إصدار Java (Java غير مثبَّت)
+
+@auto_pulou_protecao
+حماية الملفات الشخصية (لا ملف شخصي لطرف آخر على هذا الجهاز)
+
+@portas_diga_qual
+حدِّد المنفذ، هكذا:
+
+tandem portas fixar COM2 /dev/ttyACM0
+
+@portas_sem_aparelho
+لا يوجد أي جهاز في:
+{1}
+
+@portas_sem_ambiente
+لا توجد بيئة Windows هنا بعد.
+
+افتح برنامج .exe مرّة واحدة فتُنشأ.
+
+@portas_ambiente_de_terceiro
+لم يُنشئ Tandem بيئة Windows هذه، لذا فهو لا يمسّها.
+
+@portas_fixada
+تمّ: صار {1} هو {2} لبرامج Windows.
+
+افتح البرنامج من جديد واختر {2} في إعداداته.
+
+@portas_nao_fixou
+لم أتمكّن من تثبيت المنفذ. اطّلع على: tandem logs
+
+@portas_diga_qual_soltar
+حدِّد المنفذ الذي تريد تحريره. مثال: tandem portas soltar COM2
+
+@portas_soltada
+عاد {1} ليختاره Wine من تلقاء نفسه.
+
+@portas_titulo_janela
+Tandem - منافذ الأجهزة
+
+@portas_nao_conheco
+لا أعرف "{1}".
+
+tandem portas                        يعرض المنافذ
+tandem portas fixar COM2 /dev/ttyACM0   يثبّت جهازًا على منفذ
+tandem portas soltar COM2               يلغي التثبيت

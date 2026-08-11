@@ -1298,3 +1298,175 @@ ATENÇÃO: a identidade desta máquina mudou desde que o ambiente foi criado.
 ATENÇÃO: esta máquina tem {1} placas de rede. Muitos programas usam o
   número da placa como parte da identidade, e se uma delas for Wi-Fi que
   liga e desliga, a identidade muda junto. Deixe a rede sempre ligada.
+
+# ------------------------------------------------------- o painel e o CLI
+
+@prep_nada_falta
+Nada falta: esta máquina já tem tudo que o Tandem usa.
+
+@prep_pergunta
+O Tandem pode instalar o que está faltando:
+{1}
+
+Precisa de internet e da sua senha. Posso continuar?
+
+@prep_sem_confirmacao
+Não instalei nada: preciso de uma confirmação e não há janela nem terminal para perguntar.
+
+@prep_instalando
+Instalando o que falta. Pode demorar bastante - não desligue o computador.
+
+@prep_sem_senha
+Não consegui pedir a sua senha para instalar.
+
+Abra o Terminal e execute:  sudo tandem preparar
+
+@prep_nao_terminou
+A instalação não terminou bem. Veja o que faltou com:
+
+tandem doctor
+
+@prep_convite_envio
+Uma última coisa, e é a única que sai desta máquina.
+
+Quando você confirma que um programa funcionou, o Tandem aprende o que ele
+precisava. Posso mandar essa lição para a lista da comunidade?
+
+Vai UMA LINHA por programa: uma impressão digital do arquivo do programa, 32 ou
+64 bits, e quais componentes resolveram. Nada mais.
+
+NÃO vai: nome de arquivo, pasta, seu nome de usuário, o nome do computador,
+endereço de rede, nem uma linha de registro.
+
+Para que serve: quem instalar o mesmo programa depois já encontra a resposta
+pronta, em vez de esperar o Tandem descobrir de novo.
+
+Você pode mudar quando quiser:  tandem enviar sim   /   tandem enviar nao
+
+@prep_obrigado
+Obrigado. Você pode ver o que sai com:  tandem enviar
+
+@prep_tudo_pronto
+Tudo pronto. Confira com: tandem doctor
+
+@desinst_nenhum_ainda
+Nenhum programa do Windows foi instalado pelo Tandem ainda.
+
+@desinst_nenhum_para_remover
+Não encontrei nenhum programa do Windows para remover.
+
+Programas que não trazem desinstalador próprio não aparecem nesta lista.
+
+@wine_nao_instalado
+O Wine não está instalado.
+
+@desinst_pergunta
+Remover este programa do Windows?
+
+{1}
+
+Os arquivos dele serão apagados.
+
+@desinst_sem_confirmacao
+Não removi {1}: preciso de uma confirmação e não há janela nem terminal para perguntar.
+
+@desinst_copia_guardada
+Antes de remover, guardei uma cópia dos seus arquivos em:
+{1}
+
+@desinst_remover_mesmo_assim
+Remover mesmo assim?
+
+@desinst_removendo
+Removendo {1}...
+
+@desinst_janela_propria
+Vai abrir a janela de remoção do próprio {1}. Confirme por lá.
+
+@desinst_nao_removeu
+Não consegui remover {1}.
+
+O desinstalador do programa não completou. Tente de novo, ou remova pela janela do próprio programa.
+
+@desinst_removido
+{1} foi removido.
+
+@botao_pode_mandar
+Pode mandar
+
+@botao_nao_mandar
+Não mandar
+
+@auto_ignore
+autoteste: ignore esta mensagem
+
+@auto_depois_de_fechada
+depois de fechada
+
+@auto_titulo
+Tandem - Autoteste
+
+@auto_passa
+PASSA
+
+@auto_falha
+FALHA
+
+@auto_pulou_progresso
+barra de progresso (sem sessão gráfica para exercitar)
+
+@auto_pulou_pe
+pré-voo do PE (nenhum programa Windows instalado ainda)
+
+@auto_pulou_java
+pré-voo do Java (nenhum .jar nesta máquina para exercitar)
+
+@auto_pulou_deb
+pré-voo do .deb (nenhum pacote nesta máquina para exercitar)
+
+@auto_pulou_java_versao
+versão do Java (Java não instalado)
+
+@auto_pulou_protecao
+proteção de perfis (nenhum perfil de terceiro nesta máquina)
+
+@portas_diga_qual
+Diga qual porta, assim:
+
+tandem portas fixar COM2 /dev/ttyACM0
+
+@portas_sem_aparelho
+Não existe nenhum aparelho em:
+{1}
+
+@portas_sem_ambiente
+Ainda não há um ambiente Windows aqui.
+
+Abra um programa .exe uma vez e ele é criado.
+
+@portas_ambiente_de_terceiro
+Este ambiente Windows não foi criado pelo Tandem, então ele não mexe aqui.
+
+@portas_fixada
+Pronto: {1} agora é a {2} para os programas Windows.
+
+Abra o programa de novo e escolha a {2} na configuração dele.
+
+@portas_nao_fixou
+Não consegui prender a porta. Veja: tandem logs
+
+@portas_diga_qual_soltar
+Diga qual porta soltar. Exemplo: tandem portas soltar COM2
+
+@portas_soltada
+A {1} voltou a ser escolhida sozinha pelo Wine.
+
+@portas_titulo_janela
+Tandem - portas dos aparelhos
+
+@portas_nao_conheco
+Não conheço "{1}".
+
+tandem portas                        mostra as portas
+tandem portas fixar COM2 /dev/ttyACM0   prende um aparelho numa porta
+tandem portas soltar COM2               desfaz

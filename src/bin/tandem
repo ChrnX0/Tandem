@@ -428,7 +428,7 @@ acao_preparar() {
 
     faltas="$(t_pecas_faltando)"
     if [ -z "$faltas" ]; then
-        t_ok "Nada falta: esta máquina já tem tudo que o Tandem usa."
+        t_ok "$(t_msg prep_nada_falta)"
         return 0
     fi
 
@@ -439,37 +439,30 @@ acao_preparar() {
 • $linha"
     done <<< "$faltas"
 
-    if ! t_pergunta "O Tandem pode instalar o que está faltando:
-$plano
-
-Precisa de internet e da sua senha. Posso continuar?" "Instalar tudo" "Agora não"; then
+    if ! t_pergunta "$(t_msg prep_pergunta "$plano")" "Instalar tudo" "Agora não"; then
         if [ -t 0 ]; then
             printf 'O Tandem pode instalar o que está faltando:\n%s\n\nPrecisa de internet e da sua senha. Continuar? [s/N] ' "$plano"
             read -r r
             case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; return 1 ;; esac
         else
-            t_erro "Não instalei nada: preciso de uma confirmação e não há janela nem terminal para perguntar."
+            t_erro "$(t_msg prep_sem_confirmacao)"
             return 1
         fi
     fi
 
     script="$(t_script_instalacao "${codigos[@]}")"
     t_diz "preparar: instalando ${codigos[*]}"
-    t_progresso_abre "Instalando o que falta. Pode demorar bastante - não desligue o computador."
+    t_progresso_abre "$(t_msg prep_instalando)"
     t_como_root "$script" >>"$LOG" 2>&1
     c=$?
     t_progresso_fecha
 
     if [ "$c" -eq 127 ]; then
-        t_erro "Não consegui pedir a sua senha para instalar.
-
-Abra o Terminal e execute:  sudo tandem preparar"
+        t_erro "$(t_msg prep_sem_senha)"
         return 1
     fi
     if [ "$c" -ne 0 ]; then
-        t_erro "A instalação não terminou bem. Veja o que faltou com:
-
-tandem doctor"
+        t_erro "$(t_msg prep_nao_terminou)"
         return 1
     fi
     # The install-time question, asked at the only moment where a dialog is
@@ -482,31 +475,17 @@ tandem doctor"
     # displays. If the owner skips it, the question comes back once with the
     # real line, the first time a program of his actually works.
     if ! t_envio_decidido; then
-        if t_pergunta "Uma última coisa, e é a única que sai desta máquina.
-
-Quando você confirma que um programa funcionou, o Tandem aprende o que ele
-precisava. Posso mandar essa lição para a lista da comunidade?
-
-Vai UMA LINHA por programa: uma impressão digital do arquivo do programa, 32 ou
-64 bits, e quais componentes resolveram. Nada mais.
-
-NÃO vai: nome de arquivo, pasta, seu nome de usuário, o nome do computador,
-endereço de rede, nem uma linha de registro.
-
-Para que serve: quem instalar o mesmo programa depois já encontra a resposta
-pronta, em vez de esperar o Tandem descobrir de novo.
-
-Você pode mudar quando quiser:  tandem enviar sim   /   tandem enviar nao" \
-                       "Pode mandar" "Não mandar"; then
+        if t_pergunta "$(t_msg prep_convite_envio)" \
+                       "$(t_msg botao_pode_mandar)" "$(t_msg botao_nao_mandar)"; then
             t_envio_define sim
-            t_ok "Obrigado. Você pode ver o que sai com:  tandem enviar"
+            t_ok "$(t_msg prep_obrigado)"
         else
             t_envio_define nao
             t_diz "envio recusado no preparar"
         fi
     fi
 
-    t_ok "Tudo pronto. Confira com: tandem doctor"
+    t_ok "$(t_msg prep_tudo_pronto)"
     return 0
 }
 
@@ -586,7 +565,7 @@ acao_uninstall() {
     local escolha achou="" nomes=() silencioso normal
 
     [ -f "$pref/system.reg" ] || {
-        t_erro "Nenhum programa do Windows foi instalado pelo Tandem ainda."; return 1; }
+        t_erro "$(t_msg desinst_nenhum_ainda)"; return 1; }
 
     # Uninstalling changes the prefix, so it only holds for ours. A
     # third-party prefix - the point-of-sale system's, for example - is
@@ -594,9 +573,7 @@ acao_uninstall() {
     export WINEPREFIX="$pref"
     lista="$(t_uninstall_dump "$pref")"
     if [ -z "$lista" ]; then
-        t_erro "Não encontrei nenhum programa do Windows para remover.
-
-Programas que não trazem desinstalador próprio não aparecem nesta lista."
+        t_erro "$(t_msg desinst_nenhum_para_remover)"
         return 1
     fi
 
@@ -629,22 +606,18 @@ Programas que não trazem desinstalador próprio não aparecem nesta lista."
         esac
     done <<< "$lista"
     [ -n "$achou" ] || { t_erro "Não achei nenhum programa com \"$filtro\" no nome."; return 1; }
-    command -v wine >/dev/null 2>&1 || { t_erro "O Wine não está instalado."; return 1; }
+    command -v wine >/dev/null 2>&1 || { t_erro "$(t_msg wine_nao_instalado)"; return 1; }
 
     # Confirmation: a window; failing that, the terminal; with neither, it
     # refuses SAYING why - removing a program with nobody confirming is a
     # risk, and giving up silently is a defect.
-    if ! t_pergunta "Remover este programa do Windows?
-
-$nome
-
-Os arquivos dele serão apagados." "Remover" "Cancelar"; then
+    if ! t_pergunta "$(t_msg desinst_pergunta "$nome")" "Remover" "Cancelar"; then
         if [ -t 0 ]; then
             printf 'Remover "%s"? Os arquivos dele serão apagados. [s/N] ' "$nome"
             read -r r
             case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; return 1 ;; esac
         else
-            t_erro "Não removi $nome: preciso de uma confirmação e não há janela nem terminal para perguntar."
+            t_erro "$(t_msg desinst_sem_confirmacao "$nome")"
             return 1
         fi
     fi
@@ -657,11 +630,10 @@ Os arquivos dele serão apagados." "Remover" "Cancelar"; then
     local c_resgate
     resgate="$(t_dados_resgate "$TANDEM_PREFIXO_PADRAO" antes-de-remover)"; c_resgate=$?
     case $c_resgate in
-        0) t_aviso "Antes de remover, guardei uma cópia dos seus arquivos em:
-$resgate" ;;
+        0) t_aviso "$(t_msg desinst_copia_guardada "$resgate")" ;;
         1) t_pergunta "$(t_texto_resgate_falhou)
 
-Remover mesmo assim?" "Remover assim mesmo" "Parar" || return 1 ;;
+$(t_msg desinst_remover_mesmo_assim)" "Remover assim mesmo" "Parar" || return 1 ;;
     esac
 
     # We prefer the silent uninstaller, which the program itself declares in
@@ -670,14 +642,14 @@ Remover mesmo assim?" "Remover assim mesmo" "Parar" || return 1 ;;
     # English.
     local c
     if [ -n "$silencioso" ]; then
-        t_progresso_abre "Removendo $nome..."
+        t_progresso_abre "$(t_msg desinst_removendo "$nome")"
         t_diz ">>> $silencioso"
         t_executa_comando_windows "$silencioso" >>"$LOG" 2>&1
         c=$?
         wineserver -w 2>/dev/null
         t_progresso_fecha
     else
-        t_aviso "Vai abrir a janela de remoção do próprio $nome. Confirme por lá."
+        t_aviso "$(t_msg desinst_janela_propria "$nome")"
         t_diz ">>> $normal"
         t_executa_comando_windows "$normal" >>"$LOG" 2>&1
         c=$?
@@ -689,12 +661,10 @@ Remover mesmo assim?" "Remover assim mesmo" "Parar" || return 1 ;;
 
     # The acid test is the registry: did the key disappear?
     if t_uninstall_dump "$pref" | grep -qF -- "$achou|||"; then
-        t_erro "Não consegui remover $nome.
-
-O desinstalador do programa não completou. Tente de novo, ou remova pela janela do próprio programa."
+        t_erro "$(t_msg desinst_nao_removeu "$nome")"
         return 1
     fi
-    t_ok "$nome foi removido."
+    t_ok "$(t_msg desinst_removido "$nome")"
     return 0
 }
 
@@ -749,12 +719,12 @@ acao_autoteste() {
     tmp="$(mktemp -d)"
     trap 'rm -rf -- "$tmp"' RETURN
 
-    passa() { ok=$((ok+1));     saida="$saida  PASSA   $1"$'\n'; }
-    falha() { falhou=$((falhou+1)); saida="$saida  FALHA   $1"$'\n         '"$2"$'\n'; }
+    passa() { ok=$((ok+1));     saida="$saida  $(t_msg auto_passa)   $1"$'\n'; }
+    falha() { falhou=$((falhou+1)); saida="$saida  $(t_msg auto_falha)   $1"$'\n         '"$2"$'\n'; }
 
     # 1. Does the error message reach SOMEWHERE? Without this, all the rest of
     #    the diagnosis is useless: the owner would never learn of the problem.
-    if [ -n "$(t_erro "autoteste: ignore esta mensagem" 2>&1 1>/dev/null)" ] || t_tem_gui; then
+    if [ -n "$(t_erro "$(t_msg auto_ignore)" 2>&1 1>/dev/null)" ] || t_tem_gui; then
         passa "as mensagens de erro têm para onde ir"
     else
         falha "as mensagens de erro somem" "sem janela e sem terminal, um erro daqui não chega a ninguém"
@@ -789,14 +759,14 @@ acao_autoteste() {
     #    open it, kill the reader, write. This used to kill Tandem with 141.
     if t_tem_gui && command -v zenity >/dev/null 2>&1; then
         ( t_progresso_abre "autoteste"; kill "${TANDEM_PROG_PID:-0}" 2>/dev/null
-          sleep 0.3; t_progresso_texto "depois de fechada"; t_progresso_fecha ) >/dev/null 2>&1
+          sleep 0.3; t_progresso_texto "$(t_msg auto_depois_de_fechada)"; t_progresso_fecha ) >/dev/null 2>&1
         if [ $? -lt 128 ]; then
             passa "fechar a janela de progresso não derruba o Tandem"
         else
             falha "fechar a janela de progresso derruba o Tandem" "o processo recebeu um sinal em vez de continuar"
         fi
     else
-        saida="$saida  --      barra de progresso (sem sessão gráfica para exercitar)"$'\n'
+        saida="$saida  --      $(t_msg auto_pulou_progresso)"$'\n'
     fi
 
     # 6. Does the PE reader work on this machine? Exercised against a real
@@ -810,7 +780,7 @@ acao_autoteste() {
             falha "o pré-voo não conseguiu ler um programa" "$umexe"
         fi
     else
-        saida="$saida  --      pré-voo do PE (nenhum programa Windows instalado ainda)"$'\n'
+        saida="$saida  --      $(t_msg auto_pulou_pe)"$'\n'
     fi
 
     # 7. Do the associations point at Tandem? That is what makes the double
@@ -868,7 +838,7 @@ acao_autoteste() {
             falha "o pré-voo do Java não conseguiu ler um .jar" "$umjar"
         fi
     else
-        saida="$saida  --      pré-voo do Java (nenhum .jar nesta máquina para exercitar)"$'\n'
+        saida="$saida  --      $(t_msg auto_pulou_java)"$'\n'
     fi
 
     # 10. The .deb reader, on a package written here and now. Every current
@@ -888,7 +858,7 @@ acao_autoteste() {
                       "$umdeb: $(t_campo "$lido_deb" ERRO)"
             fi
         else
-            saida="$saida  --      pré-voo do .deb (nenhum pacote nesta máquina para exercitar)"$'\n'
+            saida="$saida  --      $(t_msg auto_pulou_deb)"$'\n'
         fi
     fi
 
@@ -913,7 +883,7 @@ acao_autoteste() {
             *)           passa "a versão do Java foi reconhecida ($jv)" ;;
         esac
     else
-        saida="$saida  --      versão do Java (Java não instalado)"$'\n'
+        saida="$saida  --      $(t_msg auto_pulou_java_versao)"$'\n'
     fi
 
     # 13. Is the protection of other people's prefixes in force? It exercises
@@ -929,14 +899,14 @@ acao_autoteste() {
     elif [ "$protegidos" -gt 0 ]; then
         passa "os $protegidos perfil(is) da sua lista são recusados pela automação"
     else
-        saida="$saida  --      proteção de perfis (nenhum perfil de terceiro nesta máquina)"$'\n'
+        saida="$saida  --      $(t_msg auto_pulou_protecao)"$'\n'
     fi
 
     printf 'Tandem %s — autoteste nesta máquina\n\n%s\n%d passaram, %d falharam.\n%s\n' \
         "$VERSAO" "$saida" "$ok" "$falhou" \
         "$([ "$falhou" -gt 0 ] && printf 'Cada FALHA acima é uma coisa que não vai funcionar quando você precisar.' \
                                 || printf 'O Tandem exercitou o que dava para exercitar aqui, e tudo respondeu.')" |
-        t_texto "Tandem - Autoteste"
+        t_texto "$(t_msg auto_titulo)"
     [ "$falhou" -eq 0 ]
 }
 
@@ -1056,44 +1026,33 @@ acao_portas() {
             local porta="${2:-}" caminho="${3:-}"
             case "$porta" in
                 COM[0-9]|COM[0-9][0-9]|LPT[0-9]) ;;
-                *) t_erro "Diga qual porta, assim:
-
-tandem portas fixar COM2 /dev/ttyACM0"; return 1 ;;
+                *) t_erro "$(t_msg portas_diga_qual)"; return 1 ;;
             esac
-            [ -e "$caminho" ] || { t_erro "Não existe nenhum aparelho em:
-$caminho"; return 1; }
-            [ -f "$p/system.reg" ] || { t_erro "Ainda não há um ambiente Windows aqui.
-
-Abra um programa .exe uma vez e ele é criado."; return 1; }
+            [ -e "$caminho" ] || { t_erro "$(t_msg portas_sem_aparelho "$caminho")"; return 1; }
+            [ -f "$p/system.reg" ] || { t_erro "$(t_msg portas_sem_ambiente)"; return 1; }
             # Rule number 1: this writes into a prefix, so it may only ever be
             # one of ours.
             if t_prefixo_protegido "$p"; then
-                t_erro "Este ambiente Windows não foi criado pelo Tandem, então ele não mexe aqui."
+                t_erro "$(t_msg portas_ambiente_de_terceiro)"
                 return 1
             fi
             if WINEPREFIX="$p" WINEDEBUG=-all wine reg add 'HKLM\Software\Wine\Ports' \
                  /v "$porta" /t REG_SZ /d "$caminho" /f >>"$LOG" 2>&1; then
-                t_ok "Pronto: $caminho agora é a $porta para os programas Windows.
-
-Abra o programa de novo e escolha a $porta na configuração dele."
+                t_ok "$(t_msg portas_fixada "$caminho" "$porta")"
             else
-                t_erro "Não consegui prender a porta. Veja: tandem logs"
+                t_erro "$(t_msg portas_nao_fixou)"
                 return 1
             fi ;;
         soltar|liberar)
             local porta="${2:-}"
-            [ -n "$porta" ] || { t_erro "Diga qual porta soltar. Exemplo: tandem portas soltar COM2"; return 1; }
+            [ -n "$porta" ] || { t_erro "$(t_msg portas_diga_qual_soltar)"; return 1; }
             WINEPREFIX="$p" WINEDEBUG=-all wine reg delete 'HKLM\Software\Wine\Ports' \
                 /v "$porta" /f >>"$LOG" 2>&1
-            t_ok "A $porta voltou a ser escolhida sozinha pelo Wine." ;;
+            t_ok "$(t_msg portas_soltada "$porta")" ;;
         ""|ver|listar)
-            t_texto_portas "$p" | t_texto "Tandem - portas dos aparelhos" ;;
+            t_texto_portas "$p" | t_texto "$(t_msg portas_titulo_janela)" ;;
         *)
-            t_erro "Não conheço \"$1\".
-
-tandem portas                        mostra as portas
-tandem portas fixar COM2 /dev/ttyACM0   prende um aparelho numa porta
-tandem portas soltar COM2               desfaz"
+            t_erro "$(t_msg portas_nao_conheco "$1")"
             return 1 ;;
     esac
 }

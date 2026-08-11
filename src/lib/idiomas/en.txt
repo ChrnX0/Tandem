@@ -1308,3 +1308,175 @@ NOTE: this machine's identity has changed since the environment was created.
 NOTE: this machine has {1} network cards. Many programs use a card's number
   as part of the identity, and if one of them is Wi-Fi that goes on and off,
   the identity changes with it. Leave the network always on.
+
+# ------------------------------------------------------ the panel and CLI
+
+@prep_nada_falta
+Nothing is missing: this machine already has everything Tandem uses.
+
+@prep_pergunta
+Tandem can install what is missing:
+{1}
+
+It needs the internet and your password. May I go ahead?
+
+@prep_sem_confirmacao
+I installed nothing: I need a confirmation and there is no window and no terminal to ask in.
+
+@prep_instalando
+Installing what is missing. This can take a good while - do not switch the computer off.
+
+@prep_sem_senha
+I could not ask for your password in order to install.
+
+Open the Terminal and run:  sudo tandem preparar
+
+@prep_nao_terminou
+The install did not end well. See what is missing with:
+
+tandem doctor
+
+@prep_convite_envio
+One last thing, and it is the only one that leaves this machine.
+
+When you confirm that a program worked, Tandem learns what it needed. May I
+send that lesson to the community list?
+
+ONE LINE per program goes: a fingerprint of the program's file, 32 or 64-bit,
+and which components did the job. Nothing else.
+
+What does NOT go: a file name, a folder, your user name, the computer's name, a
+network address, or a single line of log.
+
+What it is for: whoever installs the same program later finds the answer ready
+instead of waiting for Tandem to work it out again.
+
+You can change it whenever you like:  tandem enviar sim   /   tandem enviar nao
+
+@prep_obrigado
+Thank you. You can see what goes out with:  tandem enviar
+
+@prep_tudo_pronto
+All set. Check it with: tandem doctor
+
+@desinst_nenhum_ainda
+Tandem has not installed any Windows program yet.
+
+@desinst_nenhum_para_remover
+I found no Windows program to remove.
+
+Programs that do not bring their own uninstaller do not appear on this list.
+
+@wine_nao_instalado
+Wine is not installed.
+
+@desinst_pergunta
+Remove this Windows program?
+
+{1}
+
+Its files will be deleted.
+
+@desinst_sem_confirmacao
+I did not remove {1}: I need a confirmation and there is no window and no terminal to ask in.
+
+@desinst_copia_guardada
+Before removing it, I kept a copy of your files in:
+{1}
+
+@desinst_remover_mesmo_assim
+Remove anyway?
+
+@desinst_removendo
+Removing {1}...
+
+@desinst_janela_propria
+{1}'s own removal window is about to open. Confirm it there.
+
+@desinst_nao_removeu
+I could not remove {1}.
+
+The program's uninstaller did not finish. Try again, or remove it from the program's own window.
+
+@desinst_removido
+{1} has been removed.
+
+@botao_pode_mandar
+Go ahead
+
+@botao_nao_mandar
+Do not send
+
+@auto_ignore
+self-test: ignore this message
+
+@auto_depois_de_fechada
+after it is closed
+
+@auto_titulo
+Tandem - Self-test
+
+@auto_passa
+PASS
+
+@auto_falha
+FAIL
+
+@auto_pulou_progresso
+progress bar (no graphical session to exercise it)
+
+@auto_pulou_pe
+the PE pre-flight (no Windows program installed yet)
+
+@auto_pulou_java
+the Java pre-flight (no .jar on this machine to exercise it)
+
+@auto_pulou_deb
+the .deb pre-flight (no package on this machine to exercise it)
+
+@auto_pulou_java_versao
+the Java version (Java not installed)
+
+@auto_pulou_protecao
+profile protection (no third-party profile on this machine)
+
+@portas_diga_qual
+Say which port, like this:
+
+tandem portas fixar COM2 /dev/ttyACM0
+
+@portas_sem_aparelho
+There is no device at:
+{1}
+
+@portas_sem_ambiente
+There is no Windows environment here yet.
+
+Open a .exe program once and it gets created.
+
+@portas_ambiente_de_terceiro
+This Windows environment was not created by Tandem, so Tandem does not touch it.
+
+@portas_fixada
+Done: {1} is now {2} for Windows programs.
+
+Open the program again and pick {2} in its settings.
+
+@portas_nao_fixou
+I could not pin the port. See: tandem logs
+
+@portas_diga_qual_soltar
+Say which port to release. Example: tandem portas soltar COM2
+
+@portas_soltada
+{1} is back to being chosen by Wine on its own.
+
+@portas_titulo_janela
+Tandem - device ports
+
+@portas_nao_conheco
+I do not know "{1}".
+
+tandem portas                        shows the ports
+tandem portas fixar COM2 /dev/ttyACM0   pins a device to a port
+tandem portas soltar COM2               undoes it

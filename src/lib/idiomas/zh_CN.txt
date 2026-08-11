@@ -1239,3 +1239,174 @@ Windows 的 ProductId
 @id_varias_placas
 注意：这台机器有 {1} 张网卡。很多程序把网卡的编号当成身份的一部分，
   如果其中一张是会开会关的 Wi-Fi，身份就会跟着变。请让网络一直开着。
+
+# --------------------------------------------------------- 面板与命令行
+
+@prep_nada_falta
+什么都不缺：这台机器已经有 Tandem 需要的一切。
+
+@prep_pergunta
+Tandem 可以把缺的东西装上：
+{1}
+
+需要联网和您的密码。可以继续吗？
+
+@prep_sem_confirmacao
+我什么都没装：需要您确认，但既没有窗口也没有终端可以问。
+
+@prep_instalando
+正在安装缺的东西，可能要挺久 —— 请不要关机。
+
+@prep_sem_senha
+我没能向您索要安装所需的密码。
+
+请打开终端并执行：  sudo tandem preparar
+
+@prep_nao_terminou
+安装没有顺利完成。用这个看看缺了什么：
+
+tandem doctor
+
+@prep_convite_envio
+最后一件事，也是唯一会离开这台机器的事。
+
+当您确认某个程序能用时，Tandem 就学到了它需要什么。我可以把这条经验发到
+社区清单里吗？
+
+每个程序只发一行：程序文件的指纹、32 位还是 64 位、以及哪些组件解决了问题。
+别的什么都没有。
+
+不会发的：文件名、文件夹、您的用户名、电脑名、网络地址，以及任何一行日志。
+
+这有什么用：以后装同一个程序的人可以直接拿到现成的答案，不用再等 Tandem
+重新摸索一遍。
+
+您随时可以更改：  tandem enviar sim   /   tandem enviar nao
+
+@prep_obrigado
+谢谢。用这个可以看到发出去的是什么：  tandem enviar
+
+@prep_tudo_pronto
+都装好了。用这个核对一下：tandem doctor
+
+@desinst_nenhum_ainda
+Tandem 还没有装过任何 Windows 程序。
+
+@desinst_nenhum_para_remover
+我没有找到可以卸载的 Windows 程序。
+
+不自带卸载程序的软件不会出现在这个列表里。
+
+@wine_nao_instalado
+Wine 没有安装。
+
+@desinst_pergunta
+要卸载这个 Windows 程序吗？
+
+{1}
+
+它的文件会被删掉。
+
+@desinst_sem_confirmacao
+我没有卸载 {1}：需要您确认，但既没有窗口也没有终端可以问。
+
+@desinst_copia_guardada
+卸载之前，我把您的文件备份到了：
+{1}
+
+@desinst_remover_mesmo_assim
+仍然卸载吗？
+
+@desinst_removendo
+正在卸载 {1}……
+
+@desinst_janela_propria
+{1} 自己的卸载窗口就要打开了。请在那里确认。
+
+@desinst_nao_removeu
+我没能卸载 {1}。
+
+程序自己的卸载工具没跑完。请再试一次，或者从程序自己的窗口里卸载。
+
+@desinst_removido
+{1} 已卸载。
+
+@botao_pode_mandar
+可以发
+
+@botao_nao_mandar
+不要发
+
+@auto_ignore
+自检：请忽略这条消息
+
+@auto_depois_de_fechada
+关闭之后
+
+@auto_titulo
+Tandem - 自检
+
+@auto_passa
+通过
+
+@auto_falha
+失败
+
+@auto_pulou_progresso
+进度条（没有图形会话可供实测）
+
+@auto_pulou_pe
+PE 预检（还没有装过 Windows 程序）
+
+@auto_pulou_java
+Java 预检（这台机器上没有 .jar 可供实测）
+
+@auto_pulou_deb
+.deb 预检（这台机器上没有软件包可供实测）
+
+@auto_pulou_java_versao
+Java 版本（Java 没有安装）
+
+@auto_pulou_protecao
+环境保护（这台机器上没有第三方环境）
+
+@portas_diga_qual
+请说明是哪个口，像这样：
+
+tandem portas fixar COM2 /dev/ttyACM0
+
+@portas_sem_aparelho
+这里没有任何设备：
+{1}
+
+@portas_sem_ambiente
+这里还没有 Windows 环境。
+
+打开一次 .exe 程序，它就会被建好。
+
+@portas_ambiente_de_terceiro
+这个 Windows 环境不是 Tandem 建的，所以 Tandem 不会动它。
+
+@portas_fixada
+好了：对 Windows 程序来说，{1} 现在就是 {2}。
+
+重新打开程序，在它的设置里选 {2}。
+
+@portas_nao_fixou
+我没能固定这个口。请看：tandem logs
+
+@portas_diga_qual_soltar
+请说明要放开哪个口。例如：tandem portas soltar COM2
+
+@portas_soltada
+{1} 又回到由 Wine 自己决定了。
+
+@portas_titulo_janela
+Tandem - 设备接口
+
+@portas_nao_conheco
+我不认识“{1}”。
+
+tandem portas                        显示各个口
+tandem portas fixar COM2 /dev/ttyACM0   把设备固定到某个口
+tandem portas soltar COM2               撤销
