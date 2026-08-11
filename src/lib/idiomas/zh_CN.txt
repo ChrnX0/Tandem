@@ -571,3 +571,110 @@ Tandem - {1}
 
 @script_primeiras_linhas
 它开头的几行：
+
+# ------------------------------------------------------- Android 应用
+
+@apk_cifrado
+这个文件被发布它的网站加了保护。
+
+里面的内容是锁着的，只有那个网站自己的应用能打开。这不是您电脑的毛病，
+也不是 Tandem 的。
+
+到别处找同一个应用：普通的 .apk 或 .xapk 在这里都能正常安装。
+
+@apk_nao_e_android
+这个文件看起来不是 Android 应用。
+
+@apk_preparando
+正在准备 Android……
+
+@apk_sdk_novo_demais
+这个应用要求的 Android 版本比已装的更新。
+
+它要 {1} 版，而这里的 Android 是 {2} 版。
+
+请找这个应用的旧版本。
+
+@apk_arm_com_tradutor
+这个应用只为手机（ARM）而做，而这个 Android 里缺少转译层。
+
+安装转译层：
+
+git clone https://github.com/casualsnek/waydroid_script
+cd waydroid_script && python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+sudo venv/bin/python3 main.py install houdini
+
+@apk_arm_sem_saida
+这个应用只为手机（ARM）而做，在这里跑不起来。
+
+@apk_sdk_curto
+这个应用要求的 Android 版本比已装的更新。
+
+@apk_ja_instalado
+这个应用已经装了。
+
+请先在 Android 里把它卸掉。
+
+@apk_versao_mais_nova
+这个应用已经装了更新的版本。
+
+@apk_sem_espaco
+Android 里面空间不够。
+
+@apk_sem_assinatura
+这个应用的签名不对。请换个来源下载。
+
+@apk_corrompido
+这个文件看起来是坏的或者没下载完。
+
+@apk_faltam_partes
+这个应用缺了几个部分。
+
+请下载完整的 .xapk 文件，而不是单独的 .apk。
+
+@apk_instalado_pacote
+安装成功。{1}
+
+请到应用程序菜单里找。
+
+@apk_nao_instalou
+这个应用没能装上。
+
+@apk_instalado_simples
+安装成功。请到应用程序菜单里找。
+
+@apk_nao_confirmou
+我没能确认是否装好了。
+
+@apk_extraindo_partes
+正在解出应用的 {1} 个部分……
+
+@apk_pacote_nao_abre
+我打不开这个包。文件可能是坏的。
+
+@apk_pacote_vazio
+这个包里面我没找到任何应用。
+
+@apk_falta_adb
+要安装分片的包，需要 adb。
+
+sudo apt install adb
+
+@apk_sem_endereco
+我没能查到 Android 的地址。
+
+@apk_conectando
+正在连接 Android（{1}）……
+
+@apk_nao_conectou
+我没能连上 Android 来安装这些部分。
+
+@apk_instalando_partes
+正在安装 {1} 个部分……
+
+@apk_copiando_dados
+正在复制应用的数据文件……
+
+@apk_instalando
+正在安装 {1}……

@@ -601,3 +601,111 @@ Tandem - {1}
 
 @script_primeiras_linhas
 As primeiras linhas dele:
+
+# -------------------------------------------------- aplicativos Android
+
+@apk_cifrado
+Este arquivo está protegido pelo site que distribui ele.
+
+O conteúdo vem trancado, e só o aplicativo do próprio site consegue abrir. Não é
+defeito da sua máquina nem do Tandem.
+
+Procure o mesmo app em outro lugar: um arquivo .apk ou .xapk comum instala aqui
+sem problema.
+
+@apk_nao_e_android
+Este arquivo não parece ser um aplicativo Android.
+
+@apk_preparando
+Preparando o Android...
+
+@apk_sdk_novo_demais
+Este app exige uma versão do Android mais nova do que a instalada.
+
+Ele pede a versão {1} e o Android daqui é a {2}.
+
+Procure uma versão mais antiga do app.
+
+@apk_arm_com_tradutor
+Este app é feito só para celular (ARM) e falta o tradutor neste Android.
+
+Para instalar o tradutor:
+
+git clone https://github.com/casualsnek/waydroid_script
+cd waydroid_script && python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+sudo venv/bin/python3 main.py install houdini
+
+@apk_arm_sem_saida
+Este app é feito só para celular (ARM) e não roda aqui.
+
+@apk_sdk_curto
+Este app exige uma versão do Android mais nova que a instalada.
+
+@apk_ja_instalado
+Este app já está instalado.
+
+Desinstale primeiro pelo próprio Android.
+
+@apk_versao_mais_nova
+Já existe uma versão mais nova deste app instalada.
+
+@apk_sem_espaco
+Não há espaço suficiente dentro do Android.
+
+@apk_sem_assinatura
+O app não está assinado corretamente. Baixe de outra fonte.
+
+@apk_corrompido
+O arquivo parece corrompido ou incompleto.
+
+@apk_faltam_partes
+Faltam partes deste app.
+
+Baixe o arquivo .xapk completo, em vez do .apk avulso.
+
+@apk_instalado_pacote
+Instalado com sucesso.{1}
+
+Procure no menu de aplicativos.
+
+@apk_nao_instalou
+Não deu para instalar este app.
+
+@apk_instalado_simples
+Instalado com sucesso. Procure no menu de aplicativos.
+
+@apk_nao_confirmou
+Não consegui confirmar a instalação.
+
+@apk_extraindo_partes
+Extraindo as {1} partes do aplicativo...
+
+@apk_pacote_nao_abre
+Não consegui abrir este pacote. O arquivo pode estar corrompido.
+
+@apk_pacote_vazio
+Não encontrei nenhum aplicativo dentro deste pacote.
+
+@apk_falta_adb
+Para instalar pacotes divididos é preciso o adb.
+
+sudo apt install adb
+
+@apk_sem_endereco
+Não descobri o endereço do Android.
+
+@apk_conectando
+Conectando ao Android ({1})...
+
+@apk_nao_conectou
+Não consegui conectar ao Android para instalar as partes.
+
+@apk_instalando_partes
+Instalando {1} partes...
+
+@apk_copiando_dados
+Copiando arquivos de dados do app...
+
+@apk_instalando
+Instalando {1}...

@@ -597,3 +597,115 @@ Tandem - {1}
 
 @script_primeiras_linhas
 Ses premières lignes :
+
+# ------------------------------------------------ applications Android
+
+@apk_cifrado
+Ce fichier est protégé par le site qui le distribue.
+
+Le contenu arrive verrouillé, et seule l'application de ce site peut l'ouvrir.
+Ce n'est pas un défaut de votre machine ni de Tandem.
+
+Cherchez la même application ailleurs : un .apk ou .xapk ordinaire s'installe
+ici sans problème.
+
+@apk_nao_e_android
+Ce fichier ne ressemble pas à une application Android.
+
+@apk_preparando
+Préparation d'Android...
+
+@apk_sdk_novo_demais
+Cette application exige une version d'Android plus récente que celle
+installée.
+
+Elle demande la version {1} et l'Android d'ici est la {2}.
+
+Cherchez une version plus ancienne de l'application.
+
+@apk_arm_com_tradutor
+Cette application est faite pour téléphones uniquement (ARM) et le traducteur
+manque à cet Android.
+
+Pour installer le traducteur :
+
+git clone https://github.com/casualsnek/waydroid_script
+cd waydroid_script && python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+sudo venv/bin/python3 main.py install houdini
+
+@apk_arm_sem_saida
+Cette application est faite pour téléphones uniquement (ARM) et ne fonctionne
+pas ici.
+
+@apk_sdk_curto
+Cette application exige une version d'Android plus récente que celle
+installée.
+
+@apk_ja_instalado
+Cette application est déjà installée.
+
+Désinstallez-la d'abord depuis Android.
+
+@apk_versao_mais_nova
+Une version plus récente de cette application est déjà installée.
+
+@apk_sem_espaco
+Il n'y a pas assez de place dans Android.
+
+@apk_sem_assinatura
+L'application n'est pas signée correctement. Téléchargez-la ailleurs.
+
+@apk_corrompido
+Le fichier semble corrompu ou incomplet.
+
+@apk_faltam_partes
+Il manque des morceaux de cette application.
+
+Téléchargez le fichier .xapk complet plutôt que le .apk seul.
+
+@apk_instalado_pacote
+Installé avec succès.{1}
+
+Cherchez-le dans le menu des applications.
+
+@apk_nao_instalou
+Cette application n'a pas pu être installée.
+
+@apk_instalado_simples
+Installé avec succès. Cherchez-le dans le menu des applications.
+
+@apk_nao_confirmou
+Je n'ai pas pu confirmer l'installation.
+
+@apk_extraindo_partes
+Extraction des {1} morceaux de l'application...
+
+@apk_pacote_nao_abre
+Je n'ai pas pu ouvrir ce paquet. Le fichier est peut-être corrompu.
+
+@apk_pacote_vazio
+Je n'ai trouvé aucune application dans ce paquet.
+
+@apk_falta_adb
+Installer des paquets découpés nécessite adb.
+
+sudo apt install adb
+
+@apk_sem_endereco
+Je n'ai pas trouvé l'adresse d'Android.
+
+@apk_conectando
+Connexion à Android ({1})...
+
+@apk_nao_conectou
+Je n'ai pas pu me connecter à Android pour installer les morceaux.
+
+@apk_instalando_partes
+Installation de {1} morceaux...
+
+@apk_copiando_dados
+Copie des fichiers de données de l'application...
+
+@apk_instalando
+Installation de {1}...

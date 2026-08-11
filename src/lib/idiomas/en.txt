@@ -603,3 +603,112 @@ Tandem - {1}
 
 @script_primeiras_linhas
 Its first few lines:
+
+# ------------------------------------------------------------ Android apps
+
+@apk_cifrado
+This file is protected by the site that distributes it.
+
+The contents arrive locked, and only that site's own app can open them. It is
+not a fault of your machine or of Tandem.
+
+Look for the same app somewhere else: an ordinary .apk or .xapk installs here
+without trouble.
+
+@apk_nao_e_android
+This file does not look like an Android app.
+
+@apk_preparando
+Getting Android ready...
+
+@apk_sdk_novo_demais
+This app needs a newer version of Android than the one installed.
+
+It asks for version {1} and the Android here is {2}.
+
+Look for an older version of the app.
+
+@apk_arm_com_tradutor
+This app is built for phones only (ARM) and the translator is missing from
+this Android.
+
+To install the translator:
+
+git clone https://github.com/casualsnek/waydroid_script
+cd waydroid_script && python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+sudo venv/bin/python3 main.py install houdini
+
+@apk_arm_sem_saida
+This app is built for phones only (ARM) and will not run here.
+
+@apk_sdk_curto
+This app needs a newer version of Android than the one installed.
+
+@apk_ja_instalado
+This app is already installed.
+
+Uninstall it from inside Android first.
+
+@apk_versao_mais_nova
+A newer version of this app is already installed.
+
+@apk_sem_espaco
+There is not enough space inside Android.
+
+@apk_sem_assinatura
+The app is not signed properly. Download it from somewhere else.
+
+@apk_corrompido
+The file looks corrupted or incomplete.
+
+@apk_faltam_partes
+Parts of this app are missing.
+
+Download the complete .xapk file instead of the loose .apk.
+
+@apk_instalado_pacote
+Installed successfully.{1}
+
+Look for it in the applications menu.
+
+@apk_nao_instalou
+This app could not be installed.
+
+@apk_instalado_simples
+Installed successfully. Look for it in the applications menu.
+
+@apk_nao_confirmou
+I could not confirm the installation.
+
+@apk_extraindo_partes
+Unpacking the app's {1} parts...
+
+@apk_pacote_nao_abre
+I could not open this package. The file may be corrupted.
+
+@apk_pacote_vazio
+I found no app inside this package.
+
+@apk_falta_adb
+Installing split packages needs adb.
+
+sudo apt install adb
+
+@apk_sem_endereco
+I could not find Android's address.
+
+@apk_conectando
+Connecting to Android ({1})...
+
+@apk_nao_conectou
+I could not connect to Android to install the parts.
+
+@apk_instalando_partes
+Installing {1} parts...
+
+@apk_copiando_dados
+Copying the app's data files...
+
+@apk_instalando
+Installing {1}...

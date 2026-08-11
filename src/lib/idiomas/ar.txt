@@ -581,3 +581,110 @@ Tandem - {1}
 
 @script_primeiras_linhas
 أوّل سطور منه:
+
+# --------------------------------------------------- تطبيقات Android
+
+@apk_cifrado
+هذا الملف محميّ من الموقع الذي يوزّعه.
+
+يأتي المحتوى مُقفلًا، ولا يستطيع فتحه إلا تطبيق ذلك الموقع نفسه. وليس هذا
+عيبًا في جهازك ولا في Tandem.
+
+ابحث عن التطبيق نفسه في مكان آخر: ملف .apk أو .xapk عادي يُثبَّت هنا بلا مشكلة.
+
+@apk_nao_e_android
+لا يبدو هذا الملف تطبيق Android.
+
+@apk_preparando
+جارٍ تهيئة Android…
+
+@apk_sdk_novo_demais
+يتطلّب هذا التطبيق إصدارًا من Android أحدث من المثبَّت.
+
+يطلب الإصدار {1}، وإصدار Android هنا هو {2}.
+
+ابحث عن إصدار أقدم من التطبيق.
+
+@apk_arm_com_tradutor
+هذا التطبيق مصنوع للهواتف فقط (ARM)، والمُترجم غير موجود في هذا Android.
+
+لتثبيت المُترجم:
+
+git clone https://github.com/casualsnek/waydroid_script
+cd waydroid_script && python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+sudo venv/bin/python3 main.py install houdini
+
+@apk_arm_sem_saida
+هذا التطبيق مصنوع للهواتف فقط (ARM) ولا يعمل هنا.
+
+@apk_sdk_curto
+يتطلّب هذا التطبيق إصدارًا من Android أحدث من المثبَّت.
+
+@apk_ja_instalado
+هذا التطبيق مثبَّت بالفعل.
+
+أزِله من داخل Android أوّلًا.
+
+@apk_versao_mais_nova
+هناك إصدار أحدث من هذا التطبيق مثبَّت بالفعل.
+
+@apk_sem_espaco
+لا توجد مساحة كافية داخل Android.
+
+@apk_sem_assinatura
+التطبيق غير موقَّع كما ينبغي. نزّله من مصدر آخر.
+
+@apk_corrompido
+يبدو الملف تالفًا أو ناقصًا.
+
+@apk_faltam_partes
+تنقص أجزاء من هذا التطبيق.
+
+نزّل ملف .xapk الكامل بدلًا من ملف .apk المنفرد.
+
+@apk_instalado_pacote
+تمّ التثبيت بنجاح.{1}
+
+ابحث عنه في قائمة التطبيقات.
+
+@apk_nao_instalou
+لم يتمكّن هذا التطبيق من التثبيت.
+
+@apk_instalado_simples
+تمّ التثبيت بنجاح. ابحث عنه في قائمة التطبيقات.
+
+@apk_nao_confirmou
+لم أتمكّن من تأكيد التثبيت.
+
+@apk_extraindo_partes
+جارٍ استخراج أجزاء التطبيق الـ{1}…
+
+@apk_pacote_nao_abre
+لم أتمكّن من فتح هذه الحزمة. قد يكون الملف تالفًا.
+
+@apk_pacote_vazio
+لم أجد أي تطبيق داخل هذه الحزمة.
+
+@apk_falta_adb
+يحتاج تثبيت الحزم المُقسَّمة إلى adb.
+
+sudo apt install adb
+
+@apk_sem_endereco
+لم أعرف عنوان Android.
+
+@apk_conectando
+جارٍ الاتصال بـAndroid ({1})…
+
+@apk_nao_conectou
+لم أتمكّن من الاتصال بـAndroid لتثبيت الأجزاء.
+
+@apk_instalando_partes
+جارٍ تثبيت {1} من الأجزاء…
+
+@apk_copiando_dados
+جارٍ نسخ ملفات بيانات التطبيق…
+
+@apk_instalando
+جارٍ تثبيت {1}…

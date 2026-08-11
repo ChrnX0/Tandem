@@ -593,3 +593,112 @@ Tandem - {1}
 
 @script_primeiras_linhas
 Sus primeras líneas:
+
+# ------------------------------------------------ aplicaciones de Android
+
+@apk_cifrado
+Este archivo está protegido por el sitio que lo distribuye.
+
+El contenido viene cerrado, y solo la aplicación de ese sitio puede abrirlo. No
+es un defecto de tu máquina ni de Tandem.
+
+Busca la misma app en otro lugar: un archivo .apk o .xapk normal se instala aquí
+sin problema.
+
+@apk_nao_e_android
+Este archivo no parece una aplicación de Android.
+
+@apk_preparando
+Preparando Android...
+
+@apk_sdk_novo_demais
+Esta app exige una versión de Android más nueva que la instalada.
+
+Pide la versión {1} y el Android de aquí es la {2}.
+
+Busca una versión más antigua de la app.
+
+@apk_arm_com_tradutor
+Esta app está hecha solo para móviles (ARM) y falta el traductor en este
+Android.
+
+Para instalar el traductor:
+
+git clone https://github.com/casualsnek/waydroid_script
+cd waydroid_script && python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+sudo venv/bin/python3 main.py install houdini
+
+@apk_arm_sem_saida
+Esta app está hecha solo para móviles (ARM) y no funciona aquí.
+
+@apk_sdk_curto
+Esta app exige una versión de Android más nueva que la instalada.
+
+@apk_ja_instalado
+Esta app ya está instalada.
+
+Desinstálala primero desde Android.
+
+@apk_versao_mais_nova
+Ya hay instalada una versión más nueva de esta app.
+
+@apk_sem_espaco
+No hay espacio suficiente dentro de Android.
+
+@apk_sem_assinatura
+La app no está firmada correctamente. Descárgala de otra fuente.
+
+@apk_corrompido
+El archivo parece dañado o incompleto.
+
+@apk_faltam_partes
+Faltan partes de esta app.
+
+Descarga el archivo .xapk completo, en lugar del .apk suelto.
+
+@apk_instalado_pacote
+Instalado correctamente.{1}
+
+Búscalo en el menú de aplicaciones.
+
+@apk_nao_instalou
+No se pudo instalar esta app.
+
+@apk_instalado_simples
+Instalado correctamente. Búscalo en el menú de aplicaciones.
+
+@apk_nao_confirmou
+No pude confirmar la instalación.
+
+@apk_extraindo_partes
+Extrayendo las {1} partes de la aplicación...
+
+@apk_pacote_nao_abre
+No pude abrir este paquete. El archivo puede estar dañado.
+
+@apk_pacote_vazio
+No encontré ninguna aplicación dentro de este paquete.
+
+@apk_falta_adb
+Para instalar paquetes divididos hace falta adb.
+
+sudo apt install adb
+
+@apk_sem_endereco
+No descubrí la dirección de Android.
+
+@apk_conectando
+Conectando con Android ({1})...
+
+@apk_nao_conectou
+No pude conectar con Android para instalar las partes.
+
+@apk_instalando_partes
+Instalando {1} partes...
+
+@apk_copiando_dados
+Copiando los archivos de datos de la app...
+
+@apk_instalando
+Instalando {1}...

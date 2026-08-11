@@ -28,7 +28,7 @@ ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + [RAIZ / "src/lib/common.sh"]
 # declaring it done, and --migrados then refuses to let it slip back.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
-    "tandem-android", "tandem-deb",
+    "tandem-android", "tandem-deb", "tandem-apk",
 }
 
 CHAMADA = re.compile(

@@ -46,37 +46,25 @@ done <<< "$INFO"
 # Python exception in English about a missing password, which is the failure mode
 # this project treats as a defect.
 if [ "$CIFRADO" = 1 ]; then
-    t_erro "Este arquivo está protegido pelo site que distribui ele.
-
-O conteúdo vem trancado, e só o aplicativo do próprio site consegue abrir. Não é
-defeito da sua máquina nem do Tandem.
-
-Procure o mesmo app em outro lugar: um arquivo .apk ou .xapk comum instala aqui
-sem problema."
+    t_erro "$(t_msg apk_cifrado)"
     exit 1
 fi
 
 if [ -n "$ERRO" ]; then
-    t_erro "Não consegui ler este arquivo.
-
-$ERRO"; exit 1
+    t_erro "$(t_msg nao_consegui_ler "$ERRO")"; exit 1
 fi
 if [ "$FORMATO" = "desconhecido" ]; then
-    t_erro "Este arquivo não parece ser um aplicativo Android."; exit 1
+    t_erro "$(t_msg apk_nao_e_android)"; exit 1
 fi
 
-t_progresso_abre "Preparando o Android..."
+t_progresso_abre "$(t_msg apk_preparando)"
 t_wd_garantir || exit 1
 
 # ------------------------------------------- 2. Compatibility, before trying
 SDK="$(t_wd_sdk)"
 if [ -n "$MINSDK" ] && [ -n "$SDK" ] && [ "$MINSDK" -gt "$SDK" ] 2>/dev/null; then
     t_progresso_fecha
-    t_erro "Este app exige uma versão do Android mais nova do que a instalada.
-
-Ele pede a versão $MINSDK e o Android daqui é a $SDK.
-
-Procure uma versão mais antiga do app."
+    t_erro "$(t_msg apk_sdk_novo_demais "$MINSDK" "$SDK")"
     exit 1
 fi
 
@@ -84,14 +72,7 @@ fi
 if [ -n "$ABIS" ] && ! printf '%s' "$ABIS" | grep -q 'x86'; then
     if ! t_wd_tem_arm; then
         t_progresso_fecha
-        t_erro "Este app é feito só para celular (ARM) e falta o tradutor neste Android.
-
-Para instalar o tradutor:
-
-git clone https://github.com/casualsnek/waydroid_script
-cd waydroid_script && python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-sudo venv/bin/python3 main.py install houdini"
+        t_erro "$(t_msg apk_arm_com_tradutor)"
         exit 1
     fi
     t_diz "app ARM-only, tradutor presente"
@@ -102,46 +83,40 @@ resultado() {
     local saida="$1"
     case "$saida" in
         *NO_MATCHING_ABIS*)
-            t_erro "Este app é feito só para celular (ARM) e não roda aqui." ;;
+            t_erro "$(t_msg apk_arm_sem_saida)" ;;
         *INSTALL_FAILED_OLDER_SDK*)
-            t_erro "Este app exige uma versão do Android mais nova que a instalada." ;;
+            t_erro "$(t_msg apk_sdk_curto)" ;;
         *INSTALL_FAILED_ALREADY_EXISTS*)
-            t_erro "Este app já está instalado.
-
-Desinstale primeiro pelo próprio Android." ;;
+            t_erro "$(t_msg apk_ja_instalado)" ;;
         *INSTALL_FAILED_VERSION_DOWNGRADE*)
-            t_erro "Já existe uma versão mais nova deste app instalada." ;;
+            t_erro "$(t_msg apk_versao_mais_nova)" ;;
         *INSTALL_FAILED_INSUFFICIENT_STORAGE*)
-            t_erro "Não há espaço suficiente dentro do Android." ;;
+            t_erro "$(t_msg apk_sem_espaco)" ;;
         *INSTALL_PARSE_FAILED_NO_CERTIFICATES*)
-            t_erro "O app não está assinado corretamente. Baixe de outra fonte." ;;
+            t_erro "$(t_msg apk_sem_assinatura)" ;;
         *INSTALL_PARSE_FAILED*)
-            t_erro "O arquivo parece corrompido ou incompleto." ;;
+            t_erro "$(t_msg apk_corrompido)" ;;
         *INSTALL_FAILED_MISSING_SPLIT*)
-            t_erro "Faltam partes deste app.
-
-Baixe o arquivo .xapk completo, em vez do .apk avulso." ;;
+            t_erro "$(t_msg apk_faltam_partes)" ;;
         *Success*)
-            t_ok "Instalado com sucesso.${PACOTE:+ ($PACOTE)}
-
-Procure no menu de aplicativos."
+            t_ok "$(t_msg apk_instalado_pacote "${PACOTE:+ ($PACOTE)}")"
             return 0 ;;
         *Failure*|*INSTALL_FAILED*|*Exception*|*error:*|*Error:*)
-            t_erro "Não deu para instalar este app." ;;
+            t_erro "$(t_msg apk_nao_instalou)" ;;
         *)
             # No keyword: confirm by asking Android itself.
             if [ -n "$PACOTE" ] && waydroid shell -- pm list packages 2>/dev/null |
                  grep -q "package:$PACOTE"; then
-                t_ok "Instalado com sucesso. Procure no menu de aplicativos."
+                t_ok "$(t_msg apk_instalado_simples)"
                 return 0
             fi
-            t_erro "Não consegui confirmar a instalação." ;;
+            t_erro "$(t_msg apk_nao_confirmou)" ;;
     esac
     return 1
 }
 
 if [ "$FORMATO" = "apk" ]; then
-    t_progresso_texto "Instalando $(basename -- "$APK")..."
+    t_progresso_texto "$(t_msg apk_instalando "$(basename -- "$APK")")"
     SAIDA="$(timeout 300 waydroid app install "$APK" 2>&1)"
     t_diz "$SAIDA"
     t_progresso_fecha
@@ -149,28 +124,26 @@ if [ "$FORMATO" = "apk" ]; then
 fi
 
 # ---------------------------- 4. Split package (xapk/apks/apkm) via ADB
-t_progresso_texto "Extraindo as $SPLITS partes do aplicativo..."
+t_progresso_texto "$(t_msg apk_extraindo_partes "$SPLITS")"
 TMP="$(mktemp -d)"
 if ! unzip -q -o "$APK" -d "$TMP" 2>>"$LOG"; then
     t_progresso_fecha
-    t_erro "Não consegui abrir este pacote. O arquivo pode estar corrompido."
+    t_erro "$(t_msg apk_pacote_nao_abre)"
     exit 1
 fi
 
 mapfile -t PARTES < <(find "$TMP" -maxdepth 2 -type f -iname '*.apk' | sort)
 [ "${#PARTES[@]}" -gt 0 ] || {
-    t_progresso_fecha; t_erro "Não encontrei nenhum aplicativo dentro deste pacote."; exit 1; }
+    t_progresso_fecha; t_erro "$(t_msg apk_pacote_vazio)"; exit 1; }
 
 command -v adb >/dev/null 2>&1 || {
     t_progresso_fecha
-    t_erro "Para instalar pacotes divididos é preciso o adb.
-
-sudo apt install adb"; exit 1; }
+    t_erro "$(t_msg apk_falta_adb)"; exit 1; }
 
 IP="$(t_wd_ip)"
-[ -n "$IP" ] || { t_progresso_fecha; t_erro "Não descobri o endereço do Android."; exit 1; }
+[ -n "$IP" ] || { t_progresso_fecha; t_erro "$(t_msg apk_sem_endereco)"; exit 1; }
 
-t_progresso_texto "Conectando ao Android ($IP)..."
+t_progresso_texto "$(t_msg apk_conectando "$IP")"
 adb connect "$IP:5555" >>"$LOG" 2>&1
 for _ in $(seq 1 10); do
     adb -s "$IP:5555" get-state 2>/dev/null | grep -q device && break
@@ -178,15 +151,15 @@ for _ in $(seq 1 10); do
 done
 adb -s "$IP:5555" get-state 2>/dev/null | grep -q device || {
     t_progresso_fecha
-    t_erro "Não consegui conectar ao Android para instalar as partes."; exit 1; }
+    t_erro "$(t_msg apk_nao_conectou)"; exit 1; }
 
-t_progresso_texto "Instalando ${#PARTES[@]} partes..."
+t_progresso_texto "$(t_msg apk_instalando_partes "${#PARTES[@]}")"
 SAIDA="$(timeout 900 adb -s "$IP:5555" install-multiple -r "${PARTES[@]}" 2>&1)"
 t_diz "$SAIDA"
 
 # Extra data files (OBB), when present.
 if [ "$OBB" = 1 ] && [ -d "$TMP/Android/obb" ]; then
-    t_progresso_texto "Copiando arquivos de dados do app..."
+    t_progresso_texto "$(t_msg apk_copiando_dados)"
     adb -s "$IP:5555" shell mkdir -p /sdcard/Android/obb >>"$LOG" 2>&1
     for d in "$TMP"/Android/obb/*/; do
         [ -d "$d" ] || continue

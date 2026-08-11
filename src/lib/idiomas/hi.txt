@@ -590,3 +590,110 @@ Tandem - {1}
 
 @script_primeiras_linhas
 इसकी शुरुआती पंक्तियाँ:
+
+# ------------------------------------------------------ Android के ऐप
+
+@apk_cifrado
+इस फ़ाइल को बाँटने वाली साइट ने इसे सुरक्षित कर दिया है।
+
+सामग्री बंद हालत में आती है, और उसे सिर्फ़ उसी साइट का ऐप खोल सकता है। यह न
+आपकी मशीन की खराबी है, न Tandem की।
+
+वही ऐप कहीं और खोजिए: सामान्य .apk या .xapk यहाँ बिना दिक्कत इंस्टॉल होता है।
+
+@apk_nao_e_android
+यह फ़ाइल Android का ऐप नहीं लगती।
+
+@apk_preparando
+Android तैयार हो रहा है…
+
+@apk_sdk_novo_demais
+यह ऐप इंस्टॉल किए हुए Android से नया संस्करण माँगता है।
+
+यह {1} संस्करण माँगता है और यहाँ का Android {2} है।
+
+ऐप का कोई पुराना संस्करण खोजिए।
+
+@apk_arm_com_tradutor
+यह ऐप सिर्फ़ फ़ोन (ARM) के लिए बना है, और इस Android में अनुवादक नहीं है।
+
+अनुवादक इंस्टॉल करने के लिए:
+
+git clone https://github.com/casualsnek/waydroid_script
+cd waydroid_script && python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+sudo venv/bin/python3 main.py install houdini
+
+@apk_arm_sem_saida
+यह ऐप सिर्फ़ फ़ोन (ARM) के लिए बना है और यहाँ नहीं चलेगा।
+
+@apk_sdk_curto
+यह ऐप इंस्टॉल किए हुए Android से नया संस्करण माँगता है।
+
+@apk_ja_instalado
+यह ऐप पहले से इंस्टॉल है।
+
+पहले Android में जाकर इसे हटाइए।
+
+@apk_versao_mais_nova
+इस ऐप का इससे नया संस्करण पहले से इंस्टॉल है।
+
+@apk_sem_espaco
+Android के अंदर पर्याप्त जगह नहीं है।
+
+@apk_sem_assinatura
+ऐप ठीक से हस्ताक्षरित नहीं है। किसी दूसरे स्रोत से डाउनलोड कीजिए।
+
+@apk_corrompido
+फ़ाइल खराब या अधूरी लगती है।
+
+@apk_faltam_partes
+इस ऐप के कुछ हिस्से गायब हैं।
+
+अलग .apk के बजाय पूरा .xapk फ़ाइल डाउनलोड कीजिए।
+
+@apk_instalado_pacote
+सफलतापूर्वक इंस्टॉल हो गया।{1}
+
+एप्लिकेशन मेन्यू में देखिए।
+
+@apk_nao_instalou
+यह ऐप इंस्टॉल नहीं हो सका।
+
+@apk_instalado_simples
+सफलतापूर्वक इंस्टॉल हो गया। एप्लिकेशन मेन्यू में देखिए।
+
+@apk_nao_confirmou
+मैं इंस्टॉल होने की पुष्टि नहीं कर सका।
+
+@apk_extraindo_partes
+ऐप के {1} हिस्से निकाले जा रहे हैं…
+
+@apk_pacote_nao_abre
+मैं यह पैकेज खोल नहीं सका। फ़ाइल खराब हो सकती है।
+
+@apk_pacote_vazio
+इस पैकेज के अंदर मुझे कोई ऐप नहीं मिला।
+
+@apk_falta_adb
+बँटे हुए पैकेज इंस्टॉल करने के लिए adb चाहिए।
+
+sudo apt install adb
+
+@apk_sem_endereco
+मुझे Android का पता नहीं मिला।
+
+@apk_conectando
+Android ({1}) से जुड़ रहा हूँ…
+
+@apk_nao_conectou
+हिस्से इंस्टॉल करने के लिए मैं Android से नहीं जुड़ सका।
+
+@apk_instalando_partes
+{1} हिस्से इंस्टॉल हो रहे हैं…
+
+@apk_copiando_dados
+ऐप की डेटा फ़ाइलें कॉपी हो रही हैं…
+
+@apk_instalando
+{1} इंस्टॉल हो रहा है…
