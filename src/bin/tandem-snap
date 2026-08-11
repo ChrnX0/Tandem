@@ -43,9 +43,7 @@ if snap list "$NOME" >/dev/null 2>&1; then
     exit 0
 fi
 
-if ! t_pergunta "Instalar \"$NOME\" a partir deste arquivo?
-
-$(basename -- "$ARQ")
+if ! t_pergunta "$(t_msg snap_pergunta "$NOME" "$(basename -- "$ARQ")")
 
 $(t_msg snap_aviso_sem_assinatura)" "$(t_msg botao_instalar_assim_mesmo)" "$(t_msg botao_cancelar)"; then
     if [ -t 0 ]; then

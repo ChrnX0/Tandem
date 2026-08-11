@@ -340,9 +340,6 @@ Búscalo en el menú de aplicaciones.
 
 {2}
 
-Un snap descargado fuera de la tienda no pasa por su revisión, así que entra
-marcado como "sin verificar". Continúa solo si confías en quien te lo envió.
-
 @snap_sem_confirmacao
 No instalé "{1}": este archivo no se puede verificar, y necesito una
 confirmación que no tengo cómo pedir sin ventana ni terminal.
@@ -490,3 +487,109 @@ No pude leer este paquete.
 Ningún puerto serie de verdad en este ordenador. Un pinpad, una balanza o una
   impresora de tickets tiene que entrar por un adaptador USB, y entonces
   aparece aquí como /dev/ttyUSB0.
+
+# ---------------------------------------------- paquetes del sistema (.deb)
+
+@deb_ja_instalando
+Este paquete ya se está instalando...
+
+@deb_download_incompleto
+La descarga de este archivo no terminó.
+
+{1}
+
+El paquete dice por dentro que debería ser más grande de lo que es. Descárgalo
+otra vez e inténtalo de nuevo.
+
+@deb_nao_e_pacote
+Este archivo no parece un paquete del sistema.
+
+@deb_ja_instalado
+{1} {2} ya está instalado en esta máquina.
+
+No hace falta instalarlo otra vez. Busca el programa en el menú de
+aplicaciones.
+
+@deb_downgrade_pergunta
+Ya tienes instalada una versión MÁS NUEVA de este programa.
+
+Instalada:  {1}
+Este archivo:  {2}
+
+Instalar este hará retroceder el programa, y eso a veces rompe los datos que ya
+había guardado. ¿Seguro?
+
+@botao_voltar_versao_antiga
+Volver a la versión antigua
+
+@deb_downgrade_sem_janela
+No instalé {1}.
+
+Ya tienes la versión {2}, que es más nueva que la {3} de este archivo, y no hay
+ventana ni terminal para preguntarte si quieres retroceder.
+
+Desde la Terminal:  sudo apt install --allow-downgrades "{4}"
+
+@deb_conferindo
+Comprobando lo que necesita este paquete...
+
+@deb_remove_pergunta
+Para instalar este paquete, el sistema quiere QUITAR estos programas:
+
+{1}
+
+Eso puede desinstalar cosas que usas. ¿Quieres continuar?
+
+@botao_continuar_assim_mesmo
+Continuar de todos modos
+
+@deb_remove_sem_janela
+No instalé {1}.
+
+Para instalarlo el sistema tendría que QUITAR otros programas, y no hay ventana
+ni terminal para preguntarte si lo aceptas.
+
+@deb_instalar_pergunta
+¿Instalar este programa?
+
+{1}
+
+@deb_vai_ocupar
+Va a ocupar unos {1}.
+
+@deb_junto_vem
+Junto con él vienen:{1}
+
+@deb_sem_confirmacao
+No instalé {1}: necesito una confirmación y no hay ventana ni terminal
+donde preguntar.
+
+Desde la Terminal:  sudo apt install "{2}"
+
+@deb_instalando
+Instalando {1}. No apagues el ordenador...
+
+@deb_sem_senha
+No pude pedirte la contraseña para instalar.
+
+Abre la Terminal y ejecuta:
+
+sudo apt install "{1}"
+
+@deb_instalado
+{1} {2} instalado.
+
+@se_nao_aparecer_saia_entre
+Si no aparece, cierra la sesión y vuelve a entrar en tu cuenta.
+
+@deb_nao_instalou
+No pude instalar {1}.
+
+@sistema_disse
+Esto es lo que dijo el sistema:
+
+@janela_titulo_arquivo
+Tandem - {1}
+
+@script_primeiras_linhas
+Sus primeras líneas:

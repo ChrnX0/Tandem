@@ -56,7 +56,7 @@ $(t_msg script_ver_antes)" "$(t_msg botao_ver_conteudo)" "$(t_msg botao_nao_ver)
             printf -- '----------------------------------------\n'
             head -c 65536 -- "$SCRIPT" | tr -d '\000' |
                 LC_ALL=C sed 's/[^[:print:][:space:]]/./g'
-        } | t_texto "Tandem - $(basename -- "$SCRIPT")"
+        } | t_texto "$(t_msg janela_titulo_arquivo "$(basename -- "$SCRIPT")")"
     fi
 fi
 
@@ -64,10 +64,10 @@ if ! t_pergunta "$QUAL
 
 $(basename -- "$SCRIPT")   ($(t_tamanho_amigavel "$TAM"))
 
-As primeiras linhas dele:
+$(t_msg script_primeiras_linhas)
 $CABECA
 
-$(t_msg script_aviso_poder)" "$ACAO" "Cancelar"; then
+$(t_msg script_aviso_poder)" "$ACAO" "$(t_msg botao_cancelar)"; then
     if [ -t 0 ]; then
         printf '%s\n\n%s [s/N] ' "$QUAL" "$ACAO?"
         read -r r

@@ -350,9 +350,6 @@ Install "{1}" from this file?
 
 {2}
 
-A snap downloaded outside the store does not go through its checks, so it goes
-in marked "unverified". Only continue if you trust whoever sent it.
-
 @snap_sem_confirmacao
 I did not install "{1}": this file cannot be verified, and I need a
 confirmation I have no way to ask for without a window or a terminal.
@@ -500,3 +497,109 @@ I could not read this package.
 No real serial port on this computer. A pinpad, a scale or a receipt printer
   has to come in through a USB adapter — and then it shows up here as
   /dev/ttyUSB0.
+
+# ----------------------------------------------------- system packages (.deb)
+
+@deb_ja_instalando
+This package is already being installed...
+
+@deb_download_incompleto
+The download of this file did not finish.
+
+{1}
+
+The package says inside that it should be bigger than it is. Download it again
+and try once more.
+
+@deb_nao_e_pacote
+This file does not look like a system package.
+
+@deb_ja_instalado
+{1} {2} is already installed on this machine.
+
+There is no need to install it again. Look for the program in the applications
+menu.
+
+@deb_downgrade_pergunta
+You already have a NEWER version of this program installed.
+
+Installed:  {1}
+This file:  {2}
+
+Installing this one takes the program backwards, and that sometimes breaks the
+data it has already saved. Are you sure?
+
+@botao_voltar_versao_antiga
+Go back to the old version
+
+@deb_downgrade_sem_janela
+I did not install {1}.
+
+You already have version {2}, which is newer than this file's {3}, and there is
+no window and no terminal for me to ask whether you want to go back.
+
+From the Terminal:  sudo apt install --allow-downgrades "{4}"
+
+@deb_conferindo
+Checking what this package needs...
+
+@deb_remove_pergunta
+To install this package, the system wants to REMOVE these programs:
+
+{1}
+
+That may uninstall things you use. Do you want to continue?
+
+@botao_continuar_assim_mesmo
+Continue anyway
+
+@deb_remove_sem_janela
+I did not install {1}.
+
+To install it the system would have to REMOVE other programs, and there is no
+window and no terminal for me to ask whether you accept that.
+
+@deb_instalar_pergunta
+Install this program?
+
+{1}
+
+@deb_vai_ocupar
+It will take up about {1}.
+
+@deb_junto_vem
+These come with it:{1}
+
+@deb_sem_confirmacao
+I did not install {1}: I need a confirmation and there is no window and no
+terminal to ask in.
+
+From the Terminal:  sudo apt install "{2}"
+
+@deb_instalando
+Installing {1}. Do not switch the computer off...
+
+@deb_sem_senha
+I could not ask for your password in order to install it.
+
+Open the Terminal and run:
+
+sudo apt install "{1}"
+
+@deb_instalado
+{1} {2} installed.
+
+@se_nao_aparecer_saia_entre
+If it does not show up, log out of your account and back in.
+
+@deb_nao_instalou
+I could not install {1}.
+
+@sistema_disse
+This is what the system said:
+
+@janela_titulo_arquivo
+Tandem - {1}
+
+@script_primeiras_linhas
+Its first few lines:

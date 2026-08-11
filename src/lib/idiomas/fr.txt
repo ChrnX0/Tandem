@@ -340,10 +340,6 @@ Installer « {1} » à partir de ce fichier ?
 
 {2}
 
-Un snap téléchargé hors de la logithèque ne passe pas ses vérifications : il
-entre marqué « non vérifié ». Ne continuez que si vous faites confiance à
-celui qui vous l'a envoyé.
-
 @snap_sem_confirmacao
 Je n'ai pas installé « {1} » : ce fichier ne peut pas être vérifié, et il me
 faut une confirmation que je n'ai aucun moyen de demander sans fenêtre ni
@@ -495,3 +491,109 @@ Je n'ai pas pu lire ce paquet.
 Aucun port série réel sur cet ordinateur. Un TPE, une balance ou une
   imprimante à tickets doit passer par un adaptateur USB — et il apparaît alors
   ici sous /dev/ttyUSB0.
+
+# ------------------------------------------------ paquets du système (.deb)
+
+@deb_ja_instalando
+Ce paquet est déjà en cours d'installation...
+
+@deb_download_incompleto
+Le téléchargement de ce fichier ne s'est pas terminé.
+
+{1}
+
+Le paquet indique en interne qu'il devrait être plus gros qu'il ne l'est.
+Retéléchargez-le et réessayez.
+
+@deb_nao_e_pacote
+Ce fichier ne ressemble pas à un paquet du système.
+
+@deb_ja_instalado
+{1} {2} est déjà installé sur cette machine.
+
+Inutile de l'installer à nouveau. Cherchez le programme dans le menu des
+applications.
+
+@deb_downgrade_pergunta
+Vous avez déjà une version PLUS RÉCENTE de ce programme.
+
+Installée :  {1}
+Ce fichier :  {2}
+
+Installer celui-ci fait revenir le programme en arrière, et cela casse parfois
+les données qu'il a déjà enregistrées. Vous êtes sûr ?
+
+@botao_voltar_versao_antiga
+Revenir à l'ancienne version
+
+@deb_downgrade_sem_janela
+Je n'ai pas installé {1}.
+
+Vous avez déjà la version {2}, plus récente que la {3} de ce fichier, et il n'y
+a ni fenêtre ni terminal pour vous demander si vous voulez revenir en arrière.
+
+Depuis le Terminal :  sudo apt install --allow-downgrades "{4}"
+
+@deb_conferindo
+Vérification de ce dont ce paquet a besoin...
+
+@deb_remove_pergunta
+Pour installer ce paquet, le système veut SUPPRIMER ces programmes :
+
+{1}
+
+Cela peut désinstaller des choses que vous utilisez. Voulez-vous continuer ?
+
+@botao_continuar_assim_mesmo
+Continuer quand même
+
+@deb_remove_sem_janela
+Je n'ai pas installé {1}.
+
+Pour l'installer, le système devrait SUPPRIMER d'autres programmes, et il n'y a
+ni fenêtre ni terminal pour vous demander si vous l'acceptez.
+
+@deb_instalar_pergunta
+Installer ce programme ?
+
+{1}
+
+@deb_vai_ocupar
+Il va occuper environ {1}.
+
+@deb_junto_vem
+Avec lui viennent :{1}
+
+@deb_sem_confirmacao
+Je n'ai pas installé {1} : il me faut une confirmation et il n'y a ni fenêtre
+ni terminal pour la demander.
+
+Depuis le Terminal :  sudo apt install "{2}"
+
+@deb_instalando
+Installation de {1}. N'éteignez pas l'ordinateur...
+
+@deb_sem_senha
+Je n'ai pas pu vous demander votre mot de passe pour installer.
+
+Ouvrez le Terminal et lancez :
+
+sudo apt install "{1}"
+
+@deb_instalado
+{1} {2} installé.
+
+@se_nao_aparecer_saia_entre
+S'il n'apparaît pas, déconnectez-vous de votre compte et reconnectez-vous.
+
+@deb_nao_instalou
+Je n'ai pas pu installer {1}.
+
+@sistema_disse
+Voici ce que le système a dit :
+
+@janela_titulo_arquivo
+Tandem - {1}
+
+@script_primeiras_linhas
+Ses premières lignes :

@@ -1393,6 +1393,56 @@ if true; then
     fi
 fi
 
+section "language: a migrated file stays migrated"
+
+# The check used during the first migration pass was WRONG, and it is worth
+# spelling out because it looked convincing. It was "does the file still hold
+# an accented character", and on that basis tandem-snap was declared finished
+# while
+#
+#     t_pergunta "Instalar \"$NOME\" a partir deste arquivo?
+#
+# was still a literal - accent-free Portuguese walks straight through an accent
+# grep. tools/conta-literais.py counts CALL SITES instead, and a call site is
+# clean when every letter a person reads comes out of a t_msg lookup.
+
+if [ -f "$ROOT/tools/conta-literais.py" ]; then
+    saida_lit="$(cd "$ROOT" && python3 tools/conta-literais.py --migrados 2>&1)"
+    if [ -z "$saida_lit" ]; then
+        pass "no file declared migrated has a Portuguese literal left"
+    else
+        fail "no file declared migrated has a Portuguese literal left" "" "$saida_lit"
+    fi
+    # And the counter has to actually catch one, or a green result means
+    # nothing. Accent-free Portuguese is the exact case that fooled the old
+    # check, so that is what gets fed to it.
+    ISCA="$TMPROOT/isca.sh"
+    printf 't_erro "Instalar este arquivo?"\n' > "$ISCA"
+    achou="$(cd "$ROOT" && python3 - "$ISCA" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(len(m.literais(pathlib.Path(sys.argv[1]))))
+FIM
+)"
+    equal "the counter catches accent-free Portuguese, which fooled the old check" \
+          "1" "$achou"
+    # A composed message - several t_msg lookups plus data - must NOT be
+    # reported. That is what a finished call site looks like.
+    printf 't_erro "$(t_msg um)\n\n$(basename -- "$f")\n\n$(t_msg dois)"\n' > "$ISCA"
+    limpo="$(cd "$ROOT" && python3 - "$ISCA" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(len(m.literais(pathlib.Path(sys.argv[1]))))
+FIM
+)"
+    equal "a message assembled from several t_msg lookups is not a literal" \
+          "0" "$limpo"
+else
+    skip "a migrated file stays migrated" "tools/conta-literais.py is missing"
+fi
+
 section "language: the messages are data, not code"
 
 # Every sentence in this program used to be a Portuguese literal inside the

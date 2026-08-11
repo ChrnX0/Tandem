@@ -350,9 +350,6 @@ Instalar "{1}" a partir deste arquivo?
 
 {2}
 
-Um snap baixado fora da loja não passa pela conferência dela, então ele entra
-com a marca de "não verificado". Só continue se você confia em quem mandou.
-
 @snap_sem_confirmacao
 Não instalei "{1}": este arquivo não pode ser verificado, e preciso
 de uma confirmação que não tenho como pedir sem janela nem terminal.
@@ -499,3 +496,108 @@ Não consegui ler este pacote.
 Nenhuma porta serial de verdade neste computador. Um pinpad, uma balança ou
   uma impressora de cupom precisa entrar por um adaptador USB — e aí ele
   aparece aqui como /dev/ttyUSB0.
+
+# ------------------------------------------------ pacotes do sistema (.deb)
+
+@deb_ja_instalando
+Este pacote já está sendo instalado...
+
+@deb_download_incompleto
+O download deste arquivo não terminou.
+
+{1}
+
+O pacote diz por dentro que deveria ser maior do que é. Baixe de novo e tente
+outra vez.
+
+@deb_nao_e_pacote
+Este arquivo não parece ser um pacote do sistema.
+
+@deb_ja_instalado
+{1} {2} já está instalado nesta máquina.
+
+Não precisa instalar de novo. Procure o programa no menu de aplicativos.
+
+@deb_downgrade_pergunta
+Você já tem uma versão MAIS NOVA deste programa instalada.
+
+Instalada:  {1}
+Este arquivo:  {2}
+
+Instalar este vai voltar o programa para trás, e às vezes isso quebra os dados
+que ele já guardou. Quer mesmo?
+
+@botao_voltar_versao_antiga
+Voltar para a versão antiga
+
+@deb_downgrade_sem_janela
+Não instalei {1}.
+
+Você já tem a versão {2}, que é mais nova que a {3} deste arquivo, e não há
+janela nem terminal para eu perguntar se você quer voltar atrás.
+
+Pelo Terminal:  sudo apt install --allow-downgrades "{4}"
+
+@deb_conferindo
+Conferindo o que este pacote precisa...
+
+@deb_remove_pergunta
+Para instalar este pacote, o sistema quer REMOVER estes programas:
+
+{1}
+
+Isso pode desinstalar coisas que você usa. Quer continuar?
+
+@botao_continuar_assim_mesmo
+Continuar assim mesmo
+
+@deb_remove_sem_janela
+Não instalei {1}.
+
+Para instalá-lo o sistema teria que REMOVER outros programas, e não há janela nem
+terminal para eu perguntar se você aceita isso.
+
+@deb_instalar_pergunta
+Instalar este programa?
+
+{1}
+
+@deb_vai_ocupar
+Vai ocupar cerca de {1}.
+
+@deb_junto_vem
+Junto com ele vêm:{1}
+
+@deb_sem_confirmacao
+Não instalei {1}: preciso de uma confirmação e não há janela nem
+terminal para perguntar.
+
+Pelo Terminal:  sudo apt install "{2}"
+
+@deb_instalando
+Instalando {1}. Não desligue o computador...
+
+@deb_sem_senha
+Não consegui pedir a sua senha para instalar.
+
+Abra o Terminal e execute:
+
+sudo apt install "{1}"
+
+@deb_instalado
+{1} {2} instalado.
+
+@se_nao_aparecer_saia_entre
+Se não aparecer, saia e entre novamente na sua conta.
+
+@deb_nao_instalou
+Não consegui instalar {1}.
+
+@sistema_disse
+Foi isto que o sistema disse:
+
+@janela_titulo_arquivo
+Tandem - {1}
+
+@script_primeiras_linhas
+As primeiras linhas dele:

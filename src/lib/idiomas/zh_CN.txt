@@ -329,9 +329,6 @@ sudo apt install snapd
 
 {2}
 
-从商店之外下载的 snap 没有经过商店的检查，会以“未验证”的身份装进来。
-只有在您信得过发来的人时才继续。
-
 @snap_sem_confirmacao
 我没有安装“{1}”：这个文件无法验证，而我需要您确认，却既没有窗口
 也没有终端可以问。
@@ -473,3 +470,104 @@ Tandem 能打开 .exe、.msi、.apk、.xapk、.AppImage、.jar、.deb、.rpm、
 @portas_nenhuma_real
 这台电脑上没有真正的串口。刷卡机、电子秤或小票打印机得通过 USB 转接头接入 ——
   接上以后就会在这里显示为 /dev/ttyUSB0。
+
+# --------------------------------------------------------- 系统软件包 (.deb)
+
+@deb_ja_instalando
+这个软件包已经在安装了……
+
+@deb_download_incompleto
+这个文件没有下载完。
+
+{1}
+
+包里自己写着它应该更大。请重新下载后再试。
+
+@deb_nao_e_pacote
+这个文件看起来不是系统的软件包。
+
+@deb_ja_instalado
+{1} {2} 在这台机器上已经装好了。
+
+不用再装一遍。请到应用程序菜单里找这个程序。
+
+@deb_downgrade_pergunta
+您装的这个程序已经是更新的版本了。
+
+已装：  {1}
+这个文件：  {2}
+
+装这个会把程序退回旧版，有时会弄坏它已经存下的数据。确定吗？
+
+@botao_voltar_versao_antiga
+退回旧版
+
+@deb_downgrade_sem_janela
+我没有安装 {1}。
+
+您装的 {2} 版比这个文件里的 {3} 更新，而我既没有窗口也没有终端来问您
+是否要退回旧版。
+
+在终端里：  sudo apt install --allow-downgrades "{4}"
+
+@deb_conferindo
+正在核对这个包需要什么……
+
+@deb_remove_pergunta
+要安装这个包，系统打算卸载这些程序：
+
+{1}
+
+这可能会卸掉您在用的东西。要继续吗？
+
+@botao_continuar_assim_mesmo
+仍然继续
+
+@deb_remove_sem_janela
+我没有安装 {1}。
+
+要装它，系统就得卸掉别的程序，而我既没有窗口也没有终端来问您是否接受。
+
+@deb_instalar_pergunta
+要安装这个程序吗？
+
+{1}
+
+@deb_vai_ocupar
+大约会占用 {1}。
+
+@deb_junto_vem
+跟它一起装的还有：{1}
+
+@deb_sem_confirmacao
+我没有安装 {1}：需要您确认，但既没有窗口也没有终端可以问。
+
+在终端里：  sudo apt install "{2}"
+
+@deb_instalando
+正在安装 {1}。请不要关机……
+
+@deb_sem_senha
+我没能向您索要安装所需的密码。
+
+请打开终端并执行：
+
+sudo apt install "{1}"
+
+@deb_instalado
+{1} {2} 已安装。
+
+@se_nao_aparecer_saia_entre
+如果没出现，请注销账号再登录一次。
+
+@deb_nao_instalou
+没能安装 {1}。
+
+@sistema_disse
+系统是这么说的：
+
+@janela_titulo_arquivo
+Tandem - {1}
+
+@script_primeiras_linhas
+它开头的几行：
