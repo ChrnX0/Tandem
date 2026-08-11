@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "495806570 762" "$soma_esperados"
+      "540335084 774" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
       "2310912825 1467" "$soma_padroes"
 
@@ -1392,6 +1392,46 @@ if true; then
         skip "a real .deb still routes" "no package could be built here"
     fi
 fi
+
+section "language: the data tables translate too, and fall back"
+
+# The catalogues were not the whole of it. alternativas.tsv and limites.tsv
+# carry PROSE in their columns - "what changes" and "why it will never work" -
+# and that prose reaches the owner through t_texto_alternativas and the limit
+# verdicts. A per-language table sits beside the original, and the original is
+# the fallback, exactly as a missing catalogue key falls back to Portuguese.
+
+for tab in alternativas limites; do
+    if [ -f "$ROOT/src/lib/$tab.en.tsv" ]; then
+        pass "$tab has an English table"
+    else
+        fail "$tab has an English table" "src/lib/$tab.en.tsv" "missing"
+    fi
+    # Same number of rows, or a row silently disappears from one language.
+    # Blank lines are cosmetic; the invariant is the DATA rows. Counting the
+    # blanks made this fail on a file that was in fact row-for-row correct.
+    n_pt="$(grep -v '^#' "$ROOT/src/lib/$tab.tsv" | grep -c . | tr -d ' ')"
+    n_en="$(grep -v '^#' "$ROOT/src/lib/$tab.en.tsv" | grep -c . | tr -d ' ')"
+    equal "$tab.en.tsv has the same number of rows as the original" "$n_pt" "$n_en"
+    # And the same keys in the same order, or a pattern matches the wrong row.
+    k_pt="$(grep -v '^#' "$ROOT/src/lib/$tab.tsv" | grep . | cut -f1 | cksum)"
+    k_en="$(grep -v '^#' "$ROOT/src/lib/$tab.en.tsv" | grep . | cut -f1 | cksum)"
+    equal "$tab.en.tsv matches the original row for row" "$k_pt" "$k_en"
+done
+
+tabela_para() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO="$1" TANDEM_ALTERNATIVAS="$ROOT/src/lib/alternativas.tsv" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_alternativas_para photoshop' 2>/dev/null
+}
+contem "an English machine reads the English table" \
+       "edits images" "$(tabela_para en)"
+contem "a Portuguese machine reads the original" \
+       "edita imagem" "$(tabela_para pt_BR)"
+# The fallback is what makes shipping this half-done defensible: a language
+# with no table of its own must read the Portuguese rows rather than nothing.
+contem "a language with no table of its own falls back to Portuguese" \
+       "edita imagem" "$(tabela_para hi)"
 
 section "language: a migrated file stays migrated"
 

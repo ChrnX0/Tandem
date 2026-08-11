@@ -48,6 +48,8 @@ LAYOUT = [
     ("usr/lib/tandem/verbos.tsv",  "lib/verbos.tsv",  0o644),
     ("usr/lib/tandem/limites.tsv", "lib/limites.tsv", 0o644),
     ("usr/lib/tandem/alternativas.tsv", "lib/alternativas.tsv", 0o644),
+    ("usr/lib/tandem/alternativas.en.tsv", "lib/alternativas.en.tsv", 0o644),
+    ("usr/lib/tandem/limites.en.tsv", "lib/limites.en.tsv", 0o644),
     ("usr/lib/tandem/idiomas/pt_BR.txt", "lib/idiomas/pt_BR.txt", 0o644),
     ("usr/lib/tandem/idiomas/en.txt", "lib/idiomas/en.txt", 0o644),
     ("usr/lib/tandem/idiomas/es.txt", "lib/idiomas/es.txt", 0o644),

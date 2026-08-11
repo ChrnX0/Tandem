@@ -936,6 +936,27 @@ t_pe_arch() {
 # The table is local and auditable, not an internet search: Tandem works
 # without a network and sends nothing anywhere. One new line is enough.
 
+# The data tables carry prose too, and it reaches the owner: the "what changes"
+# column of alternativas.tsv and the whole of limites.tsv are sentences, not
+# codes. So they get the same treatment as the message catalogues - a
+# per-language file, falling back to the Portuguese original when a translation
+# of that table does not exist yet.
+#
+# The fallback is what makes this safe to ship half-done: a Spanish machine
+# with no alternativas.es.tsv reads the Portuguese rows rather than reading
+# nothing, exactly as a missing catalogue key falls back to Portuguese.
+t_tabela_do_idioma() {
+    local base="$1" dir
+    dir="$(dirname -- "$base")"
+    local nome; nome="$(basename -- "$base" .tsv)"
+    if [ -n "${TANDEM_IDIOMA:-}" ] && [ "$TANDEM_IDIOMA" != "$TANDEM_IDIOMA_PADRAO" ] &&
+       [ -f "$dir/$nome.$TANDEM_IDIOMA.tsv" ]; then
+        printf '%s' "$dir/$nome.$TANDEM_IDIOMA.tsv"
+    else
+        printf '%s' "$base"
+    fi
+}
+
 TANDEM_ALTERNATIVAS="${TANDEM_ALTERNATIVAS:-${TANDEM_LIB:-/usr/lib/tandem}/alternativas.tsv}"
 
 # Looks up by name. Returns "class|name|how to install|what changes", one
@@ -944,7 +965,8 @@ t_alternativas_para() {
     local alvo padrao classe nome como muda
     alvo="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | tr -d ' _-')"
     [ -n "$alvo" ] || return 1
-    [ -f "$TANDEM_ALTERNATIVAS" ] || return 1
+    local tabela; tabela="$(t_tabela_do_idioma "$TANDEM_ALTERNATIVAS")"
+    [ -f "$tabela" ] || return 1
     local achou=1
     while IFS=$'\t' read -r padrao classe nome como muda; do
         case "$padrao" in ''|'#'*) continue ;; esac
@@ -953,7 +975,7 @@ t_alternativas_para() {
         case "$alvo" in
             $padrao) printf '%s|%s|%s|%s\n' "$classe" "$nome" "$como" "$muda"; achou=0 ;;
         esac
-    done < "$TANDEM_ALTERNATIVAS"
+    done < "$tabela"
     return $achou
 }
 
@@ -1244,7 +1266,7 @@ t_limite_sem_saida() {
 # The table lives in limites.tsv and grows without touching code.
 t_limite_do_programa() {
     local tabela dll padrao classe frase saida
-    tabela="${TANDEM_LIMITES:-${TANDEM_LIB:-/usr/lib/tandem}/limites.tsv}"
+    tabela="$(t_tabela_do_idioma "${TANDEM_LIMITES:-${TANDEM_LIB:-/usr/lib/tandem}/limites.tsv}")"
     [ -f "$tabela" ] || return 1
     local dlls; dlls="$(t_pe_dlls "$1")"
     [ -n "$dlls" ] || return 1

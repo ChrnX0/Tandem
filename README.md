@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-650-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-659-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
