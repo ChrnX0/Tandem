@@ -704,41 +704,59 @@ Read this before touching a message anywhere in the tree.
   shipping it without saying so is not. Getting those reviewed is the easiest
   contribution to ask for.
 
-### What is migrated, and what is not
+### The migration is finished
 
-Done end to end: `tandem-exe` (the whole run-detect-install-verify-retry
-loop), `tandem-script`, `tandem-snap`, `tandem-rpm`, `tandem-android`, plus
-the shared entry errors in all nine handlers and everything added in 4.1.
+`tools/conta-literais.py` reports **TOTAL 0** across `src/bin` and `src/lib`,
+and the suite asserts that number, so the next literal added anywhere fails a
+test. 404 keys in each of the seven catalogues.
 
-**239 messages are still Portuguese literals in the code**, counted with the
-regex below:
+**The counter is the interesting part of this, not the translation.** It was
+wrong SIX times, each time narrower than reality, and it never once failed
+safe - every version reported zero for something that was there:
 
-```
-src/bin/tandem      119   src/bin/tandem-flatpak  17
-src/bin/tandem-apk   28   src/lib/common.sh       16
-src/bin/tandem-jar   20   src/bin/tandem-appimage 13
-src/bin/tandem-deb   18   leftovers in the "done"  8
-```
+1. "no accented character left in the file" - accent-free Portuguese walked
+   straight through, and `tandem-snap` was declared done with
+   `Instalar "$NOME" a partir deste arquivo?` still in it.
+2. Only literals passed DIRECTLY to `t_erro` - assignments were invisible, and
+   four survived in files already called finished.
+3. Only UPPERCASE assignment names - `common.sh` reported ZERO while the
+   `t_texto_*` builders assembled into a lowercase `saida`.
+4. No `printf` at all - and `printf` is how those builders emit prose. ~150
+   lines that three successive versions scored as zero.
+5. `ALVOS` never opened `src/lib/winedeps.sh`, which holds the bitness dead end
+   and the suspicious-DLL verdict.
+6. A `printf` inside an `acao_*` command - 43 more sentences, including the
+   whole of `tandem enviar`.
 
-Suggested order: `tandem-deb` -> `apk` -> `jar` -> `flatpak` -> `appimage` ->
-`common.sh` -> the CLI last, because it is the biggest and the least used by
-somebody who only double-clicks.
+**The lesson, which is the reason this is written down:** a completeness check
+built from what happened to be in front of me will always pass. The measure only
+became trustworthy at the moment it caught something. If you add a message in a
+shape not listed above, the counter will happily report zero.
 
-**Do not use "no accented characters left" as the completeness check.** It is
-what this session used, and it declared `tandem-snap` finished while
-`Instalar "$NOME" a partir deste arquivo?` was still a literal - accent-free
-Portuguese walks straight through it. That one line is still there. Count call
-sites instead, and **turn this into a test** so the next migration cannot
-declare itself done by the same wrong measure:
+### What stays Portuguese on purpose
 
-```python
-re.compile(r't_(erro|aviso|ok|pergunta|texto|progresso_abre|progresso_texto)'
-           r'\s+"((?:[^"\\]|\\.)*)"', re.S)   # count matches NOT starting with $(t_msg
-```
+- **The values written into state files**: `abriu`, `confirmado`, `so-abriu`,
+  `reprovado`, `RESOLVERAM`, `CONFIANCA`, `alta`, `override`, `nativo`,
+  `parecido`. On-disk format, not prose. `tandem memoria` translates the field
+  LABELS and leaves the values alone. Translating one silently breaks memory
+  files and recipes already written on somebody's machine.
+- **The command names** (`preparar`, `programas`, `dados`...) and the sim/nao
+  arguments, so a command copied from a forum works on any machine.
+- `man/tandem.1`, the `Name`/`Comment` of the `.desktop` files, `LEIAME.md`
+  and `CONTRIBUINDO.md` - rule 3 above.
 
-Of the 8 leftovers, 6 are pass-throughs to `t_texto_*` functions whose text
-lives in `common.sh` and is counted there, 1 is a window title, and 1 is the
-real `tandem-snap` line above.
+### The data tables
+
+`alternativas.tsv` and `limites.tsv` carry prose in their columns and it reaches
+the owner. They now work like the catalogues: `alternativas.<lang>.tsv` beside
+the original, **and the original is the fallback** - a language with no table of
+its own reads the Portuguese rows rather than nothing.
+
+**English is written; es, fr, zh_CN, hi and ar are not.** That is the one place
+where a non-Portuguese reader still meets Portuguese: the framing is translated,
+the row content is not. 43 alternative rows and 37 impossibility rows each.
+There is a test that a translated table matches the original row for row - a
+pattern matching the wrong row would be worse than any wording.
 
 ## Next steps
 
@@ -749,11 +767,16 @@ for a reason.
 
 The queue, in order:
 
-0. **Finish the translation, and field-test 4.1 on the counter.** Both are
-   written up in the section above. The field half needs the owner's machine
-   and nothing else: `tandem portas` (32 phantom sockets collapsed into one
-   line), `tandem intalar` (must say "I do not know that command", not
-   "unrecognised file type"), and `tandem idioma`.
+0. **Field-test 4.1 on the counter.** The translation is done; this half needs
+   the owner's machine and nothing else: `tandem portas` (32 phantom sockets
+   collapsed into one line), `tandem intalar` (must say "I do not know that
+   command", not "unrecognised file type"), `tandem idioma`, and a double click
+   on a real `.xapk`, `.AppImage` and `.jar`.
+
+0b. **Five catalogues carry `REVISADO=nao`** and five data tables do not exist.
+   Both are asking-for-help work rather than engineering: the files are plain
+   text, the format cannot execute anything, and the fallback means a
+   half-finished contribution breaks nothing.
 
 1. **Fill the community list.** Half-solved in 3.9: the client side of automatic
    sending is built, tested against a real socket, and off by default. What is
