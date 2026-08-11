@@ -906,3 +906,60 @@ chmod +x "{1}"
 
 @appimage_fechou_com_erro
 {1} गड़बड़ी के साथ बंद हो गया (कोड {2})।
+
+@instalando_generico
+इंस्टॉल हो रहा है…
+
+@pronto_procure_no_menu
+हो गया। एप्लिकेशन मेन्यू में यह खोजिए:
+
+{1}
+
+@abriu_e_fechou_sozinho
+प्रोग्राम {1} सेकंड में अपने आप खुला और बंद हो गया, इस्तेमाल करने का मौका ही
+नहीं मिला।
+
+@funcionou_como_esperava
+प्रोग्राम वैसा ही चला जैसा आपने सोचा था?
+
+अगर कुछ गड़बड़ हुआ — खाली स्क्रीन, टूटे अक्षर, खाली रिपोर्ट — तो "नहीं"
+कहिए। Tandem इसे याद रखेगा और दूसरों को यह रास्ता सुझाना बंद कर देगा।
+
+@anotado_nao_exporto
+नोट कर लिया। मैं इस रास्ते को सफल बताकर बाहर नहीं भेजूँगा।
+
+@waydroid_falta_pergunta
+इस मशीन पर Android (Waydroid) इंस्टॉल नहीं है।
+
+क्या मैं अभी इंस्टॉल कर दूँ? करीब 1 GB डाउनलोड होगा और आपका पासवर्ड चाहिए।
+
+@waydroid_instalando
+Android इंस्टॉल हो रहा है। इसमें समय लगेगा — कंप्यूटर बंद न कीजिए।
+
+@waydroid_falta_erro
+इस मशीन पर Android (Waydroid) इंस्टॉल नहीं है।
+
+Tandem को सब इंस्टॉल करने दीजिए:  tandem preparar
+
+@waydroid_ligando
+Android चालू हो रहा है…
+
+@waydroid_nao_ligou
+मैं Android चालू नहीं कर सका।
+
+@waydroid_iniciando_sessao
+Android सत्र शुरू हो रहा है…
+
+@waydroid_sem_init
+इस मशीन पर Android कभी सेट नहीं किया गया।
+
+एक बार यह चलाइए:  sudo waydroid init
+
+@waydroid_nao_iniciou
+Android शुरू नहीं हुआ। कंप्यूटर दोबारा चालू कर के फिर कोशिश कीजिए।
+
+@waydroid_aguardando
+Android का शुरू होना पूरा होने का इंतज़ार…
+
+@waydroid_nao_ficou_pronto
+Android शुरू हुआ, पर समय पर तैयार नहीं हो पाया।

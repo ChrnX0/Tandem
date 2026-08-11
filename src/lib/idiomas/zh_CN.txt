@@ -878,3 +878,59 @@ chmod +x "{1}"
 
 @appimage_fechou_com_erro
 {1} 出错退出了（代码 {2}）。
+
+@instalando_generico
+正在安装……
+
+@pronto_procure_no_menu
+好了。请到应用程序菜单里找：
+
+{1}
+
+@abriu_e_fechou_sozinho
+程序自己在 {1} 秒内开了又关，根本没来得及用。
+
+@funcionou_como_esperava
+程序的表现和您预想的一样吗？
+
+如果有什么不对 —— 白屏、重音符号乱码、报表是空的 —— 请回答“否”。
+Tandem 会把这件事记下来，不再向别人推荐这条路。
+
+@anotado_nao_exporto
+记下了。我不会把这条路当成成功的经验发出去。
+
+@waydroid_falta_pergunta
+这台机器上没有安装 Android（Waydroid）。
+
+现在安装吗？大约要下载 1 GB，并且需要您的密码。
+
+@waydroid_instalando
+正在安装 Android。会比较久 —— 请不要关机。
+
+@waydroid_falta_erro
+这台机器上没有安装 Android（Waydroid）。
+
+让 Tandem 一次装好：  tandem preparar
+
+@waydroid_ligando
+正在启动 Android……
+
+@waydroid_nao_ligou
+我没能启动 Android。
+
+@waydroid_iniciando_sessao
+正在启动 Android 会话……
+
+@waydroid_sem_init
+这台机器上从来没有配置过 Android。
+
+执行一次：  sudo waydroid init
+
+@waydroid_nao_iniciou
+Android 没有启动起来。请重启电脑后再试。
+
+@waydroid_aguardando
+正在等 Android 启动完成……
+
+@waydroid_nao_ficou_pronto
+Android 起来了，但没能及时准备好。

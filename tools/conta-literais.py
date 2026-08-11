@@ -41,9 +41,16 @@ CHAMADA = re.compile(
 # are invisible to the pattern above, and four of them survived a file that had
 # just been declared finished - the same class of miss as the accent grep, one
 # level of indirection further out.
+#
+# Then it happened a THIRD time. common.sh reported zero while 149 lines of
+# Portuguese sat in the t_texto_* builders, because those assemble into a
+# lowercase "saida" rather than into one of the names above. Every time this
+# measure has been narrowed to what was in front of me, it has declared
+# something finished that was not.
 ATRIBUICAO = re.compile(
-    r"\b(?:PORQUE|QUAL|PERGUNTA|ACAO|RESSALVA|ORIGEM_LICAO|MOTIVO|AVISO)"
-    r'=\s*"((?:[^"\\]|\\.)*)"',
+    r"\b(?:PORQUE|QUAL|PERGUNTA|ACAO|RESSALVA|ORIGEM_LICAO|MOTIVO|AVISO"
+    r"|saida|texto|aviso|motivo)"
+    r'\+?=\s*"((?:[^"\\]|\\.)*)"',
     re.S,
 )
 VARIAVEL = re.compile(r"\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*")
@@ -93,11 +100,52 @@ def e_literal(argumento):
     return bool(LETRA.search(resto))
 
 
+# And a FOURTH shape, the largest of them. The t_texto_* and t_causa_* helpers
+# in common.sh do not assign or pass anything: they printf their prose straight
+# out, in single quotes, one line per printf. That is roughly 150 lines of
+# Portuguese that three successive versions of this counter reported as zero.
+#
+# Only these builders are scanned this way. printf is the workhorse of the
+# whole codebase - alignment, log lines, pure format strings - and treating
+# every one of them as a message would drown the real ones.
+FUNCAO_MENSAGEM = re.compile(r"^(t_(?:texto|causa)_[a-z_0-9]+)\(\)\s*\{", re.M)
+PRINTF = re.compile(r"printf\s+(?:--\s+)?'((?:[^'\\]|\\.)*)'")
+FORMATO = re.compile(r"%[-+ #0-9.]*[a-zA-Z]|\\[nt]")
+
+
+def corpos_de_mensagem(texto):
+    """Each t_texto_*/t_causa_* body, found by counting braces."""
+    for m in FUNCAO_MENSAGEM.finditer(texto):
+        i = texto.index("{", m.start())
+        profundidade = 0
+        for j in range(i, len(texto)):
+            if texto[j] == "{":
+                profundidade += 1
+            elif texto[j] == "}":
+                profundidade -= 1
+                if profundidade == 0:
+                    yield m.group(1), texto[i:j]
+                    break
+
+
+def printfs_com_prosa(texto):
+    achados = []
+    for _nome, corpo in corpos_de_mensagem(texto):
+        for m in PRINTF.finditer(corpo):
+            resto = FORMATO.sub("", m.group(1))
+            # Three letters in a row is a word. One or two are a unit, an
+            # initial, or the tail of an escape.
+            if re.search(r"[^\W\d_]{3,}", resto, re.UNICODE):
+                achados.append(m.group(1))
+    return achados
+
+
 def literais(caminho):
     texto = caminho.read_text(encoding="utf-8")
     achados = [m.group(1) for m in CHAMADA.finditer(texto)]
     achados += [m.group(1) for m in ATRIBUICAO.finditer(texto)]
-    return [a for a in achados if e_literal(a)]
+    achados = [a for a in achados if e_literal(a)]
+    return achados + printfs_com_prosa(texto)
 
 
 def main():

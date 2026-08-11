@@ -922,3 +922,60 @@ folder and open it from there.
 
 @appimage_fechou_com_erro
 {1} closed with an error (code {2}).
+
+@instalando_generico
+Installing...
+
+@pronto_procure_no_menu
+Done. Look in the applications menu for:
+
+{1}
+
+@abriu_e_fechou_sozinho
+The program opened and closed on its own in {1} second(s), with no time to use it.
+
+@funcionou_como_esperava
+Did the program work the way you expected?
+
+If anything came out wrong - a blank screen, broken accents, an empty report -
+answer No. Tandem keeps that and stops recommending this route to other
+people.
+
+@anotado_nao_exporto
+Noted. I will not export this route as though it had worked.
+
+@waydroid_falta_pergunta
+Android (Waydroid) is not installed on this machine.
+
+May I install it now? It downloads about 1 GB and needs your password.
+
+@waydroid_instalando
+Installing Android. This will take a while - do not switch the computer off.
+
+@waydroid_falta_erro
+Android (Waydroid) is not installed on this machine.
+
+Let Tandem install everything:  tandem preparar
+
+@waydroid_ligando
+Starting Android up...
+
+@waydroid_nao_ligou
+I could not start Android.
+
+@waydroid_iniciando_sessao
+Starting the Android session...
+
+@waydroid_sem_init
+Android has never been set up on this machine.
+
+Run this once:  sudo waydroid init
+
+@waydroid_nao_iniciou
+Android did not start. Restart the computer and try again.
+
+@waydroid_aguardando
+Waiting for Android to finish starting...
+
+@waydroid_nao_ficou_pronto
+Android started but was not ready in time.

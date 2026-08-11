@@ -918,3 +918,60 @@ pessoal e abra de lá.
 
 @appimage_fechou_com_erro
 {1} fechou com erro (código {2}).
+
+@instalando_generico
+Instalando...
+
+@pronto_procure_no_menu
+Pronto. Procure no menu de aplicativos por:
+
+{1}
+
+@abriu_e_fechou_sozinho
+O programa abriu e fechou sozinho em {1} segundo(s), sem dar tempo de usar.
+
+@funcionou_como_esperava
+O programa funcionou como você esperava?
+
+Se alguma coisa saiu errada - tela em branco, acento quebrado, relatório
+vazio - responda Não. O Tandem guarda isso e para de recomendar este
+caminho para outras pessoas.
+
+@anotado_nao_exporto
+Anotado. Não vou exportar este caminho como se tivesse dado certo.
+
+@waydroid_falta_pergunta
+O Android (Waydroid) não está instalado nesta máquina.
+
+Posso instalar agora? Baixa cerca de 1 GB e precisa da sua senha.
+
+@waydroid_instalando
+Instalando o Android. Vai demorar - não desligue o computador.
+
+@waydroid_falta_erro
+O Android (Waydroid) não está instalado nesta máquina.
+
+Deixe o Tandem instalar tudo:  tandem preparar
+
+@waydroid_ligando
+Ligando o Android...
+
+@waydroid_nao_ligou
+Não consegui ligar o Android.
+
+@waydroid_iniciando_sessao
+Iniciando a sessão Android...
+
+@waydroid_sem_init
+O Android nunca foi configurado nesta máquina.
+
+Execute uma vez:  sudo waydroid init
+
+@waydroid_nao_iniciou
+O Android não iniciou. Reinicie o computador e tente de novo.
+
+@waydroid_aguardando
+Aguardando o Android terminar de iniciar...
+
+@waydroid_nao_ficou_pronto
+O Android iniciou mas não ficou pronto a tempo.

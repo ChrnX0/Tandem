@@ -922,3 +922,62 @@ dossier personnel et ouvrez-le de là.
 
 @appimage_fechou_com_erro
 {1} s'est fermé sur une erreur (code {2}).
+
+@instalando_generico
+Installation...
+
+@pronto_procure_no_menu
+C'est fait. Cherchez dans le menu des applications :
+
+{1}
+
+@abriu_e_fechou_sozinho
+Le programme s'est ouvert et refermé tout seul en {1} seconde(s), sans laisser
+le temps de s'en servir.
+
+@funcionou_como_esperava
+Le programme a-t-il fonctionné comme vous l'attendiez ?
+
+Si quelque chose s'est mal passé - écran blanc, accents cassés, rapport vide -
+répondez Non. Tandem l'enregistre et arrête de recommander cette voie à
+d'autres personnes.
+
+@anotado_nao_exporto
+Noté. Je n'exporterai pas cette voie comme si elle avait fonctionné.
+
+@waydroid_falta_pergunta
+Android (Waydroid) n'est pas installé sur cette machine.
+
+Je l'installe maintenant ? Il télécharge environ 1 Go et il faut votre mot de
+passe.
+
+@waydroid_instalando
+Installation d'Android. Cela va prendre du temps - n'éteignez pas l'ordinateur.
+
+@waydroid_falta_erro
+Android (Waydroid) n'est pas installé sur cette machine.
+
+Laissez Tandem tout installer :  tandem preparar
+
+@waydroid_ligando
+Démarrage d'Android...
+
+@waydroid_nao_ligou
+Je n'ai pas pu démarrer Android.
+
+@waydroid_iniciando_sessao
+Démarrage de la session Android...
+
+@waydroid_sem_init
+Android n'a jamais été configuré sur cette machine.
+
+Lancez une fois :  sudo waydroid init
+
+@waydroid_nao_iniciou
+Android n'a pas démarré. Redémarrez l'ordinateur et réessayez.
+
+@waydroid_aguardando
+Attente de la fin du démarrage d'Android...
+
+@waydroid_nao_ficou_pronto
+Android a démarré mais n'a pas été prêt à temps.

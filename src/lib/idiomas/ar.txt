@@ -891,3 +891,59 @@ chmod +x "{1}"
 
 @appimage_fechou_com_erro
 أُغلق {1} بخطأ (الرمز {2}).
+
+@instalando_generico
+جارٍ التثبيت…
+
+@pronto_procure_no_menu
+تمّ. ابحث في قائمة التطبيقات عن:
+
+{1}
+
+@abriu_e_fechou_sozinho
+فُتح البرنامج وأُغلق من تلقاء نفسه في {1} ثانية، دون أن يتيح وقتًا لاستخدامه.
+
+@funcionou_como_esperava
+هل عمل البرنامج كما توقّعت؟
+
+إن كان شيء قد سار على غير ما ينبغي — شاشة فارغة، حروف مشوّهة، تقرير خالٍ —
+فأجب بلا. يحفظ Tandem ذلك ويتوقّف عن التوصية بهذا الطريق للآخرين.
+
+@anotado_nao_exporto
+سُجّل. لن أُصدّر هذا الطريق كأنه نجح.
+
+@waydroid_falta_pergunta
+Android (Waydroid) غير مثبَّت على هذا الجهاز.
+
+هل أُثبّته الآن؟ سيُنزّل نحو ١ غيغابايت ويحتاج إلى كلمة مرورك.
+
+@waydroid_instalando
+جارٍ تثبيت Android. سيطول الأمر — لا تُطفئ الحاسوب.
+
+@waydroid_falta_erro
+Android (Waydroid) غير مثبَّت على هذا الجهاز.
+
+دع Tandem يثبّت كل شيء:  tandem preparar
+
+@waydroid_ligando
+جارٍ تشغيل Android…
+
+@waydroid_nao_ligou
+لم أتمكّن من تشغيل Android.
+
+@waydroid_iniciando_sessao
+جارٍ بدء جلسة Android…
+
+@waydroid_sem_init
+لم يُهيَّأ Android على هذا الجهاز قط.
+
+نفِّذ مرّة واحدة:  sudo waydroid init
+
+@waydroid_nao_iniciou
+لم يبدأ Android. أعد تشغيل الحاسوب وحاول مرّة أخرى.
+
+@waydroid_aguardando
+في انتظار انتهاء بدء تشغيل Android…
+
+@waydroid_nao_ficou_pronto
+بدأ Android لكنه لم يصبح جاهزًا في الوقت المناسب.

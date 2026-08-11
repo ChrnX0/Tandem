@@ -440,7 +440,7 @@ t_texto() {
 }
 
 # Indeterminate progress bar. Usage:
-#   t_progresso_abre "Instalando..." ; ... ; t_progresso_fecha
+#   t_progresso_abre "$(t_msg instalando_generico)" ; ... ; t_progresso_fecha
 t_progresso_abre() {
     t_tem_gui || return 0
     command -v zenity >/dev/null 2>&1 || return 0
@@ -789,9 +789,7 @@ t_anuncia_atalhos() {
         update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
     nomes="$(printf '%s\n' "$novos" | sed 's|.*/||; s|\.desktop$||' | sed 's/^/• /')"
     t_diz "atalhos novos: $(printf '%s' "$novos" | tr '\n' ' ')"
-    t_ok "Pronto. Procure no menu de aplicativos por:
-
-$nomes"
+    t_ok "$(t_msg pronto_procure_no_menu "$nomes")"
     return 0
 }
 
@@ -1462,16 +1460,12 @@ t_confirma_funcionou() {
         # itself before anybody could use it. Saying "it opened!" would be a
         # lie.
         t_memoria_grava "$prog" RESULTADO "fechou sozinho"
-        t_aviso "O programa abriu e fechou sozinho em $durou segundo(s), sem dar tempo de usar."
+        t_aviso "$(t_msg abriu_e_fechou_sozinho "$durou")"
     fi
 
     t_tem_gui || return 0
     command -v zenity >/dev/null 2>&1 || return 0
-    if t_pergunta "O programa funcionou como você esperava?
-
-Se alguma coisa saiu errada - tela em branco, acento quebrado, relatório
-vazio - responda Não. O Tandem guarda isso e para de recomendar este
-caminho para outras pessoas." "Sim, funcionou" "Não, algo saiu errado"; then
+    if t_pergunta "$(t_msg funcionou_como_esperava)" "Sim, funcionou" "Não, algo saiu errado"; then
         t_memoria_grava "$prog" CONFIRMADO sim
         t_diz "o dono confirmou que funcionou"
         # The only moment in the whole program where a lesson is worth anything
@@ -1482,7 +1476,7 @@ caminho para outras pessoas." "Sim, funcionou" "Não, algo saiu errado"; then
     else
         t_memoria_grava "$prog" CONFIRMADO nao
         t_diz "o dono disse que NAO funcionou direito"
-        t_aviso "Anotado. Não vou exportar este caminho como se tivesse dado certo."
+        t_aviso "$(t_msg anotado_nao_exporto)"
     fi
     return 0
 }
@@ -2349,16 +2343,12 @@ t_wd_tem_arm() {
 t_wd_garantir() {
     local estado
     if ! command -v waydroid >/dev/null 2>&1; then
-        if t_pergunta "O Android (Waydroid) não está instalado nesta máquina.
-
-Posso instalar agora? Baixa cerca de 1 GB e precisa da sua senha." "Instalar" "Agora não"; then
-            t_progresso_texto "Instalando o Android. Vai demorar - não desligue o computador."
+        if t_pergunta "$(t_msg waydroid_falta_pergunta)" "Instalar" "Agora não"; then
+            t_progresso_texto "$(t_msg waydroid_instalando)"
             t_como_root "$(t_script_instalacao waydroid)" >>"${LOG:-/dev/null}" 2>&1
         fi
         command -v waydroid >/dev/null 2>&1 || {
-            t_erro "O Android (Waydroid) não está instalado nesta máquina.
-
-Deixe o Tandem instalar tudo:  tandem preparar"
+            t_erro "$(t_msg waydroid_falta_erro)"
             return 1; }
     fi
 
@@ -2369,10 +2359,10 @@ Deixe o Tandem instalar tudo:  tandem preparar"
             sleep 2
         done
     elif [ "$estado" != "active" ]; then
-        t_progresso_texto "Ligando o Android..."
+        t_progresso_texto "$(t_msg waydroid_ligando)"
         systemctl start waydroid-container >>"${LOG:-/dev/null}" 2>&1 ||
         pkexec systemctl start waydroid-container >>"${LOG:-/dev/null}" 2>&1 || {
-            t_erro "Não consegui ligar o Android."; return 1; }
+            t_erro "$(t_msg waydroid_nao_ligou)"; return 1; }
     fi
     for _ in $(seq 1 30); do
         [ "$(systemctl is-active waydroid-container 2>/dev/null)" = "active" ] && break
@@ -2385,26 +2375,24 @@ Deixe o Tandem instalar tudo:  tandem preparar"
         for _ in $(seq 1 10); do t_wd_sessao_ok && break; sleep 2; done
     fi
     if ! t_wd_sessao_ok; then
-        t_progresso_texto "Iniciando a sessão Android..."
+        t_progresso_texto "$(t_msg waydroid_iniciando_sessao)"
         setsid waydroid session start >>"${LOG:-/dev/null}" 2>&1 &
         for _ in $(seq 1 40); do t_wd_sessao_ok && break; sleep 2; done
     fi
     if ! t_wd_sessao_ok; then
         if grep -qi 'not initialized' "${LOG:-/dev/null}" 2>/dev/null; then
-            t_erro "O Android nunca foi configurado nesta máquina.
-
-Execute uma vez:  sudo waydroid init"
+            t_erro "$(t_msg waydroid_sem_init)"
         else
-            t_erro "O Android não iniciou. Reinicie o computador e tente de novo."
+            t_erro "$(t_msg waydroid_nao_iniciou)"
         fi
         return 1
     fi
 
     if ! t_wd_pronto; then
-        t_progresso_texto "Aguardando o Android terminar de iniciar..."
+        t_progresso_texto "$(t_msg waydroid_aguardando)"
         for _ in $(seq 1 90); do t_wd_pronto && break; sleep 2; done
     fi
-    t_wd_pronto || { t_erro "O Android iniciou mas não ficou pronto a tempo."; return 1; }
+    t_wd_pronto || { t_erro "$(t_msg waydroid_nao_ficou_pronto)"; return 1; }
     return 0
 }
 
