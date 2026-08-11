@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3484173973 760" "$soma_esperados"
+      "495806570 762" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
       "2310912825 1467" "$soma_padroes"
 
@@ -1407,6 +1407,10 @@ section "language: a migrated file stays migrated"
 # clean when every letter a person reads comes out of a t_msg lookup.
 
 if [ -f "$ROOT/tools/conta-literais.py" ]; then
+    # Every file is on the migrated list now, so this is the whole-tree check:
+    # not one user-facing sentence is left as a literal in the code.
+    total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
+    equal "no Portuguese literal is left anywhere in the code" "0" "$total_lit"
     saida_lit="$(cd "$ROOT" && python3 tools/conta-literais.py --migrados 2>&1)"
     if [ -z "$saida_lit" ]; then
         pass "no file declared migrated has a Portuguese literal left"

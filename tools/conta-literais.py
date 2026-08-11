@@ -32,7 +32,7 @@ ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + sorted(RAIZ.glob("src/lib/*.sh"))
 # declaring it done, and --migrados then refuses to let it slip back.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
-    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak", "tandem-jar", "tandem-appimage", "winedeps.sh", "common.sh",
+    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak", "tandem-jar", "tandem-appimage", "winedeps.sh", "common.sh", "tandem",
 }
 
 CHAMADA = re.compile(
@@ -118,9 +118,16 @@ def e_literal(argumento):
 # Only these builders are scanned this way. printf is the workhorse of the
 # whole codebase - alignment, log lines, pure format strings - and treating
 # every one of them as a message would drown the real ones.
-FUNCAO_MENSAGEM = re.compile(r"^(t_(?:texto|causa)_[a-z_0-9]+)\(\)\s*\{", re.M)
+# Sixth: a printf inside an acao_* command was invisible too, because this was
+# scoped to the t_texto_* helpers alone. acao_alternativas printed its heading
+# that way and it survived a file reported as finished.
+FUNCAO_MENSAGEM = re.compile(
+    r"^((?:t_(?:texto|causa)_|acao_)[a-z_0-9]+|uso)\(\)\s*\{", re.M)
 PRINTF = re.compile(r"printf\s+(?:--\s+)?'((?:[^'\\]|\\.)*)'")
 FORMATO = re.compile(r"%[-+ #0-9.]*[a-zA-Z]|\\[nt]")
+# An octal escape means binary, not prose. The ELF magic the self-test writes to
+# build a fake executable spells "ELF" in the middle of it.
+BINARIO = re.compile(r"\\[0-7]{3}")
 
 
 def corpos_de_mensagem(texto):
@@ -142,6 +149,8 @@ def printfs_com_prosa(texto):
     achados = []
     for _nome, corpo in corpos_de_mensagem(texto):
         for m in PRINTF.finditer(corpo):
+            if BINARIO.search(m.group(1)):
+                continue
             resto = FORMATO.sub("", m.group(1))
             # Three letters in a row is a word. One or two are a unit, an
             # initial, or the tail of an escape.

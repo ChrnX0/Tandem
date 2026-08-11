@@ -1608,3 +1608,332 @@ Use:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agor
 
 @env_titulo
 Tandem - Enviar para a lista
+
+@doctor_titulo
+Tandem - Diagnóstico
+
+@dados_nao_conheco
+Não conheço "tandem dados {1}".
+
+Use:  tandem dados | tandem dados salvar | tandem dados restaurar
+
+@sem_ambiente_windows
+Ainda não há um ambiente Windows aqui.
+
+@dados_titulo
+Tandem - Seus arquivos
+
+@dados_nada_para_copiar
+Não há arquivos seus para copiar ainda.
+
+@dados_copiando
+Copiando os seus arquivos ({1})...
+
+@dados_copiados
+Seus arquivos foram copiados para:
+
+{1}
+
+Este arquivo é seu. Guarde num pendrive ou mande para você mesmo por
+e-mail: com ele, seus dados voltam em qualquer computador.
+
+@dados_nao_copiou
+Não consegui copiar os seus arquivos.
+
+@dados_sem_copia
+Não encontrei nenhuma cópia dos seus arquivos.
+
+Se você tem o arquivo, diga onde ele está:
+tandem dados restaurar /caminho/da/copia.tar.gz
+
+@dados_sem_ambiente_devolver
+Ainda não há um ambiente Windows para devolver os arquivos.
+
+@dados_devolver_pergunta
+Devolver os seus arquivos a partir de:
+
+{1}
+
+Nada do que já existe será apagado - só entram os arquivos que faltam.
+
+@dados_devolvendo
+Devolvendo os seus arquivos...
+
+@dados_devolvidos
+Seus arquivos foram devolvidos.
+
+@dados_nao_devolveu
+Não consegui devolver os arquivos.
+
+@bkp_sem_ambiente
+Não há ambiente Windows para salvar ainda.
+
+@bkp_salvando
+Salvando o ambiente Windows. Pode demorar.
+
+@bkp_salvo
+Backup salvo em:
+{1}
+
+Isto é o ambiente INTEIRO. Os seus arquivos são {2}
+desse total - para levar só eles, que é rápido e cabe num e-mail:
+tandem dados salvar
+
+@bkp_nao_salvou
+Não consegui salvar o backup.
+
+@rst_nenhum_backup
+Nenhum backup encontrado na sua pasta pessoal.
+
+@rst_pergunta
+Restaurar o ambiente Windows a partir de:
+
+{1}
+
+O ambiente atual será substituído. Se algum programa daqui foi ativado com
+licença amarrada a este computador, ele volta a ser o de quando a cópia foi
+feita — e pode pedir ativação de novo.
+
+@rst_copia_guardada
+Guardei uma cópia dos seus arquivos em:
+{1}
+
+@rst_mesmo_assim
+Restaurar mesmo assim?
+
+@rst_restaurando
+Restaurando...
+
+@rst_restaurado
+Ambiente restaurado.
+
+@rst_nao_restaurou
+Não consegui restaurar.
+
+@prot_caminho_invalido
+Caminho inválido.
+
+@prot_nao_gravou
+Não consegui gravar a lista de perfis protegidos.
+
+@prot_protegido
+Perfil protegido:
+{1}
+
+O Tandem nunca vai instalar nem alterar nada aí dentro.
+
+@prog_nenhum
+Nenhum programa instalado pelo Tandem por enquanto.
+
+Programas do Windows que não criam atalho no Menu Iniciar não aparecem aqui.
+
+@prog_nao_achei
+Não achei nenhum programa com "{1}" no nome.
+
+@alt_diga_o_nome
+Diga o nome do programa.
+
+Exemplo:  tandem alternativas photoshop
+
+@alt_titulo
+Tandem - Alternativas para {1}
+
+@alt_nao_conheco
+Não conheço alternativa de Linux para "{1}".
+
+Isso não quer dizer que não exista — quer dizer que ainda não está na minha lista.
+Se você encontrar uma, ela pode ser acrescentada em uma linha.
+
+@mem_nada_aprendido
+O Tandem ainda não aprendeu nada.
+
+A memória se forma sozinha conforme você usa os programas.
+
+@mem_nao_achei
+Não achei nada aprendido sobre "{1}".
+
+@mem_titulo
+Tandem - O que eu aprendi
+
+@esq_diga_o_nome
+Diga o nome do programa a esquecer.
+
+@esq_esqueci
+Esqueci o que sabia sobre {1} programa(s). Da próxima vez ele descobre de novo.
+
+@id_titulo_janela
+Tandem - identidade da máquina
+
+@logs_nenhum
+Ainda não há registros.
+
+@soc_pronto
+Relatório pronto:
+
+{1}
+
+Mande este arquivo para quem estiver ajudando você. Ele tem tudo o que
+essa pessoa vai perguntar - não precisa digitar nenhum comando.
+
+Antes de mandar, dê uma olhada: ele mostra nomes e caminhos de arquivos
+que estão nesta máquina.
+
+@soc_nao_gerou
+Não consegui gerar o relatório.
+
+@mem_campo_resultado
+resultado:  
+
+@mem_campo_arquitetura
+arquitetura: 
+
+@mem_campo_resolveram
+resolveram: 
+
+@mem_campo_nao_resolveram
+não resolveram: 
+
+@mem_campo_segundos
+levou (s): 
+
+@mem_campo_visto_em
+visto em:   
+
+@mem_campo_limite
+limite:     
+
+@idioma_titulo_janela
+Tandem - idioma
+
+@botao_devolver
+Devolver
+
+@botao_restaurar
+Restaurar
+
+@botao_restaurar_assim_mesmo
+Restaurar assim mesmo
+
+@botao_parar
+Parar
+
+@auto_progresso_titulo
+autoteste
+
+@prog_instalados_titulo
+Programas instalados pelo Tandem:
+
+@prog_para_abrir
+Para abrir um deles:  tandem programas "<parte do nome>"
+
+@desinst_podem_ser_removidos
+Programas do Windows que podem ser removidos:
+
+@desinst_para_remover
+Para remover:  tandem desinstalar "<parte do nome>"
+
+@desinst_terminal
+Remover "%s"? Os arquivos dele serão apagados. [s/N] 
+
+@alt_cabecalho
+Programas de Linux que fazem o trabalho de "{1}":
+
+@auto_cabecalho
+Tandem {1} — autoteste nesta máquina
+
+@auto_resumo
+{1} passaram, {2} falharam.
+
+@auto_falha_importa
+Cada FALHA acima é uma coisa que não vai funcionar quando você precisar.
+
+@auto_tudo_respondeu
+O Tandem exercitou o que dava para exercitar aqui, e tudo respondeu.
+
+@env_cabecalho
+Mandar o que o Tandem aprende para a lista da comunidade
+
+@env_agora_ligado
+Agora está: LIGADO   (desde {1})
+
+@env_agora_desligado
+Agora está: DESLIGADO   (você escolheu em {1})
+
+@env_ninguem_decidiu
+Agora está: DESLIGADO   (ninguém decidiu ainda)
+
+@env_fila
+Linhas guardadas na fila: {1}
+
+@env_endereco
+Endereço de envio: {1}
+
+@env_endereco_nao_existe
+Endereço de envio: NÃO EXISTE nesta versão.
+  As linhas ficam na fila e vão junto quando existir um. Enquanto isso,
+  nada sai desta máquina - nem se estiver ligado.
+
+@env_o_que_sai
+O que sai, quando sai: uma linha de oito pedaços por programa, e só depois
+que VOCÊ confirmar que o programa funcionou. Veja a linha de um programa
+com:  tandem contribuir <arquivo>
+
+@env_nunca_sai
+O que nunca sai: nome de arquivo, pasta, seu nome de usuário, o nome do
+computador, endereço de rede, nem uma linha de registro. O filtro que
+garante isso roda duas vezes: quando a linha é montada e outra vez na hora
+de mandar.
+
+@env_ligar
+Ligar:     tandem enviar sim
+
+@env_desligar
+Desligar:  tandem enviar nao
+
+@env_ver_fila
+Ver a fila inteira:  cat {1}
+
+@soc_cabecalho
+RELATÓRIO DO TANDEM
+
+@soc_gerado_em
+Gerado em {1}
+
+@soc_o_que_tem
+O que tem aqui dentro: a versão do Tandem, o que está instalado
+nesta máquina, os últimos registros técnicos e o que o Tandem
+aprendeu sobre os programas. Os registros mostram CAMINHOS DE
+ARQUIVO seus. Dê uma olhada antes de mandar para alguém.
+
+@soc_sec_diagnostico
+DIAGNÓSTICO
+
+@soc_sec_autoteste
+AUTOTESTE
+
+@soc_sec_suspeitas
+TRADUÇÕES SUSPEITAS
+
+@soc_sec_aprendi
+O QUE APRENDI
+
+@soc_sec_registros
+REGISTROS TÉCNICOS
+
+@soc_nenhuma
+(nenhuma)
+
+@soc_ultimas_linhas
+--- {1} (últimas 200 linhas) ---
+
+@prep_terminal
+O Tandem pode instalar o que está faltando:
+%s
+
+Precisa de internet e da sua senha. Continuar? [s/N] 
+
+@cancelado
+Cancelado.
+
+@botao_instalar_tudo
+Instalar tudo

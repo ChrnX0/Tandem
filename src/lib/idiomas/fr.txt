@@ -1638,3 +1638,338 @@ Utilisez :  tandem enviar | tandem enviar sim | tandem enviar nao | tandem envia
 
 @env_titulo
 Tandem - Envoyer à la liste
+
+@doctor_titulo
+Tandem - Diagnostic
+
+@dados_nao_conheco
+Je ne connais pas « tandem dados {1} ».
+
+Utilisez :  tandem dados | tandem dados salvar | tandem dados restaurar
+
+@sem_ambiente_windows
+Il n'y a pas encore d'environnement Windows ici.
+
+@dados_titulo
+Tandem - Vos fichiers
+
+@dados_nada_para_copiar
+Il n'y a pas encore de fichiers à vous à copier.
+
+@dados_copiando
+Copie de vos fichiers ({1})...
+
+@dados_copiados
+Vos fichiers ont été copiés vers :
+
+{1}
+
+Ce fichier est à vous. Gardez-le sur une clé USB ou envoyez-le-vous par
+courriel : avec lui, vos données reviennent sur n'importe quel ordinateur.
+
+@dados_nao_copiou
+Je n'ai pas pu copier vos fichiers.
+
+@dados_sem_copia
+Je n'ai trouvé aucune copie de vos fichiers.
+
+Si vous avez le fichier, indiquez où il est :
+tandem dados restaurar /chemin/de/la/copie.tar.gz
+
+@dados_sem_ambiente_devolver
+Il n'y a pas encore d'environnement Windows où remettre les fichiers.
+
+@dados_devolver_pergunta
+Remettre vos fichiers à partir de :
+
+{1}
+
+Rien de ce qui existe déjà ne sera supprimé - seuls les fichiers manquants
+entrent.
+
+@dados_devolvendo
+Remise en place de vos fichiers...
+
+@dados_devolvidos
+Vos fichiers ont été remis en place.
+
+@dados_nao_devolveu
+Je n'ai pas pu remettre les fichiers.
+
+@bkp_sem_ambiente
+Il n'y a pas encore d'environnement Windows à sauvegarder.
+
+@bkp_salvando
+Sauvegarde de l'environnement Windows. Cela peut prendre du temps.
+
+@bkp_salvo
+Sauvegarde enregistrée dans :
+{1}
+
+Ceci est l'environnement ENTIER. Vos propres fichiers représentent {2} de ce
+total - pour n'emporter que ceux-là, ce qui est rapide et tient dans un
+courriel :
+tandem dados salvar
+
+@bkp_nao_salvou
+Je n'ai pas pu enregistrer la sauvegarde.
+
+@rst_nenhum_backup
+Aucune sauvegarde trouvée dans votre dossier personnel.
+
+@rst_pergunta
+Restaurer l'environnement Windows à partir de :
+
+{1}
+
+L'environnement actuel sera remplacé. Si un programme d'ici a été activé avec
+une licence liée à cet ordinateur, il redevient celui du moment où la copie a
+été faite — et pourra redemander une activation.
+
+@rst_copia_guardada
+J'ai gardé une copie de vos fichiers dans :
+{1}
+
+@rst_mesmo_assim
+Restaurer quand même ?
+
+@rst_restaurando
+Restauration...
+
+@rst_restaurado
+Environnement restauré.
+
+@rst_nao_restaurou
+Je n'ai pas pu restaurer.
+
+@prot_caminho_invalido
+Chemin non valide.
+
+@prot_nao_gravou
+Je n'ai pas pu écrire la liste des profils protégés.
+
+@prot_protegido
+Profil protégé :
+{1}
+
+Tandem n'installera ni ne modifiera jamais rien là-dedans.
+
+@prog_nenhum
+Aucun programme installé par Tandem pour l'instant.
+
+Les programmes Windows qui ne créent pas de raccourci dans le menu Démarrer
+n'apparaissent pas ici.
+
+@prog_nao_achei
+Je n'ai trouvé aucun programme avec « {1} » dans son nom.
+
+@alt_diga_o_nome
+Indiquez le nom du programme.
+
+Exemple :  tandem alternativas photoshop
+
+@alt_titulo
+Tandem - Alternatives à {1}
+
+@alt_nao_conheco
+Je ne connais pas d'alternative Linux à « {1} ».
+
+Cela ne veut pas dire qu'il n'en existe pas — cela veut dire qu'elle n'est pas
+encore sur ma liste. Si vous en trouvez une, elle peut être ajoutée en une
+ligne.
+
+@mem_nada_aprendido
+Tandem n'a encore rien appris.
+
+La mémoire se forme d'elle-même à mesure que vous utilisez les programmes.
+
+@mem_nao_achei
+Je n'ai rien trouvé d'appris sur « {1} ».
+
+@mem_titulo
+Tandem - Ce que j'ai appris
+
+@esq_diga_o_nome
+Indiquez le nom du programme à oublier.
+
+@esq_esqueci
+J'ai oublié ce que je savais sur {1} programme(s). La prochaine fois, il le
+retrouvera.
+
+@id_titulo_janela
+Tandem - identité de la machine
+
+@logs_nenhum
+Il n'y a pas encore de journaux.
+
+@soc_pronto
+Rapport prêt :
+
+{1}
+
+Envoyez ce fichier à la personne qui vous aide. Il contient tout ce qu'elle va
+demander - aucune commande à taper.
+
+Avant de l'envoyer, jetez-y un œil : il montre des noms et des chemins de
+fichiers présents sur cette machine.
+
+@soc_nao_gerou
+Je n'ai pas pu générer le rapport.
+
+@mem_campo_resultado
+résultat :  
+
+@mem_campo_arquitetura
+architecture:
+
+@mem_campo_resolveram
+ont réglé : 
+
+@mem_campo_nao_resolveram
+n'ont pas réglé : 
+
+@mem_campo_segundos
+a pris (s) : 
+
+@mem_campo_visto_em
+vu le :     
+
+@mem_campo_limite
+limite :    
+
+@idioma_titulo_janela
+Tandem - langue
+
+@botao_devolver
+Remettre
+
+@botao_restaurar
+Restaurer
+
+@botao_restaurar_assim_mesmo
+Restaurer quand même
+
+@botao_parar
+Arrêter
+
+@auto_progresso_titulo
+autotest
+
+@prog_instalados_titulo
+Programmes installés par Tandem :
+
+@prog_para_abrir
+Pour en ouvrir un :  tandem programas "<partie du nom>"
+
+@desinst_podem_ser_removidos
+Programmes Windows qui peuvent être supprimés :
+
+@desinst_para_remover
+Pour supprimer :  tandem desinstalar "<partie du nom>"
+
+@desinst_terminal
+Supprimer « %s » ? Ses fichiers seront effacés. [o/N] 
+
+@alt_cabecalho
+Programmes Linux qui font le travail de « {1} » :
+
+@auto_cabecalho
+Tandem {1} — autotest sur cette machine
+
+@auto_resumo
+{1} réussis, {2} échoués.
+
+@auto_falha_importa
+Chaque ÉCHEC ci-dessus est une chose qui ne fonctionnera pas quand vous en
+aurez besoin.
+
+@auto_tudo_respondeu
+Tandem a exercé ce qui pouvait l'être ici, et tout a répondu.
+
+@env_cabecalho
+Envoyer ce que Tandem apprend à la liste de la communauté
+
+@env_agora_ligado
+Actuellement : ACTIVÉ   (depuis {1})
+
+@env_agora_desligado
+Actuellement : DÉSACTIVÉ   (vous l'avez choisi le {1})
+
+@env_ninguem_decidiu
+Actuellement : DÉSACTIVÉ   (personne n'a encore décidé)
+
+@env_fila
+Lignes gardées en file : {1}
+
+@env_endereco
+Adresse d'envoi : {1}
+
+@env_endereco_nao_existe
+Adresse d'envoi : IL N'EN EXISTE PAS dans cette version.
+  Les lignes restent en file et partiront quand il en existera une. D'ici là,
+  rien ne quitte cette machine - même si l'envoi est activé.
+
+@env_o_que_sai
+Ce qui part, quand cela part : une ligne de huit morceaux par programme, et
+seulement après que VOUS avez confirmé que le programme a fonctionné. Voyez la
+ligne d'un programme avec :  tandem contribuir <fichier>
+
+@env_nunca_sai
+Ce qui ne part jamais : un nom de fichier, un dossier, votre nom d'utilisateur,
+le nom de l'ordinateur, une adresse réseau, ni une seule ligne de journal. Le
+filtre qui le garantit tourne deux fois : à l'assemblage de la ligne et de
+nouveau au moment de l'envoi.
+
+@env_ligar
+Activer :  tandem enviar sim
+
+@env_desligar
+Désactiver : tandem enviar nao
+
+@env_ver_fila
+Voir toute la file :  cat {1}
+
+@soc_cabecalho
+RAPPORT TANDEM
+
+@soc_gerado_em
+Généré le {1}
+
+@soc_o_que_tem
+Ce qu'il y a là-dedans : la version de Tandem, ce qui est installé sur cette
+machine, les derniers journaux techniques et ce que Tandem a appris sur les
+programmes. Les journaux montrent des CHEMINS DE FICHIER à vous. Jetez-y un œil
+avant de l'envoyer à quelqu'un.
+
+@soc_sec_diagnostico
+DIAGNOSTIC
+
+@soc_sec_autoteste
+AUTOTEST
+
+@soc_sec_suspeitas
+CORRESPONDANCES SUSPECTES
+
+@soc_sec_aprendi
+CE QUE J'AI APPRIS
+
+@soc_sec_registros
+JOURNAUX TECHNIQUES
+
+@soc_nenhuma
+(aucune)
+
+@soc_ultimas_linhas
+--- {1} (200 dernières lignes) ---
+
+@prep_terminal
+Tandem peut installer ce qui manque :
+%s
+
+Il faut internet et votre mot de passe. Continuer ? [o/N] 
+
+@cancelado
+Annulé.
+
+@botao_instalar_tudo
+Tout installer

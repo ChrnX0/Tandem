@@ -1570,3 +1570,326 @@ rm "{1}"
 
 @env_titulo
 Tandem - الإرسال إلى القائمة
+
+@doctor_titulo
+Tandem - التشخيص
+
+@dados_nao_conheco
+لا أعرف "tandem dados {1}".
+
+الاستخدام:  tandem dados | tandem dados salvar | tandem dados restaurar
+
+@sem_ambiente_windows
+لا توجد بيئة Windows هنا بعد.
+
+@dados_titulo
+Tandem - ملفاتك
+
+@dados_nada_para_copiar
+لا توجد ملفات لك لنسخها بعد.
+
+@dados_copiando
+جارٍ نسخ ملفاتك ({1})…
+
+@dados_copiados
+نُسخت ملفاتك إلى:
+
+{1}
+
+هذا الملف ملكك. احفظه على ذاكرة USB أو أرسله إلى نفسك بالبريد: به تعود
+بياناتك على أي حاسوب.
+
+@dados_nao_copiou
+لم أتمكّن من نسخ ملفاتك.
+
+@dados_sem_copia
+لم أجد أي نسخة من ملفاتك.
+
+إن كان الملف بحوزتك، فحدِّد مكانه:
+tandem dados restaurar /مسار/النسخة.tar.gz
+
+@dados_sem_ambiente_devolver
+لا توجد بعد بيئة Windows لإعادة الملفات إليها.
+
+@dados_devolver_pergunta
+أُعيد ملفاتك من:
+
+{1}
+
+لن يُحذف أي شيء موجود بالفعل — تُضاف الملفات المفقودة فقط.
+
+@dados_devolvendo
+جارٍ إعادة ملفاتك…
+
+@dados_devolvidos
+أُعيدت ملفاتك.
+
+@dados_nao_devolveu
+لم أتمكّن من إعادة الملفات.
+
+@bkp_sem_ambiente
+لا توجد بيئة Windows لحفظها بعد.
+
+@bkp_salvando
+جارٍ حفظ بيئة Windows. قد يطول الأمر.
+
+@bkp_salvo
+حُفظت النسخة الاحتياطية في:
+{1}
+
+هذه هي البيئة بأكملها. ملفاتك الخاصة تشكّل {2} من هذا المجموع — لأخذها
+وحدها، وهو أسرع ويصلح للبريد:
+tandem dados salvar
+
+@bkp_nao_salvou
+لم أتمكّن من حفظ النسخة الاحتياطية.
+
+@rst_nenhum_backup
+لم أجد أي نسخة احتياطية في مجلّدك الشخصي.
+
+@rst_pergunta
+أستعيد بيئة Windows من:
+
+{1}
+
+سيُستبدل البيئة الحالية. وإن كان أحد البرامج هنا قد فُعِّل بترخيص مربوط بهذا
+الحاسوب، فسيعود إلى حالته وقت أخذ النسخة — وقد يطلب التفعيل من جديد.
+
+@rst_copia_guardada
+حفظت نسخة من ملفاتك في:
+{1}
+
+@rst_mesmo_assim
+أأستعيد رغم ذلك؟
+
+@rst_restaurando
+جارٍ الاستعادة…
+
+@rst_restaurado
+استُعيدت البيئة.
+
+@rst_nao_restaurou
+لم أتمكّن من الاستعادة.
+
+@prot_caminho_invalido
+مسار غير صالح.
+
+@prot_nao_gravou
+لم أتمكّن من كتابة قائمة الملفات الشخصية المحميّة.
+
+@prot_protegido
+ملف شخصي محميّ:
+{1}
+
+لن يثبّت Tandem شيئًا داخله ولن يغيّر فيه أبدًا.
+
+@prog_nenhum
+لا برنامج ثبّته Tandem حتى الآن.
+
+برامج Windows التي لا تُنشئ اختصارًا في قائمة ابدأ لا تظهر هنا.
+
+@prog_nao_achei
+لم أجد أي برنامج يحمل "{1}" في اسمه.
+
+@alt_diga_o_nome
+اذكر اسم البرنامج.
+
+مثال:  tandem alternativas photoshop
+
+@alt_titulo
+Tandem - بدائل لـ{1}
+
+@alt_nao_conheco
+لا أعرف بديلًا على لينكس لـ"{1}".
+
+لا يعني ذلك أنه لا وجود له — يعني أنه ليس في قائمتي بعد. إن وجدت واحدًا،
+فيمكن إضافته في سطر واحد.
+
+@mem_nada_aprendido
+لم يتعلّم Tandem شيئًا بعد.
+
+تتشكّل الذاكرة من تلقاء نفسها بقدر ما تستخدم البرامج.
+
+@mem_nao_achei
+لم أجد شيئًا متعلَّمًا عن "{1}".
+
+@mem_titulo
+Tandem - ما تعلّمته
+
+@esq_diga_o_nome
+اذكر اسم البرنامج الذي تريد نسيانه.
+
+@esq_esqueci
+نسيت ما كنت أعرفه عن {1} من البرامج. سيكتشفه من جديد في المرّة القادمة.
+
+@id_titulo_janela
+Tandem - هوية الجهاز
+
+@logs_nenhum
+لا توجد سجلات بعد.
+
+@soc_pronto
+التقرير جاهز:
+
+{1}
+
+أرسل هذا الملف إلى من يساعدك. فيه كل ما سيسأل عنه — لا حاجة إلى كتابة أي أمر.
+
+قبل الإرسال، ألقِ نظرة: يُظهر أسماء ومسارات ملفات موجودة على هذا الجهاز.
+
+@soc_nao_gerou
+لم أتمكّن من إنشاء التقرير.
+
+@mem_campo_resultado
+النتيجة:    
+
+@mem_campo_arquitetura
+المعمارية:  
+
+@mem_campo_resolveram
+حلّت:       
+
+@mem_campo_nao_resolveram
+لم تحلّ:        
+
+@mem_campo_segundos
+استغرق (ث): 
+
+@mem_campo_visto_em
+آخر ظهور:   
+
+@mem_campo_limite
+الحدّ:       
+
+@idioma_titulo_janela
+Tandem - اللغة
+
+@botao_devolver
+أعِدها
+
+@botao_restaurar
+استعادة
+
+@botao_restaurar_assim_mesmo
+استعادة رغم ذلك
+
+@botao_parar
+توقّف
+
+@auto_progresso_titulo
+اختبار ذاتي
+
+@prog_instalados_titulo
+البرامج التي ثبّتها Tandem:
+
+@prog_para_abrir
+لفتح أحدها:  tandem programas "<جزء من الاسم>"
+
+@desinst_podem_ser_removidos
+برامج Windows التي يمكن إزالتها:
+
+@desinst_para_remover
+للإزالة:  tandem desinstalar "<جزء من الاسم>"
+
+@desinst_terminal
+أأُزيل "%s"؟ ستُحذف ملفاته. [y/N] 
+
+@alt_cabecalho
+برامج لينكس التي تؤدّي عمل "{1}":
+
+@auto_cabecalho
+Tandem {1} — اختبار ذاتي على هذا الجهاز
+
+@auto_resumo
+نجح {1}، وفشل {2}.
+
+@auto_falha_importa
+كل "فشل" أعلاه هو أمر لن يعمل عندما تحتاج إليه.
+
+@auto_tudo_respondeu
+اختبر Tandem ما أمكن اختباره هنا، وقد استجاب الجميع.
+
+@env_cabecalho
+إرسال ما يتعلّمه Tandem إلى قائمة المجتمع
+
+@env_agora_ligado
+الحالة الآن: مُفعَّل   (منذ {1})
+
+@env_agora_desligado
+الحالة الآن: مُعطَّل   (اخترت ذلك في {1})
+
+@env_ninguem_decidiu
+الحالة الآن: مُعطَّل   (لم يقرّر أحد بعد)
+
+@env_fila
+السطور المحفوظة في الطابور: {1}
+
+@env_endereco
+عنوان الإرسال: {1}
+
+@env_endereco_nao_existe
+عنوان الإرسال: لا وجود له في هذه النسخة.
+  تبقى السطور في الطابور وتُرسَل عند وجود عنوان. وحتى ذلك الحين، لا يخرج شيء
+  من هذا الجهاز — ولو كان الإرسال مُفعَّلًا.
+
+@env_o_que_sai
+ما يُرسَل ومتى: سطر واحد من ثمانية أجزاء لكل برنامج، وبعد أن تؤكّد أنت أنّ
+البرنامج قد عمل فقط. اطّلع على سطر برنامج عبر:  tandem contribuir <ملف>
+
+@env_nunca_sai
+ما لا يُرسَل أبدًا: اسم ملف، أو مجلّد، أو اسم مستخدمك، أو اسم الحاسوب، أو
+عنوان شبكة، ولا سطر واحد من السجل. والمِصفاة التي تضمن ذلك تعمل مرّتين: عند
+تركيب السطر ومرّة أخرى لحظة الإرسال.
+
+@env_ligar
+التفعيل:   tandem enviar sim
+
+@env_desligar
+التعطيل:   tandem enviar nao
+
+@env_ver_fila
+اطّلع على الطابور كاملًا:  cat {1}
+
+@soc_cabecalho
+تقرير TANDEM
+
+@soc_gerado_em
+أُنشئ في {1}
+
+@soc_o_que_tem
+ما في هذا التقرير: إصدار Tandem، وما هو مثبَّت على هذا الجهاز، وآخر السجلات
+التقنية، وما تعلّمه Tandem عن البرامج. تُظهر السجلات مسارات ملفات تخصّك.
+ألقِ نظرة قبل إرساله إلى أحد.
+
+@soc_sec_diagnostico
+التشخيص
+
+@soc_sec_autoteste
+اختبار ذاتي
+
+@soc_sec_suspeitas
+ترجمات مُريبة
+
+@soc_sec_aprendi
+ما تعلّمته
+
+@soc_sec_registros
+السجلات التقنية
+
+@soc_nenhuma
+(لا شيء)
+
+@soc_ultimas_linhas
+--- {1} (آخر ٢٠٠ سطر) ---
+
+@prep_terminal
+يستطيع Tandem تثبيت ما ينقص:
+%s
+
+يحتاج إلى الإنترنت وإلى كلمة مرورك. أأتابع؟ [y/N] 
+
+@cancelado
+أُلغي.
+
+@botao_instalar_tudo
+ثبّت كل شيء

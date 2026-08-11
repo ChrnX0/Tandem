@@ -253,7 +253,7 @@ acao_doctor() {
 
     # %b (and not raw "$out") because the text has \n to expand but may
     # contain % coming from paths and versions, which would break the format.
-    printf '%b' "$out" | t_texto "Tandem - Diagnóstico"
+    printf '%b' "$out" | t_texto "$(t_msg doctor_titulo)"
 }
 
 # ---------------------------------------------------------------- dados
@@ -268,15 +268,13 @@ acao_dados() {
         salvar|save|copiar)   acao_dados_salvar "${2:-}" ;;
         restaurar|restore)    acao_dados_restaurar "${2:-}" ;;
         listar|lista|"")      acao_dados_listar ;;
-        *) t_erro "Não conheço \"tandem dados $sub\".
-
-Use:  tandem dados | tandem dados salvar | tandem dados restaurar"; return 1 ;;
+        *) t_erro "$(t_msg dados_nao_conheco "$sub")"; return 1 ;;
     esac
 }
 
 acao_dados_listar() {
     local p="$TANDEM_PREFIXO_PADRAO" total linhas
-    [ -d "$p/drive_c" ] || { t_erro "Ainda não há um ambiente Windows aqui."; return 1; }
+    [ -d "$p/drive_c" ] || { t_erro "$(t_msg sem_ambiente_windows)"; return 1; }
     linhas="$(t_dados_lista "$p" 2>/dev/null)"
     total="$(printf '%s\n' "$linhas" | awk -F'\t' '{s += $3} END {print s + 0}')"
     if [ -z "$linhas" ]; then
@@ -285,7 +283,7 @@ acao_dados_listar() {
 Não encontrei nenhum arquivo seu ainda - só o ambiente, que o Tandem
 sabe refazer sozinho em alguns minutos.
 
-Isso é normal se você ainda não usou nenhum programa para valer." | t_texto "Tandem - Seus arquivos"
+Isso é normal se você ainda não usou nenhum programa para valer." | t_texto "$(t_msg dados_titulo)"
         return 0
     fi
     printf '%s\n' "Seus arquivos dentro do Windows
@@ -300,30 +298,25 @@ $(printf '%s\n' "$linhas" | sort -t"$(printf '\t')" -k3 -rn | head -40 |
 
 Total: $(t_tamanho_amigavel "$total") em $(printf '%s\n' "$linhas" | grep -c .) itens.
 
-Para guardar uma cópia só disso:   tandem dados salvar" | t_texto "Tandem - Seus arquivos"
+Para guardar uma cópia só disso:   tandem dados salvar" | t_texto "$(t_msg dados_titulo)"
 }
 
 acao_dados_salvar() {
     local p="$TANDEM_PREFIXO_PADRAO" destino="${1:-}" total
-    [ -d "$p/drive_c" ] || { t_erro "Ainda não há um ambiente Windows aqui."; return 1; }
+    [ -d "$p/drive_c" ] || { t_erro "$(t_msg sem_ambiente_windows)"; return 1; }
     total="$(t_dados_total "$p")"
     if [ "${total:-0}" -eq 0 ]; then
-        t_aviso "Não há arquivos seus para copiar ainda."
+        t_aviso "$(t_msg dados_nada_para_copiar)"
         return 0
     fi
     [ -n "$destino" ] || destino="$HOME/tandem-dados-$(date +%F-%H%M).tar.gz"
-    t_progresso_abre "Copiando os seus arquivos ($(t_tamanho_amigavel "$total"))..."
+    t_progresso_abre "$(t_msg dados_copiando "$(t_tamanho_amigavel "$total")")"
     t_dados_salva "$p" "$destino"; local c=$?
     t_progresso_fecha
     if [ $c -eq 0 ]; then
-        t_ok "Seus arquivos foram copiados para:
-
-$destino
-
-Este arquivo é seu. Guarde num pendrive ou mande para você mesmo por
-e-mail: com ele, seus dados voltam em qualquer computador."
+        t_ok "$(t_msg dados_copiados "$destino")"
     else
-        t_erro "Não consegui copiar os seus arquivos."
+        t_erro "$(t_msg dados_nao_copiou)"
     fi
     return $c
 }
@@ -332,57 +325,40 @@ acao_dados_restaurar() {
     local p="$TANDEM_PREFIXO_PADRAO" arq="${1:-}"
     [ -n "$arq" ] || arq="$(ls -1t "$HOME"/tandem-dados-*.tar.gz 2>/dev/null | head -1)"
     [ -n "$arq" ] && [ -f "$arq" ] || {
-        t_erro "Não encontrei nenhuma cópia dos seus arquivos.
-
-Se você tem o arquivo, diga onde ele está:
-tandem dados restaurar /caminho/da/copia.tar.gz"; return 1; }
-    [ -d "$p/drive_c" ] || { t_erro "Ainda não há um ambiente Windows para devolver os arquivos."; return 1; }
+        t_erro "$(t_msg dados_sem_copia)"; return 1; }
+    [ -d "$p/drive_c" ] || { t_erro "$(t_msg dados_sem_ambiente_devolver)"; return 1; }
     # Giving data back DELETES nothing: a file that already exists stays as it
     # is. A restore that overwrites today's work with last week's copy is
     # exactly the damage this command exists to prevent.
-    t_pergunta "Devolver os seus arquivos a partir de:
-
-$(basename -- "$arq")
-
-Nada do que já existe será apagado - só entram os arquivos que faltam." \
-        "Devolver" "Cancelar" || return 1
-    t_progresso_abre "Devolvendo os seus arquivos..."
+    t_pergunta "$(t_msg dados_devolver_pergunta "$(basename -- "$arq")")" \
+        "$(t_msg botao_devolver)" "$(t_msg botao_cancelar)" || return 1
+    t_progresso_abre "$(t_msg dados_devolvendo)"
     tar -C "$p/drive_c" -xzf "$arq" --skip-old-files 2>>"$LOG"; local c=$?
     t_progresso_fecha
-    [ $c -eq 0 ] && t_ok "Seus arquivos foram devolvidos." || t_erro "Não consegui devolver os arquivos."
+    [ $c -eq 0 ] && t_ok "$(t_msg dados_devolvidos)" || t_erro "$(t_msg dados_nao_devolveu)"
     return $c
 }
 
 acao_backup() {
     local p="$TANDEM_PREFIXO_PADRAO"
-    [ -f "$p/system.reg" ] || { t_erro "Não há ambiente Windows para salvar ainda."; return 1; }
+    [ -f "$p/system.reg" ] || { t_erro "$(t_msg bkp_sem_ambiente)"; return 1; }
     local dest
     dest="$HOME/tandem-backup-$(date +%F-%H%M).tar.gz"
-    t_progresso_abre "Salvando o ambiente Windows. Pode demorar."
+    t_progresso_abre "$(t_msg bkp_salvando)"
     tar -C "$(dirname -- "$p")" -czf "$dest" "$(basename -- "$p")" 2>>"$LOG"
     local c=$?
     t_progresso_fecha
     local so_dados; so_dados="$(t_dados_total "$p")"
-    [ $c -eq 0 ] && t_ok "Backup salvo em:
-$dest
-
-Isto é o ambiente INTEIRO. Os seus arquivos são $(t_tamanho_amigavel "${so_dados:-0}")
-desse total - para levar só eles, que é rápido e cabe num e-mail:
-tandem dados salvar" || t_erro "Não consegui salvar o backup."
+    [ $c -eq 0 ] && t_ok "$(t_msg bkp_salvo "$dest" "$(t_tamanho_amigavel "${so_dados:-0}")")" || t_erro "$(t_msg bkp_nao_salvou)"
     return $c
 }
 
 acao_restore() {
     local arq
     arq="$(ls -1t "$HOME"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
-    [ -n "$arq" ] || { t_erro "Nenhum backup encontrado na sua pasta pessoal."; return 1; }
-    t_pergunta "Restaurar o ambiente Windows a partir de:
-
-$(basename -- "$arq")
-
-O ambiente atual será substituído. Se algum programa daqui foi ativado com
-licença amarrada a este computador, ele volta a ser o de quando a cópia foi
-feita — e pode pedir ativação de novo." "Restaurar" "Cancelar" || return 1
+    [ -n "$arq" ] || { t_erro "$(t_msg rst_nenhum_backup)"; return 1; }
+    t_pergunta "$(t_msg rst_pergunta "$(basename -- "$arq")")" \
+        "$(t_msg botao_restaurar)" "$(t_msg botao_cancelar)" || return 1
     # Before swapping the whole environment, save what cannot be remade.
     # Without this the command gave back last week's environment and took the
     # month's sales along with it - silently, and with no chance to undo.
@@ -390,30 +366,26 @@ feita — e pode pedir ativação de novo." "Restaurar" "Cancelar" || return 1
     local c_resgate
     resgate="$(t_dados_resgate "$TANDEM_PREFIXO_PADRAO" antes-de-restaurar)"; c_resgate=$?
     case $c_resgate in
-        0) t_aviso "Guardei uma cópia dos seus arquivos em:
-$resgate" ;;
+        0) t_aviso "$(t_msg rst_copia_guardada "$resgate")" ;;
         1) t_pergunta "$(t_texto_resgate_falhou)
 
-Restaurar mesmo assim?" "Restaurar assim mesmo" "Parar" || return 1 ;;
+$(t_msg rst_mesmo_assim)" "$(t_msg botao_restaurar_assim_mesmo)" "$(t_msg botao_parar)" || return 1 ;;
     esac
-    t_progresso_abre "Restaurando..."
+    t_progresso_abre "$(t_msg rst_restaurando)"
     rm -rf -- "$TANDEM_PREFIXO_PADRAO"
     mkdir -p "$(dirname -- "$TANDEM_PREFIXO_PADRAO")"
     tar -C "$(dirname -- "$TANDEM_PREFIXO_PADRAO")" -xzf "$arq" 2>>"$LOG"
     local c=$?
     t_progresso_fecha
-    [ $c -eq 0 ] && t_ok "Ambiente restaurado." || t_erro "Não consegui restaurar."
+    [ $c -eq 0 ] && t_ok "$(t_msg rst_restaurado)" || t_erro "$(t_msg rst_nao_restaurou)"
     return $c
 }
 
 acao_protect() {
     local p; p="$(readlink -f -- "${1:-}" 2>/dev/null)"
-    [ -n "$p" ] && [ -d "$p" ] || { t_erro "Caminho inválido."; return 1; }
-    t_protege "$p" || { t_erro "Não consegui gravar a lista de perfis protegidos."; return 1; }
-    t_ok "Perfil protegido:
-$p
-
-O Tandem nunca vai instalar nem alterar nada aí dentro."
+    [ -n "$p" ] && [ -d "$p" ] || { t_erro "$(t_msg prot_caminho_invalido)"; return 1; }
+    t_protege "$p" || { t_erro "$(t_msg prot_nao_gravou)"; return 1; }
+    t_ok "$(t_msg prot_protegido "$p")"
 }
 
 # ----------------------------------------------------------------- preparar
@@ -439,11 +411,11 @@ acao_preparar() {
 • $linha"
     done <<< "$faltas"
 
-    if ! t_pergunta "$(t_msg prep_pergunta "$plano")" "Instalar tudo" "Agora não"; then
+    if ! t_pergunta "$(t_msg prep_pergunta "$plano")" "$(t_msg botao_instalar_tudo)" "$(t_msg botao_agora_nao)"; then
         if [ -t 0 ]; then
-            printf 'O Tandem pode instalar o que está faltando:\n%s\n\nPrecisa de internet e da sua senha. Continuar? [s/N] ' "$plano"
+            printf "$(t_msg prep_terminal)" "$plano"
             read -r r
-            case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; return 1 ;; esac
+            case "$r" in s|S|sim|SIM) ;; *) printf '%s\n' "$(t_msg cancelado)"; return 1 ;; esac
         else
             t_erro "$(t_msg prep_sem_confirmacao)"
             return 1
@@ -518,9 +490,7 @@ acao_programas() {
     local lista; lista="$(t_atalhos_nossos; t_atalhos_appimage)"
     lista="$(printf '%s\n' "$lista" | grep -v '^$')"
     if [ -z "$lista" ]; then
-        t_erro "Nenhum programa instalado pelo Tandem por enquanto.
-
-Programas do Windows que não criam atalho no Menu Iniciar não aparecem aqui."
+        t_erro "$(t_msg prog_nenhum)"
         return 1
     fi
 
@@ -530,9 +500,9 @@ Programas do Windows que não criam atalho no Menu Iniciar não aparecem aqui."
             nome="$(t_nome_do_atalho "$d")"
             case "${nome,,}" in *"${filtro,,}"*) achou="$d"; break ;; esac
         done <<< "$lista"
-        [ -n "$achou" ] || { t_erro "Não achei nenhum programa com \"$filtro\" no nome."; return 1; }
+        [ -n "$achou" ] || { t_erro "$(t_msg prog_nao_achei "$filtro")"; return 1; }
         setsid gio launch "$achou" >/dev/null 2>&1 &
-        t_ok "Abrindo $(t_nome_do_atalho "$achou")..."
+        t_ok "$(t_msg abrindo "$(t_nome_do_atalho "$achou")")"
         return 0
     fi
 
@@ -547,9 +517,9 @@ Programas do Windows que não criam atalho no Menu Iniciar não aparecem aqui."
     escolha="$(escolher "Tandem - Programas instalados" \
                         "Qual programa você quer abrir?" "${nomes[@]}")"
     if [ -z "$escolha" ]; then
-        printf 'Programas instalados pelo Tandem:\n\n'
+        printf '%s\n\n' "$(t_msg prog_instalados_titulo)"
         printf '  %s\n' "${nomes[@]}"
-        printf '\nPara abrir um deles:  tandem programas "<parte do nome>"\n'
+        printf '\n%s\n' "$(t_msg prog_para_abrir)"
         return 0
     fi
     acao_programas "$escolha"
@@ -586,9 +556,9 @@ acao_uninstall() {
         escolha="$(escolher "Tandem - Remover programa" \
                             "Qual programa você quer remover?" "${nomes[@]}")"
         if [ -z "$escolha" ]; then
-            printf 'Programas do Windows que podem ser removidos:\n\n'
+            printf '%s\n\n' "$(t_msg desinst_podem_ser_removidos)"
             printf '  %s\n' "${nomes[@]}"
-            printf '\nPara remover:  tandem desinstalar "<parte do nome>"\n'
+            printf '\n%s\n' "$(t_msg desinst_para_remover)"
             return 0
         fi
         filtro="$escolha"
@@ -605,7 +575,7 @@ acao_uninstall() {
                 break ;;
         esac
     done <<< "$lista"
-    [ -n "$achou" ] || { t_erro "Não achei nenhum programa com \"$filtro\" no nome."; return 1; }
+    [ -n "$achou" ] || { t_erro "$(t_msg prog_nao_achei "$filtro")"; return 1; }
     command -v wine >/dev/null 2>&1 || { t_erro "$(t_msg wine_nao_instalado)"; return 1; }
 
     # Confirmation: a window; failing that, the terminal; with neither, it
@@ -613,9 +583,9 @@ acao_uninstall() {
     # risk, and giving up silently is a defect.
     if ! t_pergunta "$(t_msg desinst_pergunta "$nome")" "Remover" "Cancelar"; then
         if [ -t 0 ]; then
-            printf 'Remover "%s"? Os arquivos dele serão apagados. [s/N] ' "$nome"
+            printf "$(t_msg desinst_terminal)" "$nome"
             read -r r
-            case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; return 1 ;; esac
+            case "$r" in s|S|sim|SIM) ;; *) printf '%s\n' "$(t_msg cancelado)"; return 1 ;; esac
         else
             t_erro "$(t_msg desinst_sem_confirmacao "$nome")"
             return 1
@@ -676,24 +646,19 @@ $(t_msg desinst_remover_mesmo_assim)" "Remover assim mesmo" "Parar" || return 1 
 acao_alternativas() {
     local nome="${1:-}" texto
     if [ -z "$nome" ]; then
-        t_erro "Diga o nome do programa.
-
-Exemplo:  tandem alternativas photoshop"
+        t_erro "$(t_msg alt_diga_o_nome)"
         return 1
     fi
     # Accepts both "photoshop" and the path to a .exe.
     [ -f "$nome" ] && nome="$(basename -- "${nome%.*}")"
 
     if texto="$(t_texto_alternativas "$nome")"; then
-        printf 'Programas de Linux que fazem o trabalho de "%s":\n%s\n' "$nome" "$texto" |
-            t_texto "Tandem - Alternativas para $nome"
+        printf '%s\n%s\n' "$(t_msg alt_cabecalho "$nome")" "$texto" |
+            t_texto "$(t_msg alt_titulo "$nome")"
         return 0
     fi
 
-    t_erro "Não conheço alternativa de Linux para \"$nome\".
-
-Isso não quer dizer que não exista — quer dizer que ainda não está na minha lista.
-Se você encontrar uma, ela pode ser acrescentada em uma linha."
+    t_erro "$(t_msg alt_nao_conheco "$nome")"
     return 1
 }
 
@@ -758,7 +723,7 @@ acao_autoteste() {
     # 5. Does the progress bar survive the window vanishing? Really exercised:
     #    open it, kill the reader, write. This used to kill Tandem with 141.
     if t_tem_gui && command -v zenity >/dev/null 2>&1; then
-        ( t_progresso_abre "autoteste"; kill "${TANDEM_PROG_PID:-0}" 2>/dev/null
+        ( t_progresso_abre "$(t_msg auto_progresso_titulo)"; kill "${TANDEM_PROG_PID:-0}" 2>/dev/null
           sleep 0.3; t_progresso_texto "$(t_msg auto_depois_de_fechada)"; t_progresso_fecha ) >/dev/null 2>&1
         if [ $? -lt 128 ]; then
             passa "fechar a janela de progresso não derruba o Tandem"
@@ -902,10 +867,11 @@ acao_autoteste() {
         saida="$saida  --      $(t_msg auto_pulou_protecao)"$'\n'
     fi
 
-    printf 'Tandem %s — autoteste nesta máquina\n\n%s\n%d passaram, %d falharam.\n%s\n' \
-        "$VERSAO" "$saida" "$ok" "$falhou" \
-        "$([ "$falhou" -gt 0 ] && printf 'Cada FALHA acima é uma coisa que não vai funcionar quando você precisar.' \
-                                || printf 'O Tandem exercitou o que dava para exercitar aqui, e tudo respondeu.')" |
+    printf '%s\n\n%s\n%s\n%s\n' \
+        "$(t_msg auto_cabecalho "$VERSAO")" "$saida" \
+        "$(t_msg auto_resumo "$ok" "$falhou")" \
+        "$([ "$falhou" -gt 0 ] && printf '%s' "$(t_msg auto_falha_importa)" \
+                                || printf '%s' "$(t_msg auto_tudo_respondeu)")" |
         t_texto "$(t_msg auto_titulo)"
     [ "$falhou" -eq 0 ]
 }
@@ -959,9 +925,7 @@ acao_receita() {
 acao_memoria() {
     local filtro="${1:-}" arq prog saida="" n=0
     if [ ! -d "$TANDEM_MEMORIA" ] || [ -z "$(ls -A "$TANDEM_MEMORIA" 2>/dev/null)" ]; then
-        t_erro "O Tandem ainda não aprendeu nada.
-
-A memória se forma sozinha conforme você usa os programas."
+        t_erro "$(t_msg mem_nada_aprendido)"
         return 1
     fi
     for arq in "$TANDEM_MEMORIA"/*.txt; do
@@ -970,28 +934,32 @@ A memória se forma sozinha conforme você usa os programas."
         [ -n "$filtro" ] && case "${prog,,}" in *"${filtro,,}"*) ;; *) continue ;; esac
         n=$((n+1))
         saida="$saida$prog"$'\n'
-        saida="$saida$(sed -n 's/^RESULTADO=/  resultado:  /p;
-                              s/^ARQUITETURA=/  arquitetura: /p;
-                              s/^RESOLVERAM=/  resolveram: /p;
-                              s/^NAO_RESOLVERAM=/  não resolveram: /p;
-                              s/^SEGUNDOS=/  levou (s): /p;
-                              s/^VISTO_EM=/  visto em:   /p;
-                              s/^LIMITE=/  limite:     /p' "$arq")"$'\n\n'
+        # The field NAMES are translated; the values are not - they are on-disk
+        # format (abriu, confirmado, RESOLVERAM) and translating one silently
+        # breaks memory files already written on somebody's machine.
+        saida="$saida$(sed -n "
+            s/^RESULTADO=/  $(t_msg mem_campo_resultado)/p
+            s/^ARQUITETURA=/  $(t_msg mem_campo_arquitetura)/p
+            s/^RESOLVERAM=/  $(t_msg mem_campo_resolveram)/p
+            s/^NAO_RESOLVERAM=/  $(t_msg mem_campo_nao_resolveram)/p
+            s/^SEGUNDOS=/  $(t_msg mem_campo_segundos)/p
+            s/^VISTO_EM=/  $(t_msg mem_campo_visto_em)/p
+            s/^LIMITE=/  $(t_msg mem_campo_limite)/p" "$arq")"$'\n\n'
     done
-    [ "$n" -gt 0 ] || { t_erro "Não achei nada aprendido sobre \"$filtro\"."; return 1; }
-    printf '%s' "$saida" | t_texto "Tandem - O que eu aprendi"
+    [ "$n" -gt 0 ] || { t_erro "$(t_msg mem_nao_achei "$filtro")"; return 1; }
+    printf '%s' "$saida" | t_texto "$(t_msg mem_titulo)"
 }
 
 acao_esquecer() {
     local filtro="${1:-}" arq prog n=0
-    [ -n "$filtro" ] || { t_erro "Diga o nome do programa a esquecer."; return 1; }
+    [ -n "$filtro" ] || { t_erro "$(t_msg esq_diga_o_nome)"; return 1; }
     for arq in "$TANDEM_MEMORIA"/*.txt; do
         [ -f "$arq" ] || continue
         prog="$(sed -n 's/^PROGRAMA=//p' "$arq" | head -1)"
         case "${prog,,}" in *"${filtro,,}"*) rm -f -- "$arq"; n=$((n+1)) ;; esac
     done
-    [ "$n" -gt 0 ] || { t_erro "Não achei nada aprendido sobre \"$filtro\"."; return 1; }
-    t_ok "Esqueci o que sabia sobre $n programa(s). Da próxima vez ele descobre de novo."
+    [ "$n" -gt 0 ] || { t_erro "$(t_msg mem_nao_achei "$filtro")"; return 1; }
+    t_ok "$(t_msg esq_esqueci "$n")"
 }
 
 # ------------------------------------------------------ identity and ports
@@ -1003,7 +971,7 @@ acao_esquecer() {
 # had no answer at all before, and the owner met them as "activate again" and
 # "the printer is not there".
 acao_identidade() {
-    t_texto_identidade "$TANDEM_PREFIXO_PADRAO" | t_texto "Tandem - identidade da máquina"
+    t_texto_identidade "$TANDEM_PREFIXO_PADRAO" | t_texto "$(t_msg id_titulo_janela)"
 }
 
 acao_portas() {
@@ -1066,7 +1034,7 @@ acao_idioma() {
                 printf '\n'
             done
             printf '\n'; t_msg idioma_rodape; printf '\n'
-        } | t_texto "Tandem - idioma"
+        } | t_texto "$(t_msg idioma_titulo_janela)"
         return 0
     fi
 
@@ -1090,8 +1058,8 @@ acao_idioma() {
 
 acao_logs() {
     local l; l="$(ls -1t "$TANDEM_ESTADO"/*.log 2>/dev/null | head -1)"
-    [ -n "$l" ] || { t_erro "Ainda não há registros."; return 1; }
-    tail -n 400 "$l" | t_texto "Tandem - $(basename "$l")"
+    [ -n "$l" ] || { t_erro "$(t_msg logs_nenhum)"; return 1; }
+    tail -n 400 "$l" | t_texto "$(t_msg janela_titulo_arquivo "$(basename "$l")")"
 }
 
 # ----------------------------------------------------------------- lista
@@ -1234,33 +1202,27 @@ acao_enviar() {
 
     fila="$(t_envio_pendentes)"
     {
-        printf 'Mandar o que o Tandem aprende para a lista da comunidade\n\n'
+        printf '%s\n\n' "$(t_msg env_cabecalho)"
         if t_envio_ligado; then
-            printf 'Agora está: LIGADO   (desde %s)\n' "$(t_config_le ENVIAR_DESDE 2>/dev/null || echo '?')"
+            printf '%s\n' "$(t_msg env_agora_ligado \
+                "$(t_config_le ENVIAR_DESDE 2>/dev/null || echo '?')")"
         elif t_envio_decidido; then
-            printf 'Agora está: DESLIGADO   (você escolheu em %s)\n' \
-                   "$(t_config_le ENVIAR_DESDE 2>/dev/null || echo '?')"
+            printf '%s\n' "$(t_msg env_agora_desligado \
+                "$(t_config_le ENVIAR_DESDE 2>/dev/null || echo '?')")"
         else
-            printf 'Agora está: DESLIGADO   (ninguém decidiu ainda)\n'
+            printf '%s\n' "$(t_msg env_ninguem_decidiu)"
         fi
-        printf 'Linhas guardadas na fila: %s\n' "$fila"
+        printf '%s\n' "$(t_msg env_fila "$fila")"
         if [ -n "$TANDEM_LISTA_ENVIO" ]; then
-            printf 'Endereço de envio: %s\n' "$TANDEM_LISTA_ENVIO"
+            printf '%s\n' "$(t_msg env_endereco "$TANDEM_LISTA_ENVIO")"
         else
-            printf 'Endereço de envio: NÃO EXISTE nesta versão.\n'
-            printf '  As linhas ficam na fila e vão junto quando existir um. Enquanto isso,\n'
-            printf '  nada sai desta máquina - nem se estiver ligado.\n'
+            printf '%s\n' "$(t_msg env_endereco_nao_existe)"
         fi
-        printf '\nO que sai, quando sai: uma linha de oito pedaços por programa, e só depois\n'
-        printf 'que VOCÊ confirmar que o programa funcionou. Veja a linha de um programa\n'
-        printf 'com:  tandem contribuir <arquivo>\n\n'
-        printf 'O que nunca sai: nome de arquivo, pasta, seu nome de usuário, o nome do\n'
-        printf 'computador, endereço de rede, nem uma linha de registro. O filtro que\n'
-        printf 'garante isso roda duas vezes: quando a linha é montada e outra vez na hora\n'
-        printf 'de mandar.\n\n'
-        printf 'Ligar:     tandem enviar sim\n'
-        printf 'Desligar:  tandem enviar nao\n'
-        printf 'Ver a fila inteira:  cat %s\n' "$TANDEM_FILA"
+        printf '\n%s\n\n' "$(t_msg env_o_que_sai)"
+        printf '%s\n\n' "$(t_msg env_nunca_sai)"
+        printf '%s\n' "$(t_msg env_ligar)"
+        printf '%s\n' "$(t_msg env_desligar)"
+        printf '%s\n' "$(t_msg env_ver_fila "$TANDEM_FILA")"
     } | t_texto "$(t_msg env_titulo)"
     return 0
 }
@@ -1280,45 +1242,34 @@ acao_socorro() {
     local arq l
     arq="$HOME/tandem-socorro-$(date +%F-%H%M).txt"
     {
-        printf 'RELATÓRIO DO TANDEM\n'
-        printf 'Gerado em %s\n\n' "$(date '+%d/%m/%Y às %H:%M')"
-        printf 'O que tem aqui dentro: a versão do Tandem, o que está instalado\n'
-        printf 'nesta máquina, os últimos registros técnicos e o que o Tandem\n'
-        printf 'aprendeu sobre os programas. Os registros mostram CAMINHOS DE\n'
-        printf 'ARQUIVO seus. Dê uma olhada antes de mandar para alguém.\n'
-        printf '\n========================= DIAGNÓSTICO =========================\n\n'
+        printf '%s\n' "$(t_msg soc_cabecalho)"
+        printf '%s\n\n' "$(t_msg soc_gerado_em "$(date '+%d/%m/%Y %H:%M')")"
+        printf '%s\n' "$(t_msg soc_o_que_tem)"
+        printf '\n===== %s =====\n\n' "$(t_msg soc_sec_diagnostico)"
         acao_doctor 2>&1
-        printf '\n========================= AUTOTESTE ===========================\n\n'
+        printf '\n===== %s =====\n\n' "$(t_msg soc_sec_autoteste)"
         acao_autoteste 2>&1
-        printf '\n===================== TRADUÇÕES SUSPEITAS =====================\n\n'
+        printf '\n===== %s =====\n\n' "$(t_msg soc_sec_suspeitas)"
         if [ -s "$TANDEM_ESTADO/traducao-suspeita.tsv" ]; then
             cat "$TANDEM_ESTADO/traducao-suspeita.tsv"
         else
-            printf '(nenhuma)\n'
+            printf '%s\n' "$(t_msg soc_nenhuma)"
         fi
-        printf '\n======================== O QUE APRENDI ========================\n\n'
+        printf '\n===== %s =====\n\n' "$(t_msg soc_sec_aprendi)"
         acao_memoria 2>&1
-        printf '\n====================== REGISTROS TÉCNICOS =====================\n'
+        printf '\n===== %s =====\n' "$(t_msg soc_sec_registros)"
         for l in "$TANDEM_ESTADO"/*.log; do
             [ -f "$l" ] || continue
-            printf '\n--- %s (últimas 200 linhas) ---\n' "$(basename -- "$l")"
+            printf '\n%s\n' "$(t_msg soc_ultimas_linhas "$(basename -- "$l")")"
             tail -n 200 "$l"
         done
     } > "$arq" 2>/dev/null
 
     if [ -s "$arq" ]; then
-        t_ok "Relatório pronto:
-
-$arq
-
-Mande este arquivo para quem estiver ajudando você. Ele tem tudo o que
-essa pessoa vai perguntar - não precisa digitar nenhum comando.
-
-Antes de mandar, dê uma olhada: ele mostra nomes e caminhos de arquivos
-que estão nesta máquina."
+        t_ok "$(t_msg soc_pronto "$arq")"
         return 0
     fi
-    t_erro "Não consegui gerar o relatório."
+    t_erro "$(t_msg soc_nao_gerou)"
     return 1
 }
 

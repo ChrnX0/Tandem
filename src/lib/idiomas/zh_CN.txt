@@ -1545,3 +1545,325 @@ rm "{1}"
 
 @env_titulo
 Tandem - 发送到清单
+
+@doctor_titulo
+Tandem - 环境诊断
+
+@dados_nao_conheco
+我不认识 "tandem dados {1}"。
+
+用法：  tandem dados | tandem dados salvar | tandem dados restaurar
+
+@sem_ambiente_windows
+这里还没有 Windows 环境。
+
+@dados_titulo
+Tandem - 您的文件
+
+@dados_nada_para_copiar
+还没有您的文件可以备份。
+
+@dados_copiando
+正在复制您的文件（{1}）……
+
+@dados_copiados
+您的文件已复制到：
+
+{1}
+
+这个文件是您的。请存到 U 盘里，或者用邮件发给自己：有了它，
+您的数据在任何电脑上都能回来。
+
+@dados_nao_copiou
+我没能复制您的文件。
+
+@dados_sem_copia
+我没找到您文件的任何备份。
+
+如果您手上有那个文件，请告诉我它在哪：
+tandem dados restaurar /备份/所在/路径.tar.gz
+
+@dados_sem_ambiente_devolver
+还没有可以把文件放回去的 Windows 环境。
+
+@dados_devolver_pergunta
+从这里把您的文件放回去：
+
+{1}
+
+已经存在的东西不会被删掉：只补进缺少的文件。
+
+@dados_devolvendo
+正在把您的文件放回去……
+
+@dados_devolvidos
+您的文件已经放回去了。
+
+@dados_nao_devolveu
+我没能把文件放回去。
+
+@bkp_sem_ambiente
+还没有可以备份的 Windows 环境。
+
+@bkp_salvando
+正在备份 Windows 环境，可能要一会儿。
+
+@bkp_salvo
+备份已保存到：
+{1}
+
+这是整个环境。其中您自己的文件只有 {2} —— 如果只想带走这些，
+又快又能塞进一封邮件：
+tandem dados salvar
+
+@bkp_nao_salvou
+我没能保存备份。
+
+@rst_nenhum_backup
+在您的主目录里没有找到备份。
+
+@rst_pergunta
+从这里恢复 Windows 环境：
+
+{1}
+
+现有的环境会被替换掉。如果这里面有程序是用绑定这台电脑的授权激活的，
+它会回到做备份时的状态 —— 可能会要求重新激活。
+
+@rst_copia_guardada
+我把您的文件备份到了：
+{1}
+
+@rst_mesmo_assim
+仍然恢复吗？
+
+@rst_restaurando
+正在恢复……
+
+@rst_restaurado
+环境已恢复。
+
+@rst_nao_restaurou
+我没能恢复。
+
+@prot_caminho_invalido
+路径无效。
+
+@prot_nao_gravou
+我没能写入受保护环境的名单。
+
+@prot_protegido
+环境已保护：
+{1}
+
+Tandem 永远不会在里面装东西，也不会改动任何内容。
+
+@prog_nenhum
+到目前为止 Tandem 还没装过任何程序。
+
+不在开始菜单里建快捷方式的 Windows 程序不会出现在这里。
+
+@prog_nao_achei
+我没找到名字里带 "{1}" 的程序。
+
+@alt_diga_o_nome
+请说出程序的名字。
+
+例如：  tandem alternativas photoshop
+
+@alt_titulo
+Tandem - {1} 的替代品
+
+@alt_nao_conheco
+我不知道 "{1}" 在 Linux 上的替代品。
+
+这不等于没有 —— 只是说它还不在我的清单里。如果您找到了，一行就能加上去。
+
+@mem_nada_aprendido
+Tandem 还什么都没学到。
+
+随着您使用这些程序，记忆会自己攒起来。
+
+@mem_nao_achei
+关于 "{1}" 我没有学到过任何东西。
+
+@mem_titulo
+Tandem - 我学到的东西
+
+@esq_diga_o_nome
+请说出要忘掉的程序名。
+
+@esq_esqueci
+我已经忘掉关于 {1} 个程序所知道的事。下次会重新摸索。
+
+@id_titulo_janela
+Tandem - 机器身份
+
+@logs_nenhum
+还没有任何记录。
+
+@soc_pronto
+报告已生成：
+
+{1}
+
+把这个文件发给正在帮您的人。他要问的东西里面都有 —— 您不用敲任何命令。
+
+发之前先看一眼：里面会显示这台机器上文件的名字和路径。
+
+@soc_nao_gerou
+我没能生成报告。
+
+@mem_campo_resultado
+结果：      
+
+@mem_campo_arquitetura
+架构：       
+
+@mem_campo_resolveram
+解决了：     
+
+@mem_campo_nao_resolveram
+没解决：        
+
+@mem_campo_segundos
+用了（秒）： 
+
+@mem_campo_visto_em
+上次见到：   
+
+@mem_campo_limite
+限制：       
+
+@idioma_titulo_janela
+Tandem - 语言
+
+@botao_devolver
+放回去
+
+@botao_restaurar
+恢复
+
+@botao_restaurar_assim_mesmo
+仍然恢复
+
+@botao_parar
+停下
+
+@auto_progresso_titulo
+自检
+
+@prog_instalados_titulo
+Tandem 装过的程序：
+
+@prog_para_abrir
+要打开其中一个：  tandem programas "<名字的一部分>"
+
+@desinst_podem_ser_removidos
+可以卸载的 Windows 程序：
+
+@desinst_para_remover
+要卸载：  tandem desinstalar "<名字的一部分>"
+
+@desinst_terminal
+要卸载“%s”吗？它的文件会被删掉。[y/N] 
+
+@alt_cabecalho
+能顶替“{1}”干活的 Linux 程序：
+
+@auto_cabecalho
+Tandem {1} — 本机自检
+
+@auto_resumo
+{1} 项通过，{2} 项失败。
+
+@auto_falha_importa
+上面每一项“失败”，都是您真要用的时候会不管用的东西。
+
+@auto_tudo_respondeu
+Tandem 把这里能实测的都测了，全都有回应。
+
+@env_cabecalho
+把 Tandem 学到的东西发到社区清单
+
+@env_agora_ligado
+当前状态：已开启   （自 {1}）
+
+@env_agora_desligado
+当前状态：已关闭   （您在 {1} 选的）
+
+@env_ninguem_decidiu
+当前状态：已关闭   （还没有人做过选择）
+
+@env_fila
+队列里存着的行数：{1}
+
+@env_endereco
+发送地址：{1}
+
+@env_endereco_nao_existe
+发送地址：这个版本里根本没有。
+  这些记录留在队列里，等有了地址再一起发。在那之前，什么都不会离开这台
+  机器 —— 即使开着也一样。
+
+@env_o_que_sai
+发的是什么、什么时候发：每个程序一行，共八个字段，而且只在您确认程序
+能用之后才发。用这个看某个程序的那一行：  tandem contribuir <文件>
+
+@env_nunca_sai
+永远不会发的：文件名、文件夹、您的用户名、电脑名、网络地址，以及任何
+一行日志。保证这一点的筛子会跑两遍：一次在拼这行的时候，一次在真要发
+出去的时候。
+
+@env_ligar
+开启：     tandem enviar sim
+
+@env_desligar
+关闭：     tandem enviar nao
+
+@env_ver_fila
+查看整个队列：  cat {1}
+
+@soc_cabecalho
+TANDEM 报告
+
+@soc_gerado_em
+生成时间 {1}
+
+@soc_o_que_tem
+里面有什么：Tandem 的版本、这台机器上装了什么、最近的技术记录，以及
+Tandem 关于这些程序学到的东西。记录里会出现您的文件路径。发给别人之前
+先看一眼。
+
+@soc_sec_diagnostico
+环境诊断
+
+@soc_sec_autoteste
+自检
+
+@soc_sec_suspeitas
+可疑的对应关系
+
+@soc_sec_aprendi
+我学到的东西
+
+@soc_sec_registros
+技术记录
+
+@soc_nenhuma
+（无）
+
+@soc_ultimas_linhas
+--- {1}（最后 200 行）---
+
+@prep_terminal
+Tandem 可以把缺的东西装上：
+%s
+
+需要联网和您的密码。要继续吗？[y/N] 
+
+@cancelado
+已取消。
+
+@botao_instalar_tudo
+全部安装

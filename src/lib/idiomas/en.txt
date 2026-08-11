@@ -1618,3 +1618,330 @@ Use:  tandem enviar | tandem enviar sim | tandem enviar nao | tandem enviar agor
 
 @env_titulo
 Tandem - Send to the list
+
+@doctor_titulo
+Tandem - Diagnosis
+
+@dados_nao_conheco
+I do not know "tandem dados {1}".
+
+Use:  tandem dados | tandem dados salvar | tandem dados restaurar
+
+@sem_ambiente_windows
+There is no Windows environment here yet.
+
+@dados_titulo
+Tandem - Your files
+
+@dados_nada_para_copiar
+There are no files of yours to copy yet.
+
+@dados_copiando
+Copying your files ({1})...
+
+@dados_copiados
+Your files were copied to:
+
+{1}
+
+That file is yours. Keep it on a USB stick or e-mail it to yourself: with it,
+your data comes back on any computer.
+
+@dados_nao_copiou
+I could not copy your files.
+
+@dados_sem_copia
+I found no copy of your files.
+
+If you have the file, say where it is:
+tandem dados restaurar /path/to/copy.tar.gz
+
+@dados_sem_ambiente_devolver
+There is no Windows environment yet to put the files back into.
+
+@dados_devolver_pergunta
+Put your files back from:
+
+{1}
+
+Nothing that already exists will be deleted - only the missing files go in.
+
+@dados_devolvendo
+Putting your files back...
+
+@dados_devolvidos
+Your files have been put back.
+
+@dados_nao_devolveu
+I could not put the files back.
+
+@bkp_sem_ambiente
+There is no Windows environment to save yet.
+
+@bkp_salvando
+Saving the Windows environment. This may take a while.
+
+@bkp_salvo
+Backup saved to:
+{1}
+
+This is the WHOLE environment. Your own files are {2} of that total - to take
+just those, which is quick and fits in an e-mail:
+tandem dados salvar
+
+@bkp_nao_salvou
+I could not save the backup.
+
+@rst_nenhum_backup
+No backup found in your home folder.
+
+@rst_pergunta
+Restore the Windows environment from:
+
+{1}
+
+The current environment will be replaced. If a program in here was activated
+with a licence tied to this computer, it goes back to how it was when the copy
+was made — and may ask to be activated again.
+
+@rst_copia_guardada
+I kept a copy of your files in:
+{1}
+
+@rst_mesmo_assim
+Restore anyway?
+
+@rst_restaurando
+Restoring...
+
+@rst_restaurado
+Environment restored.
+
+@rst_nao_restaurou
+I could not restore it.
+
+@prot_caminho_invalido
+Invalid path.
+
+@prot_nao_gravou
+I could not write the list of protected profiles.
+
+@prot_protegido
+Profile protected:
+{1}
+
+Tandem will never install or change anything in there.
+
+@prog_nenhum
+No program installed by Tandem so far.
+
+Windows programs that do not create a Start Menu shortcut do not appear here.
+
+@prog_nao_achei
+I found no program with "{1}" in its name.
+
+@alt_diga_o_nome
+Say the program's name.
+
+Example:  tandem alternativas photoshop
+
+@alt_titulo
+Tandem - Alternatives to {1}
+
+@alt_nao_conheco
+I know of no Linux alternative to "{1}".
+
+That does not mean there is none — it means it is not on my list yet. If you
+find one, it can be added in a single line.
+
+@mem_nada_aprendido
+Tandem has not learnt anything yet.
+
+The memory forms on its own as you use the programs.
+
+@mem_nao_achei
+I found nothing learnt about "{1}".
+
+@mem_titulo
+Tandem - What I have learnt
+
+@esq_diga_o_nome
+Say the name of the program to forget.
+
+@esq_esqueci
+I have forgotten what I knew about {1} program(s). Next time it works it out again.
+
+@id_titulo_janela
+Tandem - machine identity
+
+@logs_nenhum
+There are no logs yet.
+
+@soc_pronto
+Report ready:
+
+{1}
+
+Send this file to whoever is helping you. It holds everything that person is
+going to ask for - no commands to type.
+
+Before sending it, have a look: it shows names and paths of files that are on
+this machine.
+
+@soc_nao_gerou
+I could not produce the report.
+
+@mem_campo_resultado
+result:     
+
+@mem_campo_arquitetura
+architecture:
+
+@mem_campo_resolveram
+fixed it:   
+
+@mem_campo_nao_resolveram
+did not fix it: 
+
+@mem_campo_segundos
+took (s):  
+
+@mem_campo_visto_em
+last seen:  
+
+@mem_campo_limite
+limit:      
+
+@idioma_titulo_janela
+Tandem - language
+
+@botao_devolver
+Put them back
+
+@botao_restaurar
+Restore
+
+@botao_restaurar_assim_mesmo
+Restore anyway
+
+@botao_parar
+Stop
+
+@auto_progresso_titulo
+self-test
+
+@prog_instalados_titulo
+Programs installed by Tandem:
+
+@prog_para_abrir
+To open one of them:  tandem programas "<part of the name>"
+
+@desinst_podem_ser_removidos
+Windows programs that can be removed:
+
+@desinst_para_remover
+To remove one:  tandem desinstalar "<part of the name>"
+
+@desinst_terminal
+Remove "%s"? Its files will be deleted. [y/N] 
+
+@alt_cabecalho
+Linux programs that do the job of "{1}":
+
+@auto_cabecalho
+Tandem {1} — self-test on this machine
+
+@auto_resumo
+{1} passed, {2} failed.
+
+@auto_falha_importa
+Every FAIL above is something that will not work when you need it.
+
+@auto_tudo_respondeu
+Tandem exercised what could be exercised here, and everything answered.
+
+@env_cabecalho
+Sending what Tandem learns to the community list
+
+@env_agora_ligado
+Right now: ON   (since {1})
+
+@env_agora_desligado
+Right now: OFF   (you chose that on {1})
+
+@env_ninguem_decidiu
+Right now: OFF   (nobody has decided yet)
+
+@env_fila
+Lines held in the queue: {1}
+
+@env_endereco
+Address to send to: {1}
+
+@env_endereco_nao_existe
+Address to send to: NONE EXISTS in this version.
+  The lines stay in the queue and go along once one exists. Until then,
+  nothing leaves this machine - not even with sending on.
+
+@env_o_que_sai
+What goes, when it goes: one line of eight pieces per program, and only after
+YOU confirm that the program worked. See a program's line with:
+tandem contribuir <file>
+
+@env_nunca_sai
+What never goes: a file name, a folder, your user name, the computer's name, a
+network address, or a single line of log. The sieve that guarantees it runs
+twice: when the line is assembled and again at the moment of sending.
+
+@env_ligar
+Turn on:   tandem enviar sim
+
+@env_desligar
+Turn off:  tandem enviar nao
+
+@env_ver_fila
+See the whole queue:  cat {1}
+
+@soc_cabecalho
+TANDEM REPORT
+
+@soc_gerado_em
+Generated on {1}
+
+@soc_o_que_tem
+What is in here: Tandem's version, what is installed on this machine, the
+latest technical logs, and what Tandem has learnt about the programs. The logs
+show FILE PATHS of yours. Have a look before sending it to somebody.
+
+@soc_sec_diagnostico
+DIAGNOSIS
+
+@soc_sec_autoteste
+SELF-TEST
+
+@soc_sec_suspeitas
+SUSPICIOUS MAPPINGS
+
+@soc_sec_aprendi
+WHAT I HAVE LEARNT
+
+@soc_sec_registros
+TECHNICAL LOGS
+
+@soc_nenhuma
+(none)
+
+@soc_ultimas_linhas
+--- {1} (last 200 lines) ---
+
+@prep_terminal
+Tandem can install what is missing:
+%s
+
+It needs the internet and your password. Continue? [y/N] 
+
+@cancelado
+Cancelled.
+
+@botao_instalar_tudo
+Install everything
