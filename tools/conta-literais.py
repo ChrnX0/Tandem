@@ -30,9 +30,17 @@ ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + sorted(RAIZ.glob("src/lib/*.sh"))
 
 # Files whose migration is finished. Adding a name here IS the act of
 # declaring it done, and --migrados then refuses to let it slip back.
+# "tandem" and "common.sh" were on this list and had no business being there:
+# 75 sentences between them, including the whole of "tandem doctor", the zenity
+# panel's own prompt, the hardware-key advice and the longest message in the
+# program. They were declared done on the word of a counter that could not see
+# an "out+=" append or a printf whose prose is in the argument rather than the
+# format. Declaring a file finished is a claim about the file, not about the
+# tool, and the two got confused for two versions.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
-    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak", "tandem-jar", "tandem-appimage", "winedeps.sh", "common.sh", "tandem",
+    "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak",
+    "tandem-jar", "tandem-appimage", "winedeps.sh",
 }
 
 CHAMADA = re.compile(
@@ -73,6 +81,15 @@ def sem_expansoes(texto):
     profundidade = 0
     i = 0
     while i < len(texto):
+        # A backslash-escaped character is never structure. Without this, the
+        # \) inside a sed script closed the $( that had not been opened by it,
+        # and the rest of a shell command came out looking like a sentence -
+        # which put "/proc/meminfo" on the list of messages to translate.
+        if texto[i] == "\\":
+            if not profundidade:
+                fora.append(texto[i:i + 2])
+            i += 2
+            continue
         if texto.startswith("$(", i):
             profundidade += 1
             i += 2
@@ -124,6 +141,17 @@ def e_literal(argumento):
 FUNCAO_MENSAGEM = re.compile(
     r"^((?:t_(?:texto|causa)_|acao_)[a-z_0-9]+|uso)\(\)\s*\{", re.M)
 PRINTF = re.compile(r"printf\s+(?:--\s+)?'((?:[^'\\]|\\.)*)'")
+# TENTH shape, found while fixing the ninth: printf's prose does not have to be
+# in the format string. t_texto_vm writes
+#
+#     printf '%s' "Existe um caminho mais pesado, ..."
+#
+# and PRINTF above matched only the '%s', which has no letters in it - so a
+# fifteen-line paragraph about running a real Windows in a virtual machine, the
+# longest single message in the program, counted as zero. The lesson holds: every
+# version of this measure built from the shapes in front of me has passed
+# falsely, so this number is a FLOOR, not a total.
+PRINTF_ARG = re.compile(r'printf\s+(?:--\s+)?(?:\'[^\']*\'|"[^"]*")\s+"((?:[^"\\]|\\.)*)"')
 FORMATO = re.compile(r"%[-+ #0-9.]*[a-zA-Z]|\\[nt]")
 # An octal escape means binary, not prose. The ELF magic the self-test writes to
 # build a fake executable spells "ELF" in the middle of it.
@@ -180,15 +208,88 @@ def corpos_de_mensagem(texto):
 def printfs_com_prosa(texto):
     achados = []
     for _nome, corpo in corpos_de_mensagem(texto):
-        for m in PRINTF.finditer(corpo):
-            if BINARIO.search(m.group(1)):
-                continue
-            resto = FORMATO.sub("", m.group(1))
-            # Three letters in a row is a word. One or two are a unit, an
-            # initial, or the tail of an escape.
-            if re.search(r"[^\W\d_]{3,}", resto, re.UNICODE):
-                achados.append(m.group(1))
+        for padrao in (PRINTF, PRINTF_ARG):
+            for m in padrao.finditer(corpo):
+                if BINARIO.search(m.group(1)):
+                    continue
+                resto = FORMATO.sub("", m.group(1))
+                resto = sem_expansoes(resto).strip()
+                # Three letters in a row is a word. One or two are a unit, an
+                # initial, or the tail of an escape.
+                if re.search(r"[^\W\d_]{3,}", resto, re.UNICODE):
+                    achados.append(m.group(1))
     return achados
+
+
+# And an EIGHTH shape - ninth, counting the lowercase name that got away once -
+# and it hid the second most-read screen in the program. acao_doctor does not
+# printf and does not call t_erro: it appends its whole report, line by line,
+# into a variable with
+#
+#     out+="SISTEMA\n"
+#
+# ATRIBUICAO above is a WHITELIST OF VARIABLE NAMES, and "out" was not on it, so
+# forty-odd lines of Portuguese - the entire diagnostic an English-speaking user
+# reads, and the thing "tandem socorro" ships to whoever is helping them - were
+# scored as zero while this tool printed TOTAL 0 and the suite asserted that
+# number. Found by installing the built package and reading the output, which is
+# the only method that has ever caught this measure being wrong.
+#
+# So the whitelist stops here. Inside a body that exists to produce prose, EVERY
+# assignment and append is examined, whatever it is called. The narrowing that
+# keeps this usable is the body, not the name: t_texto_*, t_causa_*, acao_* and
+# uso() are where sentences are assembled, and a string assignment in one of
+# them is a message until proven otherwise.
+ATRIBUICAO_QUALQUER = re.compile(
+    r'\b[A-Za-z_][A-Za-z0-9_]*\+?=\s*"((?:[^"\\]|\\.)*)"')
+
+
+def atribuicoes_com_prosa(texto):
+    achados = []
+    for _nome, corpo in corpos_de_mensagem(texto):
+        for m in ATRIBUICAO_QUALQUER.finditer(corpo):
+            bruto = m.group(1)
+            if BINARIO.search(bruto):
+                continue
+            resto = FORMATO.sub("", bruto)
+            resto = sem_expansoes(resto).strip()
+            if not re.search(r"[^\W\d_]{3,}", resto, re.UNICODE):
+                continue
+            # A value with no whitespace that carries a slash or a dot is a
+            # path, a filename, a MIME type or a version - not a sentence.
+            # Without this the file paths every acao_* opens are all reported
+            # as messages, and a report that is mostly noise gets ignored,
+            # which is how a real one goes unread.
+            if " " not in resto and re.search(r"[/.]", resto):
+                continue
+            if resto.startswith("-") and " " not in resto:
+                continue
+            achados.append(bruto)
+    return achados
+
+
+# Strings that are NOT prose and must never be translated, listed one by one
+# with the reason. This is a list of decisions, not a rule about shapes: a rule
+# is what let nine versions of this counter pass falsely, whereas an exact string
+# that somebody had to add on purpose cannot quietly grow to cover new prose. If
+# you find yourself adding a sentence here, you are doing it wrong.
+EXCECOES = {
+    # Vendor product names. The owner is told to fetch these FROM THE
+    # MANUFACTURER, by the name the manufacturer uses; a translated product
+    # name is a name that finds nothing.
+    "Sentinel LDK Run-time Environment for Linux",
+    "CodeMeter Runtime for Linux",
+    "CodeMeter",
+    # systemd unit names, queried with systemctl.
+    "CodeMeter CodeMeterLin",
+    # Windows serial-port labels. Wine counts the phantom ports too, so these
+    # numbers have to match what Wine shows - and COM is not a word.
+    "COM$n",
+    "COM$n|$p",
+    # An on-disk value, not prose. Rule: translating one breaks memory files
+    # and recipes already written on somebody's machine.
+    "sim",
+}
 
 
 def literais(caminho):
@@ -196,7 +297,9 @@ def literais(caminho):
     achados = [m.group(1) for m in CHAMADA.finditer(texto)]
     achados += [m.group(1) for m in ATRIBUICAO.finditer(texto)]
     achados = [a for a in achados if e_literal(a)]
-    return achados + printfs_com_prosa(texto) + heredocs_com_prosa(texto)
+    todos = (achados + printfs_com_prosa(texto) + heredocs_com_prosa(texto)
+             + atribuicoes_com_prosa(texto))
+    return [a for a in todos if a.strip() not in EXCECOES]
 
 
 def main():
