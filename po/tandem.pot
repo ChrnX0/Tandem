@@ -3007,3 +3007,175 @@ msgstr ""
 msgctxt "doc_perfis_nenhum"
 msgid "(none listed; other people's profiles are protected automatically)"
 msgstr ""
+
+msgctxt "at_erro_ok"
+msgid "error messages have somewhere to go"
+msgstr ""
+
+msgctxt "at_erro_nao"
+msgid "error messages vanish"
+msgstr ""
+
+msgctxt "at_erro_porque"
+msgid "with no window and no terminal, an error from here reaches nobody"
+msgstr ""
+
+msgctxt "at_acento_ok"
+msgid "the system accepts accented text (charmap UTF-8)"
+msgstr ""
+
+msgctxt "at_acento_nao"
+msgid "accented text does not get through"
+msgstr ""
+
+msgctxt "at_acento_porque"
+msgid "the locale in force is not UTF-8; Tandem's windows will not open"
+msgstr ""
+
+msgctxt "at_diag_ok"
+msgid "the diagnosis can be written to a file and sent"
+msgstr ""
+
+msgctxt "at_diag_nao"
+msgid "the diagnosis cannot be sent"
+msgstr ""
+
+msgctxt "at_diag_porque"
+msgid "writing to a file produced zero bytes"
+msgstr ""
+
+msgctxt "at_trava_ok"
+msgid "the double-click lock can be created ({1})"
+msgstr ""
+
+msgctxt "at_trava_nao"
+msgid "the lock cannot be created"
+msgstr ""
+
+msgctxt "at_trava_porque"
+msgid "in {1} — disk full, no permission, or a folder on the network"
+msgstr ""
+
+msgctxt "at_progresso_ok"
+msgid "closing the progress window does not bring Tandem down"
+msgstr ""
+
+msgctxt "at_progresso_nao"
+msgid "closing the progress window brings Tandem down"
+msgstr ""
+
+msgctxt "at_progresso_porque"
+msgid "the process took a signal instead of carrying on"
+msgstr ""
+
+msgctxt "at_pevoo_ok"
+msgid "the pre-flight reads a real Windows program"
+msgstr ""
+
+msgctxt "at_pevoo_nao"
+msgid "the pre-flight could not read a program"
+msgstr ""
+
+msgctxt "at_clique_ok"
+msgid "a double click on a {1} comes to Tandem"
+msgstr ""
+
+msgctxt "at_clique_nao"
+msgid "a double click on a {1} does not come to Tandem"
+msgstr ""
+
+msgctxt "at_clique_porque"
+msgid "what answers is: {1} — run: tandem repair"
+msgstr ""
+
+msgctxt "at_appimage_ok"
+msgid "the AppImage pre-flight reads type and processor"
+msgstr ""
+
+msgctxt "at_appimage_nao"
+msgid "the AppImage pre-flight did not read the header"
+msgstr ""
+
+msgctxt "at_python_porque"
+msgid "{1} — the python3 on this machine may be broken"
+msgstr ""
+
+msgctxt "at_java_ok"
+msgid "the Java pre-flight reads a real .jar"
+msgstr ""
+
+msgctxt "at_java_nao"
+msgid "the Java pre-flight could not read a .jar"
+msgstr ""
+
+msgctxt "at_deb_ok"
+msgid "the pre-flight reads a real .deb package ({1})"
+msgstr ""
+
+msgctxt "at_deb_nao"
+msgid "the pre-flight could not read a .deb"
+msgstr ""
+
+msgctxt "at_apt_ok"
+msgid "apt answers without a password (the diagnosis comes before asking for it)"
+msgstr ""
+
+msgctxt "at_apt_nao"
+msgid "apt did not answer without a password"
+msgstr ""
+
+msgctxt "at_apt_porque"
+msgid "without this the owner types a password only to be told no"
+msgstr ""
+
+msgctxt "at_javaver_nao"
+msgid "I could not read the Java version"
+msgstr ""
+
+msgctxt "at_javaver_porque"
+msgid "java -version answered: {1}"
+msgstr ""
+
+msgctxt "at_javaver_ok"
+msgid "the Java version was recognised ({1})"
+msgstr ""
+
+msgctxt "at_protegido_nao"
+msgid "a profile on your list is not being protected"
+msgstr ""
+
+msgctxt "at_protegido_ok"
+msgid "the {1} profile(s) on your list are refused by the automation"
+msgstr ""
+
+msgctxt "prog_titulo_janela"
+msgid "Tandem - Installed programs"
+msgstr ""
+
+msgctxt "prog_qual_abrir"
+msgid "Which program do you want to open?"
+msgstr ""
+
+msgctxt "des_titulo_janela"
+msgid "Tandem - Remove a program"
+msgstr ""
+
+msgctxt "des_qual_remover"
+msgid "Which program do you want to remove?"
+msgstr ""
+
+msgctxt "botao_remover"
+msgid "Remove"
+msgstr ""
+
+msgctxt "botao_remover_assim"
+msgid "Remove it anyway"
+msgstr ""
+
+msgctxt "botao_abrir_formulario"
+msgid "Open the form"
+msgstr ""
+
+msgctxt "botao_nao_obrigado"
+msgid "No, thank you"
+msgstr ""

@@ -1513,7 +1513,7 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # is not. Lower this line when you migrate something; the test fails if you
     # add prose to the code, and fails if you leave this number stale after
     # removing some.
-    TETO_LIT=63
+    TETO_LIT=15
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
         pass "the literals still in the code are the $TETO_LIT already known about"
@@ -1852,6 +1852,45 @@ equal "a tab in RESULTADO is refused too" \
       "5" "$(campos_receita "RESULTADO=abriu$(printf '\t')mais coisa")"
 equal "and an ordinary recipe still imports" \
       "0" "$(campos_receita "ARQUITETURA=64")"
+
+# The counter skips t_diz lines, because the log is a different audience with a
+# documented exception - and that skip is a whole-line one, so a line carrying
+# BOTH a log call and a user-facing call would lose the user-facing half. No such
+# line exists today; this is what notices if one appears.
+ISCA_LOG="$TMPROOT/isca-log.sh"
+cat > "$ISCA_LOG" <<'FIMLOG'
+acao_x() {
+    t_diz "isto vai para o registro tecnico"
+    t_erro "isto a pessoa le na tela"
+}
+FIMLOG
+conta_isca="$(cd "$ROOT" && python3 - "$ISCA_LOG" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(len(m.literais(pathlib.Path(sys.argv[1]))))
+FIM
+)"
+equal "a log line is exempt and a message on the next line still counts" \
+      "1" "$conta_isca"
+# And the two on ONE line, which the whole-line skip would swallow.
+cat > "$ISCA_LOG" <<'FIMLOG'
+acao_x() {
+    t_erro "isto a pessoa le na tela" && t_diz "isto vai para o registro"
+}
+FIMLOG
+conta_junto="$(cd "$ROOT" && python3 - "$ISCA_LOG" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(len(m.literais(pathlib.Path(sys.argv[1]))))
+FIM
+)"
+equal "a message sharing a line with a log call is still counted" \
+      "1" "$conta_junto"
+naocontem "and no such line exists in the tree, so the skip costs nothing today" \
+          "t_diz" "$(grep -hE '(t_erro|t_aviso|t_ok|t_pergunta) .*t_diz' \
+                         "$ROOT"/src/bin/* "$ROOT"/src/lib/*.sh || true)"
 
 # The doctor report is the second most-read screen, and it is what "tandem
 # socorro" sends to whoever is helping - so a Portuguese diagnostic reaching an

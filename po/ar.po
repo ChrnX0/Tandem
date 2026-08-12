@@ -3844,3 +3844,175 @@ msgstr "الملفات المحمية"
 msgctxt "doc_perfis_nenhum"
 msgid "(none listed; other people's profiles are protected automatically)"
 msgstr "(لا شيء مُدرَج؛ ملفات الآخرين محميّة تلقائيًا)"
+
+msgctxt "at_erro_ok"
+msgid "error messages have somewhere to go"
+msgstr "رسائل الخطأ لها مكان تظهر فيه"
+
+msgctxt "at_erro_nao"
+msgid "error messages vanish"
+msgstr "رسائل الخطأ تتلاشى"
+
+msgctxt "at_erro_porque"
+msgid "with no window and no terminal, an error from here reaches nobody"
+msgstr "بلا نافذة ولا طرفية، لا يصل أي خطأ من هنا إلى أحد"
+
+msgctxt "at_acento_ok"
+msgid "the system accepts accented text (charmap UTF-8)"
+msgstr "النظام يقبل النصوص المشكَّلة (charmap UTF-8)"
+
+msgctxt "at_acento_nao"
+msgid "accented text does not get through"
+msgstr "النص المشكَّل لا يمر"
+
+msgctxt "at_acento_porque"
+msgid "the locale in force is not UTF-8; Tandem's windows will not open"
+msgstr "الإعداد المحلي الحالي ليس UTF-8؛ نوافذ Tandem لن تُفتح"
+
+msgctxt "at_diag_ok"
+msgid "the diagnosis can be written to a file and sent"
+msgstr "يمكن حفظ التشخيص في ملف وإرساله"
+
+msgctxt "at_diag_nao"
+msgid "the diagnosis cannot be sent"
+msgstr "لا يمكن إرسال التشخيص"
+
+msgctxt "at_diag_porque"
+msgid "writing to a file produced zero bytes"
+msgstr "الكتابة إلى ملف أنتجت صفر بايت"
+
+msgctxt "at_trava_ok"
+msgid "the double-click lock can be created ({1})"
+msgstr "يمكن إنشاء قفل النقر المزدوج ({1})"
+
+msgctxt "at_trava_nao"
+msgid "the lock cannot be created"
+msgstr "لا يمكن إنشاء القفل"
+
+msgctxt "at_trava_porque"
+msgid "in {1} — disk full, no permission, or a folder on the network"
+msgstr "في {1} — القرص ممتلئ، أو لا صلاحية، أو مجلد على الشبكة"
+
+msgctxt "at_progresso_ok"
+msgid "closing the progress window does not bring Tandem down"
+msgstr "إغلاق نافذة التقدم لا يُسقِط Tandem"
+
+msgctxt "at_progresso_nao"
+msgid "closing the progress window brings Tandem down"
+msgstr "إغلاق نافذة التقدم يُسقِط Tandem"
+
+msgctxt "at_progresso_porque"
+msgid "the process took a signal instead of carrying on"
+msgstr "استلمت العملية إشارة بدل أن تتابع"
+
+msgctxt "at_pevoo_ok"
+msgid "the pre-flight reads a real Windows program"
+msgstr "الفحص المسبق يقرأ برنامج Windows حقيقيًا"
+
+msgctxt "at_pevoo_nao"
+msgid "the pre-flight could not read a program"
+msgstr "لم يستطع الفحص المسبق قراءة برنامج"
+
+msgctxt "at_clique_ok"
+msgid "a double click on a {1} comes to Tandem"
+msgstr "النقر المزدوج على {1} يصل إلى Tandem"
+
+msgctxt "at_clique_nao"
+msgid "a double click on a {1} does not come to Tandem"
+msgstr "النقر المزدوج على {1} لا يصل إلى Tandem"
+
+msgctxt "at_clique_porque"
+msgid "what answers is: {1} — run: tandem repair"
+msgstr "الذي يستجيب هو: {1} — نفِّذ: tandem repair"
+
+msgctxt "at_appimage_ok"
+msgid "the AppImage pre-flight reads type and processor"
+msgstr "الفحص المسبق لـ AppImage يقرأ النوع والمعالج"
+
+msgctxt "at_appimage_nao"
+msgid "the AppImage pre-flight did not read the header"
+msgstr "الفحص المسبق لـ AppImage لم يقرأ الترويسة"
+
+msgctxt "at_python_porque"
+msgid "{1} — the python3 on this machine may be broken"
+msgstr "{1} — قد يكون python3 على هذا الجهاز معطوبًا"
+
+msgctxt "at_java_ok"
+msgid "the Java pre-flight reads a real .jar"
+msgstr "الفحص المسبق لـ Java يقرأ ملف .jar حقيقيًا"
+
+msgctxt "at_java_nao"
+msgid "the Java pre-flight could not read a .jar"
+msgstr "لم يستطع الفحص المسبق لـ Java قراءة ملف .jar"
+
+msgctxt "at_deb_ok"
+msgid "the pre-flight reads a real .deb package ({1})"
+msgstr "الفحص المسبق يقرأ حزمة .deb حقيقية ({1})"
+
+msgctxt "at_deb_nao"
+msgid "the pre-flight could not read a .deb"
+msgstr "لم يستطع الفحص المسبق قراءة ملف .deb"
+
+msgctxt "at_apt_ok"
+msgid "apt answers without a password (the diagnosis comes before asking for it)"
+msgstr "يستجيب apt بلا كلمة مرور (التشخيص يأتي قبل طلبها)"
+
+msgctxt "at_apt_nao"
+msgid "apt did not answer without a password"
+msgstr "لم يستجب apt بلا كلمة مرور"
+
+msgctxt "at_apt_porque"
+msgid "without this the owner types a password only to be told no"
+msgstr "بدون هذا يُدخِل المالك كلمة المرور ليسمع الرفض فقط"
+
+msgctxt "at_javaver_nao"
+msgid "I could not read the Java version"
+msgstr "لم أتمكّن من قراءة إصدار Java"
+
+msgctxt "at_javaver_porque"
+msgid "java -version answered: {1}"
+msgstr "أجاب java -version بـ: {1}"
+
+msgctxt "at_javaver_ok"
+msgid "the Java version was recognised ({1})"
+msgstr "تم التعرّف على إصدار Java ({1})"
+
+msgctxt "at_protegido_nao"
+msgid "a profile on your list is not being protected"
+msgstr "أحد الملفات في قائمتك غير محميّ"
+
+msgctxt "at_protegido_ok"
+msgid "the {1} profile(s) on your list are refused by the automation"
+msgstr "الملفات ({1}) في قائمتك ترفضها الآلية"
+
+msgctxt "prog_titulo_janela"
+msgid "Tandem - Installed programs"
+msgstr "Tandem - البرامج المثبَّتة"
+
+msgctxt "prog_qual_abrir"
+msgid "Which program do you want to open?"
+msgstr "أي برنامج تريد فتحه؟"
+
+msgctxt "des_titulo_janela"
+msgid "Tandem - Remove a program"
+msgstr "Tandem - إزالة برنامج"
+
+msgctxt "des_qual_remover"
+msgid "Which program do you want to remove?"
+msgstr "أي برنامج تريد إزالته؟"
+
+msgctxt "botao_remover"
+msgid "Remove"
+msgstr "إزالة"
+
+msgctxt "botao_remover_assim"
+msgid "Remove it anyway"
+msgstr "أزِله على أي حال"
+
+msgctxt "botao_abrir_formulario"
+msgid "Open the form"
+msgstr "افتح النموذج"
+
+msgctxt "botao_nao_obrigado"
+msgid "No, thank you"
+msgstr "لا، شكرًا"

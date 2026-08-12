@@ -493,8 +493,8 @@ acao_programas() {
     # With no window (terminal, SSH), the list comes out as text. "escolher"
     # returns empty both on Cancel and when zenity is missing; in the first
     # case the listing is harmless, in the second it is the only path left.
-    escolha="$(escolher "Tandem - Programas instalados" \
-                        "Qual programa você quer abrir?" "${nomes[@]}")"
+    escolha="$(escolher "$(t_msg prog_titulo_janela)" \
+                        "$(t_msg prog_qual_abrir)" "${nomes[@]}")"
     if [ -z "$escolha" ]; then
         printf '%s\n\n' "$(t_msg prog_instalados_titulo)"
         printf '  %s\n' "${nomes[@]}"
@@ -532,8 +532,8 @@ acao_uninstall() {
     done <<< "$lista"
 
     if [ -z "$filtro" ]; then
-        escolha="$(escolher "Tandem - Remover programa" \
-                            "Qual programa você quer remover?" "${nomes[@]}")"
+        escolha="$(escolher "$(t_msg des_titulo_janela)" \
+                            "$(t_msg des_qual_remover)" "${nomes[@]}")"
         if [ -z "$escolha" ]; then
             printf '%s\n\n' "$(t_msg desinst_podem_ser_removidos)"
             printf '  %s\n' "${nomes[@]}"
@@ -560,7 +560,7 @@ acao_uninstall() {
     # Confirmation: a window; failing that, the terminal; with neither, it
     # refuses SAYING why - removing a program with nobody confirming is a
     # risk, and giving up silently is a defect.
-    if ! t_pergunta "$(t_msg desinst_pergunta "$nome")" "Remover" "Cancelar"; then
+    if ! t_pergunta "$(t_msg desinst_pergunta "$nome")" "$(t_msg botao_remover)" "$(t_msg botao_cancelar)"; then
         if [ -t 0 ]; then
             printf "$(t_msg desinst_terminal)" "$nome"
             read -r r
@@ -582,7 +582,7 @@ acao_uninstall() {
         0) t_aviso "$(t_msg desinst_copia_guardada "$resgate")" ;;
         1) t_pergunta "$(t_texto_resgate_falhou)
 
-$(t_msg desinst_remover_mesmo_assim)" "Remover assim mesmo" "Parar" || return 1 ;;
+$(t_msg desinst_remover_mesmo_assim)" "$(t_msg botao_remover_assim)" "$(t_msg botao_parar)" || return 1 ;;
     esac
 
     # We prefer the silent uninstaller, which the program itself declares in
@@ -669,34 +669,34 @@ acao_autoteste() {
     # 1. Does the error message reach SOMEWHERE? Without this, all the rest of
     #    the diagnosis is useless: the owner would never learn of the problem.
     if [ -n "$(t_erro "$(t_msg auto_ignore)" 2>&1 1>/dev/null)" ] || t_tem_gui; then
-        passa "as mensagens de erro têm para onde ir"
+        passa "$(t_msg at_erro_ok)"
     else
-        falha "as mensagens de erro somem" "sem janela e sem terminal, um erro daqui não chega a ninguém"
+        falha "$(t_msg at_erro_nao)" "$(t_msg at_erro_porque)"
     fi
 
     # 2. Does accented text survive? This is the defect that wiped out the
     #    whole interface on a real machine, and no listing would catch it.
     if [ "$(locale charmap 2>/dev/null)" = "UTF-8" ]; then
-        passa "o sistema aceita texto com acento (charmap UTF-8)"
+        passa "$(t_msg at_acento_ok)"
     else
-        falha "o texto com acento não passa" "o locale em vigor não é UTF-8; as janelas do Tandem não vão abrir"
+        falha "$(t_msg at_acento_nao)" "$(t_msg at_acento_porque)"
     fi
 
     # 3. Can the diagnosis be written to a file? If not, the owner has no way
     #    to send it to anyone.
     if ( "$0" version > "$tmp/redir.txt" 2>/dev/null ) && [ -s "$tmp/redir.txt" ]; then
-        passa "o diagnóstico pode ser gravado e enviado"
+        passa "$(t_msg at_diag_ok)"
     else
-        falha "o diagnóstico não pode ser enviado" "gravar em arquivo produziu zero byte"
+        falha "$(t_msg at_diag_nao)" "$(t_msg at_diag_porque)"
     fi
 
     # 4. Can the double-click lock be created? If not, the double click stops
     #    working - and silently, which is what happened.
     if ( exec 7> "$TANDEM_TRAVAS/autoteste.lock" ) 2>/dev/null &&
        rm -f "$TANDEM_TRAVAS/autoteste.lock" 2>/dev/null; then
-        passa "a trava do duplo clique pode ser criada ($TANDEM_TRAVAS)"
+        passa "$(t_msg at_trava_ok "$TANDEM_TRAVAS")"
     else
-        falha "a trava não pode ser criada" "em $TANDEM_TRAVAS — disco cheio, sem permissão, ou pasta em rede"
+        falha "$(t_msg at_trava_nao)" "$(t_msg at_trava_porque "$TANDEM_TRAVAS")"
     fi
 
     # 5. Does the progress bar survive the window vanishing? Really exercised:
@@ -705,9 +705,9 @@ acao_autoteste() {
         ( t_progresso_abre "$(t_msg auto_progresso_titulo)"; kill "${TANDEM_PROG_PID:-0}" 2>/dev/null
           sleep 0.3; t_progresso_texto "$(t_msg auto_depois_de_fechada)"; t_progresso_fecha ) >/dev/null 2>&1
         if [ $? -lt 128 ]; then
-            passa "fechar a janela de progresso não derruba o Tandem"
+            passa "$(t_msg at_progresso_ok)"
         else
-            falha "fechar a janela de progresso derruba o Tandem" "o processo recebeu um sinal em vez de continuar"
+            falha "$(t_msg at_progresso_nao)" "$(t_msg at_progresso_porque)"
         fi
     else
         saida="$saida  --      $(t_msg auto_pulou_progresso)"$'\n'
@@ -719,9 +719,9 @@ acao_autoteste() {
     umexe="$(find "$TANDEM_PREFIXO_PADRAO/drive_c" -name '*.exe' -size -20M 2>/dev/null | head -1)"
     if [ -n "$umexe" ]; then
         if [ -n "$(python3 "$TANDEM_LIB/peinfo.py" "$umexe" 2>/dev/null | sed -n 's/^ARQUITETURA=//p')" ]; then
-            passa "o pré-voo lê um programa Windows de verdade"
+            passa "$(t_msg at_pevoo_ok)"
         else
-            falha "o pré-voo não conseguiu ler um programa" "$umexe"
+            falha "$(t_msg at_pevoo_nao)" "$umexe"
         fi
     else
         saida="$saida  --      $(t_msg auto_pulou_pe)"$'\n'
@@ -746,10 +746,10 @@ acao_autoteste() {
                    "application/vnd.snap|.snap|tandem-snap.desktop"; do
             dono="$(xdg-mime query default "${par%%|*}" 2>/dev/null)"
             if [ "$dono" = "${par##*|}" ]; then
-                passa "o duplo clique num $(printf '%s' "$par" | cut -d'|' -f2) vem para o Tandem"
+                passa "$(t_msg at_clique_ok "$(printf '%s' "$par" | cut -d'|' -f2)")"
             else
-                falha "o duplo clique num $(printf '%s' "$par" | cut -d'|' -f2) não vem para o Tandem" \
-                      "quem responde é: ${dono:-ninguém} — rode: tandem repair"
+                falha "$(t_msg at_clique_nao "$(printf '%s' "$par" | cut -d'|' -f2)")" \
+                      "$(t_msg at_clique_porque "${dono:-?}")"
             fi
         done
     fi
@@ -764,9 +764,9 @@ acao_autoteste() {
     local lido; lido="$(t_appimage_info "$tmp/falso.AppImage" 2>/dev/null)"
     if [ "$(t_campo "$lido" TIPO)" = 2 ] &&
        [ "$(t_campo "$lido" ARQUITETURA)" = x86_64 ]; then
-        passa "o pré-voo do AppImage lê tipo e processador"
+        passa "$(t_msg at_appimage_ok)"
     else
-        falha "o pré-voo do AppImage não leu o cabeçalho" "${lido:-nenhuma resposta} — o python3 desta máquina pode estar quebrado"
+        falha "$(t_msg at_appimage_nao)" "$(t_msg at_python_porque "${lido:-?}")"
     fi
 
     # 9. Does the jar reader work? Against a real .jar, if this machine has one
@@ -777,9 +777,9 @@ acao_autoteste() {
                   2>/dev/null | head -1)"
     if [ -n "$umjar" ]; then
         if [ -n "$(t_campo "$(t_jar_info "$umjar")" MAIOR)" ]; then
-            passa "o pré-voo do Java lê um .jar de verdade"
+            passa "$(t_msg at_java_ok)"
         else
-            falha "o pré-voo do Java não conseguiu ler um .jar" "$umjar"
+            falha "$(t_msg at_java_nao)" "$umjar"
         fi
     else
         saida="$saida  --      $(t_msg auto_pulou_java)"$'\n'
@@ -796,9 +796,9 @@ acao_autoteste() {
         if [ -n "$umdeb" ]; then
             local lido_deb; lido_deb="$(t_deb_info "$umdeb")"
             if [ -n "$(t_campo "$lido_deb" PACOTE)" ]; then
-                passa "o pré-voo lê um pacote .deb de verdade ($(t_campo "$lido_deb" PACOTE))"
+                passa "$(t_msg at_deb_ok "$(t_campo "$lido_deb" PACOTE)")"
             else
-                falha "o pré-voo não conseguiu ler um .deb" \
+                falha "$(t_msg at_deb_nao)" \
                       "$umdeb: $(t_campo "$lido_deb" ERRO)"
             fi
         else
@@ -810,10 +810,9 @@ acao_autoteste() {
     #     if this fails, the owner gets asked for a password only to be told no.
     if command -v apt-get >/dev/null 2>&1; then
         if t_apt_simula /bin/true 2>&1 | grep -qiE 'Reading package lists|E: |Unable'; then
-            passa "o apt responde sem senha (o diagnóstico vem antes de pedi-la)"
+            passa "$(t_msg at_apt_ok)"
         else
-            falha "o apt não respondeu sem senha" \
-                  "sem isso o dono digita a senha só para ouvir não"
+            falha "$(t_msg at_apt_nao)" "$(t_msg at_apt_porque)"
         fi
     fi
 
@@ -823,8 +822,8 @@ acao_autoteste() {
     if command -v java >/dev/null 2>&1; then
         local jv; jv="$(t_java_versao)"
         case "$jv" in
-            ''|*[!0-9]*) falha "não consegui ler a versão do Java" "java -version respondeu: $(java -version 2>&1 | head -1)" ;;
-            *)           passa "a versão do Java foi reconhecida ($jv)" ;;
+            ''|*[!0-9]*) falha "$(t_msg at_javaver_nao)" "$(t_msg at_javaver_porque "$(java -version 2>&1 | head -1)")" ;;
+            *)           passa "$(t_msg at_javaver_ok "$jv")" ;;
         esac
     else
         saida="$saida  --      $(t_msg auto_pulou_java_versao)"$'\n'
@@ -839,9 +838,9 @@ acao_autoteste() {
         else desprotegidos="$desprotegidos $alheio"; fi
     done <<< "$(t_atalhos_wine >/dev/null 2>&1; grep -v '^$' "$TANDEM_PROTEGIDOS" 2>/dev/null)"
     if [ -n "$desprotegidos" ]; then
-        falha "um perfil da lista não está sendo protegido" "$desprotegidos"
+        falha "$(t_msg at_protegido_nao)" "$desprotegidos"
     elif [ "$protegidos" -gt 0 ]; then
-        passa "os $protegidos perfil(is) da sua lista são recusados pela automação"
+        passa "$(t_msg at_protegido_ok "$protegidos")"
     else
         saida="$saida  --      $(t_msg auto_pulou_protecao)"$'\n'
     fi
@@ -1138,7 +1137,7 @@ https://github.com/ChrnX0/Tandem/issues" | t_texto "$(t_msg contrib_titulo)"
         # which is why the test for this compares the two files rather than
         # trusting either.
         if command -v xdg-open >/dev/null 2>&1 &&
-           t_pergunta "$(t_msg contrib_abrir_formulario)" "Abrir o formulário" "Não, obrigado"; then
+           t_pergunta "$(t_msg contrib_abrir_formulario)" "$(t_msg botao_abrir_formulario)" "$(t_msg botao_nao_obrigado)"; then
             URL_FORM="https://github.com/ChrnX0/Tandem/issues/new?template=list.yml&record=$(t_url_escapa "$reg")"
             # Not backgrounded, and its status is read. Written as
             # "setsid ... >/dev/null 2>&1 &" the failure was unreachable: with

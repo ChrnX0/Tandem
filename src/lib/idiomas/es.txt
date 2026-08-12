@@ -2295,3 +2295,132 @@ PERFILES PROTEGIDOS
 
 @doc_perfis_nenhum
 (ninguno en la lista; los perfiles de otros se protegen automáticamente)
+
+@at_erro_ok
+los mensajes de error tienen adónde ir
+
+@at_erro_nao
+los mensajes de error desaparecen
+
+@at_erro_porque
+sin ventana y sin terminal, un error de aquí no llega a nadie
+
+@at_acento_ok
+el sistema acepta texto con acentos (charmap UTF-8)
+
+@at_acento_nao
+el texto con acentos no pasa
+
+@at_acento_porque
+el locale en vigor no es UTF-8; las ventanas de Tandem no abrirán
+
+@at_diag_ok
+el diagnóstico se puede guardar y enviar
+
+@at_diag_nao
+el diagnóstico no se puede enviar
+
+@at_diag_porque
+guardar en un archivo produjo cero bytes
+
+@at_trava_ok
+el candado del doble clic se puede crear ({1})
+
+@at_trava_nao
+el candado no se puede crear
+
+@at_trava_porque
+en {1} — disco lleno, sin permiso, o carpeta en la red
+
+@at_progresso_ok
+cerrar la ventana de progreso no tumba a Tandem
+
+@at_progresso_nao
+cerrar la ventana de progreso tumba a Tandem
+
+@at_progresso_porque
+el proceso recibió una señal en vez de continuar
+
+@at_pevoo_ok
+el prevuelo lee un programa Windows de verdad
+
+@at_pevoo_nao
+el prevuelo no pudo leer un programa
+
+@at_clique_ok
+el doble clic en un {1} llega a Tandem
+
+@at_clique_nao
+el doble clic en un {1} no llega a Tandem
+
+@at_clique_porque
+quien responde es: {1} — ejecute: tandem repair
+
+@at_appimage_ok
+el prevuelo del AppImage lee tipo y procesador
+
+@at_appimage_nao
+el prevuelo del AppImage no leyó el encabezado
+
+@at_python_porque
+{1} — el python3 de esta máquina puede estar roto
+
+@at_java_ok
+el prevuelo de Java lee un .jar de verdad
+
+@at_java_nao
+el prevuelo de Java no pudo leer un .jar
+
+@at_deb_ok
+el prevuelo lee un paquete .deb de verdad ({1})
+
+@at_deb_nao
+el prevuelo no pudo leer un .deb
+
+@at_apt_ok
+apt responde sin contraseña (el diagnóstico viene antes de pedirla)
+
+@at_apt_nao
+apt no respondió sin contraseña
+
+@at_apt_porque
+sin esto el dueño escribe la contraseña solo para oír que no
+
+@at_javaver_nao
+no pude leer la versión de Java
+
+@at_javaver_porque
+java -version respondió: {1}
+
+@at_javaver_ok
+se reconoció la versión de Java ({1})
+
+@at_protegido_nao
+un perfil de su lista no está siendo protegido
+
+@at_protegido_ok
+los {1} perfil(es) de su lista son rechazados por la automatización
+
+@prog_titulo_janela
+Tandem - Programas instalados
+
+@prog_qual_abrir
+¿Qué programa quiere abrir?
+
+@des_titulo_janela
+Tandem - Quitar un programa
+
+@des_qual_remover
+¿Qué programa quiere quitar?
+
+@botao_remover
+Quitar
+
+@botao_remover_assim
+Quitar de todos modos
+
+@botao_abrir_formulario
+Abrir el formulario
+
+@botao_nao_obrigado
+No, gracias

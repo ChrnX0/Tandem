@@ -2296,3 +2296,132 @@ PROTECTED PROFILES
 
 @doc_perfis_nenhum
 (none listed; other people's profiles are protected automatically)
+
+@at_erro_ok
+error messages have somewhere to go
+
+@at_erro_nao
+error messages vanish
+
+@at_erro_porque
+with no window and no terminal, an error from here reaches nobody
+
+@at_acento_ok
+the system accepts accented text (charmap UTF-8)
+
+@at_acento_nao
+accented text does not get through
+
+@at_acento_porque
+the locale in force is not UTF-8; Tandem's windows will not open
+
+@at_diag_ok
+the diagnosis can be written to a file and sent
+
+@at_diag_nao
+the diagnosis cannot be sent
+
+@at_diag_porque
+writing to a file produced zero bytes
+
+@at_trava_ok
+the double-click lock can be created ({1})
+
+@at_trava_nao
+the lock cannot be created
+
+@at_trava_porque
+in {1} — disk full, no permission, or a folder on the network
+
+@at_progresso_ok
+closing the progress window does not bring Tandem down
+
+@at_progresso_nao
+closing the progress window brings Tandem down
+
+@at_progresso_porque
+the process took a signal instead of carrying on
+
+@at_pevoo_ok
+the pre-flight reads a real Windows program
+
+@at_pevoo_nao
+the pre-flight could not read a program
+
+@at_clique_ok
+a double click on a {1} comes to Tandem
+
+@at_clique_nao
+a double click on a {1} does not come to Tandem
+
+@at_clique_porque
+what answers is: {1} — run: tandem repair
+
+@at_appimage_ok
+the AppImage pre-flight reads type and processor
+
+@at_appimage_nao
+the AppImage pre-flight did not read the header
+
+@at_python_porque
+{1} — the python3 on this machine may be broken
+
+@at_java_ok
+the Java pre-flight reads a real .jar
+
+@at_java_nao
+the Java pre-flight could not read a .jar
+
+@at_deb_ok
+the pre-flight reads a real .deb package ({1})
+
+@at_deb_nao
+the pre-flight could not read a .deb
+
+@at_apt_ok
+apt answers without a password (the diagnosis comes before asking for it)
+
+@at_apt_nao
+apt did not answer without a password
+
+@at_apt_porque
+without this the owner types a password only to be told no
+
+@at_javaver_nao
+I could not read the Java version
+
+@at_javaver_porque
+java -version answered: {1}
+
+@at_javaver_ok
+the Java version was recognised ({1})
+
+@at_protegido_nao
+a profile on your list is not being protected
+
+@at_protegido_ok
+the {1} profile(s) on your list are refused by the automation
+
+@prog_titulo_janela
+Tandem - Installed programs
+
+@prog_qual_abrir
+Which program do you want to open?
+
+@des_titulo_janela
+Tandem - Remove a program
+
+@des_qual_remover
+Which program do you want to remove?
+
+@botao_remover
+Remove
+
+@botao_remover_assim
+Remove it anyway
+
+@botao_abrir_formulario
+Open the form
+
+@botao_nao_obrigado
+No, thank you

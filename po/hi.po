@@ -3881,3 +3881,175 @@ msgstr "सुरक्षित प्रोफ़ाइल"
 msgctxt "doc_perfis_nenhum"
 msgid "(none listed; other people's profiles are protected automatically)"
 msgstr "(कोई सूचीबद्ध नहीं; दूसरों की प्रोफ़ाइल अपने-आप सुरक्षित रहती हैं)"
+
+msgctxt "at_erro_ok"
+msgid "error messages have somewhere to go"
+msgstr "गलती के संदेशों के पास जाने की जगह है"
+
+msgctxt "at_erro_nao"
+msgid "error messages vanish"
+msgstr "गलती के संदेश गायब हो जाते हैं"
+
+msgctxt "at_erro_porque"
+msgid "with no window and no terminal, an error from here reaches nobody"
+msgstr "न खिड़की न टर्मिनल - यहाँ की गलती किसी तक नहीं पहुँचती"
+
+msgctxt "at_acento_ok"
+msgid "the system accepts accented text (charmap UTF-8)"
+msgstr "सिस्टम उच्चारण-चिह्न वाला पाठ स्वीकारता है (charmap UTF-8)"
+
+msgctxt "at_acento_nao"
+msgid "accented text does not get through"
+msgstr "उच्चारण-चिह्न वाला पाठ पार नहीं होता"
+
+msgctxt "at_acento_porque"
+msgid "the locale in force is not UTF-8; Tandem's windows will not open"
+msgstr "मौजूदा locale UTF-8 नहीं है; Tandem की खिड़कियाँ नहीं खुलेंगी"
+
+msgctxt "at_diag_ok"
+msgid "the diagnosis can be written to a file and sent"
+msgstr "निदान फ़ाइल में लिखा और भेजा जा सकता है"
+
+msgctxt "at_diag_nao"
+msgid "the diagnosis cannot be sent"
+msgstr "निदान भेजा नहीं जा सकता"
+
+msgctxt "at_diag_porque"
+msgid "writing to a file produced zero bytes"
+msgstr "फ़ाइल में लिखने से शून्य बाइट निकले"
+
+msgctxt "at_trava_ok"
+msgid "the double-click lock can be created ({1})"
+msgstr "दो-क्लिक का ताला बनाया जा सकता है ({1})"
+
+msgctxt "at_trava_nao"
+msgid "the lock cannot be created"
+msgstr "ताला बनाया नहीं जा सकता"
+
+msgctxt "at_trava_porque"
+msgid "in {1} — disk full, no permission, or a folder on the network"
+msgstr "{1} में — डिस्क भरी है, अनुमति नहीं, या नेटवर्क पर फ़ोल्डर है"
+
+msgctxt "at_progresso_ok"
+msgid "closing the progress window does not bring Tandem down"
+msgstr "प्रगति की खिड़की बंद करने से Tandem नहीं गिरता"
+
+msgctxt "at_progresso_nao"
+msgid "closing the progress window brings Tandem down"
+msgstr "प्रगति की खिड़की बंद करने से Tandem गिर जाता है"
+
+msgctxt "at_progresso_porque"
+msgid "the process took a signal instead of carrying on"
+msgstr "प्रक्रिया को आगे चलने के बजाय एक संकेत मिला"
+
+msgctxt "at_pevoo_ok"
+msgid "the pre-flight reads a real Windows program"
+msgstr "उड़ान-पूर्व जाँच एक असली Windows प्रोग्राम पढ़ लेती है"
+
+msgctxt "at_pevoo_nao"
+msgid "the pre-flight could not read a program"
+msgstr "उड़ान-पूर्व जाँच कोई प्रोग्राम नहीं पढ़ सकी"
+
+msgctxt "at_clique_ok"
+msgid "a double click on a {1} comes to Tandem"
+msgstr "{1} पर दो क्लिक Tandem तक आते हैं"
+
+msgctxt "at_clique_nao"
+msgid "a double click on a {1} does not come to Tandem"
+msgstr "{1} पर दो क्लिक Tandem तक नहीं आते"
+
+msgctxt "at_clique_porque"
+msgid "what answers is: {1} — run: tandem repair"
+msgstr "जवाब देता है: {1} — चलाएँ: tandem repair"
+
+msgctxt "at_appimage_ok"
+msgid "the AppImage pre-flight reads type and processor"
+msgstr "AppImage की उड़ान-पूर्व जाँच प्रकार और प्रोसेसर पढ़ लेती है"
+
+msgctxt "at_appimage_nao"
+msgid "the AppImage pre-flight did not read the header"
+msgstr "AppImage की उड़ान-पूर्व जाँच शीर्षलेख नहीं पढ़ पाई"
+
+msgctxt "at_python_porque"
+msgid "{1} — the python3 on this machine may be broken"
+msgstr "{1} — इस मशीन का python3 टूटा हो सकता है"
+
+msgctxt "at_java_ok"
+msgid "the Java pre-flight reads a real .jar"
+msgstr "Java की उड़ान-पूर्व जाँच एक असली .jar पढ़ लेती है"
+
+msgctxt "at_java_nao"
+msgid "the Java pre-flight could not read a .jar"
+msgstr "Java की उड़ान-पूर्व जाँच कोई .jar नहीं पढ़ सकी"
+
+msgctxt "at_deb_ok"
+msgid "the pre-flight reads a real .deb package ({1})"
+msgstr "उड़ान-पूर्व जाँच एक असली .deb पैकेज पढ़ लेती है ({1})"
+
+msgctxt "at_deb_nao"
+msgid "the pre-flight could not read a .deb"
+msgstr "उड़ान-पूर्व जाँच कोई .deb नहीं पढ़ सकी"
+
+msgctxt "at_apt_ok"
+msgid "apt answers without a password (the diagnosis comes before asking for it)"
+msgstr "apt पासवर्ड के बिना जवाब देता है (निदान माँगने से पहले आता है)"
+
+msgctxt "at_apt_nao"
+msgid "apt did not answer without a password"
+msgstr "apt ने पासवर्ड के बिना जवाब नहीं दिया"
+
+msgctxt "at_apt_porque"
+msgid "without this the owner types a password only to be told no"
+msgstr "इसके बिना मालिक पासवर्ड टाइप करता है सिर्फ़ \"नहीं\" सुनने के लिए"
+
+msgctxt "at_javaver_nao"
+msgid "I could not read the Java version"
+msgstr "मैं Java का संस्करण नहीं पढ़ सका"
+
+msgctxt "at_javaver_porque"
+msgid "java -version answered: {1}"
+msgstr "java -version ने जवाब दिया: {1}"
+
+msgctxt "at_javaver_ok"
+msgid "the Java version was recognised ({1})"
+msgstr "Java का संस्करण पहचाना गया ({1})"
+
+msgctxt "at_protegido_nao"
+msgid "a profile on your list is not being protected"
+msgstr "आपकी सूची का एक प्रोफ़ाइल सुरक्षित नहीं है"
+
+msgctxt "at_protegido_ok"
+msgid "the {1} profile(s) on your list are refused by the automation"
+msgstr "आपकी सूची के {1} प्रोफ़ाइल स्वचालन द्वारा अस्वीकार किए जाते हैं"
+
+msgctxt "prog_titulo_janela"
+msgid "Tandem - Installed programs"
+msgstr "Tandem - स्थापित प्रोग्राम"
+
+msgctxt "prog_qual_abrir"
+msgid "Which program do you want to open?"
+msgstr "आप कौन-सा प्रोग्राम खोलना चाहते हैं?"
+
+msgctxt "des_titulo_janela"
+msgid "Tandem - Remove a program"
+msgstr "Tandem - प्रोग्राम हटाएँ"
+
+msgctxt "des_qual_remover"
+msgid "Which program do you want to remove?"
+msgstr "आप कौन-सा प्रोग्राम हटाना चाहते हैं?"
+
+msgctxt "botao_remover"
+msgid "Remove"
+msgstr "हटाएँ"
+
+msgctxt "botao_remover_assim"
+msgid "Remove it anyway"
+msgstr "फिर भी हटाएँ"
+
+msgctxt "botao_abrir_formulario"
+msgid "Open the form"
+msgstr "फ़ॉर्म खोलें"
+
+msgctxt "botao_nao_obrigado"
+msgid "No, thank you"
+msgstr "नहीं, धन्यवाद"

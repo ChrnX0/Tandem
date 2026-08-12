@@ -121,8 +121,22 @@ tandem (4.3) unstable; urgency=medium
     same version and the old catalogue answered - and the attempt after that
     was refused by build.py because the catalogues had drifted from po/, which
     is that guard doing exactly its job.
-  * 63 sentences are still literals - the autoteste report and the hardware-key
-    advice. Migrating them is the rest of this version's work.
+  * The autoteste report is translated - all 35 of its lines, pass and fail
+    together with the explanation each failure carries. It is the command that
+    answers "does this actually work on my machine", and its answer was in one
+    language.
+  * The remaining window titles and buttons went with it: the program picker,
+    the uninstall picker, and Remove / Cancel / Remove anyway / Stop. A dialog
+    whose buttons are in a language the reader does not have is a dialog they
+    close rather than answer.
+  * The literal counter now skips t_diz lines, because the log is a different
+    audience with a documented exception - it is read by whoever is helping,
+    not by the shop owner. That is a rule about syntax, which is what failed
+    twelve times, and it is defensible only because t_diz cannot reach the user
+    at all: it appends to a file. Two tests pin it, including one where a
+    message shares a line with a log call.
+  * 15 sentences are still literals - eight long paragraphs, in the hardware-key
+    advice, the virtual-machine explanation and the three list screens. Migrating them is the rest of this version's work.
     The suite holds the number as a ratchet: it may fall, never rise.
 
  -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 16:00:00 +0000

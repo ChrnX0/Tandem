@@ -2339,3 +2339,132 @@ PROFILS PROTÉGÉS
 
 @doc_perfis_nenhum
 (aucun listé ; les profils d'autrui sont protégés automatiquement)
+
+@at_erro_ok
+les messages d'erreur ont où aller
+
+@at_erro_nao
+les messages d'erreur disparaissent
+
+@at_erro_porque
+sans fenêtre et sans terminal, une erreur d'ici n'atteint personne
+
+@at_acento_ok
+le système accepte le texte accentué (charmap UTF-8)
+
+@at_acento_nao
+le texte accentué ne passe pas
+
+@at_acento_porque
+la locale en vigueur n'est pas UTF-8 ; les fenêtres de Tandem n'ouvriront pas
+
+@at_diag_ok
+le diagnostic peut être enregistré et envoyé
+
+@at_diag_nao
+le diagnostic ne peut pas être envoyé
+
+@at_diag_porque
+l'enregistrement dans un fichier a produit zéro octet
+
+@at_trava_ok
+le verrou du double-clic peut être créé ({1})
+
+@at_trava_nao
+le verrou ne peut pas être créé
+
+@at_trava_porque
+dans {1} — disque plein, sans permission, ou dossier en réseau
+
+@at_progresso_ok
+fermer la fenêtre de progression ne fait pas tomber Tandem
+
+@at_progresso_nao
+fermer la fenêtre de progression fait tomber Tandem
+
+@at_progresso_porque
+le processus a reçu un signal au lieu de continuer
+
+@at_pevoo_ok
+le pré-vol lit un vrai programme Windows
+
+@at_pevoo_nao
+le pré-vol n'a pas pu lire un programme
+
+@at_clique_ok
+un double-clic sur un {1} arrive à Tandem
+
+@at_clique_nao
+un double-clic sur un {1} n'arrive pas à Tandem
+
+@at_clique_porque
+ce qui répond est : {1} — lancez : tandem repair
+
+@at_appimage_ok
+le pré-vol de l'AppImage lit le type et le processeur
+
+@at_appimage_nao
+le pré-vol de l'AppImage n'a pas lu l'en-tête
+
+@at_python_porque
+{1} — le python3 de cette machine est peut-être cassé
+
+@at_java_ok
+le pré-vol de Java lit un vrai .jar
+
+@at_java_nao
+le pré-vol de Java n'a pas pu lire un .jar
+
+@at_deb_ok
+le pré-vol lit un vrai paquet .deb ({1})
+
+@at_deb_nao
+le pré-vol n'a pas pu lire un .deb
+
+@at_apt_ok
+apt répond sans mot de passe (le diagnostic vient avant de le demander)
+
+@at_apt_nao
+apt n'a pas répondu sans mot de passe
+
+@at_apt_porque
+sans cela, le propriétaire tape un mot de passe juste pour entendre non
+
+@at_javaver_nao
+je n'ai pas pu lire la version de Java
+
+@at_javaver_porque
+java -version a répondu : {1}
+
+@at_javaver_ok
+la version de Java a été reconnue ({1})
+
+@at_protegido_nao
+un profil de votre liste n'est pas protégé
+
+@at_protegido_ok
+les {1} profil(s) de votre liste sont refusés par l'automatisation
+
+@prog_titulo_janela
+Tandem - Programmes installés
+
+@prog_qual_abrir
+Quel programme voulez-vous ouvrir ?
+
+@des_titulo_janela
+Tandem - Supprimer un programme
+
+@des_qual_remover
+Quel programme voulez-vous supprimer ?
+
+@botao_remover
+Supprimer
+
+@botao_remover_assim
+Supprimer quand même
+
+@botao_abrir_formulario
+Ouvrir le formulaire
+
+@botao_nao_obrigado
+Non merci

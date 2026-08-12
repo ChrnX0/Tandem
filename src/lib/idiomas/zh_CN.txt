@@ -2222,3 +2222,132 @@ dialout 组：不在（设备看得到却打不开）—— tandem portas
 
 @doc_perfis_nenhum
 （列表为空；别人的环境会被自动保护）
+
+@at_erro_ok
+错误消息有地方可以显示
+
+@at_erro_nao
+错误消息会消失
+
+@at_erro_porque
+既没有窗口也没有终端，这里的错误谁也看不到
+
+@at_acento_ok
+系统接受带重音的文本（charmap UTF-8）
+
+@at_acento_nao
+带重音的文本过不去
+
+@at_acento_porque
+当前的 locale 不是 UTF-8；Tandem 的窗口打不开
+
+@at_diag_ok
+诊断可以存成文件并发出去
+
+@at_diag_nao
+诊断发不出去
+
+@at_diag_porque
+写入文件得到零字节
+
+@at_trava_ok
+双击用的锁可以建立（{1}）
+
+@at_trava_nao
+锁建不起来
+
+@at_trava_porque
+在 {1} —— 磁盘满了、没有权限，或者是网络上的文件夹
+
+@at_progresso_ok
+关掉进度窗口不会把 Tandem 一起弄死
+
+@at_progresso_nao
+关掉进度窗口会把 Tandem 一起弄死
+
+@at_progresso_porque
+进程收到了一个信号，而不是继续跑下去
+
+@at_pevoo_ok
+起飞前检查能读懂一个真的 Windows 程序
+
+@at_pevoo_nao
+起飞前检查读不了程序
+
+@at_clique_ok
+双击 {1} 会交给 Tandem
+
+@at_clique_nao
+双击 {1} 不会交给 Tandem
+
+@at_clique_porque
+响应的是：{1} —— 请执行：tandem repair
+
+@at_appimage_ok
+AppImage 的起飞前检查能读出类型和处理器
+
+@at_appimage_nao
+AppImage 的起飞前检查没读到文件头
+
+@at_python_porque
+{1} —— 这台机器上的 python3 可能坏了
+
+@at_java_ok
+Java 的起飞前检查能读懂一个真的 .jar
+
+@at_java_nao
+Java 的起飞前检查读不了 .jar
+
+@at_deb_ok
+起飞前检查能读懂一个真的 .deb 包（{1}）
+
+@at_deb_nao
+起飞前检查读不了 .deb
+
+@at_apt_ok
+apt 不用密码就会回答（诊断在要密码之前）
+
+@at_apt_nao
+apt 没有在不用密码的情况下回答
+
+@at_apt_porque
+没有这个，店主输了密码只是为了听到「不行」
+
+@at_javaver_nao
+我读不到 Java 的版本
+
+@at_javaver_porque
+java -version 的回答是：{1}
+
+@at_javaver_ok
+Java 的版本已被识别（{1}）
+
+@at_protegido_nao
+您列表里有一个环境没有被保护
+
+@at_protegido_ok
+您列表里的 {1} 个环境会被自动化拒绝
+
+@prog_titulo_janela
+Tandem - 已安装的程序
+
+@prog_qual_abrir
+您想打开哪个程序？
+
+@des_titulo_janela
+Tandem - 卸载程序
+
+@des_qual_remover
+您想卸载哪个程序？
+
+@botao_remover
+卸载
+
+@botao_remover_assim
+还是要卸载
+
+@botao_abrir_formulario
+打开表单
+
+@botao_nao_obrigado
+不用，谢谢

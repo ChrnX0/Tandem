@@ -2247,3 +2247,132 @@ Windows في جهاز ظاهري: هذا المعالج لا يستطيع
 
 @doc_perfis_nenhum
 (لا شيء مُدرَج؛ ملفات الآخرين محميّة تلقائيًا)
+
+@at_erro_ok
+رسائل الخطأ لها مكان تظهر فيه
+
+@at_erro_nao
+رسائل الخطأ تتلاشى
+
+@at_erro_porque
+بلا نافذة ولا طرفية، لا يصل أي خطأ من هنا إلى أحد
+
+@at_acento_ok
+النظام يقبل النصوص المشكَّلة (charmap UTF-8)
+
+@at_acento_nao
+النص المشكَّل لا يمر
+
+@at_acento_porque
+الإعداد المحلي الحالي ليس UTF-8؛ نوافذ Tandem لن تُفتح
+
+@at_diag_ok
+يمكن حفظ التشخيص في ملف وإرساله
+
+@at_diag_nao
+لا يمكن إرسال التشخيص
+
+@at_diag_porque
+الكتابة إلى ملف أنتجت صفر بايت
+
+@at_trava_ok
+يمكن إنشاء قفل النقر المزدوج ({1})
+
+@at_trava_nao
+لا يمكن إنشاء القفل
+
+@at_trava_porque
+في {1} — القرص ممتلئ، أو لا صلاحية، أو مجلد على الشبكة
+
+@at_progresso_ok
+إغلاق نافذة التقدم لا يُسقِط Tandem
+
+@at_progresso_nao
+إغلاق نافذة التقدم يُسقِط Tandem
+
+@at_progresso_porque
+استلمت العملية إشارة بدل أن تتابع
+
+@at_pevoo_ok
+الفحص المسبق يقرأ برنامج Windows حقيقيًا
+
+@at_pevoo_nao
+لم يستطع الفحص المسبق قراءة برنامج
+
+@at_clique_ok
+النقر المزدوج على {1} يصل إلى Tandem
+
+@at_clique_nao
+النقر المزدوج على {1} لا يصل إلى Tandem
+
+@at_clique_porque
+الذي يستجيب هو: {1} — نفِّذ: tandem repair
+
+@at_appimage_ok
+الفحص المسبق لـ AppImage يقرأ النوع والمعالج
+
+@at_appimage_nao
+الفحص المسبق لـ AppImage لم يقرأ الترويسة
+
+@at_python_porque
+{1} — قد يكون python3 على هذا الجهاز معطوبًا
+
+@at_java_ok
+الفحص المسبق لـ Java يقرأ ملف .jar حقيقيًا
+
+@at_java_nao
+لم يستطع الفحص المسبق لـ Java قراءة ملف .jar
+
+@at_deb_ok
+الفحص المسبق يقرأ حزمة .deb حقيقية ({1})
+
+@at_deb_nao
+لم يستطع الفحص المسبق قراءة ملف .deb
+
+@at_apt_ok
+يستجيب apt بلا كلمة مرور (التشخيص يأتي قبل طلبها)
+
+@at_apt_nao
+لم يستجب apt بلا كلمة مرور
+
+@at_apt_porque
+بدون هذا يُدخِل المالك كلمة المرور ليسمع الرفض فقط
+
+@at_javaver_nao
+لم أتمكّن من قراءة إصدار Java
+
+@at_javaver_porque
+أجاب java -version بـ: {1}
+
+@at_javaver_ok
+تم التعرّف على إصدار Java ({1})
+
+@at_protegido_nao
+أحد الملفات في قائمتك غير محميّ
+
+@at_protegido_ok
+الملفات ({1}) في قائمتك ترفضها الآلية
+
+@prog_titulo_janela
+Tandem - البرامج المثبَّتة
+
+@prog_qual_abrir
+أي برنامج تريد فتحه؟
+
+@des_titulo_janela
+Tandem - إزالة برنامج
+
+@des_qual_remover
+أي برنامج تريد إزالته؟
+
+@botao_remover
+إزالة
+
+@botao_remover_assim
+أزِله على أي حال
+
+@botao_abrir_formulario
+افتح النموذج
+
+@botao_nao_obrigado
+لا، شكرًا
