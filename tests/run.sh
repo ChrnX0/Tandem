@@ -1498,6 +1498,9 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # that finally works is a walk that descends INTO a substitution while
     # refusing to glue its text into the sentence around it.
     #
+    # (see the changelog line-length guard further down, added for the same
+    # reason: the release found it, so the suite owns it now)
+    #
     # So the number is the measured truth and it is a RATCHET: it may fall,
     # never rise. A hard 0 that is wrong is worse than a true 145 that can only
     # shrink, because the 0 says the work is finished and the 145 says where it
@@ -4015,6 +4018,26 @@ elif [ "$(date -d "$DATA_1" +%s 2>/dev/null || echo 0)" \
 else
     fail "the newest changelog entry is dated after the one before it" \
          "newer than $DATA_2" "$DATA_1"
+fi
+
+# lintian refuses a changelog line over 80 columns, and the release step runs it
+# with --fail-on warning while demanding ZERO output - so eight lines at 81 and
+# 82 columns turned a green suite into a red release. Found by CI rather than
+# here, which is the wrong order, so the suite owns it now.
+#
+# Only the newest entry is checked, and that is a decision rather than laziness:
+# older entries carry " -- Name <address>  date" trailers at 85 columns that
+# lintian does not complain about, and rewrapping history to satisfy a guard
+# would mean editing what was already published.
+NOME_COL="the newest changelog entry stays inside 80 columns"
+FIM_ENTRADA="$(awk '/^ -- /{ print NR; exit }' "$ROOT/debian/changelog")"
+LONGAS="$(awk -v fim="${FIM_ENTRADA:-0}" \
+              'NR < fim && length > 80 { printf "line %d is %d columns\n", NR, length }' \
+              "$ROOT/debian/changelog")"
+if [ -z "$LONGAS" ]; then
+    pass "$NOME_COL"
+else
+    fail "$NOME_COL" "every line at 80 columns or fewer" "$LONGAS"
 fi
 
 # The top changelog entry must not describe a package that is already out. It
