@@ -1945,3 +1945,45 @@ Cancelled.
 
 @botao_instalar_tudo
 Install everything
+
+@ajuda
+Tandem - runs Windows programs, Android apps and Linux packages.
+
+  Formats: .exe .msi  |  .apk .xapk .apks .apkm  |  .AppImage .jar
+           .deb .rpm .flatpakref .snap  |  .sh .run
+
+  tandem                      opens the panel
+  tandem install <file>       installs/runs any of the nine formats
+  tandem preparar             installs what is missing (Wine, Java, Android...)
+  tandem programas [name]     lists and opens the installed programs
+  tandem desinstalar [name]   removes an installed Windows program
+  tandem android              opens the Android screen
+  tandem doctor               diagnosis of the environment (what EXISTS)
+  tandem autoteste            exercises it for real (what WORKS)
+  tandem repair               reapplies the file associations
+  tandem dados                shows your own files inside Windows
+  tandem dados salvar         copies ONLY your files (quick and small)
+  tandem dados restaurar [c]  puts your files back from a copy
+  tandem backup               saves the Windows environment
+  tandem restore              restores the Windows environment
+  tandem protect <path>       protects a Wine profile from being changed
+  tandem identidade           what a program sees of your machine (licences)
+  tandem portas               pinpad, scale, printer: which COM they landed on
+  tandem portas fixar <p> <d> pins a device to a port (e.g. COM2)
+  tandem idioma [code]        which language Tandem speaks (pt_BR en es fr zh_CN hi ar)
+  tandem alternativas <name>  looks for a Linux program that does the same job
+  tandem receita <file>       exports what it learnt, to send to somebody
+  tandem receita --importar <r> <file>      uses somebody else's recipe
+  tandem memoria [name]       what Tandem has learnt about the programs
+  tandem esquecer <name>      erases what it learnt about one program
+  tandem lista                what the community has already worked out
+  tandem lista atualizar      downloads the list (sends nothing of yours)
+  tandem contribuir <file>    builds the line for you to send, if you want
+  tandem enviar [sim|nao]     send what it learns automatically (default: nao)
+  tandem socorro              gathers everything into one file to ask for help
+  tandem logs                 shows the most recent log
+  tandem version              shows the installed version
+  tandem help                 shows this list
+
+@faixa_de_ate
+{1} to {2}

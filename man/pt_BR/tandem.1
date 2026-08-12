@@ -1,0 +1,438 @@
+.TH TANDEM 1 "2026-08-09" "tandem 4.1" "Comandos do usuário"
+.SH NOME
+tandem \- roda programas Windows, aplicativos Android e pacotes do Linux
+.SH SINOPSE
+.B tandem
+.RI [ comando ]
+.RI [ argumento ]
+.br
+.B tandem-exe
+.I arquivo.exe
+.br
+.B tandem-apk
+.I arquivo.apk
+.br
+.B tandem-appimage
+.I arquivo.AppImage
+.br
+.B tandem-jar
+.I arquivo.jar
+.br
+.B tandem-deb
+.I arquivo.deb
+.br
+.B tandem-rpm
+.I arquivo.rpm
+.br
+.B tandem-flatpak
+.I arquivo.flatpakref
+.br
+.B tandem-snap
+.I arquivo.snap
+.br
+.B tandem-script
+.I arquivo.sh
+.br
+.B tandem-android
+.br
+.B tandem-repair
+.SH DESCRIÇÃO
+O
+.B Tandem
+faz arquivos
+.IR .exe ,
+.IR .msi ,
+.IR .apk ,
+.IR .xapk ,
+.I .AppImage
+e
+.I .jar
+abrirem com dois cliques no Linux. Ele não substitui o Wine nem o Waydroid:
+é uma camada de decisão, tradução e diagnóstico por cima deles.
+.PP
+Para programas Windows, o Tandem executa o arquivo, lê a saída de erro do
+Wine à procura de bibliotecas faltando, traduz cada uma para o pacote do
+.BR winetricks (1)
+que a fornece, instala e tenta de novo. É o laço que uma pessoa experiente
+faria à mão.
+.PP
+Para aplicativos Android, o Tandem inspeciona o pacote antes de instalar
+(arquitetura, versão mínima do sistema e divisão em partes) e relata
+incompatibilidades em português, em vez de falhar sem explicação.
+.PP
+Para os formatos que o próprio Linux usa, o diagnóstico vem antes da
+execução. Um
+.I .AppImage
+é conferido quanto ao download completo, ao tipo de processador e à
+permissão de execução que o navegador não deu; quando falta o FUSE, o
+Tandem abre o programa desempacotando em vez de falhar, e coloca o
+programa no menu de aplicativos usando o atalho que o próprio AppImage
+carrega. Um
+.I .jar
+é lido para saber se é um programa ou apenas uma peça de programa, e para
+saber de qual versão do Java ele precisa \(em de modo que
+.RB \(lq "class file version 65" \(rq
+seja respondido com \(lqisto precisa do Java 21\(rq.
+.PP
+Para os pacotes da própria distribuição, todo o diagnóstico acontece
+.B antes
+de pedir a senha. Isso não é preferência, é um fato medido: o
+.B apt-get install -s
+responde sem privilégio nenhum e já diz qual dependência não pode ser
+satisfeita. Um
+.I .deb
+feito para outra versão do sistema é relatado como exatamente isso, em vez de
+como \(lqlibssl1.1 but it is not installable\(rq \(em e a diferença entre esse
+caso e \(lqfalta um repositório que você precisa adicionar\(rq é decidida pelo
+nome: uma biblioteca com a versão soldada no nome nunca vai instalar aqui.
+.PP
+Um
+.I .rpm
+não instala neste sistema e o Tandem não oferece converter: um pacote convertido
+traz nomes de dependência que não existem aqui e pula os scripts de instalação,
+produzindo algo que parece instalado e não está. Em vez disso, o Tandem procura o
+mesmo programa nos repositórios da própria máquina e mostra o comando.
+.PP
+Um
+.I .sh
+é o único caso em que a resposta padrão do Tandem
+.B não
+é executar. Um script faz tudo o que o dono pode fazer, e a diferença entre um
+instalador de fabricante \(em makeself, um payload atrás de um cabeçalho de shell
+\(em e um script qualquer decide o que é oferecido primeiro: executar, ou ler.
+Por isso
+.I application/x-shellscript
+é o único tipo que o
+.B tandem repair
+deliberadamente
+.B não
+reivindica: abrir um script baixado num editor de texto é uma resposta melhor do
+que executá-lo, e o Tandem não tira um tipo de quem já está fazendo a coisa
+certa. O
+.B tandem-script
+continua alcançável pelo \(lqAbrir com\(rq e pelo
+.BR "tandem install" .
+.SH COMANDOS
+.TP
+.B tandem
+Abre o painel gráfico. Sem sessão gráfica, mostra esta ajuda.
+.TP
+.BI "tandem install " arquivo
+Instala ou executa o arquivo, escolhendo entre os nove formatos pelo tipo.
+Quando o nome não diz nada, decide pelo conteúdo, sempre da marca mais
+específica para a mais genérica: todo AppImage é um ELF, todo
+.I .jar
+é um zip e todo
+.I .deb
+é um arquivo
+.BR ar .
+.TP
+.B tandem android
+Abre a tela do Android.
+.TP
+.B "tandem preparar"
+Instala o que falta — Wine, winetricks, suporte a 32 bits, adb, o Java, o
+FUSE e o Android (Waydroid) — e inicializa o Android. O Flatpak fica de fora
+de propósito: ele é instalado na hora, se um
+.I .flatpakref
+aparecer. Pede a senha uma vez só. Isso não pode
+acontecer durante a instalação do pacote: o
+.BR dpkg (1)
+segura uma trava enquanto o
+.I postinst
+roda, e um
+.BR apt-get (8)
+lá dentro esperaria para sempre.
+.TP
+.BI "tandem programas " [nome]
+Lista os programas Windows instalados e abre o escolhido, sem depender do
+menu do sistema. Sob Wayland o GNOME só relê a lista de aplicativos depois
+de sair e entrar na conta, então um programa recém-instalado não existe para
+o usuário até o próximo login.
+.TP
+.BI "tandem desinstalar " [nome]
+Remove um programa Windows e limpa os atalhos que ficaram apontando para
+nada. Só funciona no perfil do Tandem: desinstalar altera o perfil, e perfil
+de terceiro é intocável.
+.TP
+.B tandem doctor
+Mostra o diagnóstico do ambiente: versão do Wine, suporte a 32 e 64 bits,
+estado do Waydroid e perfis protegidos. Diz o que EXISTE.
+.TP
+.B tandem autoteste
+Exercita o Tandem nesta máquina e diz o que FUNCIONA — que não é a mesma
+pergunta. Uma peça instalada pode não funcionar: já aconteceu de o
+.BR zenity (1)
+estar presente e mesmo assim recusar todo texto acentuado, apagando a
+interface inteira sem deixar rastro. O autoteste roda cada coisa de verdade
+e olha o resultado; onde não dá para exercitar, ele diz que pulou em vez de
+fingir que aprovou.
+.TP
+.BI "tandem alternativas " nome
+Procura um programa de Linux que faça o trabalho de um programa de Windows.
+Separa o que É o mesmo programa com versão oficial para Linux daquilo que
+apenas faz algo parecido, sempre dizendo o que muda.
+.TP
+.BI "tandem receita " arquivo
+Escreve na saída padrão o que o Tandem aprendeu sobre um programa, em texto
+que cabe numa mensagem e pode ser conferido antes de enviar. Para guardar num
+arquivo, redirecione:
+.IP
+.EX
+tandem receita ~/Downloads/sistema.exe > receita.txt
+.EE
+.IP
+A receita sai marcada com a origem da confiança: uma lição que o dono
+confirmou na tela vale diferente de uma em que o programa apenas saiu sem
+erro.
+.TP
+.BI "tandem receita --importar " "receita programa"
+Usa a receita de outra pessoa. A receita é recusada se não se declarar como
+tal, se for de outro programa, ou se trouxer nome de componente com
+caractere fora do esperado — ela vira argumento do
+.BR winetricks (1),
+e entrada vinda de fora não pode carregar comando.
+.TP
+.BI "tandem memoria " [nome]
+Mostra o que o Tandem aprendeu sobre cada programa: quais componentes
+resolveram, quais não resolveram, se abriu e quanto tempo levou.
+.TP
+.BI "tandem esquecer " nome
+Apaga o que ele aprendeu sobre um programa. Da próxima vez ele descobre de
+novo.
+.TP
+.B tandem repair
+Reaplica as associações de arquivo. Use quando o duplo clique abrir o
+diálogo "Abrir com…" em vez do Tandem.
+.TP
+.B tandem dados
+Mostra os arquivos que
+.I você
+criou dentro do Windows — documentos, planilhas, bancos de dados de
+programas — separados do ambiente, que o Tandem sabe refazer sozinho.
+.RS
+.TP
+.B tandem dados salvar
+Copia somente esses arquivos para um
+.I .tar.gz
+na pasta pessoal. É rápido e pequeno, porque não leva o ambiente junto.
+.TP
+.BI "tandem dados restaurar " [cópia]
+Devolve os arquivos de uma cópia. Nada que já existe é sobrescrito; só
+entram os arquivos que faltam. Sem argumento, usa a cópia mais recente.
+.RE
+.TP
+.B tandem backup
+Salva o ambiente Windows do Tandem em um arquivo na pasta pessoal.
+Inclui os seus arquivos, mas é pesado; para levar só os dados, use
+.BR "tandem dados salvar" .
+.TP
+.B tandem restore
+Restaura o ambiente Windows a partir do backup mais recente.
+.TP
+.BI "tandem protect " caminho
+Marca um perfil Wine como intocável. O Tandem nunca instala nem altera
+nada dentro de um perfil protegido.
+.TP
+.BI "tandem idioma " [código]
+Sem argumento, mostra em que idioma o Tandem está falando e a lista dos que
+existem. Com um código
+.RB ( pt_BR ", " en ", " es ", " fr ", " zh_CN ", " hi ", " ar ),
+troca para ele e guarda a escolha.
+.IP
+O Tandem não pergunta o idioma durante a instalação do pacote: ele segue o
+idioma que o Linux já está configurado para usar, e avisa qual escolheu na
+primeira vez que roda. Traduções ainda não conferidas por quem fala o idioma
+de berço são marcadas com um asterisco na lista, e o Tandem diz isso na cara
+de quem escolhe uma delas.
+.TP
+.B tandem identidade
+Mostra, lado a lado, tudo o que um programa consegue ler sobre este
+computador quando amarra a licença a ele, e diz de onde cada coisa vem: da
+sua máquina de verdade, de um valor fixo que todo Wine do mundo responde
+igual, ou de dentro do ambiente Windows. É só leitura: não abre o Wine, não
+pede senha e não altera nada. Serve para responder à pergunta que aparece
+quando um programa pede ativação de novo sem nada ter mudado.
+.TP
+.B tandem portas
+Lista em que porta COM ou LPT cada aparelho ligado à máquina vai aparecer
+para os programas Windows — pinpad, balança, impressora, leitor de código de
+barras em modo serial. Avisa nos dois casos que quebram isso em silêncio: o
+aparelho que caiu numa porta acima da COM4, que muito programa de loja
+antigo recusa, e a falta do grupo
+.BR dialout ,
+sem o qual o aparelho aparece na lista e não abre.
+.TP
+.BI "tandem portas fixar " "porta caminho"
+Prende um aparelho numa porta escolhida por você, por exemplo
+.BR "tandem portas fixar COM2 /dev/ttyACM0" .
+Só funciona em ambiente criado pelo Tandem.
+.BR "tandem portas soltar " porta
+desfaz.
+.TP
+.B tandem lista
+Mostra a lista da comunidade: o que já deu certo na máquina de outras
+pessoas, por programa.
+.TP
+.B tandem lista atualizar
+Baixa a lista. É um arquivo de texto público, buscado por HTTPS — o modelo
+das listas de filtro de bloqueador de anúncio. Nada desta máquina é enviado,
+e nada é instalado: a lista vira sugestão, e o Tandem continua perguntando.
+.TP
+.BI "tandem contribuir " programa
+Monta a linha padronizada com o que este Tandem aprendeu e mostra ela
+inteira, para você conferir e enviar se quiser. O Tandem nunca envia
+sozinho. A linha não carrega nome de arquivo, pasta, usuário, nome da
+máquina, endereço de rede nem log; o gerador se recusa a produzi\-la se
+alguma dessas coisas aparecer. O formato está descrito em
+.IR docs/LIST\-FORMAT.md .
+.TP
+.BR "tandem enviar " [ sim | nao ]
+Liga ou desliga o envio automático do que o Tandem aprende para a lista da
+comunidade. Sem argumento, mostra o estado, quantas linhas estão guardadas na
+fila e para onde elas iriam.
+.PP
+Nasce
+.B desligado
+e assim continua até o dono dizer o contrário, uma vez, olhando a linha inteira
+que sairia da máquina dele \(em não uma descrição dela. A pergunta aparece no
+.B tandem preparar
+e, se ele não decidir lá, uma vez mais no momento em que existe algo concreto
+para mandar: logo depois de ele confirmar que um programa funcionou.
+.PP
+Por que isto existe: até a versão 3.8 a lista só descia, e a consequência era
+medível \(em ela estava
+.BR vazia .
+O caminho para contribuir era ler uma linha na tela, copiar, abrir um navegador,
+criar conta num site desconhecido e colar num formulário. Ninguém faz isso, e a
+lista vazia é a medida de quantos fizeram.
+.PP
+O que sai é uma linha de oito campos por programa, a mesma que o
+.B tandem contribuir
+mostra. O filtro que garante que ela não carrega nome de arquivo, pasta, nome de
+usuário, nome da máquina nem endereço de rede roda
+.B duas
+vezes: quando a linha é montada e outra vez na hora de mandar \(em porque a fila
+é um arquivo de texto, e arquivo de texto é exatamente o que alguém edita à mão.
+.PP
+Nada disso atrasa um duplo clique: o envio é feito em segundo plano, no máximo
+20 linhas por dia, e uma máquina sem internet guarda a linha e esquece o
+assunto.
+.TP
+.B tandem socorro
+Junta num arquivo único tudo o que alguém precisa para ajudar você à
+distância: diagnóstico, autoteste, o que o Tandem aprendeu e os registros
+técnicos. O arquivo mostra caminhos de arquivos desta máquina — confira
+antes de enviar.
+.TP
+.B tandem logs
+Mostra o registro técnico mais recente.
+.TP
+.B tandem version
+Mostra a versão instalada.
+.TP
+.B tandem help
+Mostra a lista de comandos. Sem sessão gráfica, é o que
+.B tandem
+sozinho faz.
+.SH PREFIXOS PROTEGIDOS
+Um prefixo Wine que o Tandem não criou é sempre tratado como somente
+leitura pela automação: o programa é executado lá dentro, o que falta é
+informado, e nada é instalado. Isso existe para que um sistema em produção
+que já funciona nunca seja alterado por engano.
+.PP
+Prefixos criados pelo Tandem trazem o arquivo
+.I .tandem-prefixo
+na raiz. A lista explícita de
+.B tandem protect
+tem precedência sobre essa marca.
+.SH EVIDÊNCIA
+O
+.B doctor
+e o
+.B autoteste
+respondem perguntas diferentes, e a diferença já custou caro neste projeto.
+Listar que uma peça está instalada é evidência fraca: prova que ela existe,
+não que funciona. Cinco defeitos encontrados em campo eram invisíveis para
+uma lista e visíveis para um exercício — entre eles a janela de erro que
+nunca abria e a barra de progresso que derrubava o programa inteiro.
+Antes de confiar que algo funciona aqui, exercite.
+.SH ARQUIVOS
+.TP
+.I ~/.local/share/tandem/wine
+Prefixo Wine padrão, criado no primeiro uso.
+.TP
+.I ~/.config/tandem/protegidos.txt
+Perfis Wine que a automação nunca pode modificar, um por linha.
+.TP
+.I ~/.local/state/tandem/*.log
+Registros técnicos de cada comando.
+.TP
+.I ~/.config/mimeapps.list
+Associações de arquivo aplicadas por
+.BR "tandem repair" .
+.TP
+.I ~/.local/share/tandem/memoria/
+O que o Tandem aprendeu sobre cada programa, um arquivo por programa,
+indexado por uma impressão digital do arquivo.
+.TP
+.I ~/.local/share/tandem/wine/.tandem-verbos
+Recibo dos componentes já instalados naquele perfil. Impede repetir uma
+instalação já paga.
+.TP
+.I ~/.local/share/applications/tandem-appimage-*.desktop
+Atalhos de menu que o Tandem criou para AppImages, com a linha
+.I X-Tandem-AppImage
+apontando para o arquivo. Um atalho cujo arquivo desapareceu é apagado
+sozinho na próxima listagem.
+.TP
+.I ~/.config/tandem/tipos-aplicados.txt
+Os tipos de arquivo que o Tandem já reivindicou nesta máquina. Numa
+atualização, só os tipos ausentes desta lista são reivindicados de novo \(em um
+tipo que o dono nunca viu o Tandem assumir não carrega decisão dele para
+sobrescrever.
+.TP
+.I ~/.config/tandem/.primeira-vez
+Qual versão do Tandem fez o trabalho de primeira execução. Antes era um arquivo
+vazio, e por isso uma máquina atualizada nunca reivindicava os formatos novos.
+.TP
+.I ~/.local/state/tandem/lista.tsv
+A lista da comunidade, quando baixada por
+.BR "tandem lista atualizar" .
+.TP
+.I ~/.local/state/tandem/traducao-suspeita.tsv
+Componentes que o Tandem instalou e que não entregaram o arquivo pedido —
+ou seja, erro de tradução dele próprio.
+.TP
+.I ~/tandem-dados-*.tar.gz
+Cópias dos seus arquivos, feitas por
+.B tandem dados salvar
+e automaticamente antes de qualquer operação destrutiva.
+.SH VARIÁVEIS DE AMBIENTE
+.TP
+.B TANDEM_LIB
+Onde procurar as bibliotecas. Padrão:
+.IR /usr/lib/tandem .
+Existe para a suíte poder exercitar os executáveis sem instalar o pacote.
+.TP
+.B TANDEM_PREFIXO_PADRAO
+Perfil Wine usado para programas avulsos. Padrão:
+.IR ~/.local/share/tandem/wine .
+.TP
+.B TANDEM_LISTA_URL
+De onde baixar a lista da comunidade.
+.SH DIAGNÓSTICO
+Nenhum caminho de erro termina em silêncio. Quando há sessão gráfica, os
+erros aparecem em janela e notificação; sem ela, saem no terminal. Em
+qualquer caso, ficam registrados no log, acessível por
+.BR "tandem logs" .
+.SH VEJA TAMBÉM
+.BR wine (1),
+.BR winetricks (1),
+.BR waydroid (1),
+.BR adb (1)
+.SH AUTOR
+Paulo Eduardo.
+Código e relatórios de problema em
+.UR https://github.com/ChrnX0/Tandem
+.UE .

@@ -1932,3 +1932,45 @@ Cancelado.
 
 @botao_instalar_tudo
 Instalar todo
+
+@ajuda
+Tandem - ejecuta programas de Windows, apps de Android y paquetes de Linux.
+
+  Formatos: .exe .msi  |  .apk .xapk .apks .apkm  |  .AppImage .jar
+            .deb .rpm .flatpakref .snap  |  .sh .run
+
+  tandem                      abre el panel
+  tandem install <archivo>    instala/ejecuta cualquiera de los nueve formatos
+  tandem preparar             instala lo que falta (Wine, Java, Android...)
+  tandem programas [nombre]   lista y abre los programas instalados
+  tandem desinstalar [nombre] quita un programa de Windows instalado
+  tandem android              abre la pantalla de Android
+  tandem doctor               diagnostico del entorno (lo que EXISTE)
+  tandem autoteste            lo ejercita de verdad (lo que FUNCIONA)
+  tandem repair               reaplica las asociaciones de archivo
+  tandem dados                muestra tus archivos dentro de Windows
+  tandem dados salvar         copia SOLO tus archivos (rapido y pequeno)
+  tandem dados restaurar [c]  devuelve tus archivos desde una copia
+  tandem backup               guarda el entorno de Windows
+  tandem restore              restaura el entorno de Windows
+  tandem protect <ruta>       protege un perfil de Wine contra cambios
+  tandem identidade           lo que un programa ve de tu maquina (licencias)
+  tandem portas               pinpad, balanza, impresora: en que COM quedaron
+  tandem portas fixar <p> <d> fija un aparato en un puerto (ej.: COM2)
+  tandem idioma [codigo]      en que idioma habla Tandem (pt_BR en es fr zh_CN hi ar)
+  tandem alternativas <nom>   busca un programa de Linux que haga lo mismo
+  tandem receita <archivo>    exporta lo que aprendio, para mandarlo a alguien
+  tandem receita --importar <r> <archivo>   usa la receta de otra persona
+  tandem memoria [nombre]     lo que Tandem aprendio sobre los programas
+  tandem esquecer <nombre>    borra lo que aprendio sobre un programa
+  tandem lista                lo que la comunidad ya descubrio
+  tandem lista atualizar      descarga la lista (no manda nada tuyo)
+  tandem contribuir <arch>    monta la linea para que la mandes, si quieres
+  tandem enviar [sim|nao]     mandar automaticamente lo que aprende (por omision: nao)
+  tandem socorro              junta todo en un archivo para pedir ayuda
+  tandem logs                 muestra el registro mas reciente
+  tandem version              muestra la version instalada
+  tandem help                 muestra esta lista
+
+@faixa_de_ate
+{1} a {2}

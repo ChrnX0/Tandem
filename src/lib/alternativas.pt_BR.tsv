@@ -1,0 +1,81 @@
+# padrão	class	name	how to install	what changes
+#
+# Linux programs that do the job of a Windows program.
+#
+# TWO CLASSES, and the difference matters a great deal:
+#
+#   nativo   - IT IS THE SAME PROGRAM, with an official Linux build. There is
+#              no swap and no adaptation: same product, same vendor, running
+#              directly. Running it under Wine is always worse - slower, no
+#              automatic updates, and it breaks when Wine changes. This is the
+#              category that solves the most and that the fewest people know
+#              about.
+#
+#   parecido - A different program that does a similar job. It is NOT the
+#              same, and the "what changes" column has to say how it differs.
+#              Suggesting a swap without naming the difference would be
+#              misleading.
+#
+# Tandem NEVER swaps anything on its own, and never suggests replacing a
+# program that is working. This surfaces in two situations: when the owner
+# asks ("tandem alternativas"), and when the pre-flight recognises that a
+# program will never work here - where staying quiet would leave the owner
+# with no way out.
+#
+# A new line requires no code changes.
+#
+# The class values (nativo/parecido) are on-disk format, compared by the
+# shell: do not translate them. The name, install instructions and "what
+# changes" columns are shown to the user, so they stay in Portuguese.
+
+*teamviewer*	nativo	TeamViewer para Linux	baixe em teamviewer.com/pt-br/download/linux/	é o mesmo TeamViewer, versão oficial para Linux
+*anydesk*	nativo	AnyDesk para Linux	baixe em anydesk.com/pt/downloads/linux	é o mesmo AnyDesk, versão oficial para Linux
+*rustdesk*	nativo	RustDesk para Linux	baixe em rustdesk.com	é o mesmo RustDesk, versão oficial para Linux
+*chrome*	nativo	Google Chrome	baixe em google.com/chrome	é o mesmo Chrome, versão oficial para Linux
+*firefox*	nativo	Firefox	já vem instalado no Zorin	é o mesmo Firefox
+*zoom*	nativo	Zoom para Linux	baixe em zoom.us/download	é o mesmo Zoom, versão oficial para Linux
+*skype*	nativo	Skype para Linux	sudo snap install skype	é o mesmo Skype, versão oficial para Linux
+*spotify*	nativo	Spotify para Linux	sudo snap install spotify	é o mesmo Spotify, versão oficial para Linux
+*vlc*	nativo	VLC	sudo apt install vlc	é o mesmo VLC
+*obs*studio*	nativo	OBS Studio	sudo apt install obs-studio	é o mesmo OBS Studio
+*audacity*	nativo	Audacity	sudo apt install audacity	é o mesmo Audacity
+*blender*	nativo	Blender	sudo apt install blender	é o mesmo Blender
+*inkscape*	nativo	Inkscape	sudo apt install inkscape	é o mesmo Inkscape
+*gimp*	nativo	GIMP	sudo apt install gimp	é o mesmo GIMP
+*libreoffice*	nativo	LibreOffice	já vem instalado no Zorin	é o mesmo LibreOffice
+*thunderbird*	nativo	Thunderbird	sudo apt install thunderbird	é o mesmo Thunderbird
+*filezilla*	nativo	FileZilla	sudo apt install filezilla	é o mesmo FileZilla
+*putty*	nativo	PuTTY	sudo apt install putty	é o mesmo PuTTY; no Linux o terminal já faz SSH sem programa extra
+*notepad++*	parecido	Gedit, Kate ou VS Code	sudo apt install gedit	edita texto e código; sem os plugins do Notepad++
+*winrar*	parecido	Gerenciador de arquivos do Zorin	já vem instalado	abre e cria .zip e .rar com dois cliques, sem instalar nada
+*7z*	parecido	Gerenciador de arquivos do Zorin	já vem instalado	abre e cria .zip e .7z com dois cliques, sem instalar nada
+*winzip*	parecido	Gerenciador de arquivos do Zorin	já vem instalado	abre e cria .zip com dois cliques, sem instalar nada
+*acrobat*	parecido	Evince ou Okular	já vem instalado no Zorin	lê e imprime PDF; não edita nem assina como o Acrobat pago
+*adobereader*	parecido	Evince ou Okular	já vem instalado no Zorin	lê e imprime PDF; não edita nem assina como o Acrobat pago
+*photoshop*	parecido	GIMP ou Krita	sudo apt install gimp krita	edita imagem, mas é outro programa: menus diferentes e sem os arquivos .psd com todos os recursos
+*coreldraw*	parecido	Inkscape	sudo apt install inkscape	desenho vetorial; abre .cdr com limitações e salva em .svg
+*illustrator*	parecido	Inkscape	sudo apt install inkscape	desenho vetorial; não abre .ai com todos os recursos
+*excel*	parecido	LibreOffice Calc	já vem instalado no Zorin	abre e salva .xlsx; macros do VBA não funcionam
+*word*	parecido	LibreOffice Writer	já vem instalado no Zorin	abre e salva .docx; a formatação pode sair diferente em documento complexo
+*powerpoint*	parecido	LibreOffice Impress	já vem instalado no Zorin	abre e salva .pptx; animações complexas podem sair diferentes
+*autocad*	parecido	LibreCAD ou FreeCAD	sudo apt install librecad freecad	desenho técnico; LibreCAD é só 2D e o FreeCAD trabalha diferente do AutoCAD
+*sketchup*	parecido	FreeCAD ou Blender	sudo apt install freecad	modelagem 3D, com jeito de trabalhar bem diferente
+*ccleaner*	parecido	BleachBit	sudo apt install bleachbit	limpa arquivos temporários; no Linux isso é raramente necessário
+*virtualbox*	nativo	VirtualBox para Linux	sudo apt install virtualbox	é o mesmo VirtualBox, e no Linux ele roda muito melhor
+*wireshark*	nativo	Wireshark	sudo apt install wireshark	é o mesmo Wireshark
+*qbittorrent*	nativo	qBittorrent	sudo apt install qbittorrent	é o mesmo qBittorrent
+*calibre*	nativo	Calibre	sudo apt install calibre	é o mesmo Calibre
+*handbrake*	nativo	HandBrake	sudo apt install handbrake	é o mesmo HandBrake
+*keepass*	nativo	KeePassXC	sudo apt install keepassxc	abre o mesmo arquivo de senhas .kdbx
+
+# ---------------------------------------------------------------------------
+# Shop hardware. These four are not Windows programs, they are the peripherals
+# on a Brazilian counter - and they are here because the honest answer to "my
+# printer does not work inside Android" is not a workaround, it is that the
+# device belongs on Linux, where all four are better supported than in the
+# container. Established by search, 2026-08: nobody anywhere has reported a
+# thermal printer, a pinpad or a scale working inside Waydroid.
+impressora*termica	nativo	ESC/POS direto no Linux	a impressora aparece como /dev/usb/lp0 ou numa fila "raw" do CUPS	Imprime do Linux sem Android e sem Wine. Se o programa que imprime for um app Android, configure ele para impressora de REDE e aponte para este computador - a maioria dos apps de impressão térmica fala por rede.
+leitor*codigo*barras	nativo	já funciona, não instale nada	nenhuma instalação	Um leitor de código de barras é um teclado. Ele digita o código onde o cursor estiver, no Linux e dentro do Android, sem driver nenhum. Se ele digitar cada código DUAS vezes dentro do Android, veja "tandem doctor".
+balanca*	nativo	leitura direta pela porta serial	o aparelho aparece como /dev/ttyUSB0	Toledo, Filizola e Urano falam um protocolo de texto documentado pela porta serial. Um programa de Linux lê isso direto; dentro do Android, não.
+pinpad*	parecido	ACBrLib (ABECS) para Linux	https://acbr.sourceforge.io/ACBrLib/	A biblioteca brasileira ACBrLib é compilada para Linux e implementa o protocolo ABECS. ATENÇÃO: quem decide se o seu pinpad pode ser usado assim é a adquirente (Cielo, Rede, Stone), não o Tandem nem o fabricante.

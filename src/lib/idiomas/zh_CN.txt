@@ -1867,3 +1867,45 @@ Tandem 可以把缺的东西装上：
 
 @botao_instalar_tudo
 全部安装
+
+@ajuda
+Tandem - 运行 Windows 程序、Android 应用和 Linux 软件包。
+
+  支持格式：.exe .msi  |  .apk .xapk .apks .apkm  |  .AppImage .jar
+            .deb .rpm .flatpakref .snap  |  .sh .run
+
+  tandem                      打开面板
+  tandem install <文件>       安装/运行这九种格式中的任意一种
+  tandem preparar             把缺的装上（Wine、Java、Android……）
+  tandem programas [名字]     列出并打开已装的程序
+  tandem desinstalar [名字]   卸载一个已装的 Windows 程序
+  tandem android              打开 Android 界面
+  tandem doctor               环境诊断（有什么）
+  tandem autoteste            真刀真枪地测（什么能用）
+  tandem repair               重新应用文件关联
+  tandem dados                显示 Windows 里面属于您的文件
+  tandem dados salvar         只备份您的文件（又快又小）
+  tandem dados restaurar [c]  从备份里把您的文件放回去
+  tandem backup               备份整个 Windows 环境
+  tandem restore              恢复 Windows 环境
+  tandem protect <路径>       保护某个 Wine 环境不被改动
+  tandem identidade           程序从您机器上看到什么（授权相关）
+  tandem portas               刷卡机、电子秤、打印机：各自落在哪个 COM
+  tandem portas fixar <p> <d> 把设备固定到某个口（例如 COM2）
+  tandem idioma [代码]        Tandem 用哪种语言（pt_BR en es fr zh_CN hi ar）
+  tandem alternativas <名字>  找一个干同样活的 Linux 程序
+  tandem receita <文件>       导出学到的东西，好发给别人
+  tandem receita --importar <r> <文件>      用别人的配方
+  tandem memoria [名字]       Tandem 关于这些程序学到了什么
+  tandem esquecer <名字>      忘掉关于某个程序学到的东西
+  tandem lista                社区已经摸索出来的东西
+  tandem lista atualizar      下载清单（不会发送您的任何东西）
+  tandem contribuir <文件>    把要发的那一行拼好，发不发您定
+  tandem enviar [sim|nao]     自动发送学到的东西（默认：nao）
+  tandem socorro              把所有信息汇成一个文件，好求助
+  tandem logs                 显示最近的记录
+  tandem version              显示已装的版本
+  tandem help                 显示这份清单
+
+@faixa_de_ate
+{1} 到 {2}

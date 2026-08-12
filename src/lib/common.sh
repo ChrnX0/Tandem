@@ -131,8 +131,19 @@ fi
 # rule number 2 applied to its own machinery: a half-translated program still
 # has to say something a person can read.
 
-TANDEM_IDIOMAS="pt_BR en es fr zh_CN hi ar"
-TANDEM_IDIOMA_PADRAO=pt_BR
+TANDEM_IDIOMAS="en pt_BR es fr zh_CN hi ar"
+# ENGLISH IS THE DEFAULT, and that is a deliberate reversal.
+#
+# It used to be Portuguese, on the reasoning that Portuguese was what this
+# program spoke before it could speak anything else. That reasoning protected
+# nobody: a machine set to Portuguese still resolves to Portuguese by locale,
+# so the only people the old default ever reached were the ones whose language
+# Tandem does not have a catalogue for - and to them, Portuguese is not a
+# gentler fallback than English, it is a wall.
+#
+# It is also the base every catalogue falls back to when a key is missing, so
+# the language that has to be complete first is this one.
+TANDEM_IDIOMA_PADRAO=en
 TANDEM_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/tandem"
 
 declare -gA T_MSG=()
@@ -259,8 +270,8 @@ t_idioma_escolhe() {
 t_idioma_carrega() {
     local dir="${TANDEM_IDIOMAS_DIR:-$TANDEM_LIB/idiomas}"
     TANDEM_IDIOMA="$(t_idioma_escolhe)"
-    # Portuguese first and always: it is the fallback for every key a
-    # translation has not caught up with yet.
+    # The default language first and always: it is the fallback for every key
+    # a translation has not caught up with yet.
     t_catalogo_le "$dir/$TANDEM_IDIOMA_PADRAO.txt" T_MSG_BASE
     if [ "$TANDEM_IDIOMA" != "$TANDEM_IDIOMA_PADRAO" ]; then
         t_catalogo_le "$dir/$TANDEM_IDIOMA.txt" T_MSG
@@ -1983,7 +1994,10 @@ t_texto_portas() {
         [ -n "$f_ini" ] || return 0
         local faixa dev
         if [ "$f_ini" = "$f_fim" ]; then faixa="$f_ini"; dev="$f_dev_ini"
-        else faixa="$f_ini a $f_fim"; dev="$f_dev_ini a $f_dev_fim"; fi
+        else
+            faixa="$(t_msg faixa_de_ate "$f_ini" "$f_fim")"
+            dev="$(t_msg faixa_de_ate "$f_dev_ini" "$f_dev_fim")"
+        fi
         saida="$saida
   $(t_msg portas_fantasma_faixa "$faixa" "$dev")"
         f_ini=""

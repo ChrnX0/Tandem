@@ -1,8 +1,18 @@
 [Desktop Entry]
 Type=Application
 Name=Tandem
+Name[es]=Tandem
+Name[fr]=Tandem
+Name[zh_CN]=Tandem
+Name[hi]=Tandem
+Name[ar]=Tandem
 Comment=Run Windows programs and Android apps
 Comment[pt_BR]=Rode programas Windows e apps Android
+Comment[es]=Ejecuta programas de Windows y apps de Android
+Comment[fr]=Lance des programmes Windows et des applis Android
+Comment[zh_CN]=运行 Windows 程序和 Android 应用
+Comment[hi]=Windows के प्रोग्राम और Android के ऐप चलाता है
+Comment[ar]=يشغّل برامج Windows وتطبيقات Android
 Exec=/usr/bin/tandem
 Icon=tandem
 Terminal=false

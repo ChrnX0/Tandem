@@ -46,15 +46,15 @@ LAYOUT = [
     ("usr/lib/tandem/debinfo.py",  "lib/debinfo.py",  0o755),
     ("usr/lib/tandem/rpminfo.py",  "lib/rpminfo.py",  0o755),
     ("usr/lib/tandem/verbos.tsv",  "lib/verbos.tsv",  0o644),
-    ("usr/lib/tandem/limites.tsv", "lib/limites.tsv", 0o644),
     ("usr/lib/tandem/alternativas.tsv", "lib/alternativas.tsv", 0o644),
-    ("usr/lib/tandem/alternativas.en.tsv", "lib/alternativas.en.tsv", 0o644),
+    ("usr/lib/tandem/limites.tsv", "lib/limites.tsv", 0o644),
+    ("usr/lib/tandem/alternativas.pt_BR.tsv", "lib/alternativas.pt_BR.tsv", 0o644),
     ("usr/lib/tandem/alternativas.es.tsv", "lib/alternativas.es.tsv", 0o644),
     ("usr/lib/tandem/alternativas.fr.tsv", "lib/alternativas.fr.tsv", 0o644),
     ("usr/lib/tandem/alternativas.zh_CN.tsv", "lib/alternativas.zh_CN.tsv", 0o644),
     ("usr/lib/tandem/alternativas.hi.tsv", "lib/alternativas.hi.tsv", 0o644),
     ("usr/lib/tandem/alternativas.ar.tsv", "lib/alternativas.ar.tsv", 0o644),
-    ("usr/lib/tandem/limites.en.tsv", "lib/limites.en.tsv", 0o644),
+    ("usr/lib/tandem/limites.pt_BR.tsv", "lib/limites.pt_BR.tsv", 0o644),
     ("usr/lib/tandem/limites.es.tsv", "lib/limites.es.tsv", 0o644),
     ("usr/lib/tandem/limites.fr.tsv", "lib/limites.fr.tsv", 0o644),
     ("usr/lib/tandem/limites.zh_CN.tsv", "lib/limites.zh_CN.tsv", 0o644),
@@ -91,6 +91,13 @@ DOCS = [
 ] + [
     ("usr/share/man/man1/%s.1.gz" % n, os.path.join(MAN, "%s.1" % n), True)
     for n in MANPAGES
+] + [
+    # The Portuguese manual goes to the per-locale path man(1) itself looks in,
+    # so a pt_BR machine gets it and everybody else gets the English one. That
+    # is the mechanism the format already has; keeping Portuguese at the
+    # default path made it the manual for readers who cannot read it.
+    ("usr/share/man/pt_BR/man1/tandem.1.gz",
+     os.path.join(MAN, "pt_BR", "tandem.1"), True),
 ]
 
 

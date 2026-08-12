@@ -684,10 +684,23 @@ Read this before touching a message anywhere in the tree.
 - **A key missing from a translation falls back to Portuguese** - never to the
   key name, never to nothing. A test demands every key in every catalogue, so
   half-finished cannot become permanent by accident.
+- **ENGLISH IS THE DEFAULT.** It used to be Portuguese, and that was wrong: a
+  machine set to Portuguese resolves to Portuguese by locale anyway, so the only
+  people the Portuguese default ever reached were those whose language Tandem
+  has no catalogue for - and to them Portuguese is a wall, not a mercy. English
+  is also what every catalogue falls back to for a missing key, so it is the one
+  that has to be complete first.
 - **Where the language comes from**, in order: `TANDEM_IDIOMA_FORCADO`, the
-  owner's choice in `~/.config/tandem/idioma`, the system locale, Portuguese.
+  owner's choice in `~/.config/tandem/idioma`, the system locale, English.
   `pt_PT` gets the Portuguese catalogue and `es_AR` the Spanish one, because
   the country is not the language.
+- **The unsuffixed file is always the default, which now means English.**
+  `alternativas.tsv` and `limites.tsv` are English and `*.pt_BR.tsv` is the
+  translation; `man/tandem.1` is English and `man/pt_BR/tandem.1` installs to
+  the per-locale path `man(1)` looks in; the `.desktop` files carry English in
+  bare `Name=`/`Comment=` and all six others in `Name[xx]=`. Flipping the
+  default without also flipping the tables left English reading the Portuguese
+  rows - the tests caught it.
 - **`TANDEM_LANG_SISTEMA` is read at the very top of `common.sh`, before the
   charmap fixup below it exports `LC_ALL`.** That fixup overwrote the only
   evidence of what language the machine was in: on any computer with no
@@ -711,7 +724,7 @@ and the suite asserts that number, so the next literal added anywhere fails a
 test. 404 keys in each of the seven catalogues.
 
 **The counter is the interesting part of this, not the translation.** It was
-wrong SIX times, each time narrower than reality, and it never once failed
+wrong EIGHT times, each time narrower than reality, and it never once failed
 safe - every version reported zero for something that was there:
 
 1. "no accented character left in the file" - accent-free Portuguese walked
@@ -727,6 +740,12 @@ safe - every version reported zero for something that was there:
    and the suspicious-DLL verdict.
 6. A `printf` inside an `acao_*` command - 43 more sentences, including the
    whole of `tandem enviar`.
+7. **No heredoc, ever.** `uso()` is `cat <<'AJUDA'` followed by forty lines of
+   help text - the most-read screen in the program - and SIX versions of this
+   counter scored it as zero, because a heredoc is neither a call nor an
+   assignment nor a printf.
+8. A lowercase assignment outside the known names: `faixa="$f_ini a $f_fim"`,
+   where the ` a ` is Portuguese for "to".
 
 **The lesson, which is the reason this is written down:** a completeness check
 built from what happened to be in front of me will always pass. The measure only
@@ -742,8 +761,12 @@ shape not listed above, the counter will happily report zero.
   files and recipes already written on somebody's machine.
 - **The command names** (`preparar`, `programas`, `dados`...) and the sim/nao
   arguments, so a command copied from a forum works on any machine.
-- `man/tandem.1`, the `Name`/`Comment` of the `.desktop` files, `LEIAME.md`
-  and `CONTRIBUINDO.md` - rule 3 above.
+- `LEIAME.md` and `CONTRIBUINDO.md`, which are the Portuguese half of a pair
+  with `README.md` and `CONTRIBUTING.md` - the translation, not an exception.
+
+**Nothing else.** The manual and the `.desktop` fields used to be listed here
+as deliberate exceptions and they were not defensible: both formats have a
+localisation mechanism of their own, and using it was the whole answer.
 
 ### The data tables
 

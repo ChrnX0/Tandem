@@ -1893,3 +1893,45 @@ Tandem {1} — اختبار ذاتي على هذا الجهاز
 
 @botao_instalar_tudo
 ثبّت كل شيء
+
+@ajuda
+Tandem - يشغّل برامج Windows وتطبيقات Android وحزم لينكس.
+
+  الصيغ: .exe .msi  |  .apk .xapk .apks .apkm  |  .AppImage .jar
+         .deb .rpm .flatpakref .snap  |  .sh .run
+
+  tandem                      يفتح اللوحة
+  tandem install <ملف>        يثبّت/يشغّل أيًّا من الصيغ التسع
+  tandem preparar             يثبّت ما ينقص (Wine، Java، Android…)
+  tandem programas [اسم]      يسرد البرامج المثبَّتة ويفتحها
+  tandem desinstalar [اسم]    يُزيل برنامج Windows مثبَّتًا
+  tandem android              يفتح شاشة Android
+  tandem doctor               تشخيص البيئة (ما هو موجود)
+  tandem autoteste            يختبرها فعليًا (ما يعمل)
+  tandem repair               يعيد تطبيق ارتباطات الملفات
+  tandem dados                يُظهر ملفاتك داخل Windows
+  tandem dados salvar         ينسخ ملفاتك وحدها (سريع وصغير)
+  tandem dados restaurar [c]  يعيد ملفاتك من نسخة
+  tandem backup               يحفظ بيئة Windows
+  tandem restore              يستعيد بيئة Windows
+  tandem protect <مسار>       يحمي ملفًّا شخصيًا لـWine من التغيير
+  tandem identidade           ما يراه البرنامج من جهازك (التراخيص)
+  tandem portas               جهاز الدفع والميزان والطابعة: على أي COM حلّوا
+  tandem portas fixar <p> <d> يثبّت جهازًا على منفذ (مثل COM2)
+  tandem idioma [رمز]         بأي لغة يتحدّث Tandem (pt_BR en es fr zh_CN hi ar)
+  tandem alternativas <اسم>   يبحث عن برنامج لينكس يؤدّي العمل نفسه
+  tandem receita <ملف>        يُصدّر ما تعلّمه، لإرساله إلى أحد
+  tandem receita --importar <r> <ملف>       يستخدم وصفة شخص آخر
+  tandem memoria [اسم]        ما تعلّمه Tandem عن البرامج
+  tandem esquecer <اسم>       يمحو ما تعلّمه عن برنامج واحد
+  tandem lista                ما توصّل إليه المجتمع بالفعل
+  tandem lista atualizar      ينزّل القائمة (لا يُرسل شيئًا من عندك)
+  tandem contribuir <ملف>     يجهّز السطر لترسله، إن أردت
+  tandem enviar [sim|nao]     إرسال ما يتعلّمه تلقائيًا (الافتراضي: nao)
+  tandem socorro              يجمع كل شيء في ملف واحد لطلب المساعدة
+  tandem logs                 يُظهر أحدث سجل
+  tandem version              يُظهر الإصدار المثبَّت
+  tandem help                 يُظهر هذه القائمة
+
+@faixa_de_ate
+{1} إلى {2}

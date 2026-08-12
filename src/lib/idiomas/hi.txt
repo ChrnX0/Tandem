@@ -1920,3 +1920,45 @@ TANDEM की रिपोर्ट
 
 @botao_instalar_tudo
 सब इंस्टॉल करें
+
+@ajuda
+Tandem - Windows के प्रोग्राम, Android के ऐप और Linux के पैकेज चलाता है।
+
+  प्रारूप: .exe .msi  |  .apk .xapk .apks .apkm  |  .AppImage .jar
+           .deb .rpm .flatpakref .snap  |  .sh .run
+
+  tandem                      पैनल खोलता है
+  tandem install <फ़ाइल>       नौ प्रारूपों में से किसी को इंस्टॉल/चलाता है
+  tandem preparar             जो नहीं है वह इंस्टॉल करता है (Wine, Java, Android…)
+  tandem programas [नाम]      इंस्टॉल किए प्रोग्राम गिनाता और खोलता है
+  tandem desinstalar [नाम]    इंस्टॉल किया Windows प्रोग्राम हटाता है
+  tandem android              Android की स्क्रीन खोलता है
+  tandem doctor               वातावरण का निदान (क्या मौजूद है)
+  tandem autoteste            सचमुच जाँचता है (क्या चलता है)
+  tandem repair               फ़ाइल संबंध दोबारा लागू करता है
+  tandem dados                Windows के अंदर आपकी फ़ाइलें दिखाता है
+  tandem dados salvar         सिर्फ़ आपकी फ़ाइलें कॉपी करता है (तेज़ और छोटा)
+  tandem dados restaurar [c]  नकल से आपकी फ़ाइलें वापस रखता है
+  tandem backup               Windows वातावरण सहेजता है
+  tandem restore              Windows वातावरण बहाल करता है
+  tandem protect <पता>        किसी Wine प्रोफ़ाइल को बदलाव से बचाता है
+  tandem identidade           प्रोग्राम आपकी मशीन का क्या देखता है (लाइसेंस)
+  tandem portas               पिनपैड, तराज़ू, प्रिंटर: कौन किस COM पर है
+  tandem portas fixar <p> <d> उपकरण को किसी पोर्ट पर बाँधता है (जैसे COM2)
+  tandem idioma [कोड]         Tandem किस भाषा में बोले (pt_BR en es fr zh_CN hi ar)
+  tandem alternativas <नाम>   वही काम करने वाला Linux प्रोग्राम खोजता है
+  tandem receita <फ़ाइल>       सीखा हुआ बाहर लिखता है, किसी को भेजने के लिए
+  tandem receita --importar <r> <फ़ाइल>     किसी और की विधि इस्तेमाल करता है
+  tandem memoria [नाम]        Tandem ने प्रोग्रामों के बारे में क्या सीखा
+  tandem esquecer <नाम>       किसी प्रोग्राम के बारे में सीखा हुआ मिटाता है
+  tandem lista                समुदाय ने अब तक क्या पता लगाया
+  tandem lista atualizar      सूची डाउनलोड करता है (आपका कुछ नहीं भेजता)
+  tandem contribuir <फ़ाइल>    भेजने वाली पंक्ति बना देता है, भेजना आपकी मर्ज़ी
+  tandem enviar [sim|nao]     सीखा हुआ अपने आप भेजे (डिफ़ॉल्ट: nao)
+  tandem socorro              मदद माँगने के लिए सब एक फ़ाइल में जोड़ता है
+  tandem logs                 सबसे नया ब्यौरा दिखाता है
+  tandem version              इंस्टॉल किया संस्करण दिखाता है
+  tandem help                 यह सूची दिखाता है
+
+@faixa_de_ate
+{1} से {2}

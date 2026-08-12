@@ -9,45 +9,9 @@ t_primeira_vez
 VERSAO="$TANDEM_VERSAO"
 
 uso() {
-    cat <<'AJUDA'
-Tandem - roda programas Windows, apps Android e pacotes do Linux.
-
-  Formatos: .exe .msi  |  .apk .xapk .apks .apkm  |  .AppImage .jar
-            .deb .rpm .flatpakref .snap  |  .sh .run
-
-  tandem                      abre o painel
-  tandem install <arquivo>    instala/executa qualquer um dos nove formatos
-  tandem preparar             instala o que falta (Wine, Java, Android, ...)
-  tandem programas [nome]     lista e abre os programas instalados
-  tandem desinstalar [nome]   remove um programa Windows instalado
-  tandem android              abre a tela do Android
-  tandem doctor               diagnostico do ambiente (o que existe)
-  tandem autoteste            exercita de verdade (o que funciona)
-  tandem repair               reaplica as associacoes de arquivo
-  tandem dados                mostra os seus arquivos dentro do Windows
-  tandem dados salvar         copia SO os seus arquivos (rapido e pequeno)
-  tandem dados restaurar [c]  devolve os seus arquivos de uma copia
-  tandem backup               salva o ambiente Windows
-  tandem restore              restaura o ambiente Windows
-  tandem protect <caminho>    protege um perfil Wine contra alteracoes
-  tandem identidade           o que o programa ve da sua maquina (licenca)
-  tandem portas               pinpad, balanca, impressora: em que COM ficaram
-  tandem portas fixar <p> <d> prende um aparelho numa porta (ex.: COM2)
-  tandem idioma [codigo]      em que idioma o Tandem fala (pt_BR en es fr zh_CN hi ar)
-  tandem alternativas <nome>  procura um programa de Linux que faca o mesmo
-  tandem receita <arquivo>    exporta o que aprendeu, para mandar a alguem
-  tandem receita --importar <r> <arquivo>   usa a receita de outra pessoa
-  tandem memoria [nome]       o que o Tandem aprendeu sobre os programas
-  tandem esquecer <nome>      apaga o que ele aprendeu sobre um programa
-  tandem lista                o que a comunidade ja descobriu
-  tandem lista atualizar      baixa a lista (nao manda nada seu)
-  tandem contribuir <arq>     monta a linha para voce mandar, se quiser
-  tandem enviar [sim|nao]     mandar automaticamente o que aprende (padrao: nao)
-  tandem socorro              junta tudo num arquivo para pedir ajuda
-  tandem logs                 mostra o log mais recente
-  tandem version              mostra a versao instalada
-  tandem help                 mostra esta lista
-AJUDA
+    t_msg ajuda
+    printf '
+'
 }
 
 # ---------------------------------------------------------------- actions

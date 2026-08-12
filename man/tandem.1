@@ -1,438 +1,452 @@
-.TH TANDEM 1 "2026-08-09" "tandem 4.1" "Comandos do usuário"
-.SH NOME
-tandem \- roda programas Windows, aplicativos Android e pacotes do Linux
-.SH SINOPSE
+.TH TANDEM 1 "2026-08-09" "tandem 4.1" "User commands"
+.SH NAME
+tandem \- runs Windows programs, Android apps and Linux packages
+.SH SYNOPSIS
 .B tandem
-.RI [ comando ]
-.RI [ argumento ]
+.RI [ command ]
+.RI [ argument ]
 .br
 .B tandem-exe
-.I arquivo.exe
+.I file.exe
 .br
 .B tandem-apk
-.I arquivo.apk
+.I file.apk
 .br
 .B tandem-appimage
-.I arquivo.AppImage
+.I file.AppImage
 .br
 .B tandem-jar
-.I arquivo.jar
+.I file.jar
 .br
 .B tandem-deb
-.I arquivo.deb
+.I file.deb
 .br
 .B tandem-rpm
-.I arquivo.rpm
+.I file.rpm
 .br
 .B tandem-flatpak
-.I arquivo.flatpakref
+.I file.flatpakref
 .br
 .B tandem-snap
-.I arquivo.snap
+.I file.snap
 .br
 .B tandem-script
-.I arquivo.sh
+.I file.sh
 .br
 .B tandem-android
 .br
 .B tandem-repair
-.SH DESCRIÇÃO
-O
+.SH DESCRIPTION
 .B Tandem
-faz arquivos
+makes
 .IR .exe ,
 .IR .msi ,
 .IR .apk ,
 .IR .xapk ,
 .I .AppImage
-e
+and
 .I .jar
-abrirem com dois cliques no Linux. Ele não substitui o Wine nem o Waydroid:
-é uma camada de decisão, tradução e diagnóstico por cima deles.
+files open with a double click on Linux. It does not replace Wine or Waydroid:
+it is a layer of decision, translation and diagnosis on top of them.
 .PP
-Para programas Windows, o Tandem executa o arquivo, lê a saída de erro do
-Wine à procura de bibliotecas faltando, traduz cada uma para o pacote do
+For Windows programs, Tandem runs the file, reads Wine's error output looking
+for missing libraries, translates each one into the
 .BR winetricks (1)
-que a fornece, instala e tenta de novo. É o laço que uma pessoa experiente
-faria à mão.
+package that provides it, installs, and tries again. It is the loop an
+experienced person would do by hand.
 .PP
-Para aplicativos Android, o Tandem inspeciona o pacote antes de instalar
-(arquitetura, versão mínima do sistema e divisão em partes) e relata
-incompatibilidades em português, em vez de falhar sem explicação.
+For Android apps, Tandem inspects the package before installing it
+(architecture, minimum system version, and whether it is split into parts) and
+reports incompatibilities in a sentence, instead of failing with no
+explanation.
 .PP
-Para os formatos que o próprio Linux usa, o diagnóstico vem antes da
-execução. Um
+For the formats Linux itself uses, the diagnosis comes before the run. An
 .I .AppImage
-é conferido quanto ao download completo, ao tipo de processador e à
-permissão de execução que o navegador não deu; quando falta o FUSE, o
-Tandem abre o programa desempacotando em vez de falhar, e coloca o
-programa no menu de aplicativos usando o atalho que o próprio AppImage
-carrega. Um
+is checked for a complete download, the right kind of processor, and the
+execute permission the browser did not give it; when FUSE is missing, Tandem
+opens the program by unpacking it rather than failing, and puts the program in
+the applications menu using the shortcut the AppImage itself carries. A
 .I .jar
-é lido para saber se é um programa ou apenas uma peça de programa, e para
-saber de qual versão do Java ele precisa \(em de modo que
+is read to find out whether it is a program or merely a piece of one, and which
+version of Java it needs \(em so that
 .RB \(lq "class file version 65" \(rq
-seja respondido com \(lqisto precisa do Java 21\(rq.
+is answered with \(lqthis needs Java 21\(rq.
 .PP
-Para os pacotes da própria distribuição, todo o diagnóstico acontece
-.B antes
-de pedir a senha. Isso não é preferência, é um fato medido: o
+For the distribution's own packages, the whole diagnosis happens
+.B before
+the password is asked for. That is not a preference, it is a measured fact:
 .B apt-get install -s
-responde sem privilégio nenhum e já diz qual dependência não pode ser
-satisfeita. Um
+answers with no privilege at all and already says which dependency cannot be
+satisfied. A
 .I .deb
-feito para outra versão do sistema é relatado como exatamente isso, em vez de
-como \(lqlibssl1.1 but it is not installable\(rq \(em e a diferença entre esse
-caso e \(lqfalta um repositório que você precisa adicionar\(rq é decidida pelo
-nome: uma biblioteca com a versão soldada no nome nunca vai instalar aqui.
+built for another version of the system is reported as exactly that, instead of
+as \(lqlibssl1.1 but it is not installable\(rq \(em and the difference between
+that case and \(lqa repository you need to add is missing\(rq is decided by the
+name: a library with its version welded into its name will never install here.
 .PP
-Um
+An
 .I .rpm
-não instala neste sistema e o Tandem não oferece converter: um pacote convertido
-traz nomes de dependência que não existem aqui e pula os scripts de instalação,
-produzindo algo que parece instalado e não está. Em vez disso, o Tandem procura o
-mesmo programa nos repositórios da própria máquina e mostra o comando.
+does not install on this system and Tandem does not offer to convert it: a
+converted package carries dependency names that do not exist here and skips the
+install scripts, producing something that looks installed and is not. Instead,
+Tandem looks for the same program in the machine's own repositories and shows
+the command.
 .PP
-Um
+A
 .I .sh
-é o único caso em que a resposta padrão do Tandem
-.B não
-é executar. Um script faz tudo o que o dono pode fazer, e a diferença entre um
-instalador de fabricante \(em makeself, um payload atrás de um cabeçalho de shell
-\(em e um script qualquer decide o que é oferecido primeiro: executar, ou ler.
-Por isso
+is the one case where Tandem's default answer is
+.B not
+to run. A script can do anything its owner can do, and the difference between a
+vendor installer \(em makeself, a payload behind a shell header \(em and any
+old script decides what is offered first: run it, or read it. That is why
 .I application/x-shellscript
-é o único tipo que o
+is the only type
 .B tandem repair
-deliberadamente
-.B não
-reivindica: abrir um script baixado num editor de texto é uma resposta melhor do
-que executá-lo, e o Tandem não tira um tipo de quem já está fazendo a coisa
-certa. O
+deliberately does
+.B not
+claim: opening a downloaded script in a text editor is a better answer than
+running it, and Tandem does not take a type away from somebody who is already
+doing the right thing.
 .B tandem-script
-continua alcançável pelo \(lqAbrir com\(rq e pelo
+stays reachable through \(lqOpen with\(rq and through
 .BR "tandem install" .
-.SH COMANDOS
+.SH COMMANDS
 .TP
 .B tandem
-Abre o painel gráfico. Sem sessão gráfica, mostra esta ajuda.
+Opens the graphical panel. With no graphical session, shows this help.
 .TP
-.BI "tandem install " arquivo
-Instala ou executa o arquivo, escolhendo entre os nove formatos pelo tipo.
-Quando o nome não diz nada, decide pelo conteúdo, sempre da marca mais
-específica para a mais genérica: todo AppImage é um ELF, todo
+.BI "tandem install " file
+Installs or runs the file, choosing between the nine formats by type. When the
+name says nothing, it decides by content, always from the most specific mark to
+the most generic: every AppImage is an ELF, every
 .I .jar
-é um zip e todo
+is a zip, and every
 .I .deb
-é um arquivo
-.BR ar .
+is an
+.B ar
+archive.
 .TP
 .B tandem android
-Abre a tela do Android.
+Opens the Android screen.
 .TP
 .B "tandem preparar"
-Instala o que falta — Wine, winetricks, suporte a 32 bits, adb, o Java, o
-FUSE e o Android (Waydroid) — e inicializa o Android. O Flatpak fica de fora
-de propósito: ele é instalado na hora, se um
+Installs what is missing \(em Wine, winetricks, 32-bit support, adb, Java, FUSE
+and Android (Waydroid) \(em and starts Android up. Flatpak is left out on
+purpose: it is installed on the spot, if a
 .I .flatpakref
-aparecer. Pede a senha uma vez só. Isso não pode
-acontecer durante a instalação do pacote: o
+turns up. Asks for the password once only. This cannot happen during the
+package install:
 .BR dpkg (1)
-segura uma trava enquanto o
+holds a lock while
 .I postinst
-roda, e um
+runs, and an
 .BR apt-get (8)
-lá dentro esperaria para sempre.
+in there would wait forever.
 .TP
-.BI "tandem programas " [nome]
-Lista os programas Windows instalados e abre o escolhido, sem depender do
-menu do sistema. Sob Wayland o GNOME só relê a lista de aplicativos depois
-de sair e entrar na conta, então um programa recém-instalado não existe para
-o usuário até o próximo login.
+.BI "tandem programas " [name]
+Lists the installed Windows programs and opens the chosen one, without
+depending on the system menu. Under Wayland, GNOME only re-reads the
+application list after logging out and back in, so a freshly installed program
+does not exist for the user until the next login.
 .TP
-.BI "tandem desinstalar " [nome]
-Remove um programa Windows e limpa os atalhos que ficaram apontando para
-nada. Só funciona no perfil do Tandem: desinstalar altera o perfil, e perfil
-de terceiro é intocável.
+.BI "tandem desinstalar " [name]
+Removes a Windows program and clears up the shortcuts left pointing at
+nothing. It only works in Tandem's own profile: uninstalling changes the
+profile, and somebody else's profile is untouchable.
 .TP
 .B tandem doctor
-Mostra o diagnóstico do ambiente: versão do Wine, suporte a 32 e 64 bits,
-estado do Waydroid e perfis protegidos. Diz o que EXISTE.
+Shows the diagnosis of the environment: Wine version, 32- and 64-bit support,
+Waydroid state and protected profiles. It says what EXISTS.
 .TP
 .B tandem autoteste
-Exercita o Tandem nesta máquina e diz o que FUNCIONA — que não é a mesma
-pergunta. Uma peça instalada pode não funcionar: já aconteceu de o
+Exercises Tandem on this machine and says what WORKS \(em which is not the same
+question. An installed piece may not work: it has happened that
 .BR zenity (1)
-estar presente e mesmo assim recusar todo texto acentuado, apagando a
-interface inteira sem deixar rastro. O autoteste roda cada coisa de verdade
-e olha o resultado; onde não dá para exercitar, ele diz que pulou em vez de
-fingir que aprovou.
+was present and still refused every accented text, erasing the entire interface
+without leaving a trace. The self-test runs each thing for real and looks at
+the result; where it cannot exercise something, it says it skipped rather than
+pretending it passed.
 .TP
-.BI "tandem alternativas " nome
-Procura um programa de Linux que faça o trabalho de um programa de Windows.
-Separa o que É o mesmo programa com versão oficial para Linux daquilo que
-apenas faz algo parecido, sempre dizendo o que muda.
+.BI "tandem alternativas " name
+Looks for a Linux program that does the job of a Windows program. It separates
+what IS the same program with an official Linux version from what merely does
+something similar, always saying what changes.
 .TP
-.BI "tandem receita " arquivo
-Escreve na saída padrão o que o Tandem aprendeu sobre um programa, em texto
-que cabe numa mensagem e pode ser conferido antes de enviar. Para guardar num
-arquivo, redirecione:
+.BI "tandem receita " file
+Writes to standard output what Tandem has learnt about a program, as text that
+fits in a message and can be checked before being sent. To keep it in a file,
+redirect:
 .IP
 .EX
-tandem receita ~/Downloads/sistema.exe > receita.txt
+tandem receita ~/Downloads/system.exe > recipe.txt
 .EE
 .IP
-A receita sai marcada com a origem da confiança: uma lição que o dono
-confirmou na tela vale diferente de uma em que o programa apenas saiu sem
-erro.
+The recipe comes out marked with where its confidence came from: a lesson the
+owner confirmed on screen is worth something different from one where the
+program merely exited without an error.
 .TP
-.BI "tandem receita --importar " "receita programa"
-Usa a receita de outra pessoa. A receita é recusada se não se declarar como
-tal, se for de outro programa, ou se trouxer nome de componente com
-caractere fora do esperado — ela vira argumento do
+.BI "tandem receita --importar " "recipe program"
+Uses somebody else's recipe. The recipe is refused if it does not declare
+itself as one, if it is for another program, or if it carries a component name
+with an unexpected character \(em it becomes an argument to
 .BR winetricks (1),
-e entrada vinda de fora não pode carregar comando.
+and input from outside cannot carry a command.
 .TP
-.BI "tandem memoria " [nome]
-Mostra o que o Tandem aprendeu sobre cada programa: quais componentes
-resolveram, quais não resolveram, se abriu e quanto tempo levou.
+.BI "tandem memoria " [name]
+Shows what Tandem has learnt about each program: which components fixed it,
+which did not, whether it opened, and how long it took.
 .TP
-.BI "tandem esquecer " nome
-Apaga o que ele aprendeu sobre um programa. Da próxima vez ele descobre de
-novo.
+.BI "tandem esquecer " name
+Erases what it learnt about a program. Next time it works it out again.
 .TP
 .B tandem repair
-Reaplica as associações de arquivo. Use quando o duplo clique abrir o
-diálogo "Abrir com…" em vez do Tandem.
+Reapplies the file associations. Use it when a double click opens the
+\(lqOpen with…\(rq dialog instead of Tandem.
 .TP
 .B tandem dados
-Mostra os arquivos que
-.I você
-criou dentro do Windows — documentos, planilhas, bancos de dados de
-programas — separados do ambiente, que o Tandem sabe refazer sozinho.
+Shows the files
+.I you
+created inside Windows \(em documents, spreadsheets, program databases \(em
+separated from the environment, which Tandem knows how to rebuild on its own.
 .RS
 .TP
 .B tandem dados salvar
-Copia somente esses arquivos para um
+Copies only those files into a
 .I .tar.gz
-na pasta pessoal. É rápido e pequeno, porque não leva o ambiente junto.
+in the home folder. It is quick and small, because it does not take the
+environment along.
 .TP
-.BI "tandem dados restaurar " [cópia]
-Devolve os arquivos de uma cópia. Nada que já existe é sobrescrito; só
-entram os arquivos que faltam. Sem argumento, usa a cópia mais recente.
+.BI "tandem dados restaurar " [copy]
+Puts the files back from a copy. Nothing that already exists is overwritten;
+only the missing files go in. With no argument, it uses the most recent copy.
 .RE
 .TP
 .B tandem backup
-Salva o ambiente Windows do Tandem em um arquivo na pasta pessoal.
-Inclui os seus arquivos, mas é pesado; para levar só os dados, use
+Saves Tandem's Windows environment into a file in the home folder. It includes
+your files, but it is heavy; to take only the data, use
 .BR "tandem dados salvar" .
 .TP
 .B tandem restore
-Restaura o ambiente Windows a partir do backup mais recente.
+Restores the Windows environment from the most recent backup.
 .TP
-.BI "tandem protect " caminho
-Marca um perfil Wine como intocável. O Tandem nunca instala nem altera
-nada dentro de um perfil protegido.
+.BI "tandem protect " path
+Marks a Wine profile as untouchable. Tandem never installs or changes anything
+inside a protected profile.
 .TP
-.BI "tandem idioma " [código]
-Sem argumento, mostra em que idioma o Tandem está falando e a lista dos que
-existem. Com um código
-.RB ( pt_BR ", " en ", " es ", " fr ", " zh_CN ", " hi ", " ar ),
-troca para ele e guarda a escolha.
+.BI "tandem idioma " [code]
+With no argument, shows which language Tandem is speaking and the list of the
+ones that exist. With a code
+.RB ( en ", " pt_BR ", " es ", " fr ", " zh_CN ", " hi ", " ar ),
+switches to it and remembers the choice.
 .IP
-O Tandem não pergunta o idioma durante a instalação do pacote: ele segue o
-idioma que o Linux já está configurado para usar, e avisa qual escolheu na
-primeira vez que roda. Traduções ainda não conferidas por quem fala o idioma
-de berço são marcadas com um asterisco na lista, e o Tandem diz isso na cara
-de quem escolhe uma delas.
+Tandem does not ask about the language during the package install: it follows
+the language Linux is already set to, and says which one it picked the first
+time it runs. Translations not yet checked by somebody who speaks the language
+as their first are marked with an asterisk on the list, and Tandem says so
+outright to whoever picks one.
+.IP
+English is the default. That is what an unrecognised locale gets, and it is
+what every catalogue falls back to when a key is missing.
 .TP
 .B tandem identidade
-Mostra, lado a lado, tudo o que um programa consegue ler sobre este
-computador quando amarra a licença a ele, e diz de onde cada coisa vem: da
-sua máquina de verdade, de um valor fixo que todo Wine do mundo responde
-igual, ou de dentro do ambiente Windows. É só leitura: não abre o Wine, não
-pede senha e não altera nada. Serve para responder à pergunta que aparece
-quando um programa pede ativação de novo sem nada ter mudado.
+Shows, side by side, everything a program can read about this computer when it
+ties a licence to it, and says where each thing comes from: from your real
+machine, from a fixed value every Wine in the world answers identically, or
+from inside the Windows environment. It is read-only: it does not start Wine,
+does not ask for a password and changes nothing. It exists to answer the
+question that comes up when a program asks to be activated again with nothing
+having changed.
 .TP
 .B tandem portas
-Lista em que porta COM ou LPT cada aparelho ligado à máquina vai aparecer
-para os programas Windows — pinpad, balança, impressora, leitor de código de
-barras em modo serial. Avisa nos dois casos que quebram isso em silêncio: o
-aparelho que caiu numa porta acima da COM4, que muito programa de loja
-antigo recusa, e a falta do grupo
-.BR dialout ,
-sem o qual o aparelho aparece na lista e não abre.
+Lists which COM or LPT port each device plugged into the machine will appear on
+for Windows programs \(em pinpad, scale, printer, barcode scanner in serial
+mode. It warns about the two cases that break this silently: the device that
+landed on a port above COM4, which a lot of old shop software refuses, and the
+missing
+.B dialout
+group, without which the device shows up on the list and will not open.
+.IP
+A run of kernel serial lines with no UART behind them is collapsed into one
+line that says what they are. A modern PC registers thirty-two of them and has
+none: that is measured, not assumed, and it is what pushes a real USB adapter
+up to COM33.
 .TP
-.BI "tandem portas fixar " "porta caminho"
-Prende um aparelho numa porta escolhida por você, por exemplo
+.BI "tandem portas fixar " "port path"
+Pins a device to a port of your choosing, for example
 .BR "tandem portas fixar COM2 /dev/ttyACM0" .
-Só funciona em ambiente criado pelo Tandem.
-.BR "tandem portas soltar " porta
-desfaz.
+It only works in an environment created by Tandem.
+.BR "tandem portas soltar " port
+undoes it.
 .TP
 .B tandem lista
-Mostra a lista da comunidade: o que já deu certo na máquina de outras
-pessoas, por programa.
+Shows the community list: what has already worked on other people's machines,
+per program.
 .TP
 .B tandem lista atualizar
-Baixa a lista. É um arquivo de texto público, buscado por HTTPS — o modelo
-das listas de filtro de bloqueador de anúncio. Nada desta máquina é enviado,
-e nada é instalado: a lista vira sugestão, e o Tandem continua perguntando.
+Downloads the list. It is a public text file, fetched over HTTPS \(em the model
+of an ad blocker's filter lists. Nothing from this machine is sent, and nothing
+is installed: the list becomes a suggestion, and Tandem goes on asking.
 .TP
-.BI "tandem contribuir " programa
-Monta a linha padronizada com o que este Tandem aprendeu e mostra ela
-inteira, para você conferir e enviar se quiser. O Tandem nunca envia
-sozinho. A linha não carrega nome de arquivo, pasta, usuário, nome da
-máquina, endereço de rede nem log; o gerador se recusa a produzi\-la se
-alguma dessas coisas aparecer. O formato está descrito em
+.BI "tandem contribuir " program
+Assembles the standard line with what this Tandem has learnt and shows it in
+full, for you to check and send if you want. Tandem never sends on its own.
+The line carries no file name, folder, user name, machine name, network address
+or log; the generator refuses to produce it if any of those turns up. The
+format is described in
 .IR docs/LIST\-FORMAT.md .
 .TP
 .BR "tandem enviar " [ sim | nao ]
-Liga ou desliga o envio automático do que o Tandem aprende para a lista da
-comunidade. Sem argumento, mostra o estado, quantas linhas estão guardadas na
-fila e para onde elas iriam.
+Turns automatic sending of what Tandem learns to the community list on or off.
+With no argument, shows the state, how many lines are held in the queue, and
+where they would go.
 .PP
-Nasce
-.B desligado
-e assim continua até o dono dizer o contrário, uma vez, olhando a linha inteira
-que sairia da máquina dele \(em não uma descrição dela. A pergunta aparece no
+It is born
+.B off
+and stays that way until the owner says otherwise, once, looking at the whole
+line that would leave their machine \(em not a description of it. The question
+appears in
 .B tandem preparar
-e, se ele não decidir lá, uma vez mais no momento em que existe algo concreto
-para mandar: logo depois de ele confirmar que um programa funcionou.
+and, if they do not decide there, once more at the moment there is something
+concrete to send: right after they confirm that a program worked.
 .PP
-Por que isto existe: até a versão 3.8 a lista só descia, e a consequência era
-medível \(em ela estava
-.BR vazia .
-O caminho para contribuir era ler uma linha na tela, copiar, abrir um navegador,
-criar conta num site desconhecido e colar num formulário. Ninguém faz isso, e a
-lista vazia é a medida de quantos fizeram.
+Why this exists: up to version 3.8 the list only ever came down, and the
+consequence was measurable \(em it was
+.BR empty .
+The way to contribute was to read a line on screen, copy it, open a browser,
+create an account on an unfamiliar site and paste it into a form. Nobody does
+that, and the empty list is the measure of how many did.
 .PP
-O que sai é uma linha de oito campos por programa, a mesma que o
+What goes out is one line of eight fields per program, the same one
 .B tandem contribuir
-mostra. O filtro que garante que ela não carrega nome de arquivo, pasta, nome de
-usuário, nome da máquina nem endereço de rede roda
-.B duas
-vezes: quando a linha é montada e outra vez na hora de mandar \(em porque a fila
-é um arquivo de texto, e arquivo de texto é exatamente o que alguém edita à mão.
+shows. The sieve that guarantees it carries no file name, folder, user name,
+machine name or network address runs
+.B twice:
+when the line is assembled and again at the moment of sending \(em because the
+queue is a text file, and a text file is exactly what somebody edits by hand.
 .PP
-Nada disso atrasa um duplo clique: o envio é feito em segundo plano, no máximo
-20 linhas por dia, e uma máquina sem internet guarda a linha e esquece o
-assunto.
+None of this delays a double click: sending happens in the background, at most
+20 lines a day, and a machine with no internet keeps the line and forgets about
+it.
 .TP
 .B tandem socorro
-Junta num arquivo único tudo o que alguém precisa para ajudar você à
-distância: diagnóstico, autoteste, o que o Tandem aprendeu e os registros
-técnicos. O arquivo mostra caminhos de arquivos desta máquina — confira
-antes de enviar.
+Gathers into a single file everything somebody needs to help you at a distance:
+diagnosis, self-test, what Tandem has learnt, and the technical logs. The file
+shows file paths from this machine \(em check it before sending.
 .TP
 .B tandem logs
-Mostra o registro técnico mais recente.
+Shows the most recent technical log.
 .TP
 .B tandem version
-Mostra a versão instalada.
+Shows the installed version.
 .TP
 .B tandem help
-Mostra a lista de comandos. Sem sessão gráfica, é o que
+Shows the list of commands. With no graphical session, it is what
 .B tandem
-sozinho faz.
-.SH PREFIXOS PROTEGIDOS
-Um prefixo Wine que o Tandem não criou é sempre tratado como somente
-leitura pela automação: o programa é executado lá dentro, o que falta é
-informado, e nada é instalado. Isso existe para que um sistema em produção
-que já funciona nunca seja alterado por engano.
+on its own does.
+.SH PROTECTED PREFIXES
+A Wine prefix Tandem did not create is always treated as read-only by the
+automation: the program is run inside it, what is missing is reported, and
+nothing is installed. This exists so that a production system that already
+works is never changed by accident.
 .PP
-Prefixos criados pelo Tandem trazem o arquivo
+Prefixes created by Tandem carry the file
 .I .tandem-prefixo
-na raiz. A lista explícita de
+at their root. The explicit list of
 .B tandem protect
-tem precedência sobre essa marca.
-.SH EVIDÊNCIA
-O
+takes precedence over that marker.
+.SH EVIDENCE
 .B doctor
-e o
+and
 .B autoteste
-respondem perguntas diferentes, e a diferença já custou caro neste projeto.
-Listar que uma peça está instalada é evidência fraca: prova que ela existe,
-não que funciona. Cinco defeitos encontrados em campo eram invisíveis para
-uma lista e visíveis para um exercício — entre eles a janela de erro que
-nunca abria e a barra de progresso que derrubava o programa inteiro.
-Antes de confiar que algo funciona aqui, exercite.
-.SH ARQUIVOS
+answer different questions, and the difference has already cost this project
+dearly. Listing that a piece is installed is weak evidence: it proves the piece
+exists, not that it works. Five defects found in the field were invisible to a
+list and visible to an exercise \(em among them the error window that never
+opened and the progress bar that brought the whole program down. Before
+trusting that something works here, exercise it.
+.SH FILES
 .TP
 .I ~/.local/share/tandem/wine
-Prefixo Wine padrão, criado no primeiro uso.
+Default Wine prefix, created on first use.
 .TP
 .I ~/.config/tandem/protegidos.txt
-Perfis Wine que a automação nunca pode modificar, um por linha.
+Wine profiles the automation may never modify, one per line.
+.TP
+.I ~/.config/tandem/idioma
+The language the owner chose, if they chose one.
 .TP
 .I ~/.local/state/tandem/*.log
-Registros técnicos de cada comando.
+Technical logs for each command.
 .TP
 .I ~/.config/mimeapps.list
-Associações de arquivo aplicadas por
+File associations applied by
 .BR "tandem repair" .
 .TP
 .I ~/.local/share/tandem/memoria/
-O que o Tandem aprendeu sobre cada programa, um arquivo por programa,
-indexado por uma impressão digital do arquivo.
+What Tandem has learnt about each program, one file per program, indexed by a
+fingerprint of the file.
 .TP
 .I ~/.local/share/tandem/wine/.tandem-verbos
-Recibo dos componentes já instalados naquele perfil. Impede repetir uma
-instalação já paga.
+Receipt of the components already installed in that profile. It stops an
+install that has already been paid for from being repeated.
 .TP
 .I ~/.local/share/applications/tandem-appimage-*.desktop
-Atalhos de menu que o Tandem criou para AppImages, com a linha
+Menu shortcuts Tandem created for AppImages, with the
 .I X-Tandem-AppImage
-apontando para o arquivo. Um atalho cujo arquivo desapareceu é apagado
-sozinho na próxima listagem.
+line pointing at the file. A shortcut whose file has disappeared is deleted on
+its own at the next listing.
 .TP
 .I ~/.config/tandem/tipos-aplicados.txt
-Os tipos de arquivo que o Tandem já reivindicou nesta máquina. Numa
-atualização, só os tipos ausentes desta lista são reivindicados de novo \(em um
-tipo que o dono nunca viu o Tandem assumir não carrega decisão dele para
-sobrescrever.
+The file types Tandem has already claimed on this machine. On an upgrade, only
+the types absent from this list are claimed again \(em a type the owner never
+saw Tandem take over carries no decision of theirs to overwrite.
 .TP
 .I ~/.config/tandem/.primeira-vez
-Qual versão do Tandem fez o trabalho de primeira execução. Antes era um arquivo
-vazio, e por isso uma máquina atualizada nunca reivindicava os formatos novos.
+Which version of Tandem did the first-run work. It used to be an empty file,
+and that is why an upgraded machine never claimed the new formats.
 .TP
 .I ~/.local/state/tandem/lista.tsv
-A lista da comunidade, quando baixada por
+The community list, when downloaded by
 .BR "tandem lista atualizar" .
 .TP
 .I ~/.local/state/tandem/traducao-suspeita.tsv
-Componentes que o Tandem instalou e que não entregaram o arquivo pedido —
-ou seja, erro de tradução dele próprio.
+Components Tandem installed that did not deliver the file that was asked for
+\(em that is, a mapping error of its own.
 .TP
 .I ~/tandem-dados-*.tar.gz
-Cópias dos seus arquivos, feitas por
+Copies of your files, made by
 .B tandem dados salvar
-e automaticamente antes de qualquer operação destrutiva.
-.SH VARIÁVEIS DE AMBIENTE
+and automatically before any destructive operation.
+.SH ENVIRONMENT
 .TP
 .B TANDEM_LIB
-Onde procurar as bibliotecas. Padrão:
+Where to look for the libraries. Default:
 .IR /usr/lib/tandem .
-Existe para a suíte poder exercitar os executáveis sem instalar o pacote.
+It exists so the test suite can exercise the executables without installing the
+package.
+.TP
+.B TANDEM_IDIOMA_FORCADO
+Forces the language for one run, ahead of the owner's choice and the system
+locale.
 .TP
 .B TANDEM_PREFIXO_PADRAO
-Perfil Wine usado para programas avulsos. Padrão:
+Wine profile used for standalone programs. Default:
 .IR ~/.local/share/tandem/wine .
 .TP
 .B TANDEM_LISTA_URL
-De onde baixar a lista da comunidade.
-.SH DIAGNÓSTICO
-Nenhum caminho de erro termina em silêncio. Quando há sessão gráfica, os
-erros aparecem em janela e notificação; sem ela, saem no terminal. Em
-qualquer caso, ficam registrados no log, acessível por
+Where to download the community list from.
+.SH DIAGNOSTICS
+No error path ends in silence. When there is a graphical session, errors appear
+in a window and a notification; without one, they go to the terminal. In either
+case they are recorded in the log, reachable with
 .BR "tandem logs" .
-.SH VEJA TAMBÉM
+.SH SEE ALSO
 .BR wine (1),
 .BR winetricks (1),
 .BR waydroid (1),
 .BR adb (1)
-.SH AUTOR
+.SH AUTHOR
 Paulo Eduardo.
-Código e relatórios de problema em
+Code and bug reports at
 .UR https://github.com/ChrnX0/Tandem
 .UE .

@@ -83,9 +83,9 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "831494609 782" "$soma_esperados"
-equal "the case patterns still match the real Portuguese messages" \
-      "2310912825 1467" "$soma_padroes"
+      "1257887158 776" "$soma_esperados"
+equal "the case patterns still match the real messages" \
+      "3113881825 1444" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -261,13 +261,13 @@ equal "an empty name fails without breaking" "1" "$?"
 # here: saying GIMP is Photoshop would be deceiving the owner.
 texto_alt="$(t_texto_alternativas photoshop)"
 case "$texto_alt" in
-    *"faz um trabalho parecido"*"Atenção:"*) pass "a look-alike alternative comes with the caveat" ;;
-    *) fail "a look-alike alternative comes with the caveat" "faz um trabalho parecido + Atenção" "$texto_alt" ;;
+    *"does a similar job"*"Note:"*) pass "a look-alike alternative comes with the caveat" ;;
+    *) fail "a look-alike alternative comes with the caveat" "does a similar job + Note" "$texto_alt" ;;
 esac
 texto_nat="$(t_texto_alternativas teamviewer)"
 case "$texto_nat" in
-    *"feito para Linux"*) pass "a native alternative is presented as the same program" ;;
-    *) fail "a native alternative is presented as the same program" "feito para Linux" "$texto_nat" ;;
+    *"made for Linux"*) pass "a native alternative is presented as the same program" ;;
+    *) fail "a native alternative is presented as the same program" "made for Linux" "$texto_nat" ;;
 esac
 
 # Every line of the table needs its five columns: a malformed line would show
@@ -1186,9 +1186,9 @@ equal "lists every value of one key" \
 
 TEXTO_ID="$(t_texto_identidade "$PREF_ID")"
 contem "the report names the constant every Wine install reports" \
-       "igual" "$TEXTO_ID"
+       "identical" "$TEXTO_ID"
 contem "and says the ProductId is Wine's own, not this machine's" \
-       "não inventa outro" "$TEXTO_ID"
+       "does not invent another one" "$TEXTO_ID"
 contem "and shows the frozen identifier" \
        "11112222-3333-4444-5555-666677778888" "$TEXTO_ID"
 
@@ -1262,9 +1262,9 @@ saida_balcao="$(portas "$BALCAO")"
 contem "the device keeps the number Wine will really give it" \
        "COM33" "$saida_balcao"
 contem "and it is pointed at, so the eye lands on it" \
-       "o seu aparelho" "$saida_balcao"
+       "your device" "$saida_balcao"
 contem "the 32 phantoms collapse into one range" \
-       "COM1 a COM32" "$saida_balcao"
+       "COM1 to COM32" "$saida_balcao"
 naocontem "so the middle of the run never reaches the screen" \
        "COM17" "$saida_balcao"
 naocontem "nor does its device node" "/dev/ttyS16" "$saida_balcao"
@@ -1284,15 +1284,15 @@ fi
 # otherwise the range line reads as 32 places to plug something into.
 saida_vazio="$(portas 'for i in $(seq 0 31); do echo /dev/ttyS$i; done')"
 contem "a machine with only phantoms says it has no real port" \
-       "Nenhuma porta serial de verdade" "$saida_vazio"
+       "No real serial port" "$saida_vazio"
 contem "and points at the USB adapter as the way in" \
-       "adaptador USB" "$saida_vazio"
+       "USB adapter" "$saida_vazio"
 
 # The guard that matters most: a real port must never be swallowed by the
 # phantom filter. A shop with a genuine COM1 has to keep seeing it.
 saida_real="$(portas 'echo /dev/ttyS40; echo /dev/ttyUSB0')"
 contem "a real serial port is still listed one by one" "/dev/ttyS40" "$saida_real"
-naocontem "and is not folded into the phantom range" "sempre" "$saida_real"
+naocontem "and is not folded into the phantom range" "always creates" "$saida_real"
 naocontem "a machine with a real port is not told it has none" \
           "Nenhuma porta serial de verdade" "$saida_real"
 
@@ -1328,21 +1328,21 @@ contem "a mistyped command is a mistyped command, not a file type" \
        "tandem --help" "$(env HOME="$TMPROOT/h-inst" TANDEM_LIB="$ROOT/src/lib" \
         TANDEM_BIN="$ROOT/src/bin" bash "$ROOT/src/bin/tandem" intalar 2>&1)"
 naocontem "and it is not reported as an unrecognised file type" \
-       "tipo deste arquivo" "$(env HOME="$TMPROOT/h-inst" TANDEM_LIB="$ROOT/src/lib" \
+       "recognise the type" "$(env HOME="$TMPROOT/h-inst" TANDEM_LIB="$ROOT/src/lib" \
         TANDEM_BIN="$ROOT/src/bin" bash "$ROOT/src/bin/tandem" intalar 2>&1)"
 
 # A path that does not exist is a missing file whether or not its name carries
 # an extension Tandem knows. The extension-less case is the one that used to
 # fall through to content sniffing.
 contem "a missing .deb says the file is missing" \
-       "não encontrado" "$(inst "$CASO/nao-existe.deb")"
+       "File not found" "$(inst "$CASO/nao-existe.deb")"
 contem "a missing file with no extension says the same" \
-       "não encontrado" "$(inst "$CASO/nao-existe")"
+       "File not found" "$(inst "$CASO/nao-existe")"
 naocontem "and neither blames the file type" \
-       "tipo deste arquivo" "$(inst "$CASO/nao-existe")"
+       "recognise the type" "$(inst "$CASO/nao-existe")"
 
 # A folder is not a half-readable file: say which mistake it is.
-contem "a folder is reported as a folder" "pasta" "$(inst "$CASO")"
+contem "a folder is reported as a folder" "folder" "$(inst "$CASO")"
 
 # The download that goes wrong rarely produces nothing. The site answers with
 # an error page or a login wall and the browser saves that HTML under the name
@@ -1354,23 +1354,23 @@ printf '<!DOCTYPE html>\n<html><head><title>404</title></head><body>x</body></ht
     > "$CASO/pagina.deb"
 cp "$CASO/pagina.deb" "$CASO/pagina-sem-extensao"
 contem "an error page saved as .deb is called a web page" \
-       "página da internet" "$(inst "$CASO/pagina.deb")"
+       "web page" "$(inst "$CASO/pagina.deb")"
 naocontem "and the ar jargon does not reach the owner" \
-       "assinatura ar" "$(inst "$CASO/pagina.deb")"
+       "ar signature" "$(inst "$CASO/pagina.deb")"
 contem "the same page with no extension is caught too" \
-       "página da internet" "$(inst "$CASO/pagina-sem-extensao")"
+       "web page" "$(inst "$CASO/pagina-sem-extensao")"
 
 # Uppercase, and a page that begins with a blank line, are the same page.
 printf '\n\n<HTML><HEAD><TITLE>Login</TITLE></HEAD></HTML>\n' > "$CASO/maiuscula.deb"
 contem "an uppercase page after blank lines is still a web page" \
-       "página da internet" "$(inst "$CASO/maiuscula.deb")"
+       "web page" "$(inst "$CASO/maiuscula.deb")"
 
 # And a real unknown type still says so - but now it says WHICH file, and what
 # Tandem can actually open, so the sentence is actionable.
 printf 'lixo\000\001\002binario' > "$CASO/estranho"
 saida_estranho="$(inst "$CASO/estranho")"
 contem "an unknown type still says it did not recognise the type" \
-       "Não reconheci o tipo" "$saida_estranho"
+       "did not recognise the type" "$saida_estranho"
 contem "and names the file it is talking about" "estranho" "$saida_estranho"
 contem "and lists what Tandem does open" ".flatpakref" "$saida_estranho"
 
@@ -1385,9 +1385,9 @@ fi
 if true; then
     if [ -n "$deb_bom" ]; then
         naocontem "a real .deb is not mistaken for a web page" \
-                  "página da internet" "$(inst "$deb_bom")"
+                  "web page" "$(inst "$deb_bom")"
         naocontem "a real .deb is not mistaken for an unknown type" \
-                  "Não reconheci o tipo" "$(inst "$deb_bom")"
+                  "did not recognise the type" "$(inst "$deb_bom")"
     else
         skip "a real .deb still routes" "no package could be built here"
     fi
@@ -1399,10 +1399,10 @@ section "language: the data tables translate too, and fall back"
 # carry PROSE in their columns - "what changes" and "why it will never work" -
 # and that prose reaches the owner through t_texto_alternativas and the limit
 # verdicts. A per-language table sits beside the original, and the original is
-# the fallback, exactly as a missing catalogue key falls back to Portuguese.
+# the fallback, exactly as a missing catalogue key falls back to English.
 
 for tab in alternativas limites; do
-  for tl in en es fr zh_CN hi ar; do
+  for tl in pt_BR es fr zh_CN hi ar; do
     if [ -f "$ROOT/src/lib/$tab.$tl.tsv" ]; then
         pass "$tab has a $tl table"
     else
@@ -1425,7 +1425,7 @@ for tab in alternativas limites; do
     c_tl="$(grep -v '^#' "$ROOT/src/lib/$tab.$tl.tsv" | grep . | cut -f2 | cksum)"
     equal "$tab.$tl.tsv keeps the class column untranslated" "$c_pt" "$c_tl"
     # And no row may still be the Portuguese sentence: that is the whole point.
-    if [ "$tab" = limites ]; then
+    if [ "$tab" = limites ] && [ "$tl" != pt_BR ]; then
         pt_sobrou="$(grep -v '^#' "$ROOT/src/lib/$tab.$tl.tsv" | grep -c 'núcleo do Linux' | tr -d ' ')"
         equal "$tab.$tl.tsv has no untranslated row left" "0" "$pt_sobrou"
     fi
@@ -1439,17 +1439,15 @@ tabela_para() {
 }
 contem "an English machine reads the English table" \
        "edits images" "$(tabela_para en)"
-contem "a Portuguese machine reads the original" \
+contem "a Portuguese machine reads the Portuguese table" \
        "edita imagem" "$(tabela_para pt_BR)"
-# The fallback is what makes shipping this half-done defensible: a language
-# with no table of its own must read the Portuguese rows rather than nothing.
 contem "a Hindi machine reads the Hindi table" \
        "तस्वीरें संपादित" "$(tabela_para hi)"
-# The fallback still has to work: it is what makes a half-written table safe.
-# There is no table for pt_PT, and a pt_PT machine resolves to the pt_BR
-# catalogue, so the original is what it must read.
-contem "a language with no table of its own falls back to Portuguese" \
-       "edita imagem" "$(tabela_para pt_BR)"
+# The unsuffixed table IS English, because English is the default: a language
+# with no table of its own must land on it. That fallback is what makes a
+# half-written table safe to ship.
+contem "a language with no table of its own falls back to English" \
+       "edits images" "$(tabela_para "fi")"
 
 section "language: a migrated file stays migrated"
 
@@ -1547,7 +1545,7 @@ equal "and the entry after it is intact" "texto dois" "${T_COM[dois]}"
 # paragraph breaks and must survive - most of these are three paragraphs
 # written for somebody having a bad afternoon.
 equal "a paragraph break inside a message survives" \
-      "Não consegui ler este arquivo.
+      "I could not read this file.
 
 XPTO" "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
          '. "'"$ROOT"'/src/lib/common.sh"; t_msg nao_consegui_ler XPTO')"
@@ -1580,16 +1578,16 @@ done
 # The fallback itself, exercised: a key the translation does not carry has to
 # come back in Portuguese - never blank, and never the key name.
 printf '@sem_arquivo\nOnly this one is translated\n' > "$TMPROOT/meio.txt"
-cp "$IDIOMAS_DIR/pt_BR.txt" "$TMPROOT/pt_BR.txt"
+cp "$IDIOMAS_DIR/en.txt" "$TMPROOT/en.txt"
 MEIO="$(TANDEM_IDIOMAS_DIR="$TMPROOT" TANDEM_LIB="$ROOT/src/lib" \
     TANDEM_IDIOMA_FORCADO=meio bash -c '
-    . "'"$ROOT"'/src/lib/common.sh"; TANDEM_IDIOMAS="pt_BR meio"
+    . "'"$ROOT"'/src/lib/common.sh"; TANDEM_IDIOMAS="en meio"
     TANDEM_IDIOMA=meio; T_MSG=(); t_catalogo_le "'"$TMPROOT"'/meio.txt" T_MSG
     t_msg sem_arquivo; printf "|"; t_msg ja_instalando' 2>/dev/null)"
 equal "a translated key uses the translation" \
       "Only this one is translated" "${MEIO%%|*}"
-equal "a key the translation lacks falls back to Portuguese, not to blank" \
-      "Outra instalação já está em andamento." "${MEIO#*|}"
+equal "a key the translation lacks falls back to English, not to blank" \
+      "Another installation is already running." "${MEIO#*|}"
 
 # An unknown key must not print nothing. A silent message is the one bug this
 # whole program exists to prevent, and a catalogue is exactly the sort of file
@@ -1602,7 +1600,7 @@ equal "an unknown key returns something rather than nothing" \
 # Substitution is {1} {2}, deliberately not printf's %s: paths and versions
 # carry percent signs, and this project has been bitten by that before.
 equal "a value with a percent sign in it survives substitution" \
-      "Arquivo não encontrado:
+      "File not found:
 /mnt/50% off/x.exe" \
       "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
          '. "'"$ROOT"'/src/lib/common.sh"; t_msg arquivo_sumiu "/mnt/50% off/x.exe"')"
@@ -1623,8 +1621,11 @@ equal "a Chinese system gets Chinese"          "zh_CN" "$(escolhe zh_CN.UTF-8)"
 # written in.
 equal "Portugal gets the Portuguese catalogue" "pt_BR" "$(escolhe pt_PT.UTF-8)"
 equal "Argentina gets the Spanish one"         "es"    "$(escolhe es_AR.UTF-8)"
-equal "an unknown locale stays on Portuguese"  "pt_BR" "$(escolhe fi_FI.UTF-8)"
-equal "no locale at all stays on Portuguese"   "pt_BR" "$(escolhe "")"
+# English is the default now, and this is the case the reversal was for: the
+# only people the old Portuguese default ever reached were those whose language
+# Tandem has no catalogue for, and to them Portuguese is a wall, not a mercy.
+equal "an unknown locale lands on English"     "en"    "$(escolhe fi_FI.UTF-8)"
+equal "no locale at all lands on English"      "en"    "$(escolhe "")"
 equal "the environment overrides the system"   "fr"    "$(escolhe zh_CN.UTF-8 fr)"
 
 # Latin scripts are always present; the guard is for the ones that are not.
@@ -1637,7 +1638,7 @@ done
 
 # Which catalogues claim to have been reviewed by a speaker. Shipping one that
 # has not is defensible; shipping it without saying so is not.
-equal "the original counts as reviewed" "0" \
+equal "the default language counts as reviewed" "0" \
       "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
          '. "'"$ROOT"'/src/lib/common.sh"; t_idioma_revisado pt_BR; echo $?')"
 for l in es fr zh_CN hi ar; do
@@ -1784,7 +1785,7 @@ ORDEM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
 contem "the fifth port is COM5, which is the whole problem" \
        "COM5" "$ORDEM"
 contem "and the USB device above COM4 gets a warning of its own" \
-       "só aceita de COM1 a COM4" "$ORDEM"
+       "accepts COM1 to COM4" "$ORDEM"
 contem "with the exact command that moves it" \
        "tandem portas fixar COM2 /dev/ttyACM0" "$ORDEM"
 
@@ -2059,43 +2060,43 @@ correr_nativo() {
 
 saida_n="$(correr_nativo tandem-jar "$JARS/biblioteca.jar")"
 case "$saida_n" in
-    *"peça de um programa"*) pass "a library .jar is explained, not reported as broken" ;;
+    *"a piece of a program"*) pass "a library .jar is explained, not reported as broken" ;;
     *) fail "a library .jar is explained, not reported as broken" \
             "the sentence about being a piece of a program" "${saida_n:-zero bytes}" ;;
 esac
 saida_n="$(correr_nativo tandem-jar "$JARS/cortado.jar")"
 case "$saida_n" in
-    *"incompleto"*|*"cortado no meio"*) pass "an interrupted .jar download says so" ;;
+    *"incomplete"*|*"cut off halfway"*) pass "an interrupted .jar download says so" ;;
     *) fail "an interrupted .jar download says so" "the sentence about the download" \
             "${saida_n:-zero bytes}" ;;
 esac
 saida_n="$(correr_nativo tandem-jar "$JARS/agente.jar")"
 case "$saida_n" in
-    *"acessório de outro programa"*) pass "a java agent is explained" ;;
+    *"add-on for another Java program"*) pass "a java agent is explained" ;;
     *) fail "a java agent is explained" "the sentence about being an accessory" \
             "${saida_n:-zero bytes}" ;;
 esac
 saida_n="$(correr_nativo tandem-appimage "$AI_CORTADO")"
 case "$saida_n" in
-    *"download deste arquivo não terminou"*) pass "an interrupted AppImage download says so" ;;
+    *"did not finish"*|*"cut off halfway"*) pass "an interrupted AppImage download says so" ;;
     *) fail "an interrupted AppImage download says so" "the sentence about the download" \
             "${saida_n:-zero bytes}" ;;
 esac
 saida_n="$(correr_nativo tandem-appimage "$AI_ARM")"
 case "$saida_n" in
-    *"outro tipo de processador"*) pass "an ARM AppImage says it is the processor" ;;
+    *"different kind of processor"*) pass "an ARM AppImage says it is the processor" ;;
     *) fail "an ARM AppImage says it is the processor" "the sentence about the processor" \
             "${saida_n:-zero bytes}" ;;
 esac
 saida_n="$(correr_nativo tandem-appimage "$AI_ELF")"
 case "$saida_n" in
-    *"programa de Linux comum"*) pass "an ELF named .AppImage is told how to run anyway" ;;
+    *"ordinary Linux program"*) pass "an ELF named .AppImage is told how to run anyway" ;;
     *) fail "an ELF named .AppImage is told how to run anyway" \
             "the sentence about an ordinary Linux program" "${saida_n:-zero bytes}" ;;
 esac
 saida_n="$(correr_nativo tandem-appimage "$TMPROOT/nao-existe.AppImage")"
 case "$saida_n" in
-    *"não encontrado"*) pass "a missing file is reported by both new commands" ;;
+    *"not found"*) pass "a missing file is reported by both new commands" ;;
     *) fail "a missing file is reported by both new commands" "arquivo nao encontrado" \
             "${saida_n:-zero bytes}" ;;
 esac
@@ -2163,7 +2164,7 @@ saida_apkm="$(env -i HOME="$TMPROOT/casa-apkm" PATH="/usr/bin:/bin" \
              TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
              timeout 60 bash "$ROOT/src/bin/tandem-apk" "$ARTIFACTS/trancado.apkm" 2>&1)"
 case "$saida_apkm" in
-    *"protegido pelo site"*) pass "tandem-apk explains an encrypted .apkm" ;;
+    *"protected by the site"*) pass "tandem-apk explains an encrypted .apkm" ;;
     *) fail "tandem-apk explains an encrypted .apkm" \
             "the sentence about the site protecting it" "${saida_apkm:-zero bytes}" ;;
 esac
@@ -2383,27 +2384,27 @@ verifica_causa() {
     local dito; dito="$(t_causa_apt "$TMPROOT/causa.log")"
     case "$dito" in
         *"$3"*) pass "$1" ;;
-        *) fail "$1" "algo com \"$3\"" "${dito:-nada}" ;;
+        *) fail "$1" "something with \"$3\"" "${dito:-nothing}" ;;
     esac
 }
 verifica_causa "the dpkg lock becomes a sentence about waiting" \
   'E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 16003 (python3)' \
-  'já está instalando'
+  'already installing'
 verifica_causa "dpkg's own wording for the lock is recognised too" \
   'dpkg: error: dpkg frontend lock was locked by another process with pid 16003' \
-  'já está instalando'
+  'already installing'
 verifica_causa "the architecture mismatch is recognised" \
   ' package architecture (arm64) does not match system (amd64)' \
-  'outro tipo de processador'
+  'different kind of processor'
 verifica_causa "held broken packages becomes a sentence about missing pieces" \
   'E: Unable to correct problems, you have held broken packages.' \
-  'Faltam componentes'
+  'Components this package needs are missing'
 verifica_causa "a full disk says the disk is full" \
   'dpkg: unrecoverable fatal error: No space left on device' \
-  'disco está cheio'
+  'disk is full'
 verifica_causa "a file conflict names the risk to the other program" \
   "dpkg: error processing archive: trying to overwrite '/usr/bin/foo', which is also in package outro" \
-  'sobrescrever'
+  'overwrite'
 verifica_causa "no internet says no internet" \
   'Err:1 http://archive.ubuntu.com/ubuntu noble InRelease
   Temporary failure resolving archive.ubuntu.com' \
@@ -2413,7 +2414,7 @@ verifica_causa "no internet says no internet" \
 verifica_causa "the lock wins over the consequence when both appear" \
   'E: Could not get lock /var/lib/dpkg/lock-frontend
 E: Unable to correct problems, you have held broken packages.' \
-  'já está instalando'
+  'already installing'
 printf 'nada de especial aqui\n' > "$TMPROOT/causa.log"
 t_causa_apt "$TMPROOT/causa.log" >/dev/null &&
     fail "an unrecognised failure does not invent a cause" "nao reconhece" "inventou" ||
@@ -2859,11 +2860,11 @@ equal "32-bit prefix: system32 serves a 32-bit program" \
 
 TXB="$(t_texto_bitola "$(printf 'mfc42.dll\tmfc42')" 64)"
 case "$TXB" in
-    *"64 bits"*"32 bits"*mfc42.dll*) pass "the message names both bitnesses and the file" ;;
+    *"64-bit"*"32-bit"*mfc42.dll*) pass "the message names both bitnesses and the file" ;;
     *) fail "the message names both bitnesses and the file" "64/32/mfc42.dll" "$TXB" ;;
 esac
 case "$TXB" in
-    *"Não é defeito da sua máquina"*) pass "the message takes the blame off the owner's machine" ;;
+    *"not a fault of your machine"*) pass "the message takes the blame off the owner's machine" ;;
     *) fail "the message takes the blame off the owner's machine" "Não é defeito da sua máquina" "$TXB" ;;
 esac
 
@@ -3036,10 +3037,11 @@ t_dados_salva "$PD" "/nao/existe/x.tar.gz" 2>/dev/null
 equal "a copy that fails returns 1, not 2" "1" "$?"
 # And the sentence the owner reads in that case has to spell out the risk.
 case "$(t_texto_resgate_falhou)" in
-    *"NÃO consegui fazer uma cópia"*"não há como recuperar"*)
+    *"could NOT make a copy"*"no getting them back"*)
         pass "the failed-rescue message states the risk" ;;
     *) fail "the failed-rescue message states the risk" \
-              "NÃO consegui... não há como recuperar" "$(t_texto_resgate_falhou)" ;;
+              "could NOT make a copy... no getting them back" \
+              "$(t_texto_resgate_falhou)" ;;
 esac
 # And the three destructive paths have to handle code 1 before deleting.
 for alvo in src/bin/tandem-exe src/bin/tandem; do
@@ -3163,17 +3165,17 @@ else
     # send the owner looking for a defect in their machine, which is perfect.
     JAN="$(cat "$B/janelas.txt" 2>/dev/null)"
     case "$JAN" in
-        *msvcr71.dll*continua\ faltando*) pass "not delivered: the message names the file that was missing" ;;
+        *msvcr71.dll*is\ still\ missing*) pass "not delivered: the message names the file that was missing" ;;
         *) fail "not delivered: the message names the file that was missing" \
-                  "...msvcr71.dll continua faltando..." "${JAN:-(no window)}" ;;
+                  "...msvcr71.dll is still missing..." "${JAN:-(no window)}" ;;
     esac
     case "$JAN" in
-        *"erro meu, não da sua máquina"*) pass "not delivered: Tandem takes the blame" ;;
+        *"my mistake, not your machine"*) pass "not delivered: Tandem takes the blame" ;;
         *) fail "not delivered: Tandem takes the blame" \
                   "erro meu, não da sua máquina" "${JAN:-(no window)}" ;;
     esac
     case "$JAN" in
-        *"Já instalei o que este programa pedia"*)
+        *"already installed what this program was asking for"*)
             fail "not delivered: does not fall into the receipt dead end" \
                    "another message" "Já instalei o que este programa pedia" ;;
         *) pass "not delivered: does not fall into the receipt dead end" ;;

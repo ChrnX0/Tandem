@@ -53,7 +53,7 @@ CHAMADA = re.compile(
 # something finished that was not.
 ATRIBUICAO = re.compile(
     r"\b(?:PORQUE|QUAL|PERGUNTA|ACAO|RESSALVA|ORIGEM_LICAO|MOTIVO|AVISO"
-    r"|saida|texto|aviso|motivo)"
+    r"|saida|texto|aviso|motivo|faixa|dev|plano|lista|nomes)"
     r'\+?=\s*"((?:[^"\\]|\\.)*)"',
     re.S,
 )
@@ -130,6 +130,38 @@ FORMATO = re.compile(r"%[-+ #0-9.]*[a-zA-Z]|\\[nt]")
 BINARIO = re.compile(r"\\[0-7]{3}")
 
 
+# And a SEVENTH shape, which was the worst of them: a heredoc. uso() is
+# `cat <<'AJUDA'` followed by forty lines of help text - the single most-read
+# screen in the whole program - and six versions of this counter scored it as
+# zero, because it is neither a call nor an assignment nor a printf.
+HEREDOC = re.compile(r"<<-?'?([A-Z_][A-Z_0-9]*)'?\s*\n(.*?)\n\1", re.S)
+
+
+def heredocs_com_prosa(texto):
+    """Heredoc bodies that read like sentences rather than like code.
+
+    A heredoc is also how this project embeds shell scripts to run as root, so
+    the test cannot be "does it contain words". A body whose lines mostly begin
+    with a command, a brace or a pipe is code; one with several lines of plain
+    running text is prose.
+    """
+    achados = []
+    for m in HEREDOC.finditer(texto):
+        corpo = m.group(2)
+        linhas = [l for l in corpo.splitlines() if l.strip()]
+        if not linhas:
+            continue
+        codigo = sum(1 for l in linhas if re.match(
+            r"\s*(if|fi|then|else|elif|for|do|done|case|esac|while|echo|printf|"
+            r"cat|cd|apt|apt-get|dpkg|python3|import|urllib|\.|\}|\{|\||>|#|\$)",
+            l))
+        if codigo > len(linhas) / 2:
+            continue
+        if sum(1 for l in linhas if re.search(r"[^\W\d_]{3,}", l, re.UNICODE)) >= 2:
+            achados.append(corpo)
+    return achados
+
+
 def corpos_de_mensagem(texto):
     """Each t_texto_*/t_causa_* body, found by counting braces."""
     for m in FUNCAO_MENSAGEM.finditer(texto):
@@ -164,7 +196,7 @@ def literais(caminho):
     achados = [m.group(1) for m in CHAMADA.finditer(texto)]
     achados += [m.group(1) for m in ATRIBUICAO.finditer(texto)]
     achados = [a for a in achados if e_literal(a)]
-    return achados + printfs_com_prosa(texto)
+    return achados + printfs_com_prosa(texto) + heredocs_com_prosa(texto)
 
 
 def main():

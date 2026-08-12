@@ -1,5 +1,23 @@
 tandem (4.1) unstable; urgency=medium
 
+  * English is the default. An unrecognised locale gets English, and English is
+    what every catalogue falls back to for a missing key. It used to be
+    Portuguese, which protected nobody: a Portuguese machine resolves to
+    Portuguese by locale anyway, so the only people that default ever reached
+    were those whose language Tandem has no catalogue for.
+  * The help screen is translated. uso() was a heredoc - forty lines of the
+    most-read text in the program - and six versions of the literal counter had
+    scored it as zero, because a heredoc is neither a call nor an assignment nor
+    a printf.
+  * The manual now follows the same rule: English at
+    /usr/share/man/man1/tandem.1, Portuguese at the per-locale path
+    /usr/share/man/pt_BR/man1/tandem.1 that man(1) itself looks in.
+  * The .desktop files carry all seven languages, with English in the bare
+    Name=/Comment= and the rest in Name[xx]=.
+  * alternativas.tsv and limites.tsv are English now, with the Portuguese rows
+    in *.pt_BR.tsv, so the unsuffixed file is the default in every format that
+    has one.
+
   * The translation is complete. tools/conta-literais.py reports TOTAL 0 across
     src/bin and src/lib, and the suite asserts that number, so the next literal
     added anywhere fails a test. 404 keys in each of the seven catalogues.
