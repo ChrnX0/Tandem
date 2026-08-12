@@ -135,9 +135,10 @@ tandem (4.3) unstable; urgency=medium
     twelve times, and it is defensible only because t_diz cannot reach the user
     at all: it appends to a file. Two tests pin it, including one where a
     message shares a line with a log call.
-  * 15 sentences are still literals - eight long paragraphs, in the hardware-key
-    advice, the virtual-machine explanation and the three list screens. Migrating them is the rest of this version's work.
-    The suite holds the number as a ratchet: it may fall, never rise.
+  * 15 sentences are still literals - eight long paragraphs, in the
+    hardware-key advice, the virtual-machine explanation and the three list
+    screens. Migrating them is the rest of this version's work. The suite holds
+    the number as a ratchet: it may fall, never rise.
 
  -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 16:00:00 +0000
 
