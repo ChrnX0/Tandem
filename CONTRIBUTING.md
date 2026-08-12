@@ -37,6 +37,59 @@ It bundles the diagnosis, the self-test, what Tandem learned and the technical
 logs into a single file. **Look at it before attaching**: it shows file paths
 from your machine.
 
+## Translating: the easiest useful contribution
+
+Five of the seven catalogues have never been read by somebody who speaks the
+language. They are marked as such, and Tandem says so outright to whoever picks
+one:
+
+| | reviewed by a speaker |
+|---|---|
+| English, Portuguese | yes |
+| Spanish, French, Simplified Chinese, Hindi, Arabic | **no** |
+
+The risk is not a grammar mistake. It is the sentence that is grammatically
+perfect and lands wrong — a warning about an unsigned package that reads as
+bureaucratic instead of serious, so somebody clicks Install when they should
+not. No test catches that. A speaker reading it for ten minutes does.
+
+**The files are ordinary gettext `.po` files** in `po/`, so Poedit, Lokalize,
+Weblate, `msgmerge` and every other translation tool works on them. Nothing to
+learn, nothing to install if you already have one:
+
+```bash
+poedit po/es.po          # or just open it in a text editor
+python3 tools/po-para-catalogo.py    # regenerate the shipped catalogues
+bash tests/run.sh
+```
+
+When you have read a whole file, change its header:
+
+```
+"X-Reviewed-By-Speaker: yes\n"
+```
+
+and the asterisk disappears from `tandem idioma`. That header is the whole
+mechanism — shipping a translation nobody has read is defensible, shipping it
+without saying so is not.
+
+Two things about the format that are not optional:
+
+- **Substitution is `{1}` `{2}`, not `%s`.** Paths and versions carry percent
+  signs; there is a test with a folder called `50% off`. Keep the numbers, and
+  reorder them freely if your language wants a different order.
+- **Never translate a value that goes into a file.** `abriu`, `confirmado`,
+  `so-abriu`, `RESOLVERAM`, `CONFIANCA`, `nativo`, `parecido` are on-disk
+  format, and the command names (`preparar`, `programas`, `dados`) are what
+  people type. Translating one silently breaks memory files already written on
+  somebody's machine, and breaks a command copied from a forum.
+
+There is a second place with prose: `src/lib/alternativas.<lang>.tsv` and
+`limites.<lang>.tsv`. Those are plain tab-separated tables. **Only ever change
+the last columns** — the first column is the pattern that matches and the
+second is the class that chooses the message frame. A test checks both, because
+a reordered row would answer about the wrong program.
+
 ## If you are going to touch the code
 
 ### Read `CLAUDE.md` first

@@ -1503,6 +1503,110 @@ else
     skip "a migrated file stays migrated" "tools/conta-literais.py is missing"
 fi
 
+section "language: .po is the source, and a stale translation cannot hide"
+
+# The hand-rolled catalogue format could not do one thing, and it was the thing
+# that mattered: when an English message CHANGES, the six translations keep the
+# old text and nothing says so. Key-existence tests pass, the program runs, and
+# somebody reads a sentence that describes behaviour Tandem no longer has.
+#
+# gettext solves exactly that, so po/ is the source of truth now and
+# src/lib/idiomas/*.txt is generated from it. What gettext is NOT used for is
+# the runtime: rule 5 says the packager depends on no outside tool, so the
+# compiler is sixty lines of Python and there is no msgfmt in the build.
+
+if [ -d "$ROOT/po" ]; then
+    for pl in en pt_BR es fr zh_CN hi ar; do
+        if [ -f "$ROOT/po/$pl.po" ]; then pass "po/$pl.po exists"
+        else fail "po/$pl.po exists" "the file" "missing"; fi
+    done
+    if [ -f "$ROOT/po/tandem.pot" ]; then pass "the .pot template exists"
+    else fail "the .pot template exists" "po/tandem.pot" "missing"; fi
+
+    # The generated files must match their source, or somebody edited the
+    # wrong one and the next regeneration silently reverts their work.
+    saida_po="$(cd "$ROOT" && python3 tools/po-para-catalogo.py --check 2>&1)"
+    if [ "$saida_po" = "po/ and src/lib/idiomas/ agree" ]; then
+        pass "the generated catalogues match po/"
+    else
+        fail "the generated catalogues match po/" "agreement" "$saida_po"
+    fi
+
+    # gettext's own tools have to accept the files, because the whole reason to
+    # be in this format is that Poedit, Weblate and msgmerge work on it. If
+    # msgfmt is absent this is skipped, not failed - the build never needs it.
+    if command -v msgfmt >/dev/null 2>&1; then
+        for pl in en pt_BR es fr zh_CN hi ar; do
+            if msgfmt --check-format --check-domain -o /dev/null \
+                      "$ROOT/po/$pl.po" 2>/dev/null; then
+                pass "msgfmt accepts po/$pl.po"
+            else
+                fail "msgfmt accepts po/$pl.po" "clean" \
+                     "$(msgfmt --check-format -o /dev/null "$ROOT/po/$pl.po" 2>&1 | head -3)"
+            fi
+        done
+    else
+        skip "gettext accepts the .po files" "msgfmt is not installed here"
+    fi
+
+    # THE POINT OF ALL THIS, exercised: mark an entry fuzzy and the compiler
+    # must drop it, so the reader gets English rather than a sentence that
+    # describes what the program used to do.
+    PO_FALSO="$TMPROOT/po-fuzzy"
+    mkdir -p "$PO_FALSO"
+    cp "$ROOT"/po/*.po "$PO_FALSO"/
+    python3 - "$PO_FALSO/fr.po" <<'FIM'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+alvo = 'msgctxt "sem_arquivo"'
+assert s.count(alvo) == 1
+io.open(p, "w", encoding="utf-8").write(s.replace(alvo, "#, fuzzy\n" + alvo, 1))
+FIM
+    resultado="$(cd "$ROOT" && python3 - "$PO_FALSO/fr.po" <<'FIM'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("c", "tools/po-para-catalogo.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+itens, cab = m.le_po(sys.argv[1])
+saida = m.escreve_catalogo("fr", itens, cab)
+print("%s %s %d" % (
+    ",".join(k for k, t, f in itens if f),
+    "omitida" if "@sem_arquivo\n" not in saida else "MANTIDA",
+    saida.count("\n@")))
+FIM
+)"
+    equal "a fuzzy entry is seen, dropped, and the rest kept" \
+          "sem_arquivo omitida 440" "$resultado"
+
+    # That parser was wrong the first time it was written, in a way that made it
+    # report NO fuzzy entries at all - the flag is a comment BEFORE the entry,
+    # and closing the previous entry wiped it. It looked correct on every file
+    # in the tree, because none of them had a fuzzy entry.
+    naocontem "an untranslated entry is not written as an empty message" \
+              "@sem_arquivo
+@" "$(cat "$ROOT/src/lib/idiomas/fr.txt")"
+
+    # Plural rules: the old format had none, and said "1 linha(s)". Arabic has
+    # six forms and Chinese has one; a .po states that in its header.
+    for pl in en pt_BR es fr zh_CN hi ar; do
+        contem "po/$pl.po declares its plural rule" \
+               "Plural-Forms:" "$(head -30 "$ROOT/po/$pl.po")"
+    done
+    contem "and Arabic declares six forms, which no hand-rolled format did" \
+           "nplurals=6" "$(head -30 "$ROOT/po/ar.po")"
+    contem "and Chinese declares one" \
+           "nplurals=1" "$(head -30 "$ROOT/po/zh_CN.po")"
+
+    # The review flag is a header field now, not a comment convention, so
+    # Weblate and msgfmt both carry it.
+    contem "en is marked reviewed by a speaker" \
+           "X-Reviewed-By-Speaker: yes" "$(head -30 "$ROOT/po/en.po")"
+    contem "and ar is marked as not reviewed" \
+           "X-Reviewed-By-Speaker: no" "$(head -30 "$ROOT/po/ar.po")"
+else
+    skip "po/ is the source of truth" "po/ does not exist"
+fi
+
 section "language: the messages are data, not code"
 
 # Every sentence in this program used to be a Portuguese literal inside the

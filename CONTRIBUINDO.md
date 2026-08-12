@@ -37,6 +37,58 @@ Ele junta diagnóstico, autoteste, o que o Tandem aprendeu e os registros
 técnicos num arquivo só. **Dê uma olhada antes de anexar**: ele mostra caminhos
 de arquivos da sua máquina.
 
+## Traduzir: a contribuição útil mais fácil
+
+Cinco dos sete catálogos nunca foram lidos por quem fala o idioma. Eles estão
+marcados assim, e o Tandem diz isso na cara de quem escolhe um deles:
+
+| | revisado por falante |
+|---|---|
+| inglês, português | sim |
+| espanhol, francês, chinês simplificado, híndi, árabe | **não** |
+
+O risco não é erro de gramática. É a frase gramaticalmente perfeita que cai
+errado — um aviso sobre pacote sem assinatura que sai burocrático em vez de
+grave, e a pessoa clica em Instalar quando não devia. Nenhum teste pega isso.
+Um falante lendo por dez minutos pega.
+
+**Os arquivos são `.po` de gettext comuns**, em `po/`, então Poedit, Lokalize,
+Weblate, `msgmerge` e qualquer outra ferramenta de tradução funcionam neles.
+Nada para aprender, nada para instalar se você já tem uma:
+
+```bash
+poedit po/es.po          # ou abra num editor de texto qualquer
+python3 tools/po-para-catalogo.py    # regera os catálogos que vão no pacote
+bash tests/run.sh
+```
+
+Quando você tiver lido um arquivo inteiro, mude o cabeçalho dele:
+
+```
+"X-Reviewed-By-Speaker: yes\n"
+```
+
+e o asterisco desaparece do `tandem idioma`. Esse cabeçalho é o mecanismo
+inteiro — publicar tradução que ninguém leu é defensável; publicar sem dizer,
+não é.
+
+Duas coisas do formato que não são opcionais:
+
+- **A substituição é `{1}` `{2}`, não `%s`.** Caminhos e versões carregam sinal
+  de porcentagem; existe um teste com uma pasta chamada `50% off`. Mantenha os
+  números, e troque a ordem deles livremente se o seu idioma pedir outra.
+- **Nunca traduza um valor que vai para arquivo.** `abriu`, `confirmado`,
+  `so-abriu`, `RESOLVERAM`, `CONFIANCA`, `nativo`, `parecido` são formato em
+  disco, e os nomes dos comandos (`preparar`, `programas`, `dados`) são o que
+  as pessoas digitam. Traduzir um quebra em silêncio arquivos de memória já
+  escritos na máquina de alguém, e quebra um comando copiado de um fórum.
+
+Existe um segundo lugar com prosa: `src/lib/alternativas.<idioma>.tsv` e
+`limites.<idioma>.tsv`. São tabelas separadas por tabulação. **Só mexa nas
+últimas colunas** — a primeira é o padrão que casa e a segunda é a classe que
+escolhe a moldura da mensagem. Um teste confere as duas, porque uma linha
+reordenada responderia sobre o programa errado.
+
 ## Se você for mexer no código
 
 ### Antes de qualquer coisa, leia o `CLAUDE.md`

@@ -1,20 +1,22 @@
-# Tandem - message catalogue, English.
+# Tandem - message catalogue, en.
+#
+# GENERATED FROM po/en.po - DO NOT EDIT BY HAND.
+# Edit the .po (Poedit, Weblate, or a text editor) and run
+# tools/po-para-catalogo.py. A test fails if the two drift apart.
 #
 # FORMAT
 #   @key          opens a message; everything until the next @key is the text
 #   {1} {2} {3}   where the variable parts go (a path, a name, a number)
 #   # at line start   a comment
-#   \@ \#         for a message that must begin with @ or #
 #
 # This file is NEVER executed. A dollar sign, a backtick or $(...) in here is
-# text and stays text. You do not need to know how to program to translate it.
+# text and stays text.
 #
-# A key missing from this file falls back to the Portuguese original, so a
+# A key missing from this file falls back to the English original, so a
 # half-finished translation still says something readable.
 #
 # REVISADO=sim
 
-# ---------------------------------------------------------- shared entry
 @sem_arquivo
 No file was given.
 
@@ -30,7 +32,6 @@ I could not read this file.
 
 {1}
 
-# ------------------------------------------------------------- language
 @idioma_atual
 Tandem language: {1}
 
@@ -79,8 +80,6 @@ I could not save your choice of language.
 
 That is usually the configuration folder having no write permission, or a
 full disk.
-
-# ----------------------------------------------------- Windows programs
 
 @wine_faltando_pergunta
 Wine, which runs Windows programs, is not installed.
@@ -498,8 +497,6 @@ No real serial port on this computer. A pinpad, a scale or a receipt printer
   has to come in through a USB adapter — and then it shows up here as
   /dev/ttyUSB0.
 
-# ----------------------------------------------------- system packages (.deb)
-
 @deb_ja_instalando
 This package is already being installed...
 
@@ -603,8 +600,6 @@ Tandem - {1}
 
 @script_primeiras_linhas
 Its first few lines:
-
-# ------------------------------------------------------------ Android apps
 
 @apk_cifrado
 This file is protected by the site that distributes it.
@@ -980,8 +975,6 @@ Waiting for Android to finish starting...
 @waydroid_nao_ficou_pronto
 Android started but was not ready in time.
 
-# ------------------------------------------- the long verdicts (t_texto_*)
-
 @resgate_falhou
 I found files of yours in here and could NOT make a copy of them.
 
@@ -1308,8 +1301,6 @@ NOTE: this machine's identity has changed since the environment was created.
 NOTE: this machine has {1} network cards. Many programs use a card's number
   as part of the identity, and if one of them is Wi-Fi that goes on and off,
   the identity changes with it. Leave the network always on.
-
-# ------------------------------------------------------ the panel and CLI
 
 @prep_nada_falta
 Nothing is missing: this machine already has everything Tandem uses.

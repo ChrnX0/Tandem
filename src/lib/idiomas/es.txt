@@ -1,7 +1,19 @@
-# Tandem - catálogo de mensajes, español.
-# Formato: @clave abre un mensaje; {1} {2} son las partes variables;
-# una # al principio de línea es un comentario. Este archivo NUNCA se ejecuta.
-# Una clave que falte aquí cae al original en portugués.
+# Tandem - message catalogue, es.
+#
+# GENERATED FROM po/es.po - DO NOT EDIT BY HAND.
+# Edit the .po (Poedit, Weblate, or a text editor) and run
+# tools/po-para-catalogo.py. A test fails if the two drift apart.
+#
+# FORMAT
+#   @key          opens a message; everything until the next @key is the text
+#   {1} {2} {3}   where the variable parts go (a path, a name, a number)
+#   # at line start   a comment
+#
+# This file is NEVER executed. A dollar sign, a backtick or $(...) in here is
+# text and stays text.
+#
+# A key missing from this file falls back to the English original, so a
+# half-finished translation still says something readable.
 #
 # REVISADO=nao
 
@@ -68,8 +80,6 @@ No pude guardar tu elección de idioma.
 
 Suele ser que la carpeta de configuración no tiene permiso de escritura, o
 que el disco está lleno.
-
-# --------------------------------------------------- programas Windows
 
 @wine_faltando_pergunta
 Wine, que ejecuta los programas de Windows, no está instalado.
@@ -488,8 +498,6 @@ Ningún puerto serie de verdad en este ordenador. Un pinpad, una balanza o una
   impresora de tickets tiene que entrar por un adaptador USB, y entonces
   aparece aquí como /dev/ttyUSB0.
 
-# ---------------------------------------------- paquetes del sistema (.deb)
-
 @deb_ja_instalando
 Este paquete ya se está instalando...
 
@@ -593,8 +601,6 @@ Tandem - {1}
 
 @script_primeiras_linhas
 Sus primeras líneas:
-
-# ------------------------------------------------ aplicaciones de Android
 
 @apk_cifrado
 Este archivo está protegido por el sitio que lo distribuye.
@@ -969,8 +975,6 @@ Esperando a que Android termine de arrancar...
 @waydroid_nao_ficou_pronto
 Android arrancó pero no estuvo listo a tiempo.
 
-# ------------------------------------- diagnosticos largos (t_texto_*)
-
 @resgate_falhou
 Encontré archivos tuyos aquí dentro y NO pude hacer una copia de ellos.
 
@@ -1295,8 +1299,6 @@ ATENCIÓN: esta máquina tiene {1} tarjetas de red. Muchos programas usan el
   número de la tarjeta como parte de la identidad, y si una de ellas es Wi-Fi
   que se enciende y se apaga, la identidad cambia con ella. Deja la red siempre
   encendida.
-
-# ------------------------------------------------------ el panel y el CLI
 
 @prep_nada_falta
 No falta nada: esta máquina ya tiene todo lo que Tandem usa.

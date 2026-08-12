@@ -1,7 +1,19 @@
-# Tandem - catalogue de messages, français.
-# Format : @clé ouvre un message ; {1} {2} sont les parties variables ;
-# un # en début de ligne est un commentaire. Ce fichier n'est JAMAIS exécuté.
-# Une clé absente ici retombe sur l'original en portugais.
+# Tandem - message catalogue, fr.
+#
+# GENERATED FROM po/fr.po - DO NOT EDIT BY HAND.
+# Edit the .po (Poedit, Weblate, or a text editor) and run
+# tools/po-para-catalogo.py. A test fails if the two drift apart.
+#
+# FORMAT
+#   @key          opens a message; everything until the next @key is the text
+#   {1} {2} {3}   where the variable parts go (a path, a name, a number)
+#   # at line start   a comment
+#
+# This file is NEVER executed. A dollar sign, a backtick or $(...) in here is
+# text and stays text.
+#
+# A key missing from this file falls back to the English original, so a
+# half-finished translation still says something readable.
 #
 # REVISADO=nao
 
@@ -69,8 +81,6 @@ Je n'ai pas pu enregistrer votre choix de langue.
 
 C'est en général le dossier de configuration qui n'est pas accessible en
 écriture, ou le disque qui est plein.
-
-# ---------------------------------------------------- programmes Windows
 
 @wine_faltando_pergunta
 Wine, qui fait tourner les programmes Windows, n'est pas installé.
@@ -492,8 +502,6 @@ Aucun port série réel sur cet ordinateur. Un TPE, une balance ou une
   imprimante à tickets doit passer par un adaptateur USB — et il apparaît alors
   ici sous /dev/ttyUSB0.
 
-# ------------------------------------------------ paquets du système (.deb)
-
 @deb_ja_instalando
 Ce paquet est déjà en cours d'installation...
 
@@ -597,8 +605,6 @@ Tandem - {1}
 
 @script_primeiras_linhas
 Ses premières lignes :
-
-# ------------------------------------------------ applications Android
 
 @apk_cifrado
 Ce fichier est protégé par le site qui le distribue.
@@ -982,8 +988,6 @@ Attente de la fin du démarrage d'Android...
 @waydroid_nao_ficou_pronto
 Android a démarré mais n'a pas été prêt à temps.
 
-# ------------------------------------- les verdicts longs (t_texto_*)
-
 @resgate_falhou
 J'ai trouvé des fichiers à vous ici et je n'ai PAS pu en faire une copie.
 
@@ -1321,8 +1325,6 @@ ATTENTION : cette machine a {1} cartes réseau. Beaucoup de programmes
   utilisent le numéro d'une carte comme partie de l'identité, et si l'une
   d'elles est un Wi-Fi qui s'allume et s'éteint, l'identité change avec.
   Laissez le réseau toujours allumé.
-
-# ------------------------------------------------------ le panneau et CLI
 
 @prep_nada_falta
 Rien ne manque : cette machine a déjà tout ce que Tandem utilise.

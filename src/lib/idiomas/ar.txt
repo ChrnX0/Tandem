@@ -1,7 +1,19 @@
-# Tandem - فهرس الرسائل، العربية.
-# الصيغة: @مفتاح يبدأ رسالة؛ {1} {2} هي الأجزاء المتغيّرة؛
-# علامة # في أول السطر تعليق. هذا الملف لا يُنفَّذ أبدًا.
-# أي مفتاح ناقص هنا يعود إلى الأصل البرتغالي.
+# Tandem - message catalogue, ar.
+#
+# GENERATED FROM po/ar.po - DO NOT EDIT BY HAND.
+# Edit the .po (Poedit, Weblate, or a text editor) and run
+# tools/po-para-catalogo.py. A test fails if the two drift apart.
+#
+# FORMAT
+#   @key          opens a message; everything until the next @key is the text
+#   {1} {2} {3}   where the variable parts go (a path, a name, a number)
+#   # at line start   a comment
+#
+# This file is NEVER executed. A dollar sign, a backtick or $(...) in here is
+# text and stays text.
+#
+# A key missing from this file falls back to the English original, so a
+# half-finished translation still says something readable.
 #
 # REVISADO=nao
 
@@ -64,8 +76,6 @@ tandem idioma <رمز>
 لم أتمكّن من حفظ اختيارك للغة.
 
 عادةً ما يكون السبب أن مجلّد الإعدادات لا يسمح بالكتابة، أو أن القرص ممتلئ.
-
-# ------------------------------------------------------- برامج Windows
 
 @wine_faltando_pergunta
 لم يُثبَّت Wine، وهو ما يشغّل برامج Windows.
@@ -478,8 +488,6 @@ sudo snap install --dangerous "{1}"
 لا يوجد منفذ تسلسلي حقيقي في هذا الحاسوب. جهاز الدفع أو الميزان أو طابعة
   الإيصالات يجب أن يدخل عبر محوّل USB — وعندها يظهر هنا باسم /dev/ttyUSB0.
 
-# ------------------------------------------------------- حزم النظام (.deb)
-
 @deb_ja_instalando
 هذه الحزمة قيد التثبيت بالفعل…
 
@@ -581,8 +589,6 @@ Tandem - {1}
 
 @script_primeiras_linhas
 أوّل سطور منه:
-
-# --------------------------------------------------- تطبيقات Android
 
 @apk_cifrado
 هذا الملف محميّ من الموقع الذي يوزّعه.
@@ -948,8 +954,6 @@ Android (Waydroid) غير مثبَّت على هذا الجهاز.
 @waydroid_nao_ficou_pronto
 بدأ Android لكنه لم يصبح جاهزًا في الوقت المناسب.
 
-# ------------------------------------------- التشخيصات المطوّلة (t_texto_*)
-
 @resgate_falhou
 وجدت ملفات تخصّك هنا، ولم أتمكّن من عمل نسخة منها.
 
@@ -1263,8 +1267,6 @@ ProductId الخاص بـWindows
 تنبيه: يحتوي هذا الجهاز على {1} من بطاقات الشبكة. تستخدم برامج كثيرة رقم
   البطاقة كجزء من الهوية، وإن كانت إحداها Wi-Fi تُفتح وتُغلق، تغيّرت الهوية
   معها. اترك الشبكة مفتوحة دائمًا.
-
-# ------------------------------------------------------- اللوحة وسطر الأوامر
 
 @prep_nada_falta
 لا ينقص شيء: هذا الجهاز يملك بالفعل كل ما يستخدمه Tandem.

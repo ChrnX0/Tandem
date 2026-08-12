@@ -95,7 +95,10 @@ src/lib/rpminfo.py        .rpm header: name, version, arch, distribution
 src/lib/verbos.tsv        GENERATED DLL->verb index; do not edit by hand
 src/lib/limites.tsv       signatures of what will never work (dongle, driver)
 src/lib/alternativas.tsv  Linux programs that do the same job
-src/lib/idiomas/*.txt     the message catalogues, one per language (7)
+po/*.po                   THE SOURCE of every message: ordinary gettext .po
+po/tandem.pot             the template, for msginit and msgmerge
+tools/po-para-catalogo.py compiles po/ -> src/lib/idiomas/ in pure Python
+src/lib/idiomas/*.txt     GENERATED runtime catalogues; do not edit by hand
 tools/indice-winetricks.py  generates verbos.tsv by reading the installed winetricks
 proofgate.json            evidence gate: stack, coupled files
 .github/workflows/ci.yml  suite + lintian + a real install cycle
@@ -673,6 +676,24 @@ repository, Waydroid 1.6.2 MAINLINE with GAPPS and libhoudini, `binderfs` with
 Seven languages: `pt_BR` (the original), `en`, `es`, `fr`, `zh_CN`, `hi`, `ar`.
 Read this before touching a message anywhere in the tree.
 
+- **`po/*.po` IS THE SOURCE. `src/lib/idiomas/*.txt` is generated from it** by
+  `tools/po-para-catalogo.py`, and `build.py` refuses to package a catalogue
+  that has drifted from its `.po`. Same arrangement `verbos.tsv` already has:
+  generated, committed, guarded by a test.
+  **Why gettext, having first built a format by hand:** the hand-rolled one
+  could not do the one thing that matters. When an English message CHANGES, the
+  six translations keep the old text and nothing says so - key-existence tests
+  pass, the program runs, and somebody reads a sentence describing behaviour
+  Tandem no longer has. `msgmerge` marks that entry `#, fuzzy`, the compiler
+  DROPS a fuzzy entry, and the reader gets English instead of a lie. It also
+  buys plural forms (Arabic has six, Chinese has one; the old format said
+  `1 linha(s)`) and, most importantly, **Poedit and Weblate** - the blocker on
+  five unreviewed catalogues is getting humans to read them, and no human has
+  tooling for a bespoke `@key` format.
+  **Why NOT the gettext runtime**, which is the other half of the decision:
+  `msgfmt` at build time breaks rule 5 (the packager depends on nothing and
+  runs on Windows), and a `.po` parser is sixty lines of Python. `%1$s` would
+  also undo the `{1}` decision below.
 - **The messages are DATA, not code, and the format is built so they cannot be
   anything else.** A catalogue is parsed by `read` and never evaluated, so a
   `$`, a backtick or a `$(...)` in a translation is text and stays text. There
@@ -805,7 +826,7 @@ The queue, in order:
    command", not "unrecognised file type"), `tandem idioma`, and a double click
    on a real `.xapk`, `.AppImage` and `.jar`.
 
-0b. **Five catalogues carry `REVISADO=nao`.** That is the whole of what is left
+0b. **Five catalogues carry `X-Reviewed-By-Speaker: no`.** That is the whole of what is left
    of the translation, and it is not engineering: it needs somebody who speaks
    es, fr, zh_CN, hi or ar to read what is there. The files are plain text, the
    format cannot execute anything, and a wrong line breaks nothing - it is the

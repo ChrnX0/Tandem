@@ -1,21 +1,22 @@
-# Tandem - catálogo de mensagens, português do Brasil.
+# Tandem - message catalogue, pt_BR.
 #
-# ESTE É O ORIGINAL. Toda outra tradução responde a este arquivo, e toda chave
-# que falte numa tradução cai aqui. Uma frase perdida numa edição vira uma
-# frase em português, nunca uma tela vazia.
+# GENERATED FROM po/pt_BR.po - DO NOT EDIT BY HAND.
+# Edit the .po (Poedit, Weblate, or a text editor) and run
+# tools/po-para-catalogo.py. A test fails if the two drift apart.
 #
-# FORMATO
-#   @chave        abre uma mensagem; tudo até a próxima @chave é o texto
-#   {1} {2} {3}   onde entram os pedaços variáveis (caminho, nome, número)
-#   # no começo   comentário, quando está fora de uma mensagem
-#   \@ \#         para uma mensagem que precisa começar com @ ou #
+# FORMAT
+#   @key          opens a message; everything until the next @key is the text
+#   {1} {2} {3}   where the variable parts go (a path, a name, a number)
+#   # at line start   a comment
 #
-# Este arquivo NUNCA é executado. Cifrão, crase e $(...) aqui dentro são texto
-# e continuam texto. Você não precisa saber programar para traduzir.
+# This file is NEVER executed. A dollar sign, a backtick or $(...) in here is
+# text and stays text.
 #
-# REVISADO=sim  (é o idioma em que o programa foi escrito)
+# A key missing from this file falls back to the English original, so a
+# half-finished translation still says something readable.
+#
+# REVISADO=sim
 
-# ---------------------------------------------------------- entrada comum
 @sem_arquivo
 Nenhum arquivo foi informado.
 
@@ -31,7 +32,6 @@ Não consegui ler este arquivo.
 
 {1}
 
-# ------------------------------------------------------------- idioma
 @idioma_atual
 Idioma do Tandem: {1}
 
@@ -79,8 +79,6 @@ Não consegui guardar a sua escolha de idioma.
 
 Isso costuma ser a pasta de configuração sem permissão de escrita, ou o
 disco cheio.
-
-# --------------------------------------------------- programas Windows
 
 @wine_faltando_pergunta
 O Wine, que roda os programas do Windows, não está instalado.
@@ -497,8 +495,6 @@ Nenhuma porta serial de verdade neste computador. Um pinpad, uma balança ou
   uma impressora de cupom precisa entrar por um adaptador USB — e aí ele
   aparece aqui como /dev/ttyUSB0.
 
-# ------------------------------------------------ pacotes do sistema (.deb)
-
 @deb_ja_instalando
 Este pacote já está sendo instalado...
 
@@ -601,8 +597,6 @@ Tandem - {1}
 
 @script_primeiras_linhas
 As primeiras linhas dele:
-
-# -------------------------------------------------- aplicativos Android
 
 @apk_cifrado
 Este arquivo está protegido pelo site que distribui ele.
@@ -976,8 +970,6 @@ Aguardando o Android terminar de iniciar...
 @waydroid_nao_ficou_pronto
 O Android iniciou mas não ficou pronto a tempo.
 
-# ---------------------------------------- diagnosticos longos (t_texto_*)
-
 @resgate_falhou
 Encontrei arquivos seus aqui dentro e NÃO consegui fazer uma cópia deles.
 
@@ -1298,8 +1290,6 @@ ATENÇÃO: a identidade desta máquina mudou desde que o ambiente foi criado.
 ATENÇÃO: esta máquina tem {1} placas de rede. Muitos programas usam o
   número da placa como parte da identidade, e se uma delas for Wi-Fi que
   liga e desliga, a identidade muda junto. Deixe a rede sempre ligada.
-
-# ------------------------------------------------------- o painel e o CLI
 
 @prep_nada_falta
 Nada falta: esta máquina já tem tudo que o Tandem usa.

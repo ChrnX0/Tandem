@@ -101,6 +101,27 @@ DOCS = [
 ]
 
 
+def catalogos_em_dia():
+    """The catalogues are generated from po/; refuse to package a stale one.
+
+    They are committed rather than built here on purpose - the same choice
+    src/lib/verbos.tsv already makes - so that a clone of the repository has a
+    working tree with no generation step. What must never happen is shipping a
+    catalogue that no longer matches the .po somebody edited.
+    """
+    compilador = os.path.join(ROOT, "tools", "po-para-catalogo.py")
+    if not os.path.exists(compilador):
+        return
+    import subprocess
+    r = subprocess.run([sys.executable, compilador, "--check"],
+                       capture_output=True, text=True, cwd=ROOT)
+    if r.returncode != 0:
+        raise SystemExit(
+            "src/lib/idiomas/ is out of date with po/:\n%s\n"
+            "Run tools/po-para-catalogo.py and commit the result."
+            % (r.stdout + r.stderr).strip())
+
+
 def version():
     with open(os.path.join(DEB, "control"), encoding="utf-8") as f:
         for line in f:
@@ -213,6 +234,7 @@ def check(path):
 
 
 def main():
+    catalogos_em_dia()
     out = os.path.join(ROOT, "tandem_%s_all.deb" % version())
     blob = b"!<arch>\n"
     blob += ar_entry("debian-binary", b"2.0\n")

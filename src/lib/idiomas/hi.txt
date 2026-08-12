@@ -1,7 +1,19 @@
-# Tandem - संदेश सूची, हिन्दी।
-# प्रारूप: @कुंजी एक संदेश शुरू करती है; {1} {2} बदलने वाले हिस्से हैं;
-# पंक्ति के आरंभ में # टिप्पणी है। यह फ़ाइल कभी चलाई नहीं जाती।
-# यहाँ न मिलने वाली कुंजी पुर्तगाली मूल पर लौट जाती है।
+# Tandem - message catalogue, hi.
+#
+# GENERATED FROM po/hi.po - DO NOT EDIT BY HAND.
+# Edit the .po (Poedit, Weblate, or a text editor) and run
+# tools/po-para-catalogo.py. A test fails if the two drift apart.
+#
+# FORMAT
+#   @key          opens a message; everything until the next @key is the text
+#   {1} {2} {3}   where the variable parts go (a path, a name, a number)
+#   # at line start   a comment
+#
+# This file is NEVER executed. A dollar sign, a backtick or $(...) in here is
+# text and stays text.
+#
+# A key missing from this file falls back to the English original, so a
+# half-finished translation still says something readable.
 #
 # REVISADO=nao
 
@@ -67,8 +79,6 @@ Tandem ने {1} चुनी क्योंकि इस कंप्यू�
 
 आम तौर पर इसका कारण यह होता है कि कॉन्फ़िगरेशन फ़ोल्डर में लिखने की अनुमति
 नहीं है, या डिस्क भरी हुई है।
-
-# --------------------------------------------------- Windows के प्रोग्राम
 
 @wine_faltando_pergunta
 Windows के प्रोग्राम चलाने वाला Wine इंस्टॉल नहीं है।
@@ -486,8 +496,6 @@ Tandem .exe, .msi, .apk, .xapk, .AppImage, .jar, .deb, .rpm, .flatpakref,
   वाला प्रिंटर USB अडैप्टर से ही जुड़ेगा — और तब वह यहाँ /dev/ttyUSB0 के रूप
   में दिखेगा।
 
-# ------------------------------------------- व्यवस्था के पैकेज (.deb)
-
 @deb_ja_instalando
 यह पैकेज पहले से इंस्टॉल हो रहा है…
 
@@ -590,8 +598,6 @@ Tandem - {1}
 
 @script_primeiras_linhas
 इसकी शुरुआती पंक्तियाँ:
-
-# ------------------------------------------------------ Android के ऐप
 
 @apk_cifrado
 इस फ़ाइल को बाँटने वाली साइट ने इसे सुरक्षित कर दिया है।
@@ -964,8 +970,6 @@ Android का शुरू होना पूरा होने का इं
 @waydroid_nao_ficou_pronto
 Android शुरू हुआ, पर समय पर तैयार नहीं हो पाया।
 
-# ------------------------------------------- विस्तृत निदान (t_texto_*)
-
 @resgate_falhou
 मुझे यहाँ अंदर आपकी फ़ाइलें मिलीं और मैं उनकी नकल नहीं बना सका।
 
@@ -1286,8 +1290,6 @@ Windows का ProductId
 ध्यान दें: इस मशीन में {1} नेटवर्क कार्ड हैं। बहुत से प्रोग्राम कार्ड की
   संख्या को पहचान का हिस्सा मानते हैं, और अगर उनमें से एक Wi-Fi हो जो चालू-बंद
   होता रहे, तो पहचान भी बदलती रहेगी। नेटवर्क हमेशा चालू रखिए।
-
-# ------------------------------------------------------ पैनल और कमांड लाइन
 
 @prep_nada_falta
 कुछ नहीं छूटा: इस मशीन में Tandem को जो चाहिए, सब पहले से है।

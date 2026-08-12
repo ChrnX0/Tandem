@@ -1,5 +1,20 @@
 tandem (4.1) unstable; urgency=medium
 
+  * The messages are gettext .po files now. po/ is the source of truth and
+    src/lib/idiomas/*.txt is generated from it; build.py refuses to package a
+    catalogue that has drifted from its .po.
+  * The reason is a defect the hand-rolled format could not even detect: when an
+    English message changes, the six translations keep the old text and nothing
+    says so. msgmerge marks that entry fuzzy, the compiler drops a fuzzy entry,
+    and the reader gets English instead of a sentence describing behaviour
+    Tandem no longer has.
+  * It also buys plural forms - Arabic has six, Chinese has one, and the old
+    format could only write "1 linha(s)" - and it buys Poedit and Weblate, which
+    is what the five unreviewed catalogues actually need.
+  * gettext is not used at build or run time: msgfmt would break the rule that
+    the packager depends on nothing, and %1$s would undo the {1} substitution
+    that exists because paths carry percent signs.
+
   * English is the default. An unrecognised locale gets English, and English is
     what every catalogue falls back to for a missing key. It used to be
     Portuguese, which protected nobody: a Portuguese machine resolves to

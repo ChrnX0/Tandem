@@ -1,6 +1,19 @@
-# Tandem - 消息目录，简体中文。
-# 格式：@键 开始一条消息；{1} {2} 是可变部分；行首的 # 是注释。
-# 本文件永远不会被执行。此处缺少的键会回退到葡萄牙语原文。
+# Tandem - message catalogue, zh_CN.
+#
+# GENERATED FROM po/zh_CN.po - DO NOT EDIT BY HAND.
+# Edit the .po (Poedit, Weblate, or a text editor) and run
+# tools/po-para-catalogo.py. A test fails if the two drift apart.
+#
+# FORMAT
+#   @key          opens a message; everything until the next @key is the text
+#   {1} {2} {3}   where the variable parts go (a path, a name, a number)
+#   # at line start   a comment
+#
+# This file is NEVER executed. A dollar sign, a backtick or $(...) in here is
+# text and stays text.
+#
+# A key missing from this file falls back to the English original, so a
+# half-finished translation still says something readable.
 #
 # REVISADO=nao
 
@@ -61,8 +74,6 @@ tandem idioma <代码>
 无法保存您选择的语言。
 
 通常是配置目录没有写入权限，或者磁盘已满。
-
-# ------------------------------------------------------- Windows 程序
 
 @wine_faltando_pergunta
 运行 Windows 程序所需的 Wine 尚未安装。
@@ -471,8 +482,6 @@ Tandem 能打开 .exe、.msi、.apk、.xapk、.AppImage、.jar、.deb、.rpm、
 这台电脑上没有真正的串口。刷卡机、电子秤或小票打印机得通过 USB 转接头接入 ——
   接上以后就会在这里显示为 /dev/ttyUSB0。
 
-# --------------------------------------------------------- 系统软件包 (.deb)
-
 @deb_ja_instalando
 这个软件包已经在安装了……
 
@@ -571,8 +580,6 @@ Tandem - {1}
 
 @script_primeiras_linhas
 它开头的几行：
-
-# ------------------------------------------------------- Android 应用
 
 @apk_cifrado
 这个文件被发布它的网站加了保护。
@@ -935,8 +942,6 @@ Android 没有启动起来。请重启电脑后再试。
 @waydroid_nao_ficou_pronto
 Android 起来了，但没能及时准备好。
 
-# ------------------------------------------------ 详细诊断 (t_texto_*)
-
 @resgate_falhou
 我在这里面发现了您的文件，而且没能给它们做备份。
 
@@ -1239,8 +1244,6 @@ Windows 的 ProductId
 @id_varias_placas
 注意：这台机器有 {1} 张网卡。很多程序把网卡的编号当成身份的一部分，
   如果其中一张是会开会关的 Wi-Fi，身份就会跟着变。请让网络一直开着。
-
-# --------------------------------------------------------- 面板与命令行
 
 @prep_nada_falta
 什么都不缺：这台机器已经有 Tandem 需要的一切。
