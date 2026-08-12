@@ -170,6 +170,30 @@ if [ "$ARCH" = arm64 ]; then
     exit 1
 fi
 
+# Decidable before running anything, and until now it was not decided at all:
+# a 32-bit environment cannot run a 64-bit program, no matter what is installed
+# in it. Wine writes the answer on the fourth line of system.reg, and a
+# prefix's bitness cannot be changed after creation - so there is nothing to
+# try here, only something to say. Tandem's own prefixes are win64; the 32-bit
+# one that turns up is somebody else's, made years ago, and rule number 1 keeps
+# us out of it anyway.
+#
+# Only a prefix that DECLARES win32 is refused. The folder layout can be read
+# the same way, but a deduction is not a fact, and refusing to open a program on
+# a guess would be a worse defect than the one this fixes.
+if [ "$ARCH" = 64 ]; then
+    ARQ_PREFIXO="$(t_prefixo_arquitetura "$WINEPREFIX" 2>/dev/null)"; C_ARQ=$?
+    case $C_ARQ in
+        0) t_diz "arquitetura do prefixo: $ARQ_PREFIXO (declarada em system.reg)" ;;
+        2) t_diz "arquitetura do prefixo: $ARQ_PREFIXO (deduzida das pastas)" ;;
+        *) t_diz "arquitetura do prefixo: nao identificada" ;;
+    esac
+    if [ "$ARQ_PREFIXO" = win32 ] && [ "$C_ARQ" = 0 ]; then
+        t_erro "$(t_msg ambiente_32_bits "$(basename -- "$PROG")" "$WINEPREFIX")"
+        exit 1
+    fi
+fi
+
 # Pre-flight: reads the import table of the file itself, without running
 # anything. It does not block and does not install - it keeps the explanation
 # around in case things fail.

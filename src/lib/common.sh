@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.1"
+TANDEM_VERSAO="4.2"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -111,7 +111,7 @@ fi
 
 # ============================================================= LANGUAGE
 #
-# Until 4.1 every sentence in this program was a Portuguese literal sitting
+# Until 4.2 every sentence in this program was a Portuguese literal sitting
 # inside the script that printed it. That was right while the product had one
 # owner in one country, and it stops being right the moment somebody in
 # another one installs it.
@@ -662,16 +662,59 @@ t_reg_valor() {
         }' "$arq" 2>/dev/null
 }
 
-# Freezes the two identifiers, ONCE, in a prefix of ours. Never touches one
-# that already has a value: a program may already have activated against it,
-# and changing it afterwards is precisely the loss this function exists to
-# prevent.
+# win32 or win64, read out of the prefix and without starting Wine.
+#
+# Wine writes "#arch=" on the fourth line of system.reg, user.reg and
+# userdef.reg when it creates the prefix - measured on Wine 9.0, and it is the
+# same line wineserver refuses to start on when it disagrees with WINEARCH.
+# Nothing in Tandem read it: "grep -rn '#arch' src/ tests/" returned zero. The
+# consequence is not cosmetic. A 64-bit program simply cannot run in a 32-bit
+# environment, and somebody else's old prefix is exactly where a 32-bit
+# environment is found - so the one case that is decidable BEFORE running was
+# the one case Tandem only ever diagnosed afterwards, by grepping English
+# ("32-bit installation") out of Wine's log.
+# The return code says WHERE the answer came from, and that distinction is the
+# whole reason this is not a one-liner:
+#
+#   0 - Wine declared it, on the #arch= line. A fact.
+#   2 - deduced from the folder layout, because that line is absent. A guess.
+#   1 - no idea.
+#
+# A refusal may rest on 0 and never on 2. Turning a guess into "this program
+# cannot run" is how a program that works stops opening, and it is the same
+# rule the bitness check already follows: better not to condemn than to condemn
+# by mistake.
+t_prefixo_arquitetura() {
+    local prefixo="$1" a=""
+    [ -n "$prefixo" ] || return 1
+    a="$(sed -n 's/^#arch=//p' "$prefixo/system.reg" 2>/dev/null | head -1)"
+    case "$a" in
+        win32|win64) printf '%s\n' "$a"; return 0 ;;
+    esac
+    # Wine did not always write that line, and a prefix made years ago on a
+    # counter machine is exactly the kind that would not have it. The folder
+    # layout answers the same question: syswow64 exists only in a 64-bit
+    # prefix.
+    if [ -d "$prefixo/drive_c/windows/syswow64" ]; then
+        printf 'win64\n'; return 2
+    fi
+    [ -d "$prefixo/drive_c/windows/system32" ] && { printf 'win32\n'; return 2; }
+    return 1
+}
+
+# Freezes the two identifiers, ONCE, in a prefix of ours. Never touches a
+# prefix it has already stamped: a program may have activated against what is
+# there, and changing it afterwards is precisely the loss this function exists
+# to prevent.
 #
 # Callers must check t_prefixo_protegido first. Rule number 1 has no exception
 # here just because the write is small.
 t_identidade_fixa() {
-    local prefixo="$1" serial guid marca
+    local prefixo="$1" serial guid marca vista escreveu=""
     [ -d "$prefixo/drive_c" ] || return 1
+    # Rule number 1, spelled out here as well as in the caller. The write is
+    # small, which is exactly why it would be the one to slip through.
+    [ -f "$prefixo/.tandem-prefixo" ] || return 1
     marca="$prefixo/.tandem-identidade"
 
     serial="$(t_identidade_serial)"
@@ -680,15 +723,43 @@ t_identidade_fixa() {
             t_diz "serial do volume C: fixado em $serial"
     fi
 
+    # This half NEVER ONCE RAN, and it took real Wine to find out. The guard
+    # used to be "the registry value is absent" - and measured on Wine 9.0,
+    # wineboot writes a RANDOM MachineGuid into the 64-bit view while creating
+    # the prefix, before Tandem gets a turn. So the value was always present,
+    # the write was always skipped, and the mark file still recorded
+    # MACHINEGUID=<the seed value> - a mark describing something that was not
+    # in the prefix. Remake the environment and the program that tied its
+    # licence to this machine sees a different machine: exactly the loss the
+    # comment above claims to prevent.
+    #
+    # The mark file is the right discriminator. No mark means Tandem has not
+    # stamped this prefix yet, and the only caller runs at creation, where
+    # nothing has activated against Wine's random value because nothing has
+    # run. A prefix that already carries the mark is never touched again, even
+    # though the marks written by earlier versions describe a GUID that was
+    # never applied: that prefix has been in use, something may have activated
+    # against Wine's value, and correcting the record afterwards would cause
+    # the very reactivation this function exists to avoid.
     guid="$(t_identidade_guid)"
-    if [ -n "$guid" ] && [ -z "$(t_reg_valor "$prefixo" 'Software\\Microsoft\\Cryptography' MachineGuid)" ]; then
-        # Wine's advapi32 only writes MachineGuid when the value is absent, so
-        # one written here is never overwritten later.
-        if WINEPREFIX="$prefixo" WINEDEBUG=-all wine reg add \
-             'HKLM\Software\Microsoft\Cryptography' /v MachineGuid /t REG_SZ \
-             /d "$guid" /f >/dev/null 2>&1; then
-            t_diz "MachineGuid fixado em $guid"
-        fi
+    if [ -n "$guid" ] && [ ! -f "$marca" ]; then
+        # Both views, and each one named out loud. "wine reg" here is a 32-bit
+        # process - Ubuntu's wine wrapper picks the 32-bit loader when wine32
+        # is present, the same reason "wine uninstaller --list" reads the other
+        # view - so a write with no /reg: flag lands in Wow6432Node while the
+        # read above looks at the 64-bit key. Measured: with no flag the value
+        # appeared under Software\Wow6432Node\Microsoft\Cryptography, with
+        # /reg:64 under Software\Microsoft\Cryptography. A 32-bit program and a
+        # 64-bit one must see the SAME machine, and 2 of 2 real installers
+        # surveyed here are 32-bit, so the 32-bit view is not the afterthought.
+        for vista in 64 32; do
+            if WINEPREFIX="$prefixo" WINEDEBUG=-all wine reg add \
+                 'HKLM\Software\Microsoft\Cryptography' /v MachineGuid /t REG_SZ \
+                 /d "$guid" /f "/reg:$vista" >/dev/null 2>&1; then
+                escreveu="${escreveu:+$escreveu }$vista"
+            fi
+        done
+        [ -n "$escreveu" ] && t_diz "MachineGuid fixado em $guid (vistas: $escreveu)"
     fi
 
     # The seed goes on record. If an OS reinstall regenerates machine-id, both
@@ -1211,6 +1282,32 @@ t_memoria_esquece() {
 # In a win64 prefix Wine follows the Windows convention: system32 holds the
 # 64-bit DLLs and syswow64 the 32-bit ones. In a win32 prefix only system32
 # exists, and it is 32-bit.
+# Is this file Wine's own stub rather than the real library?
+#
+# It matters because "the file is in system32" was being read as proof of
+# delivery, and Wine puts about 560 DLLs of its own into every prefix at
+# creation. For the most expensive verb in the project that made the proof
+# measure nothing at all: verbos.tsv maps dotnet48 -> mscoree.dll, and
+# mscoree.dll is present in BOTH system32 and syswow64 of a prefix that has no
+# .NET anywhere - measured on a virgin win64 prefix with no Microsoft.NET
+# folder and zero "NET Framework Setup" registry keys. So a dotnet48 that
+# exited 0 without installing anything got approved, the receipt was written,
+# and under rule number 4 the receipt is permanent: on the next double click
+# Tandem says "I already installed what this program was asking for" and gives
+# up, half an hour of the owner's time spent on nothing. That is precisely the
+# damage the proof of delivery was invented to prevent.
+#
+# Wine marks its own DLLs where it costs nothing to look. It replaces the DOS
+# stub message ("This program cannot be run in DOS mode") with "Wine builtin
+# DLL" at offset 64 of the file. Measured on the 560 DLLs of a fresh prefix:
+# all 560 carry it, at exactly that offset. Sixteen bytes read, nothing run.
+t_dll_builtin_wine() {
+    local arq="$1" marca
+    [ -f "$arq" ] || return 1
+    marca="$(dd if="$arq" bs=1 skip=64 count=16 2>/dev/null | LC_ALL=C tr -d '\000')"
+    [ "$marca" = "Wine builtin DLL" ]
+}
+
 t_dll_no_prefixo() {
     local dll="$1" arch="${2:-}" c s32 s64 tem32=1 tem64=1
     [ -n "$dll" ] && [ -n "${WINEPREFIX:-}" ] || return 1
@@ -1220,8 +1317,16 @@ t_dll_no_prefixo() {
     [ -d "$s32" ] || { s32="$c/system32"; s64=""; }
 
     _t_acha_dll() {
+        local achou
         [ -n "$1" ] && [ -d "$1" ] || return 1
-        find "$1" -maxdepth 1 -iname "$dll" -print -quit 2>/dev/null | grep -q .
+        achou="$(find "$1" -maxdepth 1 -iname "$dll" -print -quit 2>/dev/null)"
+        [ -n "$achou" ] || return 1
+        # Wine's own stub does not count as an arrival: it is what was already
+        # failing. A DLL that came out of err:module:import_dll cannot be a
+        # builtin anyway - Wine said it could not find it - so this only ever
+        # changes the answer where the question came from the verb instead of
+        # from the log, which is the shortcut taken by "memoria" and "lista".
+        ! t_dll_builtin_wine "$achou"
     }
     _t_acha_dll "$s32" && tem32=0
     _t_acha_dll "$s64" && tem64=0
@@ -2086,7 +2191,7 @@ t_reg_lista_valores() {
 }
 
 t_texto_identidade() {
-    local prefixo="$1" saida="" guid pid serial semente marca
+    local prefixo="$1" saida="" guid guid32 pid serial semente marca
     local so_leitura="" placas conta n m f kb
 
     kb="$(sed -n 's/^MemTotal:[[:space:]]*\([0-9]*\).*/\1/p' /proc/meminfo 2>/dev/null)"
@@ -2142,6 +2247,19 @@ t_texto_identidade() {
 
   $(t_msg id_productid_de_fabrica)" ;;
         esac
+
+        # The 32-bit view of the registry is a different place, and a program
+        # reads whichever one matches its own bitness. This report used to show
+        # only the 64-bit key, which is how a MachineGuid written into
+        # Wow6432Node and read out of Software\Microsoft went unnoticed. If the
+        # two disagree the owner has two machines as far as his programs are
+        # concerned, and that deserves a sentence rather than a silent field.
+        guid32="$(t_reg_valor "$prefixo" 'Software\\Wow6432Node\\Microsoft\\Cryptography' MachineGuid)"
+        if [ -n "$guid32" ] && [ -n "$guid" ] && [ "$guid32" != "$guid" ]; then
+            saida="$saida
+
+  $(t_msg id_vistas_diferentes "$guid" "$guid32")"
+        fi
 
         if [ -n "$semente" ] && [ "$semente" != "$(t_maquina_semente)" ]; then
             saida="$saida
@@ -2994,7 +3112,7 @@ t_config_grava() {
 }
 
 # Has the owner decided? "sim", "nao", or failure when he was never asked.
-# ON BY DEFAULT since 4.1, and that is a reversal of the previous design.
+# ON BY DEFAULT since 4.2, and that is a reversal of the previous design.
 #
 # It was born off, and the owner decided once, looking at the whole line. That
 # was the more careful arrangement and it had a measurable result: the list was

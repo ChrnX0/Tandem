@@ -129,8 +129,47 @@ Where the project actually beats the competition.
 | **You cannot install from `postinst`** — `dpkg` holds a lock and an `apt-get` in there waits forever. | **DONE** — which is why `preparar` is a separate command |
 | **`tandem programas`** — GNOME under Wayland does not re-read the application menu until you log out and back in, and `update-desktop-database` does not fix it. Without a list of its own, the owner installs something and cannot find it. | **DONE** |
 | **Clean up orphaned shortcuts** — a `.desktop` whose `.lnk` is gone is a button that opens nothing. | **DONE** |
-| **Clone a prefix with `.NET` already in it** instead of running `dotnet48` from scratch (30 min, high failure rate). | **LATER** — needs extreme care never to read from a protected prefix in use, plus somewhere to fetch the ready-made prefix from |
+| **Clone a prefix with `.NET` already in it** instead of running `dotnet48` from scratch (30 min, high failure rate). | **REJECTED as designed** — see below. It was investigated in 4.2 and the investigation is what found the three defects 4.2 fixes; the copying itself must not be built the way it was proposed |
 | Bundle Wine inside the `.deb` | **REJECTED** — 400 MB, licensing, and it would make us responsible for updating Wine. |
+
+### Why the prefix mould is rejected as designed
+
+The idea: `dotnet48` costs about half an hour and fails often, so keep a prefix
+that already has it and copy that instead. The proposal was reviewed in 4.2
+along four lines — rule №1, delivery proof, the copy itself, and what a mould
+store does to the rest of the code — and it failed on all four. None of the
+objections is about effort; each one is a way the shop owner loses something.
+
+- **The only legal donor is the shop's production prefix.** Rule №1 forbids
+  writing into a prefix Tandem did not create, and there is no read-only way to
+  answer "is this prefix in use right now": every `wineserver` probe writes into
+  the prefix it probes. So the check that would make reading safe is itself the
+  violation. And the machine this project was born on runs a point-of-sale
+  system in its own prefix — that is the prefix a mould would want.
+- **The proof of delivery would have approved an empty mould.** Measured, and
+  it is the defect 4.2 fixes: `t_dll_do_verbo dotnet48` answers `mscoree.dll`,
+  and `mscoree.dll` is in both `system32` and `syswow64` of a prefix with no
+  .NET at all, because Wine put it there. A mould with nothing in it would have
+  been stamped as complete, and the receipt is permanent under rule №4.
+- **A prefix is not a folder of files.** Measured on a real prefix: `wineserver`
+  is mode `-r--------`, 11 bytes, and its content is the name of a private
+  `/tmp` directory (`wine-P0uk1W`) — a copy run by another user cannot reach it.
+  `dosdevices/z:` is a symlink to `/`, so a `tar --dereference` over a prefix
+  walks the whole filesystem, and `dosdevices/com1` points at a device node.
+  Copying a prefix correctly means knowing which of these to drop, and getting
+  it wrong writes the owner's home directory into the artifact.
+- **A mould store is a second `.tandem-prefixo`-marked tree.** `t_prefixo_do_arquivo`
+  resolves into it and Tandem believes it may write there — so the store becomes
+  a prefix Tandem installs into by accident, which is the opposite of a mould.
+- **A copy interrupted by a full disk leaves a prefix every existing check calls
+  complete.** "Complete" means `system.reg` exists; a truncated copy has one.
+
+What survives, and it is the honest version of the idea: **pay `dotnet48` once
+into a prefix Tandem creates for that purpose**, never into or out of somebody
+else's. That needs no cloning, no store, no reading of a production
+environment, and it keeps rule №1 untouched. It is not built yet, and the
+prerequisite it was waiting for — a delivery proof that can actually fail for
+`dotnet48` — only started existing in 4.2.
 
 ## 8. Android
 

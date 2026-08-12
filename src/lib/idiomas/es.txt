@@ -145,6 +145,21 @@ Soporte de 32 bits instalado.
 @arm_nao_roda
 Este programa es para Windows ARM y no funciona en este ordenador.
 
+@ambiente_32_bits
+{1} es un programa de 64 bits, y el entorno Windows en el que está se creó
+de 32 bits. Un Windows de 32 bits no puede ejecutar un programa de 64 bits. Es
+una regla de Windows mismo: no es un fallo de su computadora ni de este
+programa.
+
+El ancho de un entorno se elige al crearlo y no se puede cambiar después, así
+que aquí no hay nada que yo pueda instalar. El entorno es esta carpeta:
+
+{2}
+
+La forma de sortearlo: copie el programa a una carpeta fuera de esa - su
+carpeta de descargas, por ejemplo - y ábralo desde allí. Entonces uso mi
+propio entorno, que es de 64 bits.
+
 @licao_pergunta
 {1} estos componentes de Windows:
 
@@ -1293,6 +1308,18 @@ El ProductId de arriba es el que viene de fábrica en Wine, igual en toda
 ATENCIÓN: la identidad de esta máquina cambió desde que se creó el entorno.
   Eso pasa cuando se reinstala Linux o se clona el disco. Es la explicación de
   que un programa pida activación sin que nada más haya cambiado.
+
+@id_vistas_diferentes
+NOTA: en una máquina de 64 bits Windows mantiene dos registros - uno que leen
+  los programas de 64 bits y otro que leen los de 32 bits - y aquí los dos
+  tienen identificadores de máquina distintos:
+
+      un programa de 64 bits ve: {1}
+      un programa de 32 bits ve: {2}
+
+  Para un programa que ata su licencia a la máquina, eso son dos máquinas. Si
+  alguno de sus programas sigue pidiendo activación, esta es la línea que hay
+  que mostrar a quien le da soporte.
 
 @id_varias_placas
 ATENCIÓN: esta máquina tiene {1} tarjetas de red. Muchos programas usan el

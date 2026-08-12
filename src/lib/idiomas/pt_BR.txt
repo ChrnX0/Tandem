@@ -144,6 +144,21 @@ Suporte a 32 bits instalado.
 @arm_nao_roda
 Este programa é para Windows ARM e não roda neste computador.
 
+@ambiente_32_bits
+{1} é um programa de 64 bits, e o ambiente Windows onde ele está foi feito
+com 32 bits. Um Windows de 32 bits não consegue rodar um programa de 64 bits.
+Isso é uma regra do próprio Windows - não é defeito do seu computador, nem
+defeito deste programa.
+
+A largura de um ambiente é escolhida quando ele é criado e não muda depois,
+então não tem nada para eu instalar aqui. O ambiente é esta pasta:
+
+{2}
+
+O jeito de contornar: copie o programa para uma pasta fora dessa - a sua pasta
+de downloads, por exemplo - e abra ele de lá. Aí eu uso o meu próprio
+ambiente, que é de 64 bits.
+
 @licao_pergunta
 {1} destes componentes do Windows:
 
@@ -1285,6 +1300,18 @@ O ProductId acima é o que vem de fábrica no Wine, igual em toda máquina que
 ATENÇÃO: a identidade desta máquina mudou desde que o ambiente foi criado.
   Isso acontece quando o Linux é reinstalado ou o disco é clonado. É a
   explicação para um programa pedir ativação sem nada mais ter mudado.
+
+@id_vistas_diferentes
+OBSERVAÇÃO: numa máquina de 64 bits o Windows guarda dois registros - um que
+  os programas de 64 bits leem e outro que os de 32 bits leem - e aqui os dois
+  têm identificadores de máquina diferentes:
+
+      um programa de 64 bits vê: {1}
+      um programa de 32 bits vê: {2}
+
+  Para um programa que amarra a licença à máquina, isso são duas máquinas. Se
+  algum programa seu fica pedindo ativação de novo, esta é a linha para
+  mostrar a quem dá suporte a ele.
 
 @id_varias_placas
 ATENÇÃO: esta máquina tem {1} placas de rede. Muitos programas usam o

@@ -145,6 +145,22 @@ Or let Tandem install it:  tandem preparar
 @arm_nao_roda
 This program is for Windows on ARM and will not run on this computer.
 
+@ambiente_32_bits
+{1} is a 64-bit program, and the Windows environment it sits in was made
+32-bit. A 32-bit Windows cannot run a 64-bit program. That is a rule of
+Windows itself - it is not a fault of your computer, and not a fault of this
+program.
+
+An environment's width is chosen when it is created and cannot be changed
+afterwards, so there is nothing for me to install here. The environment is
+this folder:
+
+{2}
+
+The way round it: copy the program to a folder outside that one - your
+Downloads, for instance - and open it from there. Then I use my own
+environment, which is 64-bit.
+
 @licao_pergunta
 {1} these Windows components:
 
@@ -1296,6 +1312,18 @@ The ProductId above is Wine's factory default, identical on every machine
 NOTE: this machine's identity has changed since the environment was created.
   That happens when Linux is reinstalled or the disk is cloned. It is the
   explanation for a program asking to be activated when nothing else changed.
+
+@id_vistas_diferentes
+NOTE: on a 64-bit machine Windows keeps two registries - one that 64-bit
+  programs read and one that 32-bit programs read - and here the two hold
+  different machine identifiers:
+
+      a 64-bit program sees: {1}
+      a 32-bit program sees: {2}
+
+  To a program that ties its licence to the machine, that is two machines. If
+  one of your programs keeps asking to be activated again, this is the line to
+  show whoever supports it.
 
 @id_varias_placas
 NOTE: this machine has {1} network cards. Many programs use a card's number
