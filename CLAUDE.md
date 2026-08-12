@@ -97,7 +97,9 @@ src/lib/limites.tsv       signatures of what will never work (dongle, driver)
 src/lib/alternativas.tsv  Linux programs that do the same job
 po/*.po                   THE SOURCE of every message: ordinary gettext .po
 po/tandem.pot             the template, for msginit and msgmerge
+tools/atualiza-po.py      THE workflow: edit po/en.po, run this, then the compiler
 tools/po-para-catalogo.py compiles po/ -> src/lib/idiomas/ in pure Python
+po/LINGUAS                the languages that ship (gettext convention)
 src/lib/idiomas/*.txt     GENERATED runtime catalogues; do not edit by hand
 tools/indice-winetricks.py  generates verbos.tsv by reading the installed winetricks
 proofgate.json            evidence gate: stack, coupled files
@@ -693,7 +695,19 @@ Read this before touching a message anywhere in the tree.
   **Why NOT the gettext runtime**, which is the other half of the decision:
   `msgfmt` at build time breaks rule 5 (the packager depends on nothing and
   runs on Windows), and a `.po` parser is sixty lines of Python. `%1$s` would
-  also undo the `{1}` decision below.
+  also undo the `{1}` decision below. `msgmerge` is not used either, for the
+  same reason: the development machine is Windows.
+- **There is exactly ONE path for adding, changing or removing a message**, and
+  it is the answer to "where do I edit this": `po/en.po`, then
+  `tools/atualiza-po.py`, then `tools/po-para-catalogo.py`. Skipping the middle
+  step leaves six translations describing behaviour that is gone, which is the
+  whole failure this format was adopted to prevent.
+- **`atualiza-po.py` keeps every header line it finds** - `Last-Translator`,
+  `PO-Revision-Date`, `X-Generator`. The first version rewrote headers from a
+  template, which would have deleted the name of everybody who ever worked on
+  the file. There is a test, and the test was written after noticing that the
+  first version of it passed VACUOUSLY: it checked the file content without
+  checking that the tool had run at all.
 - **The messages are DATA, not code, and the format is built so they cannot be
   anything else.** A catalogue is parsed by `read` and never evaluated, so a
   `$`, a backtick or a `$(...)` in a translation is text and stays text. There

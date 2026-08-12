@@ -188,3 +188,57 @@ docs/LIST-FORMAT.md       o formato da lista da comunidade
 
 MIT. Ao contribuir, você concorda em licenciar sua contribuição nos mesmos
 termos.
+
+### Onde as mensagens ficam, e o que rodar
+
+```
+po/en.po            O INGLÊS. Mexer numa mensagem é mexer neste arquivo.
+po/<idioma>.po      as traduções
+po/tandem.pot       modelo gerado; comece um idioma novo com msginit
+po/LINGUAS          os idiomas que vão no pacote
+src/lib/idiomas/    catálogos GERADOS - nunca edite estes à mão
+```
+
+Adicionar, mudar ou remover uma mensagem é um caminho, e só um:
+
+```bash
+$EDITOR po/en.po                     # 1. o inglês
+python3 tools/atualiza-po.py         # 2. propaga para os sete
+python3 tools/po-para-catalogo.py    # 3. regera o que vai no pacote
+bash tests/run.sh                    # 4.
+```
+
+O passo 2 é o que se paga. Uma chave cujo **inglês mudou** é marcada `#, fuzzy`
+em todos os idiomas, e o passo 3 então **descarta** entrada fuzzy — de modo que
+a pessoa lê inglês em vez de uma frase que descreve um comportamento que o
+Tandem não tem mais. Era essa a falha que o formato anterior não conseguia nem
+detectar. O passo 2 também preserva todas as linhas de cabeçalho que encontra,
+inclusive `Last-Translator` e `X-Generator`, porque apagar o nome de quem ajudou
+é como se garante que a pessoa não volta.
+
+Para começar um idioma que ainda não existe:
+
+```bash
+echo pl >> po/LINGUAS
+msginit -i po/tandem.pot -l pl -o po/pl.po    # ou copie o tandem.pot à mão
+python3 tools/atualiza-po.py
+```
+
+Tradução faltando é segura — cai para o inglês — então idioma pela metade é
+contribuição útil, não coisa quebrada.
+
+### Como pôr isso no Weblate
+
+Nada no repositório precisa mudar. Aponte um componente do Weblate para:
+
+| campo | valor |
+|---|---|
+| Formato do arquivo | `gettext PO file` |
+| Máscara de arquivos | `po/*.po` |
+| Base monolíngue | *(deixe vazio — estes são bilíngues)* |
+| Modelo para novas traduções | `po/tandem.pot` |
+| Adicionar nova tradução | `Usar modelo` |
+| Script pós-commit | `python3 tools/po-para-catalogo.py` |
+
+O script pós-commit importa: sem ele o Weblate comita um `.po` e o catálogo que
+vai no pacote fica atrás — e o CI vai dizer isso no próximo push.

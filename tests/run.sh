@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1257887158 776" "$soma_esperados"
+      "2186825782 779" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "3113881825 1444" "$soma_padroes"
 
@@ -1605,6 +1605,130 @@ FIM
            "X-Reviewed-By-Speaker: no" "$(head -30 "$ROOT/po/ar.po")"
 else
     skip "po/ is the source of truth" "po/ does not exist"
+fi
+
+section "language: the path a translator actually walks"
+
+# Having .po files is not the same as being contributable. These four things are
+# what stands between a speaker of Spanish and a corrected catalogue, and each
+# one was missing when the format changed.
+
+if [ -d "$ROOT/po" ] && [ -f "$ROOT/tools/atualiza-po.py" ]; then
+    contem "po/LINGUAS lists the languages, gettext's own convention" \
+           "pt_BR" "$(cat "$ROOT/po/LINGUAS" 2>/dev/null)"
+
+    # THE CREDIT. Last-Translator, PO-Revision-Date and X-Generator are how a
+    # person is credited and how Weblate keeps its place. The first version of
+    # this pipeline rewrote headers from a template, which would have deleted
+    # the name of everybody who had ever worked on the file.
+    PO_T="$TMPROOT/po-tradutor"
+    mkdir -p "$PO_T" && cp -a "$ROOT/po" "$PO_T/po"
+    python3 - "$PO_T/po/fr.po" <<'FIM'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+alvo = '"Language-Team: fr\\n"'
+assert s.count(alvo) == 1, s.count(alvo)
+io.open(p, "w", encoding="utf-8").write(s.replace(
+    alvo,
+    '"Last-Translator: Marie Dupont <marie@example.org>\\n"\n'
+    '"PO-Revision-Date: 2026-08-10 14:22+0200\\n"\n'
+    '"X-Generator: Weblate 5.4\\n"\n' + alvo, 1))
+FIM
+    # Run the updater against the copy by pointing it at a tree of its own.
+    cp -a "$ROOT/tools" "$PO_T/tools"
+    mkdir -p "$PO_T/src/lib/idiomas" && cp "$ROOT"/src/lib/idiomas/*.txt "$PO_T/src/lib/idiomas/"
+    primeira="$( cd "$PO_T" && python3 tools/atualiza-po.py 2>&1 )"
+    # Assert the tool RAN, or the credit checks below pass vacuously on a file
+    # nothing ever touched - which is exactly what happened the first time.
+    contem "the updater runs at all in the sandbox" "441" "$primeira"
+    for campo in "Marie Dupont" "X-Generator: Weblate" "PO-Revision-Date"; do
+        contem "regenerating keeps $campo" "$campo" "$(cat "$PO_T/po/fr.po")"
+    done
+
+    # THE STALENESS. Change the English and every translation of that one entry
+    # has to be marked, or somebody reads a sentence about behaviour that is
+    # gone. This is the defect the hand-rolled format could not even detect.
+    python3 - "$PO_T/po/en.po" <<'FIM'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+alvo = ('msgctxt "sem_arquivo"\nmsgid "No file was given."\n'
+        'msgstr "No file was given."')
+assert s.count(alvo) == 1
+io.open(p, "w", encoding="utf-8").write(s.replace(
+    alvo,
+    'msgctxt "sem_arquivo"\nmsgid "No file was given."\n'
+    'msgstr "You did not name a file."', 1))
+FIM
+    relatorio="$( cd "$PO_T" && python3 tools/atualiza-po.py 2>&1 )"
+    # Count rather than match the padding: %-6s makes the gap depend on the
+    # length of the language code, and a test that breaks on alignment teaches
+    # people to loosen tests.
+    equal "changing one English message marks all six translations fuzzy" "6" \
+          "$(printf '%s\n' "$relatorio" | grep -c 'FUZZY')"
+    for pl in pt_BR es fr zh_CN hi ar; do
+        contem "$pl is one of them" "$pl" \
+               "$(printf '%s\n' "$relatorio" | grep 'FUZZY')"
+    done
+    naocontem "and English itself is never fuzzy - it is the source" \
+              "en " "$(printf '%s\n' "$relatorio" | grep 'FUZZY')"
+    # And the stale entry must LEAVE the shipped catalogue.
+    ( cd "$PO_T" && python3 tools/po-para-catalogo.py >/dev/null 2>&1 )
+    equal "the stale entry leaves the French catalogue, falling back to English" \
+          "0" "$(grep -c '^@sem_arquivo' "$PO_T/src/lib/idiomas/fr.txt" || true)"
+    equal "and stays in English, which is the fallback" \
+          "1" "$(grep -c '^@sem_arquivo' "$PO_T/src/lib/idiomas/en.txt" || true)"
+
+    # A NEW MESSAGE. It must arrive untranslated in all six rather than not
+    # arriving at all, because untranslated falls back and absent does not.
+    python3 - "$PO_T/po/en.po" <<'FIM'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+io.open(p, "w", encoding="utf-8").write(
+    s.rstrip("\n") + '\n\nmsgctxt "chave_nova_de_teste"\n'
+    'msgid "A brand new sentence."\nmsgstr "A brand new sentence."\n')
+FIM
+    relatorio2="$( cd "$PO_T" && python3 tools/atualiza-po.py 2>&1 )"
+    contem "a new message arrives in every language as untranslated" \
+           "1 untranslated" "$relatorio2"
+    contem "the new key reaches the French .po" \
+           "chave_nova_de_teste" "$(cat "$PO_T/po/fr.po")"
+    contem "and the template, so a new language starts complete" \
+           "chave_nova_de_teste" "$(cat "$PO_T/po/tandem.pot")"
+
+    # THE SOURCE LANGUAGE cannot drift from itself: en.po's msgstr IS the
+    # English, and its msgid must equal it, or "what is the English" has two
+    # answers.
+    desiguais="$(cd "$ROOT" && python3 - <<'FIM'
+import importlib.util, io, re
+spec = importlib.util.spec_from_file_location("c", "tools/po-para-catalogo.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+texto = io.open("po/en.po", encoding="utf-8").read()
+itens, _ = m.le_po("po/en.po")
+traducoes = {k: t for k, t, f in itens}
+ruins = []
+for bloco in texto.split("
+
+"):
+    if 'msgctxt "' not in bloco:
+        continue
+    chave = re.search(r'msgctxt "([^"]+)"', bloco).group(1)
+    corpo = bloco[bloco.index("msgid "):]
+    ident = corpo[:corpo.index("msgstr ")]
+    linhas = [l for l in ident.splitlines()]
+    linhas[0] = linhas[0][len("msgid "):]
+    partes = [m.CITADA.match(l.strip()).group(1) for l in linhas
+              if m.CITADA.match(l.strip())]
+    if m.descita(partes) != traducoes.get(chave):
+        ruins.append(chave)
+print(" ".join(ruins[:5]))
+FIM
+)"
+    equal "in po/en.po the msgid and the msgstr are the same text" "" "$desiguais"
+else
+    skip "the translator path" "po/ or tools/atualiza-po.py is missing"
 fi
 
 section "language: the messages are data, not code"

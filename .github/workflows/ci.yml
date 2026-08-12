@@ -32,6 +32,46 @@ jobs:
       - name: Test suite
         run: bash tests/run.sh
 
+      # A translator should get an answer from CI, not from a maintainer running
+      # things by hand. This job is the whole of what a translation PR needs to
+      # be judged: the .po must be valid gettext, and the generated catalogues
+      # must match it. Nothing here is needed to BUILD the package - the build
+      # deliberately depends on no gettext - which is why msgfmt is installed
+      # for this step alone.
+      - name: Translations - gettext accepts every .po
+        run: |
+          sudo apt-get install -y -qq gettext
+          fail=0
+          for f in po/*.po; do
+            if msgfmt --check-format --check-domain -o /dev/null "$f"; then
+              printf 'ok    %s\n' "$f"
+            else
+              printf 'FAIL  %s\n' "$f"; fail=1
+            fi
+            msgfmt --statistics -o /dev/null "$f" 2>&1 | sed "s|^|      $f: |"
+          done
+          exit $fail
+
+      - name: Translations - the shipped catalogues match po/
+        run: |
+          if ! python3 tools/po-para-catalogo.py --check; then
+            echo
+            echo "You edited src/lib/idiomas/ by hand, or forgot to regenerate."
+            echo "The .po files are the source. Run:"
+            echo "    python3 tools/po-para-catalogo.py"
+            echo "and commit what changes."
+            exit 1
+          fi
+
+      - name: Translations - report what still needs a speaker
+        run: |
+          for f in po/*.po; do
+            l="$(basename "$f" .po)"
+            revisado="$(grep -m1 'X-Reviewed-By-Speaker' "$f" | grep -o 'yes\|no')"
+            fuzzy="$(grep -c '^#, fuzzy' "$f" || true)"
+            printf '%-6s reviewed-by-speaker=%-3s fuzzy=%s\n' "$l" "$revisado" "$fuzzy"
+          done
+
       - name: Package
         run: python3 build.py --check
 

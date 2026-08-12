@@ -187,3 +187,57 @@ docs/LIST-FORMAT.md       the community list format
 
 MIT. By contributing you agree to licence your contribution under the same
 terms.
+
+### Where the messages live, and what to run
+
+```
+po/en.po            THE ENGLISH. Editing a message means editing this file.
+po/<lang>.po        the translations
+po/tandem.pot       generated template; msginit a new language from it
+po/LINGUAS          the languages that ship
+src/lib/idiomas/    GENERATED runtime catalogues - never edit these by hand
+```
+
+Adding, changing or removing a message is one path and only one:
+
+```bash
+$EDITOR po/en.po                     # 1. the English
+python3 tools/atualiza-po.py         # 2. propagate to all seven
+python3 tools/po-para-catalogo.py    # 3. regenerate what ships
+bash tests/run.sh                    # 4.
+```
+
+Step 2 is the one that earns its keep. A key whose **English changed** is marked
+`#, fuzzy` in every language, and step 3 then **drops** a fuzzy entry — so the
+reader gets English instead of a sentence describing behaviour Tandem no longer
+has. That is the failure the previous hand-rolled format could not even detect.
+Step 2 also keeps every header line it finds, including `Last-Translator` and
+`X-Generator`, because deleting the name of somebody who helped is how you make
+sure they do not come back.
+
+Starting a language that does not exist yet:
+
+```bash
+echo pl >> po/LINGUAS
+msginit -i po/tandem.pot -l pl -o po/pl.po    # or copy tandem.pot by hand
+python3 tools/atualiza-po.py
+```
+
+A missing translation is safe — it falls back to English — so a half-finished
+language is a useful contribution, not a broken one.
+
+### Setting this up on Weblate
+
+Nothing in the repository has to change. Point a Weblate component at:
+
+| setting | value |
+|---|---|
+| File format | `gettext PO file` |
+| File mask | `po/*.po` |
+| Monolingual base | *(leave empty — these are bilingual)* |
+| Template for new translations | `po/tandem.pot` |
+| Adding new translation | `Use template` |
+| Post-commit script | `python3 tools/po-para-catalogo.py` |
+
+The post-commit script matters: without it Weblate commits a `.po` and the
+shipped catalogue stays behind, and CI will say so on the next push.

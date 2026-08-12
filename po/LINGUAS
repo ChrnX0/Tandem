@@ -1,0 +1,9 @@
+# The languages Tandem ships. gettext convention: one code per line.
+# Adding one here and running tools/atualiza-po.py starts it off.
+en
+pt_BR
+es
+fr
+zh_CN
+hi
+ar
