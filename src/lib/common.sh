@@ -2148,29 +2148,20 @@ t_texto_chave() {
     esac
 
     if [ "$servico" = sim ] || [ "$porta" = sim ]; then
-        printf '%s' "Uma coisa a seu favor: o serviço da chave $nome JÁ ESTÁ rodando nesta
-  máquina. Então não é ele que falta. O que sobra para conferir é se a chave
-  está espetada, e se o programa é de 64 bits — nesse caso existe uma falha
-  conhecida em que ele acusa \"depurador detectado\" mesmo sem nenhum, e quem
-  conserta é a empresa que fez o programa, não você e não o Tandem."
+        printf '%s' "$(t_msg chave_ja_roda "$nome")"
         return 0
     fi
 
     if [ "$porta" = '?' ] && [ "$servico" = nao ]; then
-        printf '%s' "Não consegui conferir se o serviço da chave $nome está rodando aqui
-  (falta a ferramenta \"ss\" nesta máquina). Se o programa reclamar de licença,
-  é esse serviço que vale conferir primeiro."
+        printf '%s' "$(t_msg chave_nao_sei "$nome")"
         return 0
     fi
 
-    printf '%s' "E encontrei o provável motivo: o serviço da chave $nome NÃO está
-  rodando nesta máquina. É ele que conversa com a chave USB pelo lado do
-  Linux — sem ele, o programa procura a licença e não acha nada, do mesmo
-  jeito que aconteceria sem a chave espetada.
-
-  Quem instala é um técnico, uma vez só, e é de graça: procure por
-  \"$pacote\" no site do fabricante."
+    # The product name is passed through untranslated on purpose: the owner has
+    # to search for it verbatim on the manufacturer's site.
+    printf '%s' "$(t_msg chave_nao_roda "$nome" "$pacote")"
 }
+
 
 # --------------------------------------- the road that starts where Wine ends
 #
@@ -2241,34 +2232,18 @@ t_texto_maquina_virtual() {
             # paragraph, which is the opposite of the point.
             return 1 ;;
         bios)
-            cabe="Este computador tem o recurso, mas ele está DESLIGADO na BIOS. Ligar
-  é entrar na BIOS ao ligar a máquina e procurar por \"virtualization\", \"VT-x\"
-  ou \"SVM\". Não instala nada e não apaga nada." ;;
+            cabe="$(t_msg vm_cabe_bios)" ;;
         apertado)
-            cabe="Este computador aguenta, mas apertado: tem $(t_tamanho_amigavel "$((mem * 1024))") de memória
-  e $(t_tamanho_amigavel "$((livre * 1024))") livres no disco. O Windows de dentro quer uns 4 GB de memória
-  e 32 GB de disco só para ele." ;;
+            cabe="$(t_msg vm_cabe_apertado \
+                     "$(t_tamanho_amigavel "$((mem * 1024))")" \
+                     "$(t_tamanho_amigavel "$((livre * 1024))")")" ;;
         *)
-            cabe="Este computador aguenta: tem $(t_tamanho_amigavel "$((mem * 1024))") de memória e
-  $(t_tamanho_amigavel "$((livre * 1024))") livres no disco." ;;
+            cabe="$(t_msg vm_cabe_bem \
+                     "$(t_tamanho_amigavel "$((mem * 1024))")" \
+                     "$(t_tamanho_amigavel "$((livre * 1024))")")" ;;
     esac
 
-    printf '%s' "Existe um caminho mais pesado, e para um caso como este ele funciona:
-
-  rodar um Windows DE VERDADE dentro do Linux, e deixar só a janela do
-  programa aparecer aqui na tela, como se fosse um programa daqui. Os dois
-  programas que fazem isso são o WinBoat e o WinApps, os dois de graça.
-  Como é um Windows de verdade, driver de sistema funciona, e a chave USB de
-  proteção pode ser entregue para ele.
-
-  $cabe
-
-  O que custa, e é bom saber antes: precisa de uma licença do Windows, e tem
-  que ser a versão Pro — a Home não serve, porque ela não deixa a janela sair
-  para fora. E o Windows de dentro ocupa disco e memória o tempo todo.
-
-  O Tandem não instala isso e não vai instalar: é outro tipo de programa. Mas
-  era desonesto dizer \"não tem jeito\" sem dizer que esse jeito existe."
+    printf '%s' "$(t_msg vm_texto "$cabe")"
 }
 
 t_texto_portas() {
@@ -2305,7 +2280,7 @@ t_texto_portas() {
         fi
         fecha_faixa
         case "$p" in
-            /dev/ttyACM*|/dev/ttyUSB*) saida="$saida$(t_linha_id "COM$n" "$p   (aparelho USB)  $(t_msg portas_seu_aparelho)")" ;;
+            /dev/ttyACM*|/dev/ttyUSB*) saida="$saida$(t_linha_id "COM$n" "$(t_msg portas_usb_rotulo "$p" "$(t_msg portas_seu_aparelho)")")" ;;
             *)                         saida="$saida$(t_linha_id "COM$n" "$p")" ;;
         esac
         [ "$n" -gt 4 ] && case "$p" in /dev/ttyACM*|/dev/ttyUSB*) alto="COM$n|$p" ;; esac

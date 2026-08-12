@@ -2425,3 +2425,122 @@ Open the form
 
 @botao_nao_obrigado
 No, thank you
+
+@chave_ja_roda
+One thing in your favour: the {1} key service IS ALREADY running on this
+  machine. So that is not what is missing. What is left to check is whether the
+  key is plugged in, and whether the program is 64-bit — in that case there is a
+  known fault where it claims "debugger detected" with no debugger present, and
+  the company that made the program is who fixes it, not you and not Tandem.
+
+@chave_nao_sei
+I could not check whether the {1} key service is running here (this machine
+  has no "ss" tool). If the program complains about a licence, that service is
+  the first thing worth checking.
+
+@chave_nao_roda
+And I found the likely reason: the {1} key service is NOT running on this
+  machine. It is the one that talks to the USB key from the Linux side — without
+  it, the program looks for the licence and finds nothing, exactly as it would
+  with the key unplugged.
+
+  A technician installs it, once, and it is free: look for
+  "{2}" on the manufacturer's site.
+
+@portas_usb_rotulo
+{1}   (USB device)  {2}
+
+@vm_cabe_bios
+This computer has the feature, but it is SWITCHED OFF in the BIOS. Turning it
+  on means entering the BIOS as the machine starts and looking for
+  "virtualization", "VT-x" or "SVM". It installs nothing and erases nothing.
+
+@vm_cabe_apertado
+This computer can take it, but only just: it has {1} of memory and {2} free on
+  disk. The Windows inside wants about 4 GB of memory and 32 GB of disk for
+  itself.
+
+@vm_cabe_bem
+This computer can take it: it has {1} of memory and {2} free on disk.
+
+@vm_texto
+There is a heavier road, and for a case like this one it works:
+
+  run a REAL Windows inside Linux, and let only the program's window appear
+  here on your screen, as if it were a program from here. The two programs that
+  do this are WinBoat and WinApps, both free. Because it is a real Windows, a
+  system driver works, and the USB protection key can be handed over to it.
+
+  {1}
+
+  What it costs, and it is better to know beforehand: you need a Windows
+  licence, and it has to be the Pro edition — Home will not do, because it does
+  not let the window out. And the Windows inside takes up disk and memory the
+  whole time.
+
+  Tandem does not install this and will not: it is a different kind of program.
+  But it would have been dishonest to say "there is no way" without saying that
+  this way exists.
+
+@dados_vazio
+Your files inside Windows
+
+I have not found any file of yours yet - only the environment, which Tandem
+knows how to rebuild on its own in a few minutes.
+
+That is normal if you have not really used any program yet.
+
+@dados_lista
+Your files inside Windows
+
+These are the files YOU created. The rest - the pretend Windows, the
+components, the programs - Tandem rebuilds on its own; these it does not:
+
+{1}
+
+Total: {2} in {3} items.
+
+To keep a copy of just this:   tandem dados salvar
+
+@lista_resumo
+The community list
+
+{1} known programs.
+File: {2}
+
+{3}
+
+@contrib_texto
+Contributing to the community list
+
+This is the whole line that leaves here. There is nothing else:
+
+{1}
+
+What each piece means:
+  1. a fingerprint OF THE FILE (size + beginning + end). The same on any
+     machine in the world holding that same file. There is no way back from
+     it to the file, not even for you.
+  2. 32 or 64 bits, read from the program itself.
+  3. the Windows components that fixed it.
+  4. the ones that were installed and did not fix it.
+  5. whether you confirmed it worked, or only that it opened without error.
+  6. a machine count (always 1 here; adding up is the list's job).
+  7. year and month. No day, because a day identifies.
+
+What does NOT leave here: a file name, a folder, your user name, the computer's
+name, a network address, or a single line of log.
+
+Copy the line above and send it to:
+https://github.com/ChrnX0/Tandem/issues
+
+@lista_ainda_nao_baixada
+The community list
+
+You have not downloaded the list yet.
+
+It is a public text file with what has already worked on other people's
+machines: which Windows components each program needed. Downloading it sends
+nothing of yours anywhere.
+
+To download:   tandem lista atualizar

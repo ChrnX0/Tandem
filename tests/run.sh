@@ -1513,7 +1513,21 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # is not. Lower this line when you migrate something; the test fails if you
     # add prose to the code, and fails if you leave this number stale after
     # removing some.
-    TETO_LIT=15
+    # It reads 0 again, and the last time it read 0 the 0 WAS FALSE - that is
+    # blind spots nine through twelve, and the whole comment above. What is
+    # different this time is not the number, it is the instrument: this counter
+    # has since been shown to catch a bare zenity argument inside a command
+    # substitution inside a string, an "out+=" append into any variable name, a
+    # printf whose prose is in the argument rather than the format, and a
+    # heredoc - the four shapes that produced the previous false zeros - and
+    # there is a bait test for the worst of them.
+    #
+    # Read the migration as finished only as far as the instrument can see. The
+    # one method that has ever caught this measure lying is installing the
+    # package and reading the output, and that is what was done for every screen
+    # in this version: doctor, the panel, autoteste, the data screen and the two
+    # list screens, in seven languages.
+    TETO_LIT=0
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
         pass "the literals still in the code are the $TETO_LIT already known about"
@@ -2277,8 +2291,13 @@ NAO_SEI="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     t_servico_vivo() { return 1; }
     t_porta_escutando() { return 2; }
     t_texto_chave sentinel' 2>/dev/null)"
+# These expectations are ENGLISH now, and that is not a slip. The prose moved
+# from the code into po/, English is the default language, and the suite runs
+# without a forced locale - so what comes back is the English catalogue. The
+# thing being asserted is unchanged: that the sentence says "I could not check"
+# rather than condemning the machine.
 contem "not being able to check says so, instead of condemning" \
-       "Não consegui conferir" "$NAO_SEI"
+       "could not check" "$NAO_SEI"
 
 PARADO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     . "'"$ROOT"'/src/lib/common.sh"
@@ -2286,7 +2305,7 @@ PARADO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     t_porta_escutando() { return 1; }
     t_texto_chave sentinel' 2>/dev/null)"
 contem "a daemon that is really absent gets the probable cause" \
-       "NÃO está" "$PARADO"
+       "is NOT running" "$PARADO"
 contem "and the exact thing to look for" "Run-time Environment" "$PARADO"
 
 RODANDO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
@@ -2295,9 +2314,9 @@ RODANDO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     t_porta_escutando() { return 0; }
     t_texto_chave sentinel' 2>/dev/null)"
 contem "a daemon that IS running rules itself out instead of being repeated" \
-       "JÁ ESTÁ" "$RODANDO"
+       "IS ALREADY running" "$RODANDO"
 contem "and names the one thing the shop cannot fix itself" \
-       "empresa que fez o programa" "$RODANDO"
+       "company that made the program" "$RODANDO"
 
 # Two families, two runtimes. Pasting the Sentinel installer name into the
 # CodeMeter message would send somebody to the wrong vendor's site.
@@ -2340,7 +2359,7 @@ contem "a machine that can carry one is told the two programs by name" \
 contem "and the licence cost, which is the detail that decides it" \
        "Pro" "$COM_VM"
 contem "and that Tandem is not going to install it" \
-       "não instala isso" "$COM_VM"
+       "does not install this" "$COM_VM"
 
 BIOS_VM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     . "'"$ROOT"'/src/lib/common.sh"

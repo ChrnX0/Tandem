@@ -135,10 +135,28 @@ tandem (4.3) unstable; urgency=medium
     twelve times, and it is defensible only because t_diz cannot reach the user
     at all: it appends to a file. Two tests pin it, including one where a
     message shares a line with a log call.
-  * 15 sentences are still literals - eight long paragraphs, in the
-    hardware-key advice, the virtual-machine explanation and the three list
-    screens. Migrating them is the rest of this version's work. The suite holds
-    the number as a ratchet: it may fall, never rise.
+  * The migration is finished: the counter reads 0 and the last thirteen
+    sentences are gone. The hardware-key advice, the virtual-machine paragraph
+    which is the longest message in the program, the data screen, both list
+    screens and the contribute screen. 584 keys in each of seven catalogues.
+  * A key-name collision produced a WRONG MESSAGE, silently, and it is the one
+    thing in this version worth reading twice. lista_nao_baixou already existed
+    meaning "I could not download the list"; reusing that name for the "you
+    have not downloaded it yet" screen meant the new text was dropped as a
+    duplicate and the screen showed a download failure instead. Nothing
+    errored. Found by running the command in three languages and reading the
+    output, which is the only method that has ever caught this class of thing.
+  * The counter says 0 again, and the last time it said 0 the 0 was false. What
+    is different is not the number but the instrument: it now catches a bare
+    zenity argument inside a command substitution inside a string, an append
+    into any variable name, a printf whose prose is in the argument rather than
+    the format, and a heredoc - the four shapes behind the previous false
+    zeros. The comment above the ratchet says so, so nobody trusts the number
+    without reading why.
+  * The hardware-key tests now expect ENGLISH, and that is not a slip: the
+    prose moved into po/, English is the default, and the suite runs without a
+    forced locale. What they assert is unchanged - that the sentence says "I
+    could not check" rather than condemning the machine.
 
  -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 16:00:00 +0000
 

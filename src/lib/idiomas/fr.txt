@@ -2468,3 +2468,168 @@ Ouvrir le formulaire
 
 @botao_nao_obrigado
 Non merci
+
+@chave_ja_roda
+Un point en votre faveur : le service de la clé {1} TOURNE DÉJÀ sur cette
+  machine. Ce n'est donc pas lui qui manque. Reste à vérifier si la clé est
+  branchée, et si le programme est en 64 bits — dans ce cas il existe un défaut
+  connu où il annonce « débogueur détecté » sans qu'il y en ait, et c'est
+  l'entreprise qui a fait le programme qui corrige, pas vous ni Tandem.
+
+@chave_nao_sei
+Je n'ai pas pu vérifier si le service de la clé {1} tourne ici (l'outil
+  « ss » manque sur cette machine). Si le programme se plaint de la licence,
+  c'est ce service qu'il vaut la peine de vérifier d'abord.
+
+@chave_nao_roda
+Et j'ai trouvé la raison probable : le service de la clé {1} NE tourne PAS
+  sur cette machine. C'est lui qui parle à la clé USB du côté Linux — sans lui,
+  le programme cherche la licence et ne trouve rien, exactement comme si la clé
+  n'était pas branchée.
+
+  C'est un technicien qui l'installe, une seule fois, et c'est gratuit :
+  cherchez « {2} » sur le site du fabricant.
+
+@portas_usb_rotulo
+{1}   (appareil USB)  {2}
+
+@vm_cabe_bios
+Cet ordinateur a la fonction, mais elle est DÉSACTIVÉE dans le BIOS. Pour
+  l'activer, entrez dans le BIOS au démarrage et cherchez « virtualization »,
+  « VT-x » ou « SVM ». Cela n'installe rien et n'efface rien.
+
+@vm_cabe_apertado
+Cet ordinateur peut le supporter, mais tout juste : il a {1} de mémoire et
+  {2} libres sur le disque. Le Windows à l'intérieur veut environ 4 Go de
+  mémoire et 32 Go de disque pour lui seul.
+
+@vm_cabe_bem
+Cet ordinateur peut le supporter : il a {1} de mémoire et {2} libres sur le
+  disque.
+
+@vm_texto
+Il existe un chemin plus lourd, et pour un cas comme celui-ci il fonctionne :
+
+  faire tourner un VRAI Windows dans Linux, et ne laisser apparaître ici que la
+  fenêtre du programme, comme s'il venait d'ici. Les deux programmes qui font
+  cela sont WinBoat et WinApps, tous deux gratuits. Comme c'est un vrai Windows,
+  un pilote système fonctionne, et la clé USB de protection peut lui être
+  confiée.
+
+  {1}
+
+  Ce que cela coûte, et il vaut mieux le savoir avant : il faut une licence
+  Windows, et ce doit être l'édition Pro — la Home ne convient pas, car elle ne
+  laisse pas sortir la fenêtre. Et le Windows à l'intérieur occupe du disque et
+  de la mémoire en permanence.
+
+  Tandem n'installe pas cela et ne le fera pas : c'est un autre type de
+  programme. Mais il aurait été malhonnête de dire « il n'y a pas moyen » sans
+  dire que ce moyen existe.
+
+@dados_vazio
+Vos fichiers dans Windows
+
+Je n'ai encore trouvé aucun de vos fichiers - seulement l'environnement, que
+Tandem sait refaire tout seul en quelques minutes.
+
+C'est normal si vous n'avez pas encore vraiment utilisé de programme.Vos fichiers dans Windows
+
+Je n'ai encore trouvé aucun de vos fichiers - seulement l'environnement, que
+Tandem sait refaire tout seul en quelques minutes.
+
+C'est normal si vous n'avez pas encore vraiment utilisé de programme.
+
+@dados_lista
+Vos fichiers dans Windows
+
+Voici les fichiers que VOUS avez créés. Le reste (le faux Windows, les
+composants, les programmes), Tandem le refait tout seul ; ceci, non :
+
+{1}
+
+Total : {2} dans {3} éléments.
+
+Pour garder une copie de ceci seulement :   tandem dados salvarVos fichiers dans Windows
+
+Voici les fichiers que VOUS avez créés. Le reste (le faux Windows, les
+composants, les programmes), Tandem le refait tout seul ; ceci, non :
+
+{1}
+
+Total : {2} dans {3} éléments.
+
+Pour garder une copie de ceci seulement :   tandem dados salvar
+
+@lista_resumo
+La liste de la communauté
+
+{1} programmes connus.
+Fichier : {2}
+
+{3}La liste de la communauté
+
+{1} programmes connus.
+Fichier : {2}
+
+{3}
+
+@contrib_texto
+Contribuer à la liste de la communauté
+
+Voici la ligne entière qui part d'ici. Il n'y a rien d'autre :
+
+{1}
+
+Ce que chaque morceau veut dire :
+  1. une empreinte DU FICHIER (taille + début + fin). La même sur
+     n'importe quelle machine au monde ayant ce même fichier. Impossible
+     de revenir d'elle au fichier, pas même pour vous.
+  2. 32 ou 64 bits, lu dans le programme lui-même.
+  3. les composants Windows qui ont réglé le problème.
+  4. ceux qui ont été installés et n'ont rien réglé.
+  5. si vous avez confirmé que ça marchait, ou seulement que ça a ouvert.
+  6. un compte de machines (toujours 1 ici ; additionner est le travail
+     de la liste).
+  7. année et mois. Pas le jour, parce qu'un jour identifie.
+
+Ce qui NE part PAS d'ici : un nom de fichier, un dossier, votre nom
+d'utilisateur, le nom de l'ordinateur, une adresse réseau, ni une ligne de
+journal.
+
+Copiez la ligne ci-dessus et envoyez-la à :
+https://github.com/ChrnX0/Tandem/issuesContribuer à la liste de la communauté
+
+Voici la ligne entière qui part d'ici. Il n'y a rien d'autre :
+
+{1}
+
+Ce que chaque morceau veut dire :
+  1. une empreinte DU FICHIER (taille + début + fin). La même sur
+     n'importe quelle machine au monde ayant ce même fichier. Impossible
+     de revenir d'elle au fichier, pas même pour vous.
+  2. 32 ou 64 bits, lu dans le programme lui-même.
+  3. les composants Windows qui ont réglé le problème.
+  4. ceux qui ont été installés et n'ont rien réglé.
+  5. si vous avez confirmé que ça marchait, ou seulement que ça a ouvert.
+  6. un compte de machines (toujours 1 ici ; additionner est le travail
+     de la liste).
+  7. année et mois. Pas le jour, parce qu'un jour identifie.
+
+Ce qui NE part PAS d'ici : un nom de fichier, un dossier, votre nom
+d'utilisateur, le nom de l'ordinateur, une adresse réseau, ni une ligne de
+journal.
+
+Copiez la ligne ci-dessus et envoyez-la à :
+https://github.com/ChrnX0/Tandem/issues
+
+@lista_ainda_nao_baixada
+La liste de la communauté
+
+Vous n'avez pas encore téléchargé la liste.
+
+C'est un fichier texte public avec ce qui a déjà marché sur les machines
+d'autres personnes : quels composants Windows chaque programme a demandés. La
+télécharger n'envoie rien de chez vous où que ce soit.
+
+Pour télécharger :   tandem lista atualizar

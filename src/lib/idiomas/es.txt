@@ -2424,3 +2424,161 @@ Abrir el formulario
 
 @botao_nao_obrigado
 No, gracias
+
+@chave_ja_roda
+Algo a su favor: el servicio de la llave {1} YA ESTÁ corriendo en esta
+  máquina. Así que no es eso lo que falta. Queda por comprobar si la llave está
+  enchufada, y si el programa es de 64 bits — en ese caso hay un fallo conocido
+  en el que acusa "depurador detectado" sin haber ninguno, y quien lo arregla es
+  la empresa que hizo el programa, no usted y no Tandem.
+
+@chave_nao_sei
+No pude comprobar si el servicio de la llave {1} está corriendo aquí (falta
+  la herramienta "ss" en esta máquina). Si el programa se queja de la licencia,
+  ese servicio es lo primero que vale comprobar.
+
+@chave_nao_roda
+Y encontré el motivo probable: el servicio de la llave {1} NO está corriendo
+  en esta máquina. Es el que habla con la llave USB por el lado de Linux — sin
+  él, el programa busca la licencia y no encuentra nada, igual que si la llave
+  no estuviera enchufada.
+
+  Lo instala un técnico, una sola vez, y es gratis: busque
+  "{2}" en el sitio del fabricante.
+
+@portas_usb_rotulo
+{1}   (aparato USB)  {2}
+
+@vm_cabe_bios
+Esta computadora tiene la función, pero está DESACTIVADA en la BIOS.
+  Activarla es entrar en la BIOS al encender la máquina y buscar
+  "virtualization", "VT-x" o "SVM". No instala nada y no borra nada.
+
+@vm_cabe_apertado
+Esta computadora aguanta, pero justo: tiene {1} de memoria y {2} libres en
+  disco. El Windows de dentro quiere unos 4 GB de memoria y 32 GB de disco solo
+  para él.
+
+@vm_cabe_bem
+Esta computadora aguanta: tiene {1} de memoria y {2} libres en disco.
+
+@vm_texto
+Existe un camino más pesado, y para un caso como este funciona:
+
+  ejecutar un Windows DE VERDAD dentro de Linux, y dejar que solo la ventana
+  del programa aparezca aquí en la pantalla, como si fuera un programa de aquí.
+  Los dos programas que hacen esto son WinBoat y WinApps, ambos gratis. Como es
+  un Windows de verdad, un driver de sistema funciona, y la llave USB de
+  protección se le puede entregar.
+
+  {1}
+
+  Lo que cuesta, y conviene saberlo antes: hace falta una licencia de Windows,
+  y tiene que ser la edición Pro — la Home no sirve, porque no deja salir la
+  ventana. Y el Windows de dentro ocupa disco y memoria todo el tiempo.
+
+  Tandem no instala esto y no lo va a instalar: es otro tipo de programa. Pero
+  era deshonesto decir "no hay manera" sin decir que esta manera existe.
+
+@dados_vazio
+Sus archivos dentro de Windows
+
+Todavía no encontré ningún archivo suyo - solo el entorno, que Tandem sabe
+rehacer por su cuenta en unos minutos.
+
+Eso es normal si aún no usó ningún programa en serio.Sus archivos dentro de Windows
+
+Todavía no encontré ningún archivo suyo - solo el entorno, que Tandem sabe
+rehacer por su cuenta en unos minutos.
+
+Eso es normal si aún no usó ningún programa en serio.
+
+@dados_lista
+Sus archivos dentro de Windows
+
+Estos son los archivos que USTED creó. El resto (el Windows de mentira, los
+componentes, los programas) Tandem lo rehace solo; esto no:
+
+{1}
+
+Total: {2} en {3} elementos.
+
+Para guardar una copia solo de esto:   tandem dados salvarSus archivos dentro de Windows
+
+Estos son los archivos que USTED creó. El resto (el Windows de mentira, los
+componentes, los programas) Tandem lo rehace solo; esto no:
+
+{1}
+
+Total: {2} en {3} elementos.
+
+Para guardar una copia solo de esto:   tandem dados salvar
+
+@lista_resumo
+La lista de la comunidad
+
+{1} programas conocidos.
+Archivo: {2}
+
+{3}La lista de la comunidad
+
+{1} programas conocidos.
+Archivo: {2}
+
+{3}
+
+@contrib_texto
+Contribuir con la lista de la comunidad
+
+Esta es la línea entera que sale de aquí. No hay nada más:
+
+{1}
+
+Qué significa cada parte:
+  1. una huella DEL ARCHIVO (tamaño + comienzo + final). La misma en
+     cualquier máquina del mundo que tenga ese mismo archivo. No se puede
+     volver de ella al archivo, ni usted puede.
+  2. 32 o 64 bits, leído del propio programa.
+  3. los componentes de Windows que lo resolvieron.
+  4. los que se instalaron y no lo resolvieron.
+  5. si confirmó que funcionó, o solo que abrió sin error.
+  6. cuenta de máquinas (aquí siempre 1; sumar es tarea de la lista).
+  7. año y mes. Sin el día, porque el día identifica.
+
+Lo que NO sale de aquí: nombre de archivo, carpeta, su nombre de usuario, el
+nombre de la computadora, dirección de red, ni una línea de registro.
+
+Copie la línea de arriba y mándela a:
+https://github.com/ChrnX0/Tandem/issuesContribuir con la lista de la comunidad
+
+Esta es la línea entera que sale de aquí. No hay nada más:
+
+{1}
+
+Qué significa cada parte:
+  1. una huella DEL ARCHIVO (tamaño + comienzo + final). La misma en
+     cualquier máquina del mundo que tenga ese mismo archivo. No se puede
+     volver de ella al archivo, ni usted puede.
+  2. 32 o 64 bits, leído del propio programa.
+  3. los componentes de Windows que lo resolvieron.
+  4. los que se instalaron y no lo resolvieron.
+  5. si confirmó que funcionó, o solo que abrió sin error.
+  6. cuenta de máquinas (aquí siempre 1; sumar es tarea de la lista).
+  7. año y mes. Sin el día, porque el día identifica.
+
+Lo que NO sale de aquí: nombre de archivo, carpeta, su nombre de usuario, el
+nombre de la computadora, dirección de red, ni una línea de registro.
+
+Copie la línea de arriba y mándela a:
+https://github.com/ChrnX0/Tandem/issues
+
+@lista_ainda_nao_baixada
+La lista de la comunidad
+
+Todavía no descargó la lista.
+
+Es un archivo de texto público con lo que ya funcionó en las máquinas de otras
+personas: qué componentes de Windows necesitó cada programa. Descargarla no
+manda nada suyo a ninguna parte.
+
+Para descargar:   tandem lista atualizar
