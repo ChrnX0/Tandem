@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "975496449 799" "$soma_esperados"
+      "2838595226 803" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "3113881825 1444" "$soma_padroes"
 
@@ -1481,13 +1481,33 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # that zero. It was found by installing the built .deb and READING THE
     # OUTPUT, which is the only method that has ever caught this measure lying.
     #
-    # So the number is now the measured truth and it is a RATCHET: it may fall,
-    # never rise. A hard 0 that is wrong is worse than a true 74 that can only
-    # shrink, because the 0 says the work is finished and the 74 says where it
+    # Then it happened twice MORE, and the second of those hid the primary
+    # interface. The number went 75 -> 107 -> 167 -> 145, and only the last step
+    # is a reduction rather than a discovery: it is 22 named exceptions, the
+    # command names the panel matches on and the hardware labels that must not
+    # move with the language.
+    #
+    # ELEVENTH: acao_painel builds its whole menu out of BARE ARGUMENTS to
+    # zenity - eighteen rows of Portuguese plus the window's own question and the
+    # file chooser's filter - and those are neither an assignment nor a printf
+    # nor a call to t_erro.
+    # TWELFTH: the menu lives inside a command substitution which is itself the
+    # entire value of a string, esc="$(zenity --list ... "instalar" "Instalar ou
+    # abrir um arquivo")". A walker that skips substitutions cannot see it; a
+    # regex over shell chops it into debris like " | cut -d'|' -f2)". The rule
+    # that finally works is a walk that descends INTO a substitution while
+    # refusing to glue its text into the sentence around it.
+    #
+    # (see the changelog line-length guard further down, added for the same
+    # reason: the release found it, so the suite owns it now)
+    #
+    # So the number is the measured truth and it is a RATCHET: it may fall,
+    # never rise. A hard 0 that is wrong is worse than a true 145 that can only
+    # shrink, because the 0 says the work is finished and the 145 says where it
     # is not. Lower this line when you migrate something; the test fails if you
     # add prose to the code, and fails if you leave this number stale after
     # removing some.
-    TETO_LIT=75
+    TETO_LIT=145
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
         pass "the literals still in the code are the $TETO_LIT already known about"
@@ -1522,6 +1542,35 @@ FIM
 )"
     equal "the counter catches accent-free Portuguese, which fooled the old check" \
           "1" "$achou"
+
+    # The shape that hid the primary interface for twelve rounds, reduced to its
+    # essentials: prose as a BARE ARGUMENT to zenity, inside a command
+    # substitution, inside a string. Nothing about it is an assignment, a printf
+    # or a call to t_erro, and every earlier version of this counter scored the
+    # whole panel as zero. This is the test that makes the ratchet mean
+    # something - without it, a green suite only says the counter agrees with
+    # itself.
+    #
+    # It also pins the two halves apart: the row's command name is excepted on
+    # purpose (a command copied off a forum has to work on any machine) and the
+    # human-readable half beside it is not.
+    cat > "$ISCA" <<'FIMP'
+acao_painel() {
+    esc="$(zenity --list --text="O que você quer fazer?" \
+        "instalar"  "Instalar ou abrir um arquivo" \
+        2>/dev/null)" || return 0
+}
+FIMP
+    painel="$(cd "$ROOT" && python3 - "$ISCA" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+achados = m.literais(pathlib.Path(sys.argv[1]))
+print("%d %s" % (len(achados), "|".join(sorted(achados))))
+FIM
+)"
+    equal "the counter sees prose in a zenity argument inside a substitution" \
+          "2 Instalar ou abrir um arquivo|O que você quer fazer?" "$painel"
     # A composed message - several t_msg lookups plus data - must NOT be
     # reported. That is what a finished call site looks like.
     printf 't_erro "$(t_msg um)\n\n$(basename -- "$f")\n\n$(t_msg dois)"\n' > "$ISCA"
@@ -1719,7 +1768,15 @@ vaza_ou_nao() {
         . "'"$ROOT"'/src/lib/common.sh"
         t_lista_vaza "$1"; echo $?' _ "$1" 2>/dev/null
 }
-LIMPO="abc123	64	vcrun2022	-	confirmado	1	2026-08	-"
+# The identity here is a REAL 32-character hex fingerprint, and that detail is
+# the whole point. The fixture used to be "abc123", and a six-character stand-in
+# is what hid the defect for two versions: the sieve matched the user name as a
+# substring of the WHOLE record, so a name that happens to be hex matched the
+# fingerprint. Measured on this machine before the fix: an owner called "a", "e"
+# or "f" had 5 of 5 clean records refused, and "ed" 3 of 5. Those are ordinary
+# Unix names, and a refused line was DELETED rather than parked.
+IDENT="9f2a1b3c4d5e6f70819a2b3c4d5e6f70"
+LIMPO="$IDENT	64	vcrun2022	-	confirmado	1	2026-08	-"
 equal "a clean record passes the sieve" "1" "$(vaza_ou_nao "$LIMPO")"
 
 for vaza in "/home/zero/programa.exe" "$(id -un)" \
@@ -1727,8 +1784,42 @@ for vaza in "/home/zero/programa.exe" "$(id -un)" \
             "192.168.0.10" "/media/pendrive/x" "$HOME"; do
     [ -n "$vaza" ] || continue
     equal "a record carrying '$vaza' is refused" "0" \
-          "$(vaza_ou_nao "abc123	64	vcrun2022	$vaza	sim	1	2026-08	-")"
+          "$(vaza_ou_nao "$IDENT	64	vcrun2022	$vaza	sim	1	2026-08	-")"
 done
+
+# One case per bullet of docs/LIST-FORMAT.md, because the promise is made there
+# and three of these were let straight through: a bare file name, a Windows path,
+# an e-mail address and a MAC.
+for vaza in "PDVSuperMax-4.2-setup.exe" "setup.EXE aqui" \
+            'C:\Users\Joao\pdv.exe' "rockx0@gmail.com" \
+            "a4:83:e7:11:22:33" "https://loja.example.com"; do
+    equal "a note carrying '$vaza' is refused" "0" \
+          "$(vaza_ou_nao "$IDENT	64	vcrun2022	-	confirmado	1	2026-08	$vaza")"
+done
+
+# A short user name must not disqualify the machine. The fingerprint is 32 hex
+# characters, so any one- or two-letter hex name is a substring of almost every
+# record ever built here.
+FZ_ID="$TMPROOT/finge-id"; mkdir -p "$FZ_ID"
+for nome in a e f ed; do
+    printf '#!/bin/sh\necho %s\n' "$nome" > "$FZ_ID/id"
+    chmod +x "$FZ_ID/id"
+    equal "an owner called '$nome' can still send a clean record" "1" \
+          "$(PATH="$FZ_ID:$PATH" vaza_ou_nao "$LIMPO")"
+done
+rm -f "$FZ_ID/id"
+
+# And the half that made the bug destructive rather than annoying: a refused
+# line has to be HELD, not deleted. t_envio_envia writes the lines it keeps to a
+# file that then REPLACES the queue, so "continue" without writing was an erase.
+# The closing "fi" is anchored, and it has to be: written as /fi/ the range
+# ended on the first line containing those two letters anywhere, and the word
+# "file" in the comment just below closed it three lines early. Substring where
+# a token was meant - the same mistake the sieve itself was making.
+BLOCO_PENEIRA="$(sed -n '/^t_envio_envia()/,/^}/p' "$ROOT/src/lib/common.sh" |
+                 sed -n '/if t_lista_vaza/,/^ *fi$/p')"
+contem "a line the sieve refuses is written back to the queue, not dropped" \
+       '$resto' "$BLOCO_PENEIRA"
 
 # The whole record builder has to refuse too, not just the predicate - a sieve
 # nobody calls is decoration.
@@ -3927,6 +4018,26 @@ elif [ "$(date -d "$DATA_1" +%s 2>/dev/null || echo 0)" \
 else
     fail "the newest changelog entry is dated after the one before it" \
          "newer than $DATA_2" "$DATA_1"
+fi
+
+# lintian refuses a changelog line over 80 columns, and the release step runs it
+# with --fail-on warning while demanding ZERO output - so eight lines at 81 and
+# 82 columns turned a green suite into a red release. Found by CI rather than
+# here, which is the wrong order, so the suite owns it now.
+#
+# Only the newest entry is checked, and that is a decision rather than laziness:
+# older entries carry " -- Name <address>  date" trailers at 85 columns that
+# lintian does not complain about, and rewrapping history to satisfy a guard
+# would mean editing what was already published.
+NOME_COL="the newest changelog entry stays inside 80 columns"
+FIM_ENTRADA="$(awk '/^ -- /{ print NR; exit }' "$ROOT/debian/changelog")"
+LONGAS="$(awk -v fim="${FIM_ENTRADA:-0}" \
+              'NR < fim && length > 80 { printf "line %d is %d columns\n", NR, length }' \
+              "$ROOT/debian/changelog")"
+if [ -z "$LONGAS" ]; then
+    pass "$NOME_COL"
+else
+    fail "$NOME_COL" "every line at 80 columns or fewer" "$LONGAS"
 fi
 
 # The top changelog entry must not describe a package that is already out. It

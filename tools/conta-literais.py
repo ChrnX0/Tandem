@@ -43,6 +43,45 @@ MIGRADOS = {
     "tandem-jar", "tandem-appimage", "winedeps.sh",
 }
 
+# Exact strings this counter is told to ignore, each with the reason. A LIST OF
+# DECISIONS, not a rule about shapes - a rule is what failed eleven times,
+# whereas an exact string somebody had to add on purpose cannot quietly grow to
+# cover new prose. Anything added here should be a name the owner has to see
+# verbatim, or a value that lives on disk.
+EXCECOES = {
+    # Vendor product names. The owner searches for these on a manufacturer's
+    # site, so a translated one is a dead end rather than a kindness.
+    "Sentinel LDK Run-time Environment for Linux",
+    "CodeMeter Runtime for Linux",
+    "CodeMeter",
+    # systemd unit and service names, matched against the running system.
+    "waydroid-container",
+    # An on-disk value, not prose. Rule: translating one of these breaks
+    # compatibility with memory files already written on somebody's machine.
+    "sim",
+    # The product's own name.
+    "Tandem",
+    # THE COMMAND NAMES, which stay Portuguese forever - that is a standing
+    # decision, not an oversight: a command copied off a forum has to work on
+    # any machine, so these cannot move with the language. In the zenity panel
+    # they are the machine-readable first column that `case "$esc" in` matches;
+    # the human-readable second column beside each one IS counted, because that
+    # is the part somebody reads.
+    "instalar", "preparar", "programas", "remover", "android", "doctor",
+    "autoteste", "dados", "portas", "identidade", "backup", "restore",
+    "repair", "memoria", "lista", "enviar", "socorro", "logs",
+    # Hardware and port labels. Windows calls them this, Wine counts them this
+    # way, and a translated COM2 sends somebody looking for a port that does not
+    # exist. COM$n is already handled by the same reasoning.
+    "BIOS", "LPT$n", "COM$n",
+    # A charmap name, compared against `locale charmap` output.
+    "UTF-8",
+    # A systemd unit pair, queried with systemctl.
+    "CodeMeter CodeMeterLin",
+    # The port label with its device path, one field of a report line.
+    "COM$n|$p",
+}
+
 CHAMADA = re.compile(
     r"t_(?:erro|aviso|ok|pergunta|texto|progresso_abre|progresso_texto)"
     r'\s+"((?:[^"\\]|\\.)*)"',
@@ -240,56 +279,167 @@ def printfs_com_prosa(texto):
 # keeps this usable is the body, not the name: t_texto_*, t_causa_*, acao_* and
 # uso() are where sentences are assembled, and a string assignment in one of
 # them is a message until proven otherwise.
-ATRIBUICAO_QUALQUER = re.compile(
-    r'\b[A-Za-z_][A-Za-z0-9_]*\+?=\s*"((?:[^"\\]|\\.)*)"')
+# ELEVENTH, and it hid the primary interface. acao_painel builds the whole
+# zenity menu out of BARE ARGUMENTS:
+#
+#     "instalar"  "Instalar ou abrir um arquivo (.exe .apk .AppImage .jar .deb)"
+#
+# Eighteen rows of Portuguese, plus the window's own question and the file
+# chooser's filter label - the first and only screen a shop owner who never
+# opens a terminal ever sees - and they are neither an assignment nor a printf
+# nor a heredoc nor a call to t_erro, so every previous version of this counter
+# scored them as zero.
+#
+# The lesson has now cost eleven rounds, so the rule stops chasing shapes: in a
+# body that exists to produce prose, EVERY double-quoted string is examined, no
+# matter what syntax surrounds it. Assignment, append, printf argument, zenity
+# argument, function argument - all the same. What keeps this usable is the
+# EXCECOES list below, which is a set of exact strings somebody had to add on
+# purpose, and a rule about non-prose shapes: a path, a flag, a MIME type.
+#
+# A rule about syntax is what failed eleven times. A rule about content, with
+# named exceptions, cannot quietly grow to cover new prose.
+# Finding those strings needs a walk, not a regex. A regex over shell matches
+# the wrong quotes: it cuts a string in half at a quote that lives INSIDE a
+# $(...) - "$(basename -- "$f") is here" has three of them - and reports the
+# fragment as prose. The first version of this rule scored 271 that way, most of
+# it shell pipeline debris like " | cut -d'|' -f2)", and a count that is mostly
+# noise gets ignored, which is how a real one goes unread.
+def citadas_do_topo(corpo):
+    """Every double-quoted string a person could read, from a shell body.
+
+    Two rules, and the difference between them is the whole function:
+
+      - OUTSIDE a string, a $( ) is a command whose arguments may themselves be
+        messages, so walk INTO it. The zenity panel is built entirely inside one
+        - esc="$(zenity --list ... "instalar" "Instalar ou abrir um arquivo")" -
+        so a walker that skipped command substitutions could not see the primary
+        interface of this program. That was miss number eleven.
+      - INSIDE a string, a $( ) does not contribute to THAT sentence - its own
+        quotes must not end the string early, and its output is data, not prose:
+        "$(basename -- "$f") is here" holds three quotes and one message. But it
+        is still walked into, because the panel's whole menu lives inside a
+        substitution that is itself the entire value of a string:
+        esc="$(zenity --list ... "instalar" "Instalar ou abrir um arquivo")".
+        Skipping it outright hid eighteen rows of Portuguese; treating its text
+        as part of the outer sentence would invent a sentence nobody wrote.
+
+    A regex cannot make that distinction, which is why this is a walk.
+    """
+    saida = []
+    i = 0
+    n = len(corpo)
+    while i < n:
+        c = corpo[i]
+        if c == "\\":
+            i += 2
+            continue
+        if c == "#" and (i == 0 or corpo[i - 1] in " \t\n"):
+            j = corpo.find("\n", i)          # a comment, to end of line
+            i = n if j < 0 else j + 1
+            continue
+        if c == "'":                          # no expansion inside single quotes
+            j = corpo.find("'", i + 1)
+            i = n if j < 0 else j + 1
+            continue
+        if corpo.startswith("${", i):         # a parameter expansion is data
+            i = _fim_da_expansao(corpo, i)
+            continue
+        if corpo.startswith("$(", i):         # a command: its arguments count
+            fim = _fim_da_expansao(corpo, i)
+            saida.extend(citadas_do_topo(corpo[i + 2:max(i + 2, fim - 1)]))
+            i = fim
+            continue
+        if c == '"':
+            texto, i, aninhadas = _le_string(corpo, i)
+            saida.append(texto)
+            saida.extend(aninhadas)
+            continue
+        i += 1
+    return saida
 
 
-def atribuicoes_com_prosa(texto):
+def _fim_da_expansao(corpo, i):
+    """Index just past the $( ) or ${ } starting at i."""
+    abre, fecha = corpo[i + 1], ")" if corpo[i + 1] == "(" else "}"
+    profundidade = 1
+    j = i + 2
+    while j < len(corpo) and profundidade:
+        if corpo[j] == "\\":
+            j += 2
+            continue
+        if corpo[j] == abre:
+            profundidade += 1
+        elif corpo[j] == fecha:
+            profundidade -= 1
+        j += 1
+    return j
+
+
+def _le_string(corpo, i):
+    """The double-quoted string at i: its own prose, where it ends, and any
+    messages found inside the commands it interpolates.
+
+    The two are kept apart on purpose. A $( ) inside a string does not belong to
+    that string's sentence - gluing its text in would invent a sentence nobody
+    wrote - but the command inside it may carry messages of its own, and one of
+    them is the whole zenity panel.
+    """
+    pedacos = []
+    aninhadas = []
+    j = i + 1
+    n = len(corpo)
+    while j < n:
+        if corpo[j] == "\\":
+            pedacos.append(corpo[j:j + 2])
+            j += 2
+            continue
+        if corpo[j] == '"':
+            break
+        if corpo.startswith("${", j):        # a parameter expansion is only data
+            j = _fim_da_expansao(corpo, j)
+            continue
+        if corpo.startswith("$(", j):
+            fim = _fim_da_expansao(corpo, j)
+            aninhadas.extend(citadas_do_topo(corpo[j + 2:max(j + 2, fim - 1)]))
+            j = fim
+            continue
+        pedacos.append(corpo[j])
+        j += 1
+    return "".join(pedacos), j + 1, aninhadas
+
+
+def _e_prosa(bruto):
+    """True when this quoted string is something a person reads."""
+    if BINARIO.search(bruto):
+        return False
+    resto = FORMATO.sub("", bruto)
+    resto = sem_expansoes(resto).strip()
+    if not re.search(r"[^\W\d_]{3,}", resto, re.UNICODE):
+        return False
+    # No whitespace and a slash or a dot: a path, a filename, a MIME type, a
+    # version, a glob. Without this every file the commands open is reported as
+    # a message, and a report that is mostly noise is a report nobody reads.
+    if " " not in resto and re.search(r"[/.]", resto):
+        return False
+    if resto.startswith("-"):
+        return False
+    # A zenity/getopt option written as one word with an equals sign, e.g.
+    # --file-filter=..., survives the dash test once the value is data.
+    if "=" in resto and " " not in resto.split("=")[0]:
+        return False
+    return True
+
+
+def citadas_com_prosa(texto):
     achados = []
     for _nome, corpo in corpos_de_mensagem(texto):
-        for m in ATRIBUICAO_QUALQUER.finditer(corpo):
-            bruto = m.group(1)
-            if BINARIO.search(bruto):
+        for bruto in citadas_do_topo(corpo):
+            if bruto in EXCECOES:
                 continue
-            resto = FORMATO.sub("", bruto)
-            resto = sem_expansoes(resto).strip()
-            if not re.search(r"[^\W\d_]{3,}", resto, re.UNICODE):
-                continue
-            # A value with no whitespace that carries a slash or a dot is a
-            # path, a filename, a MIME type or a version - not a sentence.
-            # Without this the file paths every acao_* opens are all reported
-            # as messages, and a report that is mostly noise gets ignored,
-            # which is how a real one goes unread.
-            if " " not in resto and re.search(r"[/.]", resto):
-                continue
-            if resto.startswith("-") and " " not in resto:
-                continue
-            achados.append(bruto)
+            if _e_prosa(bruto):
+                achados.append(bruto)
     return achados
-
-
-# Strings that are NOT prose and must never be translated, listed one by one
-# with the reason. This is a list of decisions, not a rule about shapes: a rule
-# is what let nine versions of this counter pass falsely, whereas an exact string
-# that somebody had to add on purpose cannot quietly grow to cover new prose. If
-# you find yourself adding a sentence here, you are doing it wrong.
-EXCECOES = {
-    # Vendor product names. The owner is told to fetch these FROM THE
-    # MANUFACTURER, by the name the manufacturer uses; a translated product
-    # name is a name that finds nothing.
-    "Sentinel LDK Run-time Environment for Linux",
-    "CodeMeter Runtime for Linux",
-    "CodeMeter",
-    # systemd unit names, queried with systemctl.
-    "CodeMeter CodeMeterLin",
-    # Windows serial-port labels. Wine counts the phantom ports too, so these
-    # numbers have to match what Wine shows - and COM is not a word.
-    "COM$n",
-    "COM$n|$p",
-    # An on-disk value, not prose. Rule: translating one breaks memory files
-    # and recipes already written on somebody's machine.
-    "sim",
-}
 
 
 def literais(caminho):
@@ -297,9 +447,20 @@ def literais(caminho):
     achados = [m.group(1) for m in CHAMADA.finditer(texto)]
     achados += [m.group(1) for m in ATRIBUICAO.finditer(texto)]
     achados = [a for a in achados if e_literal(a)]
+    # citadas_com_prosa subsumes the double-quoted half of printfs_com_prosa,
+    # but not the single-quoted one - which is exactly how the t_texto_*
+    # builders write their formats - so both still run. The dedup keeps a
+    # string found by two routes from being counted twice.
     todos = (achados + printfs_com_prosa(texto) + heredocs_com_prosa(texto)
-             + atribuicoes_com_prosa(texto))
-    return [a for a in todos if a.strip() not in EXCECOES]
+             + citadas_com_prosa(texto))
+    vistos = set()
+    unicos = []
+    for a in todos:
+        if a.strip() in EXCECOES or a in vistos:
+            continue
+        vistos.add(a)
+        unicos.append(a)
+    return unicos
 
 
 def main():
