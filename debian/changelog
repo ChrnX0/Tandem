@@ -22,6 +22,36 @@ tandem (4.3) unstable; urgency=medium
     may be messages, so descend into it; inside a string it is data being
     interpolated, so its text is not part of that sentence even though the
     command inside it may carry messages of its own.
+  * The privacy sieve was refusing whole machines and DELETING what it refused.
+    t_lista_vaza matched the owner's user name as a substring of the entire
+    record, and the record's first field is a 32-character hex fingerprint - so a
+    name that happens to be hex matched it. Measured: an owner called "a", "e" or
+    "f" had 5 of 5 clean records refused, "ed" 3 of 5. Those are ordinary Unix
+    names.
+  * Worse than refusing: a refused line was destroyed. t_envio_envia skipped it
+    without writing it to the file that then REPLACES the queue, so the sieve was
+    quietly erasing the lessons it exists to protect. A refusal now HOLDS the
+    line. Stopping a record from leaving the machine is a different power from
+    being allowed to delete it.
+  * It also let through three of the things docs/LIST-FORMAT.md promises a record
+    cannot carry: a bare file name ("PDVSuperMax-4.2-setup.exe" names a shop's
+    software in the clear), a Windows path, an e-mail address and a MAC. Fields
+    are compared one at a time now, with one rule per documented bullet.
+  * A short name is matched as a whole word rather than anywhere in a field,
+    because one or two hex characters occur in almost every fingerprint - and the
+    machine this was measured on is called "vm". Dropping short names would have
+    been simpler and would have quietly abandoned the promise.
+  * Now that a refusal only holds a line back, erring toward refusal is cheap and
+    erring toward sending is not: "works on 1.2.3.4" is refused even though it is
+    plainly a version number, because telling that from an address in free text
+    is not reliably possible and the two mistakes do not cost the same.
+  * None of this was reachable in a shipped version, because TANDEM_LISTA_ENVIO
+    is empty and t_envio_envia returns before the sieve runs. It would all have
+    fired on the day an address was filled in.
+  * The test fixture is what hid it: the identity in the sieve's tests was
+    "abc123", and a six-character stand-in cannot collide with a user name the way
+    a real 32-hex fingerprint does.
+
   * 145 sentences are still literals - the whole of tandem doctor, the whole
     panel, the autoteste report and the hardware-key advice. Migrating them is
     the rest of this version's work. The suite holds the number as a ratchet: it

@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "975496449 799" "$soma_esperados"
+      "2838595226 803" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "3113881825 1444" "$soma_padroes"
 
@@ -1765,7 +1765,15 @@ vaza_ou_nao() {
         . "'"$ROOT"'/src/lib/common.sh"
         t_lista_vaza "$1"; echo $?' _ "$1" 2>/dev/null
 }
-LIMPO="abc123	64	vcrun2022	-	confirmado	1	2026-08	-"
+# The identity here is a REAL 32-character hex fingerprint, and that detail is
+# the whole point. The fixture used to be "abc123", and a six-character stand-in
+# is what hid the defect for two versions: the sieve matched the user name as a
+# substring of the WHOLE record, so a name that happens to be hex matched the
+# fingerprint. Measured on this machine before the fix: an owner called "a", "e"
+# or "f" had 5 of 5 clean records refused, and "ed" 3 of 5. Those are ordinary
+# Unix names, and a refused line was DELETED rather than parked.
+IDENT="9f2a1b3c4d5e6f70819a2b3c4d5e6f70"
+LIMPO="$IDENT	64	vcrun2022	-	confirmado	1	2026-08	-"
 equal "a clean record passes the sieve" "1" "$(vaza_ou_nao "$LIMPO")"
 
 for vaza in "/home/zero/programa.exe" "$(id -un)" \
@@ -1773,8 +1781,42 @@ for vaza in "/home/zero/programa.exe" "$(id -un)" \
             "192.168.0.10" "/media/pendrive/x" "$HOME"; do
     [ -n "$vaza" ] || continue
     equal "a record carrying '$vaza' is refused" "0" \
-          "$(vaza_ou_nao "abc123	64	vcrun2022	$vaza	sim	1	2026-08	-")"
+          "$(vaza_ou_nao "$IDENT	64	vcrun2022	$vaza	sim	1	2026-08	-")"
 done
+
+# One case per bullet of docs/LIST-FORMAT.md, because the promise is made there
+# and three of these were let straight through: a bare file name, a Windows path,
+# an e-mail address and a MAC.
+for vaza in "PDVSuperMax-4.2-setup.exe" "setup.EXE aqui" \
+            'C:\Users\Joao\pdv.exe' "rockx0@gmail.com" \
+            "a4:83:e7:11:22:33" "https://loja.example.com"; do
+    equal "a note carrying '$vaza' is refused" "0" \
+          "$(vaza_ou_nao "$IDENT	64	vcrun2022	-	confirmado	1	2026-08	$vaza")"
+done
+
+# A short user name must not disqualify the machine. The fingerprint is 32 hex
+# characters, so any one- or two-letter hex name is a substring of almost every
+# record ever built here.
+FZ_ID="$TMPROOT/finge-id"; mkdir -p "$FZ_ID"
+for nome in a e f ed; do
+    printf '#!/bin/sh\necho %s\n' "$nome" > "$FZ_ID/id"
+    chmod +x "$FZ_ID/id"
+    equal "an owner called '$nome' can still send a clean record" "1" \
+          "$(PATH="$FZ_ID:$PATH" vaza_ou_nao "$LIMPO")"
+done
+rm -f "$FZ_ID/id"
+
+# And the half that made the bug destructive rather than annoying: a refused
+# line has to be HELD, not deleted. t_envio_envia writes the lines it keeps to a
+# file that then REPLACES the queue, so "continue" without writing was an erase.
+# The closing "fi" is anchored, and it has to be: written as /fi/ the range
+# ended on the first line containing those two letters anywhere, and the word
+# "file" in the comment just below closed it three lines early. Substring where
+# a token was meant - the same mistake the sieve itself was making.
+BLOCO_PENEIRA="$(sed -n '/^t_envio_envia()/,/^}/p' "$ROOT/src/lib/common.sh" |
+                 sed -n '/if t_lista_vaza/,/^ *fi$/p')"
+contem "a line the sieve refuses is written back to the queue, not dropped" \
+       '$resto' "$BLOCO_PENEIRA"
 
 # The whole record builder has to refuse too, not just the predicate - a sieve
 # nobody calls is decoration.

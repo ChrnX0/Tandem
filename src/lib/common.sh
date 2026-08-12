@@ -1572,14 +1572,87 @@ TANDEM_LISTA_VERSAO=1
 # Fields that may never leave this machine. This is not a recommendation: it
 # is the test the contribution generator runs against its own text before
 # showing it.
+# The first field is a 32-character hex fingerprint, and that is what broke this
+# function. Matching the user name as a SUBSTRING of the whole record meant that
+# a name which happens to be hex matched the fingerprint: measured here, a
+# machine whose owner is called "a", "e" or "f" had 5 of 5 clean records refused,
+# and "ed" 3 of 5. Those are ordinary Unix names. And a refused line is not
+# parked, it is DELETED - t_envio_envia skips it without writing it to the file
+# that replaces the queue - so the sieve was quietly destroying the lesson it was
+# meant to be protecting.
+#
+# So the fingerprint is skipped and the rest is compared FIELD BY FIELD.
+#
+# Note what the parking fix above changes about the rest of this function. While
+# a refusal DELETED the line, every over-broad rule cost the owner a lesson, so
+# each one had to be argued for. Now that a refusal only holds the line back,
+# erring toward refusal is cheap and erring toward sending is not - the record
+# stays in the queue either way. That is why "works on 1.2.3.4" is refused even
+# though it is plainly a version number and not an address: telling those two
+# apart in free text is not reliably possible, the cost of guessing wrong in one
+# direction is a line that waits, and in the other it is a shop's LAN address on
+# a public list. Do not "fix" that refusal without first re-checking that a
+# refused line is still parked.
 t_lista_vaza() {
-    local reg="$1"
-    # Path, machine name, user, IP, and anything with a slash.
-    case "$reg" in
-        */*|*"$HOME"*|*"$(id -un)"*) return 0 ;;
-    esac
-    [ -n "${HOSTNAME:-}" ] && case "$reg" in *"$HOSTNAME"*) return 0 ;; esac
-    printf '%s' "$reg" | grep -qE '[0-9]{1,3}(\.[0-9]{1,3}){3}' && return 0
+    local reg="$1" campo n=0 usuario maquina
+    usuario="$(id -un 2>/dev/null)"
+    maquina="${HOSTNAME:-$(hostname 2>/dev/null)}"
+
+    # How a name is matched depends on how long it is, and the reason is the
+    # fingerprint. A name of three characters or more is looked for ANYWHERE in a
+    # field, so that "joao" is found inside "joaospc". A shorter one is looked for
+    # only as a whole field or as a whole word, because one or two hex characters
+    # are a substring of almost every record this program will ever build - and
+    # this machine's own host name is "vm", which is exactly that case. Dropping
+    # short names entirely would be simpler and would quietly abandon the promise
+    # in docs/LIST-FORMAT.md that a record cannot carry a machine name.
+    _t_acha_nome() {                   # $1 = field, $2 = name
+        [ -n "$2" ] || return 1
+        if [ "${#2}" -ge 3 ]; then
+            case "$1" in *"$2"*) return 0 ;; esac
+        else
+            case " $1 " in *" $2 "*) return 0 ;; esac
+            [ "$1" = "$2" ] && return 0
+        fi
+        return 1
+    }
+
+    # tr gets the escape directly. Written as nl="$(printf '\n')" the variable
+    # is EMPTY - command substitution strips the trailing newline, which is the
+    # only character there - so tr refused the whole translation and every field
+    # arrived as one line. The sieve then let a full path, an e-mail address and
+    # a MAC straight through, which is worse than the defect being fixed.
+    while IFS= read -r campo; do
+        n=$((n + 1))
+        [ "$n" = 1 ] && continue        # the fingerprint: hex, and not a secret
+        [ -n "$campo" ] || continue
+        case "$campo" in
+            # Anything with a path separator, a drive letter or a URL in it.
+            # "*/*" already covers a URL, so there is no *://* here.
+            */*|*'\'*|[A-Za-z]:*) return 0 ;;
+        esac
+        case "$campo" in
+            *@*) return 0 ;;            # an address of any kind
+        esac
+        # A file name, which docs/LIST-FORMAT.md promises the record cannot
+        # carry and which the old version let straight through: a note reading
+        # "PDVSuperMax-4.2-setup.exe" names the shop's software in the clear.
+        case "${campo,,}" in
+            *.exe|*.exe\ *|*.msi|*.msi\ *|*.apk|*.jar|*.deb|*.rpm|*.appimage|\
+            *.snap|*.sh|*.run|*.bat|*.lnk|*.zip|*.rar|*.log|*.txt) return 0 ;;
+        esac
+        _t_acha_nome "$campo" "$usuario" && { unset -f _t_acha_nome; return 0; }
+        _t_acha_nome "$campo" "$maquina" && { unset -f _t_acha_nome; return 0; }
+        [ -n "$HOME" ] && case "$campo" in *"$HOME"*) return 0 ;; esac
+        # An IPv4 address, and a MAC, which the old version never looked for.
+        printf '%s' "$campo" |
+            grep -qE '(^|[^0-9])[0-9]{1,3}(\.[0-9]{1,3}){3}([^0-9]|$)' && return 0
+        printf '%s' "$campo" |
+            grep -qiE '([0-9a-f]{2}:){5}[0-9a-f]{2}' && return 0
+    done <<FIM
+$(printf '%s' "$reg" | tr '\t' '\n')
+FIM
+    unset -f _t_acha_nome
     return 1
 }
 
@@ -3301,7 +3374,14 @@ t_envio_envia() {
     while IFS= read -r reg; do
         [ -n "$reg" ] || continue
         if t_lista_vaza "$reg"; then
-            t_diz "envio: linha descartada pelo filtro"
+            # PARKED, not deleted. This used to "continue" without writing the
+            # line anywhere, and the file being written replaces the queue - so
+            # a record the sieve refused was destroyed, with one log line, and
+            # the lesson it carried went with it. The sieve exists to stop a
+            # line LEAVING the machine, which is a different thing from being
+            # allowed to erase it.
+            printf '%s\n' "$reg" >> "$resto"
+            t_diz "envio: linha retida pelo filtro (guardada, nao enviada)"
             continue
         fi
         if [ "$contador" -ge "$TANDEM_ENVIO_POR_DIA" ]; then
