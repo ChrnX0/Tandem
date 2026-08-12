@@ -1968,7 +1968,7 @@ Tandem - ejecuta programas de Windows, apps de Android y paquetes de Linux.
   tandem lista                lo que la comunidad ya descubrio
   tandem lista atualizar      descarga la lista (no manda nada tuyo)
   tandem contribuir <arch>    monta la linea para que la mandes, si quieres
-  tandem enviar [sim|nao]     mandar automaticamente lo que aprende (por omision: nao)
+  tandem enviar [sim|nao]     mandar automaticamente lo que aprende (por omision: sim)
   tandem socorro              junta todo en un archivo para pedir ayuda
   tandem logs                 muestra el registro mas reciente
   tandem version              muestra la version instalada
@@ -1976,3 +1976,44 @@ Tandem - ejecuta programas de Windows, apps de Android y paquetes de Linux.
 
 @faixa_de_ate
 {1} a {2}
+
+@envio_aviso_ligado
+Tandem manda a la lista de la comunidad lo que aprende.
+
+Cuando confirmas que un programa funcionó, sale UNA LÍNEA: una huella del
+archivo del programa, 32 o 64 bits, y qué componentes lo resolvieron. Nada más.
+
+No va nombre de archivo, ni carpeta, ni tu nombre de usuario, ni el nombre del
+ordenador, ni dirección de red, ni una línea de registro. El filtro que lo
+garantiza corre dos veces.
+
+Esto está ACTIVADO. Para desactivarlo, ahora o cuando quieras:
+
+    tandem enviar nao
+
+Para ver exactamente lo que saldría de un programa:  tandem contribuir <archivo>
+
+@envio_esta_linha
+Esta es la línea que va a salir, entera:
+
+@botao_desligar_envio
+Desactivarlo
+
+@botao_deixar_ligado
+Dejarlo activado
+
+@envio_desligado_agora
+Desactivado. Nada sale de esta máquina.
+
+@instalado_resumo
+  Tandem instalado.
+
+    Doble clic en un .exe o .msi    -> se ejecuta en Windows (Wine)
+    Doble clic en un .apk o .xapk   -> se instala en Android
+    Doble clic en un .AppImage      -> se ejecuta directo, sin instalar
+    Doble clic en un .jar           -> se ejecuta en Java
+    Doble clic en un .deb           -> se instala, comprobando antes
+    Doble clic en un .rpm           -> explica por que no sirve aqui
+    Menu de aplicaciones -> Tandem  -> el panel, con todo
+
+  Comprueba el entorno con:  tandem doctor

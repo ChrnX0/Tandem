@@ -2994,8 +2994,28 @@ t_config_grava() {
 }
 
 # Has the owner decided? "sim", "nao", or failure when he was never asked.
+# ON BY DEFAULT since 4.1, and that is a reversal of the previous design.
+#
+# It was born off, and the owner decided once, looking at the whole line. That
+# was the more careful arrangement and it had a measurable result: the list was
+# EMPTY. A default nobody changes is a decision made by the default, so the
+# choice here is between a list that does not exist and a transmission the owner
+# did not initiate. The architect chose the second.
+#
+# What makes that defensible rather than merely convenient is the two things
+# around it, and neither is optional:
+#   - the line cannot carry anything personal. t_lista_vaza refuses to emit a
+#     record holding a filename, a path, a user name, a machine name or an IP,
+#     and it runs twice - when the line is built and again at send time.
+#   - the owner is TOLD, twice: dpkg prints it at install, and the first run
+#     says it in its own window. Notice is what turns a default into a choice.
+# Turning it off is one command and it is in both messages.
 t_envio_ligado() {
-    [ "$(t_config_le ENVIAR 2>/dev/null)" = sim ]
+    case "$(t_config_le ENVIAR 2>/dev/null)" in
+        sim) return 0 ;;
+        nao) return 1 ;;
+        *)   return 0 ;;   # undecided means on
+    esac
 }
 
 t_envio_decidido() {
@@ -3117,18 +3137,28 @@ t_envio_oferece() {
     local prog="$1" reg
     reg="$(t_lista_registro "$prog" 2>/dev/null)" || return 1
     [ -n "$reg" ] || return 1
-    if ! t_envio_decidido; then
-        # With nobody to ask, the answer is no, and it is not recorded as a
-        # decision: the owner has not decided anything yet.
-        if ! t_tem_gui && [ ! -t 0 ]; then
-            t_diz "envio: ninguem para perguntar; nada enviado e nada decidido"
-            return 1
-        fi
-        if t_pergunta "$(t_texto_pedir_envio "$reg")" "Pode mandar" "Não mandar"; then
-            t_envio_define sim
+    # Sending is on by default, so this is a NOTICE and not a question - but it
+    # is shown before the first line ever leaves, and it shows the actual line
+    # rather than a description of one. A notice that describes a payload is
+    # asking to be trusted; a notice that displays it is telling the truth.
+    #
+    # It is offered once. If there is nobody to show it to, the line still goes
+    # (the default is on and dpkg already printed the notice at install), and
+    # the fact that nobody was told is written to the log.
+    if ! t_envio_decidido && [ "$(t_config_le ENVIAR_AVISADO 2>/dev/null)" != sim ]; then
+        if t_tem_gui || [ -t 0 ]; then
+            t_config_grava ENVIAR_AVISADO sim
+            if ! t_pergunta "$(t_msg envio_aviso_ligado)
+
+$(t_msg envio_esta_linha)
+
+$reg" "$(t_msg botao_deixar_ligado)" "$(t_msg botao_desligar_envio)"; then
+                t_envio_define nao
+                t_ok "$(t_msg envio_desligado_agora)"
+                return 1
+            fi
         else
-            t_envio_define nao
-            return 1
+            t_diz "envio ligado por padrao e ninguem para avisar; o aviso saiu no postinst"
         fi
     fi
     t_envio_ligado || return 1

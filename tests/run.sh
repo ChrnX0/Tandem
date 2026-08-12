@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2186825782 779" "$soma_esperados"
+      "4011840298 797" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "3113881825 1444" "$soma_padroes"
 
@@ -1576,7 +1576,7 @@ print("%s %s %d" % (
 FIM
 )"
     equal "a fuzzy entry is seen, dropped, and the rest kept" \
-          "sem_arquivo omitida 440" "$resultado"
+          "sem_arquivo omitida 446" "$resultado"
 
     # That parser was wrong the first time it was written, in a way that made it
     # report NO fuzzy entries at all - the flag is a comment BEFORE the entry,
@@ -1606,6 +1606,96 @@ FIM
 else
     skip "po/ is the source of truth" "po/ does not exist"
 fi
+
+section "sending: on by default, and the owner is told twice"
+
+# This reverses the previous design, and the reversal has a reason with a
+# measurement behind it: born off, the list was EMPTY. A default nobody changes
+# is a decision made by the default, so the choice was between a list that does
+# not exist and a transmission the owner did not initiate.
+#
+# What makes it defensible is not the default, it is the two things around it -
+# the line cannot carry anything personal, and the owner is TOLD. These tests
+# hold both of those, because the default without them would be indefensible.
+
+CFG_ENV="$TMPROOT/envio"
+env_le() {
+    env HOME="$CFG_ENV" XDG_CONFIG_HOME="$CFG_ENV/.config" \
+        TANDEM_LIB="$ROOT/src/lib" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        '"$1"'' 2>/dev/null
+}
+rm -rf "$CFG_ENV"; mkdir -p "$CFG_ENV"
+
+equal "with nothing decided, sending is ON" "0" \
+      "$(env_le 't_envio_ligado; echo $?')"
+equal "and nothing has been decided yet, which is a different thing" "1" \
+      "$(env_le 't_envio_decidido; echo $?')"
+
+# Off has to STICK, or the default silently overrides the owner - which would be
+# the worst version of this feature.
+env_le 't_envio_define nao' >/dev/null
+equal "once the owner says no, sending is off" "1" \
+      "$(env_le 't_envio_ligado; echo $?')"
+equal "and that counts as decided" "0" \
+      "$(env_le 't_envio_decidido; echo $?')"
+# And it survives, because a decision that resets on upgrade is not a decision.
+equal "the refusal is written to the config, not held in memory" "nao" \
+      "$(env_le 't_config_le ENVIAR')"
+env_le 't_envio_define sim' >/dev/null
+equal "and yes works the same way" "0" "$(env_le 't_envio_ligado; echo $?')"
+
+# THE NOTICE. dpkg prints it at install; postinst reads it out of the installed
+# catalogue in the machine's language, and never sources that file - it runs as
+# root, and a file that will one day come from a translator must not execute
+# there.
+contem "postinst prints the sending notice" \
+       "envio_aviso_ligado" "$(cat "$ROOT/debian/postinst")"
+contem "and reads the catalogue with awk rather than sourcing it" \
+       "awk" "$(sed -n '/^diz_msg()/,/^}/p' "$ROOT/debian/postinst")"
+naocontem "postinst never sources a catalogue" \
+          ". /usr/lib/tandem/idiomas" "$(cat "$ROOT/debian/postinst")"
+
+# The notice has to say the one thing that makes it a notice and not an
+# announcement: how to stop it. In every language.
+for pl in en pt_BR es fr zh_CN hi ar; do
+    contem "the $pl notice names the command that turns it off" \
+           "tandem enviar nao" \
+           "$(TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" TANDEM_LIB="$ROOT/src/lib" \
+              TANDEM_IDIOMA_FORCADO="$pl" bash -c \
+              '. "'"$ROOT"'/src/lib/common.sh"; t_msg envio_aviso_ligado')"
+done
+
+# And the sieve, which is the other half. A default-on transmission is only
+# defensible if the payload CANNOT carry anything personal, so the sieve is
+# tested here rather than taken on faith.
+#
+# t_lista_vaza answers "does this leak?", so 0 means it found something and the
+# record is refused. The first version of this test had that backwards AND used
+# a user name that is not this machine's, so two of its five cases were
+# meaningless and it still went green on the three that were not.
+vaza_ou_nao() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_lista_vaza "$1"; echo $?' _ "$1" 2>/dev/null
+}
+LIMPO="abc123	64	vcrun2022	-	confirmado	1	2026-08	-"
+equal "a clean record passes the sieve" "1" "$(vaza_ou_nao "$LIMPO")"
+
+for vaza in "/home/zero/programa.exe" "$(id -un)" \
+            "$(hostname 2>/dev/null || echo maquina)" \
+            "192.168.0.10" "/media/pendrive/x" "$HOME"; do
+    [ -n "$vaza" ] || continue
+    equal "a record carrying '$vaza' is refused" "0" \
+          "$(vaza_ou_nao "abc123	64	vcrun2022	$vaza	sim	1	2026-08	-")"
+done
+
+# The whole record builder has to refuse too, not just the predicate - a sieve
+# nobody calls is decoration.
+contem "t_lista_registro runs the sieve before returning a record" \
+       "t_lista_vaza" "$(sed -n '/^t_lista_registro()/,/^}/p' "$ROOT/src/lib/common.sh")"
+contem "and t_envio_envia runs it AGAIN at send time" \
+       "t_lista_vaza" "$(sed -n '/^t_envio_envia()/,/^}/p' "$ROOT/src/lib/common.sh")"
 
 section "language: the path a translator actually walks"
 
@@ -1641,7 +1731,7 @@ FIM
     primeira="$( cd "$PO_T" && python3 tools/atualiza-po.py 2>&1 )"
     # Assert the tool RAN, or the credit checks below pass vacuously on a file
     # nothing ever touched - which is exactly what happened the first time.
-    contem "the updater runs at all in the sandbox" "441" "$primeira"
+    contem "the updater runs at all in the sandbox" "entries" "$primeira"
     for campo in "Marie Dupont" "X-Generator: Weblate" "PO-Revision-Date"; do
         contem "regenerating keeps $campo" "$campo" "$(cat "$PO_T/po/fr.po")"
     done
@@ -2858,7 +2948,10 @@ env_envio() {
         bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1" 2>/dev/null
 }
 
-equal "out of the box, sending is off" "1" "$(env_envio 't_envio_ligado; echo $?')"
+# Reversed in 4.1: born ON, with the owner told at install and again on first
+# use. The previous default was off and the measurable consequence was an empty
+# list - a default nobody changes is a decision made by the default.
+equal "out of the box, sending is ON" "0" "$(env_envio 't_envio_ligado; echo $?')"
 equal "and \"nobody decided\" is not the same as \"decided no\"" \
       "1" "$(env_envio 't_envio_decidido; echo $?')"
 env_envio 't_envio_define nao' >/dev/null

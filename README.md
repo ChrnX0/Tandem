@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-755-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-780-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -350,7 +350,7 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem receita <file>` | export what it learned, to send to someone |
 | `tandem memoria` · `tandem esquecer <name>` | see and clear what it learned |
 | `tandem lista` · `tandem contribuir <file>` | the community list, both directions |
-| `tandem enviar [sim\|nao]` | send what it learns automatically — **off** until you say otherwise |
+| `tandem enviar [sim\|nao]` | send what it learns automatically — **on**, and announced at install |
 | `tandem socorro` | one file with everything, to ask for help |
 | `tandem logs` | the latest log |
 

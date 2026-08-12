@@ -410,14 +410,17 @@ acao_preparar() {
     # Asked here without a concrete line to show, so it describes rather than
     # displays. If the owner skips it, the question comes back once with the
     # real line, the first time a program of his actually works.
+    # Sending is ON by default, so this is not a question about whether to start:
+    # it is the notice, with the button that stops it. Asking "may I?" about
+    # something already running would be the dishonest version.
     if ! t_envio_decidido; then
-        if t_pergunta "$(t_msg prep_convite_envio)" \
-                       "$(t_msg botao_pode_mandar)" "$(t_msg botao_nao_mandar)"; then
-            t_envio_define sim
-            t_ok "$(t_msg prep_obrigado)"
+        t_config_grava ENVIAR_AVISADO sim
+        if t_pergunta "$(t_msg envio_aviso_ligado)" \
+                       "$(t_msg botao_deixar_ligado)" "$(t_msg botao_desligar_envio)"; then
+            t_diz "envio deixado ligado no preparar"
         else
             t_envio_define nao
-            t_diz "envio recusado no preparar"
+            t_ok "$(t_msg envio_desligado_agora)"
         fi
     fi
 

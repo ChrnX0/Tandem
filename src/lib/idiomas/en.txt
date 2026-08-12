@@ -1970,7 +1970,7 @@ Tandem - runs Windows programs, Android apps and Linux packages.
   tandem lista                what the community has already worked out
   tandem lista atualizar      downloads the list (sends nothing of yours)
   tandem contribuir <file>    builds the line for you to send, if you want
-  tandem enviar [sim|nao]     send what it learns automatically (default: nao)
+  tandem enviar [sim|nao]     send what it learns automatically (default: sim)
   tandem socorro              gathers everything into one file to ask for help
   tandem logs                 shows the most recent log
   tandem version              shows the installed version
@@ -1978,3 +1978,43 @@ Tandem - runs Windows programs, Android apps and Linux packages.
 
 @faixa_de_ate
 {1} to {2}
+
+@envio_aviso_ligado
+Tandem sends what it learns to the community list.
+
+When you confirm that a program worked, ONE LINE goes out: a fingerprint of the
+program's file, 32 or 64-bit, and which components did the job. Nothing else.
+
+It carries no file name, no folder, no user name, no computer name, no network
+address and no log line. The sieve that guarantees that runs twice.
+
+This is ON. To turn it off, now or ever:
+
+    tandem enviar nao
+
+To see exactly what would go out for one program:  tandem contribuir <file>
+
+@envio_esta_linha
+This is the line that is about to go out, in full:
+
+@botao_desligar_envio
+Turn it off
+
+@botao_deixar_ligado
+Leave it on
+
+@envio_desligado_agora
+Turned off. Nothing leaves this machine.
+
+@instalado_resumo
+  Tandem installed.
+
+    Double-click a .exe or .msi     -> runs on Windows (Wine)
+    Double-click a .apk or .xapk    -> installs on Android
+    Double-click a .AppImage        -> runs directly, nothing to install
+    Double-click a .jar             -> runs on Java
+    Double-click a .deb             -> installs, checking first
+    Double-click a .rpm             -> explains why it is not for this system
+    Applications menu -> Tandem     -> the panel, with everything
+
+  Check the environment with:  tandem doctor

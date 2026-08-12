@@ -426,11 +426,20 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   flag by hand in both the local headers and the central directory.
 - **The list only ever pulled, and the measurable consequence is that
   `lista/lista.tsv` is EMPTY.** Contributing meant five steps ending in a GitHub
-  account. Since 3.9 sending is automated, off by default, and the reason it can
-  be is that `t_lista_vaza` already refuses to emit a record carrying a filename,
-  a path, a username, a machine name or an IP - so there is nothing to anonymise
-  at send time. The sieve runs AGAIN before the POST, because the queue is a
-  plain-text file and those get edited by hand.
+  account. Since 3.9 sending is automated, and **since 4.1 it is ON BY DEFAULT**.
+  That reversal is the architect's call and its justification is the measurement
+  above: born off, the list stayed empty, and a default nobody changes is a
+  decision made by the default. What makes it defensible is not the default, it
+  is the two things around it: `t_lista_vaza` refuses to emit a record carrying
+  a filename, a path, a username, a machine name or an IP - so there is nothing
+  to anonymise at send time - and the owner is TOLD twice, by `postinst` at
+  install and again on the first real send, with the line displayed in full.
+  The sieve runs AGAIN before the POST, because the queue is a plain-text file
+  and those get edited by hand.
+  **The remaining exposure is honest and worth writing down:** an HTTP POST
+  carries an IP at the receiving end whatever the payload says, and the
+  fingerprint identifies WHICH software a shop runs. Neither is in the record;
+  both are inherent to sending anything at all.
 - **`grep -c` on an EMPTY file prints 0 and then exits 1**, so `grep -c ... ||
   echo 0` prints "0" twice. It reached the owner as a queue length of "0\n0".
   Use `awk 'END { print NR + 0 }'`.
@@ -848,7 +857,7 @@ The queue, in order:
    in all six.
 
 1. **Fill the community list.** Half-solved in 3.9: the client side of automatic
-   sending is built, tested against a real socket, and off by default. What is
+   sending is built, tested against a real socket, and ON by default. What is
    missing is not code - it is an ADDRESS. `TANDEM_LISTA_ENVIO` is empty because
    an endpoint means somebody hosts it, moderates it and answers for the data.
    That is the architect's call. Until then the queue keeps what it learns, and

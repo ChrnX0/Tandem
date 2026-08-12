@@ -2009,7 +2009,7 @@ Tandem - lance des programmes Windows, des applis Android et des paquets Linux.
   tandem lista                ce que la communaute a deja trouve
   tandem lista atualizar      telecharge la liste (n'envoie rien de vous)
   tandem contribuir <fich>    prepare la ligne a envoyer, si vous voulez
-  tandem enviar [sim|nao]     envoyer automatiquement ce qu'il apprend (defaut : nao)
+  tandem enviar [sim|nao]     envoyer automatiquement ce qu'il apprend (defaut : sim)
   tandem socorro              rassemble tout dans un fichier pour demander de l'aide
   tandem logs                 montre le journal le plus recent
   tandem version              montre la version installee
@@ -2017,3 +2017,46 @@ Tandem - lance des programmes Windows, des applis Android et des paquets Linux.
 
 @faixa_de_ate
 {1} à {2}
+
+@envio_aviso_ligado
+Tandem envoie à la liste de la communauté ce qu'il apprend.
+
+Quand vous confirmez qu'un programme a fonctionné, UNE LIGNE part : une
+empreinte du fichier du programme, 32 ou 64 bits, et quels composants ont réglé
+la chose. Rien d'autre.
+
+Elle ne porte aucun nom de fichier, aucun dossier, aucun nom d'utilisateur,
+aucun nom d'ordinateur, aucune adresse réseau et aucune ligne de journal. Le
+filtre qui le garantit tourne deux fois.
+
+C'est ACTIVÉ. Pour désactiver, maintenant ou plus tard :
+
+    tandem enviar nao
+
+Pour voir exactement ce qui partirait pour un programme :
+    tandem contribuir <fichier>
+
+@envio_esta_linha
+Voici la ligne qui va partir, en entier :
+
+@botao_desligar_envio
+Désactiver
+
+@botao_deixar_ligado
+Laisser activé
+
+@envio_desligado_agora
+Désactivé. Rien ne quitte cette machine.
+
+@instalado_resumo
+  Tandem installe.
+
+    Double-clic sur un .exe ou .msi -> tourne sous Windows (Wine)
+    Double-clic sur un .apk ou .xapk-> s'installe sur Android
+    Double-clic sur un .AppImage    -> tourne directement, rien a installer
+    Double-clic sur un .jar         -> tourne sous Java
+    Double-clic sur un .deb         -> s'installe, en verifiant d'abord
+    Double-clic sur un .rpm         -> explique pourquoi il ne sert pas ici
+    Menu des applications -> Tandem -> le panneau, avec tout
+
+  Verifiez l'environnement avec :  tandem doctor

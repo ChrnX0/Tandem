@@ -1904,7 +1904,7 @@ Tandem - 运行 Windows 程序、Android 应用和 Linux 软件包。
   tandem lista                社区已经摸索出来的东西
   tandem lista atualizar      下载清单（不会发送您的任何东西）
   tandem contribuir <文件>    把要发的那一行拼好，发不发您定
-  tandem enviar [sim|nao]     自动发送学到的东西（默认：nao）
+  tandem enviar [sim|nao]     自动发送学到的东西（默认：sim）
   tandem socorro              把所有信息汇成一个文件，好求助
   tandem logs                 显示最近的记录
   tandem version              显示已装的版本
@@ -1912,3 +1912,43 @@ Tandem - 运行 Windows 程序、Android 应用和 Linux 软件包。
 
 @faixa_de_ate
 {1} 到 {2}
+
+@envio_aviso_ligado
+Tandem 会把它学到的东西发到社区清单。
+
+当您确认某个程序能用时，会发出一行：程序文件的指纹、32 位还是 64 位、
+以及哪些组件解决了问题。别的什么都没有。
+
+里面不含文件名、文件夹、您的用户名、电脑名、网络地址，也没有任何一行日志。
+保证这一点的筛子会跑两遍。
+
+这个功能现在是开着的。要关掉，现在或以后随时：
+
+    tandem enviar nao
+
+想看清楚某个程序会发出什么：  tandem contribuir <文件>
+
+@envio_esta_linha
+下面就是即将发出去的那一行，完整的：
+
+@botao_desligar_envio
+关掉它
+
+@botao_deixar_ligado
+保持开着
+
+@envio_desligado_agora
+已关闭。什么都不会离开这台机器。
+
+@instalado_resumo
+  Tandem 已安装。
+
+    双击 .exe 或 .msi     -> 在 Windows 环境下运行（Wine）
+    双击 .apk 或 .xapk    -> 安装到 Android
+    双击 .AppImage        -> 直接运行，无需安装
+    双击 .jar             -> 用 Java 运行
+    双击 .deb             -> 先核对再安装
+    双击 .rpm             -> 解释为什么它不适合这个系统
+    应用程序菜单 -> Tandem -> 面板，全部功能都在里面
+
+  用这个检查环境：  tandem doctor

@@ -1,5 +1,22 @@
 tandem (4.1) unstable; urgency=medium
 
+  * Sending what Tandem learns to the community list is ON BY DEFAULT. It was
+    born off, and the measurable consequence was that the list stayed empty: a
+    default nobody changes is a decision made by the default.
+  * The owner is TOLD rather than asked, twice. dpkg prints the notice at
+    install, in the language the machine is set to, read out of the installed
+    catalogue with awk and never sourced - postinst runs as root, and a file
+    that will one day arrive from a translator must not execute there. The same
+    notice appears again the first time there is a real line to send, with that
+    line displayed in full rather than described.
+  * Turning it off is one command, tandem enviar nao, it is named in both
+    notices, and it sticks - a decision that reset on upgrade would not be one.
+  * What makes a default defensible rather than merely convenient is not the
+    default: the record cannot carry a filename, a path, a user name, a machine
+    name or an IP, and the sieve that guarantees that runs twice. There are now
+    tests for the sieve itself, including one that a CLEAN record passes - a
+    sieve that refuses everything would have gone green without it.
+
   * The messages are gettext .po files now. po/ is the source of truth and
     src/lib/idiomas/*.txt is generated from it; build.py refuses to package a
     catalogue that has drifted from its .po.

@@ -293,12 +293,20 @@ comunidade. Sem argumento, mostra o estado, quantas linhas estão guardadas na
 fila e para onde elas iriam.
 .PP
 Nasce
-.B desligado
-e assim continua até o dono dizer o contrário, uma vez, olhando a linha inteira
-que sairia da máquina dele \(em não uma descrição dela. A pergunta aparece no
-.B tandem preparar
-e, se ele não decidir lá, uma vez mais no momento em que existe algo concreto
-para mandar: logo depois de ele confirmar que um programa funcionou.
+.B ligado.
+É uma inversão, e o motivo é a medição abaixo: nascendo desligado, a lista
+ficou vazia. O dono é AVISADO em vez de perguntado \(em pelo
+.BR dpkg (1)
+na instalação, e outra vez na primeira vez que existe uma linha real para
+mandar, com a linha mostrada inteira. Desligar é um comando,
+.BR "tandem enviar nao" ,
+e ele está nomeado nos dois avisos.
+.PP
+O que torna um padrão defensável, e não apenas cômodo, não é o padrão: é o
+registro NÃO PODER carregar nada pessoal. Nem nome de arquivo, nem pasta, nem
+nome de usuário, nem nome de máquina, nem endereço de rede, nem uma linha de
+registro \(em e o filtro que garante isso roda duas vezes, na montagem da
+linha e na hora de mandar.
 .PP
 Por que isto existe: até a versão 3.8 a lista só descia, e a consequência era
 medível \(em ela estava
