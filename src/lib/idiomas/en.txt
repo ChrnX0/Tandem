@@ -2054,3 +2054,75 @@ Turned off. Nothing leaves this machine.
     Applications menu -> Tandem     -> the panel, with everything
 
   Check the environment with:  tandem doctor
+
+@pan_pergunta
+What do you want to do?
+
+@pan_col_acao
+Action
+
+@pan_col_descricao
+What it does
+
+@pan_instalar
+Install or open a file (.exe .apk .AppImage .jar .deb)
+
+@pan_preparar
+Install what is missing (Wine, Java, Android...)
+
+@pan_programas
+Open a program you already installed
+
+@pan_remover
+Uninstall a Windows program
+
+@pan_android
+Open the Android screen
+
+@pan_doctor
+See what this computer has and what it is missing
+
+@pan_autoteste
+Really test whether everything works here
+
+@pan_dados
+See and copy YOUR files
+
+@pan_portas
+Card reader, scale, printer: which port they ended up on
+
+@pan_identidade
+What a program sees of your machine (licences)
+
+@pan_backup
+Save the Windows environment
+
+@pan_restore
+Restore the Windows environment
+
+@pan_repair
+Fix opening files with a double click
+
+@pan_memoria
+See what Tandem has learned about your programs
+
+@pan_lista
+Download what the community has already worked out
+
+@pan_enviar
+Send what I learn to the community (on/off)
+
+@pan_socorro
+Make a report to ask for help
+
+@pan_logs
+See the technical log
+
+@pan_escolha_arquivo
+Choose the file
+
+@pan_filtro_programas
+Programs and apps
+
+@pan_filtro_todos
+All files

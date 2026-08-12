@@ -3488,3 +3488,99 @@ msgstr ""
 "    应用程序菜单 -> Tandem -> 面板，全部功能都在里面\n"
 "\n"
 "  用这个检查环境：  tandem doctor"
+
+msgctxt "pan_pergunta"
+msgid "What do you want to do?"
+msgstr "您想做什么？"
+
+msgctxt "pan_col_acao"
+msgid "Action"
+msgstr "操作"
+
+msgctxt "pan_col_descricao"
+msgid "What it does"
+msgstr "作用"
+
+msgctxt "pan_instalar"
+msgid "Install or open a file (.exe .apk .AppImage .jar .deb)"
+msgstr "安装或打开一个文件（.exe .apk .AppImage .jar .deb）"
+
+msgctxt "pan_preparar"
+msgid "Install what is missing (Wine, Java, Android...)"
+msgstr "安装缺少的东西（Wine、Java、Android……）"
+
+msgctxt "pan_programas"
+msgid "Open a program you already installed"
+msgstr "打开一个已经安装的程序"
+
+msgctxt "pan_remover"
+msgid "Uninstall a Windows program"
+msgstr "卸载一个 Windows 程序"
+
+msgctxt "pan_android"
+msgid "Open the Android screen"
+msgstr "打开 Android 屏幕"
+
+msgctxt "pan_doctor"
+msgid "See what this computer has and what it is missing"
+msgstr "看看这台电脑有什么、缺什么"
+
+msgctxt "pan_autoteste"
+msgid "Really test whether everything works here"
+msgstr "真正测试这里是不是都能用"
+
+msgctxt "pan_dados"
+msgid "See and copy YOUR files"
+msgstr "查看并复制您自己的文件"
+
+msgctxt "pan_portas"
+msgid "Card reader, scale, printer: which port they ended up on"
+msgstr "读卡器、秤、打印机：它们各在哪个端口"
+
+msgctxt "pan_identidade"
+msgid "What a program sees of your machine (licences)"
+msgstr "程序能从您的机器看到什么（授权相关）"
+
+msgctxt "pan_backup"
+msgid "Save the Windows environment"
+msgstr "保存这个 Windows 环境"
+
+msgctxt "pan_restore"
+msgid "Restore the Windows environment"
+msgstr "还原这个 Windows 环境"
+
+msgctxt "pan_repair"
+msgid "Fix opening files with a double click"
+msgstr "修好用双击打开文件这件事"
+
+msgctxt "pan_memoria"
+msgid "See what Tandem has learned about your programs"
+msgstr "看看 Tandem 学到了您的程序的哪些事"
+
+msgctxt "pan_lista"
+msgid "Download what the community has already worked out"
+msgstr "下载社区已经弄明白的东西"
+
+msgctxt "pan_enviar"
+msgid "Send what I learn to the community (on/off)"
+msgstr "把我学到的送给社区（开／关）"
+
+msgctxt "pan_socorro"
+msgid "Make a report to ask for help"
+msgstr "生成一份报告，用来求助"
+
+msgctxt "pan_logs"
+msgid "See the technical log"
+msgstr "查看技术日志"
+
+msgctxt "pan_escolha_arquivo"
+msgid "Choose the file"
+msgstr "选择文件"
+
+msgctxt "pan_filtro_programas"
+msgid "Programs and apps"
+msgstr "程序和应用"
+
+msgctxt "pan_filtro_todos"
+msgid "All files"
+msgstr "所有文件"

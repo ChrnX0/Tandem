@@ -84,10 +84,27 @@ tandem (4.3) unstable; urgency=medium
     verb. An anonymous intake would also have to either fabricate the machine
     count, which is the literal 1, or keep source addresses - a database
     joining Brazilian shops to the commercial software each one runs.
-  * 145 sentences are still literals - the whole of tandem doctor, the whole
-    panel, the autoteste report and the hardware-key advice. Migrating them is
-    the rest of this version's work. The suite holds the number as a ratchet:
-    it may fall, never rise.
+  * The zenity panel is translated. It is the only screen a shop owner who
+    never opens a terminal ever sees, and it was the last thing in the program
+    still hard-coded in Portuguese: eighteen menu rows, the window's own
+    question, both column headings, the file chooser's title and its two filter
+    labels.
+  * The action column stays Portuguese, and that is the standing decision
+    rather than an omission: "case $esc in" matches those names, and a command
+    copied off a forum has to work on any machine. So the panel is now split
+    down the middle - the half a person reads comes from the catalogue in seven
+    languages, and the half the shell matches never moves.
+  * The file chooser's globs moved out of the message and into a variable at
+    the top of the file. They are the nine formats, not prose, and a translator
+    opening a catalogue should not be shown a list of extensions to consider
+    rewording.
+  * Verified by resolving the rows in all seven languages rather than by
+    reading the code: a key present in the code and missing from a catalogue
+    falls back silently, so the test demands a real sentence per language and
+    fails on the key name.
+  * 121 sentences are still literals - tandem doctor, the autoteste report and
+    the hardware-key advice. Migrating them is the rest of this version's work.
+    The suite holds the number as a ratchet: it may fall, never rise.
 
  -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 16:00:00 +0000
 

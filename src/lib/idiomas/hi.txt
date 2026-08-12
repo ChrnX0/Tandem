@@ -2040,3 +2040,75 @@ Tandem जो सीखता है, उसे समुदाय की सू
     एप्लिकेशन मेन्यू -> Tandem    -> पैनल, सब कुछ एक जगह
 
   वातावरण जाँचिए:  tandem doctor
+
+@pan_pergunta
+आप क्या करना चाहते हैं?
+
+@pan_col_acao
+काम
+
+@pan_col_descricao
+यह क्या करता है
+
+@pan_instalar
+कोई फ़ाइल स्थापित करें या खोलें (.exe .apk .AppImage .jar .deb)
+
+@pan_preparar
+जो नहीं है उसे स्थापित करें (Wine, Java, Android...)
+
+@pan_programas
+पहले से स्थापित कोई प्रोग्राम खोलें
+
+@pan_remover
+कोई Windows प्रोग्राम हटाएँ
+
+@pan_android
+Android की स्क्रीन खोलें
+
+@pan_doctor
+देखें कि इस कंप्यूटर में क्या है और क्या नहीं
+
+@pan_autoteste
+सचमुच जाँचें कि यहाँ सब चलता है या नहीं
+
+@pan_dados
+अपनी फ़ाइलें देखें और कॉपी करें
+
+@pan_portas
+कार्ड रीडर, तराज़ू, प्रिंटर: कौन-से पोर्ट पर हैं
+
+@pan_identidade
+कोई प्रोग्राम आपकी मशीन का क्या देखता है (लाइसेंस)
+
+@pan_backup
+Windows वातावरण सहेजें
+
+@pan_restore
+Windows वातावरण वापस लाएँ
+
+@pan_repair
+दो क्लिक से फ़ाइल खुलना ठीक करें
+
+@pan_memoria
+देखें कि Tandem ने आपके प्रोग्रामों के बारे में क्या सीखा
+
+@pan_lista
+समुदाय ने जो पता कर लिया है उसे डाउनलोड करें
+
+@pan_enviar
+जो मैं सीखता हूँ वह समुदाय को भेजें (चालू/बंद)
+
+@pan_socorro
+मदद माँगने के लिए एक रिपोर्ट बनाएँ
+
+@pan_logs
+तकनीकी लॉग देखें
+
+@pan_escolha_arquivo
+फ़ाइल चुनें
+
+@pan_filtro_programas
+प्रोग्राम और ऐप
+
+@pan_filtro_todos
+सभी फ़ाइलें

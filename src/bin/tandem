@@ -1,6 +1,12 @@
 #!/bin/bash
 # Tandem - main command and control panel.
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
+
+# Every extension the nine handlers claim, for the panel's file chooser. Here
+# rather than inside acao_painel because these are formats, not prose: a
+# translator opening a catalogue should not be shown a list of globs to consider
+# rewording, and the literal counter should not have to be told to ignore them.
+TANDEM_GLOBS="*.exe *.msi *.apk *.xapk *.apks *.apkm *.AppImage *.appimage *.jar *.deb *.rpm *.flatpakref *.snap *.sh *.run"
 t_log_init tandem "$*"
 t_primeira_vez
 
@@ -1262,34 +1268,45 @@ acao_painel() {
     if ! t_tem_gui || ! command -v zenity >/dev/null 2>&1; then uso; return 0; fi
     local esc
     while :; do
+        # The action names are the machine-readable half and stay Portuguese
+        # forever - "case $esc in" matches them, and a command copied off a
+        # forum has to work on any machine. Everything a person reads comes
+        # from the catalogue.
         esc="$(zenity --list --title="Tandem" --width=520 --height=400 \
-            --text="O que você quer fazer?" \
-            --column="Ação" --column="Descrição" --hide-header \
-            "instalar"  "Instalar ou abrir um arquivo (.exe .apk .AppImage .jar .deb)" \
-            "preparar"  "Instalar o que falta (Wine, Java, Android...)" \
-            "programas" "Abrir um programa já instalado" \
-            "remover"   "Desinstalar um programa do Windows" \
-            "android"   "Abrir a tela do Android" \
-            "doctor"    "Ver o diagnóstico do ambiente" \
-            "autoteste" "Testar de verdade se tudo funciona aqui" \
-            "dados"     "Ver e copiar os SEUS arquivos" \
-            "portas"    "Pinpad, balança, impressora: em que porta ficaram" \
-            "identidade" "O que o programa vê da sua máquina (licença)" \
-            "backup"    "Salvar o ambiente Windows" \
-            "restore"   "Restaurar o ambiente Windows" \
-            "repair"    "Consertar a abertura de arquivos com dois cliques" \
-            "memoria"   "Ver o que o Tandem aprendeu sobre os programas" \
-            "lista"     "Baixar o que a comunidade já descobriu" \
-            "enviar"    "Mandar o que eu aprendo para a comunidade (liga/desliga)" \
-            "socorro"   "Gerar um relatório para pedir ajuda" \
-            "logs"      "Ver o registro técnico" \
+            --text="$(t_msg pan_pergunta)" \
+            --column="$(t_msg pan_col_acao)" \
+            --column="$(t_msg pan_col_descricao)" --hide-header \
+            "instalar"   "$(t_msg pan_instalar)" \
+            "preparar"   "$(t_msg pan_preparar)" \
+            "programas"  "$(t_msg pan_programas)" \
+            "remover"    "$(t_msg pan_remover)" \
+            "android"    "$(t_msg pan_android)" \
+            "doctor"     "$(t_msg pan_doctor)" \
+            "autoteste"  "$(t_msg pan_autoteste)" \
+            "dados"      "$(t_msg pan_dados)" \
+            "portas"     "$(t_msg pan_portas)" \
+            "identidade" "$(t_msg pan_identidade)" \
+            "backup"     "$(t_msg pan_backup)" \
+            "restore"    "$(t_msg pan_restore)" \
+            "repair"     "$(t_msg pan_repair)" \
+            "memoria"    "$(t_msg pan_memoria)" \
+            "lista"      "$(t_msg pan_lista)" \
+            "enviar"     "$(t_msg pan_enviar)" \
+            "socorro"    "$(t_msg pan_socorro)" \
+            "logs"       "$(t_msg pan_logs)" \
             2>/dev/null)" || return 0
         case "$esc" in
             instalar)
                 local f
-                f="$(zenity --file-selection --title="Escolha o arquivo" \
-                     --file-filter="Programas e apps | *.exe *.msi *.apk *.xapk *.apks *.apkm *.AppImage *.appimage *.jar *.deb *.rpm *.flatpakref *.snap *.sh *.run" \
-                     --file-filter="Todos | *" 2>/dev/null)" || continue
+                # zenity's --file-filter is "label | globs", so only the half
+                # before the bar is translated. The globs live in a variable at
+                # the top of this file rather than here: they are the nine
+                # formats, not prose, and a translator opening a catalogue
+                # should never be shown a list of extensions to consider
+                # rewording.
+                f="$(zenity --file-selection --title="$(t_msg pan_escolha_arquivo)" \
+                     --file-filter="$(t_msg pan_filtro_programas) | $TANDEM_GLOBS" \
+                     --file-filter="$(t_msg pan_filtro_todos) | *" 2>/dev/null)" || continue
                 acao_install "$f" ;;
             preparar)  acao_preparar ;;
             programas) acao_programas ;;

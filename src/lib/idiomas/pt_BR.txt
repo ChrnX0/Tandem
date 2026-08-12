@@ -2047,3 +2047,75 @@ Desligado. Nada sai desta máquina.
     Menu de aplicativos -> Tandem        -> painel com tudo
 
   Verifique o ambiente com:  tandem doctor
+
+@pan_pergunta
+O que você quer fazer?
+
+@pan_col_acao
+Ação
+
+@pan_col_descricao
+Descrição
+
+@pan_instalar
+Instalar ou abrir um arquivo (.exe .apk .AppImage .jar .deb)
+
+@pan_preparar
+Instalar o que falta (Wine, Java, Android...)
+
+@pan_programas
+Abrir um programa já instalado
+
+@pan_remover
+Desinstalar um programa do Windows
+
+@pan_android
+Abrir a tela do Android
+
+@pan_doctor
+Ver o diagnóstico do ambiente
+
+@pan_autoteste
+Testar de verdade se tudo funciona aqui
+
+@pan_dados
+Ver e copiar os SEUS arquivos
+
+@pan_portas
+Pinpad, balança, impressora: em que porta ficaram
+
+@pan_identidade
+O que o programa vê da sua máquina (licença)
+
+@pan_backup
+Salvar o ambiente Windows
+
+@pan_restore
+Restaurar o ambiente Windows
+
+@pan_repair
+Consertar a abertura de arquivos com dois cliques
+
+@pan_memoria
+Ver o que o Tandem aprendeu sobre os programas
+
+@pan_lista
+Baixar o que a comunidade já descobriu
+
+@pan_enviar
+Mandar o que eu aprendo para a comunidade (liga/desliga)
+
+@pan_socorro
+Gerar um relatório para pedir ajuda
+
+@pan_logs
+Ver o registro técnico
+
+@pan_escolha_arquivo
+Escolha o arquivo
+
+@pan_filtro_programas
+Programas e apps
+
+@pan_filtro_todos
+Todos os arquivos

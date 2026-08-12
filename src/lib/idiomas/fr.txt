@@ -2097,3 +2097,75 @@ Désactivé. Rien ne quitte cette machine.
     Menu des applications -> Tandem -> le panneau, avec tout
 
   Verifiez l'environnement avec :  tandem doctor
+
+@pan_pergunta
+Que voulez-vous faire ?
+
+@pan_col_acao
+Action
+
+@pan_col_descricao
+Ce que ça fait
+
+@pan_instalar
+Installer ou ouvrir un fichier (.exe .apk .AppImage .jar .deb)
+
+@pan_preparar
+Installer ce qui manque (Wine, Java, Android...)
+
+@pan_programas
+Ouvrir un programme déjà installé
+
+@pan_remover
+Désinstaller un programme Windows
+
+@pan_android
+Ouvrir l'écran Android
+
+@pan_doctor
+Voir ce que cet ordinateur a et ce qui lui manque
+
+@pan_autoteste
+Tester pour de vrai si tout fonctionne ici
+
+@pan_dados
+Voir et copier VOS fichiers
+
+@pan_portas
+Lecteur de cartes, balance, imprimante : sur quel port ils sont
+
+@pan_identidade
+Ce qu'un programme voit de votre machine (licences)
+
+@pan_backup
+Sauvegarder l'environnement Windows
+
+@pan_restore
+Restaurer l'environnement Windows
+
+@pan_repair
+Réparer l'ouverture des fichiers par double-clic
+
+@pan_memoria
+Voir ce que Tandem a appris sur vos programmes
+
+@pan_lista
+Télécharger ce que la communauté a déjà trouvé
+
+@pan_enviar
+Envoyer ce que j'apprends à la communauté (activer/désactiver)
+
+@pan_socorro
+Produire un rapport pour demander de l'aide
+
+@pan_logs
+Voir le journal technique
+
+@pan_escolha_arquivo
+Choisissez le fichier
+
+@pan_filtro_programas
+Programmes et applis
+
+@pan_filtro_todos
+Tous les fichiers
