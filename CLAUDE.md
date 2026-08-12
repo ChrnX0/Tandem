@@ -17,6 +17,31 @@ The target user is not a programmer. The quality bar is: *no error path may end
 in silence.* "I double-clicked and nothing happened" is treated as a bug, not as
 a limitation.
 
+## How the owner wants this worked on
+
+A standing directive, in his words: *"nunca fique ocioso e sempre faça o q
+precisa ser feito, sem exceção"*, and *"eu te proíbo me perguntar coisa
+obvia"*.
+
+So: **do not ask what is obvious, and do not stop to be told to continue.** When
+the work is finished, publishing it is part of finishing it — build, verify the
+artifact against a local build, and say what came out. When one thing is done,
+the next item on the queue below starts without being asked for. Idling to
+confirm something the owner has already decided wastes the only resource he
+cannot buy back.
+
+What still deserves a question is narrow and worth keeping narrow: a decision
+only he can make (hosting an endpoint, holding a credential, spending money), or
+an action that destroys something. Everything else — which defect to fix first,
+how to shape a message, whether to open a version, whether to release one — is
+the agent's call, made and reported rather than asked about.
+
+The one thing that is never optional: **report what actually happened.** A guard
+that caught your own mistake, a test that was written after the code it guards,
+a check whose summary line was unconditional — those go in the message. This
+file is full of measurements that were wrong for a while, and every one of them
+was found by somebody writing down what they actually saw.
+
 ## Inviolable rules
 
 1. **Never write into a Wine prefix Tandem did not create.** Our prefixes carry
