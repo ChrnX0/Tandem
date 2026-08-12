@@ -1,0 +1,50 @@
+# हस्ताक्षर	वर्ग	यह कभी क्यों नहीं चलेगा
+#
+# क्या असंभव है, और क्यों। हिन्दी। limites.tsv (पुर्तगाली) मूल है और
+# वापसी का सहारा: यहाँ छूटी पंक्ति पुर्तगाली में पढ़ी जाएगी।
+#
+
+hasp4*.dll	dongle	HASP4 भौतिक कुंजी की सुरक्षा उस पीढ़ी की है जिसे निर्माता अब Windows के बाहर चलने नहीं देता
+haspms*.dll	dongle	HASP4 भौतिक कुंजी की सुरक्षा उस पीढ़ी की है जिसे निर्माता अब Windows के बाहर चलने नहीं देता
+hasp16*.dll	dongle	HASP4 भौतिक कुंजी की सुरक्षा उस पीढ़ी की है जिसे निर्माता अब Windows के बाहर चलने नहीं देता
+hasp32*.dll	dongle	HASP4 भौतिक कुंजी की सुरक्षा उस पीढ़ी की है जिसे निर्माता अब Windows के बाहर चलने नहीं देता
+hardlock*.dll	dongle	Hardlock भौतिक कुंजी की सुरक्षा उस पीढ़ी की है जिसे निर्माता अब Windows के बाहर चलने नहीं देता
+hlvdd*.dll	dongle	Hardlock भौतिक कुंजी की सुरक्षा उस पीढ़ी की है जिसे निर्माता अब Windows के बाहर चलने नहीं देता
+aksusb*.dll	dongle	यह प्रोग्राम भौतिक कुंजी से Aladdin के पुराने ड्राइवर के ज़रिए बात करता है, जो सिर्फ़ Windows के अंदर मौजूद है
+
+hasp_windows*.dll	dongle-sentinel	यह प्रोग्राम Sentinel (HASP) भौतिक कुंजी इस्तेमाल करता है, और उसका Linux पर रास्ता है	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina. Se o programa for de 64 bits e disser que "detectou um depurador", isso só quem conserta é a empresa que fez o programa - não é a sua máquina.
+hasp_net_windows*.dll	dongle-sentinel	यह प्रोग्राम नेटवर्क वाली Sentinel (HASP) भौतिक कुंजी इस्तेमाल करता है, और उसका Linux पर रास्ता है	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+haspvlib*.dll	dongle-sentinel	यह प्रोग्राम Sentinel (HASP) भौतिक कुंजी इस्तेमाल करता है, और उसका Linux पर रास्ता है	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+hasp_rt*.dll	dongle-sentinel	यह प्रोग्राम Sentinel (HASP) भौतिक कुंजी इस्तेमाल करता है, और उसका Linux पर रास्ता है	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+sntl_*.dll	dongle-sentinel	यह प्रोग्राम Sentinel भौतिक कुंजी इस्तेमाल करता है, और उसका Linux पर रास्ता है	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+sentinel*.dll	dongle-sentinel	यह प्रोग्राम Sentinel भौतिक कुंजी इस्तेमाल करता है, और उसका Linux पर रास्ता है	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+hasp*.dll	dongle-sentinel	यह प्रोग्राम HASP परिवार की भौतिक कुंजी इस्तेमाल करता है, और नए संस्करणों का Linux पर रास्ता है	Se a chave for uma Sentinel HL ou SL (as atuais), o fabricante publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Se for uma HASP4 ou Hardlock (as antigas, de plástico roxo), não tem caminho. Quem sabe qual é a sua é quem vendeu o programa.
+
+wibucm*.dll	dongle-codemeter	यह प्रोग्राम CodeMeter भौतिक कुंजी इस्तेमाल करता है, और शायद कोई रास्ता हो	O fabricante (Wibu) tem um "CodeMeter Runtime" para Linux, e o programa Windows conversa com ele pela rede da própria máquina. O mecanismo existe, mas ninguém relatou ter feito isso funcionar no Wine ainda - vale tentar, e nos conte se deu certo.
+codemeter*.dll	dongle-codemeter	यह प्रोग्राम CodeMeter भौतिक कुंजी इस्तेमाल करता है, और शायद कोई रास्ता हो	O fabricante (Wibu) tem um "CodeMeter Runtime" para Linux, e o programa Windows conversa com ele pela rede da própria máquina. O mecanismo existe, mas ninguém relatou ter feito isso funcionar no Wine ainda - vale tentar, e nos conte se deu certo.
+rockey*.dll	dongle-hid	यह प्रोग्राम Rockey भौतिक कुंजी इस्तेमाल करता है, जिसे Linux कीबोर्ड समझता है — इसलिए शायद चल जाए	Esse modelo de chave é do tipo que o Linux já reconhece sozinho, sem instalar nada. O que pode faltar é permissão de leitura no aparelho. Ninguém relatou ainda - vale tentar, e nos conte se deu certo.
+
+ntoskrnl.exe	driver	यह फ़ाइल एक सिस्टम ड्राइवर है, और Wine Linux के कर्नेल के बाहर चलता है
+hal.dll	driver	यह फ़ाइल एक सिस्टम ड्राइवर है, और Wine Linux के कर्नेल के बाहर चलता है
+ndis.sys	driver	यह फ़ाइल एक सिस्टम नेटवर्क ड्राइवर है, और Wine Linux के कर्नेल के बाहर चलता है
+wdfldr*.dll	driver	यह प्रोग्राम एक सिस्टम ड्राइवर चढ़ाता है, और Wine Linux के कर्नेल के बाहर चलता है
+wdfldr*.sys	driver	यह प्रोग्राम एक सिस्टम ड्राइवर चढ़ाता है, और Wine Linux के कर्नेल के बाहर चलता है
+winio*.dll	driver	यह प्रोग्राम सीधे हार्डवेयर तक पहुँचता है, जो सिर्फ़ सिस्टम ड्राइवर कर सकता है
+inpout*.dll	driver	यह प्रोग्राम सीधे पैरेलल पोर्ट तक पहुँचता है, जो सिर्फ़ सिस्टम ड्राइवर कर सकता है
+dlportio*.dll	driver	यह प्रोग्राम सीधे पैरेलल पोर्ट तक पहुँचता है, जो सिर्फ़ सिस्टम ड्राइवर कर सकता है
+giveio*.dll	driver	यह प्रोग्राम सीधे हार्डवेयर तक पहुँचता है, जो सिर्फ़ सिस्टम ड्राइवर कर सकता है
+*.sys	driver	यह प्रोग्राम एक सिस्टम ड्राइवर चढ़ाता है, और Wine Linux के कर्नेल के बाहर चलता है
+
+easyanticheat*.dll	anticheat	यह खेल ऐसा धोखा-रोधी इस्तेमाल करता है जो सिस्टम के कर्नेल के अंदर चलता है
+beclient*.dll	anticheat	यह खेल ऐसा धोखा-रोधी इस्तेमाल करता है जो सिस्टम के कर्नेल के अंदर चलता है
+battleye*.dll	anticheat	यह खेल ऐसा धोखा-रोधी इस्तेमाल करता है जो सिस्टम के कर्नेल के अंदर चलता है
+
+winusb.dll	usb	यह प्रोग्राम USB पोर्ट से सीधे किसी उपकरण से बात करता है; Wine उसका सिर्फ़ हिस्सा कर पाता है, और जो उपकरण Linux पहले से इस्तेमाल कर रहा हो उन पर खींचतान हो जाती है
+libusb*.dll	usb	यह प्रोग्राम USB पोर्ट से सीधे किसी उपकरण से बात करता है; Wine उसका सिर्फ़ हिस्सा कर पाता है, और जो उपकरण Linux पहले से इस्तेमाल कर रहा हो उन पर खींचतान हो जाती है
+hid.dll	usb-talvez	यह प्रोग्राम कीबोर्ड जैसे USB उपकरण से बात करता है; कीबोर्ड और बारकोड स्कैनर आम तौर पर चल जाते हैं, बाकी उपकरण दिख ही न सकते हैं	O Wine mostra ao programa todos os aparelhos desse tipo que o Linux enxerga. Se o seu não aparecer, quase sempre é permissão de leitura no aparelho, não o Wine.
+
+winscard.dll	pcsc	यह प्रोग्राम कार्ड रीडर या प्रमाणपत्र टोकन (A3) इस्तेमाल करता है	O Wine repassa a leitora para o Linux, então o primeiro passo é o Linux enxergar o token: instale pcscd, pcsc-tools e libccid, e rode pcsc-scan para ver se ele aparece. Aviso honesto: a leitora aparecer não quer dizer que o certificado vai assinar - programas brasileiros costumam pedir o certificado por um caminho do Windows que o Linux não tem, e aí só o fornecedor do programa resolve.
+
+clisitef*.dll	tef	यह प्रोग्राम कार्ड भुगतान के लिए CliSiTef लाइब्रेरी इस्तेमाल करता है	A empresa que faz o CliSiTef (Software Express) já publica uma versão dele para Linux. Não é você que instala: é o fornecedor do seu sistema de vendas que precisa usá-la. Vale pedir a ele - o pinpad no Linux costuma aparecer como /dev/ttyACM0.
+pgweblib*.dll	tef	यह प्रोग्राम कार्ड भुगतान के लिए PayGo लाइब्रेरी इस्तेमाल करता है	A PayGo já publica a biblioteca dela para Linux. Não é você que instala: é o fornecedor do seu sistema de vendas que precisa usá-la. Vale pedir a ele.
+acbrlib*.dll	tef	यह प्रोग्राम बिल या कार्ड भुगतान के लिए ACBrLib इस्तेमाल करता है	A ACBrLib é compilada também para Linux, em 32 e 64 bits. Não é você que instala: é o fornecedor do seu sistema que precisa usá-la. Vale pedir a ele.

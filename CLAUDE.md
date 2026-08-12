@@ -748,15 +748,24 @@ shape not listed above, the counter will happily report zero.
 ### The data tables
 
 `alternativas.tsv` and `limites.tsv` carry prose in their columns and it reaches
-the owner. They now work like the catalogues: `alternativas.<lang>.tsv` beside
-the original, **and the original is the fallback** - a language with no table of
-its own reads the Portuguese rows rather than nothing.
+the owner - "what changes" for each Linux alternative, "why it will never work"
+for each impossible signature. They work like the catalogues:
+`alternativas.<lang>.tsv` beside the original, **and the original is the
+fallback** - a language with no table of its own reads the Portuguese rows
+rather than nothing.
 
-**English is written; es, fr, zh_CN, hi and ar are not.** That is the one place
-where a non-Portuguese reader still meets Portuguese: the framing is translated,
-the row content is not. 43 alternative rows and 37 impossibility rows each.
-There is a test that a translated table matches the original row for row - a
-pattern matching the wrong row would be worse than any wording.
+**All six exist**: 43 alternative rows and 37 impossibility rows in each of en,
+es, fr, zh_CN, hi and ar. Four things are asserted per table per language, and
+the last two matter more than the wording:
+
+- the same number of data rows as the original;
+- the same FIRST column, in the same order - that column is the pattern that
+  matches, and a translated table that reordered its rows would match the wrong
+  one;
+- the same SECOND column - the class (`nativo`, `parecido`, `dongle`, `driver`)
+  chooses which message frames the row, so a translated `nativo` would silently
+  pick the wrong frame;
+- no row left holding the Portuguese sentence.
 
 ## Next steps
 
@@ -773,10 +782,12 @@ The queue, in order:
    command", not "unrecognised file type"), `tandem idioma`, and a double click
    on a real `.xapk`, `.AppImage` and `.jar`.
 
-0b. **Five catalogues carry `REVISADO=nao`** and five data tables do not exist.
-   Both are asking-for-help work rather than engineering: the files are plain
-   text, the format cannot execute anything, and the fallback means a
-   half-finished contribution breaks nothing.
+0b. **Five catalogues carry `REVISADO=nao`.** That is the whole of what is left
+   of the translation, and it is not engineering: it needs somebody who speaks
+   es, fr, zh_CN, hi or ar to read what is there. The files are plain text, the
+   format cannot execute anything, and a wrong line breaks nothing - it is the
+   easiest contribution this project can ask for. The data tables are complete
+   in all six.
 
 1. **Fill the community list.** Half-solved in 3.9: the client side of automatic
    sending is built, tested against a real socket, and off by default. What is

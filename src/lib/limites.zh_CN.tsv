@@ -1,0 +1,50 @@
+# 特征	类别	为什么永远不行
+#
+# 什么是做不到的，以及为什么。简体中文。limites.tsv（葡萄牙语）是原文，
+# 也是回退：这里缺的一行会以葡萄牙语显示。
+#
+
+hasp4*.dll	dongle	HASP4 硬件锁属于厂商已经不再让它在 Windows 之外工作的那一代
+haspms*.dll	dongle	HASP4 硬件锁属于厂商已经不再让它在 Windows 之外工作的那一代
+hasp16*.dll	dongle	HASP4 硬件锁属于厂商已经不再让它在 Windows 之外工作的那一代
+hasp32*.dll	dongle	HASP4 硬件锁属于厂商已经不再让它在 Windows 之外工作的那一代
+hardlock*.dll	dongle	Hardlock 硬件锁属于厂商已经不再让它在 Windows 之外工作的那一代
+hlvdd*.dll	dongle	Hardlock 硬件锁属于厂商已经不再让它在 Windows 之外工作的那一代
+aksusb*.dll	dongle	这个程序通过 Aladdin 的旧驱动跟硬件锁通信，而那个驱动只存在于 Windows 里面
+
+hasp_windows*.dll	dongle-sentinel	这个程序用的是 Sentinel（HASP）硬件锁，而它在 Linux 上有路可走	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina. Se o programa for de 64 bits e disser que "detectou um depurador", isso só quem conserta é a empresa que fez o programa - não é a sua máquina.
+hasp_net_windows*.dll	dongle-sentinel	这个程序用的是网络版 Sentinel（HASP）硬件锁，而它在 Linux 上有路可走	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+haspvlib*.dll	dongle-sentinel	这个程序用的是 Sentinel（HASP）硬件锁，而它在 Linux 上有路可走	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+hasp_rt*.dll	dongle-sentinel	这个程序用的是 Sentinel（HASP）硬件锁，而它在 Linux 上有路可走	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+sntl_*.dll	dongle-sentinel	这个程序用的是 Sentinel 硬件锁，而它在 Linux 上有路可走	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+sentinel*.dll	dongle-sentinel	这个程序用的是 Sentinel 硬件锁，而它在 Linux 上有路可走	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+hasp*.dll	dongle-sentinel	这个程序用的是 HASP 家族的硬件锁，新版本在 Linux 上有路可走	Se a chave for uma Sentinel HL ou SL (as atuais), o fabricante publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Se for uma HASP4 ou Hardlock (as antigas, de plástico roxo), não tem caminho. Quem sabe qual é a sua é quem vendeu o programa.
+
+wibucm*.dll	dongle-codemeter	这个程序用的是 CodeMeter 硬件锁，可能有路可走	O fabricante (Wibu) tem um "CodeMeter Runtime" para Linux, e o programa Windows conversa com ele pela rede da própria máquina. O mecanismo existe, mas ninguém relatou ter feito isso funcionar no Wine ainda - vale tentar, e nos conte se deu certo.
+codemeter*.dll	dongle-codemeter	这个程序用的是 CodeMeter 硬件锁，可能有路可走	O fabricante (Wibu) tem um "CodeMeter Runtime" para Linux, e o programa Windows conversa com ele pela rede da própria máquina. O mecanismo existe, mas ninguém relatou ter feito isso funcionar no Wine ainda - vale tentar, e nos conte se deu certo.
+rockey*.dll	dongle-hid	这个程序用的是 Rockey 硬件锁，Linux 把它当键盘看，所以可能能用	Esse modelo de chave é do tipo que o Linux já reconhece sozinho, sem instalar nada. O que pode faltar é permissão de leitura no aparelho. Ninguém relatou ainda - vale tentar, e nos conte se deu certo.
+
+ntoskrnl.exe	driver	这个文件是系统驱动，而 Wine 跑在 Linux 内核之外
+hal.dll	driver	这个文件是系统驱动，而 Wine 跑在 Linux 内核之外
+ndis.sys	driver	这个文件是系统网络驱动，而 Wine 跑在 Linux 内核之外
+wdfldr*.dll	driver	这个程序会加载系统驱动，而 Wine 跑在 Linux 内核之外
+wdfldr*.sys	driver	这个程序会加载系统驱动，而 Wine 跑在 Linux 内核之外
+winio*.dll	driver	这个程序直接访问硬件，而这只有系统驱动才做得到
+inpout*.dll	driver	这个程序直接访问并口，而这只有系统驱动才做得到
+dlportio*.dll	driver	这个程序直接访问并口，而这只有系统驱动才做得到
+giveio*.dll	driver	这个程序直接访问硬件，而这只有系统驱动才做得到
+*.sys	driver	这个程序会加载系统驱动，而 Wine 跑在 Linux 内核之外
+
+easyanticheat*.dll	anticheat	这个游戏用的反作弊程序跑在系统内核里面
+beclient*.dll	anticheat	这个游戏用的反作弊程序跑在系统内核里面
+battleye*.dll	anticheat	这个游戏用的反作弊程序跑在系统内核里面
+
+winusb.dll	usb	这个程序直接通过 USB 跟设备通信；Wine 只做到一部分，而且 Linux 已经在用的设备会被抢
+libusb*.dll	usb	这个程序直接通过 USB 跟设备通信；Wine 只做到一部分，而且 Linux 已经在用的设备会被抢
+hid.dll	usb-talvez	这个程序跟键盘类的 USB 设备通信；键盘和扫码枪一般能用，别的设备可能根本不出现	O Wine mostra ao programa todos os aparelhos desse tipo que o Linux enxerga. Se o seu não aparecer, quase sempre é permissão de leitura no aparelho, não o Wine.
+
+winscard.dll	pcsc	这个程序用读卡器或证书令牌（A3）	O Wine repassa a leitora para o Linux, então o primeiro passo é o Linux enxergar o token: instale pcscd, pcsc-tools e libccid, e rode pcsc-scan para ver se ele aparece. Aviso honesto: a leitora aparecer não quer dizer que o certificado vai assinar - programas brasileiros costumam pedir o certificado por um caminho do Windows que o Linux não tem, e aí só o fornecedor do programa resolve.
+
+clisitef*.dll	tef	这个程序用 CliSiTef 刷卡库	A empresa que faz o CliSiTef (Software Express) já publica uma versão dele para Linux. Não é você que instala: é o fornecedor do seu sistema de vendas que precisa usá-la. Vale pedir a ele - o pinpad no Linux costuma aparecer como /dev/ttyACM0.
+pgweblib*.dll	tef	这个程序用 PayGo 刷卡库	A PayGo já publica a biblioteca dela para Linux. Não é você que instala: é o fornecedor do seu sistema de vendas que precisa usá-la. Vale pedir a ele.
+acbrlib*.dll	tef	这个程序用 ACBrLib 来开票或刷卡	A ACBrLib é compilada também para Linux, em 32 e 64 bits. Não é você que instala: é o fornecedor do seu sistema que precisa usá-la. Vale pedir a ele.

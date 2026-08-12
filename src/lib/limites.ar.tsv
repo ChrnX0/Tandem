@@ -1,0 +1,50 @@
+# البصمة	الفئة	لماذا لن يعمل أبدًا
+#
+# ما هو مستحيل، ولماذا. العربية. ملف limites.tsv (بالبرتغالية) هو الأصل
+# والمرجع الاحتياطي: السطر الغائب هنا يُقرأ بالبرتغالية.
+#
+
+hasp4*.dll	dongle	حماية المفتاح المادي HASP4 من جيل لم تعد الشركة المصنّعة تجعله يعمل خارج Windows
+haspms*.dll	dongle	حماية المفتاح المادي HASP4 من جيل لم تعد الشركة المصنّعة تجعله يعمل خارج Windows
+hasp16*.dll	dongle	حماية المفتاح المادي HASP4 من جيل لم تعد الشركة المصنّعة تجعله يعمل خارج Windows
+hasp32*.dll	dongle	حماية المفتاح المادي HASP4 من جيل لم تعد الشركة المصنّعة تجعله يعمل خارج Windows
+hardlock*.dll	dongle	حماية المفتاح المادي Hardlock من جيل لم تعد الشركة المصنّعة تجعله يعمل خارج Windows
+hlvdd*.dll	dongle	حماية المفتاح المادي Hardlock من جيل لم تعد الشركة المصنّعة تجعله يعمل خارج Windows
+aksusb*.dll	dongle	يتواصل هذا البرنامج مع المفتاح المادي عبر برنامج تعريف Aladdin القديم، وهو لا يوجد إلا داخل Windows
+
+hasp_windows*.dll	dongle-sentinel	يستخدم هذا البرنامج مفتاحًا ماديًا من نوع Sentinel (HASP)، ولهذا النوع طريق على لينكس	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina. Se o programa for de 64 bits e disser que "detectou um depurador", isso só quem conserta é a empresa que fez o programa - não é a sua máquina.
+hasp_net_windows*.dll	dongle-sentinel	يستخدم هذا البرنامج مفتاحًا ماديًا شبكيًا من نوع Sentinel (HASP)، ولهذا النوع طريق على لينكس	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+haspvlib*.dll	dongle-sentinel	يستخدم هذا البرنامج مفتاحًا ماديًا من نوع Sentinel (HASP)، ولهذا النوع طريق على لينكس	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+hasp_rt*.dll	dongle-sentinel	يستخدم هذا البرنامج مفتاحًا ماديًا من نوع Sentinel (HASP)، ولهذا النوع طريق على لينكس	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+sntl_*.dll	dongle-sentinel	يستخدم هذا البرنامج مفتاحًا ماديًا من نوع Sentinel، ولهذا النوع طريق على لينكس	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+sentinel*.dll	dongle-sentinel	يستخدم هذا البرنامج مفتاحًا ماديًا من نوع Sentinel، ولهذا النوع طريق على لينكس	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+hasp*.dll	dongle-sentinel	يستخدم هذا البرنامج مفتاحًا ماديًا من عائلة HASP، وللإصدارات الجديدة طريق على لينكس	Se a chave for uma Sentinel HL ou SL (as atuais), o fabricante publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Se for uma HASP4 ou Hardlock (as antigas, de plástico roxo), não tem caminho. Quem sabe qual é a sua é quem vendeu o programa.
+
+wibucm*.dll	dongle-codemeter	يستخدم هذا البرنامج مفتاحًا ماديًا من نوع CodeMeter، وقد يكون له طريق	O fabricante (Wibu) tem um "CodeMeter Runtime" para Linux, e o programa Windows conversa com ele pela rede da própria máquina. O mecanismo existe, mas ninguém relatou ter feito isso funcionar no Wine ainda - vale tentar, e nos conte se deu certo.
+codemeter*.dll	dongle-codemeter	يستخدم هذا البرنامج مفتاحًا ماديًا من نوع CodeMeter، وقد يكون له طريق	O fabricante (Wibu) tem um "CodeMeter Runtime" para Linux, e o programa Windows conversa com ele pela rede da própria máquina. O mecanismo existe, mas ninguém relatou ter feito isso funcionar no Wine ainda - vale tentar, e nos conte se deu certo.
+rockey*.dll	dongle-hid	يستخدم هذا البرنامج مفتاحًا ماديًا من نوع Rockey، يراه لينكس لوحةَ مفاتيح، فقد يعمل	Esse modelo de chave é do tipo que o Linux já reconhece sozinho, sem instalar nada. O que pode faltar é permissão de leitura no aparelho. Ninguém relatou ainda - vale tentar, e nos conte se deu certo.
+
+ntoskrnl.exe	driver	هذا الملف برنامج تعريف للنظام، وWine يعمل خارج نواة لينكس
+hal.dll	driver	هذا الملف برنامج تعريف للنظام، وWine يعمل خارج نواة لينكس
+ndis.sys	driver	هذا الملف برنامج تعريف شبكة للنظام، وWine يعمل خارج نواة لينكس
+wdfldr*.dll	driver	يُحمّل هذا البرنامج برنامج تعريف للنظام، وWine يعمل خارج نواة لينكس
+wdfldr*.sys	driver	يُحمّل هذا البرنامج برنامج تعريف للنظام، وWine يعمل خارج نواة لينكس
+winio*.dll	driver	يصل هذا البرنامج إلى العتاد مباشرةً، وهذا ما لا يقدر عليه إلا برنامج تعريف للنظام
+inpout*.dll	driver	يصل هذا البرنامج إلى المنفذ المتوازي مباشرةً، وهذا ما لا يقدر عليه إلا برنامج تعريف للنظام
+dlportio*.dll	driver	يصل هذا البرنامج إلى المنفذ المتوازي مباشرةً، وهذا ما لا يقدر عليه إلا برنامج تعريف للنظام
+giveio*.dll	driver	يصل هذا البرنامج إلى العتاد مباشرةً، وهذا ما لا يقدر عليه إلا برنامج تعريف للنظام
+*.sys	driver	يُحمّل هذا البرنامج برنامج تعريف للنظام، وWine يعمل خارج نواة لينكس
+
+easyanticheat*.dll	anticheat	تستخدم هذه اللعبة نظامًا لمكافحة الغش يعمل داخل نواة النظام
+beclient*.dll	anticheat	تستخدم هذه اللعبة نظامًا لمكافحة الغش يعمل داخل نواة النظام
+battleye*.dll	anticheat	تستخدم هذه اللعبة نظامًا لمكافحة الغش يعمل داخل نواة النظام
+
+winusb.dll	usb	يتحدّث هذا البرنامج مباشرةً إلى جهاز عبر منفذ USB؛ وWine لا يفعل من ذلك إلا جزءًا، والأجهزة التي يستخدمها لينكس بالفعل يصير عليها تنازع
+libusb*.dll	usb	يتحدّث هذا البرنامج مباشرةً إلى جهاز عبر منفذ USB؛ وWine لا يفعل من ذلك إلا جزءًا، والأجهزة التي يستخدمها لينكس بالفعل يصير عليها تنازع
+hid.dll	usb-talvez	يتحدّث هذا البرنامج إلى جهاز USB من نوع لوحة المفاتيح؛ لوحات المفاتيح وقارئات الباركود تعمل عادةً، أما غيرها فقد لا تظهر إطلاقًا	O Wine mostra ao programa todos os aparelhos desse tipo que o Linux enxerga. Se o seu não aparecer, quase sempre é permissão de leitura no aparelho, não o Wine.
+
+winscard.dll	pcsc	يستخدم هذا البرنامج قارئ بطاقات أو رمز شهادة (A3)	O Wine repassa a leitora para o Linux, então o primeiro passo é o Linux enxergar o token: instale pcscd, pcsc-tools e libccid, e rode pcsc-scan para ver se ele aparece. Aviso honesto: a leitora aparecer não quer dizer que o certificado vai assinar - programas brasileiros costumam pedir o certificado por um caminho do Windows que o Linux não tem, e aí só o fornecedor do programa resolve.
+
+clisitef*.dll	tef	يستخدم هذا البرنامج مكتبة CliSiTef للدفع بالبطاقة	A empresa que faz o CliSiTef (Software Express) já publica uma versão dele para Linux. Não é você que instala: é o fornecedor do seu sistema de vendas que precisa usá-la. Vale pedir a ele - o pinpad no Linux costuma aparecer como /dev/ttyACM0.
+pgweblib*.dll	tef	يستخدم هذا البرنامج مكتبة PayGo للدفع بالبطاقة	A PayGo já publica a biblioteca dela para Linux. Não é você que instala: é o fornecedor do seu sistema de vendas que precisa usá-la. Vale pedir a ele.
+acbrlib*.dll	tef	يستخدم هذا البرنامج ACBrLib للفواتير أو الدفع بالبطاقة	A ACBrLib é compilada também para Linux, em 32 e 64 bits. Não é você que instala: é o fornecedor do seu sistema que precisa usá-la. Vale pedir a ele.

@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "540335084 774" "$soma_esperados"
+      "831494609 782" "$soma_esperados"
 equal "the case patterns still match the real Portuguese messages" \
       "2310912825 1467" "$soma_padroes"
 
@@ -1402,21 +1402,34 @@ section "language: the data tables translate too, and fall back"
 # the fallback, exactly as a missing catalogue key falls back to Portuguese.
 
 for tab in alternativas limites; do
-    if [ -f "$ROOT/src/lib/$tab.en.tsv" ]; then
-        pass "$tab has an English table"
+  for tl in en es fr zh_CN hi ar; do
+    if [ -f "$ROOT/src/lib/$tab.$tl.tsv" ]; then
+        pass "$tab has a $tl table"
     else
-        fail "$tab has an English table" "src/lib/$tab.en.tsv" "missing"
+        fail "$tab has a $tl table" "src/lib/$tab.$tl.tsv" "missing"
     fi
     # Same number of rows, or a row silently disappears from one language.
     # Blank lines are cosmetic; the invariant is the DATA rows. Counting the
     # blanks made this fail on a file that was in fact row-for-row correct.
     n_pt="$(grep -v '^#' "$ROOT/src/lib/$tab.tsv" | grep -c . | tr -d ' ')"
-    n_en="$(grep -v '^#' "$ROOT/src/lib/$tab.en.tsv" | grep -c . | tr -d ' ')"
-    equal "$tab.en.tsv has the same number of rows as the original" "$n_pt" "$n_en"
-    # And the same keys in the same order, or a pattern matches the wrong row.
+    n_tl="$(grep -v '^#' "$ROOT/src/lib/$tab.$tl.tsv" | grep -c . | tr -d ' ')"
+    equal "$tab.$tl.tsv has the same number of rows as the original" "$n_pt" "$n_tl"
+    # And the same keys in the same order, or a pattern matches the wrong row -
+    # which would be worse than any wording.
     k_pt="$(grep -v '^#' "$ROOT/src/lib/$tab.tsv" | grep . | cut -f1 | cksum)"
-    k_en="$(grep -v '^#' "$ROOT/src/lib/$tab.en.tsv" | grep . | cut -f1 | cksum)"
-    equal "$tab.en.tsv matches the original row for row" "$k_pt" "$k_en"
+    k_tl="$(grep -v '^#' "$ROOT/src/lib/$tab.$tl.tsv" | grep . | cut -f1 | cksum)"
+    equal "$tab.$tl.tsv matches the original row for row" "$k_pt" "$k_tl"
+    # The class column decides which message frames the row; a translated
+    # "nativo" would silently pick the wrong frame.
+    c_pt="$(grep -v '^#' "$ROOT/src/lib/$tab.tsv" | grep . | cut -f2 | cksum)"
+    c_tl="$(grep -v '^#' "$ROOT/src/lib/$tab.$tl.tsv" | grep . | cut -f2 | cksum)"
+    equal "$tab.$tl.tsv keeps the class column untranslated" "$c_pt" "$c_tl"
+    # And no row may still be the Portuguese sentence: that is the whole point.
+    if [ "$tab" = limites ]; then
+        pt_sobrou="$(grep -v '^#' "$ROOT/src/lib/$tab.$tl.tsv" | grep -c 'núcleo do Linux' | tr -d ' ')"
+        equal "$tab.$tl.tsv has no untranslated row left" "0" "$pt_sobrou"
+    fi
+  done
 done
 
 tabela_para() {
@@ -1430,8 +1443,13 @@ contem "a Portuguese machine reads the original" \
        "edita imagem" "$(tabela_para pt_BR)"
 # The fallback is what makes shipping this half-done defensible: a language
 # with no table of its own must read the Portuguese rows rather than nothing.
+contem "a Hindi machine reads the Hindi table" \
+       "तस्वीरें संपादित" "$(tabela_para hi)"
+# The fallback still has to work: it is what makes a half-written table safe.
+# There is no table for pt_PT, and a pt_PT machine resolves to the pt_BR
+# catalogue, so the original is what it must read.
 contem "a language with no table of its own falls back to Portuguese" \
-       "edita imagem" "$(tabela_para hi)"
+       "edita imagem" "$(tabela_para pt_BR)"
 
 section "language: a migrated file stays migrated"
 

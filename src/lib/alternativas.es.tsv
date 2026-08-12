@@ -1,0 +1,51 @@
+# patrón	clase	nombre	cómo instalarlo	qué cambia
+#
+# Programas de Linux que hacen el trabajo de un programa de Windows. ESPAÑOL.
+# alternativas.tsv (portugués) es el original y el respaldo: una fila que
+# falte aquí no es un error, simplemente se lee en portugués.
+#
+
+*teamviewer*	nativo	TeamViewer para Linux	descárgalo en teamviewer.com/es/download/linux/	es el mismo TeamViewer, versión oficial para Linux
+*anydesk*	nativo	AnyDesk para Linux	descárgalo en anydesk.com/es/downloads/linux	es el mismo AnyDesk, versión oficial para Linux
+*rustdesk*	nativo	RustDesk para Linux	descárgalo en rustdesk.com	es el mismo RustDesk, versión oficial para Linux
+*chrome*	nativo	Google Chrome	descárgalo en google.com/chrome	es el mismo Chrome, versión oficial para Linux
+*firefox*	nativo	Firefox	ya viene instalado en Zorin	es el mismo Firefox
+*zoom*	nativo	Zoom para Linux	descárgalo en zoom.us/download	es el mismo Zoom, versión oficial para Linux
+*skype*	nativo	Skype para Linux	sudo snap install skype	es el mismo Skype, versión oficial para Linux
+*spotify*	nativo	Spotify para Linux	sudo snap install spotify	es el mismo Spotify, versión oficial para Linux
+*vlc*	nativo	VLC	sudo apt install vlc	es el mismo VLC
+*obs*studio*	nativo	OBS Studio	sudo apt install obs-studio	es el mismo OBS Studio
+*audacity*	nativo	Audacity	sudo apt install audacity	es el mismo Audacity
+*blender*	nativo	Blender	sudo apt install blender	es el mismo Blender
+*inkscape*	nativo	Inkscape	sudo apt install inkscape	es el mismo Inkscape
+*gimp*	nativo	GIMP	sudo apt install gimp	es el mismo GIMP
+*libreoffice*	nativo	LibreOffice	ya viene instalado en Zorin	es el mismo LibreOffice
+*thunderbird*	nativo	Thunderbird	sudo apt install thunderbird	es el mismo Thunderbird
+*filezilla*	nativo	FileZilla	sudo apt install filezilla	es el mismo FileZilla
+*putty*	nativo	PuTTY	sudo apt install putty	es el mismo PuTTY; en Linux la terminal ya hace SSH sin programa extra
+*notepad++*	parecido	Gedit, Kate o VS Code	sudo apt install gedit	edita texto y código; sin los complementos de Notepad++
+*winrar*	parecido	El gestor de archivos de Zorin	ya viene instalado	abre y crea .zip y .rar con dos clics, sin instalar nada
+*7z*	parecido	El gestor de archivos de Zorin	ya viene instalado	abre y crea .zip y .7z con dos clics, sin instalar nada
+*winzip*	parecido	El gestor de archivos de Zorin	ya viene instalado	abre y crea .zip con dos clics, sin instalar nada
+*acrobat*	parecido	Evince u Okular	ya viene instalado en Zorin	lee e imprime PDF; no edita ni firma como el Acrobat de pago
+*adobereader*	parecido	Evince u Okular	ya viene instalado en Zorin	lee e imprime PDF; no edita ni firma como el Acrobat de pago
+*photoshop*	parecido	GIMP o Krita	sudo apt install gimp krita	edita imágenes, pero es otro programa: menús distintos y los .psd no entran con todos los recursos
+*coreldraw*	parecido	Inkscape	sudo apt install inkscape	dibujo vectorial; abre .cdr con limitaciones y guarda en .svg
+*illustrator*	parecido	Inkscape	sudo apt install inkscape	dibujo vectorial; no abre .ai con todos los recursos
+*excel*	parecido	LibreOffice Calc	ya viene instalado en Zorin	abre y guarda .xlsx; las macros de VBA no funcionan
+*word*	parecido	LibreOffice Writer	ya viene instalado en Zorin	abre y guarda .docx; el formato puede salir distinto en un documento complejo
+*powerpoint*	parecido	LibreOffice Impress	ya viene instalado en Zorin	abre y guarda .pptx; las animaciones complejas pueden salir distintas
+*autocad*	parecido	LibreCAD o FreeCAD	sudo apt install librecad freecad	dibujo técnico; LibreCAD es solo 2D y FreeCAD trabaja distinto de AutoCAD
+*sketchup*	parecido	FreeCAD o Blender	sudo apt install freecad	modelado 3D, con una forma de trabajar muy distinta
+*ccleaner*	parecido	BleachBit	sudo apt install bleachbit	limpia archivos temporales; en Linux eso casi nunca hace falta
+*virtualbox*	nativo	VirtualBox para Linux	sudo apt install virtualbox	es el mismo VirtualBox, y en Linux funciona mucho mejor
+*wireshark*	nativo	Wireshark	sudo apt install wireshark	es el mismo Wireshark
+*qbittorrent*	nativo	qBittorrent	sudo apt install qbittorrent	es el mismo qBittorrent
+*calibre*	nativo	Calibre	sudo apt install calibre	es el mismo Calibre
+*handbrake*	nativo	HandBrake	sudo apt install handbrake	es el mismo HandBrake
+*keepass*	nativo	KeePassXC	sudo apt install keepassxc	abre el mismo archivo de contraseñas .kdbx
+
+impressora*termica	nativo	ESC/POS directo desde Linux	la impresora aparece como /dev/usb/lp0 o en una cola "raw" de CUPS	Imprime desde Linux sin Android y sin Wine. Si el programa que imprime es una app de Android, configúrala como impresora de RED y apúntala a este ordenador: la mayoría de las apps de impresión térmica hablan por red.
+leitor*codigo*barras	nativo	ya funciona, no instales nada	ninguna instalación	Un lector de código de barras es un teclado. Escribe el código donde esté el cursor, en Linux y dentro de Android, sin ningún controlador. Si escribe cada código DOS veces dentro de Android, mira "tandem doctor".
+balanca*	nativo	lectura directa por el puerto serie	el aparato aparece como /dev/ttyUSB0	Toledo, Filizola y Urano hablan un protocolo de texto documentado por el puerto serie. Un programa de Linux lee eso directamente; dentro de Android, no.
+pinpad*	parecido	ACBrLib (ABECS) para Linux	https://acbr.sourceforge.io/ACBrLib/	La biblioteca brasileña ACBrLib está compilada para Linux e implementa el protocolo ABECS. ATENCIÓN: quien decide si tu pinpad puede usarse así es la adquirente (Cielo, Rede, Stone), no Tandem ni el fabricante.

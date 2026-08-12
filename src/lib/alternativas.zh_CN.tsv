@@ -1,0 +1,51 @@
+# 匹配	类别	名称	如何安装	有何不同
+#
+# 能顶替 Windows 程序干活的 Linux 程序。简体中文。
+# alternativas.tsv（葡萄牙语）是原文，也是回退：这里缺一行不算错误，
+# 那一行会以葡萄牙语显示。
+#
+
+*teamviewer*	nativo	Linux 版 TeamViewer	到 teamviewer.com/cn/download/linux/ 下载	就是同一个 TeamViewer，官方的 Linux 版
+*anydesk*	nativo	Linux 版 AnyDesk	到 anydesk.com/zh-cn/downloads/linux 下载	就是同一个 AnyDesk，官方的 Linux 版
+*rustdesk*	nativo	Linux 版 RustDesk	到 rustdesk.com 下载	就是同一个 RustDesk，官方的 Linux 版
+*chrome*	nativo	Google Chrome	到 google.com/chrome 下载	就是同一个 Chrome，官方的 Linux 版
+*firefox*	nativo	Firefox	Zorin 已经自带	就是同一个 Firefox
+*zoom*	nativo	Linux 版 Zoom	到 zoom.us/download 下载	就是同一个 Zoom，官方的 Linux 版
+*skype*	nativo	Linux 版 Skype	sudo snap install skype	就是同一个 Skype，官方的 Linux 版
+*spotify*	nativo	Linux 版 Spotify	sudo snap install spotify	就是同一个 Spotify，官方的 Linux 版
+*vlc*	nativo	VLC	sudo apt install vlc	就是同一个 VLC
+*obs*studio*	nativo	OBS Studio	sudo apt install obs-studio	就是同一个 OBS Studio
+*audacity*	nativo	Audacity	sudo apt install audacity	就是同一个 Audacity
+*blender*	nativo	Blender	sudo apt install blender	就是同一个 Blender
+*inkscape*	nativo	Inkscape	sudo apt install inkscape	就是同一个 Inkscape
+*gimp*	nativo	GIMP	sudo apt install gimp	就是同一个 GIMP
+*libreoffice*	nativo	LibreOffice	Zorin 已经自带	就是同一个 LibreOffice
+*thunderbird*	nativo	Thunderbird	sudo apt install thunderbird	就是同一个 Thunderbird
+*filezilla*	nativo	FileZilla	sudo apt install filezilla	就是同一个 FileZilla
+*putty*	nativo	PuTTY	sudo apt install putty	就是同一个 PuTTY；在 Linux 上终端本身就能做 SSH，不需要额外程序
+*notepad++*	parecido	Gedit、Kate 或 VS Code	sudo apt install gedit	能编辑文本和代码；没有 Notepad++ 的那些插件
+*winrar*	parecido	Zorin 自带的文件管理器	已经自带	双击就能打开和创建 .zip 和 .rar，什么都不用装
+*7z*	parecido	Zorin 自带的文件管理器	已经自带	双击就能打开和创建 .zip 和 .7z，什么都不用装
+*winzip*	parecido	Zorin 自带的文件管理器	已经自带	双击就能打开和创建 .zip，什么都不用装
+*acrobat*	parecido	Evince 或 Okular	Zorin 已经自带	能读能打印 PDF；不能像付费版 Acrobat 那样编辑和签名
+*adobereader*	parecido	Evince 或 Okular	Zorin 已经自带	能读能打印 PDF；不能像付费版 Acrobat 那样编辑和签名
+*photoshop*	parecido	GIMP 或 Krita	sudo apt install gimp krita	能修图，但是另一个程序：菜单不一样，.psd 打开时也带不全
+*coreldraw*	parecido	Inkscape	sudo apt install inkscape	矢量绘图；打开 .cdr 有限制，保存为 .svg
+*illustrator*	parecido	Inkscape	sudo apt install inkscape	矢量绘图；打开 .ai 时带不全
+*excel*	parecido	LibreOffice Calc	Zorin 已经自带	能打开和保存 .xlsx；VBA 宏不能用
+*word*	parecido	LibreOffice Writer	Zorin 已经自带	能打开和保存 .docx；复杂文档的排版可能会变样
+*powerpoint*	parecido	LibreOffice Impress	Zorin 已经自带	能打开和保存 .pptx；复杂的动画可能会变样
+*autocad*	parecido	LibreCAD 或 FreeCAD	sudo apt install librecad freecad	工程制图；LibreCAD 只有二维，FreeCAD 的做法跟 AutoCAD 很不一样
+*sketchup*	parecido	FreeCAD 或 Blender	sudo apt install freecad	三维建模，做法差别很大
+*ccleaner*	parecido	BleachBit	sudo apt install bleachbit	清理临时文件；在 Linux 上很少有这个必要
+*virtualbox*	nativo	Linux 版 VirtualBox	sudo apt install virtualbox	就是同一个 VirtualBox，而且在 Linux 上跑得好得多
+*wireshark*	nativo	Wireshark	sudo apt install wireshark	就是同一个 Wireshark
+*qbittorrent*	nativo	qBittorrent	sudo apt install qbittorrent	就是同一个 qBittorrent
+*calibre*	nativo	Calibre	sudo apt install calibre	就是同一个 Calibre
+*handbrake*	nativo	HandBrake	sudo apt install handbrake	就是同一个 HandBrake
+*keepass*	nativo	KeePassXC	sudo apt install keepassxc	打开的是同一个 .kdbx 密码文件
+
+impressora*termica	nativo	直接从 Linux 走 ESC/POS	打印机会显示为 /dev/usb/lp0，或者出现在 CUPS 的 raw 队列里	不用 Android 也不用 Wine，直接从 Linux 打印。如果负责打印的程序是个 Android 应用，就把它设成网络打印机并指向这台电脑 —— 大多数热敏打印应用都是走网络的。
+leitor*codigo*barras	nativo	本来就能用，什么都不用装	什么都不用装	扫码枪就是一个键盘。光标在哪它就把条码打在哪，在 Linux 里和 Android 里都一样，不需要任何驱动。如果它在 Android 里把每个码打两遍，请看 "tandem doctor"。
+balanca*	nativo	直接从串口读	设备会显示为 /dev/ttyUSB0	Toledo、Filizola 和 Urano 走的是有公开文档的串口文本协议。Linux 程序能直接读；在 Android 里读不到。
+pinpad*	parecido	Linux 版 ACBrLib（ABECS）	https://acbr.sourceforge.io/ACBrLib/	巴西的 ACBrLib 库有 Linux 版本，实现了 ABECS 协议。注意：您的刷卡机能不能这样用，决定权在收单机构（Cielo、Rede、Stone），不在 Tandem，也不在厂商。

@@ -1,0 +1,51 @@
+# النمط	الفئة	الاسم	كيفية التثبيت	ما يتغيّر
+#
+# برامج لينكس التي تؤدّي عمل برنامج Windows. العربية.
+# ملف alternativas.tsv (بالبرتغالية) هو الأصل وهو المرجع الاحتياطي: غياب
+# سطر هنا ليس خطأً، بل يُقرأ ذلك السطر بالبرتغالية.
+#
+
+*teamviewer*	nativo	TeamViewer للينكس	نزّله من teamviewer.com/en/download/linux/	هو TeamViewer نفسه، النسخة الرسمية للينكس
+*anydesk*	nativo	AnyDesk للينكس	نزّله من anydesk.com/en/downloads/linux	هو AnyDesk نفسه، النسخة الرسمية للينكس
+*rustdesk*	nativo	RustDesk للينكس	نزّله من rustdesk.com	هو RustDesk نفسه، النسخة الرسمية للينكس
+*chrome*	nativo	Google Chrome	نزّله من google.com/chrome	هو Chrome نفسه، النسخة الرسمية للينكس
+*firefox*	nativo	Firefox	مثبَّت مسبقًا في Zorin	هو Firefox نفسه
+*zoom*	nativo	Zoom للينكس	نزّله من zoom.us/download	هو Zoom نفسه، النسخة الرسمية للينكس
+*skype*	nativo	Skype للينكس	sudo snap install skype	هو Skype نفسه، النسخة الرسمية للينكس
+*spotify*	nativo	Spotify للينكس	sudo snap install spotify	هو Spotify نفسه، النسخة الرسمية للينكس
+*vlc*	nativo	VLC	sudo apt install vlc	هو VLC نفسه
+*obs*studio*	nativo	OBS Studio	sudo apt install obs-studio	هو OBS Studio نفسه
+*audacity*	nativo	Audacity	sudo apt install audacity	هو Audacity نفسه
+*blender*	nativo	Blender	sudo apt install blender	هو Blender نفسه
+*inkscape*	nativo	Inkscape	sudo apt install inkscape	هو Inkscape نفسه
+*gimp*	nativo	GIMP	sudo apt install gimp	هو GIMP نفسه
+*libreoffice*	nativo	LibreOffice	مثبَّت مسبقًا في Zorin	هو LibreOffice نفسه
+*thunderbird*	nativo	Thunderbird	sudo apt install thunderbird	هو Thunderbird نفسه
+*filezilla*	nativo	FileZilla	sudo apt install filezilla	هو FileZilla نفسه
+*putty*	nativo	PuTTY	sudo apt install putty	هو PuTTY نفسه؛ وفي لينكس تقوم الطرفية بـSSH أصلًا دون برنامج إضافي
+*notepad++*	parecido	Gedit أو Kate أو VS Code	sudo apt install gedit	يحرّر النصوص والشيفرة؛ دون إضافات Notepad++
+*winrar*	parecido	مدير الملفات في Zorin	مثبَّت مسبقًا	يفتح وينشئ ملفات .zip و.rar بنقرتين، دون تثبيت أي شيء
+*7z*	parecido	مدير الملفات في Zorin	مثبَّت مسبقًا	يفتح وينشئ ملفات .zip و.7z بنقرتين، دون تثبيت أي شيء
+*winzip*	parecido	مدير الملفات في Zorin	مثبَّت مسبقًا	يفتح وينشئ ملفات .zip بنقرتين، دون تثبيت أي شيء
+*acrobat*	parecido	Evince أو Okular	مثبَّت مسبقًا في Zorin	يقرأ ملفات PDF ويطبعها؛ لا يحرّر ولا يوقّع كما يفعل Acrobat المدفوع
+*adobereader*	parecido	Evince أو Okular	مثبَّت مسبقًا في Zorin	يقرأ ملفات PDF ويطبعها؛ لا يحرّر ولا يوقّع كما يفعل Acrobat المدفوع
+*photoshop*	parecido	GIMP أو Krita	sudo apt install gimp krita	يحرّر الصور، لكنه برنامج آخر: قوائم مختلفة، وملفات .psd لا تأتي بكل ما فيها
+*coreldraw*	parecido	Inkscape	sudo apt install inkscape	رسم متجهي؛ يفتح ملفات .cdr بقيود ويحفظ بصيغة .svg
+*illustrator*	parecido	Inkscape	sudo apt install inkscape	رسم متجهي؛ لا يفتح ملفات .ai بكل ما فيها
+*excel*	parecido	LibreOffice Calc	مثبَّت مسبقًا في Zorin	يفتح ملفات .xlsx ويحفظها؛ وحدات ماكرو VBA لا تعمل
+*word*	parecido	LibreOffice Writer	مثبَّت مسبقًا في Zorin	يفتح ملفات .docx ويحفظها؛ قد يختلف التنسيق في مستند معقّد
+*powerpoint*	parecido	LibreOffice Impress	مثبَّت مسبقًا في Zorin	يفتح ملفات .pptx ويحفظها؛ قد تختلف الحركات المعقّدة
+*autocad*	parecido	LibreCAD أو FreeCAD	sudo apt install librecad freecad	رسم هندسي؛ LibreCAD ثنائي الأبعاد فقط، وFreeCAD يعمل بطريقة مختلفة عن AutoCAD
+*sketchup*	parecido	FreeCAD أو Blender	sudo apt install freecad	نمذجة ثلاثية الأبعاد، بطريقة عمل مختلفة جدًا
+*ccleaner*	parecido	BleachBit	sudo apt install bleachbit	ينظّف الملفات المؤقّتة؛ وفي لينكس يندر أن يكون ذلك ضروريًا
+*virtualbox*	nativo	VirtualBox للينكس	sudo apt install virtualbox	هو VirtualBox نفسه، وهو يعمل على لينكس أفضل بكثير
+*wireshark*	nativo	Wireshark	sudo apt install wireshark	هو Wireshark نفسه
+*qbittorrent*	nativo	qBittorrent	sudo apt install qbittorrent	هو qBittorrent نفسه
+*calibre*	nativo	Calibre	sudo apt install calibre	هو Calibre نفسه
+*handbrake*	nativo	HandBrake	sudo apt install handbrake	هو HandBrake نفسه
+*keepass*	nativo	KeePassXC	sudo apt install keepassxc	يفتح ملف كلمات المرور .kdbx نفسه
+
+impressora*termica	nativo	ESC/POS مباشرةً من لينكس	تظهر الطابعة باسم /dev/usb/lp0 أو في طابور "raw" في CUPS	يطبع من لينكس دون Android ودون Wine. وإن كان البرنامج الذي يطبع تطبيقَ Android، فاضبطه على طابعة شبكية ووجّهه إلى هذا الحاسوب — فمعظم تطبيقات الطباعة الحرارية تتواصل عبر الشبكة.
+leitor*codigo*barras	nativo	يعمل أصلًا، لا تثبّت شيئًا	لا تثبيت	قارئ الباركود لوحة مفاتيح. يكتب الرمز حيث يكون المؤشّر، في لينكس وداخل Android، دون أي برنامج تعريف. وإن كتب كل رمز مرّتين داخل Android، فراجع "tandem doctor".
+balanca*	nativo	قراءة مباشرة من المنفذ التسلسلي	يظهر الجهاز باسم /dev/ttyUSB0	تتحدّث أجهزة Toledo وFilizola وUrano ببروتوكول نصّي موثَّق عبر المنفذ التسلسلي. برنامج لينكس يقرأ ذلك مباشرةً؛ أما داخل Android فلا.
+pinpad*	parecido	ACBrLib (ABECS) للينكس	https://acbr.sourceforge.io/ACBrLib/	مكتبة ACBrLib البرازيلية مُصرَّفة للينكس وتُنفّذ بروتوكول ABECS. تنبيه: من يقرّر ما إذا كان جهاز الدفع لديك يمكن استخدامه بهذه الطريقة هو الجهة المستحصِلة (Cielo أو Rede أو Stone)، لا Tandem ولا الشركة المصنّعة.

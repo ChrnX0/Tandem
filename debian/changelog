@@ -1,5 +1,18 @@
 tandem (4.1) unstable; urgency=medium
 
+  * The translation is complete. tools/conta-literais.py reports TOTAL 0 across
+    src/bin and src/lib, and the suite asserts that number, so the next literal
+    added anywhere fails a test. 404 keys in each of the seven catalogues.
+  * The data tables translate too. alternativas.tsv and limites.tsv carry prose
+    in their columns and it reaches the owner, so they now work like the
+    catalogues: a per-language table beside the original, with the original as
+    the fallback. All six exist - 43 alternative rows and 37 impossibility rows
+    in en, es, fr, zh_CN, hi and ar.
+  * What is asserted about a translated table matters more than its wording:
+    the same data rows, the same pattern column in the same order, and the same
+    class column. A reordered row would match the wrong program; a translated
+    class would pick the wrong message to frame it with.
+
   * "tandem portas" no longer offers a shopkeeper 32 sockets this machine does
     not have. Found on a photograph of a real counter: the list ran COM1 to
     COM32 and put the shop's one real device, a USB adapter, on COM33. The

@@ -1,0 +1,50 @@
+# firma	clase	por qué nunca va a funcionar
+#
+# Lo que es imposible, y por qué. ESPAÑOL. limites.tsv (portugués) es el
+# original y el respaldo: una fila que falte aquí se lee en portugués.
+#
+
+hasp4*.dll	dongle	la protección por llave física HASP4 es de una generación que el fabricante ya no hace funcionar fuera de Windows
+haspms*.dll	dongle	la protección por llave física HASP4 es de una generación que el fabricante ya no hace funcionar fuera de Windows
+hasp16*.dll	dongle	la protección por llave física HASP4 es de una generación que el fabricante ya no hace funcionar fuera de Windows
+hasp32*.dll	dongle	la protección por llave física HASP4 es de una generación que el fabricante ya no hace funcionar fuera de Windows
+hardlock*.dll	dongle	la protección por llave física Hardlock es de una generación que el fabricante ya no hace funcionar fuera de Windows
+hlvdd*.dll	dongle	la protección por llave física Hardlock es de una generación que el fabricante ya no hace funcionar fuera de Windows
+aksusb*.dll	dongle	este programa habla con la llave física por el controlador antiguo de Aladdin, que solo existe dentro de Windows
+
+hasp_windows*.dll	dongle-sentinel	este programa usa llave física Sentinel (HASP), y esa tiene camino en Linux	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina. Se o programa for de 64 bits e disser que "detectou um depurador", isso só quem conserta é a empresa que fez o programa - não é a sua máquina.
+hasp_net_windows*.dll	dongle-sentinel	este programa usa llave física Sentinel (HASP) en red, y esa tiene camino en Linux	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+haspvlib*.dll	dongle-sentinel	este programa usa llave física Sentinel (HASP), y esa tiene camino en Linux	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+hasp_rt*.dll	dongle-sentinel	este programa usa llave física Sentinel (HASP), y esa tiene camino en Linux	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+sntl_*.dll	dongle-sentinel	este programa usa llave física Sentinel, y esa tiene camino en Linux	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+sentinel*.dll	dongle-sentinel	este programa usa llave física Sentinel, y esa tiene camino en Linux	O fabricante (Thales) publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Quem instala é um técnico, uma vez: o programa aksusbd passa a cuidar da chave USB pelo lado do Linux e o programa Windows fala com ele pela rede da própria máquina.
+hasp*.dll	dongle-sentinel	este programa usa una llave física de la familia HASP, y las versiones nuevas tienen camino en Linux	Se a chave for uma Sentinel HL ou SL (as atuais), o fabricante publica que funciona no Wine 10.0 com o "Sentinel LDK Run-time Environment for Linux" instalado. Se for uma HASP4 ou Hardlock (as antigas, de plástico roxo), não tem caminho. Quem sabe qual é a sua é quem vendeu o programa.
+
+wibucm*.dll	dongle-codemeter	este programa usa llave física CodeMeter, y quizá tenga camino	O fabricante (Wibu) tem um "CodeMeter Runtime" para Linux, e o programa Windows conversa com ele pela rede da própria máquina. O mecanismo existe, mas ninguém relatou ter feito isso funcionar no Wine ainda - vale tentar, e nos conte se deu certo.
+codemeter*.dll	dongle-codemeter	este programa usa llave física CodeMeter, y quizá tenga camino	O fabricante (Wibu) tem um "CodeMeter Runtime" para Linux, e o programa Windows conversa com ele pela rede da própria máquina. O mecanismo existe, mas ninguém relatou ter feito isso funcionar no Wine ainda - vale tentar, e nos conte se deu certo.
+rockey*.dll	dongle-hid	este programa usa llave física Rockey, que Linux ve como teclado, así que quizá funcione	Esse modelo de chave é do tipo que o Linux já reconhece sozinho, sem instalar nada. O que pode faltar é permissão de leitura no aparelho. Ninguém relatou ainda - vale tentar, e nos conte se deu certo.
+
+ntoskrnl.exe	driver	este archivo es un controlador de sistema, y Wine funciona fuera del núcleo de Linux
+hal.dll	driver	este archivo es un controlador de sistema, y Wine funciona fuera del núcleo de Linux
+ndis.sys	driver	este archivo es un controlador de red del sistema, y Wine funciona fuera del núcleo de Linux
+wdfldr*.dll	driver	este programa carga un controlador de sistema, y Wine funciona fuera del núcleo de Linux
+wdfldr*.sys	driver	este programa carga un controlador de sistema, y Wine funciona fuera del núcleo de Linux
+winio*.dll	driver	este programa accede al hardware directamente, algo que solo un controlador de sistema puede hacer
+inpout*.dll	driver	este programa accede al puerto paralelo directamente, algo que solo un controlador de sistema puede hacer
+dlportio*.dll	driver	este programa accede al puerto paralelo directamente, algo que solo un controlador de sistema puede hacer
+giveio*.dll	driver	este programa accede al hardware directamente, algo que solo un controlador de sistema puede hacer
+*.sys	driver	este programa carga un controlador de sistema, y Wine funciona fuera del núcleo de Linux
+
+easyanticheat*.dll	anticheat	este juego usa un antitrampas que funciona dentro del núcleo del sistema
+beclient*.dll	anticheat	este juego usa un antitrampas que funciona dentro del núcleo del sistema
+battleye*.dll	anticheat	este juego usa un antitrampas que funciona dentro del núcleo del sistema
+
+winusb.dll	usb	este programa habla directamente con un aparato por el puerto USB; Wine solo hace parte de eso, y los aparatos que Linux ya está usando quedan en disputa
+libusb*.dll	usb	este programa habla directamente con un aparato por el puerto USB; Wine solo hace parte de eso, y los aparatos que Linux ya está usando quedan en disputa
+hid.dll	usb-talvez	este programa habla con un aparato USB de tipo teclado; teclados y lectores de código de barras suelen funcionar, otros aparatos puede que no aparezcan	O Wine mostra ao programa todos os aparelhos desse tipo que o Linux enxerga. Se o seu não aparecer, quase sempre é permissão de leitura no aparelho, não o Wine.
+
+winscard.dll	pcsc	este programa usa lector de tarjetas o token de certificado (A3)	O Wine repassa a leitora para o Linux, então o primeiro passo é o Linux enxergar o token: instale pcscd, pcsc-tools e libccid, e rode pcsc-scan para ver se ele aparece. Aviso honesto: a leitora aparecer não quer dizer que o certificado vai assinar - programas brasileiros costumam pedir o certificado por um caminho do Windows que o Linux não tem, e aí só o fornecedor do programa resolve.
+
+clisitef*.dll	tef	este programa usa la biblioteca de pago con tarjeta CliSiTef	A empresa que faz o CliSiTef (Software Express) já publica uma versão dele para Linux. Não é você que instala: é o fornecedor do seu sistema de vendas que precisa usá-la. Vale pedir a ele - o pinpad no Linux costuma aparecer como /dev/ttyACM0.
+pgweblib*.dll	tef	este programa usa la biblioteca de pago con tarjeta PayGo	A PayGo já publica a biblioteca dela para Linux. Não é você que instala: é o fornecedor do seu sistema de vendas que precisa usá-la. Vale pedir a ele.
+acbrlib*.dll	tef	este programa usa ACBrLib para facturación o pago con tarjeta	A ACBrLib é compilada também para Linux, em 32 e 64 bits. Não é você que instala: é o fornecedor do seu sistema que precisa usá-la. Vale pedir a ele.

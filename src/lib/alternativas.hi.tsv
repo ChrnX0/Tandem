@@ -1,0 +1,51 @@
+# पैटर्न	वर्ग	नाम	कैसे इंस्टॉल करें	क्या बदलता है
+#
+# Windows के प्रोग्राम का काम करने वाले Linux प्रोग्राम। हिन्दी।
+# alternativas.tsv (पुर्तगाली) मूल है और वापसी का सहारा भी: यहाँ कोई पंक्ति
+# छूट जाए तो वह गलती नहीं है — वह पंक्ति पुर्तगाली में पढ़ी जाएगी।
+#
+
+*teamviewer*	nativo	Linux के लिए TeamViewer	teamviewer.com/en/download/linux/ से डाउनलोड कीजिए	यह वही TeamViewer है, Linux का आधिकारिक संस्करण
+*anydesk*	nativo	Linux के लिए AnyDesk	anydesk.com/en/downloads/linux से डाउनलोड कीजिए	यह वही AnyDesk है, Linux का आधिकारिक संस्करण
+*rustdesk*	nativo	Linux के लिए RustDesk	rustdesk.com से डाउनलोड कीजिए	यह वही RustDesk है, Linux का आधिकारिक संस्करण
+*chrome*	nativo	Google Chrome	google.com/chrome से डाउनलोड कीजिए	यह वही Chrome है, Linux का आधिकारिक संस्करण
+*firefox*	nativo	Firefox	Zorin में पहले से आता है	यह वही Firefox है
+*zoom*	nativo	Linux के लिए Zoom	zoom.us/download से डाउनलोड कीजिए	यह वही Zoom है, Linux का आधिकारिक संस्करण
+*skype*	nativo	Linux के लिए Skype	sudo snap install skype	यह वही Skype है, Linux का आधिकारिक संस्करण
+*spotify*	nativo	Linux के लिए Spotify	sudo snap install spotify	यह वही Spotify है, Linux का आधिकारिक संस्करण
+*vlc*	nativo	VLC	sudo apt install vlc	यह वही VLC है
+*obs*studio*	nativo	OBS Studio	sudo apt install obs-studio	यह वही OBS Studio है
+*audacity*	nativo	Audacity	sudo apt install audacity	यह वही Audacity है
+*blender*	nativo	Blender	sudo apt install blender	यह वही Blender है
+*inkscape*	nativo	Inkscape	sudo apt install inkscape	यह वही Inkscape है
+*gimp*	nativo	GIMP	sudo apt install gimp	यह वही GIMP है
+*libreoffice*	nativo	LibreOffice	Zorin में पहले से आता है	यह वही LibreOffice है
+*thunderbird*	nativo	Thunderbird	sudo apt install thunderbird	यह वही Thunderbird है
+*filezilla*	nativo	FileZilla	sudo apt install filezilla	यह वही FileZilla है
+*putty*	nativo	PuTTY	sudo apt install putty	यह वही PuTTY है; Linux में टर्मिनल खुद ही SSH कर लेता है, अलग प्रोग्राम की ज़रूरत नहीं
+*notepad++*	parecido	Gedit, Kate या VS Code	sudo apt install gedit	टेक्स्ट और कोड संपादित करता है; Notepad++ के प्लगइन नहीं हैं
+*winrar*	parecido	Zorin का फ़ाइल प्रबंधक	पहले से आता है	दो क्लिक में .zip और .rar खोलता और बनाता है, कुछ इंस्टॉल किए बिना
+*7z*	parecido	Zorin का फ़ाइल प्रबंधक	पहले से आता है	दो क्लिक में .zip और .7z खोलता और बनाता है, कुछ इंस्टॉल किए बिना
+*winzip*	parecido	Zorin का फ़ाइल प्रबंधक	पहले से आता है	दो क्लिक में .zip खोलता और बनाता है, कुछ इंस्टॉल किए बिना
+*acrobat*	parecido	Evince या Okular	Zorin में पहले से आता है	PDF पढ़ता और छापता है; पैसे वाले Acrobat की तरह संपादन या हस्ताक्षर नहीं करता
+*adobereader*	parecido	Evince या Okular	Zorin में पहले से आता है	PDF पढ़ता और छापता है; पैसे वाले Acrobat की तरह संपादन या हस्ताक्षर नहीं करता
+*photoshop*	parecido	GIMP या Krita	sudo apt install gimp krita	तस्वीरें संपादित करता है, पर यह दूसरा प्रोग्राम है: मेन्यू अलग हैं और .psd पूरी तरह नहीं आती
+*coreldraw*	parecido	Inkscape	sudo apt install inkscape	वेक्टर चित्रकारी; .cdr सीमाओं के साथ खोलता है और .svg में सहेजता है
+*illustrator*	parecido	Inkscape	sudo apt install inkscape	वेक्टर चित्रकारी; .ai पूरी तरह नहीं खोलता
+*excel*	parecido	LibreOffice Calc	Zorin में पहले से आता है	.xlsx खोलता और सहेजता है; VBA मैक्रो नहीं चलते
+*word*	parecido	LibreOffice Writer	Zorin में पहले से आता है	.docx खोलता और सहेजता है; जटिल दस्तावेज़ में सजावट बदल सकती है
+*powerpoint*	parecido	LibreOffice Impress	Zorin में पहले से आता है	.pptx खोलता और सहेजता है; जटिल एनिमेशन बदल सकते हैं
+*autocad*	parecido	LibreCAD या FreeCAD	sudo apt install librecad freecad	तकनीकी चित्रकारी; LibreCAD सिर्फ़ 2D है और FreeCAD का तरीक़ा AutoCAD से अलग है
+*sketchup*	parecido	FreeCAD या Blender	sudo apt install freecad	3D मॉडलिंग, काम करने का तरीक़ा बहुत अलग
+*ccleaner*	parecido	BleachBit	sudo apt install bleachbit	अस्थायी फ़ाइलें साफ़ करता है; Linux में इसकी ज़रूरत कम ही पड़ती है
+*virtualbox*	nativo	Linux के लिए VirtualBox	sudo apt install virtualbox	यह वही VirtualBox है, और Linux पर बहुत बेहतर चलता है
+*wireshark*	nativo	Wireshark	sudo apt install wireshark	यह वही Wireshark है
+*qbittorrent*	nativo	qBittorrent	sudo apt install qbittorrent	यह वही qBittorrent है
+*calibre*	nativo	Calibre	sudo apt install calibre	यह वही Calibre है
+*handbrake*	nativo	HandBrake	sudo apt install handbrake	यह वही HandBrake है
+*keepass*	nativo	KeePassXC	sudo apt install keepassxc	वही .kdbx पासवर्ड फ़ाइल खोलता है
+
+impressora*termica	nativo	Linux से सीधे ESC/POS	प्रिंटर /dev/usb/lp0 के रूप में या CUPS की "raw" कतार में दिखता है	Android और Wine के बिना, सीधे Linux से छापता है। अगर छापने वाला प्रोग्राम कोई Android ऐप है, तो उसे नेटवर्क प्रिंटर पर सेट कर के इस कंप्यूटर की ओर मोड़िए — थर्मल छपाई के ज़्यादातर ऐप नेटवर्क से बात करते हैं।
+leitor*codigo*barras	nativo	पहले से चलता है, कुछ इंस्टॉल न कीजिए	कुछ इंस्टॉल नहीं करना	बारकोड स्कैनर एक कीबोर्ड है। कर्सर जहाँ हो वहीं वह कोड टाइप कर देता है, Linux में भी और Android में भी, बिना किसी ड्राइवर के। अगर Android में वह हर कोड दो बार टाइप करे, तो "tandem doctor" देखिए।
+balanca*	nativo	सीरियल पोर्ट से सीधी पढ़ाई	उपकरण /dev/ttyUSB0 के रूप में दिखता है	Toledo, Filizola और Urano सीरियल पोर्ट पर एक प्रलेखित पाठ प्रोटोकॉल बोलते हैं। Linux का प्रोग्राम उसे सीधे पढ़ लेता है; Android के अंदर नहीं।
+pinpad*	parecido	Linux के लिए ACBrLib (ABECS)	https://acbr.sourceforge.io/ACBrLib/	ब्राज़ील की ACBrLib लाइब्रेरी Linux के लिए संकलित है और ABECS प्रोटोकॉल लागू करती है। ध्यान दें: आपका पिनपैड ऐसे इस्तेमाल हो सकता है या नहीं, यह तय करने वाली अधिग्रहणकर्ता कंपनी (Cielo, Rede, Stone) है — न Tandem, न निर्माता।
