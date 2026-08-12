@@ -27,8 +27,10 @@ a limitation.
    environment is worse than not automating at all.
 2. **No jargon in anything the user reads, in any language.** `NO_MATCHING_ABIS`
    becomes "this app is made for phones only and does not run here". Every such
-   sentence lives in `po/`, never in the code — `tools/conta-literais.py`
-   reports TOTAL 0 and the suite asserts that number.
+   sentence belongs in `po/`, never in the code. `tools/conta-literais.py`
+   measures how far that is from true and the suite holds the number as a
+   ratchet: it may fall, never rise. **It is 75, not 0** — read the section on
+   the counter before you trust any number it prints.
 3. **`set -e` only in the packager, never in the executables.** The wait loops
    depend on commands that fail on purpose (`grep -q ... && break`).
 4. **Never repeat an install already paid for.** `dotnet48` takes ~30 min; the
@@ -963,11 +965,21 @@ for a reason.
 
 The queue, in order:
 
-0. **Field-test 4.2 on the counter.** The translation is done; this half needs
-   the owner's machine and nothing else: `tandem portas` (32 phantom sockets
-   collapsed into one line), `tandem intalar` (must say "I do not know that
-   command", not "unrecognised file type"), `tandem idioma`, and a double click
-   on a real `.xapk`, `.AppImage` and `.jar`.
+0. **Migrate the 75 literals `tandem doctor` and the panel still hold.** This is
+   4.3's job and it is the largest honest gap in the product: an
+   English-speaking user runs the flagship diagnostic and gets Portuguese, and
+   the zenity panel asks `O que você quer fazer?` in Portuguese before anything
+   else appears. `tools/conta-literais.py --migrados` prints the list. Open a
+   `tandem (4.3)` changelog entry first; 4.2 is published and its entry is
+   history. Roughly 55 keys after dedup, seven languages each, and the shape to
+   follow is one key per line with `{1}` for the data — not fragments glued
+   together, which breaks word order in the other six.
+
+0a. **Field-test 4.2 on the counter**, now that it can be installed from the
+   release page. Needs the owner's machine and nothing else: `tandem portas`
+   (32 phantom sockets collapsed into one line), `tandem intalar` (must say "I
+   do not know that command", not "unrecognised file type"), `tandem idioma`,
+   and a double click on a real `.xapk`, `.AppImage` and `.jar`.
 
 0b. **Five catalogues carry `X-Reviewed-By-Speaker: no`.** That is the whole of what is left
    of the translation, and it is not engineering: it needs somebody who speaks
@@ -1021,22 +1033,34 @@ The queue, in order:
 to end on real files. `.AppImage` and `.jar` came in 3.7; `.deb`, `.rpm`,
 `.flatpakref`, `.snap` and shell installers in 3.8 — see the State section for exactly what was
 measured. The orphan-shortcut question is settled: it was never a defect. The
-real-program harness exists and is green. **v4.0 and v4.1 are published** — tag,
-`.deb` and `.sha256` attached, and 4.0's published artifact verified
-byte-for-byte identical to a local build (sha256 `82544a90…`). 3.7 through 3.9
-were never released, so 4.0 is the first package the public gets with all nine
-formats in it. The next release goes out the same way; see the section below for
-why the browser path exists.
+real-program harness exists and is green. **v4.0, v4.1 and v4.2 are published** —
+tag, `.deb` and `.sha256` attached, and 4.0's and 4.2's published artifacts each
+verified byte-for-byte identical to a local build (sha256 `82544a90…` and
+`3d5ed79a…`). 3.7 through 3.9 were never released, so 4.0 is the first package
+the public gets with all nine formats in it. The next release goes out the same
+way; see the section below for why the browser path exists.
 
-**4.2 is the version in the tree and it is NOT released.** Everything after
-v4.1 — the gettext migration, English as the default, the six data tables,
-sending on by default, and the three defects above — lives under `tandem (4.2)`
-in the changelog. That entry had to be *split out* of 4.1's: v4.1 was published
-on 2026-08-09 and work kept being appended to its changelog entry afterwards,
-so the entry described a package the public never got. The 4.1 entry is now
-byte-identical to the one in the `v4.1` tag again. **Check the published tag
-before adding to the top changelog entry** — if that version is out, the entry
-is history and a new one has to be opened.
+**v4.2 IS PUBLISHED** — 2026-08-12, tag `v4.2` at `4c1fb11`, `.deb` and
+`.sha256` attached, and the published artifact verified byte-for-byte against a
+local build: sha256 `3d5ed79a…` from all three of the release's own checksum
+file, the downloaded bytes, and a build made here. It carries the gettext
+migration, English as the default, the six data tables, sending on by default,
+the security fix on verb names, and the three Wine defects above. **The next
+version is 4.3 and its changelog entry has to be opened before anything is
+added** — `debian/control` still says 4.2 and the top changelog entry is now
+history.
+
+That entry had to be *split out* of 4.1's, and the lesson is the reason this
+paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
+work kept being appended to its changelog entry afterwards, so the entry
+described a package the public never got. **Check the published tag before
+adding to the top changelog entry.** There is a test for it now, and its first
+version was wrong in the way this project keeps being wrong: it asked "does a
+tag with this version exist", which is red on a freshly released tree where
+nothing is wrong at all. It compares `debian/changelog` against the tag instead
+— a released tree passes, a doc-only commit after a release passes, and
+appending a bullet to a published entry fails. Checked against real history:
+v4.0 and v4.1 pass at their tags, `293613f` and `92dbb49` fail.
 
 **Two guards were added because the release itself found the defects**, and
 both are in the suite now rather than in a failed workflow: the newest
