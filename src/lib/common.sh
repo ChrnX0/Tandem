@@ -1222,11 +1222,67 @@ t_memoria_junta() {
 # Acceptable verb name. This is the defense that matters: the verb of a recipe
 # becomes an argument to "winetricks -q". Without this sieve, a recipe coming
 # from outside could carry a command along with the name.
+# A verb name that is safe to hand to "winetricks -q".
+#
+# The character set was right and the SHAPE was not, and the two holes it left
+# are both live today through "tandem receita --importar" - a plain text file
+# the recipe's own header tells the owner to accept from other people:
+#
+#   1. A leading dash was allowed, so "--self-update" and "-q" passed. Those are
+#      not verbs, they are winetricks' own options: "winetricks -q
+#      --self-update" makes winetricks overwrite itself from the internet.
+#   2. A dot was allowed, and winetricks treats an argument matching *.verb as a
+#      FILE TO SOURCE - read in the shipped winetricks at the command-line loop:
+#      `case ${verb} in */*) . "${verb}" ;; *) . ./"${verb}" ;; esac`. So
+#      "evil.verb" is sourced as a shell script, from the current directory -
+#      and executar() does `cd -- "$(dirname -- "$PROG")"` outside a subshell,
+#      so by the time winetricks runs the current directory is the folder the
+#      owner double-clicked in. A zip carrying setup.exe plus evil.verb plus a
+#      recipe naming that verb is arbitrary code, as the user.
+#
+# Rejecting the dot outright costs nothing: measured against the installed
+# winetricks, ZERO of its 538 verb names contain one.
 t_verbo_valido() {
     case "${1:-}" in
-        ''|*[!a-zA-Z0-9_.-]*) return 1 ;;
+        ''|*[!a-zA-Z0-9_-]*) return 1 ;;
+        # Must begin with a letter or a digit. This is the whole of the
+        # option-injection fix and it is one line.
+        [!a-zA-Z0-9]*) return 1 ;;
     esac
     [ "${#1}" -le 40 ] || return 1
+    return 0
+}
+
+# Verbs that change a SETTING rather than install a dependency, which is not
+# something a lesson from somebody else's machine may ever do.
+#
+# winetricks labels every verb with a category of its own - 315 dlls, 112
+# settings, 62 apps, 41 fonts, 8 benchmarks - and "settings" is where the
+# damage lives: "sandbox" and "isolate_home" REMOVE the prefix's links to
+# $HOME, "remove_mono" takes .NET support out, "winxp" and "win95" move the
+# Windows version under an installed program's feet. Every one of them passes
+# every validity check, installs cleanly, and earns a permanent receipt under
+# rule number 4.
+#
+# The authority is winetricks itself, so this keeps working as winetricks
+# changes. When it cannot be read - not installed yet, at recipe-import time -
+# fall back to naming the destructive ones, because refusing every outside verb
+# on a machine that has no winetricks would reject a legitimate recipe for a
+# reason that has nothing to do with the recipe.
+t_verbo_de_fora_ok() {
+    local verbo="${1:-}" wt
+    t_verbo_valido "$verbo" || return 1
+    wt="$(command -v winetricks 2>/dev/null)"
+    if [ -n "$wt" ] && [ -r "$wt" ]; then
+        grep -q "^w_metadata ${verbo} settings" "$wt" 2>/dev/null && return 1
+        return 0
+    fi
+    case "$verbo" in
+        sandbox|isolate_home|remove_mono|forcemono|nocrashdialog|alldlls|\
+        win2k|win2k3|win7|win8|win81|win10|win11|win20|win30|win31|win95|\
+        win98|winme|winnt40|winvista|winxp|winxp64|native_mdac|native_oleaut32)
+            return 1 ;;
+    esac
     return 0
 }
 
@@ -1268,7 +1324,7 @@ t_receita_importa() {
         case "$chave" in
             RESOLVERAM|NAO_RESOLVERAM)
                 for v in $valor; do
-                    t_verbo_valido "$v" || { t_diz "receita recusada: verbo suspeito '$v'"; return 4; }
+                    t_verbo_de_fora_ok "$v" || { t_diz "receita recusada: verbo suspeito ou que nao instala dependencia: '$v'"; return 4; }
                 done
                 verbos="$verbos$chave=$valor"$'\n' ;;
             ARQUITETURA|LIMITE|RESULTADO|PROGRAMA) verbos="$verbos$chave=$valor"$'\n' ;;

@@ -1,5 +1,35 @@
 tandem (4.2) unstable; urgency=medium
 
+  * SECURITY. A verb name coming from outside this machine could run arbitrary
+    code as the user, and the way in was the feature built for sharing: a
+    recipe file, whose own header says "you can read it, check it and send it to
+    somebody else".
+  * Two holes, both in the shape of the name rather than its characters. A
+    leading dash was allowed, so "--self-update" and "-q" were passed to
+    winetricks as its own options - the first makes winetricks overwrite itself
+    from the internet. And a dot was allowed, while the shipped winetricks
+    SOURCES an argument matching *.verb as a shell script, from the current
+    directory - and Tandem changes into the double-clicked file's folder before
+    it ever calls winetricks. A zip carrying setup.exe, evil.verb and a recipe
+    naming that verb was arbitrary code. Zero of winetricks' own 538 verb names
+    contain a dot, so refusing it costs nothing.
+  * A lesson from somebody else's machine may now install a DEPENDENCY and
+    nothing else. winetricks labels 112 of its verbs "settings", and that is
+    where the damage lives: "sandbox" and "isolate_home" remove the
+    environment's links to your home folder, "remove_mono" takes .NET support
+    out, "winxp" moves the Windows version under an installed program's feet.
+    Every one of them passed every check, installed cleanly and earned a
+    permanent receipt. The authority is winetricks itself, so this keeps working
+    as winetricks changes, with a named fallback when it cannot be read.
+  * Both doors use the stricter check - the community list and recipe import -
+    and the check happens where the verb is USED, not only where it arrives, so
+    a verb that a recipe wrote into the local memory on some earlier day is
+    caught too.
+  * Verified by running the attack: four hostile recipes refused, including one
+    hiding "sandbox" behind a legitimate verb, a legitimate recipe still
+    imported, and the payload never ran. The previous validator accepted all
+    four.
+
   * Sending what Tandem learns to the community list is ON BY DEFAULT. It was
     born off, and the measurable consequence was that the list stayed empty: a
     default nobody changes is a decision made by the default.
