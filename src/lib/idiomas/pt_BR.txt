@@ -1590,6 +1590,15 @@ Você ainda confere e envia - o Tandem não manda nada sozinho por aqui.
 Se preferir que ele mande sozinho de agora em diante, é outra coisa:
 tandem enviar sim
 
+@contrib_sem_navegador
+Não consegui abrir um navegador neste computador, então o formulário não
+está na tela.
+
+A linha já está na sua área de transferência. Abra este endereço em qualquer
+computador - o seu celular serve - e o formulário chega com a linha dentro:
+
+{1}
+
 @contrib_pode_mandar_sozinho
 Se quiser, o Tandem pode mandar isso sozinho da próxima vez:
 tandem enviar sim

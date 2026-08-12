@@ -1602,6 +1602,14 @@ You still check it and send it - Tandem sends nothing by itself here.
 If you would rather it sent on its own from now on, that is a different thing:
 tandem enviar sim
 
+@contrib_sem_navegador
+I could not open a browser on this computer, so the form is not on screen.
+
+The line is already on your clipboard. Open this address on any computer -
+your phone will do - and the form arrives with the line already in it:
+
+{1}
+
 @contrib_pode_mandar_sozinho
 If you like, Tandem can send this by itself next time:
 tandem enviar sim

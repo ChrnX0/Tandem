@@ -1631,6 +1631,16 @@ Vous vérifiez et envoyez vous-même - Tandem n'envoie rien tout seul par ici.
 Si vous préférez qu'il envoie seul désormais, c'est autre chose :
 tandem enviar sim
 
+@contrib_sem_navegador
+Je n'ai pas pu ouvrir de navigateur sur cet ordinateur, le formulaire
+n'est donc pas à l'écran.
+
+La ligne est déjà dans votre presse-papiers. Ouvrez cette adresse sur
+n'importe quel ordinateur - votre téléphone convient - et le formulaire
+arrive avec la ligne déjà dedans :
+
+{1}
+
 @contrib_pode_mandar_sozinho
 Si vous voulez, Tandem peut l'envoyer tout seul la prochaine fois :
 tandem enviar sim

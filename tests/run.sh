@@ -1821,6 +1821,56 @@ BLOCO_PENEIRA="$(sed -n '/^t_envio_envia()/,/^}/p' "$ROOT/src/lib/common.sh" |
 contem "a line the sieve refuses is written back to the queue, not dropped" \
        '$resto' "$BLOCO_PENEIRA"
 
+# A recipe comes from another person - its own header says so - and four of its
+# fields were copied verbatim while only the verbs were checked. ARQUITETURA goes
+# into field 2 of a community-list record, and a TAB survives t_memoria_grava, so
+# a hostile value spliced the remaining fields including the NOTE: a way to write
+# a shop's name onto a public list, and a tagging primitive besides.
+REC_DIR="$TMPROOT/receita-campos"; mkdir -p "$REC_DIR"
+head -c 2100000 /dev/urandom > "$REC_DIR/prog.exe" 2>/dev/null
+campos_receita() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        export TANDEM_ESTADO="$2/estado"; mkdir -p "$TANDEM_ESTADO"
+        id="$(t_memoria_id "$2/prog.exe")"
+        printf "TANDEM_RECEITA=1\nIDENTIDADE=%s\nRESOLVERAM=vcrun2022\n%s\n" \
+            "$id" "$1" > "$2/r.receita"
+        t_receita_importa "$2/r.receita" "$2/prog.exe" >/dev/null 2>&1
+        echo $?' _ "$1" "$REC_DIR" 2>/dev/null
+}
+equal "a recipe splicing extra record fields through ARQUITETURA is refused" \
+      "5" "$(campos_receita "ARQUITETURA=64$(printf '\t')vcrun2022$(printf '\t')Padaria do Joao")"
+equal "an architecture that is not one of the four allowed is refused" \
+      "5" "$(campos_receita "ARQUITETURA=x86_64")"
+equal "a tab in RESULTADO is refused too" \
+      "5" "$(campos_receita "RESULTADO=abriu$(printf '\t')mais coisa")"
+equal "and an ordinary recipe still imports" \
+      "0" "$(campos_receita "ARQUITETURA=64")"
+
+# The form shortcut has to name the field the form actually has. GitHub prefills
+# an issue form by FIELD ID, and a parameter matching nothing looks exactly like
+# one matching something: the client sent "linha" while list.yml calls the field
+# "record", so the one up-path that works opened an EMPTY form while README.md
+# and LEIAME.md both promise "the form already filled in". Compare the two files
+# rather than trusting either.
+if [ -f "$ROOT/.github/ISSUE_TEMPLATE/list.yml" ]; then
+    CAMPO_FORM="$(awk '/^ *id: /{ print $2; exit }' "$ROOT/.github/ISSUE_TEMPLATE/list.yml")"
+    PARAM_FORM="$(sed -n 's/.*issues\/new?template=list\.yml&\([a-z_]*\)=.*/\1/p' \
+                      "$ROOT/src/bin/tandem" | head -1)"
+    equal "the prefilled form names the field the template declares" \
+          "$CAMPO_FORM" "$PARAM_FORM"
+fi
+
+# And the offer cannot fail in silence. With no browser xdg-open exits non-zero
+# and says why on stderr; backgrounded and redirected to /dev/null that status
+# was unreachable, so the owner clicked "open the form" and nothing happened at
+# all - the shape of failure this project treats as a defect, not a limitation.
+BLOCO_FORM="$(sed -n '/xdg-open "\$URL_FORM"/,/^ *fi$/p' "$ROOT/src/bin/tandem")"
+contem "a browser that will not open produces a sentence" \
+       "t_erro" "$BLOCO_FORM"
+naocontem "and the launcher is not backgrounded, which would discard its status" \
+          "setsid" "$BLOCO_FORM"
+
 # The whole record builder has to refuse too, not just the predicate - a sieve
 # nobody calls is decoration.
 contem "t_lista_registro runs the sieve before returning a record" \
