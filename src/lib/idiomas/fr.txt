@@ -146,6 +146,21 @@ Support 32 bits installé.
 @arm_nao_roda
 Ce programme est pour Windows ARM et ne fonctionne pas sur cet ordinateur.
 
+@ambiente_32_bits
+{1} est un programme 64 bits, et l'environnement Windows dans lequel il se
+trouve a été créé en 32 bits. Un Windows 32 bits ne peut pas exécuter un
+programme 64 bits. C'est une règle de Windows lui-même : ce n'est pas un défaut
+de votre ordinateur, ni de ce programme.
+
+La largeur d'un environnement est choisie à sa création et ne change plus
+ensuite : il n'y a donc rien à installer ici. L'environnement est ce dossier :
+
+{2}
+
+Le contournement : copiez le programme dans un dossier hors de celui-là - votre
+dossier de téléchargements, par exemple - et ouvrez-le depuis là. J'utilise
+alors mon propre environnement, qui est en 64 bits.
+
 @licao_pergunta
 {1} ces composants Windows :
 
@@ -1319,6 +1334,18 @@ ATTENTION : l'identité de cette machine a changé depuis la création de
   l'environnement. Cela arrive quand Linux est réinstallé ou le disque cloné.
   C'est l'explication d'un programme qui redemande une activation sans que rien
   d'autre n'ait changé.
+
+@id_vistas_diferentes
+REMARQUE : sur une machine 64 bits, Windows tient deux registres - l'un lu par
+  les programmes 64 bits, l'autre par les programmes 32 bits - et ici les deux
+  contiennent des identifiants de machine différents :
+
+      un programme 64 bits voit : {1}
+      un programme 32 bits voit : {2}
+
+  Pour un programme qui lie sa licence à la machine, cela fait deux machines.
+  Si l'un de vos programmes redemande sans cesse une activation, c'est la ligne
+  à montrer à celui qui en assure le support.
 
 @id_varias_placas
 ATTENTION : cette machine a {1} cartes réseau. Beaucoup de programmes

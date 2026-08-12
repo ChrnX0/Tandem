@@ -25,8 +25,10 @@ a limitation.
    This exists because the origin machine also runs a point-of-sale system in
    its own prefix — installing a dependency inside a working production
    environment is worse than not automating at all.
-2. **User-facing messages in Portuguese, no jargon.** `NO_MATCHING_ABIS` becomes
-   "este app é feito só para celular e não roda aqui".
+2. **No jargon in anything the user reads, in any language.** `NO_MATCHING_ABIS`
+   becomes "this app is made for phones only and does not run here". Every such
+   sentence lives in `po/`, never in the code — `tools/conta-literais.py`
+   reports TOTAL 0 and the suite asserts that number.
 3. **`set -e` only in the packager, never in the executables.** The wait loops
    depend on commands that fail on purpose (`grep -q ... && break`).
 4. **Never repeat an install already paid for.** `dotnet48` takes ~30 min; the
@@ -41,26 +43,30 @@ documentation, the changelog, and commit messages. That is a standing directive:
 the repository is where people from outside come to read and contribute, and a
 codebase they cannot read is a wall.
 
-Four deliberate exceptions, all of them for the same reason — the product's user
-is a Brazilian shop owner who is not a programmer:
+**The product is written seven times over, and English is the default.** That is
+a reversal, decided by the owner: *"o padrão eh inglês. tudo tem q ser
+traduzido, óbvio."* So there is no longer a Portuguese half of this project and
+an English half — there is a repository, in English, and a product that exists
+in `en`, `pt_BR`, `es`, `fr`, `zh_CN`, `hi` and `ar`. Every format is translated
+through its own native mechanism: the messages through `po/`, the `.desktop`
+files through `Name[xx]=`, the manual through `/usr/share/man/<locale>/man1/`,
+the data tables through `alternativas.<lang>.tsv` and `limites.<lang>.tsv`.
 
-1. **Every string shown to the user stays in Portuguese.** That is rule №2 above
-   and it is a product requirement, not a preference. It covers whatever goes to
-   `t_erro`, `t_aviso`, `t_ok`, `t_pergunta`, `t_texto`, `zenity`, and the help
-   text in `uso()`.
-2. **The command names the user types stay in Portuguese** — `preparar`,
-   `programas`, `desinstalar`, `dados`, `alternativas`, `receita`, `memoria`,
-   `esquecer`, `socorro`, `contribuir`, `lista`. Most carry an English alias for
-   people who expect one.
-3. **Anything shipped inside the package stays in Portuguese**, because it is
-   product, not repository: `man/tandem.1` (the user reads it with `man
-   tandem`), the `Name`/`Comment` fields of the `.desktop` files, and the
-   `xml:lang="pt_BR"` comments in `src/mime/tandem.xml`.
-4. **`LEIAME.md` and `CONTRIBUINDO.md` stay in Portuguese.** They are the front
-   door for the audience that actually runs this software, and a test keeps
-   their command lists in sync with the English pair.
+Three things stay Portuguese, and each for a reason that is not sentiment:
 
-The short form: **the repository is English, the product is Portuguese.**
+1. **The command names the user types** — `preparar`, `programas`,
+   `desinstalar`, `dados`, `alternativas`, `receita`, `memoria`, `esquecer`,
+   `socorro`, `contribuir`, `lista`. A command copied off a forum has to work
+   on any machine, so these cannot move with the language. Most carry an English
+   alias for people who expect one.
+2. **`LEIAME.md` and `CONTRIBUINDO.md`.** They are the front door for the
+   audience that actually runs this software, and a test keeps their command
+   lists in sync with the English pair.
+3. **The literal values written into state files** — see the paragraph below.
+   Those are on-disk format, not prose.
+
+The short form: **the repository is English, the product is every language, and
+what is on disk is neither.**
 
 And one thing that only looks like language: **the literal values written into
 state files** — `abriu`, `confirmado`, `so-abriu`, `reprovado`, `RESOLVERAM`,
@@ -142,7 +148,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 499 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 806 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -291,6 +297,48 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   it. The v3.3 delivery proof looked in both folders and approved — a dead end
   with a receipt on top. Check **per architecture**. Half the winetricks verbs
   ship 32-bit payloads only, and it says so in English in the middle of the log.
+- **Arriving is not arriving at all if Wine put it there.** Wine installs ~560
+  DLLs of its own into every prefix and marks each one **`Wine builtin DLL` at
+  offset 64** of the file, in place of the DOS stub message — measured 560 of
+  560 on a virgin `win64` prefix, so the marker is a reliable discriminator and
+  costs sixteen bytes to read (`t_dll_builtin_wine`). This is not a detail:
+  `verbos.tsv` maps `dotnet48` → `mscoree.dll`, and **`mscoree.dll` is present
+  in both `system32` and `syswow64` of a prefix with no .NET anywhere** (no
+  `Microsoft.NET` folder, zero `NET Framework Setup` keys). So the delivery
+  proof for the most expensive verb in the project *could not fail*: a
+  `dotnet48` that installed nothing was approved, the receipt was written, and
+  under rule №4 the receipt is permanent — half an hour spent, and "I already
+  installed what this program was asking for" ever after. Reachable through the
+  `memoria`/`lista` shortcut, which asks the table which DLL to look for; a DLL
+  that came out of `err:module:import_dll` can never be a builtin, because Wine
+  said it could not find it.
+- **`wineboot` writes a random `MachineGuid` at prefix creation**, into the
+  64-bit view, before Tandem gets a turn — measured on a virgin prefix, Wine
+  9.0. That is why `t_identidade_fixa`'s GUID half **had never once run**: its
+  guard was "the registry value is absent", which was never true, while the
+  mark file recorded `MACHINEGUID=<seed value>` — a mark describing something
+  the prefix did not contain. The discriminator has to be the mark file, not
+  the registry value. Remaking the environment otherwise hands a licensed
+  program a different machine, which is the exact loss that function exists to
+  prevent.
+- **`wine reg` writes the view it is not read from.** On Ubuntu with `wine32`
+  present, `/usr/bin/wine` runs `reg.exe` as a **32-bit** process — same reason
+  `wine uninstaller --list` enumerates the other view — so `wine reg add
+  HKLM\Software\...` with **no `/reg:` flag lands in `Software\Wow6432Node\…`**,
+  while `t_reg_valor` reads `Software\…`. Measured both ways: no flag →
+  `Wow6432Node`, `/reg:64` → the 64-bit key, and `/reg:32` is a no-op here
+  because that is already the default. Name the view every time, and write
+  **both**: a 32-bit program and a 64-bit one must see the same machine, and 2
+  of 2 real installers surveyed here are 32-bit.
+- **`#arch=win32` / `#arch=win64` is on line 4 of `system.reg`**, `user.reg` and
+  `userdef.reg`, and until 4.2 nothing in the tree read it (`grep -rn '#arch'
+  src/ tests/` → zero). A 64-bit program in a 32-bit environment is the one
+  failure decidable *before* running anything, and it was the one only ever
+  diagnosed afterwards, by grepping English (`32-bit installation`) out of
+  Wine's log. `t_prefixo_arquitetura` returns **0 when Wine declared it and 2
+  when it was deduced from the folder layout** — and a refusal may rest on 0
+  only. Refusing to open a working program on a guess would be worse than the
+  defect being fixed, which is the same rule `t_dll_no_prefixo` follows.
 - **`systemd-inhibit` exists and does not work without D-Bus.** It exits 1 and
   takes the wrapped command down with it; `winetricks` never even ran. Exercise
   it before using it (`t_inibidor`), do not ask whether the binary exists.
@@ -426,7 +474,7 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   flag by hand in both the local headers and the central directory.
 - **The list only ever pulled, and the measurable consequence is that
   `lista/lista.tsv` is EMPTY.** Contributing meant five steps ending in a GitHub
-  account. Since 3.9 sending is automated, and **since 4.1 it is ON BY DEFAULT**.
+  account. Since 3.9 sending is automated, and **since 4.2 it is ON BY DEFAULT**.
   That reversal is the architect's call and its justification is the measurement
   above: born off, the list stayed empty, and a default nobody changes is a
   decision made by the default. What makes it defensible is not the default, it
@@ -582,7 +630,18 @@ root), no longer only by reading:
 - `tandem dados` listing and copying real files out of a prefix; `tandem socorro`
   producing its report; the bitness warning appearing in the dialog *before* the
   download.
-- 499 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- **The 4.2 identity fix closed end to end on a real prefix.** `wineboot`
+  created a `win64` prefix and minted `MachineGuid=1a2dea1e-…` on its own;
+  `t_identidade_fixa` replaced it with the seed-derived `7e4fe22d-…` **in both
+  registry views**, the mark file recorded the same value the prefix now holds,
+  a second call left everything alone, and the same call against a prefix
+  without `.tandem-prefixo` returned 1 and wrote nothing. Before the fix that
+  half had never run at all.
+- **The builtin discriminator closed on the real case.** On a real prefix with
+  no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
+  had installed, and the delivery proof now answers "not delivered" for 64 and
+  32 alike; swapping in a file without the marker flips it back to "delivered".
+- 807 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The five remaining formats closed on real files**: a `.deb` built for an
   older release produced the release-mismatch verdict with `libssl1.1` and
   `libicu70` named and **no password asked**; an arm64 package produced the
@@ -682,7 +741,7 @@ repository, Waydroid 1.6.2 MAINLINE with GAPPS and libhoudini, `binderfs` with
   **`socorro`**, **`contribuir`**.
 - **Evidence gate, CI and a release pipeline.**
 
-## The language system (4.1)
+## The language system (4.2)
 
 Seven languages: `pt_BR` (the original), `en`, `es`, `fr`, `zh_CN`, `hi`, `ar`.
 Read this before touching a message anywhere in the tree.
@@ -843,7 +902,7 @@ for a reason.
 
 The queue, in order:
 
-0. **Field-test 4.1 on the counter.** The translation is done; this half needs
+0. **Field-test 4.2 on the counter.** The translation is done; this half needs
    the owner's machine and nothing else: `tandem portas` (32 phantom sockets
    collapsed into one line), `tandem intalar` (must say "I do not know that
    command", not "unrecognised file type"), `tandem idioma`, and a double click
@@ -874,10 +933,19 @@ The queue, in order:
 4. ~~`.apkm` support is declared but only `.xapk`/`.apks` were tested.~~ **Done:**
    `tests/mkapk.py` now writes both a plain `.apkm` and an encrypted one, and the
    reader is exercised on each.
-5. Clone a prefix with .NET already in it instead of running `dotnet48` from
-   scratch (30 min, high failure rate) — delivery proof was the prerequisite and
-   now exists; what is missing is the care never to read from a protected prefix
-   in use.
+5. ~~Clone a prefix with .NET already in it instead of running `dotnet48` from
+   scratch.~~ **REJECTED as designed in 4.2** — read the reasons in
+   `docs/IDEAS.md` before reopening it. The short form: the only legal donor is
+   the shop's production prefix; there is no read-only way to check "not in
+   use", so the safety check is itself the rule-№1 violation; a prefix is not a
+   folder of files (`dosdevices/z: -> /`, and `wineserver` names a private
+   `/tmp` dir the copy cannot reach); and a mould store is a second
+   `.tandem-prefixo`-marked tree that `t_prefixo_do_arquivo` resolves into.
+   **The investigation is what found the three defects 4.2 fixes**, which is
+   the argument for investigating a rejected idea properly. The surviving
+   version — pay `dotnet48` once into a prefix Tandem creates *for that
+   purpose*, with no cloning and no reading of anybody else's environment — is
+   still open, and now has a delivery proof that can actually fail for it.
 6. **No format is queued.** All nine are done. `.msix` was rejected and the
    reason is written down — do not reopen it without reading that first. The next
    valuable work is not another format; it is field evidence for the ones that
@@ -892,12 +960,22 @@ The queue, in order:
 to end on real files. `.AppImage` and `.jar` came in 3.7; `.deb`, `.rpm`,
 `.flatpakref`, `.snap` and shell installers in 3.8 — see the State section for exactly what was
 measured. The orphan-shortcut question is settled: it was never a defect. The
-real-program harness exists and is green. **v4.0 is published** — tag, `.deb`
-and `.sha256` attached, and the published artifact verified byte-for-byte
-identical to a local build (sha256 `82544a90…`). 3.7 through 3.9 were never
-released, so 4.0 is the first package the public gets with all nine formats in
-it. The next release goes out the same way; see the section below for why the
-browser path exists.
+real-program harness exists and is green. **v4.0 and v4.1 are published** — tag,
+`.deb` and `.sha256` attached, and 4.0's published artifact verified
+byte-for-byte identical to a local build (sha256 `82544a90…`). 3.7 through 3.9
+were never released, so 4.0 is the first package the public gets with all nine
+formats in it. The next release goes out the same way; see the section below for
+why the browser path exists.
+
+**4.2 is the version in the tree and it is NOT released.** Everything after
+v4.1 — the gettext migration, English as the default, the six data tables,
+sending on by default, and the three defects above — lives under `tandem (4.2)`
+in the changelog. That entry had to be *split out* of 4.1's: v4.1 was published
+on 2026-08-09 and work kept being appended to its changelog entry afterwards,
+so the entry described a package the public never got. The 4.1 entry is now
+byte-identical to the one in the `v4.1` tag again. **Check the published tag
+before adding to the top changelog entry** — if that version is out, the entry
+is history and a new one has to be opened.
 
 **Two guards were added because the release itself found the defects**, and
 both are in the suite now rather than in a failed workflow: the newest

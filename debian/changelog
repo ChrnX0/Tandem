@@ -1,4 +1,4 @@
-tandem (4.1) unstable; urgency=medium
+tandem (4.2) unstable; urgency=medium
 
   * Sending what Tandem learns to the community list is ON BY DEFAULT. It was
     born off, and the measurable consequence was that the list stayed empty: a
@@ -62,6 +62,40 @@ tandem (4.1) unstable; urgency=medium
     the same data rows, the same pattern column in the same order, and the same
     class column. A reordered row would match the wrong program; a translated
     class would pick the wrong message to frame it with.
+
+  * Three defects found by investigating a feature that was then NOT built, and
+    all three measured against real Wine rather than read out of the source.
+  * Wine's own copy of a DLL no longer counts as a delivery. Wine installs some
+    560 DLLs of its own into every prefix, marked "Wine builtin DLL" at offset
+    64 of the file - 560 of 560 measured on a virgin prefix. verbos.tsv maps
+    dotnet48 to mscoree.dll, and Wine had already put an mscoree.dll in both
+    system32 and syswow64, so the proof of delivery for the most expensive verb
+    in the project could not fail: an install that did nothing was approved, and
+    under rule number 4 the receipt is permanent. Half an hour of the owner's
+    time, and "I already installed what this program was asking for" ever after.
+  * The identity freeze had never once run. Measured on Wine 9.0: wineboot
+    writes a RANDOM MachineGuid into the 64-bit view while creating the prefix,
+    so the old guard - "the registry value is absent" - was never true, while
+    the mark file recorded a GUID the prefix did not contain. Remake the
+    environment and a program that ties its licence to this machine sees a
+    different machine, which is the exact loss that code exists to prevent. It
+    now keys on the mark file, and it writes BOTH registry views: "wine reg"
+    here runs 32-bit, so a write with no /reg: flag landed in Wow6432Node while
+    the read looked at the 64-bit key - the code wrote the view it did not read.
+  * "tandem identidade" shows the two views and says so when they disagree. That
+    is the check that would have caught the line above, and it was missing.
+  * A 64-bit program in a 32-bit environment is now recognised BEFORE running,
+    off the #arch= line Wine writes into system.reg. Nothing in the tree had
+    ever read that line; the case was only ever diagnosed afterwards, by
+    grepping English out of Wine's log. Only a DECLARED win32 refuses - the
+    folder layout answers the same question, but a deduction is not a fact and
+    refusing to open a working program on a guess would be the worse defect.
+  * t_identidade_fixa refuses a prefix without our mark. Rule number 1 was
+    documented in that function and enforced only by its caller.
+
+ -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 12:00:00 +0000
+
+tandem (4.1) unstable; urgency=medium
 
   * "tandem portas" no longer offers a shopkeeper 32 sockets this machine does
     not have. Found on a photograph of a real counter: the list ran COM1 to

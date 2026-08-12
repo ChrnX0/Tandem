@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "4011840298 797" "$soma_esperados"
+      "3116281636 799" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "3113881825 1444" "$soma_padroes"
 
@@ -1197,6 +1197,10 @@ contem "and shows the frozen identifier" \
 # loss the feature exists to prevent, and doing it late causes it.
 PREF_FIX="$TMPROOT/prefixo-fixa"
 mkdir -p "$PREF_FIX/drive_c"
+# Our mark, because the function now refuses a prefix that does not carry it.
+# Rule number 1 was documented in that function's comment and enforced only by
+# its caller, which is one accident away from not being enforced at all.
+: > "$PREF_FIX/.tandem-prefixo"
 t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
 equal "freezing writes the volume serial into the drive root" \
       "$SER1" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
@@ -1575,8 +1579,13 @@ print("%s %s %d" % (
     saida.count("\n@")))
 FIM
 )"
+    # One less entry than the catalogue has keys: the fuzzy one is dropped. The
+    # number is computed rather than written down, because a hard number here
+    # fails on the next message somebody adds and teaches them to edit the
+    # expectation instead of reading the test.
+    N_CHAVES="$(grep -c '^msgctxt ' "$ROOT/po/en.po")"
     equal "a fuzzy entry is seen, dropped, and the rest kept" \
-          "sem_arquivo omitida 446" "$resultado"
+          "sem_arquivo omitida $(( N_CHAVES - 1 ))" "$resultado"
 
     # That parser was wrong the first time it was written, in a way that made it
     # report NO fuzzy entries at all - the flag is a comment BEFORE the entry,
@@ -3189,6 +3198,194 @@ case "$TXB" in
     *) fail "the message takes the blame off the owner's machine" "Não é defeito da sua máquina" "$TXB" ;;
 esac
 
+section "Wine's own copy is not a delivery"
+
+# Wine puts some 560 DLLs of its own into every prefix and marks each one at
+# offset 64, where the DOS stub message would otherwise sit. Measured on a
+# fresh win64 prefix: 560 of 560 carry "Wine builtin DLL" at exactly that
+# offset. That is the whole reason the proof of delivery could approve the most
+# expensive verb in the project on a prefix with no .NET anywhere - verbos.tsv
+# maps dotnet48 -> mscoree.dll, and Wine had already put an mscoree.dll in both
+# folders. Exit 0 plus a file Wine itself installed read as proof, the receipt
+# was written, and under rule number 4 a receipt is permanent.
+finge_builtin() {
+    mkdir -p "$(dirname -- "$1")"
+    { printf 'MZ'; head -c 62 /dev/zero; printf 'Wine builtin DLL'
+      head -c 64 /dev/zero; } > "$1"
+}
+finge_nativa() {
+    mkdir -p "$(dirname -- "$1")"
+    { printf 'MZ'; head -c 62 /dev/zero; printf 'This program canno'
+      head -c 64 /dev/zero; } > "$1"
+}
+
+PWB="$TMPROOT/pref-builtin"
+mkdir -p "$PWB/drive_c/windows/system32" "$PWB/drive_c/windows/syswow64"
+finge_builtin "$PWB/drive_c/windows/system32/mscoree.dll"
+finge_builtin "$PWB/drive_c/windows/syswow64/mscoree.dll"
+finge_nativa  "$PWB/drive_c/windows/system32/msvcp140.dll"
+
+equal "Wine's own stub is recognised by the marker at offset 64" \
+      "0" "$(t_dll_builtin_wine "$PWB/drive_c/windows/system32/mscoree.dll"; echo $?)"
+equal "a file that is not one is not mistaken for it" \
+      "1" "$(t_dll_builtin_wine "$PWB/drive_c/windows/system32/msvcp140.dll"; echo $?)"
+equal "a file that is not there is not a builtin either" \
+      "1" "$(t_dll_builtin_wine "$PWB/drive_c/windows/system32/sumiu.dll"; echo $?)"
+
+# The regression test. Both of these used to answer 0 - "delivered" - on a
+# prefix where nothing had been delivered at all.
+equal "Wine's mscoree.dll does not prove dotnet48 delivered anything" \
+      "1" "$(WINEPREFIX="$PWB"; export WINEPREFIX; t_dll_no_prefixo mscoree.dll 64; echo $?)"
+equal "and not for a 32-bit program either" \
+      "1" "$(WINEPREFIX="$PWB"; export WINEPREFIX; t_dll_no_prefixo mscoree.dll 32; echo $?)"
+equal "a library that is not Wine's still counts as delivered" \
+      "0" "$(WINEPREFIX="$PWB"; export WINEPREFIX; t_dll_no_prefixo msvcp140.dll 64; echo $?)"
+# The pairing that made this reachable: the memory/list shortcut installs a verb
+# with no Wine error to check against, so it asks the table which DLL to look
+# for. Any DLL that came out of err:module:import_dll cannot be a builtin -
+# Wine said it could not find it - which is why this only ever mattered here.
+equal "verbos.tsv is what points dotnet48 at mscoree.dll" \
+      "mscoree.dll" "$(TANDEM_VERBOS_TSV="$ROOT/src/lib/verbos.tsv" t_dll_do_verbo dotnet48)"
+
+section "how wide is this environment"
+
+# Wine writes "#arch=" on the fourth line of system.reg, and nothing in Tandem
+# read it: "grep -rn '#arch' src/ tests/" returned zero hits. A 64-bit program
+# in a 32-bit environment is the one failure that is decidable before running
+# anything, and it was the one Tandem only ever diagnosed afterwards.
+PA="$TMPROOT/arquitetura"
+mkdir -p "$PA/w64" "$PA/w32" \
+         "$PA/velho64/drive_c/windows/syswow64" \
+         "$PA/velho32/drive_c/windows/system32"
+printf 'WINE REGISTRY Version 2\n;; all keys relative\n\n#arch=win64\n' > "$PA/w64/system.reg"
+printf 'WINE REGISTRY Version 2\n;; all keys relative\n\n#arch=win32\n' > "$PA/w32/system.reg"
+# The answer and the evidence for it, together, and captured in that order:
+# relying on "$?" beside a command substitution in the same command line reads
+# the right value by accident of expansion order, which is not a thing to build
+# a test on.
+arq_com_codigo() {
+    local v c
+    v="$(t_prefixo_arquitetura "$1" 2>/dev/null)"; c=$?
+    printf '%s %s' "$v" "$c"
+}
+equal "reads win64 off the fourth line of system.reg" \
+      "win64 0" "$(arq_com_codigo "$PA/w64")"
+equal "and win32 the same way" \
+      "win32 0" "$(arq_com_codigo "$PA/w32")"
+# Older Wine did not write that line, and a prefix made years ago on a counter
+# machine is exactly the one that would not have it. The layout still answers -
+# but it answers with a 2, because a deduction is not a fact and nothing may
+# refuse to open a program on the strength of one.
+equal "with no #arch line, syswow64 says 64-bit, and says it is a guess" \
+      "win64 2" "$(arq_com_codigo "$PA/velho64")"
+equal "and only system32 says 32-bit, also a guess" \
+      "win32 2" "$(arq_com_codigo "$PA/velho32")"
+equal "a folder that is not a prefix answers nothing" \
+      " 1" "$(arq_com_codigo "$PA/nao-existe")"
+
+# The guess must NOT be enough to refuse. This fixture is a 64-bit prefix that
+# simply has no #arch line - which is also the shape of every synthetic prefix
+# in this suite - and a 64-bit program has to run in it.
+mkdir -p "$PA/sem_linha/drive_c/windows/system32"
+equal "a prefix with no #arch line is not condemned as 32-bit" \
+      "2" "$(t_prefixo_arquitetura "$PA/sem_linha" >/dev/null; echo $?)"
+
+# A fake wine, so the two tests below exercise the decision without needing
+# Wine installed - and, in the identity case, so the arguments can be read
+# back. What that code does wrong cannot be seen from its exit status.
+FINGE_W="$TMPROOT/finge-wine"; mkdir -p "$FINGE_W"
+cat > "$FINGE_W/wine" <<'FIMW'
+#!/bin/sh
+[ -n "$T_REG_LOG" ] && printf '%s\n' "$*" >> "$T_REG_LOG"
+exit 0
+FIMW
+chmod +x "$FINGE_W/wine"
+
+CASA_32="$TMPROOT/casa-32bits"; mkdir -p "$CASA_32"
+: > "$CASA_32/.primeira-vez"
+PREF_ALHEIO="$TMPROOT/prefixo-alheio-32"
+mkdir -p "$PREF_ALHEIO/drive_c/Programa"
+printf 'WINE REGISTRY Version 2\n;; all keys relative\n\n#arch=win32\n' > "$PREF_ALHEIO/system.reg"
+cp "$ARTIFACTS/prog64.exe" "$PREF_ALHEIO/drive_c/Programa/prog64.exe"
+SAIDA_32="$(env -i HOME="$CASA_32" PATH="$FINGE_W:/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+    timeout 120 bash "$ROOT/src/bin/tandem-exe" \
+    "$PREF_ALHEIO/drive_c/Programa/prog64.exe" 2>&1)"
+C_32=$?
+equal "a 64-bit program in a 32-bit environment does not fail in silence" \
+      "1" "$([ -n "$SAIDA_32" ] && echo 1 || echo 0)"
+contem "it names the width that is the problem" "32-bit" "$SAIDA_32"
+contem "and the folder that is the environment" "$PREF_ALHEIO" "$SAIDA_32"
+equal "and it refuses instead of pretending it ran" "1" "$C_32"
+
+section "the identity that was never actually written"
+
+# Measured on real Wine 9.0: wineboot writes a RANDOM MachineGuid into the
+# 64-bit view while creating the prefix, before Tandem gets a turn. The guard
+# was "the registry value is absent", so it was never true and this half never
+# once ran - while the mark file recorded MACHINEGUID=<the seed value>, a mark
+# describing something the prefix did not contain. Remake the environment and
+# the program that tied its licence to this machine sees a different machine:
+# exactly the loss the function exists to prevent.
+PID_OK="$TMPROOT/pref-identidade"
+mkdir -p "$PID_OK/drive_c"
+: > "$PID_OK/.tandem-prefixo"
+printf 'WINE REGISTRY Version 2\n\n#arch=win64\n\n[Software\\\\Microsoft\\\\Cryptography] 1700000000\n"MachineGuid"="b9ab1485-29b0-43ef-90e4-18db97d1d4e4"\n' \
+    > "$PID_OK/system.reg"
+REG_LOG="$TMPROOT/reg-chamadas.txt"; : > "$REG_LOG"
+( export T_REG_LOG="$REG_LOG"; PATH="$FINGE_W:$PATH"
+  t_identidade_fixa "$PID_OK" ) >/dev/null 2>&1
+equal "Wine's own MachineGuid no longer stops the freeze from happening" \
+      "2" "$(grep -c 'MachineGuid' "$REG_LOG")"
+# "wine reg" is a 32-bit process here - Ubuntu's wrapper picks the 32-bit
+# loader when wine32 is present, the same reason "wine uninstaller --list"
+# reads the other view - so a write with no /reg: flag landed in Wow6432Node
+# while the read looked at the 64-bit key. The code wrote the view it did not
+# read, and both views have to carry the same machine.
+contem "the 64-bit view is asked for by name" "/reg:64" "$(cat "$REG_LOG")"
+contem "and so is the 32-bit one, which is what a 32-bit program reads" \
+       "/reg:32" "$(cat "$REG_LOG")"
+equal "the volume serial went in as well" \
+      "1" "$([ -s "$PID_OK/drive_c/.windows-serial" ] && echo 1 || echo 0)"
+
+: > "$REG_LOG"
+( export T_REG_LOG="$REG_LOG"; PATH="$FINGE_W:$PATH"
+  t_identidade_fixa "$PID_OK" ) >/dev/null 2>&1
+equal "a prefix already stamped is never stamped again" \
+      "0" "$(grep -c 'MachineGuid' "$REG_LOG")"
+
+# Rule number 1. The write is small, which is exactly why it would be the one
+# to slip through.
+PID_NAO="$TMPROOT/pref-de-outro"
+mkdir -p "$PID_NAO/drive_c"
+printf 'WINE REGISTRY Version 2\n\n#arch=win64\n' > "$PID_NAO/system.reg"
+: > "$REG_LOG"
+( export T_REG_LOG="$REG_LOG"; PATH="$FINGE_W:$PATH"
+  t_identidade_fixa "$PID_NAO" ) >/dev/null 2>&1
+equal "a prefix without our mark is not written to at all" \
+      "0" "$(grep -c . "$REG_LOG")"
+equal "and no mark of ours is left inside it" \
+      "0" "$([ -f "$PID_NAO/.tandem-identidade" ] && echo 1 || echo 0)"
+
+# The report showed only the 64-bit view, which is how a MachineGuid written
+# into the other one went unnoticed. Values, not words: this assertion has to
+# hold in all seven languages.
+PID_2V="$TMPROOT/pref-duas-vistas"
+mkdir -p "$PID_2V/drive_c"
+printf 'WINE REGISTRY Version 2\n\n#arch=win64\n\n[Software\\\\Microsoft\\\\Cryptography] 1700000000\n"MachineGuid"="aaaa1111-0000-0000-0000-000000000000"\n\n[Software\\\\Wow6432Node\\\\Microsoft\\\\Cryptography] 1700000000\n"MachineGuid"="bbbb2222-0000-0000-0000-000000000000"\n' \
+    > "$PID_2V/system.reg"
+TX_2V="$(t_texto_identidade "$PID_2V")"
+contem "the report shows what a 64-bit program sees" "aaaa1111" "$TX_2V"
+contem "and the different value a 32-bit program sees" "bbbb2222" "$TX_2V"
+# Two views that agree are the normal case and deserve no paragraph about it:
+# the value appears once, on the identifier line, and nowhere else.
+PID_1V="$TMPROOT/pref-vistas-iguais"
+mkdir -p "$PID_1V/drive_c"
+printf 'WINE REGISTRY Version 2\n\n#arch=win64\n\n[Software\\\\Microsoft\\\\Cryptography] 1700000000\n"MachineGuid"="cccc3333-0000-0000-0000-000000000000"\n\n[Software\\\\Wow6432Node\\\\Microsoft\\\\Cryptography] 1700000000\n"MachineGuid"="cccc3333-0000-0000-0000-000000000000"\n' \
+    > "$PID_1V/system.reg"
+equal "and it stays quiet when the two views agree" \
+      "1" "$(t_texto_identidade "$PID_1V" | grep -c 'cccc3333')"
+
 section "choosing the verb by the program's bitness"
 
 equal "a 32-bit program keeps the normal verb" \
@@ -3573,6 +3770,28 @@ elif [ "$(date -d "$DATA_1" +%s 2>/dev/null || echo 0)" \
 else
     fail "the newest changelog entry is dated after the one before it" \
          "newer than $DATA_2" "$DATA_1"
+fi
+
+# The version being built must not be one that is already out. It happened:
+# v4.1 was published on 2026-08-09 and three commits' worth of work kept being
+# appended to its changelog entry afterwards, so the entry described a package
+# the public never received - and a "fresh" release of 4.1 would have shipped
+# under a tag that already existed. Whoever hits this has to open a new entry,
+# not edit the top one.
+#
+# Skips rather than fails when there are no tags at all: a shallow clone knows
+# nothing about what is published, and a guard that stops a good release for
+# lack of information is worse than the drift it was written for.
+if ! git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 ||
+   [ -z "$(git -C "$ROOT" tag 2>/dev/null | head -1)" ]; then
+    skip "the version being built has not been released already" \
+         "no tags here, so what is published cannot be known"
+elif git -C "$ROOT" rev-parse -q --verify "refs/tags/v$VERSAO_DEB" >/dev/null 2>&1; then
+    fail "the version being built has not been released already" \
+         "a version with no tag yet" \
+         "v$VERSAO_DEB is already published - open a new changelog entry"
+else
+    pass "the version being built has not been released already"
 fi
 
 if [ -f "$PACOTE_DEB" ]; then
