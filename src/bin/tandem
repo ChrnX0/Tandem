@@ -1118,10 +1118,26 @@ https://github.com/ChrnX0/Tandem/issues" | t_texto "$(t_msg contrib_titulo)"
             printf '%s' "$reg" | wl-copy 2>/dev/null &&
                 t_ok "$(t_msg contrib_copiada)"
         fi
+        # The query parameter has to be the issue form's FIELD ID, and it was
+        # "linha" while .github/ISSUE_TEMPLATE/list.yml calls that field
+        # "record" - so the one shortcut that works opened an EMPTY form, while
+        # README.md and LEIAME.md both promise "the form already filled in".
+        # A name matching nothing looks exactly like a name matching something,
+        # which is why the test for this compares the two files rather than
+        # trusting either.
         if command -v xdg-open >/dev/null 2>&1 &&
            t_pergunta "$(t_msg contrib_abrir_formulario)" "Abrir o formulário" "Não, obrigado"; then
-            setsid xdg-open "https://github.com/ChrnX0/Tandem/issues/new?template=list.yml&linha=$(t_url_escapa "$reg")" \
-                >/dev/null 2>&1 &
+            URL_FORM="https://github.com/ChrnX0/Tandem/issues/new?template=list.yml&record=$(t_url_escapa "$reg")"
+            # Not backgrounded, and its status is read. Written as
+            # "setsid ... >/dev/null 2>&1 &" the failure was unreachable: with
+            # no browser xdg-open exits 3 with its reason on stderr, and the
+            # owner was told nothing at all - the exact shape of failure this
+            # project treats as a defect rather than a limitation. Dropping
+            # setsid too, because xdg-open's terminal-browser fallback would
+            # otherwise fight for the tty.
+            if ! xdg-open "$URL_FORM" >/dev/null 2>&1; then
+                t_erro "$(t_msg contrib_sem_navegador "$URL_FORM")"
+            fi
         fi
     fi
 

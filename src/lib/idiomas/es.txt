@@ -1598,6 +1598,15 @@ Tú aún lo compruebas y lo envías: Tandem no manda nada solo por aquí.
 Si prefieres que lo mande solo de ahora en adelante, es otra cosa:
 tandem enviar sim
 
+@contrib_sem_navegador
+No pude abrir un navegador en esta computadora, así que el formulario no
+está en la pantalla.
+
+La línea ya está en su portapapeles. Abra esta dirección en cualquier
+computadora - su teléfono sirve - y el formulario llega con la línea dentro:
+
+{1}
+
 @contrib_pode_mandar_sozinho
 Si quieres, Tandem puede mandar esto solo la próxima vez:
 tandem enviar sim

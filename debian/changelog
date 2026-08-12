@@ -58,6 +58,32 @@ tandem (4.3) unstable; urgency=medium
     --fail-on warning and demands zero output, and eight lines at 81 and 82
     columns turned a green suite into a red release. Found by CI rather than by
     the suite, which is the wrong order to find it in.
+  * Three defects on the paths that DO work, found by investigating a receiver
+    for the community list and then not building one. The prefilled issue form
+    named a field that does not exist: the client sent "linha" while list.yml
+    calls the field "record", so the one shortcut that works opened an EMPTY
+    form while both READMEs promise "the form already filled in". A parameter
+    matching nothing looks exactly like one matching something, so the test
+    compares the two files rather than trusting either.
+  * The same offer could fail in silence. With no browser xdg-open exits
+    non-zero and says why, but it was backgrounded with its output discarded,
+    so clicking "open the form" did nothing at all. It runs in the foreground
+    now and a failure prints the address, in every language, so the owner can
+    open it on a phone.
+  * And a recipe could write arbitrary fields into a community-list record.
+    Only its verbs were validated; ARQUITETURA, LIMITE, RESULTADO and PROGRAMA
+    were copied verbatim, ARQUITETURA goes into field 2 of the record, and a
+    TAB survives - so a recipe, the file whose own header tells the owner to
+    accept it from other people, could splice the remaining fields including
+    the note. A shop's name onto a public list, and a tagging primitive
+    besides: a unique string per victim, readable back off the list.
+  * The receiver itself is NOT built, and that is the recommendation rather
+    than a delay. The list is not empty for want of an address: only tandem-exe
+    writes the keys a record needs, so eight of nine formats can never produce
+    one; the down-path has a single caller; and no known public program needs a
+    verb. An anonymous intake would also have to either fabricate the machine
+    count, which is the literal 1, or keep source addresses - a database
+    joining Brazilian shops to the commercial software each one runs.
   * 145 sentences are still literals - the whole of tandem doctor, the whole
     panel, the autoteste report and the hardware-key advice. Migrating them is
     the rest of this version's work. The suite holds the number as a ratchet:

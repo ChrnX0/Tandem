@@ -1538,6 +1538,14 @@ Tandem - 参与贡献
 如果您希望它从现在起自己发，那是另一回事：
 tandem enviar sim
 
+@contrib_sem_navegador
+我无法在这台电脑上打开浏览器，所以表单没有显示出来。
+
+那一行已经复制到您的剪贴板了。在任何一台电脑上打开下面这个地址（手机也
+可以），表单打开时那一行就已经填好了：
+
+{1}
+
 @contrib_pode_mandar_sozinho
 如果您愿意，下次 Tandem 可以自己发：
 tandem enviar sim

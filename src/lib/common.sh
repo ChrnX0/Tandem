@@ -1327,7 +1327,30 @@ t_receita_importa() {
                     t_verbo_de_fora_ok "$v" || { t_diz "receita recusada: verbo suspeito ou que nao instala dependencia: '$v'"; return 4; }
                 done
                 verbos="$verbos$chave=$valor"$'\n' ;;
-            ARQUITETURA|LIMITE|RESULTADO|PROGRAMA) verbos="$verbos$chave=$valor"$'\n' ;;
+            # These four were copied VERBATIM, and the verb check above made
+            # that look safer than it was: a recipe is the file whose own header
+            # tells the owner to accept it from other people, and ARQUITETURA
+            # goes straight into field 2 of a community-list record
+            # (t_lista_registro). A TAB survives t_memoria_grava, so a value of
+            # "64<TAB>vcrun2022<TAB>...<TAB>Padaria do Joao" spliced the
+            # remaining fields INCLUDING THE NOTE - a way to write a shop's name
+            # into a public list, and worse, a tagging primitive: a unique
+            # string per victim, readable back off the list afterwards.
+            #
+            # A tab or a newline in any of them is refused outright, and
+            # ARQUITETURA is held to the vocabulary the record allows.
+            ARQUITETURA)
+                case "$valor" in
+                    32|64|arm64|-) ;;
+                    *) t_diz "receita recusada: arquitetura invalida: '$valor'"; return 5 ;;
+                esac
+                verbos="$verbos$chave=$valor"$'\n' ;;
+            LIMITE|RESULTADO|PROGRAMA)
+                case "$valor" in
+                    *"$(printf '\t')"*)
+                        t_diz "receita recusada: $chave contem tabulacao"; return 5 ;;
+                esac
+                verbos="$verbos$chave=$valor"$'\n' ;;
         esac
     done < "$arq"
 
