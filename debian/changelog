@@ -1,3 +1,34 @@
+tandem (4.3) unstable; urgency=medium
+
+  * The literal counter can finally see the zenity panel, which is the only
+    screen a shop owner who never opens a terminal ever sees. It could not:
+    acao_painel builds its eighteen menu rows as bare arguments to zenity,
+    inside a command substitution that is itself the whole value of a string,
+    and every version of the counter either skipped substitutions outright or
+    chopped them into shell debris with a regex.
+  * That is the ELEVENTH and TWELFTH time this measure has been narrower than
+    reality, and every one of the twelve erred the same way - reporting that
+    work was finished when it was not. The number has now gone
+    0 -> 75 -> 107 -> 167 -> 145, where only the last step is a reduction: it is
+    22 named exceptions, the command names the panel matches on and the hardware
+    labels that must not move with the language.
+  * The rule stops chasing syntax. Inside a body that exists to produce prose,
+    every double-quoted string is examined, whatever surrounds it - assignment,
+    append, printf argument, zenity argument. A rule about syntax is what failed
+    twelve times; a rule about content with an auditable list of exceptions
+    cannot quietly grow to cover new prose.
+  * Finding those strings needs a walk rather than a regex, and the walk has to
+    make one distinction: outside a string a $( ) is a command whose arguments
+    may be messages, so descend into it; inside a string it is data being
+    interpolated, so its text is not part of that sentence even though the
+    command inside it may carry messages of its own.
+  * 145 sentences are still literals - the whole of tandem doctor, the whole
+    panel, the autoteste report and the hardware-key advice. Migrating them is
+    the rest of this version's work. The suite holds the number as a ratchet: it
+    may fall, never rise.
+
+ -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 16:00:00 +0000
+
 tandem (4.2) unstable; urgency=medium
 
   * SECURITY. A verb name coming from outside this machine could run arbitrary

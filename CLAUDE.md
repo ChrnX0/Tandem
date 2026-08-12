@@ -29,7 +29,7 @@ a limitation.
    becomes "this app is made for phones only and does not run here". Every such
    sentence belongs in `po/`, never in the code. `tools/conta-literais.py`
    measures how far that is from true and the suite holds the number as a
-   ratchet: it may fall, never rise. **It is 75, not 0** — read the section on
+   ratchet: it may fall, never rise. **It is 145, not 0** — read the section on
    the counter before you trust any number it prints.
 3. **`set -e` only in the packager, never in the executables.** The wait loops
    depend on commands that fail on purpose (`grep -q ... && break`).
@@ -850,11 +850,11 @@ Read this before touching a message anywhere in the tree.
 
 **This section said "the migration is finished" and cited TOTAL 0. That was
 false, and the suite asserted the false number.** `tools/conta-literais.py` now
-reports **TOTAL 75**, all of it real: the whole of `tandem doctor`, the zenity
-panel's own `O que você quer fazer?`, the hardware-key advice and the longest
-message in the program - the fifteen-line paragraph about running a real Windows
-in a virtual machine. 449 keys in each of the seven catalogues, and 75 sentences
-that never got there.
+reports **TOTAL 145**, all of it real: the whole of `tandem doctor`, the whole
+zenity panel including its eighteen menu rows, the `autoteste` report, the
+hardware-key advice and the longest message in the program - the fifteen-line
+paragraph about running a real Windows in a virtual machine. 449 keys in each of
+the seven catalogues, and 145 sentences that never got there.
 
 **How a released product came to show an English-speaking user a Portuguese
 diagnostic:** it was found by installing the built `.deb` and reading the
@@ -865,11 +865,11 @@ assembles its report as `out+="SISTEMA\n"` and the counter's assignment pattern
 was a **whitelist of variable names** that did not include `out`.
 
 The suite now asserts the measured number as a **ratchet**: it may fall, never
-rise. A hard 0 that is wrong is worse than a true 75 that can only shrink,
-because the 0 says the work is finished and the 75 says where it is not.
+rise. A hard 0 that is wrong is worse than a true 145 that can only shrink,
+because the 0 says the work is finished and the 145 says where it is not.
 
 **The counter is the interesting part of this, not the translation.** It has now
-been wrong TEN times, each time narrower than reality, and it has never once
+been wrong TWELVE times, each time narrower than reality, and it has never once
 failed safe - every version reported zero for something that was there:
 
 1. "no accented character left in the file" - accent-free Portuguese walked
@@ -902,14 +902,35 @@ failed safe - every version reported zero for something that was there:
    contains no letters. Found while fixing number 9, which is the point: the
    ninth was found by reading a running program, and the tenth by then
    distrusting the fix.
+11. **A BARE ARGUMENT to a command**, which is how the entire zenity panel is
+   written - eighteen menu rows, the window's own question and the file
+   chooser's filter, and not one of them an assignment, a printf or a call to
+   `t_erro`. **That panel is the only screen a shop owner who never opens a
+   terminal ever sees**, and twelve versions of this counter scored it as zero.
+12. **Inside a command substitution that is itself the whole value of a
+   string** - `esc="$(zenity --list ... "instalar" "Instalar ou abrir um
+   arquivo")"`. Skipping substitutions (which is how you avoid debris) hides it;
+   a regex over shell chops it into debris like `" | cut -d'|' -f2)"`, and the
+   first version of that rule scored 271, most of it pipeline fragments. **A
+   count that is mostly noise gets ignored, which is how a real one goes
+   unread.** What works is a walk that descends INTO a substitution while
+   refusing to glue its text into the sentence around it.
+
+**The rule stops chasing syntax, because syntax is what failed twelve times.**
+Inside a body that exists to produce prose (`t_texto_*`, `t_causa_*`, `acao_*`,
+`uso`), **every** double-quoted string is examined, whatever surrounds it. What
+keeps that usable is `EXCECOES`, an auditable list of exact strings somebody had
+to add on purpose - and it is 22 entries of the 167 raw hits, which is why the
+number reads 145 rather than 167.
 
 **The lesson, which is the reason this is written down:** a completeness check
 built from what happened to be in front of me will always pass. The measure only
-became trustworthy at the moment it caught something. If you add a message in a
-shape not listed above, the counter will happily report zero. **Treat 75 as a
-floor, not a total** - ten versions of this thing have under-reported, and the
-only method that has ever caught it is installing the package and reading what
-comes out.
+became trustworthy at the moment it caught something - so there is now a test
+that feeds it the panel's exact shape and fails if it goes blind again. The
+number has gone `0 → 75 → 107 → 167 → 145`, and only that last step is a
+reduction rather than a discovery. **Treat 145 as a floor, not a total** - twelve
+versions of this thing have under-reported, and the only method that has ever
+caught it is installing the package and reading what comes out.
 
 There is now a small list of exact strings the counter is told to ignore
 (`EXCECOES`), each with its reason: vendor product names the owner must search
@@ -965,7 +986,7 @@ for a reason.
 
 The queue, in order:
 
-0. **Migrate the 75 literals `tandem doctor` and the panel still hold.** This is
+0. **Migrate the 145 literals `tandem doctor` and the panel still hold.** This is
    4.3's job and it is the largest honest gap in the product: an
    English-speaking user runs the flagship diagnostic and gets Portuguese, and
    the zenity panel asks `O que você quer fazer?` in Portuguese before anything

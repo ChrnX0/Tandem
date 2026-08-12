@@ -1481,13 +1481,30 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # that zero. It was found by installing the built .deb and READING THE
     # OUTPUT, which is the only method that has ever caught this measure lying.
     #
-    # So the number is now the measured truth and it is a RATCHET: it may fall,
-    # never rise. A hard 0 that is wrong is worse than a true 74 that can only
-    # shrink, because the 0 says the work is finished and the 74 says where it
+    # Then it happened twice MORE, and the second of those hid the primary
+    # interface. The number went 75 -> 107 -> 167 -> 145, and only the last step
+    # is a reduction rather than a discovery: it is 22 named exceptions, the
+    # command names the panel matches on and the hardware labels that must not
+    # move with the language.
+    #
+    # ELEVENTH: acao_painel builds its whole menu out of BARE ARGUMENTS to
+    # zenity - eighteen rows of Portuguese plus the window's own question and the
+    # file chooser's filter - and those are neither an assignment nor a printf
+    # nor a call to t_erro.
+    # TWELFTH: the menu lives inside a command substitution which is itself the
+    # entire value of a string, esc="$(zenity --list ... "instalar" "Instalar ou
+    # abrir um arquivo")". A walker that skips substitutions cannot see it; a
+    # regex over shell chops it into debris like " | cut -d'|' -f2)". The rule
+    # that finally works is a walk that descends INTO a substitution while
+    # refusing to glue its text into the sentence around it.
+    #
+    # So the number is the measured truth and it is a RATCHET: it may fall,
+    # never rise. A hard 0 that is wrong is worse than a true 145 that can only
+    # shrink, because the 0 says the work is finished and the 145 says where it
     # is not. Lower this line when you migrate something; the test fails if you
     # add prose to the code, and fails if you leave this number stale after
     # removing some.
-    TETO_LIT=75
+    TETO_LIT=145
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
         pass "the literals still in the code are the $TETO_LIT already known about"
@@ -1522,6 +1539,35 @@ FIM
 )"
     equal "the counter catches accent-free Portuguese, which fooled the old check" \
           "1" "$achou"
+
+    # The shape that hid the primary interface for twelve rounds, reduced to its
+    # essentials: prose as a BARE ARGUMENT to zenity, inside a command
+    # substitution, inside a string. Nothing about it is an assignment, a printf
+    # or a call to t_erro, and every earlier version of this counter scored the
+    # whole panel as zero. This is the test that makes the ratchet mean
+    # something - without it, a green suite only says the counter agrees with
+    # itself.
+    #
+    # It also pins the two halves apart: the row's command name is excepted on
+    # purpose (a command copied off a forum has to work on any machine) and the
+    # human-readable half beside it is not.
+    cat > "$ISCA" <<'FIMP'
+acao_painel() {
+    esc="$(zenity --list --text="O que você quer fazer?" \
+        "instalar"  "Instalar ou abrir um arquivo" \
+        2>/dev/null)" || return 0
+}
+FIMP
+    painel="$(cd "$ROOT" && python3 - "$ISCA" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+achados = m.literais(pathlib.Path(sys.argv[1]))
+print("%d %s" % (len(achados), "|".join(sorted(achados))))
+FIM
+)"
+    equal "the counter sees prose in a zenity argument inside a substitution" \
+          "2 Instalar ou abrir um arquivo|O que você quer fazer?" "$painel"
     # A composed message - several t_msg lookups plus data - must NOT be
     # reported. That is what a finished call site looks like.
     printf 't_erro "$(t_msg um)\n\n$(basename -- "$f")\n\n$(t_msg dois)"\n' > "$ISCA"
