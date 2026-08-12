@@ -3561,3 +3561,99 @@ msgstr ""
 "    Menu de aplicaciones -> Tandem  -> el panel, con todo\n"
 "\n"
 "  Comprueba el entorno con:  tandem doctor"
+
+msgctxt "pan_pergunta"
+msgid "What do you want to do?"
+msgstr "¿Qué quiere hacer?"
+
+msgctxt "pan_col_acao"
+msgid "Action"
+msgstr "Acción"
+
+msgctxt "pan_col_descricao"
+msgid "What it does"
+msgstr "Qué hace"
+
+msgctxt "pan_instalar"
+msgid "Install or open a file (.exe .apk .AppImage .jar .deb)"
+msgstr "Instalar o abrir un archivo (.exe .apk .AppImage .jar .deb)"
+
+msgctxt "pan_preparar"
+msgid "Install what is missing (Wine, Java, Android...)"
+msgstr "Instalar lo que falta (Wine, Java, Android...)"
+
+msgctxt "pan_programas"
+msgid "Open a program you already installed"
+msgstr "Abrir un programa ya instalado"
+
+msgctxt "pan_remover"
+msgid "Uninstall a Windows program"
+msgstr "Desinstalar un programa de Windows"
+
+msgctxt "pan_android"
+msgid "Open the Android screen"
+msgstr "Abrir la pantalla de Android"
+
+msgctxt "pan_doctor"
+msgid "See what this computer has and what it is missing"
+msgstr "Ver qué tiene esta computadora y qué le falta"
+
+msgctxt "pan_autoteste"
+msgid "Really test whether everything works here"
+msgstr "Probar de verdad si todo funciona aquí"
+
+msgctxt "pan_dados"
+msgid "See and copy YOUR files"
+msgstr "Ver y copiar SUS archivos"
+
+msgctxt "pan_portas"
+msgid "Card reader, scale, printer: which port they ended up on"
+msgstr "Lector de tarjetas, balanza, impresora: en qué puerto quedaron"
+
+msgctxt "pan_identidade"
+msgid "What a program sees of your machine (licences)"
+msgstr "Lo que un programa ve de su máquina (licencias)"
+
+msgctxt "pan_backup"
+msgid "Save the Windows environment"
+msgstr "Guardar el entorno Windows"
+
+msgctxt "pan_restore"
+msgid "Restore the Windows environment"
+msgstr "Restaurar el entorno Windows"
+
+msgctxt "pan_repair"
+msgid "Fix opening files with a double click"
+msgstr "Arreglar la apertura de archivos con doble clic"
+
+msgctxt "pan_memoria"
+msgid "See what Tandem has learned about your programs"
+msgstr "Ver lo que Tandem aprendió sobre sus programas"
+
+msgctxt "pan_lista"
+msgid "Download what the community has already worked out"
+msgstr "Descargar lo que la comunidad ya averiguó"
+
+msgctxt "pan_enviar"
+msgid "Send what I learn to the community (on/off)"
+msgstr "Enviar lo que aprendo a la comunidad (activar/desactivar)"
+
+msgctxt "pan_socorro"
+msgid "Make a report to ask for help"
+msgstr "Generar un informe para pedir ayuda"
+
+msgctxt "pan_logs"
+msgid "See the technical log"
+msgstr "Ver el registro técnico"
+
+msgctxt "pan_escolha_arquivo"
+msgid "Choose the file"
+msgstr "Elija el archivo"
+
+msgctxt "pan_filtro_programas"
+msgid "Programs and apps"
+msgstr "Programas y apps"
+
+msgctxt "pan_filtro_todos"
+msgid "All files"
+msgstr "Todos los archivos"

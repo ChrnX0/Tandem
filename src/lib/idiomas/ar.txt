@@ -2008,3 +2008,75 @@ Tandem - يشغّل برامج Windows وتطبيقات Android وحزم لين�
     قائمة التطبيقات -> Tandem     -> اللوحة، وفيها كل شيء
 
   تحقّق من البيئة عبر:  tandem doctor
+
+@pan_pergunta
+ماذا تريد أن تفعل؟
+
+@pan_col_acao
+الإجراء
+
+@pan_col_descricao
+ما يفعله
+
+@pan_instalar
+تثبيت ملف أو فتحه (.exe .apk .AppImage .jar .deb)
+
+@pan_preparar
+تثبيت ما هو ناقص (Wine، Java، Android...)
+
+@pan_programas
+فتح برنامج مثبَّت بالفعل
+
+@pan_remover
+إزالة برنامج Windows
+
+@pan_android
+فتح شاشة Android
+
+@pan_doctor
+معرفة ما يوجد في هذا الحاسوب وما ينقصه
+
+@pan_autoteste
+اختبار فعلي لما إذا كان كل شيء يعمل هنا
+
+@pan_dados
+عرض ملفاتك ونسخها
+
+@pan_portas
+قارئ البطاقات والميزان والطابعة: على أي منفذ انتهى كلٌّ منها
+
+@pan_identidade
+ما يراه البرنامج من جهازك (التراخيص)
+
+@pan_backup
+حفظ بيئة Windows
+
+@pan_restore
+استعادة بيئة Windows
+
+@pan_repair
+إصلاح فتح الملفات بنقرة مزدوجة
+
+@pan_memoria
+معرفة ما تعلَّمه Tandem عن برامجك
+
+@pan_lista
+تنزيل ما توصَّل إليه المجتمع بالفعل
+
+@pan_enviar
+إرسال ما أتعلَّمه إلى المجتمع (تشغيل/إيقاف)
+
+@pan_socorro
+إنشاء تقرير لطلب المساعدة
+
+@pan_logs
+عرض السجل التقني
+
+@pan_escolha_arquivo
+اختر الملف
+
+@pan_filtro_programas
+البرامج والتطبيقات
+
+@pan_filtro_todos
+كل الملفات

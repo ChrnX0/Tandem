@@ -1983,3 +1983,75 @@ Tandem 会把它学到的东西发到社区清单。
     应用程序菜单 -> Tandem -> 面板，全部功能都在里面
 
   用这个检查环境：  tandem doctor
+
+@pan_pergunta
+您想做什么？
+
+@pan_col_acao
+操作
+
+@pan_col_descricao
+作用
+
+@pan_instalar
+安装或打开一个文件（.exe .apk .AppImage .jar .deb）
+
+@pan_preparar
+安装缺少的东西（Wine、Java、Android……）
+
+@pan_programas
+打开一个已经安装的程序
+
+@pan_remover
+卸载一个 Windows 程序
+
+@pan_android
+打开 Android 屏幕
+
+@pan_doctor
+看看这台电脑有什么、缺什么
+
+@pan_autoteste
+真正测试这里是不是都能用
+
+@pan_dados
+查看并复制您自己的文件
+
+@pan_portas
+读卡器、秤、打印机：它们各在哪个端口
+
+@pan_identidade
+程序能从您的机器看到什么（授权相关）
+
+@pan_backup
+保存这个 Windows 环境
+
+@pan_restore
+还原这个 Windows 环境
+
+@pan_repair
+修好用双击打开文件这件事
+
+@pan_memoria
+看看 Tandem 学到了您的程序的哪些事
+
+@pan_lista
+下载社区已经弄明白的东西
+
+@pan_enviar
+把我学到的送给社区（开／关）
+
+@pan_socorro
+生成一份报告，用来求助
+
+@pan_logs
+查看技术日志
+
+@pan_escolha_arquivo
+选择文件
+
+@pan_filtro_programas
+程序和应用
+
+@pan_filtro_todos
+所有文件

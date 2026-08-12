@@ -3514,3 +3514,99 @@ msgstr ""
 "    قائمة التطبيقات -> Tandem     -> اللوحة، وفيها كل شيء\n"
 "\n"
 "  تحقّق من البيئة عبر:  tandem doctor"
+
+msgctxt "pan_pergunta"
+msgid "What do you want to do?"
+msgstr "ماذا تريد أن تفعل؟"
+
+msgctxt "pan_col_acao"
+msgid "Action"
+msgstr "الإجراء"
+
+msgctxt "pan_col_descricao"
+msgid "What it does"
+msgstr "ما يفعله"
+
+msgctxt "pan_instalar"
+msgid "Install or open a file (.exe .apk .AppImage .jar .deb)"
+msgstr "تثبيت ملف أو فتحه (.exe .apk .AppImage .jar .deb)"
+
+msgctxt "pan_preparar"
+msgid "Install what is missing (Wine, Java, Android...)"
+msgstr "تثبيت ما هو ناقص (Wine، Java، Android...)"
+
+msgctxt "pan_programas"
+msgid "Open a program you already installed"
+msgstr "فتح برنامج مثبَّت بالفعل"
+
+msgctxt "pan_remover"
+msgid "Uninstall a Windows program"
+msgstr "إزالة برنامج Windows"
+
+msgctxt "pan_android"
+msgid "Open the Android screen"
+msgstr "فتح شاشة Android"
+
+msgctxt "pan_doctor"
+msgid "See what this computer has and what it is missing"
+msgstr "معرفة ما يوجد في هذا الحاسوب وما ينقصه"
+
+msgctxt "pan_autoteste"
+msgid "Really test whether everything works here"
+msgstr "اختبار فعلي لما إذا كان كل شيء يعمل هنا"
+
+msgctxt "pan_dados"
+msgid "See and copy YOUR files"
+msgstr "عرض ملفاتك ونسخها"
+
+msgctxt "pan_portas"
+msgid "Card reader, scale, printer: which port they ended up on"
+msgstr "قارئ البطاقات والميزان والطابعة: على أي منفذ انتهى كلٌّ منها"
+
+msgctxt "pan_identidade"
+msgid "What a program sees of your machine (licences)"
+msgstr "ما يراه البرنامج من جهازك (التراخيص)"
+
+msgctxt "pan_backup"
+msgid "Save the Windows environment"
+msgstr "حفظ بيئة Windows"
+
+msgctxt "pan_restore"
+msgid "Restore the Windows environment"
+msgstr "استعادة بيئة Windows"
+
+msgctxt "pan_repair"
+msgid "Fix opening files with a double click"
+msgstr "إصلاح فتح الملفات بنقرة مزدوجة"
+
+msgctxt "pan_memoria"
+msgid "See what Tandem has learned about your programs"
+msgstr "معرفة ما تعلَّمه Tandem عن برامجك"
+
+msgctxt "pan_lista"
+msgid "Download what the community has already worked out"
+msgstr "تنزيل ما توصَّل إليه المجتمع بالفعل"
+
+msgctxt "pan_enviar"
+msgid "Send what I learn to the community (on/off)"
+msgstr "إرسال ما أتعلَّمه إلى المجتمع (تشغيل/إيقاف)"
+
+msgctxt "pan_socorro"
+msgid "Make a report to ask for help"
+msgstr "إنشاء تقرير لطلب المساعدة"
+
+msgctxt "pan_logs"
+msgid "See the technical log"
+msgstr "عرض السجل التقني"
+
+msgctxt "pan_escolha_arquivo"
+msgid "Choose the file"
+msgstr "اختر الملف"
+
+msgctxt "pan_filtro_programas"
+msgid "Programs and apps"
+msgstr "البرامج والتطبيقات"
+
+msgctxt "pan_filtro_todos"
+msgid "All files"
+msgstr "كل الملفات"

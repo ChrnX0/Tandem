@@ -2681,3 +2681,99 @@ msgid ""
 "\n"
 "  Check the environment with:  tandem doctor"
 msgstr ""
+
+msgctxt "pan_pergunta"
+msgid "What do you want to do?"
+msgstr ""
+
+msgctxt "pan_col_acao"
+msgid "Action"
+msgstr ""
+
+msgctxt "pan_col_descricao"
+msgid "What it does"
+msgstr ""
+
+msgctxt "pan_instalar"
+msgid "Install or open a file (.exe .apk .AppImage .jar .deb)"
+msgstr ""
+
+msgctxt "pan_preparar"
+msgid "Install what is missing (Wine, Java, Android...)"
+msgstr ""
+
+msgctxt "pan_programas"
+msgid "Open a program you already installed"
+msgstr ""
+
+msgctxt "pan_remover"
+msgid "Uninstall a Windows program"
+msgstr ""
+
+msgctxt "pan_android"
+msgid "Open the Android screen"
+msgstr ""
+
+msgctxt "pan_doctor"
+msgid "See what this computer has and what it is missing"
+msgstr ""
+
+msgctxt "pan_autoteste"
+msgid "Really test whether everything works here"
+msgstr ""
+
+msgctxt "pan_dados"
+msgid "See and copy YOUR files"
+msgstr ""
+
+msgctxt "pan_portas"
+msgid "Card reader, scale, printer: which port they ended up on"
+msgstr ""
+
+msgctxt "pan_identidade"
+msgid "What a program sees of your machine (licences)"
+msgstr ""
+
+msgctxt "pan_backup"
+msgid "Save the Windows environment"
+msgstr ""
+
+msgctxt "pan_restore"
+msgid "Restore the Windows environment"
+msgstr ""
+
+msgctxt "pan_repair"
+msgid "Fix opening files with a double click"
+msgstr ""
+
+msgctxt "pan_memoria"
+msgid "See what Tandem has learned about your programs"
+msgstr ""
+
+msgctxt "pan_lista"
+msgid "Download what the community has already worked out"
+msgstr ""
+
+msgctxt "pan_enviar"
+msgid "Send what I learn to the community (on/off)"
+msgstr ""
+
+msgctxt "pan_socorro"
+msgid "Make a report to ask for help"
+msgstr ""
+
+msgctxt "pan_logs"
+msgid "See the technical log"
+msgstr ""
+
+msgctxt "pan_escolha_arquivo"
+msgid "Choose the file"
+msgstr ""
+
+msgctxt "pan_filtro_programas"
+msgid "Programs and apps"
+msgstr ""
+
+msgctxt "pan_filtro_todos"
+msgid "All files"
+msgstr ""

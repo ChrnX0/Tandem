@@ -3549,3 +3549,99 @@ msgstr ""
 "    एप्लिकेशन मेन्यू -> Tandem    -> पैनल, सब कुछ एक जगह\n"
 "\n"
 "  वातावरण जाँचिए:  tandem doctor"
+
+msgctxt "pan_pergunta"
+msgid "What do you want to do?"
+msgstr "आप क्या करना चाहते हैं?"
+
+msgctxt "pan_col_acao"
+msgid "Action"
+msgstr "काम"
+
+msgctxt "pan_col_descricao"
+msgid "What it does"
+msgstr "यह क्या करता है"
+
+msgctxt "pan_instalar"
+msgid "Install or open a file (.exe .apk .AppImage .jar .deb)"
+msgstr "कोई फ़ाइल स्थापित करें या खोलें (.exe .apk .AppImage .jar .deb)"
+
+msgctxt "pan_preparar"
+msgid "Install what is missing (Wine, Java, Android...)"
+msgstr "जो नहीं है उसे स्थापित करें (Wine, Java, Android...)"
+
+msgctxt "pan_programas"
+msgid "Open a program you already installed"
+msgstr "पहले से स्थापित कोई प्रोग्राम खोलें"
+
+msgctxt "pan_remover"
+msgid "Uninstall a Windows program"
+msgstr "कोई Windows प्रोग्राम हटाएँ"
+
+msgctxt "pan_android"
+msgid "Open the Android screen"
+msgstr "Android की स्क्रीन खोलें"
+
+msgctxt "pan_doctor"
+msgid "See what this computer has and what it is missing"
+msgstr "देखें कि इस कंप्यूटर में क्या है और क्या नहीं"
+
+msgctxt "pan_autoteste"
+msgid "Really test whether everything works here"
+msgstr "सचमुच जाँचें कि यहाँ सब चलता है या नहीं"
+
+msgctxt "pan_dados"
+msgid "See and copy YOUR files"
+msgstr "अपनी फ़ाइलें देखें और कॉपी करें"
+
+msgctxt "pan_portas"
+msgid "Card reader, scale, printer: which port they ended up on"
+msgstr "कार्ड रीडर, तराज़ू, प्रिंटर: कौन-से पोर्ट पर हैं"
+
+msgctxt "pan_identidade"
+msgid "What a program sees of your machine (licences)"
+msgstr "कोई प्रोग्राम आपकी मशीन का क्या देखता है (लाइसेंस)"
+
+msgctxt "pan_backup"
+msgid "Save the Windows environment"
+msgstr "Windows वातावरण सहेजें"
+
+msgctxt "pan_restore"
+msgid "Restore the Windows environment"
+msgstr "Windows वातावरण वापस लाएँ"
+
+msgctxt "pan_repair"
+msgid "Fix opening files with a double click"
+msgstr "दो क्लिक से फ़ाइल खुलना ठीक करें"
+
+msgctxt "pan_memoria"
+msgid "See what Tandem has learned about your programs"
+msgstr "देखें कि Tandem ने आपके प्रोग्रामों के बारे में क्या सीखा"
+
+msgctxt "pan_lista"
+msgid "Download what the community has already worked out"
+msgstr "समुदाय ने जो पता कर लिया है उसे डाउनलोड करें"
+
+msgctxt "pan_enviar"
+msgid "Send what I learn to the community (on/off)"
+msgstr "जो मैं सीखता हूँ वह समुदाय को भेजें (चालू/बंद)"
+
+msgctxt "pan_socorro"
+msgid "Make a report to ask for help"
+msgstr "मदद माँगने के लिए एक रिपोर्ट बनाएँ"
+
+msgctxt "pan_logs"
+msgid "See the technical log"
+msgstr "तकनीकी लॉग देखें"
+
+msgctxt "pan_escolha_arquivo"
+msgid "Choose the file"
+msgstr "फ़ाइल चुनें"
+
+msgctxt "pan_filtro_programas"
+msgid "Programs and apps"
+msgstr "प्रोग्राम और ऐप"
+
+msgctxt "pan_filtro_todos"
+msgid "All files"
+msgstr "सभी फ़ाइलें"

@@ -85,7 +85,7 @@ soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
 equal "the expected values are the ones this suite was written with" \
       "2838595226 803" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "3113881825 1444" "$soma_padroes"
+      "3123851760 1455" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1501,13 +1501,19 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # (see the changelog line-length guard further down, added for the same
     # reason: the release found it, so the suite owns it now)
     #
+    # 145 -> 121 is the zenity panel, migrated: its 24 strings now come from the
+    # catalogue and its action names stay Portuguese, because "case $esc in"
+    # matches them and a command copied off a forum has to work on any machine.
+    # What is left is tandem doctor, the autoteste report and the hardware-key
+    # advice.
+    #
     # So the number is the measured truth and it is a RATCHET: it may fall,
     # never rise. A hard 0 that is wrong is worse than a true 145 that can only
     # shrink, because the 0 says the work is finished and the 145 says where it
     # is not. Lower this line when you migrate something; the test fails if you
     # add prose to the code, and fails if you leave this number stale after
     # removing some.
-    TETO_LIT=145
+    TETO_LIT=121
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
         pass "the literals still in the code are the $TETO_LIT already known about"
@@ -1846,6 +1852,35 @@ equal "a tab in RESULTADO is refused too" \
       "5" "$(campos_receita "RESULTADO=abriu$(printf '\t')mais coisa")"
 equal "and an ordinary recipe still imports" \
       "0" "$(campos_receita "ARQUITETURA=64")"
+
+# The panel is the only screen a shop owner who never opens a terminal sees, and
+# it was the last thing in the program hard-coded in Portuguese. Every row a
+# person reads has to come from the catalogue in every language, while the action
+# column - which "case $esc in" matches - has to stay Portuguese on every
+# machine, or a command copied off a forum stops working.
+PAINEL_CORPO="$(sed -n '/^acao_painel()/,/^}/p' "$ROOT/src/bin/tandem")"
+for chave in pan_pergunta pan_instalar pan_doctor pan_portas pan_logs \
+             pan_escolha_arquivo pan_filtro_programas pan_filtro_todos; do
+    contem "the panel reads '$chave' from the catalogue" \
+           "t_msg $chave" "$PAINEL_CORPO"
+done
+for nome in instalar preparar programas remover android doctor autoteste \
+            dados portas identidade backup restore repair memoria lista \
+            enviar socorro logs; do
+    contem "the action name '$nome' is still literal, as it must be" \
+           "\"$nome\"" "$PAINEL_CORPO"
+done
+# And the rows really resolve, in every language - a key present in the code and
+# absent from a catalogue would fall back and go unnoticed.
+for lang in en pt_BR es fr zh_CN hi ar; do
+    linha="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$lang" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_msg pan_instalar' 2>/dev/null)"
+    case "$linha" in
+        pan_instalar|"") fail "the panel's first row exists in $lang" \
+                              "a translated sentence" "${linha:-nothing}" ;;
+        *) pass "the panel's first row exists in $lang" ;;
+    esac
+done
 
 # The form shortcut has to name the field the form actually has. GitHub prefills
 # an issue form by FIELD ID, and a parameter matching nothing looks exactly like
