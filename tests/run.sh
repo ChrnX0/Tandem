@@ -3772,26 +3772,41 @@ else
          "newer than $DATA_2" "$DATA_1"
 fi
 
-# The version being built must not be one that is already out. It happened:
-# v4.1 was published on 2026-08-09 and three commits' worth of work kept being
-# appended to its changelog entry afterwards, so the entry described a package
-# the public never received - and a "fresh" release of 4.1 would have shipped
-# under a tag that already existed. Whoever hits this has to open a new entry,
-# not edit the top one.
+# The top changelog entry must not describe a package that is already out. It
+# happened: v4.1 was published on 2026-08-09 and three commits' worth of work
+# kept being appended to its entry afterwards, so the entry described a package
+# the public never received. Whoever hits this has to open a NEW entry, not edit
+# the top one.
 #
-# Skips rather than fails when there are no tags at all: a shallow clone knows
-# nothing about what is published, and a guard that stops a good release for
-# lack of information is worse than the drift it was written for.
+# The check is "did this version's changelog entry change since it shipped",
+# not "does a tag with this version exist" - and the difference is the whole
+# usefulness of it. The plain tag test is red on a freshly released tree, where
+# the version in control IS the published one and nothing is wrong; it would
+# have gone red the minute a release succeeded and stayed red until somebody
+# bumped a number to shut it up. Comparing the file instead means a released
+# tree passes, a doc-only commit after a release passes, and appending a bullet
+# to a published entry fails - which is the only thing that ever went wrong.
+#
+# Skips rather than fails wherever the answer cannot be known: no repository, no
+# tags fetched, or a shallow clone that has the tag ref but not the objects
+# behind it. A guard that stops a good release for lack of information is worse
+# than the drift it was written for, and this project has already been bitten by
+# exactly that.
+NOME_PUB="the top changelog entry does not describe an already published version"
 if ! git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 ||
    [ -z "$(git -C "$ROOT" tag 2>/dev/null | head -1)" ]; then
-    skip "the version being built has not been released already" \
-         "no tags here, so what is published cannot be known"
-elif git -C "$ROOT" rev-parse -q --verify "refs/tags/v$VERSAO_DEB" >/dev/null 2>&1; then
-    fail "the version being built has not been released already" \
-         "a version with no tag yet" \
-         "v$VERSAO_DEB is already published - open a new changelog entry"
+    skip "$NOME_PUB" "no tags here, so what is published cannot be known"
+elif ! git -C "$ROOT" rev-parse -q --verify "refs/tags/v$VERSAO_DEB" >/dev/null 2>&1; then
+    pass "$NOME_PUB"
 else
-    pass "the version being built has not been released already"
+    git -C "$ROOT" diff --quiet "refs/tags/v$VERSAO_DEB" -- debian/changelog 2>/dev/null
+    case $? in
+        0) pass "$NOME_PUB" ;;
+        1) fail "$NOME_PUB" \
+                "a new entry for a version that is not out yet" \
+                "v$VERSAO_DEB is published and its changelog entry has been edited since" ;;
+        *) skip "$NOME_PUB" "the tag v$VERSAO_DEB is here but its objects are not" ;;
+    esac
 fi
 
 if [ -f "$PACOTE_DEB" ]; then
