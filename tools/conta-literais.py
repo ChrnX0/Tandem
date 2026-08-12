@@ -59,8 +59,11 @@ EXCECOES = {
     # An on-disk value, not prose. Rule: translating one of these breaks
     # compatibility with memory files already written on somebody's machine.
     "sim",
-    # The product's own name.
+    # The product's own name, and the same name with its version beside it -
+    # the first line of every report. Neither is prose: a translated product
+    # name is a name that finds nothing.
     "Tandem",
+    "Tandem $VERSAO\\n\\n",
     # THE COMMAND NAMES, which stay Portuguese forever - that is a standing
     # decision, not an oversight: a command copied off a forum has to work on
     # any machine, so these cannot move with the language. In the zenity panel
@@ -431,10 +434,30 @@ def _e_prosa(bruto):
     return True
 
 
+# The log is a different audience with a documented exception, and this rule
+# could not see the difference. t_diz writes to the log file that "tandem logs"
+# shows and "tandem socorro" bundles up - read by whoever is helping, not by the
+# shop owner - and by a decision recorded in CLAUDE.md those lines stay
+# Portuguese. Every earlier version of the counter missed them for the wrong
+# reason (they are not assignments); this one caught them for the wrong reason
+# too (they are quoted strings inside an acao_* body).
+#
+# So a t_diz command is skipped by name. That is a rule about syntax, which is
+# what failed twelve times, and it is defensible only because it is not a guess
+# about SHAPE: t_diz cannot reach the user at all - it appends to a file - so a
+# sentence there is a sentence for a maintainer by construction. If that ever
+# stops being true, this is the line that has to go.
+T_DIZ = re.compile(r"(?m)^[^\n]*?\bt_diz\s.*$")
+
+
+def sem_linhas_de_log(corpo):
+    return T_DIZ.sub("", corpo)
+
+
 def citadas_com_prosa(texto):
     achados = []
     for _nome, corpo in corpos_de_mensagem(texto):
-        for bruto in citadas_do_topo(corpo):
+        for bruto in citadas_do_topo(sem_linhas_de_log(corpo)):
             if bruto in EXCECOES:
                 continue
             if _e_prosa(bruto):

@@ -92,103 +92,109 @@ acao_install() {
 
 acao_doctor() {
     local out="" ip sdk
+    # The indentation stays HERE and not in the catalogue. A translator opening
+    # a message should see a sentence, not two leading spaces they have to
+    # preserve exactly - and a report whose columns depend on invisible
+    # characters in a .po file is a report that will drift.
     out+="Tandem $VERSAO\n\n"
-    out+="SISTEMA\n"
-    out+="  $( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-desconhecido}" )\n"
-    out+="  kernel $(uname -r)   sessão: ${XDG_SESSION_TYPE:-?}\n\n"
+    out+="$(t_msg doc_sistema)\n"
+    out+="  $( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-?}" )\n"
+    out+="  $(t_msg doc_kernel "$(uname -r)" "${XDG_SESSION_TYPE:-?}")\n\n"
 
-    out+="PROGRAMAS WINDOWS\n"
+    out+="$(t_msg doc_prog_windows)\n"
     if command -v wine >/dev/null 2>&1; then
-        out+="  wine: $(wine --version 2>/dev/null)\n"
-        t_tem_wine64 && out+="  programas de 64 bits: sim\n" ||
-            out+="  programas de 64 bits: NÃO (o Wine desta máquina é só de 32 bits)\n"
-        t_tem_wine32 && out+="  programas de 32 bits: sim\n" ||
-            out+="  programas de 32 bits: NÃO (programas antigos não abrem)\n"
+        out+="  $(t_msg doc_wine "$(wine --version 2>/dev/null)")\n"
+        t_tem_wine64 && out+="  $(t_msg doc_bits64_sim)\n" ||
+            out+="  $(t_msg doc_bits64_nao)\n"
+        t_tem_wine32 && out+="  $(t_msg doc_bits32_sim)\n" ||
+            out+="  $(t_msg doc_bits32_nao)\n"
         command -v winetricks >/dev/null 2>&1 &&
-            out+="  winetricks: sim\n" || out+="  winetricks: NÃO (não instala dependências)\n"
+            out+="  $(t_msg doc_winetricks_sim)\n" ||
+            out+="  $(t_msg doc_winetricks_nao)\n"
         [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] &&
-            out+="  ambiente: pronto\n" || out+="  ambiente: será criado no primeiro uso\n"
+            out+="  $(t_msg doc_ambiente_pronto)\n" ||
+            out+="  $(t_msg doc_ambiente_depois)\n"
     else
-        out+="  wine: NÃO INSTALADO\n"
+        out+="  $(t_msg doc_wine_nao)\n"
     fi
-    out+="\nAPPS ANDROID\n"
+    out+="\n$(t_msg doc_apps_android)\n"
     if command -v waydroid >/dev/null 2>&1; then
-        out+="  waydroid: instalado\n"
-        out+="  serviço: $(systemctl is-active waydroid-container 2>/dev/null)\n"
-        t_wd_sessao_ok && out+="  sessão: ativa\n" || out+="  sessão: parada\n"
+        out+="  $(t_msg doc_waydroid_sim)\n"
+        out+="  $(t_msg doc_servico "$(systemctl is-active waydroid-container 2>/dev/null)")\n"
+        t_wd_sessao_ok && out+="  $(t_msg doc_sessao_ativa)\n" ||
+            out+="  $(t_msg doc_sessao_parada)\n"
         if t_wd_pronto; then
             sdk="$(t_wd_sdk)"; ip="$(t_wd_ip)"
-            out+="  Android: pronto (API ${sdk:-?}, IP ${ip:-?})\n"
-            t_wd_tem_arm && out+="  tradutor ARM: sim\n" || out+="  tradutor ARM: NÃO (apps de celular não instalam)\n"
+            out+="  $(t_msg doc_android_pronto "${sdk:-?}" "${ip:-?}")\n"
+            t_wd_tem_arm && out+="  $(t_msg doc_arm_sim)\n" ||
+                out+="  $(t_msg doc_arm_nao)\n"
         else
-            out+="  Android: não iniciado\n"
+            out+="  $(t_msg doc_android_parado)\n"
         fi
         command -v adb >/dev/null 2>&1 &&
-            out+="  adb: sim\n" || out+="  adb: NÃO (pacotes .xapk não instalam)\n"
+            out+="  $(t_msg doc_adb_sim)\n" || out+="  $(t_msg doc_adb_nao)\n"
         # Two checkable facts about THIS machine, in place of a paragraph of
         # folklore. The barrier to a USB device inside Android is not the
         # container - Waydroid denies no devices - it is that the Android image
         # does not declare android.hardware.usb.host, so nothing enumerates.
         if t_wd_usb_declarado; then
-            out+="  USB para o Android: declarado (aparelhos USB podem aparecer lá dentro)\n"
+            out+="  $(t_msg doc_usb_declarado)\n"
         else
-            out+="  USB para o Android: não declarado (é o normal; o Android não enxerga\n"
-            out+="    aparelho USB nenhum, e leitor de código de barras não precisa disso)\n"
+            out+="  $(t_msg doc_usb_nao)\n"
         fi
         if t_wd_uevent; then
-            out+="  acesso direto a aparelhos: ligado — ATENÇÃO: com um leitor de código de\n"
-            out+="    barras isto costuma digitar cada código DUAS vezes\n"
+            out+="  $(t_msg doc_uevent)\n"
         fi
     else
-        out+="  waydroid: NÃO INSTALADO\n"
+        out+="  $(t_msg doc_waydroid_nao)\n"
     fi
-    out+="\nPACOTES DO LINUX\n"
+    out+="\n$(t_msg doc_pacotes_linux)\n"
     if command -v java >/dev/null 2>&1; then
         # The version line, not the first line: with JAVA_TOOL_OPTIONS set in
         # the environment - common on machines somebody has configured - Java
         # prints a paragraph of proxy settings first, and "head -1" put the
         # whole paragraph in the middle of the diagnosis.
-        out+="  java: $(t_java_versao 2>/dev/null || echo '?') ($(java -version 2>&1 |
-              grep -m1 'version "' | sed 's/^ *//'))\n"
+        out+="  $(t_msg doc_java "$(t_java_versao 2>/dev/null || echo '?')" \
+              "$(java -version 2>&1 | grep -m1 'version "' | sed 's/^ *//')")\n"
     else
-        out+="  java: NÃO INSTALADO (programas .jar não abrem)\n"
+        out+="  $(t_msg doc_java_nao)\n"
     fi
     t_tem_fuse2 &&
-        out+="  FUSE: sim (AppImage abre direto)\n" ||
-        out+="  FUSE: NÃO (AppImage abre pelo caminho lento, desempacotando)\n"
-    out+="  processador: $(t_maquina_arch) (pacotes: $(t_arch_sistema))\n"
+        out+="  $(t_msg doc_fuse_sim)\n" ||
+        out+="  $(t_msg doc_fuse_nao)\n"
+    out+="  $(t_msg doc_processador "$(t_maquina_arch)" "$(t_arch_sistema)")\n"
     local n_ai; n_ai="$(t_atalhos_appimage | grep -c . 2>/dev/null)"
-    out+="  AppImage no menu: ${n_ai:-0}\n"
+    out+="  $(t_msg doc_appimage_menu "${n_ai:-0}")\n"
     command -v apt-get >/dev/null 2>&1 &&
-        out+="  pacotes .deb: sim (o Tandem confere as dependências antes de pedir a senha)\n" ||
-        out+="  pacotes .deb: NÃO (sem apt nesta máquina)\n"
+        out+="  $(t_msg doc_deb_sim)\n" ||
+        out+="  $(t_msg doc_deb_nao)\n"
     command -v flatpak >/dev/null 2>&1 &&
-        out+="  flatpak: $(flatpak --version 2>/dev/null)\n" ||
-        out+="  flatpak: não instalado (o Tandem oferece instalar se precisar)\n"
+        out+="  $(t_msg doc_flatpak "$(flatpak --version 2>/dev/null)")\n" ||
+        out+="  $(t_msg doc_flatpak_nao)\n"
     command -v snap >/dev/null 2>&1 &&
-        out+="  snap: sim\n" || out+="  snap: não instalado\n"
+        out+="  $(t_msg doc_snap_sim)\n" || out+="  $(t_msg doc_snap_nao)\n"
     local arqs_estrangeiras
     arqs_estrangeiras="$(dpkg --print-foreign-architectures 2>/dev/null | tr '\n' ' ')"
     [ -n "$arqs_estrangeiras" ] &&
-        out+="  arquiteturas extras: $arqs_estrangeiras\n"
+        out+="  $(t_msg doc_arqs_extras "$arqs_estrangeiras")\n"
 
     # The counter's hardware. Wine already reaches all of it and the two ways
     # it goes wrong - a number above COM4, and the dialout group - are silent,
     # so they belong in the diagnosis and not in a forum thread.
-    out+="\nAPARELHOS DA LOJA\n"
+    out+="\n$(t_msg doc_aparelhos)\n"
     local n_ser n_par
     n_ser="$(t_portas_seriais | awk 'END { print NR + 0 }')"
     n_par="$(t_portas_paralelas | awk 'END { print NR + 0 }')"
-    out+="  portas seriais: $n_ser (pinpad, balança, leitor)   paralelas: $n_par\n"
+    out+="  $(t_msg doc_portas "$n_ser" "$n_par")\n"
     t_no_grupo dialout &&
-        out+="  grupo dialout: sim\n" ||
-        out+="  grupo dialout: NÃO (o aparelho aparece e não abre) — tandem portas\n"
+        out+="  $(t_msg doc_dialout_sim)\n" ||
+        out+="  $(t_msg doc_dialout_nao)\n"
     if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ]; then
         local id_serial
         id_serial="$(cat "$TANDEM_PREFIXO_PADRAO/drive_c/.windows-serial" 2>/dev/null)"
         [ -n "$id_serial" ] &&
-            out+="  identidade da máquina: presa (licenças sobrevivem a refazer o ambiente)\n" ||
-            out+="  identidade da máquina: solta (ambiente antigo) — veja: tandem identidade\n"
+            out+="  $(t_msg doc_id_presa)\n" ||
+            out+="  $(t_msg doc_id_solta)\n"
     fi
 
     # Only shown when there is something to show. A shop with no hardware key
@@ -198,7 +204,7 @@ acao_doctor() {
     for fam in sentinel codemeter; do
         case "$(t_chave_estado "$fam" | tr '\n' ' ')" in
             *SERVICO=sim*|*PORTA=sim*)
-                out+="  chave de proteção ($fam): serviço rodando nesta máquina\n" ;;
+                out+="  $(t_msg doc_chave "$fam")\n" ;;
         esac
     done
 
@@ -208,17 +214,17 @@ acao_doctor() {
     # "buy a Windows Pro licence" is bad advice on a machine whose BIOS has
     # virtualisation switched off.
     case "$(t_vm_possivel)" in
-        sim*)      out+="  Windows em máquina virtual: cabe aqui (é a saída para driver e chave antiga)\n" ;;
-        apertado*) out+="  Windows em máquina virtual: cabe apertado (pouca memória ou disco)\n" ;;
-        bios*)     out+="  Windows em máquina virtual: o processador aceita, mas está desligado na BIOS\n" ;;
-        *)         out+="  Windows em máquina virtual: este processador não faz\n" ;;
+        sim*)      out+="  $(t_msg doc_vm_cabe)\n" ;;
+        apertado*) out+="  $(t_msg doc_vm_apertado)\n" ;;
+        bios*)     out+="  $(t_msg doc_vm_bios)\n" ;;
+        *)         out+="  $(t_msg doc_vm_nao)\n" ;;
     esac
 
-    out+="\nPERFIS PROTEGIDOS\n"
+    out+="\n$(t_msg doc_perfis)\n"
     if [ -s "$TANDEM_PROTEGIDOS" ]; then
         while read -r l; do [ -n "$l" ] && out+="  $l\n"; done < "$TANDEM_PROTEGIDOS"
     else
-        out+="  (nenhum listado; perfis de terceiros são protegidos automaticamente)\n"
+        out+="  $(t_msg doc_perfis_nenhum)\n"
     fi
 
     # %b (and not raw "$out") because the text has \n to expand but may
@@ -248,27 +254,16 @@ acao_dados_listar() {
     linhas="$(t_dados_lista "$p" 2>/dev/null)"
     total="$(printf '%s\n' "$linhas" | awk -F'\t' '{s += $3} END {print s + 0}')"
     if [ -z "$linhas" ]; then
-        printf '%s\n' "Seus arquivos dentro do Windows
-
-Não encontrei nenhum arquivo seu ainda - só o ambiente, que o Tandem
-sabe refazer sozinho em alguns minutos.
-
-Isso é normal se você ainda não usou nenhum programa para valer." | t_texto "$(t_msg dados_titulo)"
+        printf '%s\n' "$(t_msg dados_vazio)" | t_texto "$(t_msg dados_titulo)"
         return 0
     fi
-    printf '%s\n' "Seus arquivos dentro do Windows
-
-Estes são os arquivos que VOCÊ criou. O resto (o Windows de mentira, os
-componentes, os programas) o Tandem refaz sozinho; isto aqui, não:
-
-$(printf '%s\n' "$linhas" | sort -t"$(printf '\t')" -k3 -rn | head -40 |
-  while IFS="$(printf '\t')" read -r _ caminho bytes; do
-      printf -- '- %-52s %s\n' "$caminho" "$(t_tamanho_amigavel "$bytes")"
-  done)
-
-Total: $(t_tamanho_amigavel "$total") em $(printf '%s\n' "$linhas" | grep -c .) itens.
-
-Para guardar uma cópia só disso:   tandem dados salvar" | t_texto "$(t_msg dados_titulo)"
+    printf '%s\n' "$(t_msg dados_lista \
+        "$(printf '%s\n' "$linhas" | sort -t"$(printf '\t')" -k3 -rn | head -40 |
+           while IFS="$(printf '\t')" read -r _ caminho bytes; do
+               printf -- '- %-52s %s\n' "$caminho" "$(t_tamanho_amigavel "$bytes")"
+           done)" \
+        "$(t_tamanho_amigavel "$total")" \
+        "$(printf '%s\n' "$linhas" | grep -c .)")" | t_texto "$(t_msg dados_titulo)"
 }
 
 acao_dados_salvar() {
@@ -487,8 +482,8 @@ acao_programas() {
     # With no window (terminal, SSH), the list comes out as text. "escolher"
     # returns empty both on Cancel and when zenity is missing; in the first
     # case the listing is harmless, in the second it is the only path left.
-    escolha="$(escolher "Tandem - Programas instalados" \
-                        "Qual programa você quer abrir?" "${nomes[@]}")"
+    escolha="$(escolher "$(t_msg prog_titulo_janela)" \
+                        "$(t_msg prog_qual_abrir)" "${nomes[@]}")"
     if [ -z "$escolha" ]; then
         printf '%s\n\n' "$(t_msg prog_instalados_titulo)"
         printf '  %s\n' "${nomes[@]}"
@@ -526,8 +521,8 @@ acao_uninstall() {
     done <<< "$lista"
 
     if [ -z "$filtro" ]; then
-        escolha="$(escolher "Tandem - Remover programa" \
-                            "Qual programa você quer remover?" "${nomes[@]}")"
+        escolha="$(escolher "$(t_msg des_titulo_janela)" \
+                            "$(t_msg des_qual_remover)" "${nomes[@]}")"
         if [ -z "$escolha" ]; then
             printf '%s\n\n' "$(t_msg desinst_podem_ser_removidos)"
             printf '  %s\n' "${nomes[@]}"
@@ -554,7 +549,7 @@ acao_uninstall() {
     # Confirmation: a window; failing that, the terminal; with neither, it
     # refuses SAYING why - removing a program with nobody confirming is a
     # risk, and giving up silently is a defect.
-    if ! t_pergunta "$(t_msg desinst_pergunta "$nome")" "Remover" "Cancelar"; then
+    if ! t_pergunta "$(t_msg desinst_pergunta "$nome")" "$(t_msg botao_remover)" "$(t_msg botao_cancelar)"; then
         if [ -t 0 ]; then
             printf "$(t_msg desinst_terminal)" "$nome"
             read -r r
@@ -576,7 +571,7 @@ acao_uninstall() {
         0) t_aviso "$(t_msg desinst_copia_guardada "$resgate")" ;;
         1) t_pergunta "$(t_texto_resgate_falhou)
 
-$(t_msg desinst_remover_mesmo_assim)" "Remover assim mesmo" "Parar" || return 1 ;;
+$(t_msg desinst_remover_mesmo_assim)" "$(t_msg botao_remover_assim)" "$(t_msg botao_parar)" || return 1 ;;
     esac
 
     # We prefer the silent uninstaller, which the program itself declares in
@@ -663,34 +658,34 @@ acao_autoteste() {
     # 1. Does the error message reach SOMEWHERE? Without this, all the rest of
     #    the diagnosis is useless: the owner would never learn of the problem.
     if [ -n "$(t_erro "$(t_msg auto_ignore)" 2>&1 1>/dev/null)" ] || t_tem_gui; then
-        passa "as mensagens de erro têm para onde ir"
+        passa "$(t_msg at_erro_ok)"
     else
-        falha "as mensagens de erro somem" "sem janela e sem terminal, um erro daqui não chega a ninguém"
+        falha "$(t_msg at_erro_nao)" "$(t_msg at_erro_porque)"
     fi
 
     # 2. Does accented text survive? This is the defect that wiped out the
     #    whole interface on a real machine, and no listing would catch it.
     if [ "$(locale charmap 2>/dev/null)" = "UTF-8" ]; then
-        passa "o sistema aceita texto com acento (charmap UTF-8)"
+        passa "$(t_msg at_acento_ok)"
     else
-        falha "o texto com acento não passa" "o locale em vigor não é UTF-8; as janelas do Tandem não vão abrir"
+        falha "$(t_msg at_acento_nao)" "$(t_msg at_acento_porque)"
     fi
 
     # 3. Can the diagnosis be written to a file? If not, the owner has no way
     #    to send it to anyone.
     if ( "$0" version > "$tmp/redir.txt" 2>/dev/null ) && [ -s "$tmp/redir.txt" ]; then
-        passa "o diagnóstico pode ser gravado e enviado"
+        passa "$(t_msg at_diag_ok)"
     else
-        falha "o diagnóstico não pode ser enviado" "gravar em arquivo produziu zero byte"
+        falha "$(t_msg at_diag_nao)" "$(t_msg at_diag_porque)"
     fi
 
     # 4. Can the double-click lock be created? If not, the double click stops
     #    working - and silently, which is what happened.
     if ( exec 7> "$TANDEM_TRAVAS/autoteste.lock" ) 2>/dev/null &&
        rm -f "$TANDEM_TRAVAS/autoteste.lock" 2>/dev/null; then
-        passa "a trava do duplo clique pode ser criada ($TANDEM_TRAVAS)"
+        passa "$(t_msg at_trava_ok "$TANDEM_TRAVAS")"
     else
-        falha "a trava não pode ser criada" "em $TANDEM_TRAVAS — disco cheio, sem permissão, ou pasta em rede"
+        falha "$(t_msg at_trava_nao)" "$(t_msg at_trava_porque "$TANDEM_TRAVAS")"
     fi
 
     # 5. Does the progress bar survive the window vanishing? Really exercised:
@@ -699,9 +694,9 @@ acao_autoteste() {
         ( t_progresso_abre "$(t_msg auto_progresso_titulo)"; kill "${TANDEM_PROG_PID:-0}" 2>/dev/null
           sleep 0.3; t_progresso_texto "$(t_msg auto_depois_de_fechada)"; t_progresso_fecha ) >/dev/null 2>&1
         if [ $? -lt 128 ]; then
-            passa "fechar a janela de progresso não derruba o Tandem"
+            passa "$(t_msg at_progresso_ok)"
         else
-            falha "fechar a janela de progresso derruba o Tandem" "o processo recebeu um sinal em vez de continuar"
+            falha "$(t_msg at_progresso_nao)" "$(t_msg at_progresso_porque)"
         fi
     else
         saida="$saida  --      $(t_msg auto_pulou_progresso)"$'\n'
@@ -713,9 +708,9 @@ acao_autoteste() {
     umexe="$(find "$TANDEM_PREFIXO_PADRAO/drive_c" -name '*.exe' -size -20M 2>/dev/null | head -1)"
     if [ -n "$umexe" ]; then
         if [ -n "$(python3 "$TANDEM_LIB/peinfo.py" "$umexe" 2>/dev/null | sed -n 's/^ARQUITETURA=//p')" ]; then
-            passa "o pré-voo lê um programa Windows de verdade"
+            passa "$(t_msg at_pevoo_ok)"
         else
-            falha "o pré-voo não conseguiu ler um programa" "$umexe"
+            falha "$(t_msg at_pevoo_nao)" "$umexe"
         fi
     else
         saida="$saida  --      $(t_msg auto_pulou_pe)"$'\n'
@@ -740,10 +735,10 @@ acao_autoteste() {
                    "application/vnd.snap|.snap|tandem-snap.desktop"; do
             dono="$(xdg-mime query default "${par%%|*}" 2>/dev/null)"
             if [ "$dono" = "${par##*|}" ]; then
-                passa "o duplo clique num $(printf '%s' "$par" | cut -d'|' -f2) vem para o Tandem"
+                passa "$(t_msg at_clique_ok "$(printf '%s' "$par" | cut -d'|' -f2)")"
             else
-                falha "o duplo clique num $(printf '%s' "$par" | cut -d'|' -f2) não vem para o Tandem" \
-                      "quem responde é: ${dono:-ninguém} — rode: tandem repair"
+                falha "$(t_msg at_clique_nao "$(printf '%s' "$par" | cut -d'|' -f2)")" \
+                      "$(t_msg at_clique_porque "${dono:-?}")"
             fi
         done
     fi
@@ -758,9 +753,9 @@ acao_autoteste() {
     local lido; lido="$(t_appimage_info "$tmp/falso.AppImage" 2>/dev/null)"
     if [ "$(t_campo "$lido" TIPO)" = 2 ] &&
        [ "$(t_campo "$lido" ARQUITETURA)" = x86_64 ]; then
-        passa "o pré-voo do AppImage lê tipo e processador"
+        passa "$(t_msg at_appimage_ok)"
     else
-        falha "o pré-voo do AppImage não leu o cabeçalho" "${lido:-nenhuma resposta} — o python3 desta máquina pode estar quebrado"
+        falha "$(t_msg at_appimage_nao)" "$(t_msg at_python_porque "${lido:-?}")"
     fi
 
     # 9. Does the jar reader work? Against a real .jar, if this machine has one
@@ -771,9 +766,9 @@ acao_autoteste() {
                   2>/dev/null | head -1)"
     if [ -n "$umjar" ]; then
         if [ -n "$(t_campo "$(t_jar_info "$umjar")" MAIOR)" ]; then
-            passa "o pré-voo do Java lê um .jar de verdade"
+            passa "$(t_msg at_java_ok)"
         else
-            falha "o pré-voo do Java não conseguiu ler um .jar" "$umjar"
+            falha "$(t_msg at_java_nao)" "$umjar"
         fi
     else
         saida="$saida  --      $(t_msg auto_pulou_java)"$'\n'
@@ -790,9 +785,9 @@ acao_autoteste() {
         if [ -n "$umdeb" ]; then
             local lido_deb; lido_deb="$(t_deb_info "$umdeb")"
             if [ -n "$(t_campo "$lido_deb" PACOTE)" ]; then
-                passa "o pré-voo lê um pacote .deb de verdade ($(t_campo "$lido_deb" PACOTE))"
+                passa "$(t_msg at_deb_ok "$(t_campo "$lido_deb" PACOTE)")"
             else
-                falha "o pré-voo não conseguiu ler um .deb" \
+                falha "$(t_msg at_deb_nao)" \
                       "$umdeb: $(t_campo "$lido_deb" ERRO)"
             fi
         else
@@ -804,10 +799,9 @@ acao_autoteste() {
     #     if this fails, the owner gets asked for a password only to be told no.
     if command -v apt-get >/dev/null 2>&1; then
         if t_apt_simula /bin/true 2>&1 | grep -qiE 'Reading package lists|E: |Unable'; then
-            passa "o apt responde sem senha (o diagnóstico vem antes de pedi-la)"
+            passa "$(t_msg at_apt_ok)"
         else
-            falha "o apt não respondeu sem senha" \
-                  "sem isso o dono digita a senha só para ouvir não"
+            falha "$(t_msg at_apt_nao)" "$(t_msg at_apt_porque)"
         fi
     fi
 
@@ -817,8 +811,8 @@ acao_autoteste() {
     if command -v java >/dev/null 2>&1; then
         local jv; jv="$(t_java_versao)"
         case "$jv" in
-            ''|*[!0-9]*) falha "não consegui ler a versão do Java" "java -version respondeu: $(java -version 2>&1 | head -1)" ;;
-            *)           passa "a versão do Java foi reconhecida ($jv)" ;;
+            ''|*[!0-9]*) falha "$(t_msg at_javaver_nao)" "$(t_msg at_javaver_porque "$(java -version 2>&1 | head -1)")" ;;
+            *)           passa "$(t_msg at_javaver_ok "$jv")" ;;
         esac
     else
         saida="$saida  --      $(t_msg auto_pulou_java_versao)"$'\n'
@@ -833,9 +827,9 @@ acao_autoteste() {
         else desprotegidos="$desprotegidos $alheio"; fi
     done <<< "$(t_atalhos_wine >/dev/null 2>&1; grep -v '^$' "$TANDEM_PROTEGIDOS" 2>/dev/null)"
     if [ -n "$desprotegidos" ]; then
-        falha "um perfil da lista não está sendo protegido" "$desprotegidos"
+        falha "$(t_msg at_protegido_nao)" "$desprotegidos"
     elif [ "$protegidos" -gt 0 ]; then
-        passa "os $protegidos perfil(is) da sua lista são recusados pela automação"
+        passa "$(t_msg at_protegido_ok "$protegidos")"
     else
         saida="$saida  --      $(t_msg auto_pulou_protecao)"$'\n'
     fi
@@ -1057,23 +1051,12 @@ acao_lista() {
             return $c ;;
         ver|"")
             if [ ! -f "$TANDEM_LISTA" ]; then
-                printf '%s\n' "Lista da comunidade
-
-Você ainda não baixou a lista.
-
-Ela é um arquivo de texto público com o que já deu certo na máquina de
-outras pessoas: quais componentes do Windows cada programa precisou.
-Baixar não manda nada seu para lugar nenhum.
-
-Para baixar:   tandem lista atualizar" | t_texto "$(t_msg lista_titulo)"
+                printf '%s\n' "$(t_msg lista_ainda_nao_baixada)" | t_texto "$(t_msg lista_titulo)"
                 return 1
             fi
-            printf '%s\n' "Lista da comunidade
-
-$(grep -vc '^#' "$TANDEM_LISTA") programas conhecidos.
-Arquivo: $TANDEM_LISTA
-
-$(head -1 "$TANDEM_LISTA")" | t_texto "$(t_msg lista_titulo)"
+            printf '%s\n' "$(t_msg lista_resumo \
+                "$(grep -vc '^#' "$TANDEM_LISTA")" "$TANDEM_LISTA" \
+                "$(head -1 "$TANDEM_LISTA")")" | t_texto "$(t_msg lista_titulo)"
             return 0 ;;
         *) t_erro "$(t_msg lista_uso)"; return 1 ;;
     esac
@@ -1089,28 +1072,7 @@ acao_contribuir() {
         t_erro "$(t_msg contrib_nada_util)"
         return 1; }
 
-    printf '%s\n' "Contribuir com a lista da comunidade
-
-Esta é a linha inteira que sai daqui. Não tem mais nada:
-
-$reg
-
-O que cada pedaço quer dizer:
-  1. uma impressão digital DO ARQUIVO (tamanho + começo + fim). A mesma
-     em qualquer máquina do mundo que tenha esse mesmo arquivo. Não dá
-     para voltar dela para o arquivo, nem para você.
-  2. 32 ou 64 bits, lido do próprio programa.
-  3. os componentes do Windows que resolveram.
-  4. os que foram instalados e não resolveram.
-  5. se você confirmou que funcionou, ou só que abriu sem erro.
-  6. contagem de máquinas (aqui é sempre 1; quem junta é a lista).
-  7. ano e mês. Sem o dia, porque dia identifica.
-
-NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do
-computador, endereço de rede, nem uma linha de log.
-
-Copie a linha acima e mande para:
-https://github.com/ChrnX0/Tandem/issues" | t_texto "$(t_msg contrib_titulo)"
+    printf '%s\n' "$(t_msg contrib_texto "$reg")" | t_texto "$(t_msg contrib_titulo)"
 
     # Copying a line off a screen, opening a browser, creating an account and
     # pasting it into an issue form is five steps, and lista/lista.tsv being
@@ -1132,7 +1094,7 @@ https://github.com/ChrnX0/Tandem/issues" | t_texto "$(t_msg contrib_titulo)"
         # which is why the test for this compares the two files rather than
         # trusting either.
         if command -v xdg-open >/dev/null 2>&1 &&
-           t_pergunta "$(t_msg contrib_abrir_formulario)" "Abrir o formulário" "Não, obrigado"; then
+           t_pergunta "$(t_msg contrib_abrir_formulario)" "$(t_msg botao_abrir_formulario)" "$(t_msg botao_nao_obrigado)"; then
             URL_FORM="https://github.com/ChrnX0/Tandem/issues/new?template=list.yml&record=$(t_url_escapa "$reg")"
             # Not backgrounded, and its status is read. Written as
             # "setsid ... >/dev/null 2>&1 &" the failure was unreachable: with

@@ -85,7 +85,7 @@ soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
 equal "the expected values are the ones this suite was written with" \
       "2838595226 803" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "3123851760 1455" "$soma_padroes"
+      "1417928664 1466" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1501,11 +1501,11 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # (see the changelog line-length guard further down, added for the same
     # reason: the release found it, so the suite owns it now)
     #
-    # 145 -> 121 is the zenity panel, migrated: its 24 strings now come from the
-    # catalogue and its action names stay Portuguese, because "case $esc in"
-    # matches them and a command copied off a forum has to work on any machine.
-    # What is left is tandem doctor, the autoteste report and the hardware-key
-    # advice.
+    # 145 -> 121 was the zenity panel; 121 -> 63 is tandem doctor, the second
+    # most-read screen and the one "tandem socorro" ships to whoever is helping.
+    # Both keep their machine-readable halves literal: the panel's action names,
+    # which "case $esc in" matches, and doctor's product-name line. What is left
+    # is the autoteste report and the hardware-key advice.
     #
     # So the number is the measured truth and it is a RATCHET: it may fall,
     # never rise. A hard 0 that is wrong is worse than a true 145 that can only
@@ -1513,7 +1513,21 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # is not. Lower this line when you migrate something; the test fails if you
     # add prose to the code, and fails if you leave this number stale after
     # removing some.
-    TETO_LIT=121
+    # It reads 0 again, and the last time it read 0 the 0 WAS FALSE - that is
+    # blind spots nine through twelve, and the whole comment above. What is
+    # different this time is not the number, it is the instrument: this counter
+    # has since been shown to catch a bare zenity argument inside a command
+    # substitution inside a string, an "out+=" append into any variable name, a
+    # printf whose prose is in the argument rather than the format, and a
+    # heredoc - the four shapes that produced the previous false zeros - and
+    # there is a bait test for the worst of them.
+    #
+    # Read the migration as finished only as far as the instrument can see. The
+    # one method that has ever caught this measure lying is installing the
+    # package and reading the output, and that is what was done for every screen
+    # in this version: doctor, the panel, autoteste, the data screen and the two
+    # list screens, in seven languages.
+    TETO_LIT=0
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
         pass "the literals still in the code are the $TETO_LIT already known about"
@@ -1852,6 +1866,71 @@ equal "a tab in RESULTADO is refused too" \
       "5" "$(campos_receita "RESULTADO=abriu$(printf '\t')mais coisa")"
 equal "and an ordinary recipe still imports" \
       "0" "$(campos_receita "ARQUITETURA=64")"
+
+# The counter skips t_diz lines, because the log is a different audience with a
+# documented exception - and that skip is a whole-line one, so a line carrying
+# BOTH a log call and a user-facing call would lose the user-facing half. No such
+# line exists today; this is what notices if one appears.
+ISCA_LOG="$TMPROOT/isca-log.sh"
+cat > "$ISCA_LOG" <<'FIMLOG'
+acao_x() {
+    t_diz "isto vai para o registro tecnico"
+    t_erro "isto a pessoa le na tela"
+}
+FIMLOG
+conta_isca="$(cd "$ROOT" && python3 - "$ISCA_LOG" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(len(m.literais(pathlib.Path(sys.argv[1]))))
+FIM
+)"
+equal "a log line is exempt and a message on the next line still counts" \
+      "1" "$conta_isca"
+# And the two on ONE line, which the whole-line skip would swallow.
+cat > "$ISCA_LOG" <<'FIMLOG'
+acao_x() {
+    t_erro "isto a pessoa le na tela" && t_diz "isto vai para o registro"
+}
+FIMLOG
+conta_junto="$(cd "$ROOT" && python3 - "$ISCA_LOG" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(len(m.literais(pathlib.Path(sys.argv[1]))))
+FIM
+)"
+equal "a message sharing a line with a log call is still counted" \
+      "1" "$conta_junto"
+naocontem "and no such line exists in the tree, so the skip costs nothing today" \
+          "t_diz" "$(grep -hE '(t_erro|t_aviso|t_ok|t_pergunta) .*t_diz' \
+                         "$ROOT"/src/bin/* "$ROOT"/src/lib/*.sh || true)"
+
+# The doctor report is the second most-read screen, and it is what "tandem
+# socorro" sends to whoever is helping - so a Portuguese diagnostic reaching an
+# English-speaking user costs two people an afternoon. Assert the rows come from
+# the catalogue AND that they resolve: a key present in the code and missing from
+# a catalogue falls back silently and looks right on the reference machine.
+DOCTOR_CORPO="$(sed -n '/^acao_doctor()/,/^}/p' "$ROOT/src/bin/tandem")"
+for chave in doc_sistema doc_kernel doc_prog_windows doc_bits64_nao \
+             doc_apps_android doc_usb_nao doc_pacotes_linux doc_aparelhos \
+             doc_portas doc_dialout_nao doc_vm_cabe doc_perfis_nenhum; do
+    contem "doctor reads '$chave' from the catalogue" \
+           "t_msg $chave" "$DOCTOR_CORPO"
+done
+for lang in en pt_BR es fr zh_CN hi ar; do
+    linha="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$lang" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_msg doc_bits64_nao' 2>/dev/null)"
+    case "$linha" in
+        doc_bits64_nao|"") fail "doctor's 32-bit-Wine line exists in $lang" \
+                                "a translated sentence" "${linha:-nothing}" ;;
+        *) pass "doctor's 32-bit-Wine line exists in $lang" ;;
+    esac
+done
+# The report's own first line is the product name and its version, and it stays
+# a literal on purpose - a translated product name is a name that finds nothing.
+contem "the report still names the product without translating it" \
+       'Tandem $VERSAO' "$DOCTOR_CORPO"
 
 # The panel is the only screen a shop owner who never opens a terminal sees, and
 # it was the last thing in the program hard-coded in Portuguese. Every row a
@@ -2212,8 +2291,13 @@ NAO_SEI="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     t_servico_vivo() { return 1; }
     t_porta_escutando() { return 2; }
     t_texto_chave sentinel' 2>/dev/null)"
+# These expectations are ENGLISH now, and that is not a slip. The prose moved
+# from the code into po/, English is the default language, and the suite runs
+# without a forced locale - so what comes back is the English catalogue. The
+# thing being asserted is unchanged: that the sentence says "I could not check"
+# rather than condemning the machine.
 contem "not being able to check says so, instead of condemning" \
-       "Não consegui conferir" "$NAO_SEI"
+       "could not check" "$NAO_SEI"
 
 PARADO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     . "'"$ROOT"'/src/lib/common.sh"
@@ -2221,7 +2305,7 @@ PARADO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     t_porta_escutando() { return 1; }
     t_texto_chave sentinel' 2>/dev/null)"
 contem "a daemon that is really absent gets the probable cause" \
-       "NÃO está" "$PARADO"
+       "is NOT running" "$PARADO"
 contem "and the exact thing to look for" "Run-time Environment" "$PARADO"
 
 RODANDO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
@@ -2230,9 +2314,9 @@ RODANDO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     t_porta_escutando() { return 0; }
     t_texto_chave sentinel' 2>/dev/null)"
 contem "a daemon that IS running rules itself out instead of being repeated" \
-       "JÁ ESTÁ" "$RODANDO"
+       "IS ALREADY running" "$RODANDO"
 contem "and names the one thing the shop cannot fix itself" \
-       "empresa que fez o programa" "$RODANDO"
+       "company that made the program" "$RODANDO"
 
 # Two families, two runtimes. Pasting the Sentinel installer name into the
 # CodeMeter message would send somebody to the wrong vendor's site.
@@ -2275,7 +2359,7 @@ contem "a machine that can carry one is told the two programs by name" \
 contem "and the licence cost, which is the detail that decides it" \
        "Pro" "$COM_VM"
 contem "and that Tandem is not going to install it" \
-       "não instala isso" "$COM_VM"
+       "does not install this" "$COM_VM"
 
 BIOS_VM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     . "'"$ROOT"'/src/lib/common.sh"

@@ -2119,3 +2119,461 @@ Programas e apps
 
 @pan_filtro_todos
 Todos os arquivos
+
+@doc_sistema
+SISTEMA
+
+@doc_kernel
+kernel {1}   sessão: {2}
+
+@doc_prog_windows
+PROGRAMAS WINDOWS
+
+@doc_wine
+wine: {1}
+
+@doc_wine_nao
+wine: NÃO INSTALADO
+
+@doc_bits64_sim
+programas de 64 bits: sim
+
+@doc_bits64_nao
+programas de 64 bits: NÃO (o Wine desta máquina é só de 32 bits)
+
+@doc_bits32_sim
+programas de 32 bits: sim
+
+@doc_bits32_nao
+programas de 32 bits: NÃO (programas antigos não abrem)
+
+@doc_winetricks_sim
+winetricks: sim
+
+@doc_winetricks_nao
+winetricks: NÃO (não instala dependências)
+
+@doc_ambiente_pronto
+ambiente: pronto
+
+@doc_ambiente_depois
+ambiente: será criado no primeiro uso
+
+@doc_apps_android
+APPS ANDROID
+
+@doc_waydroid_sim
+waydroid: instalado
+
+@doc_waydroid_nao
+waydroid: NÃO INSTALADO
+
+@doc_servico
+serviço: {1}
+
+@doc_sessao_ativa
+sessão: ativa
+
+@doc_sessao_parada
+sessão: parada
+
+@doc_android_pronto
+Android: pronto (API {1}, IP {2})
+
+@doc_android_parado
+Android: não iniciado
+
+@doc_arm_sim
+tradutor ARM: sim
+
+@doc_arm_nao
+tradutor ARM: NÃO (apps de celular não instalam)
+
+@doc_adb_sim
+adb: sim
+
+@doc_adb_nao
+adb: NÃO (pacotes .xapk não instalam)
+
+@doc_usb_declarado
+USB para o Android: declarado (aparelhos USB podem aparecer lá dentro)
+
+@doc_usb_nao
+USB para o Android: não declarado (é o normal; o Android não enxerga
+    aparelho USB nenhum, e leitor de código de barras não precisa disso)
+
+@doc_uevent
+acesso direto a aparelhos: ligado — ATENÇÃO: com um leitor de código de
+    barras isto costuma digitar cada código DUAS vezes
+
+@doc_pacotes_linux
+PACOTES DO LINUX
+
+@doc_java
+java: {1} ({2})
+
+@doc_java_nao
+java: NÃO INSTALADO (programas .jar não abrem)
+
+@doc_fuse_sim
+FUSE: sim (AppImage abre direto)
+
+@doc_fuse_nao
+FUSE: NÃO (AppImage abre pelo caminho lento, desempacotando)
+
+@doc_processador
+processador: {1} (pacotes: {2})
+
+@doc_appimage_menu
+AppImage no menu: {1}
+
+@doc_deb_sim
+pacotes .deb: sim (o Tandem confere as dependências antes de pedir a
+    senha)
+
+@doc_deb_nao
+pacotes .deb: NÃO (sem apt nesta máquina)
+
+@doc_flatpak
+flatpak: {1}
+
+@doc_flatpak_nao
+flatpak: não instalado (o Tandem oferece instalar se precisar)
+
+@doc_snap_sim
+snap: sim
+
+@doc_snap_nao
+snap: não instalado
+
+@doc_arqs_extras
+arquiteturas extras: {1}
+
+@doc_aparelhos
+APARELHOS DA LOJA
+
+@doc_portas
+portas seriais: {1} (pinpad, balança, leitor)   paralelas: {2}
+
+@doc_dialout_sim
+grupo dialout: sim
+
+@doc_dialout_nao
+grupo dialout: NÃO (o aparelho aparece e não abre) — tandem portas
+
+@doc_id_presa
+identidade da máquina: presa (licenças sobrevivem a refazer o ambiente)
+
+@doc_id_solta
+identidade da máquina: solta (ambiente antigo) — veja: tandem identidade
+
+@doc_chave
+chave de proteção ({1}): serviço rodando nesta máquina
+
+@doc_vm_cabe
+Windows em máquina virtual: cabe aqui (é a saída para driver e chave
+    antiga)
+
+@doc_vm_apertado
+Windows em máquina virtual: cabe apertado (pouca memória ou disco)
+
+@doc_vm_bios
+Windows em máquina virtual: o processador aceita, mas está desligado na
+    BIOS
+
+@doc_vm_nao
+Windows em máquina virtual: este processador não faz
+
+@doc_perfis
+PERFIS PROTEGIDOS
+
+@doc_perfis_nenhum
+(nenhum listado; perfis de terceiros são protegidos automaticamente)
+
+@at_erro_ok
+as mensagens de erro têm para onde ir
+
+@at_erro_nao
+as mensagens de erro somem
+
+@at_erro_porque
+sem janela e sem terminal, um erro daqui não chega a ninguém
+
+@at_acento_ok
+o sistema aceita texto com acento (charmap UTF-8)
+
+@at_acento_nao
+o texto com acento não passa
+
+@at_acento_porque
+o locale em vigor não é UTF-8; as janelas do Tandem não vão abrir
+
+@at_diag_ok
+o diagnóstico pode ser gravado e enviado
+
+@at_diag_nao
+o diagnóstico não pode ser enviado
+
+@at_diag_porque
+gravar em arquivo produziu zero byte
+
+@at_trava_ok
+a trava do duplo clique pode ser criada ({1})
+
+@at_trava_nao
+a trava não pode ser criada
+
+@at_trava_porque
+em {1} — disco cheio, sem permissão, ou pasta em rede
+
+@at_progresso_ok
+fechar a janela de progresso não derruba o Tandem
+
+@at_progresso_nao
+fechar a janela de progresso derruba o Tandem
+
+@at_progresso_porque
+o processo recebeu um sinal em vez de continuar
+
+@at_pevoo_ok
+o pré-voo lê um programa Windows de verdade
+
+@at_pevoo_nao
+o pré-voo não conseguiu ler um programa
+
+@at_clique_ok
+o duplo clique num {1} vem para o Tandem
+
+@at_clique_nao
+o duplo clique num {1} não vem para o Tandem
+
+@at_clique_porque
+quem responde é: {1} — rode: tandem repair
+
+@at_appimage_ok
+o pré-voo do AppImage lê tipo e processador
+
+@at_appimage_nao
+o pré-voo do AppImage não leu o cabeçalho
+
+@at_python_porque
+{1} — o python3 desta máquina pode estar quebrado
+
+@at_java_ok
+o pré-voo do Java lê um .jar de verdade
+
+@at_java_nao
+o pré-voo do Java não conseguiu ler um .jar
+
+@at_deb_ok
+o pré-voo lê um pacote .deb de verdade ({1})
+
+@at_deb_nao
+o pré-voo não conseguiu ler um .deb
+
+@at_apt_ok
+o apt responde sem senha (o diagnóstico vem antes de pedi-la)
+
+@at_apt_nao
+o apt não respondeu sem senha
+
+@at_apt_porque
+sem isso o dono digita a senha só para ouvir não
+
+@at_javaver_nao
+não consegui ler a versão do Java
+
+@at_javaver_porque
+java -version respondeu: {1}
+
+@at_javaver_ok
+a versão do Java foi reconhecida ({1})
+
+@at_protegido_nao
+um perfil da lista não está sendo protegido
+
+@at_protegido_ok
+os {1} perfil(is) da sua lista são recusados pela automação
+
+@prog_titulo_janela
+Tandem - Programas instalados
+
+@prog_qual_abrir
+Qual programa você quer abrir?
+
+@des_titulo_janela
+Tandem - Remover programa
+
+@des_qual_remover
+Qual programa você quer remover?
+
+@botao_remover
+Remover
+
+@botao_remover_assim
+Remover assim mesmo
+
+@botao_abrir_formulario
+Abrir o formulário
+
+@botao_nao_obrigado
+Não, obrigado
+
+@chave_ja_roda
+Uma coisa a seu favor: o serviço da chave {1} JÁ ESTÁ rodando nesta
+  máquina. Então não é ele que falta. O que sobra para conferir é se a chave
+  está espetada, e se o programa é de 64 bits — nesse caso existe uma falha
+  conhecida em que ele acusa "depurador detectado" mesmo sem nenhum, e quem
+  conserta é a empresa que fez o programa, não você e não o Tandem.
+
+@chave_nao_sei
+Não consegui conferir se o serviço da chave {1} está rodando aqui
+  (falta a ferramenta "ss" nesta máquina). Se o programa reclamar de licença,
+  é esse serviço que vale conferir primeiro.
+
+@chave_nao_roda
+E encontrei o provável motivo: o serviço da chave {1} NÃO está
+  rodando nesta máquina. É ele que conversa com a chave USB pelo lado do
+  Linux — sem ele, o programa procura a licença e não acha nada, do mesmo
+  jeito que aconteceria sem a chave espetada.
+
+  Quem instala é um técnico, uma vez só, e é de graça: procure por
+  "{2}" no site do fabricante.
+
+@portas_usb_rotulo
+{1}   (aparelho USB)  {2}
+
+@vm_cabe_bios
+Este computador tem o recurso, mas ele está DESLIGADO na BIOS. Ligar
+  é entrar na BIOS ao ligar a máquina e procurar por "virtualization", "VT-x"
+  ou "SVM". Não instala nada e não apaga nada.
+
+@vm_cabe_apertado
+Este computador aguenta, mas apertado: tem {1} de memória
+  e {2} livres no disco. O Windows de dentro quer uns 4 GB de memória
+  e 32 GB de disco só para ele.
+
+@vm_cabe_bem
+Este computador aguenta: tem {1} de memória e
+  {2} livres no disco.
+
+@vm_texto
+Existe um caminho mais pesado, e para um caso como este ele funciona:
+
+  rodar um Windows DE VERDADE dentro do Linux, e deixar só a janela do
+  programa aparecer aqui na tela, como se fosse um programa daqui. Os dois
+  programas que fazem isso são o WinBoat e o WinApps, os dois de graça.
+  Como é um Windows de verdade, driver de sistema funciona, e a chave USB de
+  proteção pode ser entregue para ele.
+
+  {1}
+
+  O que custa, e é bom saber antes: precisa de uma licença do Windows, e tem
+  que ser a versão Pro — a Home não serve, porque ela não deixa a janela sair
+  para fora. E o Windows de dentro ocupa disco e memória o tempo todo.
+
+  O Tandem não instala isso e não vai instalar: é outro tipo de programa. Mas
+  era desonesto dizer "não tem jeito" sem dizer que esse jeito existe.
+
+@dados_vazio
+Seus arquivos dentro do Windows
+
+Não encontrei nenhum arquivo seu ainda - só o ambiente, que o Tandem
+sabe refazer sozinho em alguns minutos.
+
+Isso é normal se você ainda não usou nenhum programa para valer.Seus arquivos dentro do Windows
+
+Não encontrei nenhum arquivo seu ainda - só o ambiente, que o Tandem
+sabe refazer sozinho em alguns minutos.
+
+Isso é normal se você ainda não usou nenhum programa para valer.
+
+@dados_lista
+Seus arquivos dentro do Windows
+
+Estes são os arquivos que VOCÊ criou. O resto (o Windows de mentira, os
+componentes, os programas) o Tandem refaz sozinho; isto aqui, não:
+
+{1}
+
+Total: {2} em {3} itens.
+
+Para guardar uma cópia só disso:   tandem dados salvarSeus arquivos dentro do Windows
+
+Estes são os arquivos que VOCÊ criou. O resto (o Windows de mentira, os
+componentes, os programas) o Tandem refaz sozinho; isto aqui, não:
+
+{1}
+
+Total: {2} em {3} itens.
+
+Para guardar uma cópia só disso:   tandem dados salvar
+
+@lista_resumo
+Lista da comunidade
+
+{1} programas conhecidos.
+Arquivo: {2}
+
+{3}Lista da comunidade
+
+{1} programas conhecidos.
+Arquivo: {2}
+
+{3}
+
+@contrib_texto
+Contribuir com a lista da comunidade
+
+Esta é a linha inteira que sai daqui. Não tem mais nada:
+
+{1}
+
+O que cada pedaço quer dizer:
+  1. uma impressão digital DO ARQUIVO (tamanho + começo + fim). A mesma
+     em qualquer máquina do mundo que tenha esse mesmo arquivo. Não dá
+     para voltar dela para o arquivo, nem para você.
+  2. 32 ou 64 bits, lido do próprio programa.
+  3. os componentes do Windows que resolveram.
+  4. os que foram instalados e não resolveram.
+  5. se você confirmou que funcionou, ou só que abriu sem erro.
+  6. contagem de máquinas (aqui é sempre 1; quem junta é a lista).
+  7. ano e mês. Sem o dia, porque dia identifica.
+
+NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do
+computador, endereço de rede, nem uma linha de log.
+
+Copie a linha acima e mande para:
+https://github.com/ChrnX0/Tandem/issuesContribuir com a lista da comunidade
+
+Esta é a linha inteira que sai daqui. Não tem mais nada:
+
+{1}
+
+O que cada pedaço quer dizer:
+  1. uma impressão digital DO ARQUIVO (tamanho + começo + fim). A mesma
+     em qualquer máquina do mundo que tenha esse mesmo arquivo. Não dá
+     para voltar dela para o arquivo, nem para você.
+  2. 32 ou 64 bits, lido do próprio programa.
+  3. os componentes do Windows que resolveram.
+  4. os que foram instalados e não resolveram.
+  5. se você confirmou que funcionou, ou só que abriu sem erro.
+  6. contagem de máquinas (aqui é sempre 1; quem junta é a lista).
+  7. ano e mês. Sem o dia, porque dia identifica.
+
+NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do
+computador, endereço de rede, nem uma linha de log.
+
+Copie a linha acima e mande para:
+https://github.com/ChrnX0/Tandem/issues
+
+@lista_ainda_nao_baixada
+Lista da comunidade
+
+Você ainda não baixou a lista.
+
+Ela é um arquivo de texto público com o que já deu certo na máquina de
+outras pessoas: quais componentes do Windows cada programa precisou.
+Baixar não manda nada seu para lugar nenhum.
+
+Para baixar:   tandem lista atualizar

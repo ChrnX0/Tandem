@@ -2055,3 +2055,444 @@ Tandem 会把它学到的东西发到社区清单。
 
 @pan_filtro_todos
 所有文件
+
+@doc_sistema
+系统
+
+@doc_kernel
+内核 {1}   会话：{2}
+
+@doc_prog_windows
+WINDOWS 程序
+
+@doc_wine
+wine：{1}
+
+@doc_wine_nao
+wine：未安装
+
+@doc_bits64_sim
+64 位程序：可以
+
+@doc_bits64_nao
+64 位程序：不行（这台机器的 Wine 只有 32 位）
+
+@doc_bits32_sim
+32 位程序：可以
+
+@doc_bits32_nao
+32 位程序：不行（老程序打不开）
+
+@doc_winetricks_sim
+winetricks：有
+
+@doc_winetricks_nao
+winetricks：没有（依赖装不了）
+
+@doc_ambiente_pronto
+环境：就绪
+
+@doc_ambiente_depois
+环境：第一次使用时才会建立
+
+@doc_apps_android
+ANDROID 应用
+
+@doc_waydroid_sim
+waydroid：已安装
+
+@doc_waydroid_nao
+waydroid：未安装
+
+@doc_servico
+服务：{1}
+
+@doc_sessao_ativa
+会话：运行中
+
+@doc_sessao_parada
+会话：已停止
+
+@doc_android_pronto
+Android：就绪（API {1}，IP {2}）
+
+@doc_android_parado
+Android：未启动
+
+@doc_arm_sim
+ARM 转译：有
+
+@doc_arm_nao
+ARM 转译：没有（手机应用装不了）
+
+@doc_adb_sim
+adb：有
+
+@doc_adb_nao
+adb：没有（.xapk 包装不了）
+
+@doc_usb_declarado
+给 Android 的 USB：已声明（USB 设备可能会在里面出现）
+
+@doc_usb_nao
+给 Android 的 USB：未声明（这是正常的；Android 根本看不到任何 USB
+    设备，而条码扫描器并不需要它）
+
+@doc_uevent
+直接访问设备：已开启 —— 注意：配条码扫描器时，这通常会把每个条码
+    输入两次
+
+@doc_pacotes_linux
+LINUX 软件包
+
+@doc_java
+java：{1}（{2}）
+
+@doc_java_nao
+java：未安装（.jar 程序打不开）
+
+@doc_fuse_sim
+FUSE：有（AppImage 可以直接打开）
+
+@doc_fuse_nao
+FUSE：没有（AppImage 走慢路，靠解包打开）
+
+@doc_processador
+处理器：{1}（软件包：{2}）
+
+@doc_appimage_menu
+菜单里的 AppImage：{1}
+
+@doc_deb_sim
+'.deb' 包：可以（Tandem 会在要密码之前先核对依赖）
+
+@doc_deb_nao
+'.deb' 包：不行（这台机器没有 apt）
+
+@doc_flatpak
+flatpak：{1}
+
+@doc_flatpak_nao
+flatpak：未安装（需要时 Tandem 会主动帮您装）
+
+@doc_snap_sim
+snap：有
+
+@doc_snap_nao
+snap：未安装
+
+@doc_arqs_extras
+额外的架构：{1}
+
+@doc_aparelhos
+店里的设备
+
+@doc_portas
+串口：{1}（读卡器、秤、扫描器）   并口：{2}
+
+@doc_dialout_sim
+dialout 组：在
+
+@doc_dialout_nao
+dialout 组：不在（设备看得到却打不开）—— tandem portas
+
+@doc_id_presa
+机器身份：已固定（重建环境后授权还在）
+
+@doc_id_solta
+机器身份：未固定（旧环境）—— 见：tandem identidade
+
+@doc_chave
+保护锁（{1}）：这台机器上有服务在运行
+
+@doc_vm_cabe
+虚拟机里的 Windows：这台机器装得下（这是驱动和老加密锁唯一的出路）
+
+@doc_vm_apertado
+虚拟机里的 Windows：勉强装得下（内存或磁盘偏少）
+
+@doc_vm_bios
+虚拟机里的 Windows：处理器支持，但在 BIOS 里被关掉了
+
+@doc_vm_nao
+虚拟机里的 Windows：这颗处理器做不到
+
+@doc_perfis
+受保护的环境
+
+@doc_perfis_nenhum
+（列表为空；别人的环境会被自动保护）
+
+@at_erro_ok
+错误消息有地方可以显示
+
+@at_erro_nao
+错误消息会消失
+
+@at_erro_porque
+既没有窗口也没有终端，这里的错误谁也看不到
+
+@at_acento_ok
+系统接受带重音的文本（charmap UTF-8）
+
+@at_acento_nao
+带重音的文本过不去
+
+@at_acento_porque
+当前的 locale 不是 UTF-8；Tandem 的窗口打不开
+
+@at_diag_ok
+诊断可以存成文件并发出去
+
+@at_diag_nao
+诊断发不出去
+
+@at_diag_porque
+写入文件得到零字节
+
+@at_trava_ok
+双击用的锁可以建立（{1}）
+
+@at_trava_nao
+锁建不起来
+
+@at_trava_porque
+在 {1} —— 磁盘满了、没有权限，或者是网络上的文件夹
+
+@at_progresso_ok
+关掉进度窗口不会把 Tandem 一起弄死
+
+@at_progresso_nao
+关掉进度窗口会把 Tandem 一起弄死
+
+@at_progresso_porque
+进程收到了一个信号，而不是继续跑下去
+
+@at_pevoo_ok
+起飞前检查能读懂一个真的 Windows 程序
+
+@at_pevoo_nao
+起飞前检查读不了程序
+
+@at_clique_ok
+双击 {1} 会交给 Tandem
+
+@at_clique_nao
+双击 {1} 不会交给 Tandem
+
+@at_clique_porque
+响应的是：{1} —— 请执行：tandem repair
+
+@at_appimage_ok
+AppImage 的起飞前检查能读出类型和处理器
+
+@at_appimage_nao
+AppImage 的起飞前检查没读到文件头
+
+@at_python_porque
+{1} —— 这台机器上的 python3 可能坏了
+
+@at_java_ok
+Java 的起飞前检查能读懂一个真的 .jar
+
+@at_java_nao
+Java 的起飞前检查读不了 .jar
+
+@at_deb_ok
+起飞前检查能读懂一个真的 .deb 包（{1}）
+
+@at_deb_nao
+起飞前检查读不了 .deb
+
+@at_apt_ok
+apt 不用密码就会回答（诊断在要密码之前）
+
+@at_apt_nao
+apt 没有在不用密码的情况下回答
+
+@at_apt_porque
+没有这个，店主输了密码只是为了听到「不行」
+
+@at_javaver_nao
+我读不到 Java 的版本
+
+@at_javaver_porque
+java -version 的回答是：{1}
+
+@at_javaver_ok
+Java 的版本已被识别（{1}）
+
+@at_protegido_nao
+您列表里有一个环境没有被保护
+
+@at_protegido_ok
+您列表里的 {1} 个环境会被自动化拒绝
+
+@prog_titulo_janela
+Tandem - 已安装的程序
+
+@prog_qual_abrir
+您想打开哪个程序？
+
+@des_titulo_janela
+Tandem - 卸载程序
+
+@des_qual_remover
+您想卸载哪个程序？
+
+@botao_remover
+卸载
+
+@botao_remover_assim
+还是要卸载
+
+@botao_abrir_formulario
+打开表单
+
+@botao_nao_obrigado
+不用，谢谢
+
+@chave_ja_roda
+有一点是好消息：{1} 加密锁的服务在这台机器上已经在运行了，所以缺的不是它。
+  还要看的是锁有没有插上，以及程序是不是 64 位的——64 位有一个已知的毛病，会在
+  根本没有调试器的情况下报「检测到调试器」，而能修的是做这个程序的公司，不是您，
+  也不是 Tandem。
+
+@chave_nao_sei
+我无法确认 {1} 加密锁的服务在这里有没有在跑（这台机器上没有 "ss" 这个工具）。
+  如果程序抱怨授权，先看这个服务最值得。
+
+@chave_nao_roda
+我找到了很可能的原因：{1} 加密锁的服务在这台机器上没有在运行。它就是在 Linux
+  这一侧跟 USB 锁对话的那个东西——没有它，程序去找授权就什么也找不到，跟没插锁
+  一模一样。
+
+  装它的是技术人员，只装一次，而且免费：在厂商网站上找
+  "{2}"。
+
+@portas_usb_rotulo
+{1}   (USB 设备)  {2}
+
+@vm_cabe_bios
+这台电脑有这个功能，但在 BIOS 里被关掉了。要打开，就在开机时进 BIOS，找
+  "virtualization"、"VT-x" 或 "SVM"。这不会装任何东西，也不会删任何东西。
+
+@vm_cabe_apertado
+这台电脑扛得住，但很勉强：它有 {1} 内存，磁盘上还剩 {2}。里面那个 Windows
+  光自己就要大约 4 GB 内存和 32 GB 磁盘。
+
+@vm_cabe_bem
+这台电脑扛得住：它有 {1} 内存，磁盘上还剩 {2}。
+
+@vm_texto
+还有一条更重的路，对这样的情况它确实管用：
+
+  在 Linux 里跑一个真正的 Windows，只让程序的窗口出现在您这块屏幕上，就像它本来
+  就是这里的程序一样。做这件事的两个程序是 WinBoat 和 WinApps，都免费。因为里面
+  是真的 Windows，系统驱动能用，USB 加密锁也可以交给它。
+
+  {1}
+
+  代价是什么，最好先知道：需要一份 Windows 授权，而且必须是 Pro 版——Home 不行，
+  因为它不让窗口出来。而且里面那个 Windows 会一直占着磁盘和内存。
+
+  Tandem 不装这个，也不会去装：那是另一类程序。但如果只说「没办法」而不说这条路
+  存在，那是不诚实的。
+
+@dados_vazio
+您在 Windows 里的文件
+
+我还没有找到任何属于您的文件——只有环境本身，而环境 Tandem 几分钟就能自己重建。
+
+如果您还没有真正用过什么程序，这是正常的。您在 Windows 里的文件
+
+我还没有找到任何属于您的文件——只有环境本身，而环境 Tandem 几分钟就能自己重建。
+
+如果您还没有真正用过什么程序，这是正常的。
+
+@dados_lista
+您在 Windows 里的文件
+
+这些是您自己建的文件。其余的（那个假的 Windows、各种组件、各个程序）Tandem 自己
+就能重建；这些不行：
+
+{1}
+
+合计：{2}，共 {3} 项。
+
+只想给这些留一份副本：   tandem dados salvar您在 Windows 里的文件
+
+这些是您自己建的文件。其余的（那个假的 Windows、各种组件、各个程序）Tandem 自己
+就能重建；这些不行：
+
+{1}
+
+合计：{2}，共 {3} 项。
+
+只想给这些留一份副本：   tandem dados salvar
+
+@lista_resumo
+社区列表
+
+已知的程序：{1} 个。
+文件：{2}
+
+{3}社区列表
+
+已知的程序：{1} 个。
+文件：{2}
+
+{3}
+
+@contrib_texto
+为社区列表做贡献
+
+下面这一整行就是从这里发出去的全部内容，别的什么都没有：
+
+{1}
+
+每一段是什么意思：
+  1. 这个文件的指纹（大小 + 开头 + 结尾）。世界上任何一台拥有同一个文件的
+     机器上，它都是一样的。没法从它反推回文件，连您自己也不行。
+  2. 32 位还是 64 位，从程序本身读出来的。
+  3. 解决了问题的那些 Windows 组件。
+  4. 装了却没解决问题的那些。
+  5. 是您确认它能用，还是只确认它没报错就打开了。
+  6. 机器台数（这里永远是 1；加总是列表的事）。
+  7. 年和月。不写日，因为日会指认到人。
+
+不会从这里出去的东西：文件名、文件夹、您的用户名、这台电脑的名字、网络地址，
+连一行日志都不会。
+
+把上面那一行复制下来，发到：
+https://github.com/ChrnX0/Tandem/issues为社区列表做贡献
+
+下面这一整行就是从这里发出去的全部内容，别的什么都没有：
+
+{1}
+
+每一段是什么意思：
+  1. 这个文件的指纹（大小 + 开头 + 结尾）。世界上任何一台拥有同一个文件的
+     机器上，它都是一样的。没法从它反推回文件，连您自己也不行。
+  2. 32 位还是 64 位，从程序本身读出来的。
+  3. 解决了问题的那些 Windows 组件。
+  4. 装了却没解决问题的那些。
+  5. 是您确认它能用，还是只确认它没报错就打开了。
+  6. 机器台数（这里永远是 1；加总是列表的事）。
+  7. 年和月。不写日，因为日会指认到人。
+
+不会从这里出去的东西：文件名、文件夹、您的用户名、这台电脑的名字、网络地址，
+连一行日志都不会。
+
+把上面那一行复制下来，发到：
+https://github.com/ChrnX0/Tandem/issues
+
+@lista_ainda_nao_baixada
+社区列表
+
+您还没有下载这份列表。
+
+它是一个公开的文本文件，记着在别人机器上已经成功的做法：每个程序需要哪些
+Windows 组件。下载它不会把您的任何东西送到任何地方。
+
+下载方法：   tandem lista atualizar

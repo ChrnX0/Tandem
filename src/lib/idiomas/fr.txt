@@ -2169,3 +2169,467 @@ Programmes et applis
 
 @pan_filtro_todos
 Tous les fichiers
+
+@doc_sistema
+SYSTÈME
+
+@doc_kernel
+noyau {1}   session : {2}
+
+@doc_prog_windows
+PROGRAMMES WINDOWS
+
+@doc_wine
+wine : {1}
+
+@doc_wine_nao
+wine : PAS INSTALLÉ
+
+@doc_bits64_sim
+programmes 64 bits : oui
+
+@doc_bits64_nao
+programmes 64 bits : NON (le Wine de cette machine est en 32 bits seulement)
+
+@doc_bits32_sim
+programmes 32 bits : oui
+
+@doc_bits32_nao
+programmes 32 bits : NON (les vieux programmes n'ouvriront pas)
+
+@doc_winetricks_sim
+winetricks : oui
+
+@doc_winetricks_nao
+winetricks : NON (les dépendances ne seront pas installées)
+
+@doc_ambiente_pronto
+environnement : prêt
+
+@doc_ambiente_depois
+environnement : sera créé à la première utilisation
+
+@doc_apps_android
+APPLIS ANDROID
+
+@doc_waydroid_sim
+waydroid : installé
+
+@doc_waydroid_nao
+waydroid : PAS INSTALLÉ
+
+@doc_servico
+service : {1}
+
+@doc_sessao_ativa
+session : active
+
+@doc_sessao_parada
+session : arrêtée
+
+@doc_android_pronto
+Android : prêt (API {1}, IP {2})
+
+@doc_android_parado
+Android : pas démarré
+
+@doc_arm_sim
+traducteur ARM : oui
+
+@doc_arm_nao
+traducteur ARM : NON (les applis de téléphone ne s'installeront pas)
+
+@doc_adb_sim
+adb : oui
+
+@doc_adb_nao
+adb : NON (les paquets .xapk ne s'installeront pas)
+
+@doc_usb_declarado
+USB vers Android : déclaré (des appareils USB peuvent y apparaître)
+
+@doc_usb_nao
+USB vers Android : non déclaré (c'est normal ; Android ne voit aucun
+    appareil USB, et un lecteur de codes-barres n'en a pas besoin)
+
+@doc_uevent
+accès direct aux appareils : activé — ATTENTION : avec un lecteur de
+    codes-barres, cela tape souvent chaque code DEUX fois
+
+@doc_pacotes_linux
+PAQUETS LINUX
+
+@doc_java
+java : {1} ({2})
+
+@doc_java_nao
+java : PAS INSTALLÉ (les programmes .jar n'ouvriront pas)
+
+@doc_fuse_sim
+FUSE : oui (un AppImage s'ouvre directement)
+
+@doc_fuse_nao
+FUSE : NON (un AppImage s'ouvre par la voie lente, en décompressant)
+
+@doc_processador
+processeur : {1} (paquets : {2})
+
+@doc_appimage_menu
+AppImage dans le menu : {1}
+
+@doc_deb_sim
+paquets .deb : oui (Tandem vérifie les dépendances avant de demander le
+    mot de passe)
+
+@doc_deb_nao
+paquets .deb : NON (pas d'apt sur cette machine)
+
+@doc_flatpak
+flatpak : {1}
+
+@doc_flatpak_nao
+flatpak : pas installé (Tandem propose de l'installer si besoin)
+
+@doc_snap_sim
+snap : oui
+
+@doc_snap_nao
+snap : pas installé
+
+@doc_arqs_extras
+architectures supplémentaires : {1}
+
+@doc_aparelhos
+APPAREILS DE LA BOUTIQUE
+
+@doc_portas
+ports série : {1} (lecteur de cartes, balance, scanner)   parallèles : {2}
+
+@doc_dialout_sim
+groupe dialout : oui
+
+@doc_dialout_nao
+groupe dialout : NON (l'appareil apparaît et ne s'ouvre pas) — tandem portas
+
+@doc_id_presa
+identité de la machine : figée (les licences survivent à la refonte de l'environnement)
+
+@doc_id_solta
+identité de la machine : non figée (ancien environnement) — voir : tandem identidade
+
+@doc_chave
+clé de protection ({1}) : un service tourne sur cette machine
+
+@doc_vm_cabe
+Windows en machine virtuelle : ça tient ici (c'est la sortie pour un
+    pilote ou une vieille clé)
+
+@doc_vm_apertado
+Windows en machine virtuelle : ça tient juste (peu de mémoire ou de disque)
+
+@doc_vm_bios
+Windows en machine virtuelle : le processeur accepte, mais c'est
+    désactivé dans le BIOS
+
+@doc_vm_nao
+Windows en machine virtuelle : ce processeur ne peut pas
+
+@doc_perfis
+PROFILS PROTÉGÉS
+
+@doc_perfis_nenhum
+(aucun listé ; les profils d'autrui sont protégés automatiquement)
+
+@at_erro_ok
+les messages d'erreur ont où aller
+
+@at_erro_nao
+les messages d'erreur disparaissent
+
+@at_erro_porque
+sans fenêtre et sans terminal, une erreur d'ici n'atteint personne
+
+@at_acento_ok
+le système accepte le texte accentué (charmap UTF-8)
+
+@at_acento_nao
+le texte accentué ne passe pas
+
+@at_acento_porque
+la locale en vigueur n'est pas UTF-8 ; les fenêtres de Tandem n'ouvriront pas
+
+@at_diag_ok
+le diagnostic peut être enregistré et envoyé
+
+@at_diag_nao
+le diagnostic ne peut pas être envoyé
+
+@at_diag_porque
+l'enregistrement dans un fichier a produit zéro octet
+
+@at_trava_ok
+le verrou du double-clic peut être créé ({1})
+
+@at_trava_nao
+le verrou ne peut pas être créé
+
+@at_trava_porque
+dans {1} — disque plein, sans permission, ou dossier en réseau
+
+@at_progresso_ok
+fermer la fenêtre de progression ne fait pas tomber Tandem
+
+@at_progresso_nao
+fermer la fenêtre de progression fait tomber Tandem
+
+@at_progresso_porque
+le processus a reçu un signal au lieu de continuer
+
+@at_pevoo_ok
+le pré-vol lit un vrai programme Windows
+
+@at_pevoo_nao
+le pré-vol n'a pas pu lire un programme
+
+@at_clique_ok
+un double-clic sur un {1} arrive à Tandem
+
+@at_clique_nao
+un double-clic sur un {1} n'arrive pas à Tandem
+
+@at_clique_porque
+ce qui répond est : {1} — lancez : tandem repair
+
+@at_appimage_ok
+le pré-vol de l'AppImage lit le type et le processeur
+
+@at_appimage_nao
+le pré-vol de l'AppImage n'a pas lu l'en-tête
+
+@at_python_porque
+{1} — le python3 de cette machine est peut-être cassé
+
+@at_java_ok
+le pré-vol de Java lit un vrai .jar
+
+@at_java_nao
+le pré-vol de Java n'a pas pu lire un .jar
+
+@at_deb_ok
+le pré-vol lit un vrai paquet .deb ({1})
+
+@at_deb_nao
+le pré-vol n'a pas pu lire un .deb
+
+@at_apt_ok
+apt répond sans mot de passe (le diagnostic vient avant de le demander)
+
+@at_apt_nao
+apt n'a pas répondu sans mot de passe
+
+@at_apt_porque
+sans cela, le propriétaire tape un mot de passe juste pour entendre non
+
+@at_javaver_nao
+je n'ai pas pu lire la version de Java
+
+@at_javaver_porque
+java -version a répondu : {1}
+
+@at_javaver_ok
+la version de Java a été reconnue ({1})
+
+@at_protegido_nao
+un profil de votre liste n'est pas protégé
+
+@at_protegido_ok
+les {1} profil(s) de votre liste sont refusés par l'automatisation
+
+@prog_titulo_janela
+Tandem - Programmes installés
+
+@prog_qual_abrir
+Quel programme voulez-vous ouvrir ?
+
+@des_titulo_janela
+Tandem - Supprimer un programme
+
+@des_qual_remover
+Quel programme voulez-vous supprimer ?
+
+@botao_remover
+Supprimer
+
+@botao_remover_assim
+Supprimer quand même
+
+@botao_abrir_formulario
+Ouvrir le formulaire
+
+@botao_nao_obrigado
+Non merci
+
+@chave_ja_roda
+Un point en votre faveur : le service de la clé {1} TOURNE DÉJÀ sur cette
+  machine. Ce n'est donc pas lui qui manque. Reste à vérifier si la clé est
+  branchée, et si le programme est en 64 bits — dans ce cas il existe un défaut
+  connu où il annonce « débogueur détecté » sans qu'il y en ait, et c'est
+  l'entreprise qui a fait le programme qui corrige, pas vous ni Tandem.
+
+@chave_nao_sei
+Je n'ai pas pu vérifier si le service de la clé {1} tourne ici (l'outil
+  « ss » manque sur cette machine). Si le programme se plaint de la licence,
+  c'est ce service qu'il vaut la peine de vérifier d'abord.
+
+@chave_nao_roda
+Et j'ai trouvé la raison probable : le service de la clé {1} NE tourne PAS
+  sur cette machine. C'est lui qui parle à la clé USB du côté Linux — sans lui,
+  le programme cherche la licence et ne trouve rien, exactement comme si la clé
+  n'était pas branchée.
+
+  C'est un technicien qui l'installe, une seule fois, et c'est gratuit :
+  cherchez « {2} » sur le site du fabricant.
+
+@portas_usb_rotulo
+{1}   (appareil USB)  {2}
+
+@vm_cabe_bios
+Cet ordinateur a la fonction, mais elle est DÉSACTIVÉE dans le BIOS. Pour
+  l'activer, entrez dans le BIOS au démarrage et cherchez « virtualization »,
+  « VT-x » ou « SVM ». Cela n'installe rien et n'efface rien.
+
+@vm_cabe_apertado
+Cet ordinateur peut le supporter, mais tout juste : il a {1} de mémoire et
+  {2} libres sur le disque. Le Windows à l'intérieur veut environ 4 Go de
+  mémoire et 32 Go de disque pour lui seul.
+
+@vm_cabe_bem
+Cet ordinateur peut le supporter : il a {1} de mémoire et {2} libres sur le
+  disque.
+
+@vm_texto
+Il existe un chemin plus lourd, et pour un cas comme celui-ci il fonctionne :
+
+  faire tourner un VRAI Windows dans Linux, et ne laisser apparaître ici que la
+  fenêtre du programme, comme s'il venait d'ici. Les deux programmes qui font
+  cela sont WinBoat et WinApps, tous deux gratuits. Comme c'est un vrai Windows,
+  un pilote système fonctionne, et la clé USB de protection peut lui être
+  confiée.
+
+  {1}
+
+  Ce que cela coûte, et il vaut mieux le savoir avant : il faut une licence
+  Windows, et ce doit être l'édition Pro — la Home ne convient pas, car elle ne
+  laisse pas sortir la fenêtre. Et le Windows à l'intérieur occupe du disque et
+  de la mémoire en permanence.
+
+  Tandem n'installe pas cela et ne le fera pas : c'est un autre type de
+  programme. Mais il aurait été malhonnête de dire « il n'y a pas moyen » sans
+  dire que ce moyen existe.
+
+@dados_vazio
+Vos fichiers dans Windows
+
+Je n'ai encore trouvé aucun de vos fichiers - seulement l'environnement, que
+Tandem sait refaire tout seul en quelques minutes.
+
+C'est normal si vous n'avez pas encore vraiment utilisé de programme.Vos fichiers dans Windows
+
+Je n'ai encore trouvé aucun de vos fichiers - seulement l'environnement, que
+Tandem sait refaire tout seul en quelques minutes.
+
+C'est normal si vous n'avez pas encore vraiment utilisé de programme.
+
+@dados_lista
+Vos fichiers dans Windows
+
+Voici les fichiers que VOUS avez créés. Le reste (le faux Windows, les
+composants, les programmes), Tandem le refait tout seul ; ceci, non :
+
+{1}
+
+Total : {2} dans {3} éléments.
+
+Pour garder une copie de ceci seulement :   tandem dados salvarVos fichiers dans Windows
+
+Voici les fichiers que VOUS avez créés. Le reste (le faux Windows, les
+composants, les programmes), Tandem le refait tout seul ; ceci, non :
+
+{1}
+
+Total : {2} dans {3} éléments.
+
+Pour garder une copie de ceci seulement :   tandem dados salvar
+
+@lista_resumo
+La liste de la communauté
+
+{1} programmes connus.
+Fichier : {2}
+
+{3}La liste de la communauté
+
+{1} programmes connus.
+Fichier : {2}
+
+{3}
+
+@contrib_texto
+Contribuer à la liste de la communauté
+
+Voici la ligne entière qui part d'ici. Il n'y a rien d'autre :
+
+{1}
+
+Ce que chaque morceau veut dire :
+  1. une empreinte DU FICHIER (taille + début + fin). La même sur
+     n'importe quelle machine au monde ayant ce même fichier. Impossible
+     de revenir d'elle au fichier, pas même pour vous.
+  2. 32 ou 64 bits, lu dans le programme lui-même.
+  3. les composants Windows qui ont réglé le problème.
+  4. ceux qui ont été installés et n'ont rien réglé.
+  5. si vous avez confirmé que ça marchait, ou seulement que ça a ouvert.
+  6. un compte de machines (toujours 1 ici ; additionner est le travail
+     de la liste).
+  7. année et mois. Pas le jour, parce qu'un jour identifie.
+
+Ce qui NE part PAS d'ici : un nom de fichier, un dossier, votre nom
+d'utilisateur, le nom de l'ordinateur, une adresse réseau, ni une ligne de
+journal.
+
+Copiez la ligne ci-dessus et envoyez-la à :
+https://github.com/ChrnX0/Tandem/issuesContribuer à la liste de la communauté
+
+Voici la ligne entière qui part d'ici. Il n'y a rien d'autre :
+
+{1}
+
+Ce que chaque morceau veut dire :
+  1. une empreinte DU FICHIER (taille + début + fin). La même sur
+     n'importe quelle machine au monde ayant ce même fichier. Impossible
+     de revenir d'elle au fichier, pas même pour vous.
+  2. 32 ou 64 bits, lu dans le programme lui-même.
+  3. les composants Windows qui ont réglé le problème.
+  4. ceux qui ont été installés et n'ont rien réglé.
+  5. si vous avez confirmé que ça marchait, ou seulement que ça a ouvert.
+  6. un compte de machines (toujours 1 ici ; additionner est le travail
+     de la liste).
+  7. année et mois. Pas le jour, parce qu'un jour identifie.
+
+Ce qui NE part PAS d'ici : un nom de fichier, un dossier, votre nom
+d'utilisateur, le nom de l'ordinateur, une adresse réseau, ni une ligne de
+journal.
+
+Copiez la ligne ci-dessus et envoyez-la à :
+https://github.com/ChrnX0/Tandem/issues
+
+@lista_ainda_nao_baixada
+La liste de la communauté
+
+Vous n'avez pas encore téléchargé la liste.
+
+C'est un fichier texte public avec ce qui a déjà marché sur les machines
+d'autres personnes : quels composants Windows chaque programme a demandés. La
+télécharger n'envoie rien de chez vous où que ce soit.
+
+Pour télécharger :   tandem lista atualizar

@@ -2126,3 +2126,421 @@ Programs and apps
 
 @pan_filtro_todos
 All files
+
+@doc_sistema
+SYSTEM
+
+@doc_kernel
+kernel {1}   session: {2}
+
+@doc_prog_windows
+WINDOWS PROGRAMS
+
+@doc_wine
+wine: {1}
+
+@doc_wine_nao
+wine: NOT INSTALLED
+
+@doc_bits64_sim
+64-bit programs: yes
+
+@doc_bits64_nao
+64-bit programs: NO (the Wine on this machine is 32-bit only)
+
+@doc_bits32_sim
+32-bit programs: yes
+
+@doc_bits32_nao
+32-bit programs: NO (old programs will not open)
+
+@doc_winetricks_sim
+winetricks: yes
+
+@doc_winetricks_nao
+winetricks: NO (dependencies will not be installed)
+
+@doc_ambiente_pronto
+environment: ready
+
+@doc_ambiente_depois
+environment: will be created the first time you use it
+
+@doc_apps_android
+ANDROID APPS
+
+@doc_waydroid_sim
+waydroid: installed
+
+@doc_waydroid_nao
+waydroid: NOT INSTALLED
+
+@doc_servico
+service: {1}
+
+@doc_sessao_ativa
+session: running
+
+@doc_sessao_parada
+session: stopped
+
+@doc_android_pronto
+Android: ready (API {1}, IP {2})
+
+@doc_android_parado
+Android: not started
+
+@doc_arm_sim
+ARM translator: yes
+
+@doc_arm_nao
+ARM translator: NO (phone apps will not install)
+
+@doc_adb_sim
+adb: yes
+
+@doc_adb_nao
+adb: NO (.xapk packages will not install)
+
+@doc_usb_declarado
+USB into Android: declared (USB devices may show up in there)
+
+@doc_usb_nao
+USB into Android: not declared (this is normal; Android sees no USB
+    device at all, and a barcode scanner does not need it)
+
+@doc_uevent
+direct device access: on — CAREFUL: with a barcode scanner this
+    usually types every code TWICE
+
+@doc_pacotes_linux
+LINUX PACKAGES
+
+@doc_java
+java: {1} ({2})
+
+@doc_java_nao
+java: NOT INSTALLED (.jar programs will not open)
+
+@doc_fuse_sim
+FUSE: yes (an AppImage opens directly)
+
+@doc_fuse_nao
+FUSE: NO (an AppImage opens the slow way, by unpacking)
+
+@doc_processador
+processor: {1} (packages: {2})
+
+@doc_appimage_menu
+AppImage in the menu: {1}
+
+@doc_deb_sim
+'.deb' packages: yes (Tandem checks the dependencies before asking for
+    the password)
+
+@doc_deb_nao
+'.deb' packages: NO (no apt on this machine)
+
+@doc_flatpak
+flatpak: {1}
+
+@doc_flatpak_nao
+flatpak: not installed (Tandem offers to install it if you need it)
+
+@doc_snap_sim
+snap: yes
+
+@doc_snap_nao
+snap: not installed
+
+@doc_arqs_extras
+extra architectures: {1}
+
+@doc_aparelhos
+SHOP DEVICES
+
+@doc_portas
+serial ports: {1} (card reader, scale, scanner)   parallel: {2}
+
+@doc_dialout_sim
+dialout group: yes
+
+@doc_dialout_nao
+dialout group: NO (the device shows up and will not open) — tandem portas
+
+@doc_id_presa
+machine identity: pinned (licences survive remaking the environment)
+
+@doc_id_solta
+machine identity: loose (old environment) — see: tandem identidade
+
+@doc_chave
+protection key ({1}): a service is running on this machine
+
+@doc_vm_cabe
+Windows in a virtual machine: fits here (it is the way out for a driver
+    or an old key)
+
+@doc_vm_apertado
+Windows in a virtual machine: a tight fit (little memory or disk)
+
+@doc_vm_bios
+Windows in a virtual machine: the processor can, but it is switched off
+    in the BIOS
+
+@doc_vm_nao
+Windows in a virtual machine: this processor cannot
+
+@doc_perfis
+PROTECTED PROFILES
+
+@doc_perfis_nenhum
+(none listed; other people's profiles are protected automatically)
+
+@at_erro_ok
+error messages have somewhere to go
+
+@at_erro_nao
+error messages vanish
+
+@at_erro_porque
+with no window and no terminal, an error from here reaches nobody
+
+@at_acento_ok
+the system accepts accented text (charmap UTF-8)
+
+@at_acento_nao
+accented text does not get through
+
+@at_acento_porque
+the locale in force is not UTF-8; Tandem's windows will not open
+
+@at_diag_ok
+the diagnosis can be written to a file and sent
+
+@at_diag_nao
+the diagnosis cannot be sent
+
+@at_diag_porque
+writing to a file produced zero bytes
+
+@at_trava_ok
+the double-click lock can be created ({1})
+
+@at_trava_nao
+the lock cannot be created
+
+@at_trava_porque
+in {1} — disk full, no permission, or a folder on the network
+
+@at_progresso_ok
+closing the progress window does not bring Tandem down
+
+@at_progresso_nao
+closing the progress window brings Tandem down
+
+@at_progresso_porque
+the process took a signal instead of carrying on
+
+@at_pevoo_ok
+the pre-flight reads a real Windows program
+
+@at_pevoo_nao
+the pre-flight could not read a program
+
+@at_clique_ok
+a double click on a {1} comes to Tandem
+
+@at_clique_nao
+a double click on a {1} does not come to Tandem
+
+@at_clique_porque
+what answers is: {1} — run: tandem repair
+
+@at_appimage_ok
+the AppImage pre-flight reads type and processor
+
+@at_appimage_nao
+the AppImage pre-flight did not read the header
+
+@at_python_porque
+{1} — the python3 on this machine may be broken
+
+@at_java_ok
+the Java pre-flight reads a real .jar
+
+@at_java_nao
+the Java pre-flight could not read a .jar
+
+@at_deb_ok
+the pre-flight reads a real .deb package ({1})
+
+@at_deb_nao
+the pre-flight could not read a .deb
+
+@at_apt_ok
+apt answers without a password (the diagnosis comes before asking for it)
+
+@at_apt_nao
+apt did not answer without a password
+
+@at_apt_porque
+without this the owner types a password only to be told no
+
+@at_javaver_nao
+I could not read the Java version
+
+@at_javaver_porque
+java -version answered: {1}
+
+@at_javaver_ok
+the Java version was recognised ({1})
+
+@at_protegido_nao
+a profile on your list is not being protected
+
+@at_protegido_ok
+the {1} profile(s) on your list are refused by the automation
+
+@prog_titulo_janela
+Tandem - Installed programs
+
+@prog_qual_abrir
+Which program do you want to open?
+
+@des_titulo_janela
+Tandem - Remove a program
+
+@des_qual_remover
+Which program do you want to remove?
+
+@botao_remover
+Remove
+
+@botao_remover_assim
+Remove it anyway
+
+@botao_abrir_formulario
+Open the form
+
+@botao_nao_obrigado
+No, thank you
+
+@chave_ja_roda
+One thing in your favour: the {1} key service IS ALREADY running on this
+  machine. So that is not what is missing. What is left to check is whether the
+  key is plugged in, and whether the program is 64-bit — in that case there is a
+  known fault where it claims "debugger detected" with no debugger present, and
+  the company that made the program is who fixes it, not you and not Tandem.
+
+@chave_nao_sei
+I could not check whether the {1} key service is running here (this machine
+  has no "ss" tool). If the program complains about a licence, that service is
+  the first thing worth checking.
+
+@chave_nao_roda
+And I found the likely reason: the {1} key service is NOT running on this
+  machine. It is the one that talks to the USB key from the Linux side — without
+  it, the program looks for the licence and finds nothing, exactly as it would
+  with the key unplugged.
+
+  A technician installs it, once, and it is free: look for
+  "{2}" on the manufacturer's site.
+
+@portas_usb_rotulo
+{1}   (USB device)  {2}
+
+@vm_cabe_bios
+This computer has the feature, but it is SWITCHED OFF in the BIOS. Turning it
+  on means entering the BIOS as the machine starts and looking for
+  "virtualization", "VT-x" or "SVM". It installs nothing and erases nothing.
+
+@vm_cabe_apertado
+This computer can take it, but only just: it has {1} of memory and {2} free on
+  disk. The Windows inside wants about 4 GB of memory and 32 GB of disk for
+  itself.
+
+@vm_cabe_bem
+This computer can take it: it has {1} of memory and {2} free on disk.
+
+@vm_texto
+There is a heavier road, and for a case like this one it works:
+
+  run a REAL Windows inside Linux, and let only the program's window appear
+  here on your screen, as if it were a program from here. The two programs that
+  do this are WinBoat and WinApps, both free. Because it is a real Windows, a
+  system driver works, and the USB protection key can be handed over to it.
+
+  {1}
+
+  What it costs, and it is better to know beforehand: you need a Windows
+  licence, and it has to be the Pro edition — Home will not do, because it does
+  not let the window out. And the Windows inside takes up disk and memory the
+  whole time.
+
+  Tandem does not install this and will not: it is a different kind of program.
+  But it would have been dishonest to say "there is no way" without saying that
+  this way exists.
+
+@dados_vazio
+Your files inside Windows
+
+I have not found any file of yours yet - only the environment, which Tandem
+knows how to rebuild on its own in a few minutes.
+
+That is normal if you have not really used any program yet.
+
+@dados_lista
+Your files inside Windows
+
+These are the files YOU created. The rest - the pretend Windows, the
+components, the programs - Tandem rebuilds on its own; these it does not:
+
+{1}
+
+Total: {2} in {3} items.
+
+To keep a copy of just this:   tandem dados salvar
+
+@lista_resumo
+The community list
+
+{1} known programs.
+File: {2}
+
+{3}
+
+@contrib_texto
+Contributing to the community list
+
+This is the whole line that leaves here. There is nothing else:
+
+{1}
+
+What each piece means:
+  1. a fingerprint OF THE FILE (size + beginning + end). The same on any
+     machine in the world holding that same file. There is no way back from
+     it to the file, not even for you.
+  2. 32 or 64 bits, read from the program itself.
+  3. the Windows components that fixed it.
+  4. the ones that were installed and did not fix it.
+  5. whether you confirmed it worked, or only that it opened without error.
+  6. a machine count (always 1 here; adding up is the list's job).
+  7. year and month. No day, because a day identifies.
+
+What does NOT leave here: a file name, a folder, your user name, the computer's
+name, a network address, or a single line of log.
+
+Copy the line above and send it to:
+https://github.com/ChrnX0/Tandem/issues
+
+@lista_ainda_nao_baixada
+The community list
+
+You have not downloaded the list yet.
+
+It is a public text file with what has already worked on other people's
+machines: which Windows components each program needed. Downloading it sends
+nothing of yours anywhere.
+
+To download:   tandem lista atualizar

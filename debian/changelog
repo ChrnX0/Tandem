@@ -102,9 +102,61 @@ tandem (4.3) unstable; urgency=medium
     reading the code: a key present in the code and missing from a catalogue
     falls back silently, so the test demands a real sentence per language and
     fails on the key name.
-  * 121 sentences are still literals - tandem doctor, the autoteste report and
-    the hardware-key advice. Migrating them is the rest of this version's work.
-    The suite holds the number as a ratchet: it may fall, never rise.
+  * tandem doctor is translated - the second most-read screen in the program,
+    and the one "tandem socorro" ships to whoever is helping. 55 keys: every
+    section heading, every label, and every yes/NO line with the explanation
+    that follows it. An English-speaking user ran the flagship diagnostic and
+    got Portuguese, and that had been true of every published version.
+  * The indentation stayed in the code rather than going into the catalogue. A
+    translator should see a sentence, not two leading spaces they have to
+    preserve exactly, and a report whose columns depend on invisible characters
+    in a .po file is a report that will drift.
+  * The report's own first line - the product name and its version - stays a
+    literal, with the reason written into the counter's exception list rather
+    than left to be rediscovered: a translated product name is a name that
+    finds nothing.
+  * Verified on the installed package, not in the tree: built the .deb,
+    installed it, and read the report back in all seven languages. The first
+    attempt did not prove anything - apt declined to replace a package of the
+    same version and the old catalogue answered - and the attempt after that
+    was refused by build.py because the catalogues had drifted from po/, which
+    is that guard doing exactly its job.
+  * The autoteste report is translated - all 35 of its lines, pass and fail
+    together with the explanation each failure carries. It is the command that
+    answers "does this actually work on my machine", and its answer was in one
+    language.
+  * The remaining window titles and buttons went with it: the program picker,
+    the uninstall picker, and Remove / Cancel / Remove anyway / Stop. A dialog
+    whose buttons are in a language the reader does not have is a dialog they
+    close rather than answer.
+  * The literal counter now skips t_diz lines, because the log is a different
+    audience with a documented exception - it is read by whoever is helping,
+    not by the shop owner. That is a rule about syntax, which is what failed
+    twelve times, and it is defensible only because t_diz cannot reach the user
+    at all: it appends to a file. Two tests pin it, including one where a
+    message shares a line with a log call.
+  * The migration is finished: the counter reads 0 and the last thirteen
+    sentences are gone. The hardware-key advice, the virtual-machine paragraph
+    which is the longest message in the program, the data screen, both list
+    screens and the contribute screen. 584 keys in each of seven catalogues.
+  * A key-name collision produced a WRONG MESSAGE, silently, and it is the one
+    thing in this version worth reading twice. lista_nao_baixou already existed
+    meaning "I could not download the list"; reusing that name for the "you
+    have not downloaded it yet" screen meant the new text was dropped as a
+    duplicate and the screen showed a download failure instead. Nothing
+    errored. Found by running the command in three languages and reading the
+    output, which is the only method that has ever caught this class of thing.
+  * The counter says 0 again, and the last time it said 0 the 0 was false. What
+    is different is not the number but the instrument: it now catches a bare
+    zenity argument inside a command substitution inside a string, an append
+    into any variable name, a printf whose prose is in the argument rather than
+    the format, and a heredoc - the four shapes behind the previous false
+    zeros. The comment above the ratchet says so, so nobody trusts the number
+    without reading why.
+  * The hardware-key tests now expect ENGLISH, and that is not a slip: the
+    prose moved into po/, English is the default, and the suite runs without a
+    forced locale. What they assert is unchanged - that the sentence says "I
+    could not check" rather than condemning the machine.
 
  -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 16:00:00 +0000
 
