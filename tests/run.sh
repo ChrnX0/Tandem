@@ -2940,8 +2940,11 @@ equal "a verb with an unexpected character is refused" \
       "1" "$(t_verbo_valido 'vcrun2022; rm -rf /'; echo $?)"
 equal "a verb with a slash is refused" "1" "$(t_verbo_valido '../../etc/passwd'; echo $?)"
 equal "an ordinary verb passes" "0" "$(t_verbo_valido vcrun2022; echo $?)"
-case "$(grep -c 't_verbo_valido' "$ROOT/src/bin/tandem-exe")" in
-    0) fail "the list shortcut validates the verb before using it" "t_verbo_valido" "missing" ;;
+# t_verbo_de_fora_ok, not t_verbo_valido: the list is third-party content and
+# has to clear the stricter bar - no winetricks options, no *.verb file to
+# source, and nothing that changes a setting instead of installing something.
+case "$(grep -c 't_verbo_de_fora_ok' "$ROOT/src/bin/tandem-exe")" in
+    0) fail "the list shortcut validates the verb before using it" "t_verbo_de_fora_ok" "missing" ;;
     *) pass "the list shortcut validates the verb before using it" ;;
 esac
 # And proof of delivery applies to that shortcut too: it was the only path that
@@ -3228,6 +3231,78 @@ case "$TXB" in
     *"not a fault of your machine"*) pass "the message takes the blame off the owner's machine" ;;
     *) fail "the message takes the blame off the owner's machine" "Não é defeito da sua máquina" "$TXB" ;;
 esac
+
+section "a verb from somebody else is not a command line"
+
+# Found by attacking the community list on purpose, and both holes were live
+# through "tandem receita --importar" - a plain text file whose own header tells
+# the owner to accept it from other people.
+#
+#   - a leading dash passed, so "--self-update" and "-q" reached
+#     "winetricks -q ...". Those are winetricks' own options, and --self-update
+#     makes winetricks overwrite itself from the internet.
+#   - a dot passed, and the SHIPPED winetricks sources an argument matching
+#     *.verb as a shell script, from the current directory:
+#       case ${verb} in */*) . "${verb}" ;; *) . ./"${verb}" ;; esac
+#     executar() does `cd -- "$(dirname -- "$PROG")"` outside a subshell, so by
+#     the time winetricks runs the current directory is the folder that was
+#     double-clicked. A zip carrying setup.exe, evil.verb and a recipe naming
+#     that verb is arbitrary code, as the user.
+#
+# Rejecting the dot costs nothing: zero of the installed winetricks' verb names
+# contain one.
+for mau in "--self-update" "-q" "--force" "evil.verb" "x.verb" "_leading" \
+           "a;b" "a b" "../etc/passwd" '$(id)' '`id`' "a|b" "alldlls=builtin"; do
+    if (. "$ROOT/src/lib/common.sh"; t_verbo_valido "$mau") 2>/dev/null; then
+        fail "a verb name of '$mau' is refused" "refused" "accepted"
+    else
+        pass "a verb name of '$mau' is refused"
+    fi
+done
+for bom in vcrun2022 dotnet48 corefonts xact_x64 d3dx9_43 9lives; do
+    if (. "$ROOT/src/lib/common.sh"; t_verbo_valido "$bom") 2>/dev/null; then
+        pass "and a real verb name like '$bom' still passes"
+    else
+        fail "and a real verb name like '$bom' still passes" "accepted" "refused"
+    fi
+done
+
+# A lesson from another machine may install a DEPENDENCY. It may never change a
+# setting. winetricks labels its own verbs - 315 dlls, 112 settings - and the
+# settings are where the damage is: sandbox and isolate_home REMOVE the
+# prefix's links to $HOME, remove_mono takes .NET support out, winxp moves the
+# Windows version under an installed program's feet. All of them pass every
+# validity check, install cleanly, and earn a permanent receipt under rule 4.
+for destrutivo in sandbox isolate_home remove_mono forcemono winxp win95 \
+                  nocrashdialog set_userpath hosts native_oleaut32; do
+    if (. "$ROOT/src/lib/common.sh"; t_verbo_de_fora_ok "$destrutivo") 2>/dev/null; then
+        fail "an outside lesson cannot ask for '$destrutivo'" "refused" "accepted"
+    else
+        pass "an outside lesson cannot ask for '$destrutivo'"
+    fi
+done
+for dep in vcrun2022 dotnet48 corefonts; do
+    if (. "$ROOT/src/lib/common.sh"; t_verbo_de_fora_ok "$dep") 2>/dev/null; then
+        pass "while a real dependency like '$dep' is still allowed through"
+    else
+        fail "while a real dependency like '$dep' is still allowed through" \
+             "accepted" "refused"
+    fi
+done
+# The authority is winetricks itself, so this keeps working as winetricks
+# changes. Without it installed there is a named fallback, and the test says
+# which one it exercised rather than pretending it checked the real thing.
+if command -v winetricks >/dev/null 2>&1; then
+    equal "winetricks itself is what says a verb is a setting" \
+          "1" "$(grep -c '^w_metadata sandbox settings' "$(command -v winetricks)")"
+else
+    skip "winetricks itself is what says a verb is a setting" "winetricks not installed"
+fi
+# Both entry points have to use the stricter check, not just one of them.
+equal "the community-list loop uses the stricter check" \
+      "1" "$(grep -c 't_verbo_de_fora_ok' "$ROOT/src/bin/tandem-exe")"
+equal "and so does recipe import" \
+      "1" "$(grep -c 't_verbo_de_fora_ok' "$ROOT/src/lib/common.sh" | awk '{print ($1>=1)?1:0}')"
 
 section "Wine's own copy is not a delivery"
 

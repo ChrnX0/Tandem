@@ -339,6 +339,30 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   when it was deduced from the folder layout** — and a refusal may rest on 0
   only. Refusing to open a working program on a guess would be worse than the
   defect being fixed, which is the same rule `t_dll_no_prefixo` follows.
+- **`winetricks` SOURCES an argument matching `*.verb` as a shell script**, from
+  the current directory — read it in the shipped file, at the command-line loop:
+  `case ${verb} in */*) . "${verb}" ;; *) . ./"${verb}" ;; esac`. And
+  `executar()` in `tandem-exe` does `cd -- "$(dirname -- "$PROG")"` **outside a
+  subshell**, so by the time winetricks runs, the current directory is the
+  folder that was double-clicked. Until 4.2 `t_verbo_valido` allowed a dot and a
+  leading dash, so a zip carrying `setup.exe`, `evil.verb` and a recipe naming
+  that verb was arbitrary code as the user — through `tandem receita
+  --importar`, the feature whose own header says to accept the file from other
+  people. **Zero of winetricks' 538 verb names contain a dot**, so refusing it
+  costs nothing; a leading dash is how `--self-update` got in. Do not loosen
+  that character set, and do not assume the charset is the whole check: the two
+  holes were in the *shape* of the name.
+- **A verb from outside may install a dependency and never change a setting.**
+  winetricks labels its own verbs and **112 of them are `settings`** — `sandbox`
+  and `isolate_home` remove the prefix's links to `$HOME`, `remove_mono` takes
+  .NET out, `winxp`/`win95` move the Windows version under an installed
+  program's feet. All of them are valid names, install cleanly, and earn a
+  permanent receipt under rule №4. `t_verbo_de_fora_ok` asks the installed
+  winetricks (`^w_metadata <verb> settings`) rather than carrying a list, so it
+  keeps working as winetricks changes; the hard-coded names are only the
+  fallback for when winetricks cannot be read. `alldlls` is declared
+  `alldlls=default` / `alldlls=builtin`, so the bare name is not a verb and the
+  `=` is already outside the character set.
 - **`systemd-inhibit` exists and does not work without D-Bus.** It exits 1 and
   takes the wrapped command down with it; `winetricks` never even ran. Exercise
   it before using it (`t_inibidor`), do not ask whether the binary exists.
@@ -641,7 +665,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 814 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 847 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The five remaining formats closed on real files**: a `.deb` built for an
   older release produced the release-mismatch verdict with `libssl1.1` and
   `libicu70` named and **no password asked**; an arm64 package produced the

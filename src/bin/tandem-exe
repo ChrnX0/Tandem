@@ -232,8 +232,11 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
         # The lesson may come from the community list, which is THIRD PARTY
         # content. The same care taken with recipes applies here: a verb name
         # with an unexpected character does not become an argument to any
-        # command.
-        t_verbo_valido "$v" || { t_diz "verbo recusado (nome suspeito): $v"; continue; }
+        # command - and a verb that changes a SETTING instead of installing a
+        # dependency is refused outright, whatever it is called. Checked at the
+        # point of use rather than only at import, because this list also holds
+        # what a recipe wrote into the local memory on some earlier day.
+        t_verbo_de_fora_ok "$v" || { t_diz "verbo recusado (nao instala dependencia, ou nome suspeito): $v"; continue; }
         v="$(t_verbo_para_arquitetura "$v" "$ARCH")"
         grep -qxF -- "$v" "$WINEPREFIX/.tandem-verbos" 2>/dev/null || PENDENTES="$PENDENTES $v"
     done
