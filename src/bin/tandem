@@ -92,103 +92,109 @@ acao_install() {
 
 acao_doctor() {
     local out="" ip sdk
+    # The indentation stays HERE and not in the catalogue. A translator opening
+    # a message should see a sentence, not two leading spaces they have to
+    # preserve exactly - and a report whose columns depend on invisible
+    # characters in a .po file is a report that will drift.
     out+="Tandem $VERSAO\n\n"
-    out+="SISTEMA\n"
-    out+="  $( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-desconhecido}" )\n"
-    out+="  kernel $(uname -r)   sessão: ${XDG_SESSION_TYPE:-?}\n\n"
+    out+="$(t_msg doc_sistema)\n"
+    out+="  $( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-?}" )\n"
+    out+="  $(t_msg doc_kernel "$(uname -r)" "${XDG_SESSION_TYPE:-?}")\n\n"
 
-    out+="PROGRAMAS WINDOWS\n"
+    out+="$(t_msg doc_prog_windows)\n"
     if command -v wine >/dev/null 2>&1; then
-        out+="  wine: $(wine --version 2>/dev/null)\n"
-        t_tem_wine64 && out+="  programas de 64 bits: sim\n" ||
-            out+="  programas de 64 bits: NÃO (o Wine desta máquina é só de 32 bits)\n"
-        t_tem_wine32 && out+="  programas de 32 bits: sim\n" ||
-            out+="  programas de 32 bits: NÃO (programas antigos não abrem)\n"
+        out+="  $(t_msg doc_wine "$(wine --version 2>/dev/null)")\n"
+        t_tem_wine64 && out+="  $(t_msg doc_bits64_sim)\n" ||
+            out+="  $(t_msg doc_bits64_nao)\n"
+        t_tem_wine32 && out+="  $(t_msg doc_bits32_sim)\n" ||
+            out+="  $(t_msg doc_bits32_nao)\n"
         command -v winetricks >/dev/null 2>&1 &&
-            out+="  winetricks: sim\n" || out+="  winetricks: NÃO (não instala dependências)\n"
+            out+="  $(t_msg doc_winetricks_sim)\n" ||
+            out+="  $(t_msg doc_winetricks_nao)\n"
         [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] &&
-            out+="  ambiente: pronto\n" || out+="  ambiente: será criado no primeiro uso\n"
+            out+="  $(t_msg doc_ambiente_pronto)\n" ||
+            out+="  $(t_msg doc_ambiente_depois)\n"
     else
-        out+="  wine: NÃO INSTALADO\n"
+        out+="  $(t_msg doc_wine_nao)\n"
     fi
-    out+="\nAPPS ANDROID\n"
+    out+="\n$(t_msg doc_apps_android)\n"
     if command -v waydroid >/dev/null 2>&1; then
-        out+="  waydroid: instalado\n"
-        out+="  serviço: $(systemctl is-active waydroid-container 2>/dev/null)\n"
-        t_wd_sessao_ok && out+="  sessão: ativa\n" || out+="  sessão: parada\n"
+        out+="  $(t_msg doc_waydroid_sim)\n"
+        out+="  $(t_msg doc_servico "$(systemctl is-active waydroid-container 2>/dev/null)")\n"
+        t_wd_sessao_ok && out+="  $(t_msg doc_sessao_ativa)\n" ||
+            out+="  $(t_msg doc_sessao_parada)\n"
         if t_wd_pronto; then
             sdk="$(t_wd_sdk)"; ip="$(t_wd_ip)"
-            out+="  Android: pronto (API ${sdk:-?}, IP ${ip:-?})\n"
-            t_wd_tem_arm && out+="  tradutor ARM: sim\n" || out+="  tradutor ARM: NÃO (apps de celular não instalam)\n"
+            out+="  $(t_msg doc_android_pronto "${sdk:-?}" "${ip:-?}")\n"
+            t_wd_tem_arm && out+="  $(t_msg doc_arm_sim)\n" ||
+                out+="  $(t_msg doc_arm_nao)\n"
         else
-            out+="  Android: não iniciado\n"
+            out+="  $(t_msg doc_android_parado)\n"
         fi
         command -v adb >/dev/null 2>&1 &&
-            out+="  adb: sim\n" || out+="  adb: NÃO (pacotes .xapk não instalam)\n"
+            out+="  $(t_msg doc_adb_sim)\n" || out+="  $(t_msg doc_adb_nao)\n"
         # Two checkable facts about THIS machine, in place of a paragraph of
         # folklore. The barrier to a USB device inside Android is not the
         # container - Waydroid denies no devices - it is that the Android image
         # does not declare android.hardware.usb.host, so nothing enumerates.
         if t_wd_usb_declarado; then
-            out+="  USB para o Android: declarado (aparelhos USB podem aparecer lá dentro)\n"
+            out+="  $(t_msg doc_usb_declarado)\n"
         else
-            out+="  USB para o Android: não declarado (é o normal; o Android não enxerga\n"
-            out+="    aparelho USB nenhum, e leitor de código de barras não precisa disso)\n"
+            out+="  $(t_msg doc_usb_nao)\n"
         fi
         if t_wd_uevent; then
-            out+="  acesso direto a aparelhos: ligado — ATENÇÃO: com um leitor de código de\n"
-            out+="    barras isto costuma digitar cada código DUAS vezes\n"
+            out+="  $(t_msg doc_uevent)\n"
         fi
     else
-        out+="  waydroid: NÃO INSTALADO\n"
+        out+="  $(t_msg doc_waydroid_nao)\n"
     fi
-    out+="\nPACOTES DO LINUX\n"
+    out+="\n$(t_msg doc_pacotes_linux)\n"
     if command -v java >/dev/null 2>&1; then
         # The version line, not the first line: with JAVA_TOOL_OPTIONS set in
         # the environment - common on machines somebody has configured - Java
         # prints a paragraph of proxy settings first, and "head -1" put the
         # whole paragraph in the middle of the diagnosis.
-        out+="  java: $(t_java_versao 2>/dev/null || echo '?') ($(java -version 2>&1 |
-              grep -m1 'version "' | sed 's/^ *//'))\n"
+        out+="  $(t_msg doc_java "$(t_java_versao 2>/dev/null || echo '?')" \
+              "$(java -version 2>&1 | grep -m1 'version "' | sed 's/^ *//')")\n"
     else
-        out+="  java: NÃO INSTALADO (programas .jar não abrem)\n"
+        out+="  $(t_msg doc_java_nao)\n"
     fi
     t_tem_fuse2 &&
-        out+="  FUSE: sim (AppImage abre direto)\n" ||
-        out+="  FUSE: NÃO (AppImage abre pelo caminho lento, desempacotando)\n"
-    out+="  processador: $(t_maquina_arch) (pacotes: $(t_arch_sistema))\n"
+        out+="  $(t_msg doc_fuse_sim)\n" ||
+        out+="  $(t_msg doc_fuse_nao)\n"
+    out+="  $(t_msg doc_processador "$(t_maquina_arch)" "$(t_arch_sistema)")\n"
     local n_ai; n_ai="$(t_atalhos_appimage | grep -c . 2>/dev/null)"
-    out+="  AppImage no menu: ${n_ai:-0}\n"
+    out+="  $(t_msg doc_appimage_menu "${n_ai:-0}")\n"
     command -v apt-get >/dev/null 2>&1 &&
-        out+="  pacotes .deb: sim (o Tandem confere as dependências antes de pedir a senha)\n" ||
-        out+="  pacotes .deb: NÃO (sem apt nesta máquina)\n"
+        out+="  $(t_msg doc_deb_sim)\n" ||
+        out+="  $(t_msg doc_deb_nao)\n"
     command -v flatpak >/dev/null 2>&1 &&
-        out+="  flatpak: $(flatpak --version 2>/dev/null)\n" ||
-        out+="  flatpak: não instalado (o Tandem oferece instalar se precisar)\n"
+        out+="  $(t_msg doc_flatpak "$(flatpak --version 2>/dev/null)")\n" ||
+        out+="  $(t_msg doc_flatpak_nao)\n"
     command -v snap >/dev/null 2>&1 &&
-        out+="  snap: sim\n" || out+="  snap: não instalado\n"
+        out+="  $(t_msg doc_snap_sim)\n" || out+="  $(t_msg doc_snap_nao)\n"
     local arqs_estrangeiras
     arqs_estrangeiras="$(dpkg --print-foreign-architectures 2>/dev/null | tr '\n' ' ')"
     [ -n "$arqs_estrangeiras" ] &&
-        out+="  arquiteturas extras: $arqs_estrangeiras\n"
+        out+="  $(t_msg doc_arqs_extras "$arqs_estrangeiras")\n"
 
     # The counter's hardware. Wine already reaches all of it and the two ways
     # it goes wrong - a number above COM4, and the dialout group - are silent,
     # so they belong in the diagnosis and not in a forum thread.
-    out+="\nAPARELHOS DA LOJA\n"
+    out+="\n$(t_msg doc_aparelhos)\n"
     local n_ser n_par
     n_ser="$(t_portas_seriais | awk 'END { print NR + 0 }')"
     n_par="$(t_portas_paralelas | awk 'END { print NR + 0 }')"
-    out+="  portas seriais: $n_ser (pinpad, balança, leitor)   paralelas: $n_par\n"
+    out+="  $(t_msg doc_portas "$n_ser" "$n_par")\n"
     t_no_grupo dialout &&
-        out+="  grupo dialout: sim\n" ||
-        out+="  grupo dialout: NÃO (o aparelho aparece e não abre) — tandem portas\n"
+        out+="  $(t_msg doc_dialout_sim)\n" ||
+        out+="  $(t_msg doc_dialout_nao)\n"
     if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ]; then
         local id_serial
         id_serial="$(cat "$TANDEM_PREFIXO_PADRAO/drive_c/.windows-serial" 2>/dev/null)"
         [ -n "$id_serial" ] &&
-            out+="  identidade da máquina: presa (licenças sobrevivem a refazer o ambiente)\n" ||
-            out+="  identidade da máquina: solta (ambiente antigo) — veja: tandem identidade\n"
+            out+="  $(t_msg doc_id_presa)\n" ||
+            out+="  $(t_msg doc_id_solta)\n"
     fi
 
     # Only shown when there is something to show. A shop with no hardware key
@@ -198,7 +204,7 @@ acao_doctor() {
     for fam in sentinel codemeter; do
         case "$(t_chave_estado "$fam" | tr '\n' ' ')" in
             *SERVICO=sim*|*PORTA=sim*)
-                out+="  chave de proteção ($fam): serviço rodando nesta máquina\n" ;;
+                out+="  $(t_msg doc_chave "$fam")\n" ;;
         esac
     done
 
@@ -208,17 +214,17 @@ acao_doctor() {
     # "buy a Windows Pro licence" is bad advice on a machine whose BIOS has
     # virtualisation switched off.
     case "$(t_vm_possivel)" in
-        sim*)      out+="  Windows em máquina virtual: cabe aqui (é a saída para driver e chave antiga)\n" ;;
-        apertado*) out+="  Windows em máquina virtual: cabe apertado (pouca memória ou disco)\n" ;;
-        bios*)     out+="  Windows em máquina virtual: o processador aceita, mas está desligado na BIOS\n" ;;
-        *)         out+="  Windows em máquina virtual: este processador não faz\n" ;;
+        sim*)      out+="  $(t_msg doc_vm_cabe)\n" ;;
+        apertado*) out+="  $(t_msg doc_vm_apertado)\n" ;;
+        bios*)     out+="  $(t_msg doc_vm_bios)\n" ;;
+        *)         out+="  $(t_msg doc_vm_nao)\n" ;;
     esac
 
-    out+="\nPERFIS PROTEGIDOS\n"
+    out+="\n$(t_msg doc_perfis)\n"
     if [ -s "$TANDEM_PROTEGIDOS" ]; then
         while read -r l; do [ -n "$l" ] && out+="  $l\n"; done < "$TANDEM_PROTEGIDOS"
     else
-        out+="  (nenhum listado; perfis de terceiros são protegidos automaticamente)\n"
+        out+="  $(t_msg doc_perfis_nenhum)\n"
     fi
 
     # %b (and not raw "$out") because the text has \n to expand but may

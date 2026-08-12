@@ -2080,3 +2080,170 @@ Tandem - يشغّل برامج Windows وتطبيقات Android وحزم لين�
 
 @pan_filtro_todos
 كل الملفات
+
+@doc_sistema
+النظام
+
+@doc_kernel
+النواة {1}   الجلسة: {2}
+
+@doc_prog_windows
+برامج WINDOWS
+
+@doc_wine
+wine: {1}
+
+@doc_wine_nao
+wine: غير مثبَّت
+
+@doc_bits64_sim
+برامج 64 بت: نعم
+
+@doc_bits64_nao
+برامج 64 بت: لا (نسخة Wine على هذا الجهاز 32 بت فقط)
+
+@doc_bits32_sim
+برامج 32 بت: نعم
+
+@doc_bits32_nao
+برامج 32 بت: لا (البرامج القديمة لن تُفتح)
+
+@doc_winetricks_sim
+winetricks: نعم
+
+@doc_winetricks_nao
+winetricks: لا (لن تُثبَّت التبعيات)
+
+@doc_ambiente_pronto
+البيئة: جاهزة
+
+@doc_ambiente_depois
+البيئة: ستُنشأ عند أول استخدام
+
+@doc_apps_android
+تطبيقات ANDROID
+
+@doc_waydroid_sim
+waydroid: مثبَّت
+
+@doc_waydroid_nao
+waydroid: غير مثبَّت
+
+@doc_servico
+الخدمة: {1}
+
+@doc_sessao_ativa
+الجلسة: تعمل
+
+@doc_sessao_parada
+الجلسة: متوقفة
+
+@doc_android_pronto
+Android: جاهز (API {1}، IP {2})
+
+@doc_android_parado
+Android: لم يبدأ
+
+@doc_arm_sim
+مُترجم ARM: نعم
+
+@doc_arm_nao
+مُترجم ARM: لا (تطبيقات الهاتف لن تُثبَّت)
+
+@doc_adb_sim
+adb: نعم
+
+@doc_adb_nao
+adb: لا (حِزم .xapk لن تُثبَّت)
+
+@doc_usb_declarado
+USB إلى Android: مُعلَن (قد تظهر أجهزة USB بالداخل)
+
+@doc_usb_nao
+USB إلى Android: غير مُعلَن (وهذا هو الطبيعي؛ لا يرى Android أي جهاز
+    USB على الإطلاق، وقارئ الباركود لا يحتاج إليه)
+
+@doc_uevent
+الوصول المباشر للأجهزة: مُشغَّل — تنبيه: مع قارئ باركود، غالبًا ما
+    يُدخِل كل رمز مرتين
+
+@doc_pacotes_linux
+حِزم LINUX
+
+@doc_java
+java: {1} ({2})
+
+@doc_java_nao
+java: غير مثبَّت (برامج .jar لن تُفتح)
+
+@doc_fuse_sim
+FUSE: نعم (يُفتح AppImage مباشرة)
+
+@doc_fuse_nao
+FUSE: لا (يُفتح AppImage بالطريق البطيء، عبر فك الحزمة)
+
+@doc_processador
+المعالج: {1} (الحِزم: {2})
+
+@doc_appimage_menu
+AppImage في القائمة: {1}
+
+@doc_deb_sim
+حِزم '.deb': نعم (يتحقق Tandem من التبعيات قبل طلب كلمة المرور)
+
+@doc_deb_nao
+حِزم '.deb': لا (لا يوجد apt على هذا الجهاز)
+
+@doc_flatpak
+flatpak: {1}
+
+@doc_flatpak_nao
+flatpak: غير مثبَّت (يعرض Tandem تثبيته عند الحاجة)
+
+@doc_snap_sim
+snap: نعم
+
+@doc_snap_nao
+snap: غير مثبَّت
+
+@doc_arqs_extras
+معماريات إضافية: {1}
+
+@doc_aparelhos
+أجهزة المتجر
+
+@doc_portas
+منافذ تسلسلية: {1} (قارئ بطاقات، ميزان، ماسح)   متوازية: {2}
+
+@doc_dialout_sim
+مجموعة dialout: نعم
+
+@doc_dialout_nao
+مجموعة dialout: لا (يظهر الجهاز ولا يُفتح) — tandem portas
+
+@doc_id_presa
+هوية الجهاز: مثبَّتة (تبقى التراخيص سليمة عند إعادة إنشاء البيئة)
+
+@doc_id_solta
+هوية الجهاز: غير مثبَّتة (بيئة قديمة) — انظر: tandem identidade
+
+@doc_chave
+مفتاح الحماية ({1}): هناك خدمة تعمل على هذا الجهاز
+
+@doc_vm_cabe
+Windows في جهاز ظاهري: ممكن هنا (وهو المخرج لمُشغِّل أو مفتاح قديم)
+
+@doc_vm_apertado
+Windows في جهاز ظاهري: بالكاد يكفي (ذاكرة أو قرص قليل)
+
+@doc_vm_bios
+Windows في جهاز ظاهري: المعالج يقدر، لكنه مُعطَّل في BIOS
+
+@doc_vm_nao
+Windows في جهاز ظاهري: هذا المعالج لا يستطيع
+
+@doc_perfis
+الملفات المحمية
+
+@doc_perfis_nenhum
+(لا شيء مُدرَج؛ ملفات الآخرين محميّة تلقائيًا)

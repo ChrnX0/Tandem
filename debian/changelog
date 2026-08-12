@@ -102,8 +102,27 @@ tandem (4.3) unstable; urgency=medium
     reading the code: a key present in the code and missing from a catalogue
     falls back silently, so the test demands a real sentence per language and
     fails on the key name.
-  * 121 sentences are still literals - tandem doctor, the autoteste report and
-    the hardware-key advice. Migrating them is the rest of this version's work.
+  * tandem doctor is translated - the second most-read screen in the program,
+    and the one "tandem socorro" ships to whoever is helping. 55 keys: every
+    section heading, every label, and every yes/NO line with the explanation
+    that follows it. An English-speaking user ran the flagship diagnostic and
+    got Portuguese, and that had been true of every published version.
+  * The indentation stayed in the code rather than going into the catalogue. A
+    translator should see a sentence, not two leading spaces they have to
+    preserve exactly, and a report whose columns depend on invisible characters
+    in a .po file is a report that will drift.
+  * The report's own first line - the product name and its version - stays a
+    literal, with the reason written into the counter's exception list rather
+    than left to be rediscovered: a translated product name is a name that
+    finds nothing.
+  * Verified on the installed package, not in the tree: built the .deb,
+    installed it, and read the report back in all seven languages. The first
+    attempt did not prove anything - apt declined to replace a package of the
+    same version and the old catalogue answered - and the attempt after that
+    was refused by build.py because the catalogues had drifted from po/, which
+    is that guard doing exactly its job.
+  * 63 sentences are still literals - the autoteste report and the hardware-key
+    advice. Migrating them is the rest of this version's work.
     The suite holds the number as a ratchet: it may fall, never rise.
 
  -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 16:00:00 +0000

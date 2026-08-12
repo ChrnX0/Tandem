@@ -3610,3 +3610,237 @@ msgstr "البرامج والتطبيقات"
 msgctxt "pan_filtro_todos"
 msgid "All files"
 msgstr "كل الملفات"
+
+msgctxt "doc_sistema"
+msgid "SYSTEM"
+msgstr "النظام"
+
+msgctxt "doc_kernel"
+msgid "kernel {1}   session: {2}"
+msgstr "النواة {1}   الجلسة: {2}"
+
+msgctxt "doc_prog_windows"
+msgid "WINDOWS PROGRAMS"
+msgstr "برامج WINDOWS"
+
+msgctxt "doc_wine"
+msgid "wine: {1}"
+msgstr "wine: {1}"
+
+msgctxt "doc_wine_nao"
+msgid "wine: NOT INSTALLED"
+msgstr "wine: غير مثبَّت"
+
+msgctxt "doc_bits64_sim"
+msgid "64-bit programs: yes"
+msgstr "برامج 64 بت: نعم"
+
+msgctxt "doc_bits64_nao"
+msgid "64-bit programs: NO (the Wine on this machine is 32-bit only)"
+msgstr "برامج 64 بت: لا (نسخة Wine على هذا الجهاز 32 بت فقط)"
+
+msgctxt "doc_bits32_sim"
+msgid "32-bit programs: yes"
+msgstr "برامج 32 بت: نعم"
+
+msgctxt "doc_bits32_nao"
+msgid "32-bit programs: NO (old programs will not open)"
+msgstr "برامج 32 بت: لا (البرامج القديمة لن تُفتح)"
+
+msgctxt "doc_winetricks_sim"
+msgid "winetricks: yes"
+msgstr "winetricks: نعم"
+
+msgctxt "doc_winetricks_nao"
+msgid "winetricks: NO (dependencies will not be installed)"
+msgstr "winetricks: لا (لن تُثبَّت التبعيات)"
+
+msgctxt "doc_ambiente_pronto"
+msgid "environment: ready"
+msgstr "البيئة: جاهزة"
+
+msgctxt "doc_ambiente_depois"
+msgid "environment: will be created the first time you use it"
+msgstr "البيئة: ستُنشأ عند أول استخدام"
+
+msgctxt "doc_apps_android"
+msgid "ANDROID APPS"
+msgstr "تطبيقات ANDROID"
+
+msgctxt "doc_waydroid_sim"
+msgid "waydroid: installed"
+msgstr "waydroid: مثبَّت"
+
+msgctxt "doc_waydroid_nao"
+msgid "waydroid: NOT INSTALLED"
+msgstr "waydroid: غير مثبَّت"
+
+msgctxt "doc_servico"
+msgid "service: {1}"
+msgstr "الخدمة: {1}"
+
+msgctxt "doc_sessao_ativa"
+msgid "session: running"
+msgstr "الجلسة: تعمل"
+
+msgctxt "doc_sessao_parada"
+msgid "session: stopped"
+msgstr "الجلسة: متوقفة"
+
+msgctxt "doc_android_pronto"
+msgid "Android: ready (API {1}, IP {2})"
+msgstr "Android: جاهز (API {1}، IP {2})"
+
+msgctxt "doc_android_parado"
+msgid "Android: not started"
+msgstr "Android: لم يبدأ"
+
+msgctxt "doc_arm_sim"
+msgid "ARM translator: yes"
+msgstr "مُترجم ARM: نعم"
+
+msgctxt "doc_arm_nao"
+msgid "ARM translator: NO (phone apps will not install)"
+msgstr "مُترجم ARM: لا (تطبيقات الهاتف لن تُثبَّت)"
+
+msgctxt "doc_adb_sim"
+msgid "adb: yes"
+msgstr "adb: نعم"
+
+msgctxt "doc_adb_nao"
+msgid "adb: NO (.xapk packages will not install)"
+msgstr "adb: لا (حِزم .xapk لن تُثبَّت)"
+
+msgctxt "doc_usb_declarado"
+msgid "USB into Android: declared (USB devices may show up in there)"
+msgstr "USB إلى Android: مُعلَن (قد تظهر أجهزة USB بالداخل)"
+
+msgctxt "doc_usb_nao"
+msgid ""
+"USB into Android: not declared (this is normal; Android sees no USB\n"
+"    device at all, and a barcode scanner does not need it)"
+msgstr ""
+"USB إلى Android: غير مُعلَن (وهذا هو الطبيعي؛ لا يرى Android أي جهاز\n"
+"    USB على الإطلاق، وقارئ الباركود لا يحتاج إليه)"
+
+msgctxt "doc_uevent"
+msgid ""
+"direct device access: on — CAREFUL: with a barcode scanner this\n"
+"    usually types every code TWICE"
+msgstr ""
+"الوصول المباشر للأجهزة: مُشغَّل — تنبيه: مع قارئ باركود، غالبًا ما\n"
+"    يُدخِل كل رمز مرتين"
+
+msgctxt "doc_pacotes_linux"
+msgid "LINUX PACKAGES"
+msgstr "حِزم LINUX"
+
+msgctxt "doc_java"
+msgid "java: {1} ({2})"
+msgstr "java: {1} ({2})"
+
+msgctxt "doc_java_nao"
+msgid "java: NOT INSTALLED (.jar programs will not open)"
+msgstr "java: غير مثبَّت (برامج .jar لن تُفتح)"
+
+msgctxt "doc_fuse_sim"
+msgid "FUSE: yes (an AppImage opens directly)"
+msgstr "FUSE: نعم (يُفتح AppImage مباشرة)"
+
+msgctxt "doc_fuse_nao"
+msgid "FUSE: NO (an AppImage opens the slow way, by unpacking)"
+msgstr "FUSE: لا (يُفتح AppImage بالطريق البطيء، عبر فك الحزمة)"
+
+msgctxt "doc_processador"
+msgid "processor: {1} (packages: {2})"
+msgstr "المعالج: {1} (الحِزم: {2})"
+
+msgctxt "doc_appimage_menu"
+msgid "AppImage in the menu: {1}"
+msgstr "AppImage في القائمة: {1}"
+
+msgctxt "doc_deb_sim"
+msgid ""
+"'.deb' packages: yes (Tandem checks the dependencies before asking for\n"
+"    the password)"
+msgstr "حِزم '.deb': نعم (يتحقق Tandem من التبعيات قبل طلب كلمة المرور)"
+
+msgctxt "doc_deb_nao"
+msgid "'.deb' packages: NO (no apt on this machine)"
+msgstr "حِزم '.deb': لا (لا يوجد apt على هذا الجهاز)"
+
+msgctxt "doc_flatpak"
+msgid "flatpak: {1}"
+msgstr "flatpak: {1}"
+
+msgctxt "doc_flatpak_nao"
+msgid "flatpak: not installed (Tandem offers to install it if you need it)"
+msgstr "flatpak: غير مثبَّت (يعرض Tandem تثبيته عند الحاجة)"
+
+msgctxt "doc_snap_sim"
+msgid "snap: yes"
+msgstr "snap: نعم"
+
+msgctxt "doc_snap_nao"
+msgid "snap: not installed"
+msgstr "snap: غير مثبَّت"
+
+msgctxt "doc_arqs_extras"
+msgid "extra architectures: {1}"
+msgstr "معماريات إضافية: {1}"
+
+msgctxt "doc_aparelhos"
+msgid "SHOP DEVICES"
+msgstr "أجهزة المتجر"
+
+msgctxt "doc_portas"
+msgid "serial ports: {1} (card reader, scale, scanner)   parallel: {2}"
+msgstr "منافذ تسلسلية: {1} (قارئ بطاقات، ميزان، ماسح)   متوازية: {2}"
+
+msgctxt "doc_dialout_sim"
+msgid "dialout group: yes"
+msgstr "مجموعة dialout: نعم"
+
+msgctxt "doc_dialout_nao"
+msgid "dialout group: NO (the device shows up and will not open) — tandem portas"
+msgstr "مجموعة dialout: لا (يظهر الجهاز ولا يُفتح) — tandem portas"
+
+msgctxt "doc_id_presa"
+msgid "machine identity: pinned (licences survive remaking the environment)"
+msgstr "هوية الجهاز: مثبَّتة (تبقى التراخيص سليمة عند إعادة إنشاء البيئة)"
+
+msgctxt "doc_id_solta"
+msgid "machine identity: loose (old environment) — see: tandem identidade"
+msgstr "هوية الجهاز: غير مثبَّتة (بيئة قديمة) — انظر: tandem identidade"
+
+msgctxt "doc_chave"
+msgid "protection key ({1}): a service is running on this machine"
+msgstr "مفتاح الحماية ({1}): هناك خدمة تعمل على هذا الجهاز"
+
+msgctxt "doc_vm_cabe"
+msgid ""
+"Windows in a virtual machine: fits here (it is the way out for a driver\n"
+"    or an old key)"
+msgstr "Windows في جهاز ظاهري: ممكن هنا (وهو المخرج لمُشغِّل أو مفتاح قديم)"
+
+msgctxt "doc_vm_apertado"
+msgid "Windows in a virtual machine: a tight fit (little memory or disk)"
+msgstr "Windows في جهاز ظاهري: بالكاد يكفي (ذاكرة أو قرص قليل)"
+
+msgctxt "doc_vm_bios"
+msgid ""
+"Windows in a virtual machine: the processor can, but it is switched off\n"
+"    in the BIOS"
+msgstr "Windows في جهاز ظاهري: المعالج يقدر، لكنه مُعطَّل في BIOS"
+
+msgctxt "doc_vm_nao"
+msgid "Windows in a virtual machine: this processor cannot"
+msgstr "Windows في جهاز ظاهري: هذا المعالج لا يستطيع"
+
+msgctxt "doc_perfis"
+msgid "PROTECTED PROFILES"
+msgstr "الملفات المحمية"
+
+msgctxt "doc_perfis_nenhum"
+msgid "(none listed; other people's profiles are protected automatically)"
+msgstr "(لا شيء مُدرَج؛ ملفات الآخرين محميّة تلقائيًا)"

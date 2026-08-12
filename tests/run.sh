@@ -85,7 +85,7 @@ soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
 equal "the expected values are the ones this suite was written with" \
       "2838595226 803" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "3123851760 1455" "$soma_padroes"
+      "1417928664 1466" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1501,11 +1501,11 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # (see the changelog line-length guard further down, added for the same
     # reason: the release found it, so the suite owns it now)
     #
-    # 145 -> 121 is the zenity panel, migrated: its 24 strings now come from the
-    # catalogue and its action names stay Portuguese, because "case $esc in"
-    # matches them and a command copied off a forum has to work on any machine.
-    # What is left is tandem doctor, the autoteste report and the hardware-key
-    # advice.
+    # 145 -> 121 was the zenity panel; 121 -> 63 is tandem doctor, the second
+    # most-read screen and the one "tandem socorro" ships to whoever is helping.
+    # Both keep their machine-readable halves literal: the panel's action names,
+    # which "case $esc in" matches, and doctor's product-name line. What is left
+    # is the autoteste report and the hardware-key advice.
     #
     # So the number is the measured truth and it is a RATCHET: it may fall,
     # never rise. A hard 0 that is wrong is worse than a true 145 that can only
@@ -1513,7 +1513,7 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # is not. Lower this line when you migrate something; the test fails if you
     # add prose to the code, and fails if you leave this number stale after
     # removing some.
-    TETO_LIT=121
+    TETO_LIT=63
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
         pass "the literals still in the code are the $TETO_LIT already known about"
@@ -1852,6 +1852,32 @@ equal "a tab in RESULTADO is refused too" \
       "5" "$(campos_receita "RESULTADO=abriu$(printf '\t')mais coisa")"
 equal "and an ordinary recipe still imports" \
       "0" "$(campos_receita "ARQUITETURA=64")"
+
+# The doctor report is the second most-read screen, and it is what "tandem
+# socorro" sends to whoever is helping - so a Portuguese diagnostic reaching an
+# English-speaking user costs two people an afternoon. Assert the rows come from
+# the catalogue AND that they resolve: a key present in the code and missing from
+# a catalogue falls back silently and looks right on the reference machine.
+DOCTOR_CORPO="$(sed -n '/^acao_doctor()/,/^}/p' "$ROOT/src/bin/tandem")"
+for chave in doc_sistema doc_kernel doc_prog_windows doc_bits64_nao \
+             doc_apps_android doc_usb_nao doc_pacotes_linux doc_aparelhos \
+             doc_portas doc_dialout_nao doc_vm_cabe doc_perfis_nenhum; do
+    contem "doctor reads '$chave' from the catalogue" \
+           "t_msg $chave" "$DOCTOR_CORPO"
+done
+for lang in en pt_BR es fr zh_CN hi ar; do
+    linha="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$lang" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_msg doc_bits64_nao' 2>/dev/null)"
+    case "$linha" in
+        doc_bits64_nao|"") fail "doctor's 32-bit-Wine line exists in $lang" \
+                                "a translated sentence" "${linha:-nothing}" ;;
+        *) pass "doctor's 32-bit-Wine line exists in $lang" ;;
+    esac
+done
+# The report's own first line is the product name and its version, and it stays
+# a literal on purpose - a translated product name is a name that finds nothing.
+contem "the report still names the product without translating it" \
+       'Tandem $VERSAO' "$DOCTOR_CORPO"
 
 # The panel is the only screen a shop owner who never opens a terminal sees, and
 # it was the last thing in the program hard-coded in Portuguese. Every row a

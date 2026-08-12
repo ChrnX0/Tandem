@@ -59,8 +59,11 @@ EXCECOES = {
     # An on-disk value, not prose. Rule: translating one of these breaks
     # compatibility with memory files already written on somebody's machine.
     "sim",
-    # The product's own name.
+    # The product's own name, and the same name with its version beside it -
+    # the first line of every report. Neither is prose: a translated product
+    # name is a name that finds nothing.
     "Tandem",
+    "Tandem $VERSAO\\n\\n",
     # THE COMMAND NAMES, which stay Portuguese forever - that is a standing
     # decision, not an oversight: a command copied off a forum has to work on
     # any machine, so these cannot move with the language. In the zenity panel

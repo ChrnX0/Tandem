@@ -3584,3 +3584,237 @@ msgstr "程序和应用"
 msgctxt "pan_filtro_todos"
 msgid "All files"
 msgstr "所有文件"
+
+msgctxt "doc_sistema"
+msgid "SYSTEM"
+msgstr "系统"
+
+msgctxt "doc_kernel"
+msgid "kernel {1}   session: {2}"
+msgstr "内核 {1}   会话：{2}"
+
+msgctxt "doc_prog_windows"
+msgid "WINDOWS PROGRAMS"
+msgstr "WINDOWS 程序"
+
+msgctxt "doc_wine"
+msgid "wine: {1}"
+msgstr "wine：{1}"
+
+msgctxt "doc_wine_nao"
+msgid "wine: NOT INSTALLED"
+msgstr "wine：未安装"
+
+msgctxt "doc_bits64_sim"
+msgid "64-bit programs: yes"
+msgstr "64 位程序：可以"
+
+msgctxt "doc_bits64_nao"
+msgid "64-bit programs: NO (the Wine on this machine is 32-bit only)"
+msgstr "64 位程序：不行（这台机器的 Wine 只有 32 位）"
+
+msgctxt "doc_bits32_sim"
+msgid "32-bit programs: yes"
+msgstr "32 位程序：可以"
+
+msgctxt "doc_bits32_nao"
+msgid "32-bit programs: NO (old programs will not open)"
+msgstr "32 位程序：不行（老程序打不开）"
+
+msgctxt "doc_winetricks_sim"
+msgid "winetricks: yes"
+msgstr "winetricks：有"
+
+msgctxt "doc_winetricks_nao"
+msgid "winetricks: NO (dependencies will not be installed)"
+msgstr "winetricks：没有（依赖装不了）"
+
+msgctxt "doc_ambiente_pronto"
+msgid "environment: ready"
+msgstr "环境：就绪"
+
+msgctxt "doc_ambiente_depois"
+msgid "environment: will be created the first time you use it"
+msgstr "环境：第一次使用时才会建立"
+
+msgctxt "doc_apps_android"
+msgid "ANDROID APPS"
+msgstr "ANDROID 应用"
+
+msgctxt "doc_waydroid_sim"
+msgid "waydroid: installed"
+msgstr "waydroid：已安装"
+
+msgctxt "doc_waydroid_nao"
+msgid "waydroid: NOT INSTALLED"
+msgstr "waydroid：未安装"
+
+msgctxt "doc_servico"
+msgid "service: {1}"
+msgstr "服务：{1}"
+
+msgctxt "doc_sessao_ativa"
+msgid "session: running"
+msgstr "会话：运行中"
+
+msgctxt "doc_sessao_parada"
+msgid "session: stopped"
+msgstr "会话：已停止"
+
+msgctxt "doc_android_pronto"
+msgid "Android: ready (API {1}, IP {2})"
+msgstr "Android：就绪（API {1}，IP {2}）"
+
+msgctxt "doc_android_parado"
+msgid "Android: not started"
+msgstr "Android：未启动"
+
+msgctxt "doc_arm_sim"
+msgid "ARM translator: yes"
+msgstr "ARM 转译：有"
+
+msgctxt "doc_arm_nao"
+msgid "ARM translator: NO (phone apps will not install)"
+msgstr "ARM 转译：没有（手机应用装不了）"
+
+msgctxt "doc_adb_sim"
+msgid "adb: yes"
+msgstr "adb：有"
+
+msgctxt "doc_adb_nao"
+msgid "adb: NO (.xapk packages will not install)"
+msgstr "adb：没有（.xapk 包装不了）"
+
+msgctxt "doc_usb_declarado"
+msgid "USB into Android: declared (USB devices may show up in there)"
+msgstr "给 Android 的 USB：已声明（USB 设备可能会在里面出现）"
+
+msgctxt "doc_usb_nao"
+msgid ""
+"USB into Android: not declared (this is normal; Android sees no USB\n"
+"    device at all, and a barcode scanner does not need it)"
+msgstr ""
+"给 Android 的 USB：未声明（这是正常的；Android 根本看不到任何 USB\n"
+"    设备，而条码扫描器并不需要它）"
+
+msgctxt "doc_uevent"
+msgid ""
+"direct device access: on — CAREFUL: with a barcode scanner this\n"
+"    usually types every code TWICE"
+msgstr ""
+"直接访问设备：已开启 —— 注意：配条码扫描器时，这通常会把每个条码\n"
+"    输入两次"
+
+msgctxt "doc_pacotes_linux"
+msgid "LINUX PACKAGES"
+msgstr "LINUX 软件包"
+
+msgctxt "doc_java"
+msgid "java: {1} ({2})"
+msgstr "java：{1}（{2}）"
+
+msgctxt "doc_java_nao"
+msgid "java: NOT INSTALLED (.jar programs will not open)"
+msgstr "java：未安装（.jar 程序打不开）"
+
+msgctxt "doc_fuse_sim"
+msgid "FUSE: yes (an AppImage opens directly)"
+msgstr "FUSE：有（AppImage 可以直接打开）"
+
+msgctxt "doc_fuse_nao"
+msgid "FUSE: NO (an AppImage opens the slow way, by unpacking)"
+msgstr "FUSE：没有（AppImage 走慢路，靠解包打开）"
+
+msgctxt "doc_processador"
+msgid "processor: {1} (packages: {2})"
+msgstr "处理器：{1}（软件包：{2}）"
+
+msgctxt "doc_appimage_menu"
+msgid "AppImage in the menu: {1}"
+msgstr "菜单里的 AppImage：{1}"
+
+msgctxt "doc_deb_sim"
+msgid ""
+"'.deb' packages: yes (Tandem checks the dependencies before asking for\n"
+"    the password)"
+msgstr "'.deb' 包：可以（Tandem 会在要密码之前先核对依赖）"
+
+msgctxt "doc_deb_nao"
+msgid "'.deb' packages: NO (no apt on this machine)"
+msgstr "'.deb' 包：不行（这台机器没有 apt）"
+
+msgctxt "doc_flatpak"
+msgid "flatpak: {1}"
+msgstr "flatpak：{1}"
+
+msgctxt "doc_flatpak_nao"
+msgid "flatpak: not installed (Tandem offers to install it if you need it)"
+msgstr "flatpak：未安装（需要时 Tandem 会主动帮您装）"
+
+msgctxt "doc_snap_sim"
+msgid "snap: yes"
+msgstr "snap：有"
+
+msgctxt "doc_snap_nao"
+msgid "snap: not installed"
+msgstr "snap：未安装"
+
+msgctxt "doc_arqs_extras"
+msgid "extra architectures: {1}"
+msgstr "额外的架构：{1}"
+
+msgctxt "doc_aparelhos"
+msgid "SHOP DEVICES"
+msgstr "店里的设备"
+
+msgctxt "doc_portas"
+msgid "serial ports: {1} (card reader, scale, scanner)   parallel: {2}"
+msgstr "串口：{1}（读卡器、秤、扫描器）   并口：{2}"
+
+msgctxt "doc_dialout_sim"
+msgid "dialout group: yes"
+msgstr "dialout 组：在"
+
+msgctxt "doc_dialout_nao"
+msgid "dialout group: NO (the device shows up and will not open) — tandem portas"
+msgstr "dialout 组：不在（设备看得到却打不开）—— tandem portas"
+
+msgctxt "doc_id_presa"
+msgid "machine identity: pinned (licences survive remaking the environment)"
+msgstr "机器身份：已固定（重建环境后授权还在）"
+
+msgctxt "doc_id_solta"
+msgid "machine identity: loose (old environment) — see: tandem identidade"
+msgstr "机器身份：未固定（旧环境）—— 见：tandem identidade"
+
+msgctxt "doc_chave"
+msgid "protection key ({1}): a service is running on this machine"
+msgstr "保护锁（{1}）：这台机器上有服务在运行"
+
+msgctxt "doc_vm_cabe"
+msgid ""
+"Windows in a virtual machine: fits here (it is the way out for a driver\n"
+"    or an old key)"
+msgstr "虚拟机里的 Windows：这台机器装得下（这是驱动和老加密锁唯一的出路）"
+
+msgctxt "doc_vm_apertado"
+msgid "Windows in a virtual machine: a tight fit (little memory or disk)"
+msgstr "虚拟机里的 Windows：勉强装得下（内存或磁盘偏少）"
+
+msgctxt "doc_vm_bios"
+msgid ""
+"Windows in a virtual machine: the processor can, but it is switched off\n"
+"    in the BIOS"
+msgstr "虚拟机里的 Windows：处理器支持，但在 BIOS 里被关掉了"
+
+msgctxt "doc_vm_nao"
+msgid "Windows in a virtual machine: this processor cannot"
+msgstr "虚拟机里的 Windows：这颗处理器做不到"
+
+msgctxt "doc_perfis"
+msgid "PROTECTED PROFILES"
+msgstr "受保护的环境"
+
+msgctxt "doc_perfis_nenhum"
+msgid "(none listed; other people's profiles are protected automatically)"
+msgstr "（列表为空；别人的环境会被自动保护）"

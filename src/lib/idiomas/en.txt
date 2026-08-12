@@ -2126,3 +2126,173 @@ Programs and apps
 
 @pan_filtro_todos
 All files
+
+@doc_sistema
+SYSTEM
+
+@doc_kernel
+kernel {1}   session: {2}
+
+@doc_prog_windows
+WINDOWS PROGRAMS
+
+@doc_wine
+wine: {1}
+
+@doc_wine_nao
+wine: NOT INSTALLED
+
+@doc_bits64_sim
+64-bit programs: yes
+
+@doc_bits64_nao
+64-bit programs: NO (the Wine on this machine is 32-bit only)
+
+@doc_bits32_sim
+32-bit programs: yes
+
+@doc_bits32_nao
+32-bit programs: NO (old programs will not open)
+
+@doc_winetricks_sim
+winetricks: yes
+
+@doc_winetricks_nao
+winetricks: NO (dependencies will not be installed)
+
+@doc_ambiente_pronto
+environment: ready
+
+@doc_ambiente_depois
+environment: will be created the first time you use it
+
+@doc_apps_android
+ANDROID APPS
+
+@doc_waydroid_sim
+waydroid: installed
+
+@doc_waydroid_nao
+waydroid: NOT INSTALLED
+
+@doc_servico
+service: {1}
+
+@doc_sessao_ativa
+session: running
+
+@doc_sessao_parada
+session: stopped
+
+@doc_android_pronto
+Android: ready (API {1}, IP {2})
+
+@doc_android_parado
+Android: not started
+
+@doc_arm_sim
+ARM translator: yes
+
+@doc_arm_nao
+ARM translator: NO (phone apps will not install)
+
+@doc_adb_sim
+adb: yes
+
+@doc_adb_nao
+adb: NO (.xapk packages will not install)
+
+@doc_usb_declarado
+USB into Android: declared (USB devices may show up in there)
+
+@doc_usb_nao
+USB into Android: not declared (this is normal; Android sees no USB
+    device at all, and a barcode scanner does not need it)
+
+@doc_uevent
+direct device access: on — CAREFUL: with a barcode scanner this
+    usually types every code TWICE
+
+@doc_pacotes_linux
+LINUX PACKAGES
+
+@doc_java
+java: {1} ({2})
+
+@doc_java_nao
+java: NOT INSTALLED (.jar programs will not open)
+
+@doc_fuse_sim
+FUSE: yes (an AppImage opens directly)
+
+@doc_fuse_nao
+FUSE: NO (an AppImage opens the slow way, by unpacking)
+
+@doc_processador
+processor: {1} (packages: {2})
+
+@doc_appimage_menu
+AppImage in the menu: {1}
+
+@doc_deb_sim
+'.deb' packages: yes (Tandem checks the dependencies before asking for
+    the password)
+
+@doc_deb_nao
+'.deb' packages: NO (no apt on this machine)
+
+@doc_flatpak
+flatpak: {1}
+
+@doc_flatpak_nao
+flatpak: not installed (Tandem offers to install it if you need it)
+
+@doc_snap_sim
+snap: yes
+
+@doc_snap_nao
+snap: not installed
+
+@doc_arqs_extras
+extra architectures: {1}
+
+@doc_aparelhos
+SHOP DEVICES
+
+@doc_portas
+serial ports: {1} (card reader, scale, scanner)   parallel: {2}
+
+@doc_dialout_sim
+dialout group: yes
+
+@doc_dialout_nao
+dialout group: NO (the device shows up and will not open) — tandem portas
+
+@doc_id_presa
+machine identity: pinned (licences survive remaking the environment)
+
+@doc_id_solta
+machine identity: loose (old environment) — see: tandem identidade
+
+@doc_chave
+protection key ({1}): a service is running on this machine
+
+@doc_vm_cabe
+Windows in a virtual machine: fits here (it is the way out for a driver
+    or an old key)
+
+@doc_vm_apertado
+Windows in a virtual machine: a tight fit (little memory or disk)
+
+@doc_vm_bios
+Windows in a virtual machine: the processor can, but it is switched off
+    in the BIOS
+
+@doc_vm_nao
+Windows in a virtual machine: this processor cannot
+
+@doc_perfis
+PROTECTED PROFILES
+
+@doc_perfis_nenhum
+(none listed; other people's profiles are protected automatically)

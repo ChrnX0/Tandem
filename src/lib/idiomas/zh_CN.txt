@@ -2055,3 +2055,170 @@ Tandem 会把它学到的东西发到社区清单。
 
 @pan_filtro_todos
 所有文件
+
+@doc_sistema
+系统
+
+@doc_kernel
+内核 {1}   会话：{2}
+
+@doc_prog_windows
+WINDOWS 程序
+
+@doc_wine
+wine：{1}
+
+@doc_wine_nao
+wine：未安装
+
+@doc_bits64_sim
+64 位程序：可以
+
+@doc_bits64_nao
+64 位程序：不行（这台机器的 Wine 只有 32 位）
+
+@doc_bits32_sim
+32 位程序：可以
+
+@doc_bits32_nao
+32 位程序：不行（老程序打不开）
+
+@doc_winetricks_sim
+winetricks：有
+
+@doc_winetricks_nao
+winetricks：没有（依赖装不了）
+
+@doc_ambiente_pronto
+环境：就绪
+
+@doc_ambiente_depois
+环境：第一次使用时才会建立
+
+@doc_apps_android
+ANDROID 应用
+
+@doc_waydroid_sim
+waydroid：已安装
+
+@doc_waydroid_nao
+waydroid：未安装
+
+@doc_servico
+服务：{1}
+
+@doc_sessao_ativa
+会话：运行中
+
+@doc_sessao_parada
+会话：已停止
+
+@doc_android_pronto
+Android：就绪（API {1}，IP {2}）
+
+@doc_android_parado
+Android：未启动
+
+@doc_arm_sim
+ARM 转译：有
+
+@doc_arm_nao
+ARM 转译：没有（手机应用装不了）
+
+@doc_adb_sim
+adb：有
+
+@doc_adb_nao
+adb：没有（.xapk 包装不了）
+
+@doc_usb_declarado
+给 Android 的 USB：已声明（USB 设备可能会在里面出现）
+
+@doc_usb_nao
+给 Android 的 USB：未声明（这是正常的；Android 根本看不到任何 USB
+    设备，而条码扫描器并不需要它）
+
+@doc_uevent
+直接访问设备：已开启 —— 注意：配条码扫描器时，这通常会把每个条码
+    输入两次
+
+@doc_pacotes_linux
+LINUX 软件包
+
+@doc_java
+java：{1}（{2}）
+
+@doc_java_nao
+java：未安装（.jar 程序打不开）
+
+@doc_fuse_sim
+FUSE：有（AppImage 可以直接打开）
+
+@doc_fuse_nao
+FUSE：没有（AppImage 走慢路，靠解包打开）
+
+@doc_processador
+处理器：{1}（软件包：{2}）
+
+@doc_appimage_menu
+菜单里的 AppImage：{1}
+
+@doc_deb_sim
+'.deb' 包：可以（Tandem 会在要密码之前先核对依赖）
+
+@doc_deb_nao
+'.deb' 包：不行（这台机器没有 apt）
+
+@doc_flatpak
+flatpak：{1}
+
+@doc_flatpak_nao
+flatpak：未安装（需要时 Tandem 会主动帮您装）
+
+@doc_snap_sim
+snap：有
+
+@doc_snap_nao
+snap：未安装
+
+@doc_arqs_extras
+额外的架构：{1}
+
+@doc_aparelhos
+店里的设备
+
+@doc_portas
+串口：{1}（读卡器、秤、扫描器）   并口：{2}
+
+@doc_dialout_sim
+dialout 组：在
+
+@doc_dialout_nao
+dialout 组：不在（设备看得到却打不开）—— tandem portas
+
+@doc_id_presa
+机器身份：已固定（重建环境后授权还在）
+
+@doc_id_solta
+机器身份：未固定（旧环境）—— 见：tandem identidade
+
+@doc_chave
+保护锁（{1}）：这台机器上有服务在运行
+
+@doc_vm_cabe
+虚拟机里的 Windows：这台机器装得下（这是驱动和老加密锁唯一的出路）
+
+@doc_vm_apertado
+虚拟机里的 Windows：勉强装得下（内存或磁盘偏少）
+
+@doc_vm_bios
+虚拟机里的 Windows：处理器支持，但在 BIOS 里被关掉了
+
+@doc_vm_nao
+虚拟机里的 Windows：这颗处理器做不到
+
+@doc_perfis
+受保护的环境
+
+@doc_perfis_nenhum
+（列表为空；别人的环境会被自动保护）

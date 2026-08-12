@@ -2112,3 +2112,171 @@ Windows वातावरण वापस लाएँ
 
 @pan_filtro_todos
 सभी फ़ाइलें
+
+@doc_sistema
+सिस्टम
+
+@doc_kernel
+कर्नेल {1}   सत्र: {2}
+
+@doc_prog_windows
+WINDOWS प्रोग्राम
+
+@doc_wine
+wine: {1}
+
+@doc_wine_nao
+wine: स्थापित नहीं
+
+@doc_bits64_sim
+64-बिट प्रोग्राम: हाँ
+
+@doc_bits64_nao
+64-बिट प्रोग्राम: नहीं (इस मशीन का Wine केवल 32-बिट है)
+
+@doc_bits32_sim
+32-बिट प्रोग्राम: हाँ
+
+@doc_bits32_nao
+32-बिट प्रोग्राम: नहीं (पुराने प्रोग्राम नहीं खुलेंगे)
+
+@doc_winetricks_sim
+winetricks: हाँ
+
+@doc_winetricks_nao
+winetricks: नहीं (निर्भरताएँ स्थापित नहीं होंगी)
+
+@doc_ambiente_pronto
+वातावरण: तैयार
+
+@doc_ambiente_depois
+वातावरण: पहली बार उपयोग करने पर बनेगा
+
+@doc_apps_android
+ANDROID ऐप
+
+@doc_waydroid_sim
+waydroid: स्थापित
+
+@doc_waydroid_nao
+waydroid: स्थापित नहीं
+
+@doc_servico
+सेवा: {1}
+
+@doc_sessao_ativa
+सत्र: चल रहा है
+
+@doc_sessao_parada
+सत्र: रुका हुआ
+
+@doc_android_pronto
+Android: तैयार (API {1}, IP {2})
+
+@doc_android_parado
+Android: शुरू नहीं हुआ
+
+@doc_arm_sim
+ARM अनुवादक: हाँ
+
+@doc_arm_nao
+ARM अनुवादक: नहीं (फ़ोन के ऐप स्थापित नहीं होंगे)
+
+@doc_adb_sim
+adb: हाँ
+
+@doc_adb_nao
+adb: नहीं (.xapk पैकेज स्थापित नहीं होंगे)
+
+@doc_usb_declarado
+Android के लिए USB: घोषित (USB उपकरण वहाँ दिख सकते हैं)
+
+@doc_usb_nao
+Android के लिए USB: घोषित नहीं (यह सामान्य है; Android को कोई भी USB
+    उपकरण दिखता ही नहीं, और बारकोड स्कैनर को इसकी ज़रूरत नहीं)
+
+@doc_uevent
+उपकरणों तक सीधी पहुँच: चालू — सावधान: बारकोड स्कैनर के साथ यह हर कोड
+    दो बार टाइप करता है
+
+@doc_pacotes_linux
+LINUX पैकेज
+
+@doc_java
+java: {1} ({2})
+
+@doc_java_nao
+java: स्थापित नहीं (.jar प्रोग्राम नहीं खुलेंगे)
+
+@doc_fuse_sim
+FUSE: हाँ (AppImage सीधे खुलता है)
+
+@doc_fuse_nao
+FUSE: नहीं (AppImage धीमे रास्ते से, खोलकर चलता है)
+
+@doc_processador
+प्रोसेसर: {1} (पैकेज: {2})
+
+@doc_appimage_menu
+मेनू में AppImage: {1}
+
+@doc_deb_sim
+'.deb' पैकेज: हाँ (Tandem पासवर्ड माँगने से पहले निर्भरताएँ जाँचता है)
+
+@doc_deb_nao
+'.deb' पैकेज: नहीं (इस मशीन पर apt नहीं है)
+
+@doc_flatpak
+flatpak: {1}
+
+@doc_flatpak_nao
+flatpak: स्थापित नहीं (ज़रूरत पड़ने पर Tandem स्थापित करने को कहेगा)
+
+@doc_snap_sim
+snap: हाँ
+
+@doc_snap_nao
+snap: स्थापित नहीं
+
+@doc_arqs_extras
+अतिरिक्त आर्किटेक्चर: {1}
+
+@doc_aparelhos
+दुकान के उपकरण
+
+@doc_portas
+सीरियल पोर्ट: {1} (कार्ड रीडर, तराज़ू, स्कैनर)   पैरलल: {2}
+
+@doc_dialout_sim
+dialout समूह: हाँ
+
+@doc_dialout_nao
+dialout समूह: नहीं (उपकरण दिखता है पर खुलता नहीं) — tandem portas
+
+@doc_id_presa
+मशीन की पहचान: तय (वातावरण दोबारा बनाने पर भी लाइसेंस बचे रहते हैं)
+
+@doc_id_solta
+मशीन की पहचान: खुली (पुराना वातावरण) — देखें: tandem identidade
+
+@doc_chave
+सुरक्षा कुंजी ({1}): इस मशीन पर एक सेवा चल रही है
+
+@doc_vm_cabe
+वर्चुअल मशीन में Windows: यहाँ चल जाएगा (ड्राइवर या पुरानी कुंजी का
+    यही रास्ता है)
+
+@doc_vm_apertado
+वर्चुअल मशीन में Windows: बस-बस चलेगा (मेमोरी या डिस्क कम है)
+
+@doc_vm_bios
+वर्चुअल मशीन में Windows: प्रोसेसर कर सकता है, पर BIOS में बंद है
+
+@doc_vm_nao
+वर्चुअल मशीन में Windows: यह प्रोसेसर नहीं कर सकता
+
+@doc_perfis
+सुरक्षित प्रोफ़ाइल
+
+@doc_perfis_nenhum
+(कोई सूचीबद्ध नहीं; दूसरों की प्रोफ़ाइल अपने-आप सुरक्षित रहती हैं)

@@ -2119,3 +2119,173 @@ Programas e apps
 
 @pan_filtro_todos
 Todos os arquivos
+
+@doc_sistema
+SISTEMA
+
+@doc_kernel
+kernel {1}   sessão: {2}
+
+@doc_prog_windows
+PROGRAMAS WINDOWS
+
+@doc_wine
+wine: {1}
+
+@doc_wine_nao
+wine: NÃO INSTALADO
+
+@doc_bits64_sim
+programas de 64 bits: sim
+
+@doc_bits64_nao
+programas de 64 bits: NÃO (o Wine desta máquina é só de 32 bits)
+
+@doc_bits32_sim
+programas de 32 bits: sim
+
+@doc_bits32_nao
+programas de 32 bits: NÃO (programas antigos não abrem)
+
+@doc_winetricks_sim
+winetricks: sim
+
+@doc_winetricks_nao
+winetricks: NÃO (não instala dependências)
+
+@doc_ambiente_pronto
+ambiente: pronto
+
+@doc_ambiente_depois
+ambiente: será criado no primeiro uso
+
+@doc_apps_android
+APPS ANDROID
+
+@doc_waydroid_sim
+waydroid: instalado
+
+@doc_waydroid_nao
+waydroid: NÃO INSTALADO
+
+@doc_servico
+serviço: {1}
+
+@doc_sessao_ativa
+sessão: ativa
+
+@doc_sessao_parada
+sessão: parada
+
+@doc_android_pronto
+Android: pronto (API {1}, IP {2})
+
+@doc_android_parado
+Android: não iniciado
+
+@doc_arm_sim
+tradutor ARM: sim
+
+@doc_arm_nao
+tradutor ARM: NÃO (apps de celular não instalam)
+
+@doc_adb_sim
+adb: sim
+
+@doc_adb_nao
+adb: NÃO (pacotes .xapk não instalam)
+
+@doc_usb_declarado
+USB para o Android: declarado (aparelhos USB podem aparecer lá dentro)
+
+@doc_usb_nao
+USB para o Android: não declarado (é o normal; o Android não enxerga
+    aparelho USB nenhum, e leitor de código de barras não precisa disso)
+
+@doc_uevent
+acesso direto a aparelhos: ligado — ATENÇÃO: com um leitor de código de
+    barras isto costuma digitar cada código DUAS vezes
+
+@doc_pacotes_linux
+PACOTES DO LINUX
+
+@doc_java
+java: {1} ({2})
+
+@doc_java_nao
+java: NÃO INSTALADO (programas .jar não abrem)
+
+@doc_fuse_sim
+FUSE: sim (AppImage abre direto)
+
+@doc_fuse_nao
+FUSE: NÃO (AppImage abre pelo caminho lento, desempacotando)
+
+@doc_processador
+processador: {1} (pacotes: {2})
+
+@doc_appimage_menu
+AppImage no menu: {1}
+
+@doc_deb_sim
+pacotes .deb: sim (o Tandem confere as dependências antes de pedir a
+    senha)
+
+@doc_deb_nao
+pacotes .deb: NÃO (sem apt nesta máquina)
+
+@doc_flatpak
+flatpak: {1}
+
+@doc_flatpak_nao
+flatpak: não instalado (o Tandem oferece instalar se precisar)
+
+@doc_snap_sim
+snap: sim
+
+@doc_snap_nao
+snap: não instalado
+
+@doc_arqs_extras
+arquiteturas extras: {1}
+
+@doc_aparelhos
+APARELHOS DA LOJA
+
+@doc_portas
+portas seriais: {1} (pinpad, balança, leitor)   paralelas: {2}
+
+@doc_dialout_sim
+grupo dialout: sim
+
+@doc_dialout_nao
+grupo dialout: NÃO (o aparelho aparece e não abre) — tandem portas
+
+@doc_id_presa
+identidade da máquina: presa (licenças sobrevivem a refazer o ambiente)
+
+@doc_id_solta
+identidade da máquina: solta (ambiente antigo) — veja: tandem identidade
+
+@doc_chave
+chave de proteção ({1}): serviço rodando nesta máquina
+
+@doc_vm_cabe
+Windows em máquina virtual: cabe aqui (é a saída para driver e chave
+    antiga)
+
+@doc_vm_apertado
+Windows em máquina virtual: cabe apertado (pouca memória ou disco)
+
+@doc_vm_bios
+Windows em máquina virtual: o processador aceita, mas está desligado na
+    BIOS
+
+@doc_vm_nao
+Windows em máquina virtual: este processador não faz
+
+@doc_perfis
+PERFIS PROTEGIDOS
+
+@doc_perfis_nenhum
+(nenhum listado; perfis de terceiros são protegidos automaticamente)

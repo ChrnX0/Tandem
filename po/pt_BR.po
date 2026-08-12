@@ -3651,3 +3651,243 @@ msgstr "Programas e apps"
 msgctxt "pan_filtro_todos"
 msgid "All files"
 msgstr "Todos os arquivos"
+
+msgctxt "doc_sistema"
+msgid "SYSTEM"
+msgstr "SISTEMA"
+
+msgctxt "doc_kernel"
+msgid "kernel {1}   session: {2}"
+msgstr "kernel {1}   sessão: {2}"
+
+msgctxt "doc_prog_windows"
+msgid "WINDOWS PROGRAMS"
+msgstr "PROGRAMAS WINDOWS"
+
+msgctxt "doc_wine"
+msgid "wine: {1}"
+msgstr "wine: {1}"
+
+msgctxt "doc_wine_nao"
+msgid "wine: NOT INSTALLED"
+msgstr "wine: NÃO INSTALADO"
+
+msgctxt "doc_bits64_sim"
+msgid "64-bit programs: yes"
+msgstr "programas de 64 bits: sim"
+
+msgctxt "doc_bits64_nao"
+msgid "64-bit programs: NO (the Wine on this machine is 32-bit only)"
+msgstr "programas de 64 bits: NÃO (o Wine desta máquina é só de 32 bits)"
+
+msgctxt "doc_bits32_sim"
+msgid "32-bit programs: yes"
+msgstr "programas de 32 bits: sim"
+
+msgctxt "doc_bits32_nao"
+msgid "32-bit programs: NO (old programs will not open)"
+msgstr "programas de 32 bits: NÃO (programas antigos não abrem)"
+
+msgctxt "doc_winetricks_sim"
+msgid "winetricks: yes"
+msgstr "winetricks: sim"
+
+msgctxt "doc_winetricks_nao"
+msgid "winetricks: NO (dependencies will not be installed)"
+msgstr "winetricks: NÃO (não instala dependências)"
+
+msgctxt "doc_ambiente_pronto"
+msgid "environment: ready"
+msgstr "ambiente: pronto"
+
+msgctxt "doc_ambiente_depois"
+msgid "environment: will be created the first time you use it"
+msgstr "ambiente: será criado no primeiro uso"
+
+msgctxt "doc_apps_android"
+msgid "ANDROID APPS"
+msgstr "APPS ANDROID"
+
+msgctxt "doc_waydroid_sim"
+msgid "waydroid: installed"
+msgstr "waydroid: instalado"
+
+msgctxt "doc_waydroid_nao"
+msgid "waydroid: NOT INSTALLED"
+msgstr "waydroid: NÃO INSTALADO"
+
+msgctxt "doc_servico"
+msgid "service: {1}"
+msgstr "serviço: {1}"
+
+msgctxt "doc_sessao_ativa"
+msgid "session: running"
+msgstr "sessão: ativa"
+
+msgctxt "doc_sessao_parada"
+msgid "session: stopped"
+msgstr "sessão: parada"
+
+msgctxt "doc_android_pronto"
+msgid "Android: ready (API {1}, IP {2})"
+msgstr "Android: pronto (API {1}, IP {2})"
+
+msgctxt "doc_android_parado"
+msgid "Android: not started"
+msgstr "Android: não iniciado"
+
+msgctxt "doc_arm_sim"
+msgid "ARM translator: yes"
+msgstr "tradutor ARM: sim"
+
+msgctxt "doc_arm_nao"
+msgid "ARM translator: NO (phone apps will not install)"
+msgstr "tradutor ARM: NÃO (apps de celular não instalam)"
+
+msgctxt "doc_adb_sim"
+msgid "adb: yes"
+msgstr "adb: sim"
+
+msgctxt "doc_adb_nao"
+msgid "adb: NO (.xapk packages will not install)"
+msgstr "adb: NÃO (pacotes .xapk não instalam)"
+
+msgctxt "doc_usb_declarado"
+msgid "USB into Android: declared (USB devices may show up in there)"
+msgstr "USB para o Android: declarado (aparelhos USB podem aparecer lá dentro)"
+
+msgctxt "doc_usb_nao"
+msgid ""
+"USB into Android: not declared (this is normal; Android sees no USB\n"
+"    device at all, and a barcode scanner does not need it)"
+msgstr ""
+"USB para o Android: não declarado (é o normal; o Android não enxerga\n"
+"    aparelho USB nenhum, e leitor de código de barras não precisa disso)"
+
+msgctxt "doc_uevent"
+msgid ""
+"direct device access: on — CAREFUL: with a barcode scanner this\n"
+"    usually types every code TWICE"
+msgstr ""
+"acesso direto a aparelhos: ligado — ATENÇÃO: com um leitor de código de\n"
+"    barras isto costuma digitar cada código DUAS vezes"
+
+msgctxt "doc_pacotes_linux"
+msgid "LINUX PACKAGES"
+msgstr "PACOTES DO LINUX"
+
+msgctxt "doc_java"
+msgid "java: {1} ({2})"
+msgstr "java: {1} ({2})"
+
+msgctxt "doc_java_nao"
+msgid "java: NOT INSTALLED (.jar programs will not open)"
+msgstr "java: NÃO INSTALADO (programas .jar não abrem)"
+
+msgctxt "doc_fuse_sim"
+msgid "FUSE: yes (an AppImage opens directly)"
+msgstr "FUSE: sim (AppImage abre direto)"
+
+msgctxt "doc_fuse_nao"
+msgid "FUSE: NO (an AppImage opens the slow way, by unpacking)"
+msgstr "FUSE: NÃO (AppImage abre pelo caminho lento, desempacotando)"
+
+msgctxt "doc_processador"
+msgid "processor: {1} (packages: {2})"
+msgstr "processador: {1} (pacotes: {2})"
+
+msgctxt "doc_appimage_menu"
+msgid "AppImage in the menu: {1}"
+msgstr "AppImage no menu: {1}"
+
+msgctxt "doc_deb_sim"
+msgid ""
+"'.deb' packages: yes (Tandem checks the dependencies before asking for\n"
+"    the password)"
+msgstr ""
+"pacotes .deb: sim (o Tandem confere as dependências antes de pedir a\n"
+"    senha)"
+
+msgctxt "doc_deb_nao"
+msgid "'.deb' packages: NO (no apt on this machine)"
+msgstr "pacotes .deb: NÃO (sem apt nesta máquina)"
+
+msgctxt "doc_flatpak"
+msgid "flatpak: {1}"
+msgstr "flatpak: {1}"
+
+msgctxt "doc_flatpak_nao"
+msgid "flatpak: not installed (Tandem offers to install it if you need it)"
+msgstr "flatpak: não instalado (o Tandem oferece instalar se precisar)"
+
+msgctxt "doc_snap_sim"
+msgid "snap: yes"
+msgstr "snap: sim"
+
+msgctxt "doc_snap_nao"
+msgid "snap: not installed"
+msgstr "snap: não instalado"
+
+msgctxt "doc_arqs_extras"
+msgid "extra architectures: {1}"
+msgstr "arquiteturas extras: {1}"
+
+msgctxt "doc_aparelhos"
+msgid "SHOP DEVICES"
+msgstr "APARELHOS DA LOJA"
+
+msgctxt "doc_portas"
+msgid "serial ports: {1} (card reader, scale, scanner)   parallel: {2}"
+msgstr "portas seriais: {1} (pinpad, balança, leitor)   paralelas: {2}"
+
+msgctxt "doc_dialout_sim"
+msgid "dialout group: yes"
+msgstr "grupo dialout: sim"
+
+msgctxt "doc_dialout_nao"
+msgid "dialout group: NO (the device shows up and will not open) — tandem portas"
+msgstr "grupo dialout: NÃO (o aparelho aparece e não abre) — tandem portas"
+
+msgctxt "doc_id_presa"
+msgid "machine identity: pinned (licences survive remaking the environment)"
+msgstr "identidade da máquina: presa (licenças sobrevivem a refazer o ambiente)"
+
+msgctxt "doc_id_solta"
+msgid "machine identity: loose (old environment) — see: tandem identidade"
+msgstr "identidade da máquina: solta (ambiente antigo) — veja: tandem identidade"
+
+msgctxt "doc_chave"
+msgid "protection key ({1}): a service is running on this machine"
+msgstr "chave de proteção ({1}): serviço rodando nesta máquina"
+
+msgctxt "doc_vm_cabe"
+msgid ""
+"Windows in a virtual machine: fits here (it is the way out for a driver\n"
+"    or an old key)"
+msgstr ""
+"Windows em máquina virtual: cabe aqui (é a saída para driver e chave\n"
+"    antiga)"
+
+msgctxt "doc_vm_apertado"
+msgid "Windows in a virtual machine: a tight fit (little memory or disk)"
+msgstr "Windows em máquina virtual: cabe apertado (pouca memória ou disco)"
+
+msgctxt "doc_vm_bios"
+msgid ""
+"Windows in a virtual machine: the processor can, but it is switched off\n"
+"    in the BIOS"
+msgstr ""
+"Windows em máquina virtual: o processador aceita, mas está desligado na\n"
+"    BIOS"
+
+msgctxt "doc_vm_nao"
+msgid "Windows in a virtual machine: this processor cannot"
+msgstr "Windows em máquina virtual: este processador não faz"
+
+msgctxt "doc_perfis"
+msgid "PROTECTED PROFILES"
+msgstr "PERFIS PROTEGIDOS"
+
+msgctxt "doc_perfis_nenhum"
+msgid "(none listed; other people's profiles are protected automatically)"
+msgstr "(nenhum listado; perfis de terceiros são protegidos automaticamente)"
