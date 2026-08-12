@@ -83,7 +83,7 @@ soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
 soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
                 sed -E 's/ *(pass|fail)$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3116281636 799" "$soma_esperados"
+      "975496449 799" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "3113881825 1444" "$soma_padroes"
 
@@ -1467,10 +1467,41 @@ section "language: a migrated file stays migrated"
 # clean when every letter a person reads comes out of a t_msg lookup.
 
 if [ -f "$ROOT/tools/conta-literais.py" ]; then
-    # Every file is on the migrated list now, so this is the whole-tree check:
-    # not one user-facing sentence is left as a literal in the code.
+    # This number was 0 for two versions and the 0 was WRONG - the NINTH time
+    # this measure has been narrower than reality, and the worst of the nine.
+    # ATRIBUICAO in the counter is a whitelist of variable names, and
+    # acao_doctor assembles its whole report with
+    #
+    #     out+="SISTEMA\n"
+    #
+    # into a variable called "out", which was not on the list. So the entire
+    # diagnostic - the second most-read screen in the program, and the thing
+    # "tandem socorro" sends to whoever is helping - plus the zenity panel's own
+    # "O que você quer fazer?" were scored as zero while this suite asserted
+    # that zero. It was found by installing the built .deb and READING THE
+    # OUTPUT, which is the only method that has ever caught this measure lying.
+    #
+    # So the number is now the measured truth and it is a RATCHET: it may fall,
+    # never rise. A hard 0 that is wrong is worse than a true 74 that can only
+    # shrink, because the 0 says the work is finished and the 74 says where it
+    # is not. Lower this line when you migrate something; the test fails if you
+    # add prose to the code, and fails if you leave this number stale after
+    # removing some.
+    TETO_LIT=75
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
-    equal "no Portuguese literal is left anywhere in the code" "0" "$total_lit"
+    if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
+        pass "the literals still in the code are the $TETO_LIT already known about"
+    elif [ "${total_lit:-999}" -lt "$TETO_LIT" ] 2>/dev/null; then
+        fail "the literals still in the code are the $TETO_LIT already known about" \
+             "$total_lit — you migrated something, so lower TETO_LIT to $total_lit" \
+             "the ceiling still says $TETO_LIT"
+    else
+        fail "the literals still in the code are the $TETO_LIT already known about" \
+             "at most $TETO_LIT" \
+             "$total_lit — new prose was added to the code instead of to po/en.po"
+    fi
+    # The ten files that ARE finished stay finished. "tandem" and "common.sh"
+    # came off that list, because they never belonged on it.
     saida_lit="$(cd "$ROOT" && python3 tools/conta-literais.py --migrados 2>&1)"
     if [ -z "$saida_lit" ]; then
         pass "no file declared migrated has a Portuguese literal left"
@@ -3297,6 +3328,15 @@ FINGE_W="$TMPROOT/finge-wine"; mkdir -p "$FINGE_W"
 cat > "$FINGE_W/wine" <<'FIMW'
 #!/bin/sh
 [ -n "$T_REG_LOG" ] && printf '%s\n' "$*" >> "$T_REG_LOG"
+# T_REG_FALHA names a view this fake refuses, so the partial-write case can be
+# exercised. A real "wine reg" fails for ordinary reasons - a busy prefix, a
+# full disk, a Wine too old for the /reg: flags - and what Tandem does then is
+# the difference between a retry and a machine split in half forever.
+if [ -n "$T_REG_FALHA" ]; then
+    for a in "$@"; do
+        [ "$a" = "/reg:$T_REG_FALHA" ] && exit 1
+    done
+fi
 exit 0
 FIMW
 chmod +x "$FINGE_W/wine"
@@ -3353,6 +3393,48 @@ equal "the volume serial went in as well" \
   t_identidade_fixa "$PID_OK" ) >/dev/null 2>&1
 equal "a prefix already stamped is never stamped again" \
       "0" "$(grep -c 'MachineGuid' "$REG_LOG")"
+
+# Half a machine is worse than none, and this is the defect the first version of
+# the fix introduced: it wrote the mark whatever happened AND made the mark the
+# guard, so a prefix where one view refused the write was frozen with its two
+# views disagreeing - 32-bit and 64-bit programs seeing different machines,
+# nothing ever retrying, and the mark claiming a GUID only half the prefix held.
+# The same lie the fix was for, one shape further out. Caught in review.
+PID_MEIO="$TMPROOT/pref-meia-identidade"
+mkdir -p "$PID_MEIO/drive_c"
+: > "$PID_MEIO/.tandem-prefixo"
+printf 'WINE REGISTRY Version 2\n\n#arch=win64\n' > "$PID_MEIO/system.reg"
+: > "$REG_LOG"
+( export T_REG_LOG="$REG_LOG" T_REG_FALHA=32; PATH="$FINGE_W:$PATH"
+  t_identidade_fixa "$PID_MEIO" ) >/dev/null 2>&1
+COD_MEIO=$?
+equal "a view that refuses the write is reported as a failure" "1" "$COD_MEIO"
+equal "and the mark records no identifier, so the next run tries again" \
+      "MACHINEGUID=" "$(grep '^MACHINEGUID=' "$PID_MEIO/.tandem-identidade")"
+# The seed and the serial are still worth recording on their own.
+contem "while the seed still goes on file" \
+       "SEMENTE=" "$(cat "$PID_MEIO/.tandem-identidade")"
+: > "$REG_LOG"
+( export T_REG_LOG="$REG_LOG"; PATH="$FINGE_W:$PATH"
+  t_identidade_fixa "$PID_MEIO" ) >/dev/null 2>&1
+equal "and the next run really does try both views again" \
+      "2" "$(grep -c 'MachineGuid' "$REG_LOG")"
+equal "and then it records the identifier" \
+      "1" "$(grep -c '^MACHINEGUID=[0-9a-f]' "$PID_MEIO/.tandem-identidade")"
+
+# A win32 prefix has only one view. Demanding both there would mean never
+# stamping it at all, which is a refusal dressed up as a safety check.
+PID_32="$TMPROOT/pref-identidade-32"
+mkdir -p "$PID_32/drive_c"
+: > "$PID_32/.tandem-prefixo"
+printf 'WINE REGISTRY Version 2\n\n#arch=win32\n' > "$PID_32/system.reg"
+: > "$REG_LOG"
+( export T_REG_LOG="$REG_LOG"; PATH="$FINGE_W:$PATH"
+  t_identidade_fixa "$PID_32" ) >/dev/null 2>&1
+equal "a 32-bit environment is stamped in its one view" \
+      "1" "$(grep -c 'MachineGuid' "$REG_LOG")"
+equal "and that view is named, not left to the default" \
+      "1" "$(grep -c '/reg:32' "$REG_LOG")"
 
 # Rule number 1. The write is small, which is exactly why it would be the one
 # to slip through.

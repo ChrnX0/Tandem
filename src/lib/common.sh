@@ -710,7 +710,7 @@ t_prefixo_arquitetura() {
 # Callers must check t_prefixo_protegido first. Rule number 1 has no exception
 # here just because the write is small.
 t_identidade_fixa() {
-    local prefixo="$1" serial guid marca vista escreveu=""
+    local prefixo="$1" serial guid marca vista escreveu="" faltou="" vistas ja
     [ -d "$prefixo/drive_c" ] || return 1
     # Rule number 1, spelled out here as well as in the caller. The write is
     # small, which is exactly why it would be the one to slip through.
@@ -733,43 +733,77 @@ t_identidade_fixa() {
     # licence to this machine sees a different machine: exactly the loss the
     # comment above claims to prevent.
     #
-    # The mark file is the right discriminator. No mark means Tandem has not
-    # stamped this prefix yet, and the only caller runs at creation, where
-    # nothing has activated against Wine's random value because nothing has
-    # run. A prefix that already carries the mark is never touched again, even
-    # though the marks written by earlier versions describe a GUID that was
-    # never applied: that prefix has been in use, something may have activated
-    # against Wine's value, and correcting the record afterwards would cause
-    # the very reactivation this function exists to avoid.
+    # The RECORDED VALUE is the discriminator, not the file's existence - and
+    # the difference is a defect all of its own, caught in review. Writing the
+    # mark whatever happened, and then guarding on the mark, means a prefix
+    # where one of the two registry views failed to accept the write is frozen
+    # that way forever: 32-bit programs and 64-bit programs see different
+    # machines, nothing ever retries, and the mark claims a GUID that only half
+    # the prefix contains. That is the same lie this function was just fixed
+    # for, one shape further out.
+    #
+    # So: an empty MACHINEGUID means "not stamped yet, try again", and a
+    # non-empty one is never touched. A prefix stamped by an earlier version
+    # carries a GUID that was never applied, and it stays untouched on purpose:
+    # that prefix has been in use, something may have activated against Wine's
+    # value, and correcting the record afterwards would cause the very
+    # reactivation this function exists to avoid.
+    ja="$(sed -n 's/^MACHINEGUID=//p' "$marca" 2>/dev/null | head -1)"
     guid="$(t_identidade_guid)"
-    if [ -n "$guid" ] && [ ! -f "$marca" ]; then
-        # Both views, and each one named out loud. "wine reg" here is a 32-bit
-        # process - Ubuntu's wine wrapper picks the 32-bit loader when wine32
-        # is present, the same reason "wine uninstaller --list" reads the other
-        # view - so a write with no /reg: flag lands in Wow6432Node while the
-        # read above looks at the 64-bit key. Measured: with no flag the value
-        # appeared under Software\Wow6432Node\Microsoft\Cryptography, with
-        # /reg:64 under Software\Microsoft\Cryptography. A 32-bit program and a
-        # 64-bit one must see the SAME machine, and 2 of 2 real installers
-        # surveyed here are 32-bit, so the 32-bit view is not the afterthought.
-        for vista in 64 32; do
+    if [ -n "$guid" ] && [ -z "$ja" ]; then
+        # Every view this prefix HAS, and each one named out loud. "wine reg"
+        # here is a 32-bit process - Ubuntu's wine wrapper picks the 32-bit
+        # loader when wine32 is present, the same reason "wine uninstaller
+        # --list" enumerates the other view - so a write with no /reg: flag
+        # lands in Wow6432Node while the read above looks at the 64-bit key.
+        # Measured: with no flag the value appeared under
+        # Software\Wow6432Node\Microsoft\Cryptography, with /reg:64 under
+        # Software\Microsoft\Cryptography. A 32-bit program and a 64-bit one
+        # must see the SAME machine, and 2 of 2 real installers surveyed here
+        # are 32-bit, so the 32-bit view is not the afterthought.
+        #
+        # A win32 prefix has no second view to write, and demanding both there
+        # would mean never stamping it at all.
+        case "$(t_prefixo_arquitetura "$prefixo" 2>/dev/null)" in
+            win32) vistas="32" ;;
+            *)     vistas="64 32" ;;
+        esac
+        for vista in $vistas; do
             if WINEPREFIX="$prefixo" WINEDEBUG=-all wine reg add \
                  'HKLM\Software\Microsoft\Cryptography' /v MachineGuid /t REG_SZ \
                  /d "$guid" /f "/reg:$vista" >/dev/null 2>&1; then
                 escreveu="${escreveu:+$escreveu }$vista"
+            else
+                faltou="${faltou:+$faltou }$vista"
             fi
         done
-        [ -n "$escreveu" ] && t_diz "MachineGuid fixado em $guid (vistas: $escreveu)"
+        if [ -n "$faltou" ]; then
+            # Half a machine is worse than none: leave the value unrecorded so
+            # the next run tries again. Writing the same GUID twice is
+            # harmless - it is the same value from the same seed - and
+            # "tandem identidade" shows the two views side by side, so a prefix
+            # stuck like this is diagnosable rather than silently split.
+            t_diz "MachineGuid nao entrou na(s) vista(s):$faltou; nao vou marcar, para tentar de novo"
+            guid=""
+        else
+            t_diz "MachineGuid fixado em $guid (vistas: $escreveu)"
+        fi
+    else
+        guid="$ja"
     fi
 
     # The seed goes on record. If an OS reinstall regenerates machine-id, both
     # identifiers move and nothing on screen explains why; with the old value
-    # on file the reactivation becomes diagnosable instead of mysterious.
+    # on file the reactivation becomes diagnosable instead of mysterious. This
+    # is written even when the GUID did not land, because the seed and the
+    # serial are worth recording on their own - the GUID line is simply left
+    # empty, which is what tells the next run to try again.
     {
         printf 'SEMENTE=%s\n' "$(t_maquina_semente)"
         printf 'SERIAL=%s\n' "$serial"
         printf 'MACHINEGUID=%s\n' "$guid"
     } > "$marca" 2>/dev/null
+    [ -n "$faltou" ] && return 1
     return 0
 }
 

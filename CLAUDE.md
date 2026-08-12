@@ -641,7 +641,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 807 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 814 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The five remaining formats closed on real files**: a `.deb` built for an
   older release produced the release-mismatch verdict with `libssl1.1` and
   `libicu70` named and **no password asked**; an arm64 package produced the
@@ -820,15 +820,31 @@ Read this before touching a message anywhere in the tree.
   shipping it without saying so is not. Getting those reviewed is the easiest
   contribution to ask for.
 
-### The migration is finished
+### The migration is NOT finished, and the counter said it was
 
-`tools/conta-literais.py` reports **TOTAL 0** across `src/bin` and `src/lib`,
-and the suite asserts that number, so the next literal added anywhere fails a
-test. 404 keys in each of the seven catalogues.
+**This section said "the migration is finished" and cited TOTAL 0. That was
+false, and the suite asserted the false number.** `tools/conta-literais.py` now
+reports **TOTAL 75**, all of it real: the whole of `tandem doctor`, the zenity
+panel's own `O que você quer fazer?`, the hardware-key advice and the longest
+message in the program - the fifteen-line paragraph about running a real Windows
+in a virtual machine. 449 keys in each of the seven catalogues, and 75 sentences
+that never got there.
 
-**The counter is the interesting part of this, not the translation.** It was
-wrong EIGHT times, each time narrower than reality, and it never once failed
-safe - every version reported zero for something that was there:
+**How a released product came to show an English-speaking user a Portuguese
+diagnostic:** it was found by installing the built `.deb` and reading the
+output, not by any check in this repository. `tandem doctor` printed `SISTEMA`
+and `programas de 64 bits: sim` while `tandem enviar`, two commands later,
+printed English. Nothing in the tree could see it, because `acao_doctor`
+assembles its report as `out+="SISTEMA\n"` and the counter's assignment pattern
+was a **whitelist of variable names** that did not include `out`.
+
+The suite now asserts the measured number as a **ratchet**: it may fall, never
+rise. A hard 0 that is wrong is worse than a true 75 that can only shrink,
+because the 0 says the work is finished and the 75 says where it is not.
+
+**The counter is the interesting part of this, not the translation.** It has now
+been wrong TEN times, each time narrower than reality, and it has never once
+failed safe - every version reported zero for something that was there:
 
 1. "no accented character left in the file" - accent-free Portuguese walked
    straight through, and `tandem-snap` was declared done with
@@ -849,11 +865,32 @@ safe - every version reported zero for something that was there:
    assignment nor a printf.
 8. A lowercase assignment outside the known names: `faixa="$f_ini a $f_fim"`,
    where the ` a ` is Portuguese for "to".
+9. **The assignment pattern was a whitelist of variable NAMES**, and
+   `acao_doctor` appends into `out`. That hid the entire diagnostic - 68
+   sentences, the second most-read screen in the program, and the text
+   `tandem socorro` sends to whoever is helping. The whitelist is gone: inside
+   a body that exists to produce prose (`t_texto_*`, `t_causa_*`, `acao_*`,
+   `uso`), **every** assignment and append is examined, whatever it is called.
+10. **`printf '%s' "prose"`** - the prose does not have to be in the format
+   string. `t_texto_vm`'s fifteen-line paragraph sat behind a `'%s'` that
+   contains no letters. Found while fixing number 9, which is the point: the
+   ninth was found by reading a running program, and the tenth by then
+   distrusting the fix.
 
 **The lesson, which is the reason this is written down:** a completeness check
 built from what happened to be in front of me will always pass. The measure only
 became trustworthy at the moment it caught something. If you add a message in a
-shape not listed above, the counter will happily report zero.
+shape not listed above, the counter will happily report zero. **Treat 75 as a
+floor, not a total** - ten versions of this thing have under-reported, and the
+only method that has ever caught it is installing the package and reading what
+comes out.
+
+There is now a small list of exact strings the counter is told to ignore
+(`EXCECOES`), each with its reason: vendor product names the owner must search
+for verbatim, systemd unit names, the Windows `COM` port labels, and one on-disk
+value. It is a list of decisions, not a rule about shapes - a rule is what
+failed nine times, whereas an exact string somebody had to add on purpose cannot
+quietly grow to cover new prose.
 
 ### What stays Portuguese on purpose
 
