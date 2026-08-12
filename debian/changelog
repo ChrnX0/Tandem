@@ -92,6 +92,31 @@ tandem (4.2) unstable; urgency=medium
     refusing to open a working program on a guess would be the worse defect.
   * t_identidade_fixa refuses a prefix without our mark. Rule number 1 was
     documented in that function and enforced only by its caller.
+  * A registry view that refuses the write no longer freezes the prefix that
+    way. The first version of the fix above wrote its mark whatever happened
+    AND made the mark the guard, so a prefix where one view failed kept 32-bit
+    and 64-bit programs on different machine identifiers forever, with nothing
+    to retry it - the same lie one shape further out. The recorded value is the
+    guard now: empty means try again. A win32 prefix has one view and is
+    stamped in it, because demanding both there would be a refusal dressed up
+    as a safety check.
+
+  * "tandem doctor" and the graphical panel are still in Portuguese, and this
+    release says so instead of claiming otherwise. The literal counter reported
+    TOTAL 0 and the test suite asserted that number; both were wrong. The
+    counter's assignment pattern was a whitelist of variable names, and
+    acao_doctor assembles its whole report by appending into one that was not on
+    the list - so the diagnostic an English-speaking user reads, and the text
+    "tandem socorro" sends to whoever is helping them, were counted as zero.
+    Fixing that exposed a tenth blind spot: printf's prose does not have to be
+    in the format string, which hid the longest message in the program.
+  * It was found by installing the built package and reading the output. That is
+    the only method that has ever caught this measure lying, and it has now lied
+    ten times.
+  * The true number is 75 and the suite asserts it as a ratchet - it may fall,
+    never rise. A hard zero that is wrong is worse than a true 75 that can only
+    shrink: the zero says the work is finished and the 75 says where it is not.
+    Those 75 sentences are the next release's work.
 
  -- ChrnX0 <rockx0@gmail.com>  Wed, 12 Aug 2026 12:00:00 +0000
 
