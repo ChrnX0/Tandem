@@ -1,0 +1,9 @@
+{
+  "$comment": "This file is here for ONE reason: api/lista.js is a Vercel function and Vercel installs its dependency from here. Tandem itself is a .deb built by build.py, which ships an explicit list of files and never looks at this one - see LAYOUT in build.py. Nothing in the package is built by npm and nothing here reaches a shop's computer.",
+  "name": "tandem-lista",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/blob": "^0.27.0"
+  }
+}

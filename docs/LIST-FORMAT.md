@@ -54,6 +54,29 @@ program writes into its own memory files and recipes; translating them at the
 boundary would mean two vocabularies for one concept, and a mismatch there fails
 silently.
 
+### What `machines` actually counts, which is less than the name says
+
+**It counts reports, not machines.** A shop that sends the same lesson twice is
+counted twice, and two shops sending it once are indistinguishable from one shop
+sending it twice.
+
+This is not an oversight to be fixed later by trying harder. Counting *machines*
+requires telling two senders apart, and the intake (`api/lista.js`) deliberately
+keeps nothing that could do that — no address, no hash of an address, no salted
+derivative. A hash of an IPv4 address is an IPv4 address to anybody willing to
+try four billion of them, so "we only store a hash" would be a claim that does
+not survive contact with a laptop.
+
+Given the choice between a number that means what it says and a number that is
+larger, the smaller true one wins. The field keeps its position in the format so
+nothing on disk changes; what changes is the claim.
+
+**Still owed, and written here so it is not forgotten:** the sentence Tandem
+shows the owner still says *machines*. It has to say *reports* in all seven
+languages before this number is ever shown to anybody, because telling a
+shopkeeper that four hundred machines agree when four hundred reports arrived is
+exactly the kind of small lie this project does not tell.
+
 ### The identity is of the FILE, not the user
 
 `t_memoria_id` already existed and serves exactly this: `sha256` of
