@@ -448,6 +448,15 @@ It finished with no error.
 @script_disse
 This is what it said:
 
+@script_calado
+It finished with no error - but it finished almost at once and said nothing
+at all, which is what an installer looks like when it has not installed
+anything.
+
+Tandem cannot tell from here whether it worked. Look for the program in the
+menu. If it is not there, it probably has to be run in a different way, and
+whoever gave you the file will know which.
+
 @script_erro
 It finished with an error (code {1}).
 

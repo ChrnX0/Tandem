@@ -107,7 +107,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
 equal "the expected values are the ones this suite was written with" \
       "789269210 3022" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "3839351161 1679" "$soma_padroes"
+      "3251423101 1840" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -3246,6 +3246,74 @@ if grep -q 'TIPOS_SCRIPT\|x-shellscript' "$ROOT/src/bin/tandem-repair"; then
              "only the comment" "it appears in a claimed list"
 else
     fail "tandem-repair records why x-shellscript is left alone" "the comment" "nothing"
+fi
+
+# --------------------------------------------------------------------
+# "It finished with no error" was the whole verdict for a shell installer, and a
+# shell installer is the one format with no database to ask afterwards. These two
+# run the real handler through a pty, because it refuses to run anything without
+# a confirmation and a pipe is not a terminal.
+if command -v script >/dev/null 2>&1; then
+    roda_script() {                     # <file> -> what the owner sees
+        local casa="$TMPROOT/casa-sh-$2"
+        rm -rf "$casa"; mkdir -p "$casa"
+        printf 's\n' | env -i HOME="$casa" PATH="/usr/bin:/bin" \
+            TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+            TANDEM_IDIOMA_FORCADO=en \
+            script -qec "bash $ROOT/src/bin/tandem-script $1" /dev/null 2>&1
+    }
+    printf '#!/bin/sh\nexit 0\n' > "$TMPROOT/mudo.sh"; chmod +x "$TMPROOT/mudo.sh"
+    printf '#!/bin/sh\necho "Installing FooApp 1.0..."\nexit 0\n' > "$TMPROOT/falante.sh"
+    chmod +x "$TMPROOT/falante.sh"
+
+    saida_mudo="$(roda_script "$TMPROOT/mudo.sh" mudo)"
+    case "$saida_mudo" in
+        *"said nothing"*) pass "an installer that exits 0 instantly and silently is not called a success" ;;
+        *) fail "an installer that exits 0 instantly and silently is not called a success" \
+                "the warning about saying nothing" "$saida_mudo" ;;
+    esac
+    # And the guard must not fire on an installer that did something. Without
+    # this half, "warn always" would pass the test above and be worse than the
+    # defect: a real install answered with a warning teaches the owner to ignore
+    # warnings.
+    saida_falante="$(roda_script "$TMPROOT/falante.sh" falante)"
+    case "$saida_falante" in
+        *"said nothing"*) fail "an installer that printed something is still called a success" \
+                               "no warning" "the warning fired anyway" ;;
+        *"Installing FooApp"*) pass "an installer that printed something is still called a success" ;;
+        *) fail "an installer that printed something is still called a success" \
+                "its own words" "$saida_falante" ;;
+    esac
+    # The heading "this is what it said" has to be followed by what the SCRIPT
+    # said. It used to read the whole log, so it showed Tandem's own internal
+    # lines - in Portuguese - and that is also why the guard above could never
+    # have fired: a log carrying Tandem's lines is never empty.
+    case "$saida_falante" in
+        *reconhecido*|*"como script comum"*)
+            fail "the script's words are its own, not Tandem's log" \
+                 "only the script's output" "Tandem's log lines were shown" ;;
+        *) pass "the script's words are its own, not Tandem's log" ;;
+    esac
+else
+    skip "the shell-installer verdict" "no script(1) to make a terminal with"
+fi
+
+# tandem-flatpak asks flatpak whether the program is there, rather than trusting
+# the exit code - the same rule tandem-deb applies to dpkg. It had the check and
+# used it as a fallback to the code, which is the opposite.
+if grep -q 'INSTALOU=1' "$ROOT/src/bin/tandem-flatpak" &&
+   ! grep -q 'CODIGO" -eq 0 \] || {' "$ROOT/src/bin/tandem-flatpak"; then
+    pass "tandem-flatpak decides on flatpak's answer, not on the exit code"
+else
+    fail "tandem-flatpak decides on flatpak's answer, not on the exit code" \
+         "the authority decides" "the exit code is still enough on its own"
+fi
+# An error message followed by exit 0 tells the desktop the double click worked.
+if grep -q 'CODIGO" -eq 0 \] && CODIGO=1' "$ROOT/src/bin/tandem-flatpak"; then
+    pass "and a 0 with the program absent becomes a failure code"
+else
+    fail "and a 0 with the program absent becomes a failure code" \
+         "CODIGO forced to 1" "it would exit 0 after an error"
 fi
 
 # Every format Tandem DOES claim needs a handler, and every handler it ships
