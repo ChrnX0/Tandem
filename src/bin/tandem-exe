@@ -252,6 +252,11 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
             # This shortcut can also run dotnet48, which takes half an hour:
             # suspending in the middle corrupts the prefix just the same.
             INIBIR_MEM="$(t_inibidor)"
+            # Only one dependency install per prefix at a time. Two programs
+            # opened at once land in the same prefix by default, and the lock
+            # at the top of this file is keyed to the FILE - on purpose, so
+            # that opening two different programs keeps working.
+            t_trava_prefixo_pega "$WINEPREFIX"
             t_progresso_abre "$(t_msg licao_instalando)"
             for v in $PENDENTES; do
                 t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"
@@ -275,6 +280,9 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
             done
             wineserver -w
             t_progresso_fecha
+            # Released before the program runs: holding it through the run
+            # would block another program for no reason.
+            t_trava_prefixo_solta
         fi
     fi
 fi
@@ -610,6 +618,7 @@ $MAQUINA}"
     # binary exists - the lesson from the self-test applied here, after the
     # shortcut cost an installation.
     INIBIR="$(t_inibidor)"
+    t_trava_prefixo_pega "$WINEPREFIX"
 
     t_progresso_abre "$(t_msg instalando_componentes)"
     FALHARAM=""
@@ -681,6 +690,7 @@ $MAQUINA}"
     done
     wineserver -w
     t_progresso_fecha
+    t_trava_prefixo_solta
 
     # If winetricks could not download, saying "I installed the dependencies
     # and it still does not open" would be a lie - and would send the owner

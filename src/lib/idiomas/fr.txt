@@ -3000,3 +3000,6 @@ Le Wine de cette machine est le {2}.
 
 @res_falta_no_wine
 Il a appelé quelque chose que ce Wine n'a pas encore.
+
+@esperando_outra_instalacao
+Un autre programme installe en ce moment des composants Windows dans le même environnement. Je vais attendre qu'il finisse avant de commencer - faire les deux en même temps abîme l'environnement. Cela peut prendre du temps.

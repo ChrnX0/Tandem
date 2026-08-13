@@ -2844,3 +2844,6 @@ y
 
 @res_falta_no_wine
 它调用了这个 Wine 还没有的东西。
+
+@esperando_outra_instalacao
+现在另一个程序正在往同一个环境里安装 Windows 组件。我会等它装完再开始——两件事同时做会把环境弄坏。这可能要等一会儿。

@@ -5112,6 +5112,59 @@ else
     skip "desktop-file-validate" "not installed"
 fi
 
+section "two programs do not install into one prefix at the same time"
+
+# The lock tandem-exe takes at the top is keyed to the FILE, deliberately, so
+# that opening two different programs keeps working. But both of those programs
+# land in the SAME prefix by default and both may decide they need components,
+# so two "winetricks -q" runs could be writing into one WINEPREFIX at once -
+# exactly what the file lock's own comment says corrupts a prefix. The prefix
+# lock existed and wrapped only wineboot, which is the one moment two processes
+# were never going to collide on anyway.
+TRV="$TMPROOT/travas"; mkdir -p "$TRV"
+trava_env() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_TRAVAS="$TRV" TANDEM_IDIOMA_FORCADO=en \
+        WINEPREFIX="$1" bash -c "$2" 2>&1
+}
+# Per prefix, not one global lock: somebody may be running a program inside
+# their own prefix while another installs into Tandem's.
+L1="$(trava_env /tmp/pref-um '. "'"$ROOT"'/src/lib/common.sh"; t_trava_do_prefixo')"
+L2="$(trava_env /tmp/pref-dois '. "'"$ROOT"'/src/lib/common.sh"; t_trava_do_prefixo')"
+if [ "$L1" != "$L2" ] && [ -n "$L1" ]; then
+    pass "each prefix has its own lock"
+else
+    fail "each prefix has its own lock" "two different paths" "$L1 / $L2"
+fi
+
+# The real thing: one holder, one waiter, measured. Not a structural check -
+# a lock that is written but not taken looks identical to one that works.
+( trava_env /tmp/pref-um '. "'"$ROOT"'/src/lib/common.sh"
+   t_trava_prefixo_pega /tmp/pref-um; sleep 3; t_trava_prefixo_solta' >/dev/null 2>&1 ) &
+SEGURA=$!
+sleep 1
+INI=$SECONDS
+SAIDA="$(trava_env /tmp/pref-um '. "'"$ROOT"'/src/lib/common.sh"
+   t_trava_prefixo_pega /tmp/pref-um; t_trava_prefixo_solta')"
+ESPEROU=$((SECONDS-INI))
+wait $SEGURA 2>/dev/null
+if [ "$ESPEROU" -ge 1 ]; then
+    pass "the second install waits for the first instead of running alongside it"
+else
+    fail "the second install waits for the first instead of running alongside it" \
+         "a wait of at least 1s" "returned in ${ESPEROU}s - the lock is not being taken"
+fi
+# And it says so. Half an hour of dotnet48 behind a silent wait is the failure
+# this project is named after.
+contem "and the owner is told why it is waiting, not left looking at nothing" \
+       "installing Windows components into the same environment" "$SAIDA"
+# A lock that cannot be CREATED is not a lock that is busy: the first must
+# never stop a program from opening. Same decision, same reason, as the file
+# lock at the top of tandem-exe.
+IMPOSSIVEL="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_TRAVAS=/proc/nao/existe \
+    TANDEM_IDIOMA_FORCADO=en WINEPREFIX=/tmp/pref-um bash -c \
+    '. "'"$ROOT"'/src/lib/common.sh"; t_trava_prefixo_pega /tmp/pref-um && echo seguiu' 2>/dev/null)"
+contem "an impossible lock lets the program open anyway" "seguiu" "$IMPOSSIVEL"
+
 section "Wine saying it has not implemented something is a verdict"
 
 # The third verdict class, and the loop had no branch for it: the dependency

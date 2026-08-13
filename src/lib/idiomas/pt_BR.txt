@@ -2943,3 +2943,6 @@ O Wine desta máquina é o {2}.
 
 @res_falta_no_wine
 Ele chamou algo que este Wine ainda não tem.
+
+@esperando_outra_instalacao
+Outro programa está instalando componentes do Windows no mesmo ambiente agora. Vou esperar ele terminar antes de começar - fazer os dois ao mesmo tempo estraga o ambiente. Isso pode demorar.

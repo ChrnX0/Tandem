@@ -2909,3 +2909,6 @@ The Wine on this machine is {2}.
 
 @res_falta_no_wine
 It called something this Wine does not have yet.
+
+@esperando_outra_instalacao
+Another program is installing Windows components into the same environment right now. I am waiting for it to finish before starting - doing both at once damages the environment. This may take a while.

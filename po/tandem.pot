@@ -3817,3 +3817,7 @@ msgstr ""
 msgctxt "res_falta_no_wine"
 msgid "It called something this Wine does not have yet."
 msgstr ""
+
+msgctxt "esperando_outra_instalacao"
+msgid "Another program is installing Windows components into the same environment right now. I am waiting for it to finish before starting - doing both at once damages the environment. This may take a while."
+msgstr ""

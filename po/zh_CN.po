@@ -4769,3 +4769,7 @@ msgstr ""
 msgctxt "res_falta_no_wine"
 msgid "It called something this Wine does not have yet."
 msgstr "它调用了这个 Wine 还没有的东西。"
+
+msgctxt "esperando_outra_instalacao"
+msgid "Another program is installing Windows components into the same environment right now. I am waiting for it to finish before starting - doing both at once damages the environment. This may take a while."
+msgstr "现在另一个程序正在往同一个环境里安装 Windows 组件。我会等它装完再开始——两件事同时做会把环境弄坏。这可能要等一会儿。"

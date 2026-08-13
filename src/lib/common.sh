@@ -2906,6 +2906,51 @@ t_erro_do_leitor() {
 # the readers. An unknown value prints itself rather than a key name - an old
 # memory file written by a version that knew a value this one does not is the
 # normal case, not an error.
+# ------------------------------------------- one dependency install at a time
+#
+# The lock tandem-exe takes at the top is keyed to the FILE, and deliberately
+# so: opening two different programs at once has to keep working. But both of
+# those programs land in the same prefix by default, and both may decide they
+# need components - so two "winetricks -q" runs can be writing into one
+# WINEPREFIX at the same time. That is exactly what the file lock's own comment
+# says corrupts a prefix, and the lock chosen to prevent it does not cover the
+# case. The prefix lock existed already and wrapped only wineboot, which is the
+# one moment two processes were never going to collide on anyway.
+#
+# Keyed per prefix, because somebody may be running a program that lives inside
+# their own prefix while another installs into Tandem's.
+t_trava_do_prefixo() {
+    local pref="${1:-$WINEPREFIX}"
+    printf '%s/prefixo-%s.lock' "$TANDEM_TRAVAS" \
+        "$(printf '%s' "$pref" | cksum | tr -d ' ')"
+}
+
+# Takes it on fd 9. Returns 0 whether or not the lock was actually acquired: an
+# impossible lock and a busy lock are different cases, and the first must not
+# stop the program from opening - the same decision, and the same reason, as
+# the file lock at the top of tandem-exe.
+t_trava_prefixo_pega() {
+    local arq; arq="$(t_trava_do_prefixo "${1:-$WINEPREFIX}")"
+    { exec 9> "$arq"; } 2>/dev/null || {
+        t_diz "prefixo: nao consegui criar a trava $arq; seguindo sem ela"
+        return 0
+    }
+    flock -n 9 2>/dev/null && return 0
+    # Somebody else really is installing. Say so rather than appearing frozen:
+    # dotnet48 takes half an hour, and a silent wait that long is the failure
+    # this project is named after.
+    t_aviso "$(t_msg esperando_outra_instalacao)"
+    flock -w 2400 9 2>/dev/null ||
+        t_diz "prefixo: a trava nao veio em 40 min; seguindo mesmo assim"
+    return 0
+}
+
+t_trava_prefixo_solta() {
+    { flock -u 9; } 2>/dev/null
+    { exec 9>&-; } 2>/dev/null
+    return 0
+}
+
 t_resultado_amigavel() {
     local valor="${1:-}" chave
     [ -n "$valor" ] || return 1

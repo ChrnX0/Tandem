@@ -105,6 +105,20 @@ tandem (4.8) unstable; urgency=medium
     "Call from ... to unimplemented function X, aborting" is the program
     having actually called it and Wine having given up. Only the second is
     matched, and the suite asserts both directions.
+  * Two programs no longer install into one prefix at the same time. The lock
+    tandem-exe takes at the top is keyed to the FILE, deliberately, so that
+    opening two different programs keeps working - but both of those programs
+    land in the same prefix by default and both may decide they need
+    components, so two "winetricks -q" runs could be writing into one
+    WINEPREFIX at once. That is exactly what the file lock's own comment says
+    corrupts a prefix, and the lock chosen to prevent it did not cover the
+    case: the prefix lock existed and wrapped only wineboot, which is the one
+    moment two processes were never going to collide on anyway.
+  * The waiter says why it is waiting. dotnet48 takes half an hour, and half
+    an hour of silence is the failure this project is named after. A lock that
+    cannot be CREATED still lets the program open, which is the same decision,
+    for the same reason, as the file lock above it: an impossible lock and a
+    busy lock are different cases.
  -- Tandem <rockx0@gmail.com>  Thu, 13 Aug 2026 21:33:09 +0000
 
 tandem (4.7) unstable; urgency=medium
