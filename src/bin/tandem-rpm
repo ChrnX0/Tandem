@@ -35,11 +35,11 @@ VERSAO="$(t_campo "$INFO" VERSAO)"
 
 case "$ERRO" in
     '') ;;
-    arquivo\ incompleto*)
+    pacote_incompleto|rpm_cabecalho_curto)
         t_erro "$(t_msg rpm_download_incompleto "$(basename -- "$ARQ")")"
         exit 1 ;;
     *)
-        t_erro "$(t_msg nao_consegui_ler "$ERRO")"
+        t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO")")"
         exit 1 ;;
 esac
 

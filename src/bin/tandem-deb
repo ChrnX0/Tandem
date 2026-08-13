@@ -47,7 +47,7 @@ DESCRICAO="$(t_campo "$INFO" DESCRICAO)"
 
 case "$ERRO" in
     '') ;;
-    arquivo\ incompleto*)
+    pacote_incompleto|pacote_sem_dados)
         t_memoria_grava "$PACOTE_ARQ" RESULTADO "incompleto" 2>/dev/null
         t_erro "$(t_msg deb_download_incompleto "$(basename -- "$PACOTE_ARQ")")"
         exit 1 ;;
@@ -59,7 +59,7 @@ case "$ERRO" in
         if t_parece_pagina_web "$PACOTE_ARQ"; then
             t_erro "$(t_msg baixou_pagina_web "$(basename -- "$PACOTE_ARQ")")"
         else
-            t_erro "$(t_msg nao_consegui_ler_pacote "$ERRO")"
+            t_erro "$(t_msg nao_consegui_ler_pacote "$(t_erro_do_leitor "$ERRO")")"
         fi
         exit 1 ;;
 esac

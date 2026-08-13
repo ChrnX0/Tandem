@@ -44,10 +44,10 @@ if [ -n "$ERRO" ]; then
     # An ELF with no AI mark is a perfectly ordinary Linux program that happens
     # to be named .AppImage. Saying "this is not an AppImage" would be true and
     # useless; what the owner needs to know is that it can still be run.
-    if [ "$ERRO" = "nao tem a marca AI do AppImage" ]; then
+    if [ "$ERRO" = sem_marca_ai ]; then
         t_erro "$(t_msg appimage_nao_e_appimage "$PROG")"
     else
-        t_erro "$(t_msg nao_consegui_ler "$ERRO")"
+        t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO")")"
     fi
     exit 1
 fi

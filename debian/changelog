@@ -60,14 +60,31 @@ tandem (4.4) unstable; urgency=medium
     t_memoria_grava lands in a state file and stays Portuguese by a standing
     decision; an argument to t_como_root is executed, not read; a grep or sed
     argument is a program for another tool.
-  * The counter now reports 2, not 0, and those two are the pointer to the next
-    piece of work rather than debris: the six Python readers raise Portuguese
-    sentences, those sentences reach the owner through "nao_consegui_ler", and
-    the counter has never opened a .py file. tandem-appimage and tandem-jar came
-    off the migrated list for the same reason - each compares $ERRO, a field it
-    prints verbatim, against one of those sentences. Declaring them done today
-    would rest a claim about the file on what the instrument can see, which is
-    how both false zeros happened.
+  * And the fifteenth is a whole FILE TYPE nothing had ever looked at. ALVOS
+    globs *.sh and src/bin, so in fifteen revisions the counter had never opened
+    a .py - and the six Python readers RAISED PORTUGUESE. About thirty
+    sentences: "nao comeca com ELF", "o pacote nao traz um arquivo control",
+    "zip invalido ou incompleto". Every one of them reached the owner verbatim,
+    because the handlers print the ERRO field through "nao consegui ler".
+  * The catch-all branch was worse than untranslated. print("ERRO=%s" % e) hands
+    over a raw Python exception - "[Errno 13] Permission denied" - which is
+    English jargon whatever language the owner reads. That path now says what
+    happened in words and puts the exception in the log, where the person who
+    is helping will read it.
+  * So the ERRO field carries a TOKEN, never a sentence, and t_erro_do_leitor
+    turns a token into a sentence in the owner's language - 25 tokens, 26 new
+    messages, seven languages. An unknown token gets a generic sentence rather
+    than the key name, because t_msg prints the key when a key is missing, which
+    is right for a log and would be jargon on a shop counter. A token with a
+    character that is not a name is refused: the field comes out of a program,
+    and a program's output is input.
+  * Counting that would not have held it, so the suite reads the READERS: every
+    token they can emit must have a catalogue key, and no reader may go back to
+    raising a sentence. A reader that grows a failure without a message fails in
+    the commit that adds it. The first version of that check found 21 of 25
+    tokens and reported "missing: none" - a completeness check that was itself
+    incomplete on its first run, in exactly the way the counter has been fifteen
+    times. It knew about raise but not about print.
   * Half the suite's expected values were not actually guarded. The checksum
     that exists so a bulk rename cannot quietly rewrite a comparison is
     line-based, and 206 of 415 "equal" calls are written across two lines -

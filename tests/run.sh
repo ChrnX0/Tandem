@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1993369992 3131" "$soma_esperados"
+      "789269210 3022" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "955379689 1677" "$soma_padroes"
+      "3839351161 1679" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -484,9 +484,9 @@ equal "normalizes the names to lowercase" \
       "hasp_windows_x64.dll,kernel32.dll" \
       "$(pecampo "$ARTIFACTS/imports32.exe" DLLS)"
 equal "a file that is not a PE degrades with a message" \
-      "nao comeca com MZ" "$(pecampo "$ARTIFACTS/naoexe.exe" ERRO)"
+      "nao_e_mz" "$(pecampo "$ARTIFACTS/naoexe.exe" ERRO)"
 equal "a missing file degrades with a message" \
-      "arquivo nao encontrado" "$(pecampo /nao/existe.exe ERRO)"
+      "sem_arquivo" "$(pecampo /nao/existe.exe ERRO)"
 python3 src/lib/peinfo.py >/dev/null 2>&1
 equal "no argument returns a usage error" "2" "$?"
 
@@ -1103,13 +1103,13 @@ equal "apks: counts the parts"    "3"                     "$(campo "$ARTIFACTS/a
 equal "apks: no OBB"              "0"                     "$(campo "$ARTIFACTS/app.apks" OBB)"
 
 equal "a corrupt file degrades with a message" \
-      "arquivo corrompido ou nao e um pacote Android" \
+      "apk_corrompido" \
       "$(campo "$ARTIFACTS/corrompido.apk" ERRO)"
 equal "an empty file degrades with a message" \
-      "arquivo corrompido ou nao e um pacote Android" \
+      "apk_corrompido" \
       "$(campo "$ARTIFACTS/vazio.apk" ERRO)"
 equal "a missing file degrades with a message" \
-      "arquivo nao encontrado" \
+      "sem_arquivo" \
       "$(campo /nao/existe.apk ERRO)"
 
 python3 src/lib/apkinfo.py >/dev/null 2>&1
@@ -1550,9 +1550,8 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # in this version: doctor, the panel, autoteste, the data screen and the two
     # list screens, in seven languages.
     #
-    # AND THE 0 WAS FALSE AGAIN. It is 4 now, and none of the four is a
-    # regression: the instrument got two sizes wider and found what it had never
-    # been able to look at.
+    # AND THE 0 WAS FALSE AGAIN, twice over, and both were found by widening the
+    # instrument rather than by reading its number:
     #
     #   THIRTEENTH: the prose-body rule keys off function NAMES, and the eleven
     #   handler executables define no functions at all - they are straight-line
@@ -1563,17 +1562,20 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     #   FOURTEENTH: only the FIRST argument of a message call was ever read, so
     #   the BUTTONS of "did this program actually work?" were Portuguese in a
     #   shipped release, at six call sites.
+    #   FIFTEENTH: ALVOS globs *.sh and src/bin, so no version of this tool in
+    #   fifteen revisions had ever opened a .py file - and the six Python
+    #   readers RAISED PORTUGUESE, about thirty sentences, which the handlers
+    #   printed straight to the owner. That one is fixed rather than counted:
+    #   the readers emit tokens now and the shell turns a token into a sentence.
     #
-    # The two that remain are the fifteenth, and they are left in the count on
-    # purpose: the six Python readers raise Portuguese sentences, those
-    # sentences reach the owner through "nao_consegui_ler", and ALVOS has never
-    # opened a .py file. These two are the shell comparing $ERRO - a field it
-    # PRINTS verbatim - against one of them. They go when the readers emit a
-    # token and the shell translates it, and tandem-appimage and tandem-jar go
-    # back on the migrated list on the same day. Two more hits were excepted
-    # rather than counted, and the difference is the whole rule: those are
-    # values of the FORMATO field, which is compared and never shown.
-    TETO_LIT=2
+    # So this reads 0 for the third time, and the two previous zeros were both
+    # false. What is different is not the number and not this counter: it is
+    # that the fifteenth miss was a whole FILE TYPE this tool cannot see, so a
+    # second instrument now covers it - the section below reads the readers
+    # themselves and demands a catalogue key for every token they can emit. A
+    # measure that can only look at shell will never notice Portuguese in
+    # Python, however many shapes it learns.
+    TETO_LIT=0
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
         pass "the literals still in the code are the $TETO_LIT already known about"
@@ -1703,6 +1705,89 @@ FIM
 else
     skip "a migrated file stays migrated" "tools/conta-literais.py is missing"
 fi
+
+section "the readers speak in tokens, and every token has a sentence"
+
+# This is the guard the fifteenth blind spot deserved. The six Python readers
+# used to raise PORTUGUESE - "nao comeca com ELF", "o pacote nao traz um arquivo
+# control" - and the handlers printed the field straight to the owner, so about
+# thirty user-facing sentences lived in files no translation tool here had ever
+# opened: conta-literais.py globs *.sh and src/bin only, and no version of it in
+# fifteen revisions looked at a .py.
+#
+# Counting them is not the fix - a count of a thing nothing checks goes stale.
+# What closes it is this: every token a reader can emit must have a catalogue
+# key, checked by reading the readers themselves. A reader that grows a new
+# failure tomorrow and does not bring a message fails here, in the commit that
+# adds it, instead of on a shop counter.
+# TWO patterns, because a reader emits a token two ways and the first version of
+# this check only knew one of them. `raise DebRuim("nao_e_deb")` goes through an
+# exception; `print("ERRO=sem_arquivo")` is written straight out. Matching only
+# the first found 21 of 25 and reported "missing: none" - a completeness check
+# that was itself incomplete, on its first run, in exactly the way the literal
+# counter has been fifteen times. Written down because catching it needed
+# printing the list and counting it by hand, not reading the verdict.
+FICHAS="$(
+  { grep -rhoE 'raise [A-Za-z]+\("[a-z_0-9]+' "$ROOT"/src/lib/*.py | sed -E 's/.*"//'
+    grep -rhoE '"ERRO=[a-z_0-9]+' "$ROOT"/src/lib/*.py | sed -E 's/.*=//'
+  } | sort -u | grep -v '^$')"
+if [ -z "$FICHAS" ]; then
+    fail "the readers' tokens were found at all" "some tokens" "none"
+else
+    pass "the readers' tokens were found at all ($(printf '%s\n' "$FICHAS" | wc -l))"
+    faltando=""
+    for f in $FICHAS; do
+        grep -q "^@leitor_$f\$" "$ROOT/src/lib/idiomas/en.txt" 2>/dev/null ||
+            faltando="$faltando $f"
+    done
+    if [ -z "$faltando" ]; then
+        pass "every token a reader can emit has a message in the catalogue"
+    else
+        fail "every token a reader can emit has a message in the catalogue" \
+             "a leitor_* key for each" "missing:$faltando"
+    fi
+fi
+# And no reader may go back to raising prose. A token is a name; a sentence has
+# spaces in it, and that is the whole difference the protocol rests on.
+prosa_py="$(grep -rhoE 'raise [A-Za-z]+\("[^"]*"' "$ROOT"/src/lib/*.py |
+            grep -E '"[^"]* [^"]*"' || true)"
+if [ -z "$prosa_py" ]; then
+    pass "no reader raises a sentence instead of a token"
+else
+    fail "no reader raises a sentence instead of a token" "tokens only" "$prosa_py"
+fi
+
+# The shell half: a known token becomes a sentence, an unknown one becomes the
+# generic sentence rather than the key name. t_msg prints the key when a key is
+# missing, which is right for a log and would be jargon on a shop owner's
+# screen.
+equal "a known token becomes a sentence" "0" \
+      "$(t_erro_do_leitor sem_marca_ai | grep -qi 'appimage'; echo $?)"
+equal "a token carrying data puts the data in the sentence" "0" \
+      "$(t_erro_do_leitor 'rpm_entradas|99999' | grep -q '99999'; echo $?)"
+case "$(t_erro_do_leitor coisa_que_ninguem_escreveu)" in
+    *leitor_*) fail "an unknown token does not put a key name on the screen" \
+                    "a sentence" "the key name" ;;
+    ?*) pass "an unknown token becomes the generic sentence, not a key name" ;;
+    *) fail "an unknown token becomes the generic sentence, not a key name" \
+            "a sentence" "zero bytes" ;;
+esac
+# A raw Python exception is English jargon whatever the owner's language is, so
+# it goes to the log and the screen gets words.
+case "$(t_erro_do_leitor 'cru|[Errno 13] Permission denied')" in
+    *Errno*) fail "a raw Python exception does not reach the screen" \
+                  "words" "the exception" ;;
+    ?*) pass "a raw Python exception does not reach the screen" ;;
+    *) fail "a raw Python exception does not reach the screen" "words" "zero bytes" ;;
+esac
+# A token cannot choose an arbitrary message key: the field comes out of a
+# program, and a program's output is input. Compared against the generic
+# sentence rather than pattern-matched for debris - the first version of this
+# looked for "*rm*" in the output and failed on the word "format", which is a
+# bad test rather than a bad fix, and it took reading the failure to see that.
+equal "a token with a shell character gets the generic sentence" \
+      "$(t_erro_do_leitor coisa_que_ninguem_escreveu)" \
+      "$(t_erro_do_leitor 'sem_marca_ai; rm -rf /')"
 
 section "language: .po is the source, and a stale translation cannot hide"
 
@@ -2544,10 +2629,10 @@ equal "recognizes an ARM AppImage" "aarch64" \
 AI_ELF="$TMPROOT/so-elf.AppImage"
 { printf '\177ELF\002\001\001\000\000\000\000\000\000\000\000\000'; head -c 48 /dev/zero; } > "$AI_ELF"
 equal "an ELF with no AI mark is not taken for an AppImage" \
-      "nao tem a marca AI do AppImage" "$(t_campo "$(t_appimage_info "$AI_ELF")" ERRO)"
+      "sem_marca_ai" "$(t_campo "$(t_appimage_info "$AI_ELF")" ERRO)"
 printf 'nao sou um ELF nenhum, so texto\n' > "$TMPROOT/texto.AppImage"
 equal "a text file is not taken for an AppImage" \
-      "nao comeca com ELF" "$(t_campo "$(t_appimage_info "$TMPROOT/texto.AppImage")" ERRO)"
+      "nao_e_elf" "$(t_campo "$(t_appimage_info "$TMPROOT/texto.AppImage")" ERRO)"
 
 # The verdict that is worth the most, and the one no other program gives: the
 # download was cut in the middle. The payload says how big it should be, and
@@ -2713,9 +2798,9 @@ equal "a folded Class-Path is put back together" \
 equal "JavaFX is found in the constant pool" "1" \
       "$(t_campo "$(t_jar_info "$JARS/fx.jar")" JAVAFX)"
 equal "an interrupted download is not reported as a broken program" \
-      "zip invalido ou incompleto" "$(t_campo "$(t_jar_info "$JARS/cortado.jar")" ERRO)"
+      "zip_invalido" "$(t_campo "$(t_jar_info "$JARS/cortado.jar")" ERRO)"
 equal "a file that is not a zip at all" \
-      "zip invalido ou incompleto" "$(t_campo "$(t_jar_info "$TMPROOT/texto.AppImage")" ERRO)"
+      "zip_invalido" "$(t_campo "$(t_jar_info "$TMPROOT/texto.AppImage")" ERRO)"
 
 # The installed Java's version, written two different ways by Java itself.
 # Reading only the first number turns Java 8 into Java 1 - and then Tandem
@@ -2812,7 +2897,7 @@ esac
 saida_n="$(correr_nativo tandem-appimage "$TMPROOT/nao-existe.AppImage")"
 case "$saida_n" in
     *"not found"*) pass "a missing file is reported by both new commands" ;;
-    *) fail "a missing file is reported by both new commands" "arquivo nao encontrado" \
+    *) fail "a missing file is reported by both new commands" "a sentence about the file" \
             "${saida_n:-zero bytes}" ;;
 esac
 
@@ -2943,21 +3028,21 @@ while p + 60 <= len(d):
     p += 60 + tam + (tam % 2)
 PYCORTE
 case "$(t_campo "$(t_deb_info "$DEBS/cortado.deb")" ERRO)" in
-    arquivo\ incompleto*) pass "an interrupted .deb download is recognised as interrupted" ;;
+    pacote_incompleto|pacote_sem_dados) pass "an interrupted .deb download is recognised as interrupted" ;;
     *) fail "an interrupted .deb download is recognised as interrupted" \
-            "arquivo incompleto..." "$(t_campo "$(t_deb_info "$DEBS/cortado.deb")" ERRO)" ;;
+            "a truncation token" "$(t_campo "$(t_deb_info "$DEBS/cortado.deb")" ERRO)" ;;
 esac
 case "$(t_campo "$(t_deb_info "$DEBS/cortado-limpo.deb")" ERRO)" in
-    arquivo\ incompleto*)
+    pacote_incompleto|pacote_sem_dados)
         pass "a .deb cut on a member boundary is still recognised as incomplete" ;;
     *) fail "a .deb cut on a member boundary is still recognised as incomplete" \
-            "arquivo incompleto..." \
+            "a truncation token" \
             "$(t_campo "$(t_deb_info "$DEBS/cortado-limpo.deb")" ERRO)" ;;
 esac
 printf 'nao sou um pacote\n' > "$DEBS/texto.deb"
 case "$(t_campo "$(t_deb_info "$DEBS/texto.deb")" ERRO)" in
-    *assinatura\ ar*) pass "a text file is not taken for a package" ;;
-    *) fail "a text file is not taken for a package" "falta a assinatura ar" \
+    nao_e_deb) pass "a text file is not taken for a package" ;;
+    *) fail "a text file is not taken for a package" "nao_e_deb" \
             "$(t_campo "$(t_deb_info "$DEBS/texto.deb")" ERRO)" ;;
 esac
 
@@ -3050,11 +3135,11 @@ equal "reads the summary out of an I18NSTRING" "Prints a greeting" \
       "$(t_campo "$info_rpm" DESCRICAO)"
 head -c 120 "$TMPROOT/teste.rpm" > "$TMPROOT/curto.rpm"
 case "$(t_campo "$(t_rpm_info "$TMPROOT/curto.rpm")" ERRO)" in
-    *incompleto*) pass "a truncated .rpm is recognised as truncated" ;;
-    *) fail "a truncated .rpm is recognised as truncated" "incompleto" \
+    rpm_cabecalho_curto|pacote_incompleto) pass "a truncated .rpm is recognised as truncated" ;;
+    *) fail "a truncated .rpm is recognised as truncated" "a truncation token" \
             "$(t_campo "$(t_rpm_info "$TMPROOT/curto.rpm")" ERRO)" ;;
 esac
-equal "a .deb is not taken for an .rpm" "nao e um arquivo .rpm" \
+equal "a .deb is not taken for an .rpm" "nao_e_rpm" \
       "$(t_campo "$(t_rpm_info "$DEBS/simples.deb")" ERRO)"
 
 # Flatpak reference files are INI, and the two kinds mean different things: one

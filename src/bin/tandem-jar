@@ -41,7 +41,7 @@ JAVAFX="$(t_campo "$INFO" JAVAFX)"
 AGENTE="$(t_campo "$INFO" AGENTE)"
 DEPS="$(t_campo "$INFO" DEPENDENCIAS)"
 
-if [ "$ERRO" = "zip invalido ou incompleto" ]; then
+if [ "$ERRO" = zip_invalido ]; then
     # The index of a .jar lives at the end of the file, so an interrupted
     # download always breaks it here - and it breaks looking like a corrupt
     # program rather than like a partial transfer.
@@ -50,7 +50,7 @@ if [ "$ERRO" = "zip invalido ou incompleto" ]; then
     exit 1
 fi
 if [ -n "$ERRO" ]; then
-    t_erro "$(t_msg nao_consegui_ler "$ERRO")"
+    t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO")")"
     exit 1
 fi
 

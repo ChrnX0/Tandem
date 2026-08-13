@@ -31,7 +31,14 @@ TAMANHO=<Installed-Size in KiB, empty if absent>
 DESCRICAO=<the short description, one line>
 MANTENEDOR=<Maintainer>
 ESSENCIAL=0|1
-ERRO=<message, if something failed>
+ERRO=<token>[|<data>]  when something failed; see t_erro_do_leitor
+   The field carries a TOKEN, never a sentence. It used to carry Portuguese
+   prose, and the handler printed it straight to the owner - so this file held
+   user-facing messages that no translation tool in the tree had ever opened,
+   and a raw Python exception reached a shop owner in English. The shell turns
+   a token into a sentence in the owner's language; an unknown token is logged
+   and answered with a generic one, because a reader that learns a new failure
+   must not be able to produce silence.
 """
 import ctypes
 import gzip
@@ -75,7 +82,7 @@ def _zstd():
         except OSError as e:
             ultimo = e
     else:
-        raise DebRuim("sem libzstd para ler control.tar.zst (%s)" % ultimo)
+        raise DebRuim("sem_libzstd|%s" % ultimo)
     lib.ZSTD_getFrameContentSize.restype = ctypes.c_ulonglong
     lib.ZSTD_getFrameContentSize.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
     lib.ZSTD_decompress.restype = ctypes.c_size_t
@@ -92,7 +99,7 @@ def _descomprime_zstd(bruto):
     erro = (1 << 64) - 2
     n = lib.ZSTD_getFrameContentSize(bruto, len(bruto))
     if n == erro:
-        raise DebRuim("control.tar.zst danificado")
+        raise DebRuim("deb_control_danificado")
     if n == desconhecido:
         # dpkg writes the size into the frame header, so this is the path for a
         # package built by something else. Growing a guess is enough here
@@ -102,13 +109,13 @@ def _descomprime_zstd(bruto):
             got = lib.ZSTD_decompress(fora, tentativa, bruto, len(bruto))
             if not lib.ZSTD_isError(got):
                 return fora.raw[:got]
-        raise DebRuim("control.tar.zst maior do que o esperado")
+        raise DebRuim("deb_control_grande")
     if n > TETO:
-        raise DebRuim("control.tar.zst declara um tamanho absurdo (%d bytes)" % n)
+        raise DebRuim("deb_tamanho_absurdo|%d" % n)
     fora = ctypes.create_string_buffer(n)
     got = lib.ZSTD_decompress(fora, n, bruto, len(bruto))
     if lib.ZSTD_isError(got):
-        raise DebRuim("control.tar.zst nao descomprimiu")
+        raise DebRuim("deb_control_nao_abriu")
     return fora.raw[:got]
 
 
@@ -121,7 +128,7 @@ def membros_ar(dados):
     header with its trailing slash stripped.
     """
     if dados[:8] != b"!<arch>\n":
-        raise DebRuim("nao e um arquivo .deb (falta a assinatura ar)")
+        raise DebRuim("nao_e_deb")
     p = 8
     saida = []
     while p + 60 <= len(dados):
@@ -137,7 +144,7 @@ def membros_ar(dados):
         if inicio + tam > len(dados):
             # The archive claims a member longer than the file: the download was
             # cut short. Same verdict as a truncated AppImage, same cause.
-            raise DebRuim("arquivo incompleto: o pacote termina antes do que ele diz")
+            raise DebRuim("pacote_incompleto")
         saida.append((nome, dados[inicio:inicio + tam]))
         p = inicio + tam + (tam % 2)
     return saida
@@ -164,7 +171,7 @@ def texto_do_controle(dados):
     # truncation verdict depends on where the cut happened to land, which is not
     # a verdict at all.
     if not any(n.startswith("data.tar") for n in nomes):
-        raise DebRuim("arquivo incompleto: o pacote nao traz os arquivos do programa")
+        raise DebRuim("pacote_sem_dados")
     for nome in CONTROLES:
         if nome in nomes:
             bruto = descomprime(nome, nomes[nome])
@@ -175,8 +182,8 @@ def texto_do_controle(dados):
                         if f is None:
                             continue
                         return f.read().decode("utf-8", "replace")
-            raise DebRuim("o pacote nao traz um arquivo control")
-    raise DebRuim("o pacote nao traz control.tar")
+            raise DebRuim("deb_sem_control")
+    raise DebRuim("deb_sem_control_tar")
 
 
 def campos(texto):
@@ -253,11 +260,11 @@ def uma_linha(s):
 
 def main():
     if len(sys.argv) < 2:
-        print("ERRO=uso: debinfo.py <arquivo>")
+        print("ERRO=uso")
         return 2
     caminho = sys.argv[1]
     if not os.path.isfile(caminho):
-        print("ERRO=arquivo nao encontrado")
+        print("ERRO=sem_arquivo")
         return 2
     try:
         with open(caminho, "rb") as f:
@@ -267,7 +274,7 @@ def main():
         print("ERRO=%s" % e)
         return 1
     except Exception as e:
-        print("ERRO=%s" % str(e).replace("\n", " ")[:200])
+        print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
     print("PACOTE=%s" % uma_linha(c.get("Package", "")))

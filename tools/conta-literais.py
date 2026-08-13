@@ -37,18 +37,18 @@ ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + sorted(RAIZ.glob("src/lib/*.sh"))
 # an "out+=" append or a printf whose prose is in the argument rather than the
 # format. Declaring a file finished is a claim about the file, not about the
 # tool, and the two got confused for two versions.
-# tandem-appimage and tandem-jar came OFF this list, and taking them off is the
-# honest state rather than a dodge. Each compares $ERRO against a Portuguese
-# sentence, and $ERRO is a field the six Python readers produce and the handler
-# prints verbatim through `t_msg nao_consegui_ler`. So the sentence is real prose
-# reaching a real owner - it just does not live in a file this tool has ever
-# opened. They go back on when the readers emit a token and the shell translates
-# it. Declaring them done today would be the same mistake as the two false
-# zeros: a claim about the file resting on what the instrument can see.
+# tandem-appimage and tandem-jar came off this list and are back on it, and the
+# round trip is the point. They compared $ERRO against a Portuguese sentence,
+# and $ERRO is a field the six Python readers produce and the handler prints
+# verbatim - so those were real user-facing sentences living in files this tool
+# had never opened, ALVOS globbing *.sh and src/bin only. The readers emit
+# TOKENS now and the shell turns a token into a sentence, so what these two
+# compare against is a name rather than prose. The suite reads the readers and
+# demands a message for every token they can emit.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
     "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak",
-    "winedeps.sh",
+    "tandem-jar", "tandem-appimage", "winedeps.sh",
 }
 
 # Exact strings this counter is told to ignore, each with the reason. A LIST OF
@@ -96,9 +96,9 @@ EXCECOES = {
     # own. They read like Portuguese because the reader's output protocol was
     # written in Portuguese, and it is an on-disk-format decision of the same
     # kind as the memory files: changing one here changes it in apkinfo.py too,
-    # or nothing matches. The ERRO field is a DIFFERENT case and deliberately
-    # not excepted - that one is printed verbatim to the owner, which is why
-    # the count still reads 2.
+    # or nothing matches. The ERRO field used to be the same shape of problem
+    # and is not any more: the readers emit tokens and the shell translates
+    # them, so nothing there is prose to begin with.
     "desconhecido", "apk",
 }
 

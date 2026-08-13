@@ -2782,6 +2782,59 @@ t_campo() {
     printf '%s\n' "$1" | sed -n "s/^$2=//p" | tail -1
 }
 
+# Turns the readers' ERRO field into a sentence in the owner's language.
+#
+# This function exists because of the fifteenth thing the literal counter could
+# not see, and it was the worst of them in one respect: the six Python readers
+# raised PORTUGUESE - "nao comeca com ELF", "o pacote nao traz um arquivo
+# control", about thirty of them - and the handlers printed the field straight
+# to the owner through t_msg nao_consegui_ler. So a third of a screen's worth of
+# user-facing prose lived in files no translation tool in this tree had ever
+# opened, and nothing measured it: ALVOS globs *.sh and src/bin only.
+#
+# Worse than untranslated: the catch-all branch is `print("ERRO=cru|%s" % e)`,
+# an arbitrary Python exception - "[Errno 13] Permission denied" - which is
+# English jargon whatever the owner's language is. That path now says what
+# happened in words and puts the exception in the log, where the person helping
+# will read it.
+#
+# An UNKNOWN token gets the generic sentence rather than nothing. A reader that
+# learns a new failure tomorrow must not be able to produce silence, and the
+# suite asserts that every token the readers can emit has a key - so an unknown
+# one means somebody added a failure without a message, which is a bug in the
+# commit rather than in the machine in front of the owner.
+t_erro_do_leitor() {
+    local bruto="$1" ficha dado
+    [ -n "$bruto" ] || return 1
+    # The whole field always goes to the log: the token, and the technical
+    # detail if there is one. "We could not read it" on the screen and nothing
+    # anywhere else would be a diagnosis nobody can follow up.
+    t_diz "leitor: $bruto"
+    ficha="${bruto%%|*}"
+    dado="${bruto#*|}"
+    [ "$dado" = "$bruto" ] && dado=""
+    case "$ficha" in
+        cru) t_msg leitor_cru ;;
+        # A token is a name, and anything else came from somewhere it should
+        # not have. Refusing it here keeps a reader's output from choosing a
+        # message key.
+        *[!a-z_0-9]*|"") t_msg leitor_desconhecido ;;
+        *)
+            # t_msg PRINTS THE KEY NAME when a key is missing everywhere, which
+            # is right for a maintainer reading a log and wrong here: it would
+            # put "leitor_xyz" on a shop owner's screen, which is exactly the
+            # jargon rule 2 forbids. So the existence of the key is checked
+            # first, and the generic sentence covers a reader that grew a
+            # failure nobody wrote a message for.
+            if [ -n "${T_MSG[leitor_$ficha]:-}${T_MSG_BASE[leitor_$ficha]:-}" ]; then
+                t_msg "leitor_$ficha" "$dado"
+            else
+                t_diz "leitor: nao existe a mensagem 'leitor_$ficha'"
+                t_msg leitor_desconhecido
+            fi ;;
+    esac
+}
+
 t_appimage_info() {
     command -v python3 >/dev/null 2>&1 || return 1
     python3 "$TANDEM_LIB/appimageinfo.py" "$1" 2>/dev/null

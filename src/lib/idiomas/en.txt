@@ -264,6 +264,97 @@ Cancel
 @botao_tentar_sem_instalar
 Try without installing
 
+@leitor_desconhecido
+Something in the file is not the way the format says it should be.
+
+@leitor_cru
+The reader stopped before it could finish. The technical detail is in the
+log - "tandem logs" shows it.
+
+@leitor_uso
+Tandem asked a reader for a file and did not say which one.
+
+@leitor_sem_arquivo
+The file is no longer where it was. It may have been moved or deleted.
+
+@leitor_nao_e_elf
+This is not a Linux program at all - it does not even start like one.
+
+@leitor_sem_marca_ai
+It is a Linux program, but not an AppImage: the mark an AppImage carries is
+not there.
+
+@leitor_geracao_desconhecida
+It says it is an AppImage of a kind this version does not know about (kind
+{1}).
+
+@leitor_apk_corrompido
+The file is damaged, or it is not an Android package. A download that
+stopped part way looks exactly like this.
+
+@leitor_zip_invalido
+The file is damaged or the download stopped part way. A .jar keeps its index
+at the END, so an interrupted transfer always breaks it here.
+
+@leitor_nao_e_mz
+This is not a Windows program - it does not start like one.
+
+@leitor_sem_assinatura_pe
+It looks like a Windows program at the start and then stops looking like
+one. It is most likely damaged.
+
+@leitor_pe_cabecalho_desconhecido
+This Windows program is built in a way this version does not know about.
+
+@leitor_nao_e_deb
+This is not a .deb package, whatever it is called.
+
+@leitor_pacote_incompleto
+The download stopped part way: the package ends earlier than it says it
+does. Downloading it again is the whole fix.
+
+@leitor_pacote_sem_dados
+The package does not carry the program itself - only its description. The
+download stopped part way.
+
+@leitor_deb_sem_control
+The package does not say what it is or what it needs.
+
+@leitor_deb_sem_control_tar
+The package is missing the part that describes it.
+
+@leitor_deb_control_danificado
+The part of the package that describes it is damaged.
+
+@leitor_deb_control_grande
+The part of the package that describes it is bigger than it claims to be, so
+it cannot be trusted.
+
+@leitor_deb_control_nao_abriu
+The compressed part of the package would not open.
+
+@leitor_deb_tamanho_absurdo
+The package claims one of its parts is {1} bytes, which is not a real size.
+Tandem is not going to try to open it.
+
+@leitor_sem_libzstd
+This computer has no way of opening the compression this package uses.
+Installing it through the store or with "sudo apt install" still works.
+
+@leitor_nao_e_rpm
+This is not an .rpm package, whatever it is called.
+
+@leitor_rpm_cabecalho_curto
+The download stopped part way: the part that describes the package does not
+fit inside the file.
+
+@leitor_rpm_cabecalho_estranho
+The part of this .rpm that describes it is not in a shape Tandem knows.
+
+@leitor_rpm_entradas
+This .rpm says it has {1} entries in its description, which cannot be right.
+The file is damaged.
+
 @botao_sim_funcionou
 Yes, it worked
 
