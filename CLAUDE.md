@@ -1264,10 +1264,10 @@ The queue, in order:
 to end on real files. `.AppImage` and `.jar` came in 3.7; `.deb`, `.rpm`,
 `.flatpakref`, `.snap` and shell installers in 3.8 — see the State section for exactly what was
 measured. The orphan-shortcut question is settled: it was never a defect. The
-real-program harness exists and is green. **v4.0 through v4.4 are published** —
-tag, `.deb` and `.sha256` attached, and 4.0's, 4.2's, 4.3's and 4.4's published
-artifacts each verified byte-for-byte identical to a local build (sha256
-`82544a90…`, `3d5ed79a…`, `d6f2d792…` and `dbb14fad…`). 3.7 through 3.9 were never
+real-program harness exists and is green. **v4.0 through v4.5 are published** —
+tag, `.deb` and `.sha256` attached, and 4.0's, 4.2's, 4.3's, 4.4's and 4.5's
+published artifacts each verified byte-for-byte identical to a local build
+(sha256 `82544a90…`, `3d5ed79a…`, `d6f2d792…`, `dbb14fad…` and `fa8205c8…`). 3.7 through 3.9 were never
 released, so 4.0 is the first package the public gets with all nine formats in
 it. The next release goes out the same way; see the section below for why the
 browser path exists.
@@ -1295,9 +1295,21 @@ stopped deleting lessons it had not sent, and the last Portuguese left in the
 product (the buttons, `tandem repair`, and thirty sentences inside the Python
 readers) went into the catalogues.
 
-**The version in the tree is now 4.5 and its changelog entry is open** —
-`debian/control`, `debian/changelog` and `TANDEM_VERSAO` all say 4.5. Add to
-that entry; do not touch 4.4's, which is history the public already has.
+**v4.5 IS PUBLISHED** — 2026-08-13, tag `v4.5` at `4ced498`, `.deb`
+(354120 bytes) and `.sha256` attached, and the published artifact verified
+byte-for-byte against a local build of that same commit: sha256 `fa8205c8…`
+from all three of the release's own checksum file, the downloaded bytes, and
+the build made here. Exercised from the INSTALLED package, both halves of the
+change it exists for: a `.sh` that does nothing and exits 0 gets the warning
+rather than "it worked", and one that prints a line gets "Terminou sem erro"
+followed by its own words only — no Tandem log lines under "this is what it
+said", which is the defect the guard uncovered.
+
+**The next version is 4.6 and its changelog entry has to be OPENED before
+anything is added** — `debian/control`, `debian/changelog` and `TANDEM_VERSAO`
+all still say 4.5, and 4.5's entry is now history the public has. A doc-only
+commit after a release is fine and the guard allows it; a bullet appended to
+4.5's entry is not.
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
