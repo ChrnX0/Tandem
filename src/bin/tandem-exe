@@ -566,6 +566,19 @@ $MAQUINA}"
 
     t_progresso_abre "$(t_msg instalando_componentes)"
     FALHARAM=""
+    # The output of the verbs that FAILED, captured as each one fails.
+    #
+    # MARCA_WT below is reassigned on every iteration, successes included, so
+    # after the loop it marked the last verb ATTEMPTED rather than the last one
+    # that failed. The whole cause table - internet, D-Bus, full disk, clock,
+    # checksum, cabextract - then ran over that slice. When a program needs two
+    # components and the first fails, the owner was told his internet had
+    # failed, about a component whose real problem was something else entirely,
+    # because a LATER component downloaded normally. He goes and looks at his
+    # router. Every existing test installs a single verb, so nothing could see
+    # it.
+    RESTO="$TANDEM_TRAVAS/wt.$$"
+    : > "$RESTO"
     for v in $VERBOS; do
         t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"
         t_diz ">>> winetricks -q $v"
@@ -615,6 +628,8 @@ $MAQUINA}"
         else
             t_diz "!!! winetricks falhou em $v"
             FALHARAM="$FALHARAM $v"
+            # Taken HERE, while the mark still belongs to this verb.
+            tail -n +"$((MARCA_WT+1))" "$LOG" >> "$RESTO" 2>/dev/null || :
         fi
     done
     wineserver -w
@@ -624,32 +639,12 @@ $MAQUINA}"
     # and it still does not open" would be a lie - and would send the owner
     # looking for the defect in the wrong place. We read winetricks' own words
     # to explain the likely cause instead of dumping the log in his face.
+    [ -n "$FALHARAM" ] || rm -f "$RESTO"
     if [ -n "$FALHARAM" ]; then
-        RESTO="$TANDEM_TRAVAS/wt.$$"
-        tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO" 2>/dev/null || : > "$RESTO"
-        # The most common cause is the internet, but claiming that without
-        # evidence sends the owner looking for the defect in the wrong place -
-        # which is what happened when systemd-inhibit brought the install down
-        # before it even started. With no sign of a download being attempted,
-        # the honest answer is not knowing.
-        if grep -qiE 'saved \[|wget|Downloading|HTTP request sent' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_internet)"
-        else
-            PORQUE="$(t_msg porque_desconhecido "$LOG")"
-        fi
-        if grep -qi 'Failed to connect to bus' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_dbus)"
-        elif grep -qi 'No space left on device' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_disco_cheio)"
-        elif grep -qi 'certificate\|SSL\|not yet valid\|has expired' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_relogio "$(date '+%d/%m/%Y')")"
-        elif grep -qi 'Could not resolve host\|Network is unreachable\|Connection timed out' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_sem_rede)"
-        elif grep -qi 'sha256sum mismatch\|checksum' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_corrompido)"
-        elif grep -qi 'cabextract' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_cabextract)"
-        fi
+        # $RESTO already holds exactly the output of the verbs that failed,
+        # accumulated inside the loop. Nothing a successful verb printed can
+        # reach the cause table any more.
+        PORQUE="$(t_causa_do_winetricks "$RESTO" "$LOG")"
         rm -f "$RESTO"
         t_erro "$(t_msg nao_consegui_instalar "$(for v in $FALHARAM; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)")
 

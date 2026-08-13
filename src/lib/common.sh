@@ -2919,6 +2919,49 @@ t_resultado_amigavel() {
     fi
 }
 
+# Why winetricks failed, read from winetricks' own words.
+#
+# Extracted from tandem-exe so it can be exercised: it was twenty lines of elif
+# inline in the install loop, and the only way to reach it was to make a real
+# winetricks fail. That is why the scoping defect it had went unnoticed - the
+# slice handed to it came from the LAST verb attempted rather than from the one
+# that failed, so a program needing two components was told its internet had
+# failed about a component whose real problem was something else, because a
+# later component downloaded normally.
+#
+# $1 is a file holding ONLY the output of the verbs that failed.
+t_causa_do_winetricks() {
+    local resto="$1" log="${2:-}"
+    [ -f "$resto" ] || { t_msg porque_desconhecido "$log"; return 0; }
+    # The specific causes first: each one is a thing winetricks said outright,
+    # and any of them outranks the guess below.
+    if grep -qi 'Failed to connect to bus' "$resto" 2>/dev/null; then
+        t_msg porque_dbus
+    elif grep -qi 'No space left on device' "$resto" 2>/dev/null; then
+        t_msg porque_disco_cheio
+    elif grep -qi 'certificate\|SSL\|not yet valid\|has expired' "$resto" 2>/dev/null; then
+        # %x, not a hard-coded dd/mm/yyyy. The sentence around this date is
+        # translated into seven languages and the date order was Brazilian in
+        # all of them.
+        t_msg porque_relogio "$(date +%x)"
+    elif grep -qi 'Could not resolve host\|Network is unreachable\|Connection timed out' "$resto" 2>/dev/null; then
+        t_msg porque_sem_rede
+    elif grep -qi 'sha256sum mismatch\|checksum' "$resto" 2>/dev/null; then
+        t_msg porque_corrompido
+    elif grep -qi 'cabextract' "$resto" 2>/dev/null; then
+        t_msg porque_cabextract
+    # The most common cause is the internet, but claiming it without evidence
+    # sends the owner looking for the defect in the wrong place - which is what
+    # happened when systemd-inhibit brought the install down before it even
+    # started. With no sign of a download having been ATTEMPTED, the honest
+    # answer is not knowing.
+    elif grep -qiE 'saved \[|wget|Downloading|HTTP request sent' "$resto" 2>/dev/null; then
+        t_msg porque_internet
+    else
+        t_msg porque_desconhecido "$log"
+    fi
+}
+
 t_appimage_info() {
     command -v python3 >/dev/null 2>&1 || return 1
     python3 "$TANDEM_LIB/appimageinfo.py" "$1" 2>/dev/null
@@ -3294,7 +3337,11 @@ t_causa_apt() {
         t_msg apt_sem_internet; return 0
     fi
     if grep -qE 'is not valid yet|Release file.*not valid|certificate' "$log" 2>/dev/null; then
-        t_msg porque_relogio "$(date '+%d/%m/%Y')"; return 0
+        # %x, not a hard-coded dd/mm/yyyy: the sentence around this date is
+        # translated into seven languages and the date ORDER was Brazilian in
+        # all of them, so an en, zh_CN, hi or ar reader got a translated
+        # sentence ending in a date written the way only Brazil writes it.
+        t_msg porque_relogio "$(date +%x)"; return 0
     fi
     if grep -qE 'NO_PUBKEY|not signed|GPG error' "$log" 2>/dev/null; then
         t_msg apt_sem_assinatura; return 0

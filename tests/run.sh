@@ -5112,6 +5112,76 @@ else
     skip "desktop-file-validate" "not installed"
 fi
 
+section "the failure is explained from the verb that failed"
+
+# THE DEFECT, stated exactly, because it is the reason this function exists at
+# all: MARCA_WT was reassigned on every iteration of the install loop,
+# successes included, so after the loop it marked the LAST VERB ATTEMPTED
+# rather than the last one that FAILED. The whole cause table then ran over
+# that slice. When a program needs two components and the first fails, the
+# owner was told his internet had failed - about a component whose real problem
+# was a missing cabextract - because a LATER component downloaded normally. He
+# goes and looks at his router.
+#
+# Every existing test installs a single verb, which is why nothing could see
+# it, and reaching the code needed a real winetricks to fail. So the table is
+# a function now and the two-verb case is a fixture.
+causa() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; t_causa_do_winetricks "$1" /tmp/x.log' _ "$1" 2>/dev/null
+}
+# What the OLD code fed the table: the whole tail of the log, which contains
+# the successful verb's download chatter as well as the failure.
+cat > "$TMPROOT/wt-ambos.log" <<'FIMWT'
+Executing load_vcrun2022
+Executing cabextract -q -d /tmp/x /tmp/vc_redist.x64.exe
+sh: 1: cabextract: not found
+------------------------------------------------------
+Executing load_mfc42
+Downloading https://example.invalid/mfc42.exe
+saved [1234/1234]
+FIMWT
+# What the NEW code feeds it: only the failing verb's output.
+cat > "$TMPROOT/wt-so-falha.log" <<'FIMWT2'
+Executing load_vcrun2022
+Executing cabextract -q -d /tmp/x /tmp/vc_redist.x64.exe
+sh: 1: cabextract: not found
+FIMWT2
+contem "the real cause is named when only the failing verb is looked at" \
+       "cabextract" "$(causa "$TMPROOT/wt-so-falha.log")"
+# The table prefers a specific cause over the internet guess, so even the old
+# mixed slice names cabextract here - what the old code actually lost is the
+# case below, where the failing verb said nothing specific at all.
+cat > "$TMPROOT/wt-mudo.log" <<'FIMWT3'
+Executing load_vcrun2022
+warning: winetricks is not compatible with this prefix
+FIMWT3
+cat > "$TMPROOT/wt-mudo-mais-sucesso.log" <<'FIMWT4'
+Executing load_vcrun2022
+warning: winetricks is not compatible with this prefix
+------------------------------------------------------
+Executing load_mfc42
+Downloading https://example.invalid/mfc42.exe
+saved [1234/1234]
+FIMWT4
+naocontem "a verb that failed silently is NOT blamed on the internet" \
+          "internet" "$(causa "$TMPROOT/wt-mudo.log")"
+contem "which is exactly what the old whole-tail slice got wrong" \
+       "internet" "$(causa "$TMPROOT/wt-mudo-mais-sucesso.log")"
+# And the slice really is taken per verb, inside the loop, not after it.
+naocontem "so the slice is taken when a verb fails, not after the loop" \
+          'tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO"' \
+          "$(cat "$ROOT/src/bin/tandem-exe")"
+contem "and it is appended from the failure branch" \
+       'tail -n +"$((MARCA_WT+1))" "$LOG" >> "$RESTO"' \
+       "$(cat "$ROOT/src/bin/tandem-exe")"
+
+# A Brazilian date order inside a sentence that IS translated. The wrong-clock
+# message reaches en, zh_CN, hi and ar readers with dd/mm/yyyy in the middle of
+# it; %x is the locale's own order.
+naocontem "the wrong-clock message does not hard-code a Brazilian date order" \
+          "+%d/%m/%Y" "$(cat "$ROOT/src/lib/common.sh" "$ROOT/src/bin/tandem-exe")"
+
 section "the .exe is asked whether the download finished"
 
 # The question is already asked of a .jar (its index lives at the end), of an

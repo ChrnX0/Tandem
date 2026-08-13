@@ -46,6 +46,26 @@ tandem (4.8) unstable; urgency=medium
     purpose: only "shorter than its own headers declare" is a verdict, because
     NSIS and Inno Setup append their payload after the last section, so every
     real installer is legitimately longer than its section table accounts for.
+  * The explanation for a failed dependency install came from the wrong verb.
+    MARCA_WT was reassigned on every iteration of the install loop, successes
+    included, so after the loop it marked the last verb ATTEMPTED rather than
+    the last one that FAILED - and the whole cause table then ran over that
+    slice. When a program needs two components and the first fails, the owner
+    was told his internet had failed, about a component whose real problem was
+    something else entirely, because a LATER component downloaded normally. He
+    goes and looks at his router. Every test in the suite installs a single
+    verb, which is why nothing could see it.
+  * That table is now t_causa_do_winetricks in common.sh instead of twenty
+    lines of elif inline in the loop, so it can be exercised without making a
+    real winetricks fail - which is the reason the defect above survived. The
+    two-verb case is a fixture, and the suite asserts BOTH directions: the
+    failing verb's own slice names the real cause, and the old whole-tail slice
+    is shown still blaming the internet.
+  * The date in the wrong-clock message is no longer written the way only
+    Brazil writes it. Three sites, all of them feeding a sentence that IS
+    translated: the winetricks cause table, the apt cause table, and the
+    timestamp on the tandem socorro report - the file the owner sends to
+    whoever is helping him, who may be anywhere.
  -- Tandem <rockx0@gmail.com>  Thu, 13 Aug 2026 21:33:09 +0000
 
 tandem (4.7) unstable; urgency=medium
