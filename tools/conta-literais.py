@@ -98,7 +98,7 @@ EXCECOES = {
     # kind as the memory files: changing one here changes it in apkinfo.py too,
     # or nothing matches. The ERRO field is a DIFFERENT case and deliberately
     # not excepted - that one is printed verbatim to the owner, which is why
-    # the count still reads 4.
+    # the count still reads 2.
     "desconhecido", "apk",
 }
 
