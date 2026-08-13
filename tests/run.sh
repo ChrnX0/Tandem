@@ -1706,6 +1706,60 @@ else
     skip "a migrated file stays migrated" "tools/conta-literais.py is missing"
 fi
 
+# tandem-apk was the only one of the nine that wrote NOTHING to memory - not
+# even a RESULTADO. So "tandem memoria" knew nothing about an .apk, "tandem
+# socorro" carried nothing about Android, and a second attempt at the same file
+# learned nothing from the first. Structural rather than a run, because reaching
+# those branches needs a live Waydroid; it catches the case that actually
+# happens, which is somebody adding a tenth failure and forgetting.
+#
+# The exemptions are the point of the check rather than a hole in it. A verdict
+# about the FILE is a lesson - it will still be true tomorrow. A verdict about
+# THIS MACHINE is not, and recording one would be a real defect: install adb,
+# and a memory saying the file failed would still be there, wrong. Writing the
+# first version of this without that distinction reported seven "missing"
+# records, four of which were genuinely missing and three of which must never
+# exist.
+SO_DA_MAQUINA="apk_falta_adb apk_sem_endereco apk_nao_conectou"
+sem_memoria=""
+while IFS= read -r n; do
+    linha="$(sed -n "${n}p" "$ROOT/src/bin/tandem-apk")"
+    pula=0
+    for chave in $SO_DA_MAQUINA; do
+        case "$linha" in *"$chave"*) pula=1 ;; esac
+    done
+    [ "$pula" = 1 ] && continue
+    anterior="$(sed -n "$((n-1))p" "$ROOT/src/bin/tandem-apk")"
+    case "$anterior" in
+        *t_memoria_grava*) ;;
+        *) sem_memoria="$sem_memoria $n" ;;
+    esac
+done <<FIMAPK
+$(grep -n 't_erro "$(t_msg apk_' "$ROOT/src/bin/tandem-apk" | cut -d: -f1)
+FIMAPK
+if [ -z "$sem_memoria" ]; then
+    pass "every verdict about the FILE in tandem-apk records it first"
+else
+    fail "every verdict about the FILE in tandem-apk records it first" \
+         "a t_memoria_grava above each" "lines without one:$sem_memoria"
+fi
+# And the machine-state ones must NOT record, or a fixed machine would keep
+# reading a failure about a file that was never the problem.
+grava_maquina=""
+for chave in $SO_DA_MAQUINA; do
+    n="$(grep -n "$chave" "$ROOT/src/bin/tandem-apk" | head -1 | cut -d: -f1)"
+    [ -n "$n" ] || continue
+    case "$(sed -n "$((n-1))p" "$ROOT/src/bin/tandem-apk")" in
+        *t_memoria_grava*) grava_maquina="$grava_maquina $chave" ;;
+    esac
+done
+if [ -z "$grava_maquina" ]; then
+    pass "and a failure of this machine is not remembered as a failure of the file"
+else
+    fail "and a failure of this machine is not remembered as a failure of the file" \
+         "no record" "recorded:$grava_maquina"
+fi
+
 section "what gets published to everybody"
 
 # tools/monta-lista.py turns the records the intake accepted into the file every
