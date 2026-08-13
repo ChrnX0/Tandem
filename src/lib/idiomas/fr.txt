@@ -2983,3 +2983,8 @@ Le propriétaire a dit que ça n'a pas marché.
 @leitor_pe_incompleto
 Le téléchargement s'est arrêté en route : le programme se termine plus tôt
 que ne le dit son propre en-tête. Le retélécharger règle tout.
+
+@ainda_pedindo
+Le programme demande toujours : {1}
+
+Donc soit ce fichier devait venir avec le programme lui-même, soit ma propre table m'a fait installer la mauvaise chose. Dans les deux cas, je l'ai noté.

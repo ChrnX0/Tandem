@@ -66,6 +66,28 @@ tandem (4.8) unstable; urgency=medium
     translated: the winetricks cause table, the apt cause table, and the
     timestamp on the tandem socorro report - the file the owner sends to
     whoever is helping him, who may be anywhere.
+  * The strongest evidence this project ever gets was being thrown away. A
+    verb reaches the repeated-receipt branch when Wine's OWN LOADER has just
+    asked for its DLL again while the prefix carries a permanent receipt
+    saying that verb was installed - the loader contradicting the receipt, in
+    writing, in the same log. traducao-suspeita.tsv is the work list that has
+    already found six wrong entries in the table, and t_anota_suspeita was
+    called from two sites, both at install time, so that moment reached
+    nothing at all. The receipt is KEPT: rule 4 is about not paying twice, and
+    the verb may well have delivered exactly what it promised while the
+    program wants something else. This records and reports; it does not retry
+    and does not undo.
+  * And the owner is told which file is still being asked for, instead of only
+    "I already installed what this program was asking for" - a sentence Wine's
+    log contradicts on the line above it.
+  * The dedup on that list is OPT-IN, and the default stays append. From the
+    install path a repeat means "installed again, another day, and again
+    failed to deliver", which is a count worth having and is why the date
+    column exists; an existing test was pinning that and the test was right.
+    Only the new caller asks for the dedup, because it fires every time the
+    owner double-clicks a program whose receipt the loader contradicts - a
+    shop opening the same broken program every morning would otherwise append
+    the same pair every morning, for ever.
  -- Tandem <rockx0@gmail.com>  Thu, 13 Aug 2026 21:33:09 +0000
 
 tandem (4.7) unstable; urgency=medium

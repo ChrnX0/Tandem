@@ -2930,3 +2930,8 @@ El dueño dijo que no funcionó.
 @leitor_pe_incompleto
 La descarga se detuvo a la mitad: el programa termina antes de lo que dice
 su propia cabecera. Descargarlo de nuevo lo arregla todo.
+
+@ainda_pedindo
+El programa sigue pidiendo: {1}
+
+Así que o ese archivo tenía que venir con el propio programa, o mi propia tabla me mandó instalar algo equivocado. De un modo u otro, lo he anotado.

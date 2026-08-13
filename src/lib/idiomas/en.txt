@@ -2892,3 +2892,8 @@ The owner said it did not work.
 @leitor_pe_incompleto
 The download stopped part way: the program ends earlier than its own
 headers say it does. Downloading it again is the whole fix.
+
+@ainda_pedindo
+The program is still asking for: {1}
+
+So either that file was supposed to come with the program itself, or my own table sent me to install the wrong thing. I have written it down either way.

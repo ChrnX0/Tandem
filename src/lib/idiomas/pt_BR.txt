@@ -2926,3 +2926,8 @@ O dono disse que não funcionou.
 @leitor_pe_incompleto
 O download parou pela metade: o programa termina antes do que o próprio
 cabeçalho dele diz. Baixar de novo resolve tudo.
+
+@ainda_pedindo
+O programa continua pedindo: {1}
+
+Então ou esse arquivo era pra vir junto com o programa, ou a minha própria tabela me mandou instalar a coisa errada. De um jeito ou de outro, eu anotei.

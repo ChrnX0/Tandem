@@ -435,7 +435,41 @@ PARES_FIM
         # open. Recording it avoids promising next time that they solve it.
         for v in $REPETIDOS; do t_memoria_junta "$PROG" NAO_RESOLVERAM "$v"; done
         t_memoria_grava "$PROG" RESULTADO "nao abriu"
-        t_erro "$(t_msg ja_instalei_e_nao_abre "$REPETIDOS")"
+        # THE STRONGEST EVIDENCE THIS PROJECT EVER GETS, and it used to be
+        # thrown away here. A verb reaches REPETIDOS when Wine's own loader has
+        # just asked for its DLL again while the prefix carries a PERMANENT
+        # receipt saying that verb was installed. That is the loader
+        # contradicting the receipt, in writing, in the same log - and
+        # traducao-suspeita.tsv is the work list that has already found six
+        # wrong entries in the table. t_anota_suspeita was called only at
+        # install time (two sites), and SUSPEITAS starts empty on every
+        # process, so this moment reached nothing at all.
+        #
+        # The receipt is KEPT: rule 4 is about not paying twice, and the verb
+        # may well have installed exactly what it promised while the program
+        # wants something else entirely. This records and reports; it does not
+        # retry and it does not undo.
+        PEDIDAS=""
+        for v in $REPETIDOS; do
+            while IFS="$(printf '\t')" read -r dll verbo; do
+                [ "$verbo" = "$v" ] || continue
+                [ -n "$dll" ] || continue
+                t_anota_suspeita "$dll" "$v" uma_vez
+                case " $PEDIDAS " in *" $dll "*) ;; *) PEDIDAS="$PEDIDAS $dll" ;; esac
+            done <<FIMPARES
+$PARES
+FIMPARES
+        done
+        # With no pair in hand there is nothing to name, and a sentence reading
+        # "the program is still asking for:" followed by nothing is worse than
+        # not saying it.
+        if [ -n "$PEDIDAS" ]; then
+            t_erro "$(t_msg ja_instalei_e_nao_abre "$REPETIDOS")
+
+$(t_msg ainda_pedindo "${PEDIDAS# }")"
+        else
+            t_erro "$(t_msg ja_instalei_e_nao_abre "$REPETIDOS")"
+        fi
         exit "$CODIGO"
     fi
 

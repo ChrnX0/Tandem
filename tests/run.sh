@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2734912140 3409" "$soma_esperados"
+      "2986798418 3413" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5111,6 +5111,53 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "when the loader contradicts a receipt, it is written down"
+
+# A verb reaches the REPETIDOS branch when Wine's own loader has just asked for
+# its DLL AGAIN while the prefix carries a permanent receipt saying that verb
+# was installed. That is the loader contradicting the receipt, in writing, in
+# the same log - and traducao-suspeita.tsv is the work list that has already
+# found six wrong entries in the table. t_anota_suspeita was called from two
+# sites, both at install time, and SUSPEITAS is re-initialised empty on every
+# process, so this moment reached nothing at all.
+#
+# The receipt is KEPT on purpose: rule 4 is about not paying twice, and the
+# verb may well have delivered exactly what it promised while the program wants
+# something else. This records and reports; it does not retry and does not undo.
+SUSP="$TMPROOT/suspeita"; mkdir -p "$SUSP"
+anota() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_ESTADO="$SUSP" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; . "'"$ROOT"'/src/lib/winedeps.sh"
+         export TANDEM_ESTADO="'"$SUSP"'"; t_anota_suspeita "$1" "$2" uma_vez' _ "$1" "$2" 2>/dev/null
+}
+anota mfc42.dll mfc42
+anota msvcp140.dll vcrun2022
+equal "a contradicted pair is recorded on the work list" \
+      "2" "$(grep -c . "$SUSP/traducao-suspeita.tsv" 2>/dev/null || echo 0)"
+# The same program failing the same way every morning must not append the same
+# pair for ever: a work list nobody can skim is a work list nobody reads.
+anota mfc42.dll mfc42
+anota mfc42.dll mfc42
+# ...but only where the caller asks for it. From the INSTALL path a repeat
+# means "installed again, another day, and again failed to deliver", which is a
+# count worth having and is why the date column exists at all. Changing that
+# default would have rewritten the meaning of every line already on somebody's
+# machine; an existing test was pinning it, and the test was right.
+equal "and the same pair seen again does not grow the list" \
+      "2" "$(grep -c . "$SUSP/traducao-suspeita.tsv" 2>/dev/null || echo 0)"
+contem "the dll and the verb are both kept, so the table row can be found" \
+       "msvcp140.dll	vcrun2022" "$(cat "$SUSP/traducao-suspeita.tsv")"
+# And the branch really calls it, rather than only recording the negative
+# lesson as it did before.
+contem "the repeated-receipt branch records the suspicion" \
+       't_anota_suspeita "$dll" "$v"' "$(cat "$ROOT/src/bin/tandem-exe")"
+# The sentence must name the file still being asked for, or the owner is told
+# "I already installed what it wanted" and nothing about what it still wants.
+contem "and the owner is told which file is still being asked for" \
+       "still asking for" \
+       "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+          bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_msg ainda_pedindo mfc42.dll')"
 
 section "the failure is explained from the verb that failed"
 
