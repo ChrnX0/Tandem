@@ -1208,7 +1208,7 @@ acao_socorro() {
     arq="$HOME/tandem-socorro-$(date +%F-%H%M).txt"
     {
         printf '%s\n' "$(t_msg soc_cabecalho)"
-        printf '%s\n\n' "$(t_msg soc_gerado_em "$(date '+%d/%m/%Y %H:%M')")"
+        printf '%s\n\n' "$(t_msg soc_gerado_em "$(date '+%x %H:%M')")"
         printf '%s\n' "$(t_msg soc_o_que_tem)"
         printf '\n===== %s =====\n\n' "$(t_msg soc_sec_diagnostico)"
         acao_doctor 2>&1

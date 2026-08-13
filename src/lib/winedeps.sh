@@ -178,12 +178,62 @@ t_pares_do_log() {
 # already installed what this program asked for" and give up forever) nor
 # become a lesson in the memory (the wrong lesson would travel along with the
 # recipe to the other machine). It becomes a note, here.
+# $3 = "uma_vez" to skip a pair already on the list.
+#
+# The default stays APPEND, and that is deliberate rather than inherited: from
+# the install path a repeat means "this verb was installed again, on another
+# day, and again failed to deliver", which is a count worth having and is why
+# the date column exists.
+#
+# The caller added in 4.8 is different in kind. The repeated-receipt branch
+# fires every time the owner double-clicks a program whose receipt the loader
+# contradicts - so a shop that opens the same broken program every morning
+# would append the same pair every morning, for ever. A work list nobody can
+# skim is a work list nobody reads. Only that caller asks for the dedup, so the
+# meaning of the existing lines does not change.
 t_anota_suspeita() {
-    local dll="$1" verbo="$2"
+    local dll="$1" verbo="$2" modo="${3:-}" arq
     [ -n "$dll" ] && [ -n "$verbo" ] || return 0
     [ -n "${TANDEM_ESTADO:-}" ] || return 0
+    arq="$TANDEM_ESTADO/traducao-suspeita.tsv"
+    if [ "$modo" = uma_vez ] && [ -f "$arq" ] &&
+       grep -q "^$dll	$verbo	" "$arq" 2>/dev/null; then
+        return 0
+    fi
     printf '%s\t%s\t%s\n' "$dll" "$verbo" "$(date +%F)" \
-        >> "$TANDEM_ESTADO/traducao-suspeita.tsv" 2>/dev/null || return 0
+        >> "$arq" 2>/dev/null || return 0
+}
+
+# The function Wine has not implemented, when the program CALLED it and Wine
+# gave up. Empty = that did not happen.
+#
+# The third verdict class, and until 4.8 the loop had no branch for it: the
+# dependency exists, Wine has not finished implementing part of it, and there
+# is nothing to install. "The program closed with error (code 53)" was the
+# answer, which sends the owner looking for a defect in a machine that is fine.
+# Confirmed by grepping the format strings out of the INSTALLED Wine rather
+# than from memory (wine-9.0, x86_64-windows/ntdll.dll).
+#
+# THE TWO SHAPES ARE NOT THE SAME THING, and only one of them is a verdict:
+#
+#   err:module:...  No implementation for %s.%s imported from %s, setting to %p
+#       Wine stubs the export at LOAD time and carries on. Programs import
+#       functions they never call all the time, so this line appears in the log
+#       of software that works perfectly. Reporting it would alarm somebody
+#       whose program is fine - the exact failure this project's "no jargon,
+#       no false alarm" rule exists to prevent.
+#
+#   wine: Call from %p to unimplemented function %s.%s, aborting
+#       The program actually called it and Wine ABORTED. That is the verdict.
+#
+# So only the second is matched, and the function name is carried out so the
+# owner has something to search for and to send to whoever wrote the program.
+t_falta_no_wine() {
+    local log="$1"
+    [ -f "$log" ] || return 1
+    grep -oaE 'Call from [^ ]+ to unimplemented function [^,]+' "$log" 2>/dev/null |
+        sed 's/.*unimplemented function //' | sort -u | head -3 |
+        tr '\n' ' ' | sed 's/ $//' | grep . || return 1
 }
 
 # Turns this run's suspicions into the sentence the owner reads. The message

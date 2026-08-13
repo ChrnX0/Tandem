@@ -198,7 +198,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 992 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1034 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -988,17 +988,60 @@ labels are covered by a separate assertion instead), anything behind a tool the
 machine lacks — skipped probes are REPORTED, never counted as clean — and a
 one-word literal, which is below both thresholds.
 
-### Still open, measured not guessed
+### Column 4 of `limites.tsv` — fixed in 4.8, and worth reading as a pattern
 
-**Column 4 of `limites.tsv` is byte-identical Portuguese in ALL SEVEN tables,
-the English default included** — 15 rows, same md5 across `limites.tsv`,
-`.es`, `.fr` and `.zh_CN`. That column is the *way out*, the entire payload of
-the 4.0 correction, and `t_limite_do_programa` appends it to the verdict. So a
-dongle owner outside Brazil is told his case has a way out and is then handed
-the instructions in a language he cannot read. **This file's claim that "no row
-is left holding the Portuguese sentence" is wrong as written** — it was checked
-for columns 1 and 2 and never for column 4. The table test should checksum
-column 4 the way it already checksums the first two.
+It was byte-identical Portuguese in ALL SEVEN tables, the English default
+included — 15 rows, one md5. That column is the *way out*, the entire payload
+of the 4.0 correction, so a dongle owner outside Brazil was told his case had a
+way out and then handed the instructions in a language he cannot read. **The
+check that was supposed to catch it greps for a phrase that lives in column
+3**, so for two versions it only ever proved column 3 had moved. The suite now
+checksums column 4 against the Portuguese source and fails if any table is
+byte-identical to it — asserting that somebody translated the column, not what
+they wrote in it.
+
+**The tool that did the translation walked the tables by LINE NUMBER on its
+first attempt.** They carry their own comment headers and are not the same
+length, so it mismatched the rows — it would have handed a CodeMeter owner the
+Sentinel instructions. Join on the signature in column 1, which the suite
+already asserts is identical and in the same order across all seven.
+
+### What 4.8 closed in the `.exe` loop, and the shape of each
+
+Four defects, and in three of them the honest half of the fix was deciding
+what NOT to report:
+
+- **The failure was explained from the wrong verb.** `MARCA_WT` was reassigned
+  on every iteration of the install loop, successes included, so after the loop
+  it marked the last verb ATTEMPTED rather than the last one that FAILED — and
+  the whole cause table ran over that slice. A program needing two components
+  where the first fails was blamed on the internet, because a LATER component
+  downloaded normally. Every test installs a single verb, which is why nothing
+  could see it. The table is `t_causa_do_winetricks` in `common.sh` now so it
+  can be exercised without making a real winetricks fail.
+- **`No implementation for` is a verdict, and `No implementation for` is not.**
+  Two Wine wordings, taken from the installed Wine's own format strings rather
+  than from memory. `No implementation for X imported from Y, setting to Z` is
+  Wine stubbing an export at LOAD time and carrying on — that line is in the
+  log of software that works perfectly, so reporting it would be a false alarm
+  on a working program. `Call from ... to unimplemented function X, aborting`
+  is the program having called it and Wine having given up. Only the second is
+  matched.
+- **The `.exe` truncation check is ONE-SIDED on purpose.** Only "shorter than
+  its own headers declare" is a verdict: NSIS and Inno append their payload
+  after the last section, so every real installer is legitimately longer than
+  its section table accounts for, and a two-sided check would refuse exactly
+  the software this project exists for.
+- **The loader contradicting a permanent receipt is now recorded.** A verb in
+  the REPETIDOS branch means Wine just asked for its DLL again while the prefix
+  carries a receipt saying that verb was installed. `traducao-suspeita.tsv` is
+  the work list that already found six wrong table rows, and `t_anota_suspeita`
+  was called only at install time. **The receipt is KEPT** — rule №4 is about
+  not paying twice, and the verb may have delivered exactly what it promised
+  while the program wants something else. The dedup on that list is OPT-IN: from
+  the install path a repeat means "installed again, another day, and again
+  failed to deliver", which is a count worth having, and an existing test was
+  pinning that.
 
 ## What was built after 2.1
 

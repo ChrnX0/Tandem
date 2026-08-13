@@ -46,6 +46,13 @@ if [ -n "$ERRO" ]; then
     # useless; what the owner needs to know is that it can still be run.
     if [ "$ERRO" = sem_marca_ai ]; then
         t_erro "$(t_msg appimage_nao_e_appimage "$PROG")"
+    # Before the reader's own complaint, which is true and useless when the
+    # file is an error page the site handed back instead of the program: a
+    # download that goes wrong rarely produces nothing. Same ordering and
+    # same sentence tandem-deb has had since 3.8 - eight handlers were never
+    # wired to a detector and a translated message that already existed.
+    elif t_parece_pagina_web "$PROG"; then
+        t_erro "$(t_msg baixou_pagina_web "$(basename -- "$PROG")")"
     else
         t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO")")"
     fi

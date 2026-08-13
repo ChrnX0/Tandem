@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.7"
+TANDEM_VERSAO="4.8"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -2906,6 +2906,51 @@ t_erro_do_leitor() {
 # the readers. An unknown value prints itself rather than a key name - an old
 # memory file written by a version that knew a value this one does not is the
 # normal case, not an error.
+# ------------------------------------------- one dependency install at a time
+#
+# The lock tandem-exe takes at the top is keyed to the FILE, and deliberately
+# so: opening two different programs at once has to keep working. But both of
+# those programs land in the same prefix by default, and both may decide they
+# need components - so two "winetricks -q" runs can be writing into one
+# WINEPREFIX at the same time. That is exactly what the file lock's own comment
+# says corrupts a prefix, and the lock chosen to prevent it does not cover the
+# case. The prefix lock existed already and wrapped only wineboot, which is the
+# one moment two processes were never going to collide on anyway.
+#
+# Keyed per prefix, because somebody may be running a program that lives inside
+# their own prefix while another installs into Tandem's.
+t_trava_do_prefixo() {
+    local pref="${1:-$WINEPREFIX}"
+    printf '%s/prefixo-%s.lock' "$TANDEM_TRAVAS" \
+        "$(printf '%s' "$pref" | cksum | tr -d ' ')"
+}
+
+# Takes it on fd 9. Returns 0 whether or not the lock was actually acquired: an
+# impossible lock and a busy lock are different cases, and the first must not
+# stop the program from opening - the same decision, and the same reason, as
+# the file lock at the top of tandem-exe.
+t_trava_prefixo_pega() {
+    local arq; arq="$(t_trava_do_prefixo "${1:-$WINEPREFIX}")"
+    { exec 9> "$arq"; } 2>/dev/null || {
+        t_diz "prefixo: nao consegui criar a trava $arq; seguindo sem ela"
+        return 0
+    }
+    flock -n 9 2>/dev/null && return 0
+    # Somebody else really is installing. Say so rather than appearing frozen:
+    # dotnet48 takes half an hour, and a silent wait that long is the failure
+    # this project is named after.
+    t_aviso "$(t_msg esperando_outra_instalacao)"
+    flock -w 2400 9 2>/dev/null ||
+        t_diz "prefixo: a trava nao veio em 40 min; seguindo mesmo assim"
+    return 0
+}
+
+t_trava_prefixo_solta() {
+    { flock -u 9; } 2>/dev/null
+    { exec 9>&-; } 2>/dev/null
+    return 0
+}
+
 t_resultado_amigavel() {
     local valor="${1:-}" chave
     [ -n "$valor" ] || return 1
@@ -2916,6 +2961,49 @@ t_resultado_amigavel() {
         t_msg "$chave"
     else
         printf '%s' "$valor"
+    fi
+}
+
+# Why winetricks failed, read from winetricks' own words.
+#
+# Extracted from tandem-exe so it can be exercised: it was twenty lines of elif
+# inline in the install loop, and the only way to reach it was to make a real
+# winetricks fail. That is why the scoping defect it had went unnoticed - the
+# slice handed to it came from the LAST verb attempted rather than from the one
+# that failed, so a program needing two components was told its internet had
+# failed about a component whose real problem was something else, because a
+# later component downloaded normally.
+#
+# $1 is a file holding ONLY the output of the verbs that failed.
+t_causa_do_winetricks() {
+    local resto="$1" log="${2:-}"
+    [ -f "$resto" ] || { t_msg porque_desconhecido "$log"; return 0; }
+    # The specific causes first: each one is a thing winetricks said outright,
+    # and any of them outranks the guess below.
+    if grep -qi 'Failed to connect to bus' "$resto" 2>/dev/null; then
+        t_msg porque_dbus
+    elif grep -qi 'No space left on device' "$resto" 2>/dev/null; then
+        t_msg porque_disco_cheio
+    elif grep -qi 'certificate\|SSL\|not yet valid\|has expired' "$resto" 2>/dev/null; then
+        # %x, not a hard-coded dd/mm/yyyy. The sentence around this date is
+        # translated into seven languages and the date order was Brazilian in
+        # all of them.
+        t_msg porque_relogio "$(date +%x)"
+    elif grep -qi 'Could not resolve host\|Network is unreachable\|Connection timed out' "$resto" 2>/dev/null; then
+        t_msg porque_sem_rede
+    elif grep -qi 'sha256sum mismatch\|checksum' "$resto" 2>/dev/null; then
+        t_msg porque_corrompido
+    elif grep -qi 'cabextract' "$resto" 2>/dev/null; then
+        t_msg porque_cabextract
+    # The most common cause is the internet, but claiming it without evidence
+    # sends the owner looking for the defect in the wrong place - which is what
+    # happened when systemd-inhibit brought the install down before it even
+    # started. With no sign of a download having been ATTEMPTED, the honest
+    # answer is not knowing.
+    elif grep -qiE 'saved \[|wget|Downloading|HTTP request sent' "$resto" 2>/dev/null; then
+        t_msg porque_internet
+    else
+        t_msg porque_desconhecido "$log"
     fi
 }
 
@@ -3294,7 +3382,11 @@ t_causa_apt() {
         t_msg apt_sem_internet; return 0
     fi
     if grep -qE 'is not valid yet|Release file.*not valid|certificate' "$log" 2>/dev/null; then
-        t_msg porque_relogio "$(date '+%d/%m/%Y')"; return 0
+        # %x, not a hard-coded dd/mm/yyyy: the sentence around this date is
+        # translated into seven languages and the date ORDER was Brazilian in
+        # all of them, so an en, zh_CN, hi or ar reader got a translated
+        # sentence ending in a date written the way only Brazil writes it.
+        t_msg porque_relogio "$(date +%x)"; return 0
     fi
     if grep -qE 'NO_PUBKEY|not signed|GPG error' "$log" 2>/dev/null; then
         t_msg apt_sem_assinatura; return 0

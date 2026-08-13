@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3403977228 3386" "$soma_esperados"
+      "2880994793 3449" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -1474,6 +1474,41 @@ for tab in alternativas limites; do
         equal "$tab.$tl.tsv has no untranslated row left" "0" "$pt_sobrou"
     fi
   done
+done
+
+# COLUMN 4, which nothing above was looking at.
+#
+# The check just above greps for a phrase that lives in column 3, so it only
+# ever proved column 3 had moved. Column 4 - the WAY OUT, the entire payload of
+# the 4.0 correction, the paragraph that tells a dongle owner what a technician
+# can actually do for him - was byte-identical Portuguese in all seven tables,
+# the English DEFAULT included: 15 rows, one md5. So the product told a French
+# shopkeeper his case had a way out and then handed him the instructions in a
+# language he cannot read, and this repository's own notes claimed no row was
+# left holding the Portuguese sentence.
+#
+# Asserting "differs from pt_BR" rather than pinning a wording: the wording is
+# a translator's business and must be free to change, while "somebody actually
+# translated this column" is the invariant. pt_BR is the source, so it is the
+# one table this may not be asked of.
+col4() {                                # $1 = table file
+    grep -v '^#' "$1" | grep . | cut -f4 | grep . | cksum
+}
+c4_pt="$(col4 "$ROOT/src/lib/limites.pt_BR.tsv")"
+n4_pt="$(grep -v '^#' "$ROOT/src/lib/limites.pt_BR.tsv" | grep . | cut -f4 | grep -c . | tr -d ' ')"
+for tl in "" es fr zh_CN hi ar; do
+    arq="$ROOT/src/lib/limites${tl:+.$tl}.tsv"
+    nome="limites${tl:+.$tl}.tsv${tl:+}"
+    [ -z "$tl" ] && nome="limites.tsv (the English default)"
+    n4="$(grep -v '^#' "$arq" | grep . | cut -f4 | grep -c . | tr -d ' ')"
+    equal "$nome offers a way out on the same rows as the original" "$n4_pt" "$n4"
+    if [ "$(col4 "$arq")" = "$c4_pt" ]; then
+        fail "$nome translates the way out, not just the verdict" \
+             "column 4 different from the Portuguese source" \
+             "byte-identical to limites.pt_BR.tsv - the reader is told there is a way out and then handed it in Portuguese"
+    else
+        pass "$nome translates the way out, not just the verdict"
+    fi
 done
 
 tabela_para() {
@@ -5076,6 +5111,332 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "two programs do not install into one prefix at the same time"
+
+# The lock tandem-exe takes at the top is keyed to the FILE, deliberately, so
+# that opening two different programs keeps working. But both of those programs
+# land in the SAME prefix by default and both may decide they need components,
+# so two "winetricks -q" runs could be writing into one WINEPREFIX at once -
+# exactly what the file lock's own comment says corrupts a prefix. The prefix
+# lock existed and wrapped only wineboot, which is the one moment two processes
+# were never going to collide on anyway.
+TRV="$TMPROOT/travas"; mkdir -p "$TRV"
+trava_env() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_TRAVAS="$TRV" TANDEM_IDIOMA_FORCADO=en \
+        WINEPREFIX="$1" bash -c "$2" 2>&1
+}
+# Per prefix, not one global lock: somebody may be running a program inside
+# their own prefix while another installs into Tandem's.
+L1="$(trava_env /tmp/pref-um '. "'"$ROOT"'/src/lib/common.sh"; t_trava_do_prefixo')"
+L2="$(trava_env /tmp/pref-dois '. "'"$ROOT"'/src/lib/common.sh"; t_trava_do_prefixo')"
+if [ "$L1" != "$L2" ] && [ -n "$L1" ]; then
+    pass "each prefix has its own lock"
+else
+    fail "each prefix has its own lock" "two different paths" "$L1 / $L2"
+fi
+
+# The real thing: one holder, one waiter, measured. Not a structural check -
+# a lock that is written but not taken looks identical to one that works.
+( trava_env /tmp/pref-um '. "'"$ROOT"'/src/lib/common.sh"
+   t_trava_prefixo_pega /tmp/pref-um; sleep 3; t_trava_prefixo_solta' >/dev/null 2>&1 ) &
+SEGURA=$!
+sleep 1
+INI=$SECONDS
+SAIDA="$(trava_env /tmp/pref-um '. "'"$ROOT"'/src/lib/common.sh"
+   t_trava_prefixo_pega /tmp/pref-um; t_trava_prefixo_solta')"
+ESPEROU=$((SECONDS-INI))
+wait $SEGURA 2>/dev/null
+if [ "$ESPEROU" -ge 1 ]; then
+    pass "the second install waits for the first instead of running alongside it"
+else
+    fail "the second install waits for the first instead of running alongside it" \
+         "a wait of at least 1s" "returned in ${ESPEROU}s - the lock is not being taken"
+fi
+# And it says so. Half an hour of dotnet48 behind a silent wait is the failure
+# this project is named after.
+contem "and the owner is told why it is waiting, not left looking at nothing" \
+       "installing Windows components into the same environment" "$SAIDA"
+# A lock that cannot be CREATED is not a lock that is busy: the first must
+# never stop a program from opening. Same decision, same reason, as the file
+# lock at the top of tandem-exe.
+IMPOSSIVEL="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_TRAVAS=/proc/nao/existe \
+    TANDEM_IDIOMA_FORCADO=en WINEPREFIX=/tmp/pref-um bash -c \
+    '. "'"$ROOT"'/src/lib/common.sh"; t_trava_prefixo_pega /tmp/pref-um && echo seguiu' 2>/dev/null)"
+contem "an impossible lock lets the program open anyway" "seguiu" "$IMPOSSIVEL"
+
+section "Wine saying it has not implemented something is a verdict"
+
+# The third verdict class, and the loop had no branch for it: the dependency
+# exists, Wine has not finished implementing part of it, and there is NOTHING
+# to install. "The program closed with error (code 53)" was the answer, which
+# sends the owner looking for a defect in a machine that is fine.
+#
+# The two Wine wordings were taken from the INSTALLED Wine's own format strings
+# (wine-9.0, x86_64-windows/ntdll.dll), not from memory - and only one of them
+# is a verdict. That distinction is the whole test:
+#
+#   "No implementation for X imported from Y, setting to Z" - Wine stubs the
+#   export at LOAD time and carries on. Programs import functions they never
+#   call all the time, so this line is in the log of software that works
+#   perfectly. Reporting it would alarm somebody whose program is fine.
+#
+#   "Call from ... to unimplemented function X, aborting" - the program
+#   actually called it and Wine gave up. That is the verdict.
+falta_wine() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; . "'"$ROOT"'/src/lib/winedeps.sh"
+         t_falta_no_wine "$1"' _ "$1" 2>/dev/null
+}
+cat > "$TMPROOT/abortou.log" <<'FIMW'
+0024:err:module:import_dll Library FOO.dll not found
+wine: Call from 0x7b00f4e2 to unimplemented function KERNEL32.dll.SetThreadDescription, aborting
+FIMW
+equal "a call Wine aborted on names the function" \
+      "KERNEL32.dll.SetThreadDescription" "$(falta_wine "$TMPROOT/abortou.log")"
+# THE HALF THAT MATTERS MORE. This line appears in the log of programs that
+# run perfectly, so treating it as a verdict would be a false alarm on working
+# software - which is worse than the silence being fixed.
+cat > "$TMPROOT/soimportou.log" <<'FIMW2'
+0024:err:module:No implementation for msvcrt.dll._o__fileno imported from L"Z:\x.exe", setting to 0x7b00f4e2
+FIMW2
+equal "but a stubbed IMPORT is not a verdict, because working programs have them" \
+      "" "$(falta_wine "$TMPROOT/soimportou.log")"
+equal "and an ordinary log says nothing about it" \
+      "" "$(falta_wine "$TMPROOT/porque.log" 2>/dev/null)"
+# The sentence has to say there is nothing to install, or the owner goes on
+# hunting. And Tandem names the Wine version and stops: it does not manage Wine.
+contem "the owner is told no component will fix it" \
+       "nothing I can install" \
+       "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c \
+          '. "'"$ROOT"'/src/lib/common.sh"; t_msg falta_no_wine "KERNEL32.dll.X" "wine-9.0"')"
+
+section "when the loader contradicts a receipt, it is written down"
+
+# A verb reaches the REPETIDOS branch when Wine's own loader has just asked for
+# its DLL AGAIN while the prefix carries a permanent receipt saying that verb
+# was installed. That is the loader contradicting the receipt, in writing, in
+# the same log - and traducao-suspeita.tsv is the work list that has already
+# found six wrong entries in the table. t_anota_suspeita was called from two
+# sites, both at install time, and SUSPEITAS is re-initialised empty on every
+# process, so this moment reached nothing at all.
+#
+# The receipt is KEPT on purpose: rule 4 is about not paying twice, and the
+# verb may well have delivered exactly what it promised while the program wants
+# something else. This records and reports; it does not retry and does not undo.
+SUSP="$TMPROOT/suspeita"; mkdir -p "$SUSP"
+anota() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_ESTADO="$SUSP" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; . "'"$ROOT"'/src/lib/winedeps.sh"
+         export TANDEM_ESTADO="'"$SUSP"'"; t_anota_suspeita "$1" "$2" uma_vez' _ "$1" "$2" 2>/dev/null
+}
+anota mfc42.dll mfc42
+anota msvcp140.dll vcrun2022
+equal "a contradicted pair is recorded on the work list" \
+      "2" "$(grep -c . "$SUSP/traducao-suspeita.tsv" 2>/dev/null || echo 0)"
+# The same program failing the same way every morning must not append the same
+# pair for ever: a work list nobody can skim is a work list nobody reads.
+anota mfc42.dll mfc42
+anota mfc42.dll mfc42
+# ...but only where the caller asks for it. From the INSTALL path a repeat
+# means "installed again, another day, and again failed to deliver", which is a
+# count worth having and is why the date column exists at all. Changing that
+# default would have rewritten the meaning of every line already on somebody's
+# machine; an existing test was pinning it, and the test was right.
+equal "and the same pair seen again does not grow the list" \
+      "2" "$(grep -c . "$SUSP/traducao-suspeita.tsv" 2>/dev/null || echo 0)"
+contem "the dll and the verb are both kept, so the table row can be found" \
+       "msvcp140.dll	vcrun2022" "$(cat "$SUSP/traducao-suspeita.tsv")"
+# And the branch really calls it, rather than only recording the negative
+# lesson as it did before.
+contem "the repeated-receipt branch records the suspicion" \
+       't_anota_suspeita "$dll" "$v"' "$(cat "$ROOT/src/bin/tandem-exe")"
+# The sentence must name the file still being asked for, or the owner is told
+# "I already installed what it wanted" and nothing about what it still wants.
+contem "and the owner is told which file is still being asked for" \
+       "still asking for" \
+       "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+          bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_msg ainda_pedindo mfc42.dll')"
+
+section "the failure is explained from the verb that failed"
+
+# THE DEFECT, stated exactly, because it is the reason this function exists at
+# all: MARCA_WT was reassigned on every iteration of the install loop,
+# successes included, so after the loop it marked the LAST VERB ATTEMPTED
+# rather than the last one that FAILED. The whole cause table then ran over
+# that slice. When a program needs two components and the first fails, the
+# owner was told his internet had failed - about a component whose real problem
+# was a missing cabextract - because a LATER component downloaded normally. He
+# goes and looks at his router.
+#
+# Every existing test installs a single verb, which is why nothing could see
+# it, and reaching the code needed a real winetricks to fail. So the table is
+# a function now and the two-verb case is a fixture.
+causa() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; t_causa_do_winetricks "$1" /tmp/x.log' _ "$1" 2>/dev/null
+}
+# What the OLD code fed the table: the whole tail of the log, which contains
+# the successful verb's download chatter as well as the failure.
+cat > "$TMPROOT/wt-ambos.log" <<'FIMWT'
+Executing load_vcrun2022
+Executing cabextract -q -d /tmp/x /tmp/vc_redist.x64.exe
+sh: 1: cabextract: not found
+------------------------------------------------------
+Executing load_mfc42
+Downloading https://example.invalid/mfc42.exe
+saved [1234/1234]
+FIMWT
+# What the NEW code feeds it: only the failing verb's output.
+cat > "$TMPROOT/wt-so-falha.log" <<'FIMWT2'
+Executing load_vcrun2022
+Executing cabextract -q -d /tmp/x /tmp/vc_redist.x64.exe
+sh: 1: cabextract: not found
+FIMWT2
+contem "the real cause is named when only the failing verb is looked at" \
+       "cabextract" "$(causa "$TMPROOT/wt-so-falha.log")"
+# The table prefers a specific cause over the internet guess, so even the old
+# mixed slice names cabextract here - what the old code actually lost is the
+# case below, where the failing verb said nothing specific at all.
+cat > "$TMPROOT/wt-mudo.log" <<'FIMWT3'
+Executing load_vcrun2022
+warning: winetricks is not compatible with this prefix
+FIMWT3
+cat > "$TMPROOT/wt-mudo-mais-sucesso.log" <<'FIMWT4'
+Executing load_vcrun2022
+warning: winetricks is not compatible with this prefix
+------------------------------------------------------
+Executing load_mfc42
+Downloading https://example.invalid/mfc42.exe
+saved [1234/1234]
+FIMWT4
+naocontem "a verb that failed silently is NOT blamed on the internet" \
+          "internet" "$(causa "$TMPROOT/wt-mudo.log")"
+contem "which is exactly what the old whole-tail slice got wrong" \
+       "internet" "$(causa "$TMPROOT/wt-mudo-mais-sucesso.log")"
+# And the slice really is taken per verb, inside the loop, not after it.
+naocontem "so the slice is taken when a verb fails, not after the loop" \
+          'tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO"' \
+          "$(cat "$ROOT/src/bin/tandem-exe")"
+contem "and it is appended from the failure branch" \
+       'tail -n +"$((MARCA_WT+1))" "$LOG" >> "$RESTO"' \
+       "$(cat "$ROOT/src/bin/tandem-exe")"
+
+# A Brazilian date order inside a sentence that IS translated. The wrong-clock
+# message reaches en, zh_CN, hi and ar readers with dd/mm/yyyy in the middle of
+# it; %x is the locale's own order.
+naocontem "the wrong-clock message does not hard-code a Brazilian date order" \
+          "+%d/%m/%Y" "$(cat "$ROOT/src/lib/common.sh" "$ROOT/src/bin/tandem-exe")"
+
+section "the .exe is asked whether the download finished"
+
+# The question is already asked of a .jar (its index lives at the end), of an
+# .AppImage (payload offset plus squashfs bytes_used) and of a .deb (a missing
+# data.tar member). It was never asked of the .exe - and a 400 MB
+# point-of-sale installer cut short over a shop connection is the commonest
+# broken thing that reaches this project. Wine's answer today is "Bad EXE
+# format", after the wait, which sends the owner looking for a defect in a
+# file that simply did not finish arriving.
+pe_erro() {
+    python3 "$ROOT/src/lib/peinfo.py" "$1" 2>&1 | sed -n 's/^ERRO=//p'
+}
+equal "an intact PE is not accused of being short" \
+      "" "$(pe_erro "$ARTIFACTS/importslimpo.exe")"
+python3 - "$ARTIFACTS/importslimpo.exe" "$TMPROOT/cortado.exe" <<'FIMPE'
+import sys
+d = open(sys.argv[1], "rb").read()
+open(sys.argv[2], "wb").write(d[:int(len(d) * 0.6)])
+FIMPE
+equal "a PE cut short is reported as an unfinished download" \
+      "pe_incompleto" "$(pe_erro "$TMPROOT/cortado.exe")"
+
+# THE HALF THAT MATTERS MORE, because getting it wrong would refuse to open
+# exactly the software this project exists for. NSIS and Inno Setup append
+# their payload AFTER the last section, so every real Windows installer is
+# longer than its section table accounts for. The check is one-sided on
+# purpose: only "shorter than declared" is ever a verdict.
+python3 - "$ARTIFACTS/importslimpo.exe" "$TMPROOT/comcarga.exe" <<'FIMPE2'
+import sys
+d = open(sys.argv[1], "rb").read()
+open(sys.argv[2], "wb").write(d + b"NSIS-PAYLOAD" * 50000)
+FIMPE2
+equal "an installer with its payload appended is NOT called incomplete" \
+      "" "$(pe_erro "$TMPROOT/comcarga.exe")"
+# And the token has to become a sentence, in the reader's language.
+contem "and the token becomes a sentence the owner can act on" \
+       "Downloading it again" \
+       "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+          bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_erro_do_leitor pe_incompleto')"
+
+section "why this component, not just which"
+
+# The screen where the owner agrees to a half-hour download named the runtime
+# and never the file the program actually asked for, so he was agreeing on
+# trust. Tandem has known the pair since 3.3 - t_pares_do_log keeps it so
+# delivery can be proved afterwards - and was throwing the useful half away.
+cat > "$TMPROOT/porque.log" <<'FIMLOG'
+0009:err:module:import_dll Library MSVCP140.dll (needed by Z:\x.exe) not found
+0009:err:module:import_dll Library VCRUNTIME140.dll (needed by Z:\x.exe) not found
+0009:err:module:import_dll Library mfc42.dll (needed by Z:\x.exe) not found
+FIMLOG
+lista_porque() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$1" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; . "'"$ROOT"'/src/lib/winedeps.sh"
+        PARES="$(t_pares_do_log "'"$TMPROOT"'/porque.log")"
+        for v in $(t_verbos_do_log "'"$TMPROOT"'/porque.log"); do
+            dlls="$(printf "%s\n" "$PARES" | awk -F"\t" -v alvo="$v" "\$2 == alvo { print \$1 }" |
+                    sort -u | tr "\n" "," | sed "s/,\$//; s/,/, /g")"
+            [ -n "$dlls" ] && t_msg componente_porque "$(t_verbo_amigavel "$v")" "$dlls" && printf "\n"
+        done' 2>/dev/null
+}
+PORQUE="$(lista_porque en)"
+contem "the install list names the file the program actually asked for" \
+       "the program asked for mfc42.dll" "$PORQUE"
+# Two DLLs from the same runtime are one line, not two installs.
+contem "and two files from one runtime are grouped on its single line" \
+       "msvcp140.dll, vcruntime140.dll" "$PORQUE"
+contem "and the reason is in the reader's own language" \
+       "程序要的是" "$(lista_porque zh_CN)"
+
+section "a saved web page is named as one, by every handler"
+
+# A download that goes wrong rarely produces nothing: the site answers with a
+# 404, a login wall or a robot check, and the browser saves that HTML under the
+# name the link promised. t_parece_pagina_web has existed since 3.8 and had
+# exactly TWO callers - tandem-deb and the CLI's content sniff, which a
+# double-clicked .jar never reaches. Everywhere else the owner was told his
+# download stopped part way, which is the worst possible answer: it sends him
+# back to the same link to fetch the same page, for ever.
+#
+# The .jar and .rpm orderings are the interesting half. A zip's index lives at
+# the END of the file, so an HTML page named .jar fails as "zip_invalido" -
+# indistinguishable from a real truncation - and the .rpm reader answers
+# "nao_e_rpm" rather than a truncation token, so a check wired only into the
+# incomplete-download branch never fires. Both were measured, not assumed.
+PAGINA="$TMPROOT/instalador-pagina"
+cat > "$PAGINA.html" <<'FIMHTML'
+<!DOCTYPE html>
+<html><head><title>404 Not Found</title></head>
+<body><h1>Not Found</h1><p>The requested URL was not found on this server.</p></body></html>
+FIMHTML
+for par in "apk:apk" "AppImage:appimage" "jar:jar" "rpm:rpm" "snap:snap" \
+           "flatpakref:flatpak" "deb:deb"; do
+    ext="${par%%:*}"; h="${par##*:}"
+    cp "$PAGINA.html" "$PAGINA.$ext"
+    saida="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+        timeout 60 bash "$ROOT/src/bin/tandem-$h" "$PAGINA.$ext" </dev/null 2>&1 | head -3)"
+    contem "tandem-$h says a .$ext that is really a web page is a web page" \
+           "it is a web page saved under a program" "$saida"
+done
+
+# And the negative, which is what stops this from being a fix that lies in the
+# other direction: a genuinely short file must still be reported as a stopped
+# download, not as a web page.
+head -c 200 /dev/zero > "$TMPROOT/curto.rpm"
+naocontem "but a genuinely truncated file is not called a web page" \
+          "web page saved under" \
+          "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+             bash "$ROOT/src/bin/tandem-rpm" "$TMPROOT/curto.rpm" </dev/null 2>&1 | head -2)"
 
 section "the badge on the front page does not lie"
 

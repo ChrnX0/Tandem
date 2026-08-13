@@ -252,6 +252,11 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
             # This shortcut can also run dotnet48, which takes half an hour:
             # suspending in the middle corrupts the prefix just the same.
             INIBIR_MEM="$(t_inibidor)"
+            # Only one dependency install per prefix at a time. Two programs
+            # opened at once land in the same prefix by default, and the lock
+            # at the top of this file is keyed to the FILE - on purpose, so
+            # that opening two different programs keeps working.
+            t_trava_prefixo_pega "$WINEPREFIX"
             t_progresso_abre "$(t_msg licao_instalando)"
             for v in $PENDENTES; do
                 t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"
@@ -275,6 +280,9 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
             done
             wineserver -w
             t_progresso_fecha
+            # Released before the program runs: holding it through the run
+            # would block another program for no reason.
+            t_trava_prefixo_solta
         fi
     fi
 fi
@@ -435,7 +443,41 @@ PARES_FIM
         # open. Recording it avoids promising next time that they solve it.
         for v in $REPETIDOS; do t_memoria_junta "$PROG" NAO_RESOLVERAM "$v"; done
         t_memoria_grava "$PROG" RESULTADO "nao abriu"
-        t_erro "$(t_msg ja_instalei_e_nao_abre "$REPETIDOS")"
+        # THE STRONGEST EVIDENCE THIS PROJECT EVER GETS, and it used to be
+        # thrown away here. A verb reaches REPETIDOS when Wine's own loader has
+        # just asked for its DLL again while the prefix carries a PERMANENT
+        # receipt saying that verb was installed. That is the loader
+        # contradicting the receipt, in writing, in the same log - and
+        # traducao-suspeita.tsv is the work list that has already found six
+        # wrong entries in the table. t_anota_suspeita was called only at
+        # install time (two sites), and SUSPEITAS starts empty on every
+        # process, so this moment reached nothing at all.
+        #
+        # The receipt is KEPT: rule 4 is about not paying twice, and the verb
+        # may well have installed exactly what it promised while the program
+        # wants something else entirely. This records and reports; it does not
+        # retry and it does not undo.
+        PEDIDAS=""
+        for v in $REPETIDOS; do
+            while IFS="$(printf '\t')" read -r dll verbo; do
+                [ "$verbo" = "$v" ] || continue
+                [ -n "$dll" ] || continue
+                t_anota_suspeita "$dll" "$v" uma_vez
+                case " $PEDIDAS " in *" $dll "*) ;; *) PEDIDAS="$PEDIDAS $dll" ;; esac
+            done <<FIMPARES
+$PARES
+FIMPARES
+        done
+        # With no pair in hand there is nothing to name, and a sentence reading
+        # "the program is still asking for:" followed by nothing is worse than
+        # not saying it.
+        if [ -n "$PEDIDAS" ]; then
+            t_erro "$(t_msg ja_instalei_e_nao_abre "$REPETIDOS")
+
+$(t_msg ainda_pedindo "${PEDIDAS# }")"
+        else
+            t_erro "$(t_msg ja_instalei_e_nao_abre "$REPETIDOS")"
+        fi
         exit "$CODIGO"
     fi
 
@@ -494,7 +536,20 @@ $MAQUINA}"
   $CHAVE}")"
             fi
         else
-            t_erro "$(t_msg fechou_com_erro "$CODIGO")"
+            # Before falling back to the bare exit code, ask whether Wine said
+            # outright that it does not have a function the program called. It
+            # says so in the log and nowhere else, and no component install
+            # will ever fix it. Tandem names the Wine version and STOPS there:
+            # it does not manage Wine, and telling a shopkeeper to upgrade one
+            # by hand is not an instruction he can follow safely.
+            SEM_WINE="$(t_falta_no_wine "$PARCIAL" 2>/dev/null)"
+            if [ -n "$SEM_WINE" ]; then
+                t_memoria_grava "$PROG" RESULTADO "falta no wine" 2>/dev/null
+                t_erro "$(t_msg falta_no_wine "$SEM_WINE" \
+                          "$(wine --version 2>/dev/null || printf 'Wine')")"
+            else
+                t_erro "$(t_msg fechou_com_erro "$CODIGO")"
+            fi
         fi
         exit "$CODIGO"
     fi
@@ -509,7 +564,25 @@ $MAQUINA}"
         exit "$CODIGO"
     fi
 
-    LISTA="$(for v in $VERBOS; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)"
+    # "Why this component?" - each line names the runtime AND the file the
+    # program actually asked for. Tandem has known the pair since 3.3
+    # (t_pares_do_log keeps it so delivery can be proved afterwards) and was
+    # throwing the useful half away: the owner was asked to agree to a
+    # half-hour download on the strength of a product name alone. This explains
+    # more and executes exactly the same, which is the criterion this project
+    # holds itself to. A verb with no pair - one that came from the community
+    # list rather than from this run's log - keeps the bare name, because
+    # inventing a reason would be worse than not giving one.
+    LISTA="$(for v in $VERBOS; do
+        dlls="$(printf '%s\n' "$PARES" |
+                awk -F'\t' -v alvo="$v" '$2 == alvo { print $1 }' |
+                sort -u | tr '\n' ',' | sed 's/,$//; s/,/, /g')"
+        if [ -n "$dlls" ]; then
+            printf -- '- %s\n' "$(t_msg componente_porque "$(t_verbo_amigavel "$v")" "$dlls")"
+        else
+            printf -- '- %s\n' "$(t_verbo_amigavel "$v")"
+        fi
+    done)"
 
     # If the program is 64-bit and the component only exists in 32, the
     # install is almost certainly not going to solve it. We do not block - the
@@ -545,9 +618,23 @@ $MAQUINA}"
     # binary exists - the lesson from the self-test applied here, after the
     # shortcut cost an installation.
     INIBIR="$(t_inibidor)"
+    t_trava_prefixo_pega "$WINEPREFIX"
 
     t_progresso_abre "$(t_msg instalando_componentes)"
     FALHARAM=""
+    # The output of the verbs that FAILED, captured as each one fails.
+    #
+    # MARCA_WT below is reassigned on every iteration, successes included, so
+    # after the loop it marked the last verb ATTEMPTED rather than the last one
+    # that failed. The whole cause table - internet, D-Bus, full disk, clock,
+    # checksum, cabextract - then ran over that slice. When a program needs two
+    # components and the first fails, the owner was told his internet had
+    # failed, about a component whose real problem was something else entirely,
+    # because a LATER component downloaded normally. He goes and looks at his
+    # router. Every existing test installs a single verb, so nothing could see
+    # it.
+    RESTO="$TANDEM_TRAVAS/wt.$$"
+    : > "$RESTO"
     for v in $VERBOS; do
         t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"
         t_diz ">>> winetricks -q $v"
@@ -597,41 +684,24 @@ $MAQUINA}"
         else
             t_diz "!!! winetricks falhou em $v"
             FALHARAM="$FALHARAM $v"
+            # Taken HERE, while the mark still belongs to this verb.
+            tail -n +"$((MARCA_WT+1))" "$LOG" >> "$RESTO" 2>/dev/null || :
         fi
     done
     wineserver -w
     t_progresso_fecha
+    t_trava_prefixo_solta
 
     # If winetricks could not download, saying "I installed the dependencies
     # and it still does not open" would be a lie - and would send the owner
     # looking for the defect in the wrong place. We read winetricks' own words
     # to explain the likely cause instead of dumping the log in his face.
+    [ -n "$FALHARAM" ] || rm -f "$RESTO"
     if [ -n "$FALHARAM" ]; then
-        RESTO="$TANDEM_TRAVAS/wt.$$"
-        tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO" 2>/dev/null || : > "$RESTO"
-        # The most common cause is the internet, but claiming that without
-        # evidence sends the owner looking for the defect in the wrong place -
-        # which is what happened when systemd-inhibit brought the install down
-        # before it even started. With no sign of a download being attempted,
-        # the honest answer is not knowing.
-        if grep -qiE 'saved \[|wget|Downloading|HTTP request sent' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_internet)"
-        else
-            PORQUE="$(t_msg porque_desconhecido "$LOG")"
-        fi
-        if grep -qi 'Failed to connect to bus' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_dbus)"
-        elif grep -qi 'No space left on device' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_disco_cheio)"
-        elif grep -qi 'certificate\|SSL\|not yet valid\|has expired' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_relogio "$(date '+%d/%m/%Y')")"
-        elif grep -qi 'Could not resolve host\|Network is unreachable\|Connection timed out' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_sem_rede)"
-        elif grep -qi 'sha256sum mismatch\|checksum' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_corrompido)"
-        elif grep -qi 'cabextract' "$RESTO" 2>/dev/null; then
-            PORQUE="$(t_msg porque_cabextract)"
-        fi
+        # $RESTO already holds exactly the output of the verbs that failed,
+        # accumulated inside the loop. Nothing a successful verb printed can
+        # reach the cause table any more.
+        PORQUE="$(t_causa_do_winetricks "$RESTO" "$LOG")"
         rm -f "$RESTO"
         t_erro "$(t_msg nao_consegui_instalar "$(for v in $FALHARAM; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)")
 

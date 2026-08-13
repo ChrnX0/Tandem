@@ -35,7 +35,16 @@ REPO_RUNTIME="$(t_flatpak_campo "$ARQ" RuntimeRepo)"
 t_diz "flatpak ref: nome=$NOME titulo=$TITULO url=$URL ramo=$RAMO repo=$EH_REPO"
 
 if [ -z "$NOME" ] && [ -z "$URL" ]; then
-    t_erro "$(t_msg flatpak_ref_ruim)"
+    # Before the reader's own complaint, which is true and useless when the
+    # file is an error page the site handed back instead of the program: a
+    # download that goes wrong rarely produces nothing. Same ordering and
+    # same sentence tandem-deb has had since 3.8 - eight handlers were never
+    # wired to a detector and a translated message that already existed.
+    if t_parece_pagina_web "$ARQ"; then
+        t_erro "$(t_msg baixou_pagina_web "$(basename -- "$ARQ")")"
+    else
+        t_erro "$(t_msg flatpak_ref_ruim)"
+    fi
     exit 1
 fi
 

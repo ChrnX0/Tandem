@@ -52,7 +52,17 @@ if [ "$CIFRADO" = 1 ]; then
 fi
 
 if [ -n "$ERRO" ]; then
-    t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO")")"; exit 1
+    # Before the reader's own complaint, which is true and useless when the
+    # file is an error page the site handed back instead of the program: a
+    # download that goes wrong rarely produces nothing. Same ordering and
+    # same sentence tandem-deb has had since 3.8 - eight handlers were never
+    # wired to a detector and a translated message that already existed.
+    if t_parece_pagina_web "$APK"; then
+        t_erro "$(t_msg baixou_pagina_web "$(basename -- "$APK")")"
+    else
+        t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO")")"
+    fi
+    exit 1
 fi
 if [ "$FORMATO" = "desconhecido" ]; then
     t_memoria_grava "$APK" RESULTADO "nao e android" 2>/dev/null

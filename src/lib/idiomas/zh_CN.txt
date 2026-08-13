@@ -2820,3 +2820,30 @@ y
 
 @res_reprovado
 机主说它不能用。
+
+@componente_porque
+{1} —— 程序要的是 {2}
+
+@leitor_pe_incompleto
+下载中途停了：这个程序比它自己的文件头所声明的还要短。
+重新下载就能解决。
+
+@ainda_pedindo
+程序仍然在要：{1}
+
+所以要么这个文件本该随程序一起提供，要么是我自己的对照表让我装错了东西。无论哪一种，我都已经记下来了。
+
+@falta_no_wine
+这个程序调用了一个 Windows 函数，而这里装的 Wine 还没有它：
+
+  {1}
+
+所以我装什么都解决不了。问题不在您的电脑，也不在这个程序：这是 Wine 还没抄完的一块 Windows。更新的 Wine 可能会有。
+
+这台机器上的 Wine 是 {2}。
+
+@res_falta_no_wine
+它调用了这个 Wine 还没有的东西。
+
+@esperando_outra_instalacao
+现在另一个程序正在往同一个环境里安装 Windows 组件。我会等它装完再开始——两件事同时做会把环境弄坏。这可能要等一会儿。

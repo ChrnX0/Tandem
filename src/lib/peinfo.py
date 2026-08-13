@@ -152,6 +152,40 @@ def nomes_de_dll(dados, rva, secs, atrasada=False):
     return achados
 
 
+def truncado(dados, dirs, secs):
+    """True when the file is SHORTER than its own headers declare it to be.
+
+    The same question is already asked of a .jar (its index lives at the end),
+    of an .AppImage (payload offset plus squashfs bytes_used) and of a .deb (a
+    missing data.tar member). It was never asked of the .exe - and a 400 MB
+    point-of-sale installer cut short over a shop connection is the commonest
+    broken thing that reaches this project. Today that produces "Bad EXE
+    format" from Wine after the wait, which sends the owner looking for a
+    defect in a file that simply did not finish arriving.
+
+    ONE-SIDED ON PURPOSE. Only "shorter than declared" is a verdict. A valid
+    file being LONGER is normal and must never be reported: NSIS and Inno Setup
+    append their payload after the last section, so every real installer is
+    longer than its section table accounts for. Reporting that would refuse to
+    open exactly the software this project exists for.
+
+    Data directory 4 is the certificate table, and it is the one entry whose
+    address is a FILE OFFSET rather than an RVA - so it can be compared with
+    the length directly, with no section walk in between.
+    """
+    fim = len(dados)
+    for _va, _vsize, bruto, off in secs:
+        # A section with no raw data (.bss) has offset and size zero; adding
+        # them proves nothing and comparing them would flag every binary.
+        if bruto and off and off + bruto > fim:
+            return True
+    if len(dirs) > 4:
+        cert_off, cert_tam = dirs[4]
+        if cert_off and cert_tam and cert_off + cert_tam > fim:
+            return True
+    return False
+
+
 def inspecionar(caminho):
     with open(caminho, "rb") as f:
         dados = f.read()
@@ -159,6 +193,8 @@ def inspecionar(caminho):
     arq, opcional, tam_opcional, n_secoes = cabecalho(dados)
     dirs = diretorios(dados, opcional)
     secs = secoes(dados, opcional, tam_opcional, n_secoes)
+    if truncado(dados, dirs, secs):
+        raise NaoEhPE("pe_incompleto")
 
     def dir_rva(i):
         return dirs[i][0] if i < len(dirs) and dirs[i][0] else 0

@@ -2919,3 +2919,30 @@ O dono confirmou que funciona.
 
 @res_reprovado
 O dono disse que não funcionou.
+
+@componente_porque
+{1} — o programa pediu {2}
+
+@leitor_pe_incompleto
+O download parou pela metade: o programa termina antes do que o próprio
+cabeçalho dele diz. Baixar de novo resolve tudo.
+
+@ainda_pedindo
+O programa continua pedindo: {1}
+
+Então ou esse arquivo era pra vir junto com o programa, ou a minha própria tabela me mandou instalar a coisa errada. De um jeito ou de outro, eu anotei.
+
+@falta_no_wine
+Este programa chamou uma função do Windows que o Wine instalado aqui ainda não tem:
+
+  {1}
+
+Então não tem nada que eu possa instalar para resolver. Não é o seu computador e não é o programa: é um pedaço do Windows que o Wine ainda não terminou de copiar. Um Wine mais novo pode ter.
+
+O Wine desta máquina é o {2}.
+
+@res_falta_no_wine
+Ele chamou algo que este Wine ainda não tem.
+
+@esperando_outra_instalacao
+Outro programa está instalando componentes do Windows no mesmo ambiente agora. Vou esperar ele terminar antes de começar - fazer os dois ao mesmo tempo estraga o ambiente. Isso pode demorar.

@@ -2885,3 +2885,30 @@ The owner confirmed it works.
 
 @res_reprovado
 The owner said it did not work.
+
+@componente_porque
+{1} — the program asked for {2}
+
+@leitor_pe_incompleto
+The download stopped part way: the program ends earlier than its own
+headers say it does. Downloading it again is the whole fix.
+
+@ainda_pedindo
+The program is still asking for: {1}
+
+So either that file was supposed to come with the program itself, or my own table sent me to install the wrong thing. I have written it down either way.
+
+@falta_no_wine
+This program called a Windows function that the Wine installed here does not have yet:
+
+  {1}
+
+So there is nothing I can install to fix it. It is not your computer and it is not the program: it is a piece of Windows that Wine has not finished copying. A newer Wine may have it.
+
+The Wine on this machine is {2}.
+
+@res_falta_no_wine
+It called something this Wine does not have yet.
+
+@esperando_outra_instalacao
+Another program is installing Windows components into the same environment right now. I am waiting for it to finish before starting - doing both at once damages the environment. This may take a while.

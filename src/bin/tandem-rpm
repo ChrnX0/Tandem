@@ -33,6 +33,15 @@ NOME="$(t_campo "$INFO" PACOTE)"
 DIST="$(t_campo "$INFO" DISTRIBUICAO)"
 VERSAO="$(t_campo "$INFO" VERSAO)"
 
+# Hoisted above the case on purpose. Measured against a real 404 page named
+# .rpm: the reader answers "nao_e_rpm", not the truncation token, so a check
+# wired only into the incomplete-download branch never fires. Any reader
+# failure at all is worth asking this question of first - the answer is both
+# likelier and the only one the owner can act on.
+if [ -n "$ERRO" ] && t_parece_pagina_web "$ARQ"; then
+    t_erro "$(t_msg baixou_pagina_web "$(basename -- "$ARQ")")"
+    exit 1
+fi
 case "$ERRO" in
     '') ;;
     pacote_incompleto|rpm_cabecalho_curto)
