@@ -3738,9 +3738,12 @@ for veneno in \
     fi
 done
 
-# With no address configured nothing goes anywhere, even switched on. This is the
-# state this build ships in, so it is the state that most needs a test.
-equal "with no address, nothing is sent and the queue is kept" "" \
+# With the address explicitly emptied, nothing goes anywhere even switched on.
+# This USED to be the shipped state; since 4.6 the shipped state is an address,
+# and an empty TANDEM_LISTA_ENVIO is the opt-out-by-environment path - which
+# only stays empty because the default uses "${VAR-...}" and not "${VAR:-...}".
+# env_envio sets the variable to empty, so this is exactly that path.
+equal "an explicitly empty address sends nothing and keeps the queue" "" \
       "$(env_envio 't_envio_envia')"
 # The count the owner is shown has to be a number, not two of them.
 : > "$CASA_E/vazia.tsv"

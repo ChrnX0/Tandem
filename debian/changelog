@@ -1,3 +1,50 @@
+tandem (4.6) unstable; urgency=medium
+
+  * The community list has an address. It was empty for five versions because
+    an address means somebody hosts it and answers for the data, which is a
+    decision with a cost rather than a line of code. The receiving end is in
+    THIS repository - api/lista.js - deployed to a Vercel project git-linked to
+    it, so the code that takes a shop's data is as readable as the code that
+    sends it. A service in its own repository is how "we only collect anonymous
+    data" becomes a claim nobody can check.
+  * No secret is created by hand anywhere in the chain. Vercel injects the
+    storage credential when the store is connected, and the job that rebuilds
+    the list reads a public URL. Every other design ended with somebody pasting
+    a token somewhere, and avoiding that was the requirement.
+  * The intake does not trust the sender. The client sieves a line before
+    queueing it, but anybody can craft a POST by hand, so every rule is applied
+    again server-side. It keeps no address, in any form. And it refuses a record
+    that claims to speak for more than one machine, because a number anybody can
+    type is a number that means nothing.
+  * Nothing publishes itself: a weekly job rebuilds lista/lista.tsv and opens a
+    PULL REQUEST. A poisoned row that published itself would be downloaded by
+    every Tandem at once, while the same row reaching one machine is a question
+    its owner gets asked. Those are different sizes of mistake.
+  * The install notice has promised since 4.2 that Tandem sends what it learns,
+    and with no address configured nothing ever left. Setting it does not only
+    enable a feature - it makes a sentence already on the screen true.
+  * A 4xx used to be treated as a failure of the route. It is not: the far end
+    saying THIS LINE is wrong will say it for ever, so the line was retried on
+    every pass, and three permanently refused lines would trip the hour-long
+    wait meant for a broken network - stopping the good lines from leaving. One
+    malformed record would have poisoned the whole queue. A 4xx now parks the
+    line rather than deleting it; 429 and 408 stay retryable, because too fast
+    and too slow are about the moment and not about the line.
+  * The count is of REPORTS, and the sentence the owner reads said "machines" in
+    all seven languages. Counting machines honestly needs a way to tell two
+    senders apart, which is exactly what the intake refuses to keep - and "we
+    only store a hash" does not survive contact with a laptop, because a hash of
+    an IPv4 address is an IPv4 address to anybody willing to try four billion of
+    them. The claim shrank rather than the number growing.
+  * tandem-apk was the only one of the nine handlers that remembered nothing -
+    not even a RESULTADO - so "tandem memoria" knew nothing about an .apk and a
+    second attempt learned nothing from the first. The guard written for it
+    distinguishes a verdict about the FILE, which is a lesson, from a verdict
+    about THIS MACHINE, which is not: recording "adb is missing" would mean
+    installing adb and still reading a memory that blames the file.
+
+ -- ChrnX0 <rockx0@gmail.com>  Thu, 13 Aug 2026 17:53:53 +0000
+
 tandem (4.5) unstable; urgency=medium
 
   * A shell installer that exits 0 was the one place left where "it finished"
