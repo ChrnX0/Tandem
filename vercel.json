@@ -6,6 +6,9 @@
   "functions": {
     "api/lista.js": {
       "maxDuration": 10
+    },
+    "api/acumulado.js": {
+      "maxDuration": 60
     }
   }
 }
