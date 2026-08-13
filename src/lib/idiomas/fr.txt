@@ -2769,3 +2769,210 @@ d'autres personnes : quels composants Windows chaque programme a demandés. La
 télécharger n'envoie rien de chez vous où que ce soit.
 
 Pour télécharger :   tandem lista atualizar
+
+@detalhes_tecnicos
+Détails techniques :
+
+@botao_sim
+Oui
+
+@botao_nao
+Non
+
+@verbo_dotnet48
+.NET Framework 4.8 (prend environ 30 minutes)
+
+@verbo_xact
+DirectX Audio
+
+@verbo_xinput
+DirectX (manettes de jeu)
+
+@verbo_riched20
+Édition de texte enrichi
+
+@verbo_openal
+OpenAL (audio)
+
+@verbo_quartz
+DirectShow (vidéo)
+
+@verbo_dbghelp
+Débogage Windows
+
+@verbo_secur32
+Sécurité Windows
+
+@verbo_usp10
+Rendu du texte (Uniscribe)
+
+@peca_wine
+Wine (fait tourner les programmes Windows)
+
+@peca_wine32
+Prise en charge des anciens programmes 32 bits
+
+@peca_winetricks
+Installeur de composants Windows
+
+@peca_adb
+Installeur de paquets Android divisés (.xapk)
+
+@peca_java
+Java (fait tourner les programmes .jar)
+
+@peca_fuse
+Prise en charge de l'ouverture directe d'un AppImage (FUSE)
+
+@peca_waydroid
+Android (Waydroid) - télécharge environ 1 Go
+
+@limite_log_hardware
+ce programme a essayé de parler directement au matériel, comme seul un pilote système peut le faire. Wine l'a laissé démarrer et lui a renvoyé des zéros, et c'est pour cela qu'il s'ouvre puis se comporte bizarrement
+
+@limite_log_driver
+ce programme a essayé de charger un pilote système, et Wine s'exécute en dehors du noyau Linux
+
+@arq_memoria_cab1
+Ce que Tandem a appris sur ce programme.
+
+@arq_memoria_cab2
+Vous pouvez le lire, le supprimer et l'envoyer à quelqu'un d'autre.
+
+@arq_receita_cab1
+Recette Tandem : ce dont ce programme a eu besoin pour fonctionner.
+
+@arq_receita_cab2
+Vous pouvez la lire, la vérifier et l'envoyer à quelqu'un d'autre.
+
+@arq_receita_cab3
+Pour l'utiliser :  tandem receita --importar <ce fichier> <le programme>
+
+@arq_config_cab
+Configuration de Tandem. Vous pouvez lire, modifier et supprimer ce fichier.
+
+@col_programa
+Programme
+
+@appimage_comentario
+Installé par Tandem à partir de {1}
+
+@verbo_d3dcompiler
+Compilateur de shaders DirectX
+
+@unidade_bytes
+{1} octets
+
+@java_pede_desconhecido
+une plus récente
+
+@java_tem_desconhecido
+celle installée ici
+
+@deb_confirma_terminal
+Installer ? [o/N] 
+
+@script_confirma_terminal
+{1} ? [o/N] 
+
+@resposta_sim
+o
+
+@res_abriu
+Il s'est ouvert.
+
+@res_executou
+Il s'est exécuté.
+
+@res_instalado
+Installé.
+
+@res_fechou_sozinho
+Il s'est ouvert et refermé tout seul.
+
+@res_nao_abriu
+Il ne s'est pas ouvert.
+
+@res_nao_executou
+Il ne s'est pas exécuté.
+
+@res_nao_instalou
+Il ne s'est pas installé.
+
+@res_nao_confirmou
+Il a dit qu'il s'installait, mais le système ne l'a pas.
+
+@res_incompleto
+Le téléchargement n'a pas fini.
+
+@res_cifrado
+Le fichier est chiffré par le site qui l'a fourni.
+
+@res_nao_e_android
+Ce n'est pas un paquet Android.
+
+@res_android_antigo
+Il faut un Android plus récent que celui d'ici.
+
+@res_so_arm
+Il est fait uniquement pour les processeurs de téléphone.
+
+@res_ja_instalado
+Il était déjà installé.
+
+@res_versao_mais_nova
+Une version plus récente est déjà installée.
+
+@res_sem_espaco
+Il n'y avait pas assez de place.
+
+@res_sem_assinatura
+Le paquet n'est pas signé.
+
+@res_faltam_partes
+Il manque des parties du paquet.
+
+@res_pacote_nao_abre
+Le paquet ne s'ouvre pas.
+
+@res_pacote_vazio
+Le paquet ne contient rien.
+
+@res_java_antigo
+Il faut un Java plus récent que celui d'ici.
+
+@res_falta_javafx
+Il faut JavaFX, qui n'est pas installé.
+
+@res_faltam_arquivos
+Il manque des fichiers dont il a besoin, à côté de lui.
+
+@res_arquitetura_errada
+Il est fait pour un autre processeur.
+
+@res_bitola_errada
+Ce qui manquait est arrivé, mais dans l'autre largeur de processeur.
+
+@res_sistema_antigo
+Ce système est plus ancien que ce que le programme demande.
+
+@res_falta_biblioteca
+Il manque au système une bibliothèque qu'il utilise.
+
+@res_pasta_sem_permissao
+Le dossier où il se trouve n'autorise pas l'exécution.
+
+@res_faltam_dependencias
+Il manque au système des choses dont ce paquet a besoin.
+
+@res_outra_familia_de_linux
+Il a été fait pour une autre famille de Linux.
+
+@res_so_abriu
+Il s'est ouvert ; personne n'a confirmé qu'il fonctionne.
+
+@res_confirmado
+Le propriétaire a confirmé que ça marche.
+
+@res_reprovado
+Le propriétaire a dit que ça n'a pas marché.

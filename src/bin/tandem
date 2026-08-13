@@ -436,7 +436,7 @@ escolher() {
     local titulo="$1" pergunta="$2"; shift 2
     if t_tem_gui && command -v zenity >/dev/null 2>&1; then
         zenity --list --title="$titulo" --text="$pergunta" \
-               --width=520 --height=400 --column="Programa" "$@" 2>/dev/null
+               --width=520 --height=400 --column="$(t_msg col_programa)" "$@" 2>/dev/null
         return $?
     fi
     return 1
@@ -788,7 +788,7 @@ acao_autoteste() {
                 passa "$(t_msg at_deb_ok "$(t_campo "$lido_deb" PACOTE)")"
             else
                 falha "$(t_msg at_deb_nao)" \
-                      "$umdeb: $(t_campo "$lido_deb" ERRO)"
+                      "$umdeb: $(t_erro_do_leitor "$(t_campo "$lido_deb" ERRO)")"
             fi
         else
             saida="$saida  --      $(t_msg auto_pulou_deb)"$'\n'
@@ -890,7 +890,7 @@ acao_receita() {
 # memory: if he cannot SEE what was stored, he has no way to trust it and no
 # way to correct it.
 acao_memoria() {
-    local filtro="${1:-}" arq prog saida="" n=0
+    local filtro="${1:-}" arq prog res saida="" n=0
     if [ ! -d "$TANDEM_MEMORIA" ] || [ -z "$(ls -A "$TANDEM_MEMORIA" 2>/dev/null)" ]; then
         t_erro "$(t_msg mem_nada_aprendido)"
         return 1
@@ -901,11 +901,17 @@ acao_memoria() {
         [ -n "$filtro" ] && case "${prog,,}" in *"${filtro,,}"*) ;; *) continue ;; esac
         n=$((n+1))
         saida="$saida$prog"$'\n'
-        # The field NAMES are translated; the values are not - they are on-disk
-        # format (abriu, confirmado, RESOLVERAM) and translating one silently
-        # breaks memory files already written on somebody's machine.
+        # The field NAMES are translated, and so is the RESULTADO value now -
+        # but at DISPLAY time, by t_resultado_amigavel, with the value on disk
+        # left exactly as written. The old comment here said the values are
+        # on-disk format and stopped there, and that half-truth is what kept
+        # forty-four Portuguese sentences on this screen in every language:
+        # "nao confirmou", "pasta sem permissao", "bitola errada". This is the
+        # screen a shop owner opens to find out what happened, and the same
+        # text goes into the tandem socorro report he sends to whoever helps.
+        res="$(sed -n 's/^RESULTADO=//p' "$arq" | tail -1)"
+        [ -n "$res" ] && saida="$saida  $(t_msg mem_campo_resultado)$(t_resultado_amigavel "$res")"$'\n'
         saida="$saida$(sed -n "
-            s/^RESULTADO=/  $(t_msg mem_campo_resultado)/p
             s/^ARQUITETURA=/  $(t_msg mem_campo_arquitetura)/p
             s/^RESOLVERAM=/  $(t_msg mem_campo_resolveram)/p
             s/^NAO_RESOLVERAM=/  $(t_msg mem_campo_nao_resolveram)/p

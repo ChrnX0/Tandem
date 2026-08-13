@@ -1,3 +1,64 @@
+tandem (4.7) unstable; urgency=medium
+
+  * The counter said TOTAL 0 and there were seventy-three Portuguese and
+    English sentences on screen, in all seven languages. That is the third
+    false zero this measure has produced and the second one that shipped. Nine
+    were found by reading src/lib/winedeps.sh by hand; a six-lens audit of the
+    whole tree then found sixty-four more, in fourteen files.
+  * What was on the screen: "Detalhes tecnicos:" under EVERY error window; the
+    Sim/Nao buttons of every question that did not pass its own pair; the nine
+    component descriptions on the screen where the owner agrees to a half-hour
+    download ("Editor de texto rico", "Depurador do Windows", "Desenho de texto
+    (Uniscribe)"); the whole of "tandem preparar"; both paragraphs explaining a
+    system driver; the headers of the memory file, the recipe and the settings
+    file - the three files the product itself invites him to open and send to
+    somebody; the column header of the program picker; and the comment written
+    into every AppImage menu entry, which outlives the session.
+  * The memory values are the largest group and the fix is the one that does
+    not break anybody: forty-four values stay on disk exactly as written -
+    translating one would break every recipe already sitting on somebody's
+    machine - and are resolved to a sentence when they are SHOWN, the same
+    arrangement t_erro_do_leitor already uses for the readers' tokens. Until
+    now "pasta sem permissao" and "bitola errada" - Brazilian slang no
+    dictionary recovers - were what a French owner read on the screen he opens
+    to find out what went wrong, and what went into the report he was told to
+    send to whoever was helping him.
+  * A correctness defect wearing a translation defect's clothes: five handlers
+    asked "[y/N]" in English and "[o/N]" in French, from the catalogue, and
+    then accepted only s|S|sim|SIM. An English owner did what the screen asked,
+    typed y, and was told the install was cancelled. It sat on the .deb and .sh
+    paths, the two where the alternative to installing is being told that
+    nothing happened.
+  * The silent-success guard was arithmetically dead on the runs that matter.
+    tandem-exe timed from before the dependency installs, so after a dotnet48
+    the elapsed time was half an hour and the "it opened and closed by itself"
+    warning - which compares against a few seconds - could not fire. A program
+    that flashed and vanished was reported as having worked, and the inflated
+    number went into memory and travelled inside recipes.
+  * The real change is not the sentences, it is the SECOND INSTRUMENT.
+    tools/conta-literais.py reads the source and asks what shape of shell hides
+    a sentence; sixteen misses say that question has a floor, and the sixteenth
+    proves it cannot be raised by widening - the offending function's name
+    matched no prose-body pattern and it lived in a library, so every rule the
+    counter has was inapplicable to it. tools/prosa-fora-do-catalogo.py asks a
+    different question of a different thing: it RUNS the program and reads what
+    comes out. Two angles, because the first has a floor of its own - render in
+    Chinese and flag runs of Latin words, and render in all seven and flag any
+    line that comes out byte-identical, which is what a literal necessarily
+    does and a catalogue lookup almost never does.
+  * That tool's own first version did not catch the bug it was written for.
+    It wanted three words of three letters and "Editor de texto rico" is
+    chopped at "de", so it scored clean - the counter's whole history repeating
+    itself inside its replacement, on the first attempt, found only by putting
+    the defect back and watching the tool stay silent. A later version then
+    invented findings: "sim" on the verbatim list deleted itself out of the
+    middle of "simplified". Both are written down where the thresholds are.
+  * The three MIME type descriptions carried English plus pt_BR only, so five
+    of the seven shipped languages read English in the file manager while every
+    .desktop beside that file carried all seven.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 13 Aug 2026 20:11:05 +0000
+
 tandem (4.6) unstable; urgency=medium
 
   * The community list has an address. It was empty for five versions because

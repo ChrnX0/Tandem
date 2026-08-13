@@ -2716,3 +2716,210 @@ personas: qué componentes de Windows necesitó cada programa. Descargarla no
 manda nada suyo a ninguna parte.
 
 Para descargar:   tandem lista atualizar
+
+@detalhes_tecnicos
+Detalles técnicos:
+
+@botao_sim
+Sí
+
+@botao_nao
+No
+
+@verbo_dotnet48
+.NET Framework 4.8 (tarda unos 30 minutos)
+
+@verbo_xact
+DirectX Audio
+
+@verbo_xinput
+DirectX (mandos de juego)
+
+@verbo_riched20
+Edición de texto enriquecido
+
+@verbo_openal
+OpenAL (audio)
+
+@verbo_quartz
+DirectShow (vídeo)
+
+@verbo_dbghelp
+Depuración de Windows
+
+@verbo_secur32
+Seguridad de Windows
+
+@verbo_usp10
+Trazado de texto (Uniscribe)
+
+@peca_wine
+Wine (ejecuta los programas de Windows)
+
+@peca_wine32
+Compatibilidad con programas antiguos de 32 bits
+
+@peca_winetricks
+Instalador de componentes de Windows
+
+@peca_adb
+Instalador de paquetes Android divididos (.xapk)
+
+@peca_java
+Java (ejecuta los programas .jar)
+
+@peca_fuse
+Compatibilidad para abrir un AppImage directamente (FUSE)
+
+@peca_waydroid
+Android (Waydroid) - descarga cerca de 1 GB
+
+@limite_log_hardware
+este programa intentó hablar directamente con el hardware, como solo puede hacerlo un controlador del sistema. Wine lo dejó arrancar y le devolvió ceros, y por eso abre y luego se comporta de forma extraña
+
+@limite_log_driver
+este programa intentó cargar un controlador del sistema, y Wine se ejecuta fuera del núcleo de Linux
+
+@arq_memoria_cab1
+Lo que Tandem aprendió sobre este programa.
+
+@arq_memoria_cab2
+Puede leerlo, borrarlo y enviarlo a otra persona.
+
+@arq_receita_cab1
+Receta de Tandem: lo que este programa necesitó para funcionar.
+
+@arq_receita_cab2
+Puede leerla, comprobarla y enviarla a otra persona.
+
+@arq_receita_cab3
+Para usarla:  tandem receita --importar <este archivo> <el programa>
+
+@arq_config_cab
+Configuración de Tandem. Puede leer, editar y borrar este archivo.
+
+@col_programa
+Programa
+
+@appimage_comentario
+Instalado por Tandem a partir de {1}
+
+@verbo_d3dcompiler
+Compilador de sombreadores de DirectX
+
+@unidade_bytes
+{1} bytes
+
+@java_pede_desconhecido
+una más nueva
+
+@java_tem_desconhecido
+el instalado aquí
+
+@deb_confirma_terminal
+¿Instalar? [s/N] 
+
+@script_confirma_terminal
+¿{1}? [s/N] 
+
+@resposta_sim
+s
+
+@res_abriu
+Se abrió.
+
+@res_executou
+Se ejecutó.
+
+@res_instalado
+Instalado.
+
+@res_fechou_sozinho
+Se abrió y se cerró solo.
+
+@res_nao_abriu
+No se abrió.
+
+@res_nao_executou
+No se ejecutó.
+
+@res_nao_instalou
+No se instaló.
+
+@res_nao_confirmou
+Dijo que se instaló, pero el sistema no lo tiene.
+
+@res_incompleto
+La descarga no terminó.
+
+@res_cifrado
+El archivo está cifrado por el sitio que lo proporcionó.
+
+@res_nao_e_android
+No es un paquete de Android.
+
+@res_android_antigo
+Necesita un Android más nuevo que el de aquí.
+
+@res_so_arm
+Está hecho solo para procesadores de móvil.
+
+@res_ja_instalado
+Ya estaba instalado.
+
+@res_versao_mais_nova
+Ya hay una versión más nueva instalada.
+
+@res_sem_espaco
+No había espacio.
+
+@res_sem_assinatura
+El paquete no está firmado.
+
+@res_faltam_partes
+Faltan partes del paquete.
+
+@res_pacote_nao_abre
+El paquete no se abre.
+
+@res_pacote_vazio
+El paquete no tiene nada dentro.
+
+@res_java_antigo
+Necesita un Java más nuevo que el de aquí.
+
+@res_falta_javafx
+Necesita JavaFX, que no está instalado.
+
+@res_faltam_arquivos
+Faltan archivos que necesita, junto a él.
+
+@res_arquitetura_errada
+Está hecho para otro procesador.
+
+@res_bitola_errada
+Lo que faltaba llegó, pero para el otro ancho de procesador.
+
+@res_sistema_antigo
+Este sistema es más antiguo de lo que pide el programa.
+
+@res_falta_biblioteca
+Falta en el sistema una biblioteca que usa.
+
+@res_pasta_sem_permissao
+La carpeta donde está no permite ejecutar programas.
+
+@res_faltam_dependencias
+Al sistema le faltan cosas que este paquete necesita.
+
+@res_outra_familia_de_linux
+Fue hecho para otra familia de Linux.
+
+@res_so_abriu
+Se abrió; nadie confirmó que funcione.
+
+@res_confirmado
+El dueño confirmó que funciona.
+
+@res_reprovado
+El dueño dijo que no funcionó.

@@ -4573,3 +4573,279 @@ msgstr ""
 "manda nada suyo a ninguna parte.\n"
 "\n"
 "Para descargar:   tandem lista atualizar"
+
+msgctxt "detalhes_tecnicos"
+msgid "Technical details:"
+msgstr "Detalles técnicos:"
+
+msgctxt "botao_sim"
+msgid "Yes"
+msgstr "Sí"
+
+msgctxt "botao_nao"
+msgid "No"
+msgstr "No"
+
+msgctxt "verbo_dotnet48"
+msgid ".NET Framework 4.8 (takes about 30 minutes)"
+msgstr ".NET Framework 4.8 (tarda unos 30 minutos)"
+
+msgctxt "verbo_xact"
+msgid "DirectX Audio"
+msgstr "DirectX Audio"
+
+msgctxt "verbo_xinput"
+msgid "DirectX (game controllers)"
+msgstr "DirectX (mandos de juego)"
+
+msgctxt "verbo_riched20"
+msgid "Rich text editing"
+msgstr "Edición de texto enriquecido"
+
+msgctxt "verbo_openal"
+msgid "OpenAL (audio)"
+msgstr "OpenAL (audio)"
+
+msgctxt "verbo_quartz"
+msgid "DirectShow (video)"
+msgstr "DirectShow (vídeo)"
+
+msgctxt "verbo_dbghelp"
+msgid "Windows debugging support"
+msgstr "Depuración de Windows"
+
+msgctxt "verbo_secur32"
+msgid "Windows security"
+msgstr "Seguridad de Windows"
+
+msgctxt "verbo_usp10"
+msgid "Text shaping (Uniscribe)"
+msgstr "Trazado de texto (Uniscribe)"
+
+msgctxt "peca_wine"
+msgid "Wine (runs Windows programs)"
+msgstr "Wine (ejecuta los programas de Windows)"
+
+msgctxt "peca_wine32"
+msgid "Support for older 32-bit programs"
+msgstr "Compatibilidad con programas antiguos de 32 bits"
+
+msgctxt "peca_winetricks"
+msgid "Installer for Windows components"
+msgstr "Instalador de componentes de Windows"
+
+msgctxt "peca_adb"
+msgid "Installer for split Android packages (.xapk)"
+msgstr "Instalador de paquetes Android divididos (.xapk)"
+
+msgctxt "peca_java"
+msgid "Java (runs .jar programs)"
+msgstr "Java (ejecuta los programas .jar)"
+
+msgctxt "peca_fuse"
+msgid "Support for opening an AppImage directly (FUSE)"
+msgstr "Compatibilidad para abrir un AppImage directamente (FUSE)"
+
+msgctxt "peca_waydroid"
+msgid "Android (Waydroid) - downloads about 1 GB"
+msgstr "Android (Waydroid) - descarga cerca de 1 GB"
+
+msgctxt "limite_log_hardware"
+msgid "this program tried to talk straight to the hardware, the way only a system driver can. Wine let it start and handed it zeros, and that is why it opens and then behaves strangely"
+msgstr "este programa intentó hablar directamente con el hardware, como solo puede hacerlo un controlador del sistema. Wine lo dejó arrancar y le devolvió ceros, y por eso abre y luego se comporta de forma extraña"
+
+msgctxt "limite_log_driver"
+msgid "this program tried to load a system driver, and Wine runs outside the Linux kernel"
+msgstr "este programa intentó cargar un controlador del sistema, y Wine se ejecuta fuera del núcleo de Linux"
+
+msgctxt "arq_memoria_cab1"
+msgid "What Tandem learned about this program."
+msgstr "Lo que Tandem aprendió sobre este programa."
+
+msgctxt "arq_memoria_cab2"
+msgid "You can read it, delete it and send it to somebody else."
+msgstr "Puede leerlo, borrarlo y enviarlo a otra persona."
+
+msgctxt "arq_receita_cab1"
+msgid "Tandem recipe: what this program needed in order to work."
+msgstr "Receta de Tandem: lo que este programa necesitó para funcionar."
+
+msgctxt "arq_receita_cab2"
+msgid "You can read it, check it and send it to somebody else."
+msgstr "Puede leerla, comprobarla y enviarla a otra persona."
+
+msgctxt "arq_receita_cab3"
+msgid "To use it:  tandem receita --importar <this file> <the program>"
+msgstr "Para usarla:  tandem receita --importar <este archivo> <el programa>"
+
+msgctxt "arq_config_cab"
+msgid "Tandem settings. You can read, edit and delete this file."
+msgstr "Configuración de Tandem. Puede leer, editar y borrar este archivo."
+
+msgctxt "col_programa"
+msgid "Program"
+msgstr "Programa"
+
+msgctxt "appimage_comentario"
+msgid "Installed by Tandem from {1}"
+msgstr "Instalado por Tandem a partir de {1}"
+
+msgctxt "verbo_d3dcompiler"
+msgid "DirectX shader compiler"
+msgstr "Compilador de sombreadores de DirectX"
+
+msgctxt "unidade_bytes"
+msgid "{1} bytes"
+msgstr "{1} bytes"
+
+msgctxt "java_pede_desconhecido"
+msgid "a newer one"
+msgstr "una más nueva"
+
+msgctxt "java_tem_desconhecido"
+msgid "the one installed here"
+msgstr "el instalado aquí"
+
+msgctxt "deb_confirma_terminal"
+msgid "Install? [y/N] "
+msgstr "¿Instalar? [s/N] "
+
+msgctxt "script_confirma_terminal"
+msgid "{1}? [y/N] "
+msgstr "¿{1}? [s/N] "
+
+msgctxt "resposta_sim"
+msgid "y"
+msgstr "s"
+
+msgctxt "res_abriu"
+msgid "It opened."
+msgstr "Se abrió."
+
+msgctxt "res_executou"
+msgid "It ran."
+msgstr "Se ejecutó."
+
+msgctxt "res_instalado"
+msgid "It installed."
+msgstr "Instalado."
+
+msgctxt "res_fechou_sozinho"
+msgid "It opened and closed on its own."
+msgstr "Se abrió y se cerró solo."
+
+msgctxt "res_nao_abriu"
+msgid "It did not open."
+msgstr "No se abrió."
+
+msgctxt "res_nao_executou"
+msgid "It did not run."
+msgstr "No se ejecutó."
+
+msgctxt "res_nao_instalou"
+msgid "It did not install."
+msgstr "No se instaló."
+
+msgctxt "res_nao_confirmou"
+msgid "It said it installed, but the system does not have it."
+msgstr "Dijo que se instaló, pero el sistema no lo tiene."
+
+msgctxt "res_incompleto"
+msgid "The download did not finish."
+msgstr "La descarga no terminó."
+
+msgctxt "res_cifrado"
+msgid "The file is encrypted by the site that supplied it."
+msgstr "El archivo está cifrado por el sitio que lo proporcionó."
+
+msgctxt "res_nao_e_android"
+msgid "It is not an Android package."
+msgstr "No es un paquete de Android."
+
+msgctxt "res_android_antigo"
+msgid "It needs a newer Android than the one here."
+msgstr "Necesita un Android más nuevo que el de aquí."
+
+msgctxt "res_so_arm"
+msgid "It is built for phone processors only."
+msgstr "Está hecho solo para procesadores de móvil."
+
+msgctxt "res_ja_instalado"
+msgid "It was already installed."
+msgstr "Ya estaba instalado."
+
+msgctxt "res_versao_mais_nova"
+msgid "A newer version is already installed."
+msgstr "Ya hay una versión más nueva instalada."
+
+msgctxt "res_sem_espaco"
+msgid "There was not enough space."
+msgstr "No había espacio."
+
+msgctxt "res_sem_assinatura"
+msgid "The package is not signed."
+msgstr "El paquete no está firmado."
+
+msgctxt "res_faltam_partes"
+msgid "Parts of the package are missing."
+msgstr "Faltan partes del paquete."
+
+msgctxt "res_pacote_nao_abre"
+msgid "The package cannot be opened."
+msgstr "El paquete no se abre."
+
+msgctxt "res_pacote_vazio"
+msgid "The package has nothing in it."
+msgstr "El paquete no tiene nada dentro."
+
+msgctxt "res_java_antigo"
+msgid "It needs a newer Java than the one here."
+msgstr "Necesita un Java más nuevo que el de aquí."
+
+msgctxt "res_falta_javafx"
+msgid "It needs JavaFX, which is not installed."
+msgstr "Necesita JavaFX, que no está instalado."
+
+msgctxt "res_faltam_arquivos"
+msgid "Files it needs are missing from beside it."
+msgstr "Faltan archivos que necesita, junto a él."
+
+msgctxt "res_arquitetura_errada"
+msgid "It is built for a different processor."
+msgstr "Está hecho para otro procesador."
+
+msgctxt "res_bitola_errada"
+msgid "What it needed arrived, but built for the other processor width."
+msgstr "Lo que faltaba llegó, pero para el otro ancho de procesador."
+
+msgctxt "res_sistema_antigo"
+msgid "This system is older than the program needs."
+msgstr "Este sistema es más antiguo de lo que pide el programa."
+
+msgctxt "res_falta_biblioteca"
+msgid "A library it needs is missing from the system."
+msgstr "Falta en el sistema una biblioteca que usa."
+
+msgctxt "res_pasta_sem_permissao"
+msgid "The folder it is in does not allow running programs."
+msgstr "La carpeta donde está no permite ejecutar programas."
+
+msgctxt "res_faltam_dependencias"
+msgid "The system is missing things this package needs."
+msgstr "Al sistema le faltan cosas que este paquete necesita."
+
+msgctxt "res_outra_familia_de_linux"
+msgid "It was made for another family of Linux."
+msgstr "Fue hecho para otra familia de Linux."
+
+msgctxt "res_so_abriu"
+msgid "It opened; nobody has confirmed it works."
+msgstr "Se abrió; nadie confirmó que funcione."
+
+msgctxt "res_confirmado"
+msgid "The owner confirmed it works."
+msgstr "El dueño confirmó que funciona."
+
+msgctxt "res_reprovado"
+msgid "The owner said it did not work."
+msgstr "El dueño dijo que no funcionó."

@@ -66,7 +66,7 @@ $URL}")" "$(t_msg botao_adicionar_loja)" "$(t_msg botao_cancelar)"; then
         if [ -t 0 ]; then
             printf "$(t_msg flatpak_loja_terminal)" "$AMIGAVEL"
             read -r r
-            case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
+            if ! t_confirmou "$r"; then printf '%s\n' "$(t_msg cancelado)"; exit 0; fi
         else
             t_tem_gui || t_erro "$(t_msg flatpak_loja_sem_janela "$AMIGAVEL" "$ARQ")"
             exit 0
@@ -98,7 +98,7 @@ $(t_msg flatpak_vem_de "$URL")}")" "$(t_msg botao_instalar)" "$(t_msg botao_canc
     if [ -t 0 ]; then
         printf "$(t_msg flatpak_instalar_terminal)" "$AMIGAVEL"
         read -r r
-        case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
+        if ! t_confirmou "$r"; then printf '%s\n' "$(t_msg cancelado)"; exit 0; fi
     else
         t_erro "$(t_msg flatpak_sem_confirmacao "$AMIGAVEL" "$ARQ")"
         exit 1

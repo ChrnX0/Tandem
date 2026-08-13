@@ -4540,3 +4540,279 @@ msgstr ""
 "करने से आपका कुछ भी कहीं नहीं जाता।\n"
 "\n"
 "डाउनलोड करने के लिए:   tandem lista atualizar"
+
+msgctxt "detalhes_tecnicos"
+msgid "Technical details:"
+msgstr "तकनीकी विवरण:"
+
+msgctxt "botao_sim"
+msgid "Yes"
+msgstr "हाँ"
+
+msgctxt "botao_nao"
+msgid "No"
+msgstr "नहीं"
+
+msgctxt "verbo_dotnet48"
+msgid ".NET Framework 4.8 (takes about 30 minutes)"
+msgstr ".NET Framework 4.8 (लगभग 30 मिनट लगते हैं)"
+
+msgctxt "verbo_xact"
+msgid "DirectX Audio"
+msgstr "DirectX ऑडियो"
+
+msgctxt "verbo_xinput"
+msgid "DirectX (game controllers)"
+msgstr "DirectX (गेम कंट्रोलर)"
+
+msgctxt "verbo_riched20"
+msgid "Rich text editing"
+msgstr "रिच टेक्स्ट संपादन"
+
+msgctxt "verbo_openal"
+msgid "OpenAL (audio)"
+msgstr "OpenAL (ऑडियो)"
+
+msgctxt "verbo_quartz"
+msgid "DirectShow (video)"
+msgstr "DirectShow (वीडियो)"
+
+msgctxt "verbo_dbghelp"
+msgid "Windows debugging support"
+msgstr "Windows डीबगिंग सहायता"
+
+msgctxt "verbo_secur32"
+msgid "Windows security"
+msgstr "Windows सुरक्षा"
+
+msgctxt "verbo_usp10"
+msgid "Text shaping (Uniscribe)"
+msgstr "टेक्स्ट शेपिंग (Uniscribe)"
+
+msgctxt "peca_wine"
+msgid "Wine (runs Windows programs)"
+msgstr "Wine (Windows प्रोग्राम चलाता है)"
+
+msgctxt "peca_wine32"
+msgid "Support for older 32-bit programs"
+msgstr "पुराने 32-बिट प्रोग्राम के लिए सहायता"
+
+msgctxt "peca_winetricks"
+msgid "Installer for Windows components"
+msgstr "Windows घटकों का इंस्टॉलर"
+
+msgctxt "peca_adb"
+msgid "Installer for split Android packages (.xapk)"
+msgstr "विभाजित Android पैकेज (.xapk) का इंस्टॉलर"
+
+msgctxt "peca_java"
+msgid "Java (runs .jar programs)"
+msgstr "Java (.jar प्रोग्राम चलाता है)"
+
+msgctxt "peca_fuse"
+msgid "Support for opening an AppImage directly (FUSE)"
+msgstr "AppImage को सीधे खोलने की सहायता (FUSE)"
+
+msgctxt "peca_waydroid"
+msgid "Android (Waydroid) - downloads about 1 GB"
+msgstr "Android (Waydroid) - लगभग 1 GB डाउनलोड करता है"
+
+msgctxt "limite_log_hardware"
+msgid "this program tried to talk straight to the hardware, the way only a system driver can. Wine let it start and handed it zeros, and that is why it opens and then behaves strangely"
+msgstr "इस प्रोग्राम ने सीधे हार्डवेयर से बात करने की कोशिश की, जैसा केवल एक सिस्टम ड्राइवर कर सकता है। Wine ने इसे चलने दिया और शून्य लौटाए, इसीलिए यह खुलता है और फिर अजीब व्यवहार करता है"
+
+msgctxt "limite_log_driver"
+msgid "this program tried to load a system driver, and Wine runs outside the Linux kernel"
+msgstr "इस प्रोग्राम ने एक सिस्टम ड्राइवर लोड करने की कोशिश की, और Wine लिनक्स कर्नेल के बाहर चलता है"
+
+msgctxt "arq_memoria_cab1"
+msgid "What Tandem learned about this program."
+msgstr "Tandem ने इस प्रोग्राम के बारे में जो सीखा।"
+
+msgctxt "arq_memoria_cab2"
+msgid "You can read it, delete it and send it to somebody else."
+msgstr "आप इसे पढ़ सकते हैं, मिटा सकते हैं और किसी और को भेज सकते हैं।"
+
+msgctxt "arq_receita_cab1"
+msgid "Tandem recipe: what this program needed in order to work."
+msgstr "Tandem नुस्खा: इस प्रोग्राम को चलने के लिए क्या चाहिए था।"
+
+msgctxt "arq_receita_cab2"
+msgid "You can read it, check it and send it to somebody else."
+msgstr "आप इसे पढ़ सकते हैं, जाँच सकते हैं और किसी और को भेज सकते हैं।"
+
+msgctxt "arq_receita_cab3"
+msgid "To use it:  tandem receita --importar <this file> <the program>"
+msgstr "उपयोग करने के लिए:  tandem receita --importar <यह फ़ाइल> <वह प्रोग्राम>"
+
+msgctxt "arq_config_cab"
+msgid "Tandem settings. You can read, edit and delete this file."
+msgstr "Tandem की सेटिंग्स। आप इस फ़ाइल को पढ़, संपादित और मिटा सकते हैं।"
+
+msgctxt "col_programa"
+msgid "Program"
+msgstr "प्रोग्राम"
+
+msgctxt "appimage_comentario"
+msgid "Installed by Tandem from {1}"
+msgstr "Tandem द्वारा {1} से इंस्टॉल किया गया"
+
+msgctxt "verbo_d3dcompiler"
+msgid "DirectX shader compiler"
+msgstr "DirectX शेडर कंपाइलर"
+
+msgctxt "unidade_bytes"
+msgid "{1} bytes"
+msgstr "{1} बाइट्स"
+
+msgctxt "java_pede_desconhecido"
+msgid "a newer one"
+msgstr "एक नया संस्करण"
+
+msgctxt "java_tem_desconhecido"
+msgid "the one installed here"
+msgstr "यहाँ स्थापित संस्करण"
+
+msgctxt "deb_confirma_terminal"
+msgid "Install? [y/N] "
+msgstr "इंस्टॉल करें? [y/N] "
+
+msgctxt "script_confirma_terminal"
+msgid "{1}? [y/N] "
+msgstr "{1}? [y/N] "
+
+msgctxt "resposta_sim"
+msgid "y"
+msgstr "y"
+
+msgctxt "res_abriu"
+msgid "It opened."
+msgstr "यह खुला।"
+
+msgctxt "res_executou"
+msgid "It ran."
+msgstr "यह चला।"
+
+msgctxt "res_instalado"
+msgid "It installed."
+msgstr "इंस्टॉल हो गया।"
+
+msgctxt "res_fechou_sozinho"
+msgid "It opened and closed on its own."
+msgstr "यह खुला और अपने आप बंद हो गया।"
+
+msgctxt "res_nao_abriu"
+msgid "It did not open."
+msgstr "यह नहीं खुला।"
+
+msgctxt "res_nao_executou"
+msgid "It did not run."
+msgstr "यह नहीं चला।"
+
+msgctxt "res_nao_instalou"
+msgid "It did not install."
+msgstr "इंस्टॉल नहीं हुआ।"
+
+msgctxt "res_nao_confirmou"
+msgid "It said it installed, but the system does not have it."
+msgstr "इसने कहा कि इंस्टॉल हो गया, पर सिस्टम में यह नहीं है।"
+
+msgctxt "res_incompleto"
+msgid "The download did not finish."
+msgstr "डाउनलोड पूरा नहीं हुआ।"
+
+msgctxt "res_cifrado"
+msgid "The file is encrypted by the site that supplied it."
+msgstr "जिस साइट ने यह दिया, उसने फ़ाइल को एन्क्रिप्ट किया है।"
+
+msgctxt "res_nao_e_android"
+msgid "It is not an Android package."
+msgstr "यह Android पैकेज नहीं है।"
+
+msgctxt "res_android_antigo"
+msgid "It needs a newer Android than the one here."
+msgstr "इसे यहाँ मौजूद Android से नया चाहिए।"
+
+msgctxt "res_so_arm"
+msgid "It is built for phone processors only."
+msgstr "यह केवल फ़ोन के प्रोसेसर के लिए बना है।"
+
+msgctxt "res_ja_instalado"
+msgid "It was already installed."
+msgstr "यह पहले से इंस्टॉल था।"
+
+msgctxt "res_versao_mais_nova"
+msgid "A newer version is already installed."
+msgstr "पहले से एक नया संस्करण इंस्टॉल है।"
+
+msgctxt "res_sem_espaco"
+msgid "There was not enough space."
+msgstr "जगह पर्याप्त नहीं थी।"
+
+msgctxt "res_sem_assinatura"
+msgid "The package is not signed."
+msgstr "पैकेज पर हस्ताक्षर नहीं है।"
+
+msgctxt "res_faltam_partes"
+msgid "Parts of the package are missing."
+msgstr "पैकेज के कुछ हिस्से गायब हैं।"
+
+msgctxt "res_pacote_nao_abre"
+msgid "The package cannot be opened."
+msgstr "पैकेज खुल नहीं रहा।"
+
+msgctxt "res_pacote_vazio"
+msgid "The package has nothing in it."
+msgstr "पैकेज में कुछ भी नहीं है।"
+
+msgctxt "res_java_antigo"
+msgid "It needs a newer Java than the one here."
+msgstr "इसे यहाँ मौजूद Java से नया चाहिए।"
+
+msgctxt "res_falta_javafx"
+msgid "It needs JavaFX, which is not installed."
+msgstr "इसे JavaFX चाहिए, जो इंस्टॉल नहीं है।"
+
+msgctxt "res_faltam_arquivos"
+msgid "Files it needs are missing from beside it."
+msgstr "इसके साथ रहने वाली ज़रूरी फ़ाइलें गायब हैं।"
+
+msgctxt "res_arquitetura_errada"
+msgid "It is built for a different processor."
+msgstr "यह किसी दूसरे प्रोसेसर के लिए बना है।"
+
+msgctxt "res_bitola_errada"
+msgid "What it needed arrived, but built for the other processor width."
+msgstr "जो चाहिए था वह आया, पर दूसरी प्रोसेसर-चौड़ाई का।"
+
+msgctxt "res_sistema_antigo"
+msgid "This system is older than the program needs."
+msgstr "यह सिस्टम प्रोग्राम की माँग से पुराना है।"
+
+msgctxt "res_falta_biblioteca"
+msgid "A library it needs is missing from the system."
+msgstr "सिस्टम में इसकी ज़रूरी लाइब्रेरी नहीं है।"
+
+msgctxt "res_pasta_sem_permissao"
+msgid "The folder it is in does not allow running programs."
+msgstr "जिस फ़ोल्डर में यह है, वहाँ प्रोग्राम चलाने की अनुमति नहीं है।"
+
+msgctxt "res_faltam_dependencias"
+msgid "The system is missing things this package needs."
+msgstr "सिस्टम में वे चीज़ें नहीं हैं जो इस पैकेज को चाहिए।"
+
+msgctxt "res_outra_familia_de_linux"
+msgid "It was made for another family of Linux."
+msgstr "यह Linux के किसी दूसरे परिवार के लिए बना है।"
+
+msgctxt "res_so_abriu"
+msgid "It opened; nobody has confirmed it works."
+msgstr "यह खुला; किसी ने पुष्टि नहीं की कि यह काम करता है।"
+
+msgctxt "res_confirmado"
+msgid "The owner confirmed it works."
+msgstr "मालिक ने पुष्टि की कि यह काम करता है।"
+
+msgctxt "res_reprovado"
+msgid "The owner said it did not work."
+msgstr "मालिक ने कहा कि यह काम नहीं किया।"

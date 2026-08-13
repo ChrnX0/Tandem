@@ -69,9 +69,9 @@ $CABECA
 
 $(t_msg script_aviso_poder)" "$ACAO" "$(t_msg botao_cancelar)"; then
     if [ -t 0 ]; then
-        printf '%s\n\n%s [s/N] ' "$QUAL" "$ACAO?"
+        printf '%s\n\n%s' "$QUAL" "$(t_msg script_confirma_terminal "$ACAO")"
         read -r r
-        case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
+        if ! t_confirmou "$r"; then printf '%s\n' "$(t_msg cancelado)"; exit 0; fi
     else
         # No window, no terminal, and this is the one file type where carrying on
         # without a confirmation is out of the question.

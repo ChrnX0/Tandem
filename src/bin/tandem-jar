@@ -146,7 +146,7 @@ if grep -q 'UnsupportedClassVersionError' "$PARCIAL" 2>/dev/null; then
     rm -f "$PARCIAL"
     t_memoria_grava "$PROG" RESULTADO "java antigo" 2>/dev/null
     [ -n "$PEDE" ] && t_memoria_grava "$PROG" JAVA "$PEDE" 2>/dev/null
-    t_erro "$(t_texto_java_antigo "${PEDE:-mais nova}" "${TEM:-o instalado}")"
+    t_erro "$(t_texto_java_antigo "${PEDE:-$(t_msg java_pede_desconhecido)}" "${TEM:-$(t_msg java_tem_desconhecido)}")"
     exit "$CODIGO"
 fi
 

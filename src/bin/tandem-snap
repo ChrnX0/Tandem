@@ -49,7 +49,7 @@ $(t_msg snap_aviso_sem_assinatura)" "$(t_msg botao_instalar_assim_mesmo)" "$(t_m
     if [ -t 0 ]; then
         printf '%s' "$(t_msg snap_confirma_terminal)"
         read -r r
-        case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
+        if ! t_confirmou "$r"; then printf '%s\n' "$(t_msg cancelado)"; exit 0; fi
     else
         t_erro "$(t_msg snap_sem_confirmacao "$NOME")"
         exit 1
@@ -96,6 +96,6 @@ t_memoria_grava "$ARQ" RESULTADO "nao instalou" 2>/dev/null
 t_erro "$(t_msg snap_nao_instalou "$NOME")
 ${PORQUE:+
 $PORQUE
-}${ULTIMAS:+$([ -z "$PORQUE" ] && printf '\nFoi isto que o sistema disse:\n\n%s\n' "$ULTIMAS")}
+}${ULTIMAS:+$([ -z "$PORQUE" ] && printf '\n%s\n\n%s\n' "$(t_msg sistema_disse)" "$ULTIMAS")}
 $(t_msg registro_completo_em "$LOG")"
 exit "$CODIGO"

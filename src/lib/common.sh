@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.6"
+TANDEM_VERSAO="4.7"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -388,15 +388,21 @@ t_ok() {
 # one nor the other. The log always gets it, for the "it did not work"
 # post-mortem.
 t_erro() {
-    local mostrou=0
+    local mostrou=0 extra=""
     t_diz "ERRO: $1"
+    # The pointer to the log file used to carry a hard-coded "Detalhes
+    # tecnicos:" - Portuguese, in the one window every failure ends in, in all
+    # seven languages. It was assembled inside a ${LOG:+...} expansion, which is
+    # neither a call, an assignment, a printf nor a bare argument, so
+    # tools/conta-literais.py never saw it and read TOTAL 0 for two releases.
+    [ -n "$LOG" ] && extra="$(printf '\n\n%s\n%s' "$(t_msg detalhes_tecnicos)" "$LOG")"
     if t_tem_gui; then
         command -v notify-send >/dev/null 2>&1 &&
             notify-send -u critical -i dialog-error -a Tandem "Tandem" "$1" 2>/dev/null &&
             mostrou=1
         if command -v zenity >/dev/null 2>&1 &&
            zenity --error --no-wrap --title="Tandem" \
-                  --text="$1${LOG:+$'\n\n'Detalhes técnicos:$'\n'$LOG}" 2>/dev/null; then
+                  --text="$1$extra" 2>/dev/null; then
             mostrou=1
         fi
     fi
@@ -410,8 +416,37 @@ t_erro() {
 t_pergunta() {
     t_tem_gui || return 1
     command -v zenity >/dev/null 2>&1 || return 1
+    # The DEFAULT labels were literal Portuguese, so every caller that did not
+    # pass its own pair showed "Sim" and "Nao" to a French or Chinese reader.
+    # A default value is not a call, an assignment or a printf either: the
+    # counter scored this line as clean while it was the most-clicked pair of
+    # words in the program.
     zenity --question --no-wrap --title="Tandem" --text="$1" \
-           --ok-label="${2:-Sim}" --cancel-label="${3:-Não}" 2>/dev/null
+           --ok-label="${2:-$(t_msg botao_sim)}" \
+           --cancel-label="${3:-$(t_msg botao_nao)}" 2>/dev/null
+}
+
+# Did the reader agree, in a terminal, in their own language?
+#
+# This existed as `case "$r" in s|S|sim|SIM)` copied into five handlers, while
+# the prompt beside it came from the catalogue and says "[y/N]" in English and
+# "[o/N]" in French. So an English owner did what the screen asked, typed "y",
+# and was told the install was cancelled - a correctness defect wearing a
+# translation defect's clothes, and the more dangerous half is that it appears
+# on the .deb and .sh paths, where the alternative to installing is being told
+# nothing happened when something should have.
+#
+# The language's own letter comes from the catalogue; "y" and "s" are always
+# accepted on top of it, because a shop owner who learned "s" from a Brazilian
+# forum should not be refused by a machine set to French.
+t_confirmou() {
+    local r="${1:-}" letra
+    letra="$(t_msg resposta_sim 2>/dev/null)"
+    case "${r,,}" in
+        y|yes|s|sim) return 0 ;;
+    esac
+    [ -n "$letra" ] && [ "${r,,}" = "${letra,,}" ] && return 0
+    return 1
 }
 
 # Shows a long text read from standard input.
@@ -1175,9 +1210,12 @@ t_memoria_grava() {
     arq="$(t_memoria_arquivo "$prog")" || return 1
     mkdir -p "$TANDEM_MEMORIA" 2>/dev/null || return 1
     if [ ! -f "$arq" ]; then
+        # These two comment lines are prose: the owner is invited, in the
+        # product's own words, to read this file and send it to somebody. A
+        # file the user is told to open is a screen, so it is translated.
         {
-            printf '# O que o Tandem aprendeu sobre este programa.\n'
-            printf '# Pode ler, apagar e mandar para outra pessoa.\n'
+            printf '# %s\n' "$(t_msg arq_memoria_cab1)"
+            printf '# %s\n' "$(t_msg arq_memoria_cab2)"
             printf 'PROGRAMA=%s\n' "$(basename -- "$prog")"
         } > "$arq" 2>/dev/null || return 1
     fi
@@ -1290,9 +1328,13 @@ t_receita_exporta() {
     local prog="$1" arq
     arq="$(t_memoria_arquivo "$prog" 2>/dev/null)" || return 1
     [ -f "$arq" ] || return 1
-    printf '# Receita do Tandem: o que este programa precisou para funcionar.\n'
-    printf '# Pode ler, conferir e mandar para outra pessoa.\n'
-    printf '# Para usar:  tandem receita --importar <este arquivo> <o programa>\n'
+    # A recipe is written to be READ by a person and handed to another person,
+    # which makes its header the most-read prose in the whole feature. The
+    # importer skips every line starting with "#", so translating these three
+    # cannot break a recipe that crosses a language border.
+    printf '# %s\n' "$(t_msg arq_receita_cab1)"
+    printf '# %s\n' "$(t_msg arq_receita_cab2)"
+    printf '# %s\n' "$(t_msg arq_receita_cab3)"
     printf 'TANDEM_RECEITA=1\n'
     printf 'IDENTIDADE=%s\n' "$(t_memoria_id "$prog")"
     printf 'ORIGEM=%s\n' "$( . /etc/os-release 2>/dev/null
@@ -1533,12 +1575,15 @@ t_limite_do_programa() {
 t_limite_do_log() {
     local log="$1"
     [ -f "$log" ] || return 1
+    # The verdict travels as "class|sentence", the same shape limites.tsv
+    # produces - and limites.tsv has a translation per language while these two
+    # sentences, the PROVEN half of the same diagnosis, were literal Portuguese.
     if grep -qE 'MmMapIoSpace|READ_PORT_|WRITE_PORT_|IoConnectInterrupt' "$log" 2>/dev/null; then
-        printf 'driver|este programa tentou falar direto com o hardware, do jeito que só um driver de sistema pode. O Wine deixou ele começar e devolveu zeros, e é por isso que ele abre e depois se comporta de um jeito estranho'
+        printf 'driver|%s' "$(t_msg limite_log_hardware)"
         return 0
     fi
     if grep -qE 'ZwLoadDriver|err:winedevice|failed to load driver' "$log" 2>/dev/null; then
-        printf 'driver|este programa tentou carregar um driver de sistema, e o Wine roda fora do núcleo do Linux'
+        printf 'driver|%s' "$(t_msg limite_log_driver)"
         return 0
     fi
     return 1
@@ -1904,7 +1949,7 @@ t_tamanho_amigavel() {
     if   [ "$b" -ge 1073741824 ] 2>/dev/null; then awk -v b="$b" 'BEGIN{printf "%.1f GB", b/1073741824}'
     elif [ "$b" -ge 1048576 ]    2>/dev/null; then awk -v b="$b" 'BEGIN{printf "%.0f MB", b/1048576}'
     elif [ "$b" -ge 1024 ]       2>/dev/null; then awk -v b="$b" 'BEGIN{printf "%.0f KB", b/1024}'
-    else printf '%s bytes' "$b"; fi
+    else t_msg unidade_bytes "$b"; fi
 }
 
 # Lists what counts as data inside a prefix:
@@ -2536,25 +2581,30 @@ t_como_root() {
 
 # What is missing on this machine, one piece per line. Each line is
 #     code|description for the user
+# The description half of every line here was literal Portuguese, and this is
+# the whole screen of "tandem preparar" - the command that exists because a
+# dependency cannot be installed from postinst. Seven sentences, shown to every
+# user in every language, and invisible to the counter for the same reason as
+# t_verbo_amigavel: a helper whose name is not a prose-body pattern.
 t_pecas_faltando() {
     command -v wine >/dev/null 2>&1 ||
-        echo "wine|Wine (roda os programas do Windows)"
+        echo "wine|$(t_msg peca_wine)"
     if command -v wine >/dev/null 2>&1 && ! t_tem_wine32; then
-        echo "wine32|Suporte a programas antigos de 32 bits"
+        echo "wine32|$(t_msg peca_wine32)"
     fi
     command -v winetricks >/dev/null 2>&1 ||
-        echo "winetricks|Instalador de componentes do Windows"
+        echo "winetricks|$(t_msg peca_winetricks)"
     command -v adb >/dev/null 2>&1 ||
-        echo "adb|Instalador de pacotes Android divididos (.xapk)"
+        echo "adb|$(t_msg peca_adb)"
     command -v java >/dev/null 2>&1 ||
-        echo "java|Java (roda os programas .jar)"
+        echo "java|$(t_msg peca_java)"
     # An AppImage without FUSE still opens - Tandem falls back to unpacking it -
     # but every launch pays for the unpacking. The library is a few hundred
     # kilobytes and it stopped being installed by default in Ubuntu 22.04.
     t_tem_fuse2 ||
-        echo "fuse|Suporte para abrir AppImage direto (FUSE)"
+        echo "fuse|$(t_msg peca_fuse)"
     command -v waydroid >/dev/null 2>&1 ||
-        echo "waydroid|Android (Waydroid) - baixa cerca de 1 GB"
+        echo "waydroid|$(t_msg peca_waydroid)"
     return 0
 }
 
@@ -2835,6 +2885,40 @@ t_erro_do_leitor() {
     esac
 }
 
+# A memory value turned into a sentence, for the moment it is SHOWN.
+#
+# The value stays on disk exactly as it was written - "java antigo", "so arm",
+# "fechou sozinho". That is not sentiment: a recipe is a file the owner sends to
+# somebody else, and rule after rule in this project depends on those strings
+# being stable, so translating one would break every memory file and every
+# recipe already written on a machine somewhere.
+#
+# What was wrong was the conclusion drawn from that. "It is on-disk format"
+# became "so it never reaches a person", and it does: acao_memoria prints it,
+# tandem socorro puts it in the report the owner sends to whoever is helping,
+# and t_receita_exporta dumps the whole file into something whose own header
+# invites a stranger to read it. Forty-four of those values are Portuguese
+# sentences - "nao confirmou", "pasta sem permissao", "bitola errada", which is
+# Brazilian slang no dictionary recovers - and the static counter is blind to
+# all of them BY CONSTRUCTION, because it exempts an argument by where it goes.
+#
+# So: token on disk, sentence on screen, exactly as t_erro_do_leitor does for
+# the readers. An unknown value prints itself rather than a key name - an old
+# memory file written by a version that knew a value this one does not is the
+# normal case, not an error.
+t_resultado_amigavel() {
+    local valor="${1:-}" chave
+    [ -n "$valor" ] || return 1
+    chave="res_${valor// /_}"
+    chave="${chave//-/_}"
+    case "$chave" in *[!a-z_0-9]*) printf '%s' "$valor"; return 0 ;; esac
+    if [ -n "${T_MSG[$chave]:-}${T_MSG_BASE[$chave]:-}" ]; then
+        t_msg "$chave"
+    else
+        printf '%s' "$valor"
+    fi
+}
+
 t_appimage_info() {
     command -v python3 >/dev/null 2>&1 || return 1
     python3 "$TANDEM_LIB/appimageinfo.py" "$1" 2>/dev/null
@@ -2975,7 +3059,7 @@ t_integra_appimage() {
         printf 'Name=%s\n' "$nome"
         # The comment is the receipt: whoever finds this file later knows who
         # wrote it and which file it points at.
-        printf 'Comment=Instalado pelo Tandem a partir de %s\n' "$prog"
+        printf 'Comment=%s\n' "$(t_msg appimage_comentario "$prog")"
         printf 'Exec=%s\n' "$(printf '%s' "$prog" | sed 's/ /\\ /g')"
         # An empty Icon= is not the same as no Icon=: desktop-file-validate
         # complains about the first and accepts the second.
@@ -3408,7 +3492,7 @@ t_config_grava() {
     local chave="$1" valor="$2" tmp
     mkdir -p "$(dirname -- "$TANDEM_CONFIG")" 2>/dev/null || return 1
     [ -f "$TANDEM_CONFIG" ] || {
-        printf '# Configuração do Tandem. Pode ler, editar e apagar.\n' > "$TANDEM_CONFIG"; }
+        printf '# %s\n' "$(t_msg arq_config_cab)" > "$TANDEM_CONFIG"; }
     tmp="$TANDEM_CONFIG.novo"
     {
         grep -E '^(#|[A-Z_]+=)' "$TANDEM_CONFIG" 2>/dev/null | grep -v "^$chave="

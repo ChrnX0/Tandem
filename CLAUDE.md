@@ -54,8 +54,8 @@ was found by somebody writing down what they actually saw.
    becomes "this app is made for phones only and does not run here". Every such
    sentence belongs in `po/`, never in the code. `tools/conta-literais.py`
    measures how far that is from true and the suite holds the number as a
-   ratchet: it may fall, never rise. **It reads 0 for the third time and the
-   first two zeros were false** — read the section on the counter before you
+   ratchet: it may fall, never rise. **It has now read 0 four times and three
+   of those zeros were false** — read the section on the counter before you
    trust any number it prints. What is different is not the number: the
    fifteenth miss was a whole file type this tool cannot see, so a second
    instrument now covers it.
@@ -141,6 +141,11 @@ tools/po-para-catalogo.py compiles po/ -> src/lib/idiomas/ in pure Python
 po/LINGUAS                the languages that ship (gettext convention)
 src/lib/idiomas/*.txt     GENERATED runtime catalogues; do not edit by hand
 tools/indice-winetricks.py  generates verbos.tsv by reading the installed winetricks
+tools/prosa-fora-do-catalogo.py  THE SECOND INSTRUMENT: runs the program and reads
+                          the OUTPUT. conta-literais.py reads the source and has
+                          under-reported sixteen times; this one renders in Chinese
+                          and flags Latin word-runs, and renders in all seven and
+                          flags any line that comes out byte-identical
 proofgate.json            evidence gate: stack, coupled files
 .github/workflows/ci.yml  suite + lintian + a real install cycle
 .github/workflows/release.yml  tag -> build, verify, publish the .deb
@@ -193,7 +198,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 976 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 992 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -906,6 +911,94 @@ Reference environment where the project was born: Zorin OS 18.1 (Ubuntu noble
 base), kernel 7.0, x86_64, Wayland/GNOME, 15 GB RAM, Wine 10.0 from the distro
 repository, Waydroid 1.6.2 MAINLINE with GAPPS and libhoudini, `binderfs` with
 `anbox-*` nodes.
+
+### Miss sixteen, and why the sixteenth widening was not attempted
+
+**The counter read TOTAL 0 while seventy-three sentences were on screen**, and
+this is the third false zero — the second one shipped. Nine were found by
+reading `src/lib/winedeps.sh` by hand; a six-lens audit of the whole tree then
+found **sixty-four more, in fourteen files**. The mechanism is the one this file
+already predicted and it is worth stating exactly, because it is the reason no
+seventeenth widening should be attempted either:
+
+- **`t_verbo_amigavel` returns prose and its NAME matches no prose-body
+  pattern**, and it lives in a library rather than in a handler — so the
+  whole-file rule (which fixed miss thirteen) and the prose-body rule were both
+  inapplicable. It returned "Editor de texto rico", "Depurador do Windows",
+  "Desenho de texto (Uniscribe)" on the screen where the owner agrees to a
+  half-hour download. The same shape hid `t_pecas_faltando`, which is the whole
+  of `tandem preparar`.
+- **`Detalhes tecnicos:` was assembled inside a `${LOG:+...}` expansion** in
+  `t_erro`, so it was in every error window in every language, and it is neither
+  a call, an assignment, a printf nor a bare argument.
+- **`${2:-Sim}` / `${3:-Não}`** — a parameter DEFAULT is none of those four
+  either, and those were the most-clicked words in the program. The same shape
+  recurred in `tandem-jar`, which substituted `mais nova` into a Chinese
+  sentence and produced `sudo apt install openjdk-mais nova-jre`.
+- **Forty-four values in the memory file**, which the counter exempts *by
+  destination*: an argument to `t_memoria_grava` is data by assumption. It is
+  data — and `acao_memoria` prints it, `tandem socorro` puts it in the report
+  the owner sends, and `t_receita_exporta` mails the whole file to a stranger.
+  **The exemption was right about the disk and wrong about the screen.**
+
+**The fix for the memory values is the one that breaks nobody, and it is the
+pattern to copy:** the value stays on disk exactly as written, and
+`t_resultado_amigavel` turns it into a sentence when it is SHOWN — the same
+arrangement `t_erro_do_leitor` uses for the readers' tokens. Translating an
+on-disk value would break every recipe already sitting on somebody's machine.
+
+**One of these was a correctness defect, not a translation one.** Five handlers
+printed `[y/N]` in English and `[o/N]` in French, from the catalogue, and then
+ran `case "$r" in s|S|sim|SIM)`. An English owner did exactly what the screen
+asked, typed `y`, and was told the install was cancelled — on the `.deb` and
+`.sh` paths, the two where the alternative to installing is being told nothing
+happened. `t_confirmou` now accepts the language's own letter plus `y` and `s`
+always, because a shop owner who learned `s` from a Brazilian forum should not
+be refused by a machine set to French.
+
+### The second instrument, and how it failed first
+
+`tools/prosa-fora-do-catalogo.py` asks a different question of a different
+thing: it **runs the program and reads what comes out**. Two angles, because
+the first has a floor of its own:
+
+1. **Render in `zh_CN`** — Chinese shares no letters with Portuguese or
+   English, so any run of Latin words is either a name on an explicit
+   `VERBATIM` list or prose that never reached the catalogue.
+2. **Render in all seven and compare** — a line that comes out byte-identical
+   in all seven is what a literal necessarily is and a catalogue lookup almost
+   never is. This is the angle that catches accent-free Portuguese, which is
+   the hole the very FIRST version of the static counter had.
+
+**Its own first version did not catch the bug it was written for**, and that is
+the part worth keeping. It required three words of three letters each, so
+"Editor de texto rico" was chopped at "de" into runs of one and two and scored
+clean — the counter's entire history repeating itself inside its replacement, on
+the first attempt. It was found only by putting the defect back and watching the
+tool stay silent. **Do that every time**: a green instrument that has never
+caught anything is a green instrument that agrees with itself. A later version
+then INVENTED a finding — `sim` on the verbatim list deleted itself out of the
+middle of `simplified` and left `plified` — so the stripping is word-bounded
+now. A tool that invents findings is worse than one that misses them, because
+somebody has to spend an afternoon proving each one is nothing.
+
+**What it still cannot see, stated because a measure that hides its blind spot
+is the whole problem:** anything needing a graphical session (the zenity button
+labels are covered by a separate assertion instead), anything behind a tool the
+machine lacks — skipped probes are REPORTED, never counted as clean — and a
+one-word literal, which is below both thresholds.
+
+### Still open, measured not guessed
+
+**Column 4 of `limites.tsv` is byte-identical Portuguese in ALL SEVEN tables,
+the English default included** — 15 rows, same md5 across `limites.tsv`,
+`.es`, `.fr` and `.zh_CN`. That column is the *way out*, the entire payload of
+the 4.0 correction, and `t_limite_do_programa` appends it to the verdict. So a
+dongle owner outside Brazil is told his case has a way out and is then handed
+the instructions in a language he cannot read. **This file's claim that "no row
+is left holding the Portuguese sentence" is wrong as written** — it was checked
+for columns 1 and 2 and never for column 4. The table test should checksum
+column 4 the way it already checksums the first two.
 
 ## What was built after 2.1
 

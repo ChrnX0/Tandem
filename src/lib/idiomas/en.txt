@@ -2678,3 +2678,210 @@ machines: which Windows components each program needed. Downloading it sends
 nothing of yours anywhere.
 
 To download:   tandem lista atualizar
+
+@detalhes_tecnicos
+Technical details:
+
+@botao_sim
+Yes
+
+@botao_nao
+No
+
+@verbo_dotnet48
+.NET Framework 4.8 (takes about 30 minutes)
+
+@verbo_xact
+DirectX Audio
+
+@verbo_xinput
+DirectX (game controllers)
+
+@verbo_riched20
+Rich text editing
+
+@verbo_openal
+OpenAL (audio)
+
+@verbo_quartz
+DirectShow (video)
+
+@verbo_dbghelp
+Windows debugging support
+
+@verbo_secur32
+Windows security
+
+@verbo_usp10
+Text shaping (Uniscribe)
+
+@peca_wine
+Wine (runs Windows programs)
+
+@peca_wine32
+Support for older 32-bit programs
+
+@peca_winetricks
+Installer for Windows components
+
+@peca_adb
+Installer for split Android packages (.xapk)
+
+@peca_java
+Java (runs .jar programs)
+
+@peca_fuse
+Support for opening an AppImage directly (FUSE)
+
+@peca_waydroid
+Android (Waydroid) - downloads about 1 GB
+
+@limite_log_hardware
+this program tried to talk straight to the hardware, the way only a system driver can. Wine let it start and handed it zeros, and that is why it opens and then behaves strangely
+
+@limite_log_driver
+this program tried to load a system driver, and Wine runs outside the Linux kernel
+
+@arq_memoria_cab1
+What Tandem learned about this program.
+
+@arq_memoria_cab2
+You can read it, delete it and send it to somebody else.
+
+@arq_receita_cab1
+Tandem recipe: what this program needed in order to work.
+
+@arq_receita_cab2
+You can read it, check it and send it to somebody else.
+
+@arq_receita_cab3
+To use it:  tandem receita --importar <this file> <the program>
+
+@arq_config_cab
+Tandem settings. You can read, edit and delete this file.
+
+@col_programa
+Program
+
+@appimage_comentario
+Installed by Tandem from {1}
+
+@verbo_d3dcompiler
+DirectX shader compiler
+
+@unidade_bytes
+{1} bytes
+
+@java_pede_desconhecido
+a newer one
+
+@java_tem_desconhecido
+the one installed here
+
+@deb_confirma_terminal
+Install? [y/N] 
+
+@script_confirma_terminal
+{1}? [y/N] 
+
+@resposta_sim
+y
+
+@res_abriu
+It opened.
+
+@res_executou
+It ran.
+
+@res_instalado
+It installed.
+
+@res_fechou_sozinho
+It opened and closed on its own.
+
+@res_nao_abriu
+It did not open.
+
+@res_nao_executou
+It did not run.
+
+@res_nao_instalou
+It did not install.
+
+@res_nao_confirmou
+It said it installed, but the system does not have it.
+
+@res_incompleto
+The download did not finish.
+
+@res_cifrado
+The file is encrypted by the site that supplied it.
+
+@res_nao_e_android
+It is not an Android package.
+
+@res_android_antigo
+It needs a newer Android than the one here.
+
+@res_so_arm
+It is built for phone processors only.
+
+@res_ja_instalado
+It was already installed.
+
+@res_versao_mais_nova
+A newer version is already installed.
+
+@res_sem_espaco
+There was not enough space.
+
+@res_sem_assinatura
+The package is not signed.
+
+@res_faltam_partes
+Parts of the package are missing.
+
+@res_pacote_nao_abre
+The package cannot be opened.
+
+@res_pacote_vazio
+The package has nothing in it.
+
+@res_java_antigo
+It needs a newer Java than the one here.
+
+@res_falta_javafx
+It needs JavaFX, which is not installed.
+
+@res_faltam_arquivos
+Files it needs are missing from beside it.
+
+@res_arquitetura_errada
+It is built for a different processor.
+
+@res_bitola_errada
+What it needed arrived, but built for the other processor width.
+
+@res_sistema_antigo
+This system is older than the program needs.
+
+@res_falta_biblioteca
+A library it needs is missing from the system.
+
+@res_pasta_sem_permissao
+The folder it is in does not allow running programs.
+
+@res_faltam_dependencias
+The system is missing things this package needs.
+
+@res_outra_familia_de_linux
+It was made for another family of Linux.
+
+@res_so_abriu
+It opened; nobody has confirmed it works.
+
+@res_confirmado
+The owner confirmed it works.
+
+@res_reprovado
+The owner said it did not work.

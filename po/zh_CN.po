@@ -4449,3 +4449,279 @@ msgstr ""
 "Windows 组件。下载它不会把您的任何东西送到任何地方。\n"
 "\n"
 "下载方法：   tandem lista atualizar"
+
+msgctxt "detalhes_tecnicos"
+msgid "Technical details:"
+msgstr "技术细节："
+
+msgctxt "botao_sim"
+msgid "Yes"
+msgstr "是"
+
+msgctxt "botao_nao"
+msgid "No"
+msgstr "否"
+
+msgctxt "verbo_dotnet48"
+msgid ".NET Framework 4.8 (takes about 30 minutes)"
+msgstr ".NET Framework 4.8（大约需要 30 分钟）"
+
+msgctxt "verbo_xact"
+msgid "DirectX Audio"
+msgstr "DirectX 音频"
+
+msgctxt "verbo_xinput"
+msgid "DirectX (game controllers)"
+msgstr "DirectX（游戏手柄）"
+
+msgctxt "verbo_riched20"
+msgid "Rich text editing"
+msgstr "格式文本编辑"
+
+msgctxt "verbo_openal"
+msgid "OpenAL (audio)"
+msgstr "OpenAL（音频）"
+
+msgctxt "verbo_quartz"
+msgid "DirectShow (video)"
+msgstr "DirectShow（视频）"
+
+msgctxt "verbo_dbghelp"
+msgid "Windows debugging support"
+msgstr "Windows 调试支持"
+
+msgctxt "verbo_secur32"
+msgid "Windows security"
+msgstr "Windows 安全"
+
+msgctxt "verbo_usp10"
+msgid "Text shaping (Uniscribe)"
+msgstr "文本排版（Uniscribe）"
+
+msgctxt "peca_wine"
+msgid "Wine (runs Windows programs)"
+msgstr "Wine（运行 Windows 程序）"
+
+msgctxt "peca_wine32"
+msgid "Support for older 32-bit programs"
+msgstr "对旧的 32 位程序的支持"
+
+msgctxt "peca_winetricks"
+msgid "Installer for Windows components"
+msgstr "Windows 组件安装器"
+
+msgctxt "peca_adb"
+msgid "Installer for split Android packages (.xapk)"
+msgstr "分包 Android 安装包（.xapk）安装器"
+
+msgctxt "peca_java"
+msgid "Java (runs .jar programs)"
+msgstr "Java（运行 .jar 程序）"
+
+msgctxt "peca_fuse"
+msgid "Support for opening an AppImage directly (FUSE)"
+msgstr "直接打开 AppImage 的支持（FUSE）"
+
+msgctxt "peca_waydroid"
+msgid "Android (Waydroid) - downloads about 1 GB"
+msgstr "Android（Waydroid）- 需下载约 1 GB"
+
+msgctxt "limite_log_hardware"
+msgid "this program tried to talk straight to the hardware, the way only a system driver can. Wine let it start and handed it zeros, and that is why it opens and then behaves strangely"
+msgstr "这个程序试图直接与硬件通信，而只有系统驱动才能这样做。Wine 让它启动了，但只返回了零，所以它能打开，之后却表现异常"
+
+msgctxt "limite_log_driver"
+msgid "this program tried to load a system driver, and Wine runs outside the Linux kernel"
+msgstr "这个程序试图加载一个系统驱动，而 Wine 运行在 Linux 内核之外"
+
+msgctxt "arq_memoria_cab1"
+msgid "What Tandem learned about this program."
+msgstr "Tandem 关于这个程序学到的东西。"
+
+msgctxt "arq_memoria_cab2"
+msgid "You can read it, delete it and send it to somebody else."
+msgstr "你可以阅读、删除它，也可以发给别人。"
+
+msgctxt "arq_receita_cab1"
+msgid "Tandem recipe: what this program needed in order to work."
+msgstr "Tandem 配方：这个程序需要什么才能运行。"
+
+msgctxt "arq_receita_cab2"
+msgid "You can read it, check it and send it to somebody else."
+msgstr "你可以阅读、核对它，也可以发给别人。"
+
+msgctxt "arq_receita_cab3"
+msgid "To use it:  tandem receita --importar <this file> <the program>"
+msgstr "使用方法：  tandem receita --importar <这个文件> <那个程序>"
+
+msgctxt "arq_config_cab"
+msgid "Tandem settings. You can read, edit and delete this file."
+msgstr "Tandem 的设置。你可以阅读、编辑和删除这个文件。"
+
+msgctxt "col_programa"
+msgid "Program"
+msgstr "程序"
+
+msgctxt "appimage_comentario"
+msgid "Installed by Tandem from {1}"
+msgstr "由 Tandem 从 {1} 安装"
+
+msgctxt "verbo_d3dcompiler"
+msgid "DirectX shader compiler"
+msgstr "DirectX 着色器编译器"
+
+msgctxt "unidade_bytes"
+msgid "{1} bytes"
+msgstr "{1} 字节"
+
+msgctxt "java_pede_desconhecido"
+msgid "a newer one"
+msgstr "更新的版本"
+
+msgctxt "java_tem_desconhecido"
+msgid "the one installed here"
+msgstr "这里装的版本"
+
+msgctxt "deb_confirma_terminal"
+msgid "Install? [y/N] "
+msgstr "要安装吗？[y/N] "
+
+msgctxt "script_confirma_terminal"
+msgid "{1}? [y/N] "
+msgstr "{1}？[y/N] "
+
+msgctxt "resposta_sim"
+msgid "y"
+msgstr "y"
+
+msgctxt "res_abriu"
+msgid "It opened."
+msgstr "已打开。"
+
+msgctxt "res_executou"
+msgid "It ran."
+msgstr "已运行。"
+
+msgctxt "res_instalado"
+msgid "It installed."
+msgstr "已安装。"
+
+msgctxt "res_fechou_sozinho"
+msgid "It opened and closed on its own."
+msgstr "它自己打开又自己关闭了。"
+
+msgctxt "res_nao_abriu"
+msgid "It did not open."
+msgstr "没有打开。"
+
+msgctxt "res_nao_executou"
+msgid "It did not run."
+msgstr "没有运行。"
+
+msgctxt "res_nao_instalou"
+msgid "It did not install."
+msgstr "没有安装。"
+
+msgctxt "res_nao_confirmou"
+msgid "It said it installed, but the system does not have it."
+msgstr "它说安装好了，但系统里没有。"
+
+msgctxt "res_incompleto"
+msgid "The download did not finish."
+msgstr "下载没有完成。"
+
+msgctxt "res_cifrado"
+msgid "The file is encrypted by the site that supplied it."
+msgstr "这个文件被提供它的网站加密了。"
+
+msgctxt "res_nao_e_android"
+msgid "It is not an Android package."
+msgstr "这不是 Android 安装包。"
+
+msgctxt "res_android_antigo"
+msgid "It needs a newer Android than the one here."
+msgstr "它需要比这里更新的 Android。"
+
+msgctxt "res_so_arm"
+msgid "It is built for phone processors only."
+msgstr "它只为手机处理器而制作。"
+
+msgctxt "res_ja_instalado"
+msgid "It was already installed."
+msgstr "它已经装过了。"
+
+msgctxt "res_versao_mais_nova"
+msgid "A newer version is already installed."
+msgstr "已经装了更新的版本。"
+
+msgctxt "res_sem_espaco"
+msgid "There was not enough space."
+msgstr "空间不够。"
+
+msgctxt "res_sem_assinatura"
+msgid "The package is not signed."
+msgstr "这个包没有签名。"
+
+msgctxt "res_faltam_partes"
+msgid "Parts of the package are missing."
+msgstr "安装包缺少一些部分。"
+
+msgctxt "res_pacote_nao_abre"
+msgid "The package cannot be opened."
+msgstr "这个包打不开。"
+
+msgctxt "res_pacote_vazio"
+msgid "The package has nothing in it."
+msgstr "这个包里什么都没有。"
+
+msgctxt "res_java_antigo"
+msgid "It needs a newer Java than the one here."
+msgstr "它需要比这里更新的 Java。"
+
+msgctxt "res_falta_javafx"
+msgid "It needs JavaFX, which is not installed."
+msgstr "它需要 JavaFX，而这里没有装。"
+
+msgctxt "res_faltam_arquivos"
+msgid "Files it needs are missing from beside it."
+msgstr "它需要的文件不在旁边。"
+
+msgctxt "res_arquitetura_errada"
+msgid "It is built for a different processor."
+msgstr "它是为另一种处理器制作的。"
+
+msgctxt "res_bitola_errada"
+msgid "What it needed arrived, but built for the other processor width."
+msgstr "缺的东西装上了，但位数不对。"
+
+msgctxt "res_sistema_antigo"
+msgid "This system is older than the program needs."
+msgstr "这个系统比程序要求的旧。"
+
+msgctxt "res_falta_biblioteca"
+msgid "A library it needs is missing from the system."
+msgstr "系统里缺少它需要的一个库。"
+
+msgctxt "res_pasta_sem_permissao"
+msgid "The folder it is in does not allow running programs."
+msgstr "它所在的文件夹不允许运行程序。"
+
+msgctxt "res_faltam_dependencias"
+msgid "The system is missing things this package needs."
+msgstr "系统里缺少这个包需要的东西。"
+
+msgctxt "res_outra_familia_de_linux"
+msgid "It was made for another family of Linux."
+msgstr "它是为另一个 Linux 家族制作的。"
+
+msgctxt "res_so_abriu"
+msgid "It opened; nobody has confirmed it works."
+msgstr "打开了；但没有人确认它能用。"
+
+msgctxt "res_confirmado"
+msgid "The owner confirmed it works."
+msgstr "机主确认它能用。"
+
+msgctxt "res_reprovado"
+msgid "The owner said it did not work."
+msgstr "机主说它不能用。"

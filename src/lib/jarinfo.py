@@ -154,7 +154,7 @@ def inspecionar(caminho):
         # interrupted download breaks it in a way that is always detectable.
         raise JarRuim("zip_invalido")
     except OSError as e:
-        raise JarRuim(str(e))
+        raise JarRuim("cru|%s" % e)
     with z:
         campos = manifesto(z)
         principal = campos.get("main-class", "")

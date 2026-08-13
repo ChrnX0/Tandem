@@ -3509,3 +3509,279 @@ msgid ""
 "\n"
 "To download:   tandem lista atualizar"
 msgstr ""
+
+msgctxt "detalhes_tecnicos"
+msgid "Technical details:"
+msgstr ""
+
+msgctxt "botao_sim"
+msgid "Yes"
+msgstr ""
+
+msgctxt "botao_nao"
+msgid "No"
+msgstr ""
+
+msgctxt "verbo_dotnet48"
+msgid ".NET Framework 4.8 (takes about 30 minutes)"
+msgstr ""
+
+msgctxt "verbo_xact"
+msgid "DirectX Audio"
+msgstr ""
+
+msgctxt "verbo_xinput"
+msgid "DirectX (game controllers)"
+msgstr ""
+
+msgctxt "verbo_riched20"
+msgid "Rich text editing"
+msgstr ""
+
+msgctxt "verbo_openal"
+msgid "OpenAL (audio)"
+msgstr ""
+
+msgctxt "verbo_quartz"
+msgid "DirectShow (video)"
+msgstr ""
+
+msgctxt "verbo_dbghelp"
+msgid "Windows debugging support"
+msgstr ""
+
+msgctxt "verbo_secur32"
+msgid "Windows security"
+msgstr ""
+
+msgctxt "verbo_usp10"
+msgid "Text shaping (Uniscribe)"
+msgstr ""
+
+msgctxt "peca_wine"
+msgid "Wine (runs Windows programs)"
+msgstr ""
+
+msgctxt "peca_wine32"
+msgid "Support for older 32-bit programs"
+msgstr ""
+
+msgctxt "peca_winetricks"
+msgid "Installer for Windows components"
+msgstr ""
+
+msgctxt "peca_adb"
+msgid "Installer for split Android packages (.xapk)"
+msgstr ""
+
+msgctxt "peca_java"
+msgid "Java (runs .jar programs)"
+msgstr ""
+
+msgctxt "peca_fuse"
+msgid "Support for opening an AppImage directly (FUSE)"
+msgstr ""
+
+msgctxt "peca_waydroid"
+msgid "Android (Waydroid) - downloads about 1 GB"
+msgstr ""
+
+msgctxt "limite_log_hardware"
+msgid "this program tried to talk straight to the hardware, the way only a system driver can. Wine let it start and handed it zeros, and that is why it opens and then behaves strangely"
+msgstr ""
+
+msgctxt "limite_log_driver"
+msgid "this program tried to load a system driver, and Wine runs outside the Linux kernel"
+msgstr ""
+
+msgctxt "arq_memoria_cab1"
+msgid "What Tandem learned about this program."
+msgstr ""
+
+msgctxt "arq_memoria_cab2"
+msgid "You can read it, delete it and send it to somebody else."
+msgstr ""
+
+msgctxt "arq_receita_cab1"
+msgid "Tandem recipe: what this program needed in order to work."
+msgstr ""
+
+msgctxt "arq_receita_cab2"
+msgid "You can read it, check it and send it to somebody else."
+msgstr ""
+
+msgctxt "arq_receita_cab3"
+msgid "To use it:  tandem receita --importar <this file> <the program>"
+msgstr ""
+
+msgctxt "arq_config_cab"
+msgid "Tandem settings. You can read, edit and delete this file."
+msgstr ""
+
+msgctxt "col_programa"
+msgid "Program"
+msgstr ""
+
+msgctxt "appimage_comentario"
+msgid "Installed by Tandem from {1}"
+msgstr ""
+
+msgctxt "verbo_d3dcompiler"
+msgid "DirectX shader compiler"
+msgstr ""
+
+msgctxt "unidade_bytes"
+msgid "{1} bytes"
+msgstr ""
+
+msgctxt "java_pede_desconhecido"
+msgid "a newer one"
+msgstr ""
+
+msgctxt "java_tem_desconhecido"
+msgid "the one installed here"
+msgstr ""
+
+msgctxt "deb_confirma_terminal"
+msgid "Install? [y/N] "
+msgstr ""
+
+msgctxt "script_confirma_terminal"
+msgid "{1}? [y/N] "
+msgstr ""
+
+msgctxt "resposta_sim"
+msgid "y"
+msgstr ""
+
+msgctxt "res_abriu"
+msgid "It opened."
+msgstr ""
+
+msgctxt "res_executou"
+msgid "It ran."
+msgstr ""
+
+msgctxt "res_instalado"
+msgid "It installed."
+msgstr ""
+
+msgctxt "res_fechou_sozinho"
+msgid "It opened and closed on its own."
+msgstr ""
+
+msgctxt "res_nao_abriu"
+msgid "It did not open."
+msgstr ""
+
+msgctxt "res_nao_executou"
+msgid "It did not run."
+msgstr ""
+
+msgctxt "res_nao_instalou"
+msgid "It did not install."
+msgstr ""
+
+msgctxt "res_nao_confirmou"
+msgid "It said it installed, but the system does not have it."
+msgstr ""
+
+msgctxt "res_incompleto"
+msgid "The download did not finish."
+msgstr ""
+
+msgctxt "res_cifrado"
+msgid "The file is encrypted by the site that supplied it."
+msgstr ""
+
+msgctxt "res_nao_e_android"
+msgid "It is not an Android package."
+msgstr ""
+
+msgctxt "res_android_antigo"
+msgid "It needs a newer Android than the one here."
+msgstr ""
+
+msgctxt "res_so_arm"
+msgid "It is built for phone processors only."
+msgstr ""
+
+msgctxt "res_ja_instalado"
+msgid "It was already installed."
+msgstr ""
+
+msgctxt "res_versao_mais_nova"
+msgid "A newer version is already installed."
+msgstr ""
+
+msgctxt "res_sem_espaco"
+msgid "There was not enough space."
+msgstr ""
+
+msgctxt "res_sem_assinatura"
+msgid "The package is not signed."
+msgstr ""
+
+msgctxt "res_faltam_partes"
+msgid "Parts of the package are missing."
+msgstr ""
+
+msgctxt "res_pacote_nao_abre"
+msgid "The package cannot be opened."
+msgstr ""
+
+msgctxt "res_pacote_vazio"
+msgid "The package has nothing in it."
+msgstr ""
+
+msgctxt "res_java_antigo"
+msgid "It needs a newer Java than the one here."
+msgstr ""
+
+msgctxt "res_falta_javafx"
+msgid "It needs JavaFX, which is not installed."
+msgstr ""
+
+msgctxt "res_faltam_arquivos"
+msgid "Files it needs are missing from beside it."
+msgstr ""
+
+msgctxt "res_arquitetura_errada"
+msgid "It is built for a different processor."
+msgstr ""
+
+msgctxt "res_bitola_errada"
+msgid "What it needed arrived, but built for the other processor width."
+msgstr ""
+
+msgctxt "res_sistema_antigo"
+msgid "This system is older than the program needs."
+msgstr ""
+
+msgctxt "res_falta_biblioteca"
+msgid "A library it needs is missing from the system."
+msgstr ""
+
+msgctxt "res_pasta_sem_permissao"
+msgid "The folder it is in does not allow running programs."
+msgstr ""
+
+msgctxt "res_faltam_dependencias"
+msgid "The system is missing things this package needs."
+msgstr ""
+
+msgctxt "res_outra_familia_de_linux"
+msgid "It was made for another family of Linux."
+msgstr ""
+
+msgctxt "res_so_abriu"
+msgid "It opened; nobody has confirmed it works."
+msgstr ""
+
+msgctxt "res_confirmado"
+msgid "The owner confirmed it works."
+msgstr ""
+
+msgctxt "res_reprovado"
+msgid "The owner said it did not work."
+msgstr ""
