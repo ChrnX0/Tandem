@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3403977228 3386" "$soma_esperados"
+      "1109120891 3393" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -1474,6 +1474,41 @@ for tab in alternativas limites; do
         equal "$tab.$tl.tsv has no untranslated row left" "0" "$pt_sobrou"
     fi
   done
+done
+
+# COLUMN 4, which nothing above was looking at.
+#
+# The check just above greps for a phrase that lives in column 3, so it only
+# ever proved column 3 had moved. Column 4 - the WAY OUT, the entire payload of
+# the 4.0 correction, the paragraph that tells a dongle owner what a technician
+# can actually do for him - was byte-identical Portuguese in all seven tables,
+# the English DEFAULT included: 15 rows, one md5. So the product told a French
+# shopkeeper his case had a way out and then handed him the instructions in a
+# language he cannot read, and this repository's own notes claimed no row was
+# left holding the Portuguese sentence.
+#
+# Asserting "differs from pt_BR" rather than pinning a wording: the wording is
+# a translator's business and must be free to change, while "somebody actually
+# translated this column" is the invariant. pt_BR is the source, so it is the
+# one table this may not be asked of.
+col4() {                                # $1 = table file
+    grep -v '^#' "$1" | grep . | cut -f4 | grep . | cksum
+}
+c4_pt="$(col4 "$ROOT/src/lib/limites.pt_BR.tsv")"
+n4_pt="$(grep -v '^#' "$ROOT/src/lib/limites.pt_BR.tsv" | grep . | cut -f4 | grep -c . | tr -d ' ')"
+for tl in "" es fr zh_CN hi ar; do
+    arq="$ROOT/src/lib/limites${tl:+.$tl}.tsv"
+    nome="limites${tl:+.$tl}.tsv${tl:+}"
+    [ -z "$tl" ] && nome="limites.tsv (the English default)"
+    n4="$(grep -v '^#' "$arq" | grep . | cut -f4 | grep -c . | tr -d ' ')"
+    equal "$nome offers a way out on the same rows as the original" "$n4_pt" "$n4"
+    if [ "$(col4 "$arq")" = "$c4_pt" ]; then
+        fail "$nome translates the way out, not just the verdict" \
+             "column 4 different from the Portuguese source" \
+             "byte-identical to limites.pt_BR.tsv - the reader is told there is a way out and then handed it in Portuguese"
+    else
+        pass "$nome translates the way out, not just the verdict"
+    fi
 done
 
 tabela_para() {

@@ -1,3 +1,27 @@
+tandem (4.8) unstable; urgency=medium
+
+  * Column 4 of limites.tsv is translated. It is the WAY OUT - what a
+    technician can actually do about a protection dongle - and it was
+    byte-identical Portuguese in all seven tables, the English default
+    included: 15 rows, one md5 across limites.tsv, .es, .fr, .zh_CN, .hi and
+    .ar. So the product told a French or Chinese shop owner that his case had
+    a way out and then handed him the instructions in a language he cannot
+    read, which is worse than saying nothing.
+  * The check that was supposed to catch this greps for a phrase that lives in
+    column 3, so for two versions it only ever proved column 3 had moved. The
+    suite now checksums column 4 against the Portuguese source and fails if any
+    table is byte-identical to it - asserting that somebody translated the
+    column, not what they wrote in it, because the wording is a translator's
+    business and has to stay free to change.
+  * The first version of the tool that did the translation walked the tables by
+    LINE NUMBER. The per-language tables carry their own comment headers and are
+    not the same length, so it mismatched the rows - it would have handed a
+    CodeMeter owner the Sentinel instructions. It joins on the signature in
+    column 1 now, which the suite already asserts is identical and in the same
+    order across all seven tables.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 13 Aug 2026 21:33:09 +0000
+
 tandem (4.7) unstable; urgency=medium
 
   * The counter said TOTAL 0 and there were seventy-three Portuguese and
