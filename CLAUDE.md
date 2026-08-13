@@ -165,6 +165,17 @@ tests/real-programs.sh    REAL software, weekly: PuTTY/Notepad++/7-Zip/WinMerge
 docs/IDEAS.md             idea ledger with verdicts; the rejected ones with the reason
 docs/LIST-FORMAT.md       the community list record, field by field
 lista/lista.tsv           the published list; empty until real people report
+api/lista.js              THE INTAKE: validates a posted record and stores it.
+                          Deployed to the owner's Vercel project, which is
+                          git-linked to this repository - so a push deploys it
+api/acumulado.js          what the intake accepted, so the rebuild below needs
+                          no credential to read it
+tools/monta-lista.py      accepted records -> lista/lista.tsv, with an explicit
+                          exclusion list
+.github/workflows/lista.yml  weekly rebuild that opens a PULL REQUEST; nothing
+                          publishes itself
+package.json, vercel.json only for the two functions above. build.py ships an
+                          explicit LAYOUT and none of these reach the .deb
 ```
 
 Commands (`tandem --help` is the source of truth):
@@ -603,6 +614,34 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   interesting one: a log carrying Tandem's own lines is never empty, so **any**
   guard conditioned on "the program said nothing" was dead code before it was
   written. Found by running a script that does nothing and reading the output.
+- **The list has a receiver now, and the shape of it is the decision worth
+  keeping.** Both ends live in this repository — `api/lista.js` receives,
+  `lista/lista.tsv` is served — deployed to a Vercel project git-linked to the
+  repo, so a push deploys the endpoint. **No secret is created by hand anywhere
+  in the chain**: Vercel injects the Blob credential when the store is
+  connected, and the rebuild reads a public URL. Every alternative design ended
+  with somebody pasting a token somewhere, and that was the requirement.
+  It was deliberately NOT put in the owner's existing Supabase project even
+  though that was free: it is a live gym system holding real student health
+  records, and an anonymous internet-facing write endpoint does not belong
+  beside them — rule №1 applied off the Wine prefix.
+- **`res.type()` does not exist in Vercel's Node runtime** (it is Express).
+  Every response path in the intake went through one call to it, so the function
+  answered 500 to everything, including the GET that refuses before touching
+  anything. The runtime stack trace named it; guessing would not have.
+- **A 4xx is not a failure of the route, and treating it as one poisons the
+  queue.** The far end saying *this line is wrong* will say it for ever, so
+  keeping the line meant retrying it on every pass — and three permanently
+  refused lines would trip the hour-long wait that exists for a broken network,
+  stopping the GOOD lines from leaving. A 4xx now parks the line in
+  `.recusados`; 429 and 408 stay retryable, because too fast and too slow are
+  about the moment rather than about the line.
+- **Counting machines honestly is impossible without keeping something that
+  identifies the sender**, so the list counts REPORTS. "We only store a hash"
+  does not survive contact with a laptop: a hash of an IPv4 address is an IPv4
+  address to anybody willing to try four billion of them. The field kept its
+  position; the claim shrank, in `docs/LIST-FORMAT.md` and in the sentence the
+  owner reads, which said *machines* in all seven languages until 4.6.
 - **A reason cannot travel in a variable out of `$( )`.** `t_envio_envia` is read
   through a command substitution, which is a subshell, so the count goes on
   stdout and *why* goes in the exit status (3 refused, 4 waiting, 5 already
