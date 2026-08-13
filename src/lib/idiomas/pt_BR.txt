@@ -2931,3 +2931,15 @@ cabeçalho dele diz. Baixar de novo resolve tudo.
 O programa continua pedindo: {1}
 
 Então ou esse arquivo era pra vir junto com o programa, ou a minha própria tabela me mandou instalar a coisa errada. De um jeito ou de outro, eu anotei.
+
+@falta_no_wine
+Este programa chamou uma função do Windows que o Wine instalado aqui ainda não tem:
+
+  {1}
+
+Então não tem nada que eu possa instalar para resolver. Não é o seu computador e não é o programa: é um pedaço do Windows que o Wine ainda não terminou de copiar. Um Wine mais novo pode ter.
+
+O Wine desta máquina é o {2}.
+
+@res_falta_no_wine
+Ele chamou algo que este Wine ainda não tem.

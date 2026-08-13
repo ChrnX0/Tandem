@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2986798418 3413" "$soma_esperados"
+      "2880994793 3449" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5111,6 +5111,52 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "Wine saying it has not implemented something is a verdict"
+
+# The third verdict class, and the loop had no branch for it: the dependency
+# exists, Wine has not finished implementing part of it, and there is NOTHING
+# to install. "The program closed with error (code 53)" was the answer, which
+# sends the owner looking for a defect in a machine that is fine.
+#
+# The two Wine wordings were taken from the INSTALLED Wine's own format strings
+# (wine-9.0, x86_64-windows/ntdll.dll), not from memory - and only one of them
+# is a verdict. That distinction is the whole test:
+#
+#   "No implementation for X imported from Y, setting to Z" - Wine stubs the
+#   export at LOAD time and carries on. Programs import functions they never
+#   call all the time, so this line is in the log of software that works
+#   perfectly. Reporting it would alarm somebody whose program is fine.
+#
+#   "Call from ... to unimplemented function X, aborting" - the program
+#   actually called it and Wine gave up. That is the verdict.
+falta_wine() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; . "'"$ROOT"'/src/lib/winedeps.sh"
+         t_falta_no_wine "$1"' _ "$1" 2>/dev/null
+}
+cat > "$TMPROOT/abortou.log" <<'FIMW'
+0024:err:module:import_dll Library FOO.dll not found
+wine: Call from 0x7b00f4e2 to unimplemented function KERNEL32.dll.SetThreadDescription, aborting
+FIMW
+equal "a call Wine aborted on names the function" \
+      "KERNEL32.dll.SetThreadDescription" "$(falta_wine "$TMPROOT/abortou.log")"
+# THE HALF THAT MATTERS MORE. This line appears in the log of programs that
+# run perfectly, so treating it as a verdict would be a false alarm on working
+# software - which is worse than the silence being fixed.
+cat > "$TMPROOT/soimportou.log" <<'FIMW2'
+0024:err:module:No implementation for msvcrt.dll._o__fileno imported from L"Z:\x.exe", setting to 0x7b00f4e2
+FIMW2
+equal "but a stubbed IMPORT is not a verdict, because working programs have them" \
+      "" "$(falta_wine "$TMPROOT/soimportou.log")"
+equal "and an ordinary log says nothing about it" \
+      "" "$(falta_wine "$TMPROOT/porque.log" 2>/dev/null)"
+# The sentence has to say there is nothing to install, or the owner goes on
+# hunting. And Tandem names the Wine version and stops: it does not manage Wine.
+contem "the owner is told no component will fix it" \
+       "nothing I can install" \
+       "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c \
+          '. "'"$ROOT"'/src/lib/common.sh"; t_msg falta_no_wine "KERNEL32.dll.X" "wine-9.0"')"
 
 section "when the loader contradicts a receipt, it is written down"
 

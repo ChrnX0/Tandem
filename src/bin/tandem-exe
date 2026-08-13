@@ -528,7 +528,20 @@ $MAQUINA}"
   $CHAVE}")"
             fi
         else
-            t_erro "$(t_msg fechou_com_erro "$CODIGO")"
+            # Before falling back to the bare exit code, ask whether Wine said
+            # outright that it does not have a function the program called. It
+            # says so in the log and nowhere else, and no component install
+            # will ever fix it. Tandem names the Wine version and STOPS there:
+            # it does not manage Wine, and telling a shopkeeper to upgrade one
+            # by hand is not an instruction he can follow safely.
+            SEM_WINE="$(t_falta_no_wine "$PARCIAL" 2>/dev/null)"
+            if [ -n "$SEM_WINE" ]; then
+                t_memoria_grava "$PROG" RESULTADO "falta no wine" 2>/dev/null
+                t_erro "$(t_msg falta_no_wine "$SEM_WINE" \
+                          "$(wine --version 2>/dev/null || printf 'Wine')")"
+            else
+                t_erro "$(t_msg fechou_com_erro "$CODIGO")"
+            fi
         fi
         exit "$CODIGO"
     fi

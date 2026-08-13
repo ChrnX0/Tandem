@@ -88,6 +88,23 @@ tandem (4.8) unstable; urgency=medium
     owner double-clicks a program whose receipt the loader contradicts - a
     shop opening the same broken program every morning would otherwise append
     the same pair every morning, for ever.
+  * Wine saying it has not implemented something is a verdict now. It is the
+    third failure class the loop had no branch for - the dependency exists,
+    Wine has not finished implementing part of it, and there is NOTHING to
+    install - and the answer was "the program closed with error (code 53)",
+    which sends the owner looking for a defect in a machine that is fine.
+    Tandem names the function and the Wine version and stops there: it does
+    not manage Wine, and telling a shopkeeper to upgrade one by hand is not an
+    instruction he can follow safely.
+  * The two Wine wordings were taken from the INSTALLED Wine's own format
+    strings rather than from memory, and only one of them is a verdict.
+    "No implementation for X imported from Y, setting to Z" is Wine stubbing
+    an export at LOAD time and carrying on - programs import functions they
+    never call all the time, so that line is in the log of software that works
+    perfectly, and reporting it would be a false alarm on a working program.
+    "Call from ... to unimplemented function X, aborting" is the program
+    having actually called it and Wine having given up. Only the second is
+    matched, and the suite asserts both directions.
  -- Tandem <rockx0@gmail.com>  Thu, 13 Aug 2026 21:33:09 +0000
 
 tandem (4.7) unstable; urgency=medium

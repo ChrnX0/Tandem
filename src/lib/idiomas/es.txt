@@ -2935,3 +2935,15 @@ su propia cabecera. Descargarlo de nuevo lo arregla todo.
 El programa sigue pidiendo: {1}
 
 Así que o ese archivo tenía que venir con el propio programa, o mi propia tabla me mandó instalar algo equivocado. De un modo u otro, lo he anotado.
+
+@falta_no_wine
+Este programa llamó a una función de Windows que el Wine instalado aquí todavía no tiene:
+
+  {1}
+
+Así que no hay nada que yo pueda instalar para arreglarlo. No es su computadora ni es el programa: es un trozo de Windows que Wine aún no ha terminado de copiar. Un Wine más nuevo puede tenerlo.
+
+El Wine de esta máquina es el {2}.
+
+@res_falta_no_wine
+Llamó a algo que este Wine todavía no tiene.

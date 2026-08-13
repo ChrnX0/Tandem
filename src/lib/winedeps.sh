@@ -204,6 +204,38 @@ t_anota_suspeita() {
         >> "$arq" 2>/dev/null || return 0
 }
 
+# The function Wine has not implemented, when the program CALLED it and Wine
+# gave up. Empty = that did not happen.
+#
+# The third verdict class, and until 4.8 the loop had no branch for it: the
+# dependency exists, Wine has not finished implementing part of it, and there
+# is nothing to install. "The program closed with error (code 53)" was the
+# answer, which sends the owner looking for a defect in a machine that is fine.
+# Confirmed by grepping the format strings out of the INSTALLED Wine rather
+# than from memory (wine-9.0, x86_64-windows/ntdll.dll).
+#
+# THE TWO SHAPES ARE NOT THE SAME THING, and only one of them is a verdict:
+#
+#   err:module:...  No implementation for %s.%s imported from %s, setting to %p
+#       Wine stubs the export at LOAD time and carries on. Programs import
+#       functions they never call all the time, so this line appears in the log
+#       of software that works perfectly. Reporting it would alarm somebody
+#       whose program is fine - the exact failure this project's "no jargon,
+#       no false alarm" rule exists to prevent.
+#
+#   wine: Call from %p to unimplemented function %s.%s, aborting
+#       The program actually called it and Wine ABORTED. That is the verdict.
+#
+# So only the second is matched, and the function name is carried out so the
+# owner has something to search for and to send to whoever wrote the program.
+t_falta_no_wine() {
+    local log="$1"
+    [ -f "$log" ] || return 1
+    grep -oaE 'Call from [^ ]+ to unimplemented function [^,]+' "$log" 2>/dev/null |
+        sed 's/.*unimplemented function //' | sort -u | head -3 |
+        tr '\n' ' ' | sed 's/ $//' | grep . || return 1
+}
+
 # Turns this run's suspicions into the sentence the owner reads. The message
 # takes the blame instead of sending him hunting for a defect in the machine
 # - which is what "I installed the dependencies and it still does not open"

@@ -2988,3 +2988,15 @@ que ne le dit son propre en-tête. Le retélécharger règle tout.
 Le programme demande toujours : {1}
 
 Donc soit ce fichier devait venir avec le programme lui-même, soit ma propre table m'a fait installer la mauvaise chose. Dans les deux cas, je l'ai noté.
+
+@falta_no_wine
+Ce programme a appelé une fonction Windows que le Wine installé ici n'a pas encore :
+
+  {1}
+
+Il n'y a donc rien que je puisse installer pour y remédier. Ce n'est pas votre ordinateur et ce n'est pas le programme : c'est un morceau de Windows que Wine n'a pas fini de recopier. Un Wine plus récent peut l'avoir.
+
+Le Wine de cette machine est le {2}.
+
+@res_falta_no_wine
+Il a appelé quelque chose que ce Wine n'a pas encore.
