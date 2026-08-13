@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "789269210 3022" "$soma_esperados"
+      "205436375 3079" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "3251423101 1840" "$soma_padroes"
+      "665411067 2000" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1704,6 +1704,69 @@ FIM
           "0" "$limpo"
 else
     skip "a migrated file stays migrated" "tools/conta-literais.py is missing"
+fi
+
+section "what gets published to everybody"
+
+# tools/monta-lista.py turns the records the intake accepted into the file every
+# Tandem downloads. It is the narrowest point in the whole project: one wrong
+# row here reaches every machine at once, where a wrong row in one shop's memory
+# reaches one machine that then asks its owner. So the three things it must get
+# right are asserted against a synthetic intake rather than against whatever
+# happens to be in the store today.
+if [ -f "$ROOT/tools/monta-lista.py" ]; then
+    saida_lista="$(cd "$ROOT" && python3 - <<'FIM'
+import importlib.util
+spec = importlib.util.spec_from_file_location("m", "tools/monta-lista.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+A, B = "a" * 32, "b" * 32
+entrada = "\n".join([
+    "# TANDEM-ENTRADA 1",
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-07\t-",
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-",
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-06\t-",
+    f"{A}\t64\tvcrun2022\t-\treprovado\t1\t2026-08\t-",
+    f"{B}\t32\tdotnet48\t-\tconfirmado\t1\t2026-08\t-",
+    "3f376993b2da855c5e6e291da008d5d6\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-",
+    "isto nao e um registro",
+])
+linhas, recusadas = m.monta(entrada)
+print("|".join(linhas))
+print("|".join(sorted(r[0] for r in recusadas)))
+FIM
+)"
+    linhas_lista="$(printf '%s\n' "$saida_lista" | sed -n 1p)"
+    fora_lista="$(printf '%s\n' "$saida_lista" | sed -n 2p)"
+    # Three reports of one lesson are one row counting three, carrying the most
+    # recent month - not the first one seen.
+    case "$linhas_lista" in
+        *"vcrun2022	-	confirmado	3	2026-08"*)
+            pass "reports of the same lesson are added up, with the newest month" ;;
+        *) fail "reports of the same lesson are added up, with the newest month" \
+                "one row counting 3, seen 2026-08" "$linhas_lista" ;;
+    esac
+    # The rejection survives as its own row. Folding it away here would delete
+    # the evidence the client needs: t_lista_linha drops a verb set more
+    # machines rejected than confirmed, and it cannot do that if the rejections
+    # never reach the file.
+    case "$linhas_lista" in
+        *"vcrun2022	-	reprovado	1"*)
+            pass "a rejection is published too, because it is the evidence" ;;
+        *) fail "a rejection is published too, because it is the evidence" \
+                "a reprovado row" "$linhas_lista" ;;
+    esac
+    # And the two things that must never reach the file: the record posted by
+    # hand while proving the intake worked, and anything that is not a record.
+    case "$linhas_lista" in
+        *3f376993b2da855c5e6e291da008d5d6*)
+            fail "the intake's own test record is never published" \
+                 "excluded by name" "it is in the file" ;;
+        *) pass "the intake's own test record is never published" ;;
+    esac
+    equal "and what was left out is reported, not dropped in silence" \
+          "excluded: test record from the intake bring-up|malformed" "$fora_lista"
+else
+    skip "what gets published" "tools/monta-lista.py is missing"
 fi
 
 section "the readers speak in tokens, and every token has a sentence"
