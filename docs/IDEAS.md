@@ -179,6 +179,7 @@ prerequisite it was waiting for — a delivery proof that can actually fail for
 | **Parse the output of `waydroid app install`**, which exits 0 even when it fails. | **DONE** |
 | **Wait for `sys.boot_completed`**, not `Session: RUNNING`. With GAPPS that is another 20–60 s. | **DONE** |
 | **Register `.xapk`/`.apks`/`.apkm` as their own MIME type** — without it the system sees a generic ZIP and the double-click never reaches Tandem. | **DONE** |
+| Android Translation Layer (ATL) as a rival to the double-click story | **NOTED, not a rival — 2026-08-13.** ATL's `--install` writes a per-app `.desktop` launcher through xdg-desktop-portal, which is the strongest counter to "nobody makes a `.apk` just work". But it is a per-app shortcut created from a terminal command, **not a file-type handler**, and launching still needs the Java activity name passed by hand. Tandem beats it cleanly: a real MIME handler, split-format aware, no activity name. Worth the one line so the objection is pre-empted. |
 | **Say plainly that USB does not exist inside Waydroid.** Thermal printer, card reader, scale, barcode scanner: none of it passes through. For a shop, that sentence saves an afternoon. | **DONE** — it is in the README |
 | USB passthrough to Waydroid | **REJECTED, and the reason was wrong until 2026-08.** It was rejected as nonexistent. It exists: Waydroid's LXC config denies no devices, the maintainer shipped `persist.waydroid.uevent` for exactly this, and the actual barrier is that the image does not declare `android.hardware.usb.host` — a 60-byte XML file in a directory Waydroid already bind-mounts. Two people published working procedures. It stays rejected for two better reasons. **Durability:** the working route edits the shipped images and reverts on the next Waydroid update, so a shop's hardware would stop working after an unrelated upgrade, with no message — the precise failure this project refuses to ship. **Rule №1:** editing images Tandem did not create is the Waydroid analogue of writing into somebody else's Wine prefix. And **it would not help anyway**: nobody in any language has reported a printer, pinpad or scale working inside Waydroid even with the feature enabled, while all four are well supported on plain Linux. Diagnose it (`tandem doctor`) and point at the Linux path (`alternativas.tsv`); do not automate it. |
 
@@ -355,6 +356,15 @@ BIOS, ~4 GB of RAM and ~32 GB of disk that stop being yours.
 | Importing WinApps' app discovery (scan the Windows registry for installed `.exe`) | **REJECTED as new work** — `tandem programas` already does exactly this by reading `system.reg`, and for the same reason WinApps does: convergent design, nothing to take. |
 | **Parallels** | **NOT APPLICABLE** — Parallels Desktop is macOS-only. Parallels Workstation for Windows and Linux hosts was discontinued in 2013. Its "Coherence" mode is the same idea as RemoteApp, so it is worth knowing as prior art for the *shape*, and it is not a route on this machine. |
 | **PlayOnLinux** | **NOT A RIVAL, AND MOSTLY DEAD** — it is Wine plus per-program install scripts written by hand, the model this project rejected: it works only for programs somebody already wrote a script for. POL-POM-4's own README points at Phoenicis (PlayOnLinux 5), which has been "under development" for years. |
+| **WinBoat** (0.9.0 beta, 2026) | **NAME IT, DON'T MANAGE IT** — added by the 2026-08-13 sweep. It is the most usable member of this family yet: an Electron GUI over dockur/windows + FreeRDP RemoteApp, ISO in, per-app windows out, home dir auto-mounted. It belongs in the dead-end message beside WinApps/dockur. But it still needs KVM in BIOS + a container runtime + FreeRDP 3 + a Pro licence, and its USB-dongle passthrough is real-but-flaky (devices unrecognised, unmount on return — its own issue tracker). Firmly outside what a shopkeeper executes, so the verdict is unchanged: point, do not manage. |
+
+**One wording fix the sweep forced (2026-08-13):** the VM message and this file
+say "Windows Home cannot host RDP at all." That is true for the *supported*
+RemoteApp path, but it is bypassable with RDP-Wrapper-class workarounds, so the
+honest line is "the supported path needs Pro/Enterprise; Home only works through
+a third-party, ToS-gray workaround" — which for a shop is legally and
+operationally worse, not a loophole worth naming. Soften the claim, keep the
+conclusion.
 
 The forged-DMI spoofer belongs in this section too, and it is rejected for a
 different reason — see below.
@@ -382,6 +392,35 @@ prefix destroyed and remade comes back as the same computer. Same for the
 Windows `ProductId`: Tandem reports that Wine's default is shared by every
 Wine install on Earth, and does **not** invent a replacement, because that
 would be forging a Microsoft licence identifier.
+
+## What the 2026-08-13 prior-art sweep brought back
+
+A seven-agent live-web sweep across eight ecosystems (the "O Terreno do Tandem"
+artifact) produced borrowable techniques from the competitors and a handful of
+new ideas. Each carries a verdict, same as everything above. The security one is
+**DONE** already; the rest are here as decisions, and two of them are the
+owner's to make, not the agent's.
+
+### Borrowed from the competitors
+
+| Idea | Where it comes from | Verdict |
+|---|---|---|
+| **Gate every published list row through the verb-safety checks in CI.** A row naming a winetricks `settings` verb (`sandbox`, `winxp`, `remove_mono`…) installs cleanly and changes the prefix — the AUR "Atomic Arch" attack (June 2026, ~1,500 orphaned packages weaponised) in miniature, and a human reviewing the weekly PR cannot eyeball a verb's class. | **DONE** — `tools/monta-lista.py` refuses a row whose `verbs` or `failed` field names a settings verb or a non-name, and reports it as left-out. The client already re-checks at the point of use (`t_verbo_de_fora_ok`); this closes the same gap at the publish step, which is the one that reaches every Tandem at once. |
+| **Stack-pinning: record the Wine + winetricks version, refuse to merge across incompatible stacks.** WineHQ AppDB's hard rule — a test report is worthless unless you know exactly what stack produced it — and the fix ProtonDB applied late (its PC-vs-Deck split). | **NEXT** — a record-format bump (v1→v2), so the moment to do it is now, while the list is empty and there is zero migration cost. Append the two fields; `t_lista_linha` gains "same stack or don't merge". Pure decision/aggregation logic, dead-centre in the identity. |
+| **Recency / version decay in the resolver.** ProtonDB's documented weakness is that a stale report for an old Proton never decays; the fix is to weight a newer contradicting report over an old confirmation, and treat "confirmed only on Wine older than the caller's" as reduced confidence. | **NEXT** — pairs with stack-pinning (it needs the version field to be meaningful). Belongs in `t_lista_linha`, which already merges and tie-breaks on `seen`. |
+| **Downgrade, don't overwrite, when an established fingerprint's verb set suddenly changes.** The AUR orphan-adoption lesson at the record level: a sudden verb-set flip on a fingerprint with history should *lower* confidence pending re-confirmation, not silently replace the lesson — that is a reputation-inheritance vector. | **NEXT** — folds into the resolver work above. |
+| **Anonymous dedup via a machine-local salted pseudonym.** ProtonDB counts one-report-per-reporter but pays with a Steam account; thread the needle with an HMAC over a secret that never leaves the box, sent as an opaque dedup key. Fixes the "3 machines beat 400" problem the list already worries about. | **NEEDS THE OWNER'S DECISION** — it changes the project's "we keep NOTHING" stance to "we keep one opaque, non-reversible per-machine pseudonym." The report argues it reveals nothing *about* the machine, and that is true; but a stable per-machine key is still pseudonymous by definition, and CLAUDE.md is explicit that holding data is the owner's call, not the agent's. Recommended, with that trade-off stated in the open. |
+| **Sign the published `lista.tsv`; write the accept/reject policy down.** EasyList suffered for years without a written policy; Flathub proves provenance with a token. An adblock list gets away with plain HTTPS because a bad rule hides a div — a bad Tandem row runs an installer. | **LATER** — the policy half is cheap and is being written into `LIST-FORMAT.md`; the signature half needs a key and a decision about who holds it, which is the owner's. |
+
+### New, from thinking with Tandem rather than copying
+
+| Idea | Verdict |
+|---|---|
+| **"Por que este verbo?" — an explain-line before the pre-flight install.** Tandem already maps the missing DLL to a verb; say it in one sentence before installing ("this program is asking for MSVCP140.dll, which comes from the Visual C++ 2015–2022 runtime — I'll install that"). Turns a silent install into a legible one. It explains more and executes exactly the same, which is the criterion at the top of this file. | **NEXT** — small, and the most identity-aligned idea here. |
+| **A repeatable field-test harness for a real shop program.** Not the weekly PuTTY/Notepad++ run — a `tests/real-shop.sh` the owner runs *on the counter machine* against the actual POS/accounting/fiscal installer, capturing every step of the closed loop to a report Tandem reads back. Turns "the one afternoon" into an instrument, and produces the first honest community-list record. | **NEXT** — the evaluation's single highest-leverage item; costs no code the project doesn't already have the pieces for, and needs the owner's machine and one real installer. |
+| **A shareable diagnosis transcript** — after any failure, one jargon-translated, path-stripped transcript of what was tried and why it stopped, for the owner to hand to whoever helps. | **MAYBE** — check the overlap with `tandem socorro` first; it may already be most of this. |
+| **A runtime language self-test in `tandem autoteste`.** `conta-literais.py` reads shell statically and has printed a false zero twice; a runtime check that renders each command under a non-Portuguese locale and greps the output for known Portuguese stopwords would catch what the static counter cannot see — a *second instrument*, the pattern the counter's own history says is the only thing that ever works. | **MAYBE** — addresses a documented, recurring failure; worth a prototype. |
+| **A printing smoke-test.** For shop software printing *is* the program (§2). Pair it with the field-test harness — Wine + CUPS works, Wine + a USB thermal printer almost never, and the honest answer matters more than the hopeful one. | **LATER** — unchanged verdict, now tied to the harness that would make it real. |
 
 ## The queue
 
