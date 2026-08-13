@@ -386,7 +386,7 @@ in.
 Last time, this program needed
 
 @licao_origem_lista
-On {1} machines this program needed
+In {1} reports this program needed
 
 @ressalva_so32
 

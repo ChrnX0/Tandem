@@ -507,7 +507,7 @@ msgid "Last time, this program needed"
 msgstr ""
 
 msgctxt "licao_origem_lista"
-msgid "On {1} machines this program needed"
+msgid "In {1} reports this program needed"
 msgstr ""
 
 msgctxt "ressalva_so32"

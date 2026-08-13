@@ -386,7 +386,7 @@ de novo.
 Da última vez, este programa precisou
 
 @licao_origem_lista
-Em {1} máquinas este programa precisou
+Em {1} relatos este programa precisou
 
 @ressalva_so32
 

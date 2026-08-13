@@ -386,7 +386,7 @@ entrar.
 La última vez, este programa necesitó
 
 @licao_origem_lista
-En {1} máquinas este programa necesitó
+En {1} informes este programa necesitó
 
 @ressalva_so32
 
