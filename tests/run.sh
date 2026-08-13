@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "205436375 3079" "$soma_esperados"
+      "1648532542 3094" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "665411067 2000" "$soma_padroes"
 
@@ -3913,6 +3913,43 @@ PYSERV
             *) fail "tandem enviar agora explains a refusal by the far end" \
                     "a sentence about the server" "$SAIDA_ENV" ;;
         esac
+
+        # A 4xx is the far end saying this LINE is wrong, and it will say the
+        # same thing for ever. Before this, any non-2xx kept the line and
+        # counted a failure - so three permanently refused lines would trip the
+        # hour-long wait and stop the GOOD lines from leaving. One malformed
+        # record would poison the whole queue.
+        RECEBIDO_4="$TMPROOT/recebido-400.txt"; : > "$RECEBIDO_4"
+        PORTA_4="$(sobe_servidor "$RECEBIDO_4" 400)"
+        if [ -n "$PORTA_4" ]; then
+            CASA_E4="$TMPROOT/casa-envio-4"; rm -rf "$CASA_E4"; mkdir -p "$CASA_E4"
+            env_envio4() {
+                env HOME="$CASA_E4" TANDEM_LISTA_ENVIO="${TANDEM_LISTA_ENVIO_TESTE:-}" \
+                    TANDEM_FILA="$CASA_E4/fila.tsv" \
+                    bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1" 2>/dev/null
+            }
+            for i in a b c; do
+                env_envio4 "t_envio_enfileira \"\$(printf 'ruim$i\t64\tv\t-\tconfirmado\t1\t2026-08\t-')\"" >/dev/null
+            done
+            TANDEM_LISTA_ENVIO_TESTE="http://127.0.0.1:$PORTA_4/" \
+                env_envio4 't_envio_envia' >/dev/null
+            equal "a line the far end refused for good leaves the queue" "0" \
+                  "$(linhas_de "$CASA_E4/fila.tsv")"
+            # Parked, not destroyed. Stopping a line from leaving is a different
+            # power from being allowed to delete it.
+            equal "and it is parked where somebody can still read it" "3" \
+                  "$(linhas_de "$CASA_E4/fila.tsv.recusados")"
+            # And a permanent refusal is not a failure OF THE ROUTE, so it must
+            # not trip the wait that exists for a broken network.
+            # Never written at all is the right answer here, and it reads as
+            # empty rather than as "0" - which is what the first version of
+            # this assertion expected, and it was the assertion that was wrong.
+            espera_4="$(env_envio4 't_config_le ENVIO_ESPERA_ATE' | tr -d '\n')"
+            equal "a refused line does not start the hour-long wait" "sem espera" \
+                  "$(case "${espera_4:-0}" in 0) echo "sem espera" ;; *) echo "$espera_4" ;; esac)"
+        else
+            skip "a line refused for good" "could not open a local listener"
+        fi
 
         # Two passes at once. Sending is spawned detached every time a program
         # is confirmed and "tandem enviar agora" starts one too, so this is the
