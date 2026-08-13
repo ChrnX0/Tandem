@@ -51,6 +51,47 @@ FORMA = re.compile(
     r"(confirmado|so-abriu|reprovado)\t\d+\t\d{4}-\d{2}\t\S+$"
 )
 
+# A verb name is a NAME, never a command line. This mirrors t_verbo_valido in
+# common.sh: begins with a letter or digit, then only letters/digits/_/-,
+# 40 chars max. The intake already enforces the field shape, but this is the
+# gate that reaches every Tandem at once, so it re-checks rather than trusting
+# a row got past the intake unchanged - the queue and the store are both
+# plain-text things that get edited.
+VERBO = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,39}$")
+
+# winetricks "settings" verbs install cleanly and change the prefix instead of
+# delivering a dependency - sandbox strips a prefix's links to $HOME,
+# remove_mono takes .NET out, winxp moves the Windows version under an installed
+# program's feet. A malicious or careless row naming one of these is the AUR
+# "Atomic Arch" threat in miniature: valid-looking, installs without error,
+# earns a permanent receipt. The client refuses them at the point of use
+# (t_verbo_de_fora_ok asks the installed winetricks), but a human reviewing the
+# weekly rebuild PR cannot eyeball a verb's class, so the row is refused HERE
+# too - a poisoned row must not reach the file every Tandem downloads. This is
+# the hard-coded fallback list from common.sh; CI has no winetricks to ask.
+VERBOS_SETTINGS = {
+    "sandbox", "isolate_home", "remove_mono", "forcemono", "nocrashdialog",
+    "alldlls", "win2k", "win2k3", "win7", "win8", "win81", "win10", "win11",
+    "win20", "win30", "win31", "win95", "win98", "winme", "winnt40",
+    "winvista", "winxp", "winxp64", "native_mdac", "native_oleaut32",
+}
+
+
+def verbos_seguros(campo):
+    """True when every verb in a comma-list is a plain dependency name.
+
+    Returns (ok, motivo). A "-" (no verbs) is fine; anything else must pass the
+    shape check and not be a settings verb.
+    """
+    if campo == "-":
+        return True, ""
+    for v in campo.split(","):
+        if not VERBO.match(v):
+            return False, "verb %r is not a plain name" % v[:20]
+        if v in VERBOS_SETTINGS:
+            return False, "verb %r changes a setting, not a dependency" % v
+    return True, ""
+
 
 def baixa(url):
     req = urllib.request.Request(url, headers={"User-Agent": "tandem-monta-lista"})
@@ -81,6 +122,14 @@ def monta(texto):
         campos = linha.split("\t")
         if campos[0] in EXCLUIDAS:
             recusadas.append(("excluded: " + EXCLUIDAS[campos[0]], linha))
+            continue
+        # The verbs and the failed-verbs field both name winetricks verbs, and
+        # both reach a client that may act on them. A settings verb or a
+        # command-shaped name in either one refuses the whole row.
+        ok_v, motivo_v = verbos_seguros(campos[2])
+        ok_f, motivo_f = verbos_seguros(campos[3])
+        if not ok_v or not ok_f:
+            recusadas.append(("unsafe verb: " + (motivo_v or motivo_f), linha))
             continue
         chave = (campos[0], campos[1], campos[2], campos[3], campos[4])
         g = grupos[chave]

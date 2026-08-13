@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1648532542 3094" "$soma_esperados"
+      "303549873 3158" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "665411067 2000" "$soma_padroes"
+      "2376315265 2030" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1773,7 +1773,7 @@ if [ -f "$ROOT/tools/monta-lista.py" ]; then
 import importlib.util
 spec = importlib.util.spec_from_file_location("m", "tools/monta-lista.py")
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-A, B = "a" * 32, "b" * 32
+A, B, C = "a" * 32, "b" * 32, "c" * 32
 entrada = "\n".join([
     "# TANDEM-ENTRADA 1",
     f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-07\t-",
@@ -1781,6 +1781,7 @@ entrada = "\n".join([
     f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-06\t-",
     f"{A}\t64\tvcrun2022\t-\treprovado\t1\t2026-08\t-",
     f"{B}\t32\tdotnet48\t-\tconfirmado\t1\t2026-08\t-",
+    f"{C}\t64\tsandbox\t-\tconfirmado\t1\t2026-08\t-",
     "3f376993b2da855c5e6e291da008d5d6\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-",
     "isto nao e um registro",
 ])
@@ -1809,16 +1810,26 @@ FIM
         *) fail "a rejection is published too, because it is the evidence" \
                 "a reprovado row" "$linhas_lista" ;;
     esac
-    # And the two things that must never reach the file: the record posted by
-    # hand while proving the intake worked, and anything that is not a record.
+    # And the things that must never reach the file: the record posted by hand
+    # while proving the intake worked, anything that is not a record, and a row
+    # naming a winetricks SETTINGS verb - the AUR "Atomic Arch" threat in
+    # miniature, a valid-looking row that would change a prefix on every Tandem
+    # that acted on it.
     case "$linhas_lista" in
         *3f376993b2da855c5e6e291da008d5d6*)
             fail "the intake's own test record is never published" \
                  "excluded by name" "it is in the file" ;;
         *) pass "the intake's own test record is never published" ;;
     esac
-    equal "and what was left out is reported, not dropped in silence" \
-          "excluded: test record from the intake bring-up|malformed" "$fora_lista"
+    case "$linhas_lista" in
+        *sandbox*)
+            fail "a row naming a settings verb never reaches the published file" \
+                 "refused" "sandbox is in the file" ;;
+        *) pass "a row naming a settings verb never reaches the published file" ;;
+    esac
+    equal "and everything left out is reported, not dropped in silence" \
+          "excluded: test record from the intake bring-up|malformed|unsafe verb: verb 'sandbox' changes a setting, not a dependency" \
+          "$fora_lista"
 else
     skip "what gets published" "tools/monta-lista.py is missing"
 fi

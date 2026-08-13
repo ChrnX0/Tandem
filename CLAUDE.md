@@ -171,7 +171,8 @@ api/lista.js              THE INTAKE: validates a posted record and stores it.
 api/acumulado.js          what the intake accepted, so the rebuild below needs
                           no credential to read it
 tools/monta-lista.py      accepted records -> lista/lista.tsv, with an explicit
-                          exclusion list
+                          exclusion list AND a verb-safety gate: a row naming a
+                          winetricks settings verb never reaches the file
 .github/workflows/lista.yml  weekly rebuild that opens a PULL REQUEST; nothing
                           publishes itself
 package.json, vercel.json only for the two functions above. build.py ships an
@@ -270,6 +271,25 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
 - **Bottles cannot install dependencies from the command line** (GUI only),
   which rules it out as an engine. Still true in 65.4, and Eagle does not change
   it: Eagle only reports.
+- **CORRECTED, 2026-08-13 — the moat is narrower than the four points above
+  suggest, and this file should not oversell it.** A live-web sweep across eight
+  ecosystems (7 agents, sources in the artifact from that day) found the honest
+  claim has shrunk. Three specifics, each measured against the current release,
+  not memory: (1) **Bottles' dependency manager DOES auto-install** the deps it
+  detects — GUI-driven, the user picks from a list, but "it only reports" is now
+  wrong as stated; Eagle at ~v64 also gained a **scan-on-crash** offer, a
+  reactive trigger. (2) **Zorin 18.1 — the reference machine — now publicly
+  markets Tandem's own "rather than failing in silence" philosophy** for
+  `.exe`/`.msi`, naming 240+ known apps and suggesting alternatives. The
+  philosophy is no longer unique; the depth is. (3) umu/protonfixes and
+  CrossOver's CrossTie auto-install too, but only from a per-title recipe keyed
+  to a store ID — unknown program, still nothing. **What survives, exactly:**
+  nobody closes the loop *from the double click, for a non-technical user, with
+  bitness verification and a plain-language sentence, for a program nobody wrote
+  a recipe for*. That is still true everywhere the sweep looked — and it is a
+  thinner, more specific claim than "nobody detects or installs." State it that
+  way. The verify-arrival, verify-bitness, retry, and file-keyed-memory steps
+  remain unoccupied; the detection and the install, alone, no longer are.
 - **Tandem enters an association dispute, not a vacuum.** Zorin 18 ships
   "Windows App Support" and Waydroid installs `waydroid.app.install.desktop`. If
   a double click opens an "Open with…" dialog, that is why — run `tandem repair`,
