@@ -181,7 +181,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 963 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 967 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -583,6 +583,26 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   `.resto` file and both then move it over the queue, so the truncation lands in
   the middle of the other pass's appends and the lines already written are gone.
   The queue is the only copy of a lesson that has not left yet.
+- **Nine handlers, and only one of them still took `exit 0` as proof.** An audit
+  worth repeating whenever a tenth format arrives: `tandem-deb` asks dpkg's
+  database, `tandem-snap` asks `snap list`, `tandem-apk` parses waydroid's output
+  and then asks Android's own `pm list packages`, `tandem-rpm` never installs,
+  and the three that run a program ask the owner. `tandem-flatpak` had the right
+  check and used it backwards — `exit 0 OR flatpak agrees` — so a 0 was proof on
+  its own. And `tandem-script` had nothing to ask, which is why it was left: a
+  shell installer has no database behind it. **The evidence it does have** is the
+  same the silent-success guard uses: finishing almost at once having printed
+  nothing at all. No case was found where `flatpak install` exits 0 without
+  installing (a failed install exits 1, measured against flatpak 1.14.6), so
+  that half is a consistency fix and not a caught lie — worth saying plainly.
+- **`t_palavras_do_programa "$LOG"` shows TANDEM'S OWN LOG to the owner.** The
+  success path of `tandem-script` printed "this is what it said" followed by
+  `reconhecido como script comum` — an internal Portuguese line — because it
+  passed the whole log instead of the slice after `MARCA`. The failure path a few
+  lines below had always sliced it. Two consequences, and the second is the
+  interesting one: a log carrying Tandem's own lines is never empty, so **any**
+  guard conditioned on "the program said nothing" was dead code before it was
+  written. Found by running a script that does nothing and reading the output.
 - **A reason cannot travel in a variable out of `$( )`.** `t_envio_envia` is read
   through a command substitution, which is a subshell, so the count goes on
   stdout and *why* goes in the exit status (3 refused, 4 waiting, 5 already
@@ -738,7 +758,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 963 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 967 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The list's read path was measured against the OLD code before being fixed**,
   which is why the four defects are stated as numbers rather than as risks: on a
   two-row list the old query answered `vcrun2010` with 3 machines where 400
@@ -1244,10 +1264,10 @@ The queue, in order:
 to end on real files. `.AppImage` and `.jar` came in 3.7; `.deb`, `.rpm`,
 `.flatpakref`, `.snap` and shell installers in 3.8 — see the State section for exactly what was
 measured. The orphan-shortcut question is settled: it was never a defect. The
-real-program harness exists and is green. **v4.0, v4.1, v4.2 and v4.3 are
-published** — tag, `.deb` and `.sha256` attached, and 4.0's, 4.2's and 4.3's
-published artifacts each verified byte-for-byte identical to a local build
-(sha256 `82544a90…`, `3d5ed79a…` and `d6f2d792…`). 3.7 through 3.9 were never
+real-program harness exists and is green. **v4.0 through v4.4 are published** —
+tag, `.deb` and `.sha256` attached, and 4.0's, 4.2's, 4.3's and 4.4's published
+artifacts each verified byte-for-byte identical to a local build (sha256
+`82544a90…`, `3d5ed79a…`, `d6f2d792…` and `dbb14fad…`). 3.7 through 3.9 were never
 released, so 4.0 is the first package the public gets with all nine formats in
 it. The next release goes out the same way; see the section below for why the
 browser path exists.
@@ -1263,9 +1283,21 @@ zenity panel finally speak the machine's language. v4.2 before it carried the
 gettext migration, English as the default, the six data tables, sending on by
 default, the security fix on verb names and three Wine defects.
 
-**The version in the tree is now 4.4 and its changelog entry is open** —
-`debian/control`, `debian/changelog` and `TANDEM_VERSAO` all say 4.4. Add to
-that entry; do not touch 4.3's, which is history the public already has.
+**v4.4 IS PUBLISHED** — 2026-08-13, tag `v4.4` at `d6ea091`, `.deb`
+(351784 bytes) and `.sha256` attached, and the published artifact verified
+byte-for-byte against a local build of that same commit: sha256 `dbb14fad…`
+from all three of the release's own checksum file, the downloaded bytes, and
+the build made here. The installed package answers `Tandem 4.4`, `tandem
+repair` prints its report in Chinese when asked to, and a text file named
+`.rpm` produces a French sentence — which is the point of the release: the
+community list stopped answering with the first row it found, the send path
+stopped deleting lessons it had not sent, and the last Portuguese left in the
+product (the buttons, `tandem repair`, and thirty sentences inside the Python
+readers) went into the catalogues.
+
+**The version in the tree is now 4.5 and its changelog entry is open** —
+`debian/control`, `debian/changelog` and `TANDEM_VERSAO` all say 4.5. Add to
+that entry; do not touch 4.4's, which is history the public already has.
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

@@ -1,3 +1,28 @@
+tandem (4.5) unstable; urgency=medium
+
+  * A shell installer that exits 0 was the one place left where "it finished"
+    still meant "it worked". There is no database to ask afterwards, so the exit
+    code was the whole story - but there is other evidence, the same the silent-
+    success guard uses for a program: an installer that finishes almost at once
+    having printed nothing at all has not installed anything. Tandem cannot
+    prove that either, so it says what it saw instead of congratulating anybody.
+  * And writing that guard found a defect it could never have fired past. The
+    success path read the WHOLE log to show "this is what it said", so what the
+    owner saw under that heading was Tandem's own internal lines - in Portuguese
+    - and a log with those lines in it is never empty. The failure path a few
+    lines below had always sliced the log correctly; the success path never did.
+    Found by running a script that does nothing and reading the output.
+  * tandem-flatpak asked the authority backwards. It read "exit 0 OR flatpak
+    agrees the program is there", so a 0 was proof on its own and flatpak was
+    consulted only when the code had already said failure - the opposite of what
+    tandem-deb spells out in three lines of comment for dpkg. Stated honestly:
+    no case was found where flatpak install exits 0 without installing (a failed
+    install exits 1, measured against flatpak 1.14.6). What changes is which
+    question decides, and an error message followed by exit 0 would tell the
+    desktop the double click had succeeded.
+
+ -- ChrnX0 <rockx0@gmail.com>  Thu, 13 Aug 2026 03:45:00 +0000
+
 tandem (4.4) unstable; urgency=medium
 
   * The community list answered with the FIRST row it happened to read, so

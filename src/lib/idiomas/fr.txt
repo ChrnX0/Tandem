@@ -451,6 +451,14 @@ Il s'est terminé sans erreur.
 @script_disse
 Voici ce qu'il a dit :
 
+@script_calado
+Il a fini sans erreur - mais il a fini presque aussitôt et n'a rien dit du
+tout, ce à quoi ressemble un installeur qui n'a rien installé.
+
+Tandem ne peut pas savoir d'ici si ça a marché. Cherchez le programme dans le
+menu. S'il n'y est pas, il faut probablement le lancer autrement, et celui
+qui vous a donné le fichier saura comment.
+
 @script_erro
 Il s'est terminé sur une erreur (code {1}).
 

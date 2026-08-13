@@ -130,7 +130,35 @@ if [ "$CODIGO" -ne 0 ] && [ -n "$NOME" ]; then
     t_progresso_fecha
 fi
 
-if [ "$CODIGO" -eq 0 ] || { [ -n "$NOME" ] && flatpak info "$NOME" >/dev/null 2>&1; }; then
+# The acid test is flatpak's own answer, not the exit code - the same reasoning
+# tandem-deb spells out for dpkg, in the one handler that had the question
+# written down and used it backwards. It read "exit 0 OR flatpak agrees", so a 0
+# was proof on its own and the authority was consulted only when the code had
+# already said failure.
+#
+# Stated honestly: nothing here catches flatpak exiting 0 without installing. A
+# failed install exits 1, measured against real flatpak 1.14.6. What changes is
+# which question decides, and the answer to "is the program there" is worth more
+# than the answer to "did the command finish".
+if [ -n "$NOME" ]; then
+    if flatpak info "$NOME" >/dev/null 2>&1; then
+        INSTALOU=1
+    else
+        INSTALOU=0
+        # An error message followed by exit 0 tells the desktop the double click
+        # succeeded, which is the silent-failure shape this project exists to
+        # kill - so a code of 0 with the program absent becomes a failure code.
+        [ "$CODIGO" -eq 0 ] && CODIGO=1
+    fi
+elif [ "$CODIGO" -eq 0 ]; then
+    # A .flatpakref with no Name= leaves nothing to ask flatpak about, and the
+    # exit code is then the only evidence there is.
+    INSTALOU=1
+else
+    INSTALOU=0
+fi
+
+if [ "$INSTALOU" = 1 ]; then
     t_memoria_grava "$ARQ" RESULTADO instalado 2>/dev/null
     t_ok "$(t_msg flatpak_instalado "$AMIGAVEL")"
     exit 0

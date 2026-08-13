@@ -448,6 +448,14 @@ Terminou sem erro.
 @script_disse
 Foi isto que ele disse:
 
+@script_calado
+Terminou sem erro - mas terminou quase na hora e não disse nada, que é
+como fica um instalador que não instalou nada.
+
+O Tandem não tem como saber daqui se funcionou. Procure o programa no menu.
+Se não estiver lá, ele provavelmente precisa ser rodado de outro jeito, e
+quem te passou o arquivo sabe qual.
+
 @script_erro
 Terminou com erro (código {1}).
 
