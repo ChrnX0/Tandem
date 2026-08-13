@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.5"
+TANDEM_VERSAO="4.6"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -3342,12 +3342,28 @@ t_texto_script_perigo() {
 
 TANDEM_CONFIG="$HOME/.config/tandem/configuracao.txt"
 TANDEM_FILA="${TANDEM_FILA:-$TANDEM_ESTADO/enviar-fila.tsv}"
-# Where a contribution is posted. Empty in this build ON PURPOSE: an address
-# means somebody hosts it, moderates it and answers for the data, and that is a
-# decision with a cost attached rather than a line of code. Everything else is
-# built, so the day there is an address this becomes one assignment - and the
-# queue means the lines learned before that day are not lost.
-TANDEM_LISTA_ENVIO="${TANDEM_LISTA_ENVIO:-}"
+# Where a contribution is posted. This was empty for five versions because an
+# address means somebody hosts it and answers for the data, which is a decision
+# with a cost rather than a line of code. It has one now, and the receiving end
+# is in THIS REPOSITORY - api/lista.js - so the code that takes a shop's data is
+# as readable as the code that sends it.
+#
+# What arrives there is validated again from scratch, because a check that runs
+# on the sender's machine protects the sender and promises nothing to anybody
+# else. Nothing published itself: .github/workflows/lista.yml rebuilds the list
+# and opens a pull request.
+#
+# The host name is Vercel's generated one. Renaming the project there would
+# break this for every installed copy - not silently, because a name that does
+# not resolve is not a 2xx and the line stays in the queue, but it would break.
+# A custom domain is what fixes that, and it costs money nobody has spent.
+# The default has NO colon before the dash on purpose. "${VAR-default}" fills in
+# only when the variable is UNSET; an explicitly empty value stays empty. That is
+# the difference between the shipped state (unset -> this address, sends) and an
+# owner who exports TANDEM_LISTA_ENVIO="" to opt out by environment (empty ->
+# stays empty, sends nowhere). With the colon form, empty would silently become
+# the default and there would be no way to disable it by the variable at all.
+TANDEM_LISTA_ENVIO="${TANDEM_LISTA_ENVIO-https://tandem-psi-ten.vercel.app/api/lista}"
 # A machine cannot become a firehose, whatever it decides to install.
 TANDEM_ENVIO_POR_DIA="${TANDEM_ENVIO_POR_DIA:-20}"
 # ...and that cap only ever counted the lines that WENT. A failure cost
