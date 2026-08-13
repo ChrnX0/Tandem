@@ -1209,12 +1209,26 @@ The queue, in order:
    added: 4.4 added 34 keys, so five languages are now five languages plus 34
    unreviewed lines each.
 
-1. **Fill the community list.** Half-solved in 3.9: the client side of automatic
-   sending is built, tested against a real socket, and ON by default. What is
-   missing is not code - it is an ADDRESS. `TANDEM_LISTA_ENVIO` is empty because
-   an endpoint means somebody hosts it, moderates it and answers for the data.
-   That is the architect's call. Until then the queue keeps what it learns, and
-   `tandem enviar` says so out loud rather than pretending.
+1. **Fill the community list.** ~~What is missing is an ADDRESS.~~ **The address
+   exists.** The intake is `api/lista.js`, in this repository, deployed to the
+   owner's Vercel project which is git-linked to it; `api/acumulado.js` is the
+   read side; `tools/monta-lista.py` rebuilds `lista/lista.tsv`; and
+   `.github/workflows/lista.yml` opens a PULL REQUEST rather than publishing,
+   because anybody can POST and a poisoned row that publishes itself reaches
+   every Tandem at once.
+   **No secret is created by hand anywhere in the chain** — Vercel injects the
+   Blob credential when the store is connected, and the rebuild reads a public
+   URL. That was the requirement and it drove the design: every alternative
+   ended with somebody pasting a token somewhere.
+   **It was deliberately NOT put in the owner's existing Supabase project**,
+   which was the free option: that project is a live gym management system with
+   real student health records in it, and an anonymous internet-facing write
+   endpoint does not belong beside them. Same rule this project applies to
+   somebody's production Wine prefix.
+   What is still missing is real reports, and that is not code: eight of the
+   nine formats install native software where the lesson is derivable from the
+   file, so the list is inherently about the `.exe` path, where the knowledge is
+   genuinely non-derivable.
    **Three mechanical reasons an address alone would not fill it**, established
    by reading the tree rather than guessed, and each one is agent-only work that
    can be done before any address exists: only `tandem-exe` writes the

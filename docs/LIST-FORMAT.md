@@ -10,17 +10,42 @@ a volunteer's budget while a bespoke service would not: a static file has no
 server to fall over, no accounts, no database, no per-user cost, and anyone can
 mirror it.
 
-## The two halves, and why they are asymmetric
+## The two halves, and where each one lives
 
-| | How it works | Why |
+| | How it works | Where it is |
 |---|---|---|
-| **Down** (reading the list) | Automatic, once the owner asks for it | It is a `GET` of a public file. Nothing from the machine leaves. |
-| **Up** (contributing) | Tandem **builds** the record; **the owner sends it** | A shop's machine does not talk to any server because an automation decided to. |
+| **Down** (reading the list) | Automatic. A `GET` of a static file; nothing from the machine leaves. | `lista/lista.tsv`, served from this repository |
+| **Up** (contributing) | Automatic and **on by default** since 4.2. Tandem builds the record and posts it. | `api/lista.js`, in this repository too |
 
-That asymmetry is not laziness — it is the project's rule №1 applied to the
-network. Automatic contribution would mean a production machine sending data out
-with nobody asking, and "only harmless data" is a promise somebody breaks the
-first time a file path slips in by accident.
+**This paragraph used to say the owner sends it by hand, and that stopped being
+true in 4.2.** The reversal is written up in `src/lib/common.sh` at
+`t_envio_ligado`, and the measurement behind it is short: born off, the list
+stayed empty, and a default nobody changes is a decision made by the default.
+
+What makes an automatic send defensible is not the default. It is the three
+things around it, and none is optional:
+
+- **The record cannot carry anything personal.** `t_lista_vaza` refuses a line
+  holding a filename, a path, a user name, a machine name, an e-mail or an IP —
+  and it runs when the line is built and **again** before the POST, because the
+  queue is a plain text file and those get edited.
+- **The intake does not trust the client.** Every rule is applied again in
+  `api/lista.js`, because anybody can craft a POST by hand. A client-side check
+  protects the owner running it, never the list.
+- **The owner is told twice** — by `postinst` at install and again on the first
+  real send, with the line shown in full. Turning it off is one command, and it
+  is named in both messages.
+
+**Both ends are in this repository on purpose.** The code that receives a shop's
+data has to be as readable as the code that sends it; a service in its own
+repository is how "we only collect anonymous data" becomes a claim nobody can
+check.
+
+**And nothing publishes itself.** What the intake accepts is rebuilt into
+`lista/lista.tsv` by `.github/workflows/lista.yml`, which opens a pull request
+rather than committing. Anybody can POST; a poisoned row that published itself
+would be downloaded by every Tandem at once, while the same row reaching one
+machine is a question its owner gets asked.
 
 ## The record
 
@@ -38,7 +63,7 @@ identity  arch  verbs           failed       confidence  machines  seen        n
 | `verbs` | winetricks verbs that fixed it, comma-separated | `vcrun2022,dotnet48` |
 | `failed` | verbs that were installed and did **not** fix it | `vcrun6` |
 | `confidence` | `confirmado`, `so-abriu` or `reprovado` | `confirmado` |
-| `machines` | how many machines reported the same lesson | `340` |
+| `machines` | how many REPORTS carried the same lesson — see below, it is not machines | `340` |
 | `seen` | date of the most recent report, `YYYY-MM` | `2026-08` |
 | `note` | one sentence, or empty | `needs the 32-bit build` |
 
