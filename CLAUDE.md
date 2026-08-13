@@ -1397,6 +1397,24 @@ authenticates as the repository owner, and these still fail:
 - `POST`/`DELETE` on `/git/refs` via the API: HTTP 403, "Write access to this
   GitHub API path is not permitted through this proxy."
 
+**On the Vercel side**, which is new since 4.6 and worth the same treatment:
+
+- The project is **git-linked to this repository**, so a push deploys the
+  endpoint. There is nothing to upload and no CLI to run — write the file,
+  push, and the branch gets a preview deployment with its own URL. That is how
+  the intake was exercised before it ever reached production.
+- **Vercel Authentication was ON by default** (`ssoProtection`,
+  `all_except_custom_domains`), which would have bounced every anonymous POST to
+  a login page. Turned off for this project only, through
+  `update_project_deployment_protection`. An intake that cannot be reached
+  anonymously is not an intake.
+- **The MCP has no tool for environment variables or for creating a Blob
+  store.** Connecting the store is a dashboard action by the owner, and it is
+  the ONLY manual step in the whole chain — Vercel then injects
+  `BLOB_READ_WRITE_TOKEN` itself, so no secret is ever copied by hand.
+- **Runtime logs are readable** (`get_runtime_logs`) and they are what named the
+  `res.type()` defect. Read them before guessing at a 500.
+
 What works is the surface the MCP GitHub tools cover — merging a pull request,
 editing it, and `run_workflow`. Hence the release workflow accepting a
 `workflow_dispatch` and creating its own tag: that is the only route to a
