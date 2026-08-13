@@ -3498,7 +3498,7 @@ t_envio_pendentes() {
 # lints as a separate file and therefore cannot see from here.
 # shellcheck disable=SC2120
 t_envio_envia() {
-    local forcado="${1:-}" enviados=0 falhas=0 hoje contador reg resto
+    local forcado="${1:-}" enviados=0 falhas=0 hoje contador reg resto resposta
     local agora espera trava
     t_envio_ligado || return 0
     [ -n "$TANDEM_LISTA_ENVIO" ] || return 0
@@ -3557,8 +3557,17 @@ t_envio_envia() {
             printf '%s\n' "$reg" >> "$resto"
             continue
         fi
-        if t_envio_posta "$reg"; then
+        t_envio_posta "$reg"; resposta=$?
+        if [ "$resposta" = 0 ]; then
             enviados=$((enviados+1)); contador=$((contador+1)); falhas=0
+        elif [ "$resposta" = 2 ]; then
+            # Refused for good. It leaves the queue so it cannot block the
+            # lines behind it, and it is PARKED rather than deleted - the same
+            # rule the sieve refusal follows. Stopping a line from leaving is a
+            # different power from being allowed to destroy it, and a lesson
+            # nobody can read afterwards is a lesson lost either way.
+            printf '%s\n' "$reg" >> "$TANDEM_FILA.recusados" 2>/dev/null
+            t_diz "envio: linha movida para $TANDEM_FILA.recusados"
         else
             falhas=$((falhas+1))
             printf '%s\n' "$reg" >> "$resto"
@@ -3627,11 +3636,23 @@ t_envio_posta() {
     else
         return 1
     fi
+    # Three outcomes, not two, and the third is the one that matters once there
+    # is an address to post to. A 4xx is the far end saying this LINE is wrong -
+    # it will say the same thing for ever. Keeping it in the queue would retry it
+    # on every pass, and each retry counts as a failure, so three permanently
+    # refused lines would trip the hour-long wait and stop the GOOD lines from
+    # leaving. One malformed record would poison the whole queue.
+    #
+    # 429 and 408 are the exceptions inside 4xx: too fast and too slow are about
+    # the moment, not about the line.
     case "$codigo" in
-        2??) return 0 ;;
-        3??) t_diz "envio: o servidor respondeu $codigo, um redirecionamento; a linha fica na fila" ;;
-        '')  t_diz "envio: o servidor nao respondeu nada" ;;
-        *)   t_diz "envio: o servidor respondeu $codigo; a linha fica na fila" ;;
+        2??)      return 0 ;;
+        429|408)  t_diz "envio: o servidor pediu para esperar ($codigo)" ;;
+        4??)      t_diz "envio: o servidor recusou a linha ($codigo); nao adianta repetir"
+                  return 2 ;;
+        3??)      t_diz "envio: o servidor respondeu $codigo, um redirecionamento; a linha fica na fila" ;;
+        '')       t_diz "envio: o servidor nao respondeu nada" ;;
+        *)        t_diz "envio: o servidor respondeu $codigo; a linha fica na fila" ;;
     esac
     return 1
 }

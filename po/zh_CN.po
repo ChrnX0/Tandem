@@ -630,8 +630,8 @@ msgid "Last time, this program needed"
 msgstr "上次这个程序需要"
 
 msgctxt "licao_origem_lista"
-msgid "On {1} machines this program needed"
-msgstr "在 {1} 台机器上，这个程序需要"
+msgid "In {1} reports this program needed"
+msgstr "在 {1} 份报告中，这个程序需要"
 
 msgctxt "ressalva_so32"
 msgid ""

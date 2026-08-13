@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "789269210 3022" "$soma_esperados"
+      "1648532542 3094" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "3251423101 1840" "$soma_padroes"
+      "665411067 2000" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1704,6 +1704,123 @@ FIM
           "0" "$limpo"
 else
     skip "a migrated file stays migrated" "tools/conta-literais.py is missing"
+fi
+
+# tandem-apk was the only one of the nine that wrote NOTHING to memory - not
+# even a RESULTADO. So "tandem memoria" knew nothing about an .apk, "tandem
+# socorro" carried nothing about Android, and a second attempt at the same file
+# learned nothing from the first. Structural rather than a run, because reaching
+# those branches needs a live Waydroid; it catches the case that actually
+# happens, which is somebody adding a tenth failure and forgetting.
+#
+# The exemptions are the point of the check rather than a hole in it. A verdict
+# about the FILE is a lesson - it will still be true tomorrow. A verdict about
+# THIS MACHINE is not, and recording one would be a real defect: install adb,
+# and a memory saying the file failed would still be there, wrong. Writing the
+# first version of this without that distinction reported seven "missing"
+# records, four of which were genuinely missing and three of which must never
+# exist.
+SO_DA_MAQUINA="apk_falta_adb apk_sem_endereco apk_nao_conectou"
+sem_memoria=""
+while IFS= read -r n; do
+    linha="$(sed -n "${n}p" "$ROOT/src/bin/tandem-apk")"
+    pula=0
+    for chave in $SO_DA_MAQUINA; do
+        case "$linha" in *"$chave"*) pula=1 ;; esac
+    done
+    [ "$pula" = 1 ] && continue
+    anterior="$(sed -n "$((n-1))p" "$ROOT/src/bin/tandem-apk")"
+    case "$anterior" in
+        *t_memoria_grava*) ;;
+        *) sem_memoria="$sem_memoria $n" ;;
+    esac
+done <<FIMAPK
+$(grep -n 't_erro "$(t_msg apk_' "$ROOT/src/bin/tandem-apk" | cut -d: -f1)
+FIMAPK
+if [ -z "$sem_memoria" ]; then
+    pass "every verdict about the FILE in tandem-apk records it first"
+else
+    fail "every verdict about the FILE in tandem-apk records it first" \
+         "a t_memoria_grava above each" "lines without one:$sem_memoria"
+fi
+# And the machine-state ones must NOT record, or a fixed machine would keep
+# reading a failure about a file that was never the problem.
+grava_maquina=""
+for chave in $SO_DA_MAQUINA; do
+    n="$(grep -n "$chave" "$ROOT/src/bin/tandem-apk" | head -1 | cut -d: -f1)"
+    [ -n "$n" ] || continue
+    case "$(sed -n "$((n-1))p" "$ROOT/src/bin/tandem-apk")" in
+        *t_memoria_grava*) grava_maquina="$grava_maquina $chave" ;;
+    esac
+done
+if [ -z "$grava_maquina" ]; then
+    pass "and a failure of this machine is not remembered as a failure of the file"
+else
+    fail "and a failure of this machine is not remembered as a failure of the file" \
+         "no record" "recorded:$grava_maquina"
+fi
+
+section "what gets published to everybody"
+
+# tools/monta-lista.py turns the records the intake accepted into the file every
+# Tandem downloads. It is the narrowest point in the whole project: one wrong
+# row here reaches every machine at once, where a wrong row in one shop's memory
+# reaches one machine that then asks its owner. So the three things it must get
+# right are asserted against a synthetic intake rather than against whatever
+# happens to be in the store today.
+if [ -f "$ROOT/tools/monta-lista.py" ]; then
+    saida_lista="$(cd "$ROOT" && python3 - <<'FIM'
+import importlib.util
+spec = importlib.util.spec_from_file_location("m", "tools/monta-lista.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+A, B = "a" * 32, "b" * 32
+entrada = "\n".join([
+    "# TANDEM-ENTRADA 1",
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-07\t-",
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-",
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-06\t-",
+    f"{A}\t64\tvcrun2022\t-\treprovado\t1\t2026-08\t-",
+    f"{B}\t32\tdotnet48\t-\tconfirmado\t1\t2026-08\t-",
+    "3f376993b2da855c5e6e291da008d5d6\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-",
+    "isto nao e um registro",
+])
+linhas, recusadas = m.monta(entrada)
+print("|".join(linhas))
+print("|".join(sorted(r[0] for r in recusadas)))
+FIM
+)"
+    linhas_lista="$(printf '%s\n' "$saida_lista" | sed -n 1p)"
+    fora_lista="$(printf '%s\n' "$saida_lista" | sed -n 2p)"
+    # Three reports of one lesson are one row counting three, carrying the most
+    # recent month - not the first one seen.
+    case "$linhas_lista" in
+        *"vcrun2022	-	confirmado	3	2026-08"*)
+            pass "reports of the same lesson are added up, with the newest month" ;;
+        *) fail "reports of the same lesson are added up, with the newest month" \
+                "one row counting 3, seen 2026-08" "$linhas_lista" ;;
+    esac
+    # The rejection survives as its own row. Folding it away here would delete
+    # the evidence the client needs: t_lista_linha drops a verb set more
+    # machines rejected than confirmed, and it cannot do that if the rejections
+    # never reach the file.
+    case "$linhas_lista" in
+        *"vcrun2022	-	reprovado	1"*)
+            pass "a rejection is published too, because it is the evidence" ;;
+        *) fail "a rejection is published too, because it is the evidence" \
+                "a reprovado row" "$linhas_lista" ;;
+    esac
+    # And the two things that must never reach the file: the record posted by
+    # hand while proving the intake worked, and anything that is not a record.
+    case "$linhas_lista" in
+        *3f376993b2da855c5e6e291da008d5d6*)
+            fail "the intake's own test record is never published" \
+                 "excluded by name" "it is in the file" ;;
+        *) pass "the intake's own test record is never published" ;;
+    esac
+    equal "and what was left out is reported, not dropped in silence" \
+          "excluded: test record from the intake bring-up|malformed" "$fora_lista"
+else
+    skip "what gets published" "tools/monta-lista.py is missing"
 fi
 
 section "the readers speak in tokens, and every token has a sentence"
@@ -3796,6 +3913,43 @@ PYSERV
             *) fail "tandem enviar agora explains a refusal by the far end" \
                     "a sentence about the server" "$SAIDA_ENV" ;;
         esac
+
+        # A 4xx is the far end saying this LINE is wrong, and it will say the
+        # same thing for ever. Before this, any non-2xx kept the line and
+        # counted a failure - so three permanently refused lines would trip the
+        # hour-long wait and stop the GOOD lines from leaving. One malformed
+        # record would poison the whole queue.
+        RECEBIDO_4="$TMPROOT/recebido-400.txt"; : > "$RECEBIDO_4"
+        PORTA_4="$(sobe_servidor "$RECEBIDO_4" 400)"
+        if [ -n "$PORTA_4" ]; then
+            CASA_E4="$TMPROOT/casa-envio-4"; rm -rf "$CASA_E4"; mkdir -p "$CASA_E4"
+            env_envio4() {
+                env HOME="$CASA_E4" TANDEM_LISTA_ENVIO="${TANDEM_LISTA_ENVIO_TESTE:-}" \
+                    TANDEM_FILA="$CASA_E4/fila.tsv" \
+                    bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1" 2>/dev/null
+            }
+            for i in a b c; do
+                env_envio4 "t_envio_enfileira \"\$(printf 'ruim$i\t64\tv\t-\tconfirmado\t1\t2026-08\t-')\"" >/dev/null
+            done
+            TANDEM_LISTA_ENVIO_TESTE="http://127.0.0.1:$PORTA_4/" \
+                env_envio4 't_envio_envia' >/dev/null
+            equal "a line the far end refused for good leaves the queue" "0" \
+                  "$(linhas_de "$CASA_E4/fila.tsv")"
+            # Parked, not destroyed. Stopping a line from leaving is a different
+            # power from being allowed to delete it.
+            equal "and it is parked where somebody can still read it" "3" \
+                  "$(linhas_de "$CASA_E4/fila.tsv.recusados")"
+            # And a permanent refusal is not a failure OF THE ROUTE, so it must
+            # not trip the wait that exists for a broken network.
+            # Never written at all is the right answer here, and it reads as
+            # empty rather than as "0" - which is what the first version of
+            # this assertion expected, and it was the assertion that was wrong.
+            espera_4="$(env_envio4 't_config_le ENVIO_ESPERA_ATE' | tr -d '\n')"
+            equal "a refused line does not start the hour-long wait" "sem espera" \
+                  "$(case "${espera_4:-0}" in 0) echo "sem espera" ;; *) echo "$espera_4" ;; esac)"
+        else
+            skip "a line refused for good" "could not open a local listener"
+        fi
 
         # Two passes at once. Sending is spawned detached every time a program
         # is confirmed and "tandem enviar agora" starts one too, so this is the

@@ -46,6 +46,7 @@ done <<< "$INFO"
 # Python exception in English about a missing password, which is the failure mode
 # this project treats as a defect.
 if [ "$CIFRADO" = 1 ]; then
+    t_memoria_grava "$APK" RESULTADO "cifrado" 2>/dev/null
     t_erro "$(t_msg apk_cifrado)"
     exit 1
 fi
@@ -54,6 +55,7 @@ if [ -n "$ERRO" ]; then
     t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO")")"; exit 1
 fi
 if [ "$FORMATO" = "desconhecido" ]; then
+    t_memoria_grava "$APK" RESULTADO "nao e android" 2>/dev/null
     t_erro "$(t_msg apk_nao_e_android)"; exit 1
 fi
 
@@ -64,6 +66,12 @@ t_wd_garantir || exit 1
 SDK="$(t_wd_sdk)"
 if [ -n "$MINSDK" ] && [ -n "$SDK" ] && [ "$MINSDK" -gt "$SDK" ] 2>/dev/null; then
     t_progresso_fecha
+    # Remembered because it is a property of the FILE and this machine, and it
+    # will still be true tomorrow. Every other handler writes what it learned;
+    # this one wrote nothing at all, so "tandem memoria" knew nothing about an
+    # .apk and "tandem socorro" carried nothing about Android.
+    t_memoria_grava "$APK" RESULTADO "android antigo" 2>/dev/null
+    t_memoria_grava "$APK" LIMITE "versao|$MINSDK>$SDK" 2>/dev/null
     t_erro "$(t_msg apk_sdk_novo_demais "$MINSDK" "$SDK")"
     exit 1
 fi
@@ -72,6 +80,8 @@ fi
 if [ -n "$ABIS" ] && ! printf '%s' "$ABIS" | grep -q 'x86'; then
     if ! t_wd_tem_arm; then
         t_progresso_fecha
+        t_memoria_grava "$APK" RESULTADO "so arm" 2>/dev/null
+        t_memoria_grava "$APK" LIMITE "arquitetura|arm sem tradutor" 2>/dev/null
         t_erro "$(t_msg apk_arm_com_tradutor)"
         exit 1
     fi
@@ -79,37 +89,60 @@ if [ -n "$ABIS" ] && ! printf '%s' "$ABIS" | grep -q 'x86'; then
 fi
 
 # ------------------------------------------------------- 3. Install
+# Written out at each branch rather than through a local helper, and that is a
+# decision about the INSTRUMENT rather than about style: tools/conta-literais.py
+# excludes an argument by where it GOES, and it knows t_memoria_grava. Routing
+# these through a wrapper made ten on-disk tokens look like ten untranslated
+# sentences. Teaching the counter to follow wrappers, or adding a local function
+# name to its global list, is the rule-by-name mistake that failed thirteen
+# times. The values are Portuguese on-disk tokens like every other handler's.
 resultado() {
     local saida="$1"
     case "$saida" in
         *NO_MATCHING_ABIS*)
+            t_memoria_grava "$APK" RESULTADO "so arm" 2>/dev/null
             t_erro "$(t_msg apk_arm_sem_saida)" ;;
         *INSTALL_FAILED_OLDER_SDK*)
+            t_memoria_grava "$APK" RESULTADO "android antigo" 2>/dev/null
             t_erro "$(t_msg apk_sdk_curto)" ;;
         *INSTALL_FAILED_ALREADY_EXISTS*)
+            t_memoria_grava "$APK" RESULTADO "ja instalado" 2>/dev/null
             t_erro "$(t_msg apk_ja_instalado)" ;;
         *INSTALL_FAILED_VERSION_DOWNGRADE*)
+            t_memoria_grava "$APK" RESULTADO "versao mais nova" 2>/dev/null
             t_erro "$(t_msg apk_versao_mais_nova)" ;;
         *INSTALL_FAILED_INSUFFICIENT_STORAGE*)
+            t_memoria_grava "$APK" RESULTADO "sem espaco" 2>/dev/null
             t_erro "$(t_msg apk_sem_espaco)" ;;
         *INSTALL_PARSE_FAILED_NO_CERTIFICATES*)
+            t_memoria_grava "$APK" RESULTADO "sem assinatura" 2>/dev/null
             t_erro "$(t_msg apk_sem_assinatura)" ;;
         *INSTALL_PARSE_FAILED*)
+            t_memoria_grava "$APK" RESULTADO "incompleto" 2>/dev/null
             t_erro "$(t_msg apk_corrompido)" ;;
         *INSTALL_FAILED_MISSING_SPLIT*)
+            t_memoria_grava "$APK" RESULTADO "faltam partes" 2>/dev/null
             t_erro "$(t_msg apk_faltam_partes)" ;;
         *Success*)
+            t_memoria_grava "$APK" RESULTADO instalado 2>/dev/null
+            t_memoria_grava "$APK" VISTO_EM "$(date +%F)" 2>/dev/null
+            [ -n "$PACOTE" ] && t_memoria_grava "$APK" PACOTE "$PACOTE" 2>/dev/null
             t_ok "$(t_msg apk_instalado_pacote "${PACOTE:+ ($PACOTE)}")"
             return 0 ;;
         *Failure*|*INSTALL_FAILED*|*Exception*|*error:*|*Error:*)
+            t_memoria_grava "$APK" RESULTADO "nao instalou" 2>/dev/null
             t_erro "$(t_msg apk_nao_instalou)" ;;
         *)
             # No keyword: confirm by asking Android itself.
             if [ -n "$PACOTE" ] && waydroid shell -- pm list packages 2>/dev/null |
                  grep -q "package:$PACOTE"; then
+                t_memoria_grava "$APK" RESULTADO instalado 2>/dev/null
+            t_memoria_grava "$APK" VISTO_EM "$(date +%F)" 2>/dev/null
+            [ -n "$PACOTE" ] && t_memoria_grava "$APK" PACOTE "$PACOTE" 2>/dev/null
                 t_ok "$(t_msg apk_instalado_simples)"
                 return 0
             fi
+            t_memoria_grava "$APK" RESULTADO "nao confirmou" 2>/dev/null
             t_erro "$(t_msg apk_nao_confirmou)" ;;
     esac
     return 1
@@ -128,13 +161,16 @@ t_progresso_texto "$(t_msg apk_extraindo_partes "$SPLITS")"
 TMP="$(mktemp -d)"
 if ! unzip -q -o "$APK" -d "$TMP" 2>>"$LOG"; then
     t_progresso_fecha
+    t_memoria_grava "$APK" RESULTADO "pacote nao abre" 2>/dev/null
     t_erro "$(t_msg apk_pacote_nao_abre)"
     exit 1
 fi
 
 mapfile -t PARTES < <(find "$TMP" -maxdepth 2 -type f -iname '*.apk' | sort)
 [ "${#PARTES[@]}" -gt 0 ] || {
-    t_progresso_fecha; t_erro "$(t_msg apk_pacote_vazio)"; exit 1; }
+    t_progresso_fecha
+    t_memoria_grava "$APK" RESULTADO "pacote vazio" 2>/dev/null
+    t_erro "$(t_msg apk_pacote_vazio)"; exit 1; }
 
 command -v adb >/dev/null 2>&1 || {
     t_progresso_fecha

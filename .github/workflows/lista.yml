@@ -1,0 +1,63 @@
+# Rebuilds the community list from what the intake accepted, and OPENS A PULL
+# REQUEST rather than committing.
+#
+# The pull request is the whole point of the design, not caution for its own
+# sake. Anybody on the internet can POST a record to the intake; a poisoned row
+# that published itself would be downloaded by every Tandem on earth, and the
+# client treats the list as a suggestion it asks about - so one bad row reaching
+# one machine is a question, while one bad row reaching the list is a question
+# asked of everybody. Those are different sizes of mistake.
+#
+# It needs no secret. tools/monta-lista.py reads a public URL, which is why
+# api/acumulado.js exists: listing the store directly would need the read-write
+# token in this repository's secrets, and the whole arrangement was chosen to
+# avoid having a secret anybody had to create by hand.
+name: lista
+
+on:
+  schedule:
+    # Weekly. The list is a filter list, not a feed: a shop that learns
+    # something today is not waiting for the world to know by tonight.
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  montar:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild from the accepted records
+        run: |
+          python3 tools/monta-lista.py \
+            "https://tandem-psi-ten.vercel.app/api/acumulado" | tee saida.txt
+
+      - name: Open a pull request when the list actually changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- lista/lista.tsv; then
+            echo "nothing changed; no pull request"
+            exit 0
+          fi
+          # A branch per run, so two runs cannot fight over one ref.
+          ramo="lista/$(date -u +%Y-%m-%d-%H%M)"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$ramo"
+          git add lista/lista.tsv
+          git commit -m "The community list, rebuilt from the accepted records
+
+          $(cat saida.txt)"
+          git push -u origin "$ramo"
+          # The body carries what was left out as well as what went in. A row
+          # that vanishes silently between the intake and the published file is
+          # how a list stops describing what people actually reported.
+          gh pr create \
+            --title "The community list, rebuilt from the accepted records" \
+            --body "$(printf 'Rebuilt by .github/workflows/lista.yml from what the intake accepted.\n\n```\n%s\n```\n\nRead the rows before merging: anybody can POST to the intake, and this is the gate that stops a poisoned row from reaching every Tandem at once.\n' "$(cat saida.txt)")" \
+            --base main --head "$ramo"

@@ -668,8 +668,8 @@ msgid "Last time, this program needed"
 msgstr "Last time, this program needed"
 
 msgctxt "licao_origem_lista"
-msgid "On {1} machines this program needed"
-msgstr "On {1} machines this program needed"
+msgid "In {1} reports this program needed"
+msgstr "In {1} reports this program needed"
 
 msgctxt "ressalva_so32"
 msgid ""

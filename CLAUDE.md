@@ -165,6 +165,17 @@ tests/real-programs.sh    REAL software, weekly: PuTTY/Notepad++/7-Zip/WinMerge
 docs/IDEAS.md             idea ledger with verdicts; the rejected ones with the reason
 docs/LIST-FORMAT.md       the community list record, field by field
 lista/lista.tsv           the published list; empty until real people report
+api/lista.js              THE INTAKE: validates a posted record and stores it.
+                          Deployed to the owner's Vercel project, which is
+                          git-linked to this repository - so a push deploys it
+api/acumulado.js          what the intake accepted, so the rebuild below needs
+                          no credential to read it
+tools/monta-lista.py      accepted records -> lista/lista.tsv, with an explicit
+                          exclusion list
+.github/workflows/lista.yml  weekly rebuild that opens a PULL REQUEST; nothing
+                          publishes itself
+package.json, vercel.json only for the two functions above. build.py ships an
+                          explicit LAYOUT and none of these reach the .deb
 ```
 
 Commands (`tandem --help` is the source of truth):
@@ -181,7 +192,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 967 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 976 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -603,6 +614,34 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   interesting one: a log carrying Tandem's own lines is never empty, so **any**
   guard conditioned on "the program said nothing" was dead code before it was
   written. Found by running a script that does nothing and reading the output.
+- **The list has a receiver now, and the shape of it is the decision worth
+  keeping.** Both ends live in this repository — `api/lista.js` receives,
+  `lista/lista.tsv` is served — deployed to a Vercel project git-linked to the
+  repo, so a push deploys the endpoint. **No secret is created by hand anywhere
+  in the chain**: Vercel injects the Blob credential when the store is
+  connected, and the rebuild reads a public URL. Every alternative design ended
+  with somebody pasting a token somewhere, and that was the requirement.
+  It was deliberately NOT put in the owner's existing Supabase project even
+  though that was free: it is a live gym system holding real student health
+  records, and an anonymous internet-facing write endpoint does not belong
+  beside them — rule №1 applied off the Wine prefix.
+- **`res.type()` does not exist in Vercel's Node runtime** (it is Express).
+  Every response path in the intake went through one call to it, so the function
+  answered 500 to everything, including the GET that refuses before touching
+  anything. The runtime stack trace named it; guessing would not have.
+- **A 4xx is not a failure of the route, and treating it as one poisons the
+  queue.** The far end saying *this line is wrong* will say it for ever, so
+  keeping the line meant retrying it on every pass — and three permanently
+  refused lines would trip the hour-long wait that exists for a broken network,
+  stopping the GOOD lines from leaving. A 4xx now parks the line in
+  `.recusados`; 429 and 408 stay retryable, because too fast and too slow are
+  about the moment rather than about the line.
+- **Counting machines honestly is impossible without keeping something that
+  identifies the sender**, so the list counts REPORTS. "We only store a hash"
+  does not survive contact with a laptop: a hash of an IPv4 address is an IPv4
+  address to anybody willing to try four billion of them. The field kept its
+  position; the claim shrank, in `docs/LIST-FORMAT.md` and in the sentence the
+  owner reads, which said *machines* in all seven languages until 4.6.
 - **A reason cannot travel in a variable out of `$( )`.** `t_envio_envia` is read
   through a command substitution, which is a subshell, so the count goes on
   stdout and *why* goes in the exit status (3 refused, 4 waiting, 5 already
@@ -758,7 +797,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 967 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 976 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The list's read path was measured against the OLD code before being fixed**,
   which is why the four defects are stated as numbers rather than as risks: on a
   two-row list the old query answered `vcrun2010` with 3 machines where 400
@@ -1209,12 +1248,26 @@ The queue, in order:
    added: 4.4 added 34 keys, so five languages are now five languages plus 34
    unreviewed lines each.
 
-1. **Fill the community list.** Half-solved in 3.9: the client side of automatic
-   sending is built, tested against a real socket, and ON by default. What is
-   missing is not code - it is an ADDRESS. `TANDEM_LISTA_ENVIO` is empty because
-   an endpoint means somebody hosts it, moderates it and answers for the data.
-   That is the architect's call. Until then the queue keeps what it learns, and
-   `tandem enviar` says so out loud rather than pretending.
+1. **Fill the community list.** ~~What is missing is an ADDRESS.~~ **The address
+   exists.** The intake is `api/lista.js`, in this repository, deployed to the
+   owner's Vercel project which is git-linked to it; `api/acumulado.js` is the
+   read side; `tools/monta-lista.py` rebuilds `lista/lista.tsv`; and
+   `.github/workflows/lista.yml` opens a PULL REQUEST rather than publishing,
+   because anybody can POST and a poisoned row that publishes itself reaches
+   every Tandem at once.
+   **No secret is created by hand anywhere in the chain** — Vercel injects the
+   Blob credential when the store is connected, and the rebuild reads a public
+   URL. That was the requirement and it drove the design: every alternative
+   ended with somebody pasting a token somewhere.
+   **It was deliberately NOT put in the owner's existing Supabase project**,
+   which was the free option: that project is a live gym management system with
+   real student health records in it, and an anonymous internet-facing write
+   endpoint does not belong beside them. Same rule this project applies to
+   somebody's production Wine prefix.
+   What is still missing is real reports, and that is not code: eight of the
+   nine formats install native software where the lesson is derivable from the
+   file, so the list is inherently about the `.exe` path, where the knowledge is
+   genuinely non-derivable.
    **Three mechanical reasons an address alone would not fill it**, established
    by reading the tree rather than guessed, and each one is agent-only work that
    can be done before any address exists: only `tandem-exe` writes the
@@ -1343,6 +1396,24 @@ authenticates as the repository owner, and these still fail:
   deleting a ref.
 - `POST`/`DELETE` on `/git/refs` via the API: HTTP 403, "Write access to this
   GitHub API path is not permitted through this proxy."
+
+**On the Vercel side**, which is new since 4.6 and worth the same treatment:
+
+- The project is **git-linked to this repository**, so a push deploys the
+  endpoint. There is nothing to upload and no CLI to run — write the file,
+  push, and the branch gets a preview deployment with its own URL. That is how
+  the intake was exercised before it ever reached production.
+- **Vercel Authentication was ON by default** (`ssoProtection`,
+  `all_except_custom_domains`), which would have bounced every anonymous POST to
+  a login page. Turned off for this project only, through
+  `update_project_deployment_protection`. An intake that cannot be reached
+  anonymously is not an intake.
+- **The MCP has no tool for environment variables or for creating a Blob
+  store.** Connecting the store is a dashboard action by the owner, and it is
+  the ONLY manual step in the whole chain — Vercel then injects
+  `BLOB_READ_WRITE_TOKEN` itself, so no secret is ever copied by hand.
+- **Runtime logs are readable** (`get_runtime_logs`) and they are what named the
+  `res.type()` defect. Read them before guessing at a 500.
 
 What works is the surface the MCP GitHub tools cover — merging a pull request,
 editing it, and `run_workflow`. Hence the release workflow accepting a

@@ -389,7 +389,7 @@ reconnectez-vous.
 La dernière fois, ce programme a eu besoin de
 
 @licao_origem_lista
-Sur {1} machines ce programme a eu besoin de
+Dans {1} rapports ce programme a eu besoin de
 
 @ressalva_so32
 
