@@ -2613,3 +2613,210 @@ https://github.com/ChrnX0/Tandem/issues
 Windows 组件。下载它不会把您的任何东西送到任何地方。
 
 下载方法：   tandem lista atualizar
+
+@detalhes_tecnicos
+技术细节：
+
+@botao_sim
+是
+
+@botao_nao
+否
+
+@verbo_dotnet48
+.NET Framework 4.8（大约需要 30 分钟）
+
+@verbo_xact
+DirectX 音频
+
+@verbo_xinput
+DirectX（游戏手柄）
+
+@verbo_riched20
+格式文本编辑
+
+@verbo_openal
+OpenAL（音频）
+
+@verbo_quartz
+DirectShow（视频）
+
+@verbo_dbghelp
+Windows 调试支持
+
+@verbo_secur32
+Windows 安全
+
+@verbo_usp10
+文本排版（Uniscribe）
+
+@peca_wine
+Wine（运行 Windows 程序）
+
+@peca_wine32
+对旧的 32 位程序的支持
+
+@peca_winetricks
+Windows 组件安装器
+
+@peca_adb
+分包 Android 安装包（.xapk）安装器
+
+@peca_java
+Java（运行 .jar 程序）
+
+@peca_fuse
+直接打开 AppImage 的支持（FUSE）
+
+@peca_waydroid
+Android（Waydroid）- 需下载约 1 GB
+
+@limite_log_hardware
+这个程序试图直接与硬件通信，而只有系统驱动才能这样做。Wine 让它启动了，但只返回了零，所以它能打开，之后却表现异常
+
+@limite_log_driver
+这个程序试图加载一个系统驱动，而 Wine 运行在 Linux 内核之外
+
+@arq_memoria_cab1
+Tandem 关于这个程序学到的东西。
+
+@arq_memoria_cab2
+你可以阅读、删除它，也可以发给别人。
+
+@arq_receita_cab1
+Tandem 配方：这个程序需要什么才能运行。
+
+@arq_receita_cab2
+你可以阅读、核对它，也可以发给别人。
+
+@arq_receita_cab3
+使用方法：  tandem receita --importar <这个文件> <那个程序>
+
+@arq_config_cab
+Tandem 的设置。你可以阅读、编辑和删除这个文件。
+
+@col_programa
+程序
+
+@appimage_comentario
+由 Tandem 从 {1} 安装
+
+@verbo_d3dcompiler
+DirectX 着色器编译器
+
+@unidade_bytes
+{1} 字节
+
+@java_pede_desconhecido
+更新的版本
+
+@java_tem_desconhecido
+这里装的版本
+
+@deb_confirma_terminal
+要安装吗？[y/N] 
+
+@script_confirma_terminal
+{1}？[y/N] 
+
+@resposta_sim
+y
+
+@res_abriu
+已打开。
+
+@res_executou
+已运行。
+
+@res_instalado
+已安装。
+
+@res_fechou_sozinho
+它自己打开又自己关闭了。
+
+@res_nao_abriu
+没有打开。
+
+@res_nao_executou
+没有运行。
+
+@res_nao_instalou
+没有安装。
+
+@res_nao_confirmou
+它说安装好了，但系统里没有。
+
+@res_incompleto
+下载没有完成。
+
+@res_cifrado
+这个文件被提供它的网站加密了。
+
+@res_nao_e_android
+这不是 Android 安装包。
+
+@res_android_antigo
+它需要比这里更新的 Android。
+
+@res_so_arm
+它只为手机处理器而制作。
+
+@res_ja_instalado
+它已经装过了。
+
+@res_versao_mais_nova
+已经装了更新的版本。
+
+@res_sem_espaco
+空间不够。
+
+@res_sem_assinatura
+这个包没有签名。
+
+@res_faltam_partes
+安装包缺少一些部分。
+
+@res_pacote_nao_abre
+这个包打不开。
+
+@res_pacote_vazio
+这个包里什么都没有。
+
+@res_java_antigo
+它需要比这里更新的 Java。
+
+@res_falta_javafx
+它需要 JavaFX，而这里没有装。
+
+@res_faltam_arquivos
+它需要的文件不在旁边。
+
+@res_arquitetura_errada
+它是为另一种处理器制作的。
+
+@res_bitola_errada
+缺的东西装上了，但位数不对。
+
+@res_sistema_antigo
+这个系统比程序要求的旧。
+
+@res_falta_biblioteca
+系统里缺少它需要的一个库。
+
+@res_pasta_sem_permissao
+它所在的文件夹不允许运行程序。
+
+@res_faltam_dependencias
+系统里缺少这个包需要的东西。
+
+@res_outra_familia_de_linux
+它是为另一个 Linux 家族制作的。
+
+@res_so_abriu
+打开了；但没有人确认它能用。
+
+@res_confirmado
+机主确认它能用。
+
+@res_reprovado
+机主说它不能用。

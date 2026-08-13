@@ -179,9 +179,9 @@ $(t_msg precisa_da_senha)"
 
 if ! t_pergunta "$PERGUNTA" "$(t_msg botao_instalar)" "$(t_msg botao_cancelar)"; then
     if [ -t 0 ]; then
-        printf '%s\n\nInstalar? [s/N] ' "$PERGUNTA"
+        printf '%s\n\n%s' "$PERGUNTA" "$(t_msg deb_confirma_terminal)"
         read -r r
-        case "$r" in s|S|sim|SIM) ;; *) echo "Cancelado."; exit 0 ;; esac
+        if ! t_confirmou "$r"; then printf '%s\n' "$(t_msg cancelado)"; exit 0; fi
     else
         # With no window and no terminal there is nobody to confirm to. Saying
         # what would have been installed is the least this can do; installing

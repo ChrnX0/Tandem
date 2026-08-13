@@ -4571,3 +4571,279 @@ msgstr ""
 "Baixar não manda nada seu para lugar nenhum.\n"
 "\n"
 "Para baixar:   tandem lista atualizar"
+
+msgctxt "detalhes_tecnicos"
+msgid "Technical details:"
+msgstr "Detalhes técnicos:"
+
+msgctxt "botao_sim"
+msgid "Yes"
+msgstr "Sim"
+
+msgctxt "botao_nao"
+msgid "No"
+msgstr "Não"
+
+msgctxt "verbo_dotnet48"
+msgid ".NET Framework 4.8 (takes about 30 minutes)"
+msgstr ".NET Framework 4.8 (demora uns 30 minutos)"
+
+msgctxt "verbo_xact"
+msgid "DirectX Audio"
+msgstr "DirectX Áudio"
+
+msgctxt "verbo_xinput"
+msgid "DirectX (game controllers)"
+msgstr "DirectX (controles de jogo)"
+
+msgctxt "verbo_riched20"
+msgid "Rich text editing"
+msgstr "Edição de texto formatado"
+
+msgctxt "verbo_openal"
+msgid "OpenAL (audio)"
+msgstr "OpenAL (áudio)"
+
+msgctxt "verbo_quartz"
+msgid "DirectShow (video)"
+msgstr "DirectShow (vídeo)"
+
+msgctxt "verbo_dbghelp"
+msgid "Windows debugging support"
+msgstr "Depuração do Windows"
+
+msgctxt "verbo_secur32"
+msgid "Windows security"
+msgstr "Segurança do Windows"
+
+msgctxt "verbo_usp10"
+msgid "Text shaping (Uniscribe)"
+msgstr "Desenho de texto (Uniscribe)"
+
+msgctxt "peca_wine"
+msgid "Wine (runs Windows programs)"
+msgstr "Wine (roda os programas do Windows)"
+
+msgctxt "peca_wine32"
+msgid "Support for older 32-bit programs"
+msgstr "Suporte a programas antigos de 32 bits"
+
+msgctxt "peca_winetricks"
+msgid "Installer for Windows components"
+msgstr "Instalador de componentes do Windows"
+
+msgctxt "peca_adb"
+msgid "Installer for split Android packages (.xapk)"
+msgstr "Instalador de pacotes Android divididos (.xapk)"
+
+msgctxt "peca_java"
+msgid "Java (runs .jar programs)"
+msgstr "Java (roda os programas .jar)"
+
+msgctxt "peca_fuse"
+msgid "Support for opening an AppImage directly (FUSE)"
+msgstr "Suporte para abrir AppImage direto (FUSE)"
+
+msgctxt "peca_waydroid"
+msgid "Android (Waydroid) - downloads about 1 GB"
+msgstr "Android (Waydroid) - baixa cerca de 1 GB"
+
+msgctxt "limite_log_hardware"
+msgid "this program tried to talk straight to the hardware, the way only a system driver can. Wine let it start and handed it zeros, and that is why it opens and then behaves strangely"
+msgstr "este programa tentou falar direto com o hardware, do jeito que só um driver de sistema pode. O Wine deixou ele começar e devolveu zeros, e é por isso que ele abre e depois se comporta de um jeito estranho"
+
+msgctxt "limite_log_driver"
+msgid "this program tried to load a system driver, and Wine runs outside the Linux kernel"
+msgstr "este programa tentou carregar um driver de sistema, e o Wine roda fora do núcleo do Linux"
+
+msgctxt "arq_memoria_cab1"
+msgid "What Tandem learned about this program."
+msgstr "O que o Tandem aprendeu sobre este programa."
+
+msgctxt "arq_memoria_cab2"
+msgid "You can read it, delete it and send it to somebody else."
+msgstr "Pode ler, apagar e mandar para outra pessoa."
+
+msgctxt "arq_receita_cab1"
+msgid "Tandem recipe: what this program needed in order to work."
+msgstr "Receita do Tandem: o que este programa precisou para funcionar."
+
+msgctxt "arq_receita_cab2"
+msgid "You can read it, check it and send it to somebody else."
+msgstr "Pode ler, conferir e mandar para outra pessoa."
+
+msgctxt "arq_receita_cab3"
+msgid "To use it:  tandem receita --importar <this file> <the program>"
+msgstr "Para usar:  tandem receita --importar <este arquivo> <o programa>"
+
+msgctxt "arq_config_cab"
+msgid "Tandem settings. You can read, edit and delete this file."
+msgstr "Configuração do Tandem. Pode ler, editar e apagar."
+
+msgctxt "col_programa"
+msgid "Program"
+msgstr "Programa"
+
+msgctxt "appimage_comentario"
+msgid "Installed by Tandem from {1}"
+msgstr "Instalado pelo Tandem a partir de {1}"
+
+msgctxt "verbo_d3dcompiler"
+msgid "DirectX shader compiler"
+msgstr "Compilador de shaders do DirectX"
+
+msgctxt "unidade_bytes"
+msgid "{1} bytes"
+msgstr "{1} bytes"
+
+msgctxt "java_pede_desconhecido"
+msgid "a newer one"
+msgstr "uma mais nova"
+
+msgctxt "java_tem_desconhecido"
+msgid "the one installed here"
+msgstr "o instalado aqui"
+
+msgctxt "deb_confirma_terminal"
+msgid "Install? [y/N] "
+msgstr "Instalar? [s/N] "
+
+msgctxt "script_confirma_terminal"
+msgid "{1}? [y/N] "
+msgstr "{1}? [s/N] "
+
+msgctxt "resposta_sim"
+msgid "y"
+msgstr "s"
+
+msgctxt "res_abriu"
+msgid "It opened."
+msgstr "Abriu."
+
+msgctxt "res_executou"
+msgid "It ran."
+msgstr "Executou."
+
+msgctxt "res_instalado"
+msgid "It installed."
+msgstr "Instalado."
+
+msgctxt "res_fechou_sozinho"
+msgid "It opened and closed on its own."
+msgstr "Abriu e fechou sozinho."
+
+msgctxt "res_nao_abriu"
+msgid "It did not open."
+msgstr "Não abriu."
+
+msgctxt "res_nao_executou"
+msgid "It did not run."
+msgstr "Não executou."
+
+msgctxt "res_nao_instalou"
+msgid "It did not install."
+msgstr "Não instalou."
+
+msgctxt "res_nao_confirmou"
+msgid "It said it installed, but the system does not have it."
+msgstr "Disse que instalou, mas o sistema não tem."
+
+msgctxt "res_incompleto"
+msgid "The download did not finish."
+msgstr "O download não terminou."
+
+msgctxt "res_cifrado"
+msgid "The file is encrypted by the site that supplied it."
+msgstr "O arquivo está cifrado pelo site que forneceu."
+
+msgctxt "res_nao_e_android"
+msgid "It is not an Android package."
+msgstr "Não é um pacote Android."
+
+msgctxt "res_android_antigo"
+msgid "It needs a newer Android than the one here."
+msgstr "Precisa de um Android mais novo que o daqui."
+
+msgctxt "res_so_arm"
+msgid "It is built for phone processors only."
+msgstr "Foi feito só para processadores de celular."
+
+msgctxt "res_ja_instalado"
+msgid "It was already installed."
+msgstr "Já estava instalado."
+
+msgctxt "res_versao_mais_nova"
+msgid "A newer version is already installed."
+msgstr "Já tem uma versão mais nova instalada."
+
+msgctxt "res_sem_espaco"
+msgid "There was not enough space."
+msgstr "Não tinha espaço."
+
+msgctxt "res_sem_assinatura"
+msgid "The package is not signed."
+msgstr "O pacote não está assinado."
+
+msgctxt "res_faltam_partes"
+msgid "Parts of the package are missing."
+msgstr "Faltam partes do pacote."
+
+msgctxt "res_pacote_nao_abre"
+msgid "The package cannot be opened."
+msgstr "O pacote não abre."
+
+msgctxt "res_pacote_vazio"
+msgid "The package has nothing in it."
+msgstr "O pacote não tem nada dentro."
+
+msgctxt "res_java_antigo"
+msgid "It needs a newer Java than the one here."
+msgstr "Precisa de um Java mais novo que o daqui."
+
+msgctxt "res_falta_javafx"
+msgid "It needs JavaFX, which is not installed."
+msgstr "Precisa do JavaFX, que não está instalado."
+
+msgctxt "res_faltam_arquivos"
+msgid "Files it needs are missing from beside it."
+msgstr "Faltam arquivos que ele precisa, do lado dele."
+
+msgctxt "res_arquitetura_errada"
+msgid "It is built for a different processor."
+msgstr "Foi feito para outro processador."
+
+msgctxt "res_bitola_errada"
+msgid "What it needed arrived, but built for the other processor width."
+msgstr "O que faltava chegou, mas na bitola errada."
+
+msgctxt "res_sistema_antigo"
+msgid "This system is older than the program needs."
+msgstr "Este sistema é mais antigo do que o programa pede."
+
+msgctxt "res_falta_biblioteca"
+msgid "A library it needs is missing from the system."
+msgstr "Falta no sistema uma biblioteca que ele usa."
+
+msgctxt "res_pasta_sem_permissao"
+msgid "The folder it is in does not allow running programs."
+msgstr "A pasta onde ele está não deixa rodar programas."
+
+msgctxt "res_faltam_dependencias"
+msgid "The system is missing things this package needs."
+msgstr "Faltam no sistema coisas que este pacote precisa."
+
+msgctxt "res_outra_familia_de_linux"
+msgid "It was made for another family of Linux."
+msgstr "Foi feito para outra família de Linux."
+
+msgctxt "res_so_abriu"
+msgid "It opened; nobody has confirmed it works."
+msgstr "Abriu; ninguém confirmou que funciona."
+
+msgctxt "res_confirmado"
+msgid "The owner confirmed it works."
+msgstr "O dono confirmou que funciona."
+
+msgctxt "res_reprovado"
+msgid "The owner said it did not work."
+msgstr "O dono disse que não funcionou."

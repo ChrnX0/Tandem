@@ -305,6 +305,17 @@ BITOLA=""
 while :; do
     MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
     t_aviso "$(t_msg abrindo "$(basename -- "$PROG")")"
+    # The clock that decides "it opened and closed by itself" has to time THE
+    # RUN, not everything that led up to it. INICIO is set once, near the top,
+    # above the memory shortcut and above this loop - so DUROU below carried
+    # every winetricks download with it, and after a dotnet48 that is half an
+    # hour. The guard compares against a few seconds, so on exactly the runs
+    # where Tandem did the most work it was arithmetically incapable of firing,
+    # and a program that flashed and vanished was reported as having worked.
+    # The same inflated number goes into memory as SEGUNDOS and travels on
+    # inside recipes. tandem-appimage, tandem-jar and tandem-script all reset
+    # theirs in the right place; this was the one that did not.
+    INICIO=$SECONDS
     executar
     CODIGO=$?
     if [ "$CODIGO" -eq 0 ]; then

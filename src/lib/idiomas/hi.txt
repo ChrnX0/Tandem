@@ -2691,3 +2691,210 @@ https://github.com/ChrnX0/Tandem/issues
 करने से आपका कुछ भी कहीं नहीं जाता।
 
 डाउनलोड करने के लिए:   tandem lista atualizar
+
+@detalhes_tecnicos
+तकनीकी विवरण:
+
+@botao_sim
+हाँ
+
+@botao_nao
+नहीं
+
+@verbo_dotnet48
+.NET Framework 4.8 (लगभग 30 मिनट लगते हैं)
+
+@verbo_xact
+DirectX ऑडियो
+
+@verbo_xinput
+DirectX (गेम कंट्रोलर)
+
+@verbo_riched20
+रिच टेक्स्ट संपादन
+
+@verbo_openal
+OpenAL (ऑडियो)
+
+@verbo_quartz
+DirectShow (वीडियो)
+
+@verbo_dbghelp
+Windows डीबगिंग सहायता
+
+@verbo_secur32
+Windows सुरक्षा
+
+@verbo_usp10
+टेक्स्ट शेपिंग (Uniscribe)
+
+@peca_wine
+Wine (Windows प्रोग्राम चलाता है)
+
+@peca_wine32
+पुराने 32-बिट प्रोग्राम के लिए सहायता
+
+@peca_winetricks
+Windows घटकों का इंस्टॉलर
+
+@peca_adb
+विभाजित Android पैकेज (.xapk) का इंस्टॉलर
+
+@peca_java
+Java (.jar प्रोग्राम चलाता है)
+
+@peca_fuse
+AppImage को सीधे खोलने की सहायता (FUSE)
+
+@peca_waydroid
+Android (Waydroid) - लगभग 1 GB डाउनलोड करता है
+
+@limite_log_hardware
+इस प्रोग्राम ने सीधे हार्डवेयर से बात करने की कोशिश की, जैसा केवल एक सिस्टम ड्राइवर कर सकता है। Wine ने इसे चलने दिया और शून्य लौटाए, इसीलिए यह खुलता है और फिर अजीब व्यवहार करता है
+
+@limite_log_driver
+इस प्रोग्राम ने एक सिस्टम ड्राइवर लोड करने की कोशिश की, और Wine लिनक्स कर्नेल के बाहर चलता है
+
+@arq_memoria_cab1
+Tandem ने इस प्रोग्राम के बारे में जो सीखा।
+
+@arq_memoria_cab2
+आप इसे पढ़ सकते हैं, मिटा सकते हैं और किसी और को भेज सकते हैं।
+
+@arq_receita_cab1
+Tandem नुस्खा: इस प्रोग्राम को चलने के लिए क्या चाहिए था।
+
+@arq_receita_cab2
+आप इसे पढ़ सकते हैं, जाँच सकते हैं और किसी और को भेज सकते हैं।
+
+@arq_receita_cab3
+उपयोग करने के लिए:  tandem receita --importar <यह फ़ाइल> <वह प्रोग्राम>
+
+@arq_config_cab
+Tandem की सेटिंग्स। आप इस फ़ाइल को पढ़, संपादित और मिटा सकते हैं।
+
+@col_programa
+प्रोग्राम
+
+@appimage_comentario
+Tandem द्वारा {1} से इंस्टॉल किया गया
+
+@verbo_d3dcompiler
+DirectX शेडर कंपाइलर
+
+@unidade_bytes
+{1} बाइट्स
+
+@java_pede_desconhecido
+एक नया संस्करण
+
+@java_tem_desconhecido
+यहाँ स्थापित संस्करण
+
+@deb_confirma_terminal
+इंस्टॉल करें? [y/N] 
+
+@script_confirma_terminal
+{1}? [y/N] 
+
+@resposta_sim
+y
+
+@res_abriu
+यह खुला।
+
+@res_executou
+यह चला।
+
+@res_instalado
+इंस्टॉल हो गया।
+
+@res_fechou_sozinho
+यह खुला और अपने आप बंद हो गया।
+
+@res_nao_abriu
+यह नहीं खुला।
+
+@res_nao_executou
+यह नहीं चला।
+
+@res_nao_instalou
+इंस्टॉल नहीं हुआ।
+
+@res_nao_confirmou
+इसने कहा कि इंस्टॉल हो गया, पर सिस्टम में यह नहीं है।
+
+@res_incompleto
+डाउनलोड पूरा नहीं हुआ।
+
+@res_cifrado
+जिस साइट ने यह दिया, उसने फ़ाइल को एन्क्रिप्ट किया है।
+
+@res_nao_e_android
+यह Android पैकेज नहीं है।
+
+@res_android_antigo
+इसे यहाँ मौजूद Android से नया चाहिए।
+
+@res_so_arm
+यह केवल फ़ोन के प्रोसेसर के लिए बना है।
+
+@res_ja_instalado
+यह पहले से इंस्टॉल था।
+
+@res_versao_mais_nova
+पहले से एक नया संस्करण इंस्टॉल है।
+
+@res_sem_espaco
+जगह पर्याप्त नहीं थी।
+
+@res_sem_assinatura
+पैकेज पर हस्ताक्षर नहीं है।
+
+@res_faltam_partes
+पैकेज के कुछ हिस्से गायब हैं।
+
+@res_pacote_nao_abre
+पैकेज खुल नहीं रहा।
+
+@res_pacote_vazio
+पैकेज में कुछ भी नहीं है।
+
+@res_java_antigo
+इसे यहाँ मौजूद Java से नया चाहिए।
+
+@res_falta_javafx
+इसे JavaFX चाहिए, जो इंस्टॉल नहीं है।
+
+@res_faltam_arquivos
+इसके साथ रहने वाली ज़रूरी फ़ाइलें गायब हैं।
+
+@res_arquitetura_errada
+यह किसी दूसरे प्रोसेसर के लिए बना है।
+
+@res_bitola_errada
+जो चाहिए था वह आया, पर दूसरी प्रोसेसर-चौड़ाई का।
+
+@res_sistema_antigo
+यह सिस्टम प्रोग्राम की माँग से पुराना है।
+
+@res_falta_biblioteca
+सिस्टम में इसकी ज़रूरी लाइब्रेरी नहीं है।
+
+@res_pasta_sem_permissao
+जिस फ़ोल्डर में यह है, वहाँ प्रोग्राम चलाने की अनुमति नहीं है।
+
+@res_faltam_dependencias
+सिस्टम में वे चीज़ें नहीं हैं जो इस पैकेज को चाहिए।
+
+@res_outra_familia_de_linux
+यह Linux के किसी दूसरे परिवार के लिए बना है।
+
+@res_so_abriu
+यह खुला; किसी ने पुष्टि नहीं की कि यह काम करता है।
+
+@res_confirmado
+मालिक ने पुष्टि की कि यह काम करता है।
+
+@res_reprovado
+मालिक ने कहा कि यह काम नहीं किया।

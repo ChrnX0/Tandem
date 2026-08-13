@@ -2654,3 +2654,210 @@ https://github.com/ChrnX0/Tandem/issues
 احتاجها كل برنامج. وتنزيلها لا يُرسل أي شيء من عندك إلى أي مكان.
 
 للتنزيل:   tandem lista atualizar
+
+@detalhes_tecnicos
+التفاصيل التقنية:
+
+@botao_sim
+نعم
+
+@botao_nao
+لا
+
+@verbo_dotnet48
+.NET Framework 4.8 (يستغرق نحو 30 دقيقة)
+
+@verbo_xact
+صوت DirectX
+
+@verbo_xinput
+DirectX (أذرع التحكم)
+
+@verbo_riched20
+تحرير النص المنسق
+
+@verbo_openal
+OpenAL (الصوت)
+
+@verbo_quartz
+DirectShow (الفيديو)
+
+@verbo_dbghelp
+دعم تصحيح أخطاء Windows
+
+@verbo_secur32
+أمان Windows
+
+@verbo_usp10
+تشكيل النص (Uniscribe)
+
+@peca_wine
+Wine (يشغّل برامج Windows)
+
+@peca_wine32
+دعم البرامج القديمة ذات 32 بت
+
+@peca_winetricks
+مثبّت مكوّنات Windows
+
+@peca_adb
+مثبّت حزم Android المقسّمة (.xapk)
+
+@peca_java
+Java (يشغّل برامج .jar)
+
+@peca_fuse
+دعم فتح ملف AppImage مباشرةً (FUSE)
+
+@peca_waydroid
+Android (Waydroid) - ينزّل نحو 1 غيغابايت
+
+@limite_log_hardware
+حاول هذا البرنامج التخاطب مباشرة مع العتاد، بالطريقة التي لا يقدر عليها سوى مُشغِّل نظام. سمح له Wine بالبدء وأعاد له أصفارًا، ولهذا يفتح ثم يتصرّف بشكل غريب
+
+@limite_log_driver
+حاول هذا البرنامج تحميل مُشغِّل نظام، وWine يعمل خارج نواة لينكس
+
+@arq_memoria_cab1
+ما تعلّمه Tandem عن هذا البرنامج.
+
+@arq_memoria_cab2
+يمكنك قراءته وحذفه وإرساله إلى شخص آخر.
+
+@arq_receita_cab1
+وصفة Tandem: ما احتاجه هذا البرنامج كي يعمل.
+
+@arq_receita_cab2
+يمكنك قراءتها والتحقق منها وإرسالها إلى شخص آخر.
+
+@arq_receita_cab3
+للاستخدام:  tandem receita --importar <هذا الملف> <البرنامج>
+
+@arq_config_cab
+إعدادات Tandem. يمكنك قراءة هذا الملف وتحريره وحذفه.
+
+@col_programa
+البرنامج
+
+@appimage_comentario
+ثبّته Tandem من {1}
+
+@verbo_d3dcompiler
+مُصرِّف تظليل DirectX
+
+@unidade_bytes
+{1} بايت
+
+@java_pede_desconhecido
+إصدار أحدث
+
+@java_tem_desconhecido
+المثبَّت هنا
+
+@deb_confirma_terminal
+أأثبّته؟ [y/N] 
+
+@script_confirma_terminal
+{1}؟ [y/N] 
+
+@resposta_sim
+y
+
+@res_abriu
+فُتِح.
+
+@res_executou
+نُفِّذ.
+
+@res_instalado
+ثُبِّت.
+
+@res_fechou_sozinho
+فُتِح ثم أُغلق من تلقاء نفسه.
+
+@res_nao_abriu
+لم يُفتح.
+
+@res_nao_executou
+لم يُنفَّذ.
+
+@res_nao_instalou
+لم يُثبَّت.
+
+@res_nao_confirmou
+قال إنه ثُبِّت، لكن النظام لا يحتويه.
+
+@res_incompleto
+لم يكتمل التنزيل.
+
+@res_cifrado
+الملف مُعمّى من قِبل الموقع الذي وفّره.
+
+@res_nao_e_android
+ليست حزمة Android.
+
+@res_android_antigo
+يحتاج إلى Android أحدث من الموجود هنا.
+
+@res_so_arm
+صُنع لمعالجات الهواتف فقط.
+
+@res_ja_instalado
+كان مثبّتًا بالفعل.
+
+@res_versao_mais_nova
+هناك إصدار أحدث مثبّت بالفعل.
+
+@res_sem_espaco
+لم تكن هناك مساحة كافية.
+
+@res_sem_assinatura
+الحزمة غير موقّعة.
+
+@res_faltam_partes
+تنقص أجزاء من الحزمة.
+
+@res_pacote_nao_abre
+لا يمكن فتح الحزمة.
+
+@res_pacote_vazio
+الحزمة فارغة.
+
+@res_java_antigo
+يحتاج إلى Java أحدث من الموجود هنا.
+
+@res_falta_javafx
+يحتاج إلى JavaFX غير المثبّت.
+
+@res_faltam_arquivos
+تنقص ملفات يحتاجها بجواره.
+
+@res_arquitetura_errada
+صُنع لمعالج آخر.
+
+@res_bitola_errada
+وصل ما كان ناقصًا، لكن بعرض معالج مختلف.
+
+@res_sistema_antigo
+هذا النظام أقدم مما يطلبه البرنامج.
+
+@res_falta_biblioteca
+تنقص النظام مكتبة يحتاجها.
+
+@res_pasta_sem_permissao
+المجلد الذي يوجد فيه لا يسمح بتشغيل البرامج.
+
+@res_faltam_dependencias
+ينقص النظام أشياء تحتاجها هذه الحزمة.
+
+@res_outra_familia_de_linux
+صُنع لعائلة أخرى من لينكس.
+
+@res_so_abriu
+فُتِح؛ ولم يؤكّد أحد أنه يعمل.
+
+@res_confirmado
+أكّد المالك أنه يعمل.
+
+@res_reprovado
+قال المالك إنه لم يعمل.

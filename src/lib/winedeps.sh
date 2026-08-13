@@ -323,6 +323,18 @@ t_dlls_sem_traducao() {
 }
 
 # Friendly name of a verb, to show to the user.
+#
+# Half of these are product names that must stay verbatim in every language -
+# somebody searching for "Visual C++ 2015-2022" has to find the same words the
+# rest of the world uses. The other half were SENTENCES, written here as plain
+# literals: "Editor de texto rico", "Depurador do Windows", "Desenho de texto
+# (Uniscribe)". They were shown, in Portuguese, to every user of every language,
+# on the most important screen this program has - the list of what it is about
+# to install - and tools/conta-literais.py reported TOTAL 0 the whole time,
+# because this function's NAME matches none of the prose-body patterns and it
+# lives in a library rather than in a handler. That is miss number sixteen, and
+# it is the same shape as the thirteenth: a rule about names cannot see a body
+# that produces prose under a name nobody thought of.
 t_verbo_amigavel() {
     case "$1" in
         vcrun2022) echo "Visual C++ 2015-2022" ;;
@@ -335,23 +347,23 @@ t_verbo_amigavel() {
         vcrun2003) echo "Visual C++ 2003" ;;
         vcrun6)    echo "Visual C++ 6" ;;
         mfc42)     echo "MFC 4.2" ;;
-        dotnet48)  echo ".NET Framework 4.8 (demora ~30 min)" ;;
+        dotnet48)  echo "$(t_msg verbo_dotnet48)" ;;
         d3dx9|d3dx10|d3dx11_43) echo "DirectX ($1)" ;;
-        d3dcompiler_43|d3dcompiler_47) echo "DirectX Compiler" ;;
-        d3dcompiler_46) echo "DirectX Compiler" ;;
-        xact)      echo "DirectX Áudio" ;;
-        xinput)    echo "DirectX (controles)" ;;
+        d3dcompiler_43|d3dcompiler_47) echo "$(t_msg verbo_d3dcompiler)" ;;
+        d3dcompiler_46) echo "$(t_msg verbo_d3dcompiler)" ;;
+        xact)      echo "$(t_msg verbo_xact)" ;;
+        xinput)    echo "$(t_msg verbo_xinput)" ;;
         gdiplus)   echo "GDI+" ;;
-        riched20)  echo "Editor de texto rico" ;;
+        riched20)  echo "$(t_msg verbo_riched20)" ;;
         msxml3|msxml4|msxml6) echo "MSXML" ;;
-        openal)    echo "OpenAL (áudio)" ;;
+        openal)    echo "$(t_msg verbo_openal)" ;;
         physx)     echo "PhysX" ;;
-        quartz|amstream) echo "DirectShow (vídeo)" ;;
+        quartz|amstream) echo "$(t_msg verbo_quartz)" ;;
         wmp9|wmp11) echo "Windows Media Player" ;;
         wsh57)     echo "Windows Script Host" ;;
-        dbghelp)   echo "Depurador do Windows" ;;
-        secur32)   echo "Segurança do Windows" ;;
-        usp10)     echo "Desenho de texto (Uniscribe)" ;;
+        dbghelp)   echo "$(t_msg verbo_dbghelp)" ;;
+        secur32)   echo "$(t_msg verbo_secur32)" ;;
+        usp10)     echo "$(t_msg verbo_usp10)" ;;
         *)         echo "$1" ;;
     esac
 }

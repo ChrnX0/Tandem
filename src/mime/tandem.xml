@@ -7,14 +7,24 @@
   They are declared as a subclass of application/zip: that is what makes the
   extension match win over content sniffing, which would only see a ZIP.
 
-  The pt_BR <comment> lines are what the user reads in the file manager, so
-  they stay in Portuguese.
+  The <comment> lines are what the user reads in the file manager - the Type
+  row in Properties, the Type column in list view, the header of the "Open
+  with" dialog. They carried English plus pt_BR only, so five of the seven
+  shipped languages read English while every .desktop beside this file
+  carries all seven. <comment xml:lang> is this format's own localisation
+  mechanism, which is exactly the argument that settled the .desktop and the
+  man page: use the mechanism the format already has.
 -->
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
 
   <mime-type type="application/vnd.android.xapk">
     <comment>Android app bundle (XAPK)</comment>
     <comment xml:lang="pt_BR">Pacote de aplicativo Android (XAPK)</comment>
+    <comment xml:lang="es">Paquete de aplicación Android (XAPK)</comment>
+    <comment xml:lang="fr">Paquet d'application Android (XAPK)</comment>
+    <comment xml:lang="zh_CN">Android 应用包（XAPK）</comment>
+    <comment xml:lang="hi">Android ऐप बंडल (XAPK)</comment>
+    <comment xml:lang="ar">حزمة تطبيق Android ‏(XAPK)</comment>
     <sub-class-of type="application/zip"/>
     <glob pattern="*.xapk" weight="60"/>
     <generic-icon name="package-x-generic"/>
@@ -23,6 +33,11 @@
   <mime-type type="application/vnd.android.apks">
     <comment>Android split package (APKS)</comment>
     <comment xml:lang="pt_BR">Pacote Android dividido (APKS)</comment>
+    <comment xml:lang="es">Paquete Android dividido (APKS)</comment>
+    <comment xml:lang="fr">Paquet Android divisé (APKS)</comment>
+    <comment xml:lang="zh_CN">Android 分包（APKS）</comment>
+    <comment xml:lang="hi">विभाजित Android पैकेज (APKS)</comment>
+    <comment xml:lang="ar">حزمة Android مقسّمة ‏(APKS)</comment>
     <sub-class-of type="application/zip"/>
     <glob pattern="*.apks" weight="60"/>
     <generic-icon name="package-x-generic"/>
@@ -31,6 +46,11 @@
   <mime-type type="application/vnd.android.apkm">
     <comment>Android split package (APKM)</comment>
     <comment xml:lang="pt_BR">Pacote Android dividido (APKM)</comment>
+    <comment xml:lang="es">Paquete Android dividido (APKM)</comment>
+    <comment xml:lang="fr">Paquet Android divisé (APKM)</comment>
+    <comment xml:lang="zh_CN">Android 分包（APKM）</comment>
+    <comment xml:lang="hi">विभाजित Android पैकेज (APKM)</comment>
+    <comment xml:lang="ar">حزمة Android مقسّمة ‏(APKM)</comment>
     <sub-class-of type="application/zip"/>
     <glob pattern="*.apkm" weight="60"/>
     <generic-icon name="package-x-generic"/>

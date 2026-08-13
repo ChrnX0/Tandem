@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "303549873 3158" "$soma_esperados"
+      "3403977228 3386" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -414,11 +414,21 @@ else
     fail "the recipe declares itself and carries the program identity" \
            "TANDEM_RECEITA + IDENTIDADE" "$(cat "$REC")"
 fi
-if grep -q '^#.*mandar para outra pessoa' "$REC"; then
+# The header used to be a Portuguese literal, so this assertion could only ever
+# be written against Portuguese - and it passed happily while a French owner
+# exported a recipe whose explanation he could not read. Now it asserts the
+# ENGLISH default and then asserts the same header comes out in French, which
+# is what actually proves the header is wired to the catalogue rather than
+# merely spelled differently.
+if grep -q '^#.*send it to somebody else' "$REC"; then
     pass "the recipe explains itself to whoever receives it"
 else
-    fail "the recipe explains itself to whoever receives it" "explanatory header" "missing"
+    fail "the recipe explains itself to whoever receives it" "explanatory header" "$(cat "$REC")"
 fi
+REC_FR="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=fr TANDEM_MEMORIA="$TANDEM_MEMORIA" \
+    bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_receita_exporta "'"$MEM_A"'"' 2>/dev/null)"
+contem "and it explains itself in the reader's own language" \
+       "envoyer" "$REC_FR"
 
 t_memoria_esquece "$MEM_A" 2>/dev/null
 t_receita_importa "$REC" "$MEM_A"
@@ -544,7 +554,15 @@ LIM_LOG="$(TANDEM_LIB="$ROOT/src/lib" bash -c \
     '. "'"$ROOT"'/src/lib/common.sh"; t_limite_do_log "'"$TMPROOT"'/drv.log"' 2>/dev/null)"
 equal "a stubbed hardware call in the log proves a driver" "driver" "${LIM_LOG%%|*}"
 contem "and says why the program opens and then misbehaves" \
-       "devolveu zeros" "$LIM_LOG"
+       "handed it zeros" "$LIM_LOG"
+# The proven half of the driver diagnosis was two Portuguese paragraphs written
+# straight into the function, while the GUESSED half (limites.tsv) has had a
+# translation per language since 4.2. Asserting it in Spanish is what tells the
+# two apart.
+LIM_LOG_ES="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=es bash -c \
+    '. "'"$ROOT"'/src/lib/common.sh"; t_limite_do_log "'"$TMPROOT"'/drv.log"' 2>/dev/null)"
+contem "and it says it in the reader's own language" \
+       "devolvió ceros" "$LIM_LOG_ES"
 printf '0009:err:module:import_dll Library FOO.dll not found\n' > "$TMPROOT/nodrv.log"
 equal "an ordinary log proves nothing about drivers" "" \
       "$(TANDEM_LIB="$ROOT/src/lib" bash -c \
@@ -1705,6 +1723,142 @@ FIM
 else
     skip "a migrated file stays migrated" "tools/conta-literais.py is missing"
 fi
+
+# ============================ THE SECOND INSTRUMENT, WHICH READS THE OUTPUT
+#
+# Everything above reads the SOURCE and asks "what shape of shell hides a
+# sentence?". Sixteen misses say that question has a floor, and the sixteenth
+# proves it cannot be raised by widening: t_verbo_amigavel in winedeps.sh
+# returned nine Portuguese sentences - "Editor de texto rico", "Depurador do
+# Windows", "Desenho de texto (Uniscribe)" - on the screen where the owner
+# agrees to a half-hour download, in all seven languages, while the counter
+# printed TOTAL 0. It could not have seen them: that function's name matches no
+# prose-body pattern and it lives in a library rather than a handler, so every
+# rule the counter has was inapplicable. Along with it went "Detalhes tecnicos:"
+# in every error window, the Sim/Nao buttons, the seven lines of "tandem
+# preparar", the two driver paragraphs and three file headers.
+#
+# tools/prosa-fora-do-catalogo.py asks a different question of a different
+# thing: it RUNS the program and reads what comes out. Two angles, because the
+# first one has a floor of its own:
+#   - render in Chinese, and flag runs of Latin words that are not on an
+#     explicit verbatim list;
+#   - render in all seven and flag any line that comes out byte-identical,
+#     because that is what a literal necessarily does and a catalogue lookup
+#     almost never does. This is the angle that catches accent-free Portuguese,
+#     which is the hole the very FIRST version of the static check had.
+#
+# The suite runs the library probes; ci.yml runs the whole thing, handlers and
+# commands included.
+if [ -f "$ROOT/tools/prosa-fora-do-catalogo.py" ]; then
+    saida_prosa="$(cd "$ROOT" && python3 tools/prosa-fora-do-catalogo.py --rapido 2>&1)"
+    total_prosa="$(printf '%s\n' "$saida_prosa" | awk '/^TOTAL/ { print $2 }')"
+    if [ "${total_prosa:-999}" = "0" ]; then
+        pass "nothing the libraries print is prose from outside the catalogue"
+    else
+        fail "nothing the libraries print is prose from outside the catalogue" \
+             "TOTAL 0" "$saida_prosa"
+    fi
+
+    # And it has to actually catch one, or the zero above means exactly as much
+    # as the counter's did. Both angles are exercised, with the two strings that
+    # defeated the FIRST version of this tool written here:
+    #   - "Editor de texto rico" got through because the first threshold wanted
+    #     three words of three letters each, and "de" is two. Every Romance
+    #     language is built out of two-letter words.
+    #   - "Depurador do Windows" gets through the Chinese angle to this day,
+    #     because once the product name is stripped two words is not enough to
+    #     accuse anybody. It is the invariance angle that catches it.
+    prova="$(cd "$ROOT" && python3 - <<'FIM'
+import importlib.util
+spec = importlib.util.spec_from_file_location("p", "tools/prosa-fora-do-catalogo.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+casos = [
+    ("Editor de texto rico", 1),
+    ("este programa tentou carregar um driver de sistema", 1),
+    ("Android (Waydroid) - baixa cerca de 1 GB", 1),
+    # Must NOT fire: a product name, a verb falling through the default case,
+    # a path, and a bare list of extensions off the help screen.
+    ("Visual C++ 2015-2022", 0),
+    ("dxdiagn_feb2010", 0),
+    ("/home/dono/.local/share/tandem/memoria", 0),
+    (".exe .msi  |  .apk .xapk .apks .apkm  |  .AppImage .jar", 0),
+]
+print(" ".join("%d" % (1 if m.suspeita(t) else 0) for t, _ in casos))
+print(" ".join("%d" % e for _, e in casos))
+FIM
+)"
+    equal "the output instrument catches the sixteenth miss, and invents nothing" \
+          "$(printf '%s\n' "$prova" | tail -1)" "$(printf '%s\n' "$prova" | head -1)"
+else
+    skip "the output instrument runs" "tools/prosa-fora-do-catalogo.py is missing"
+fi
+
+# ---- the memory value is format on disk and a sentence on screen
+#
+# Both halves matter and they pull against each other. Translating the value
+# would break every recipe already written on somebody's machine; NOT
+# translating it left forty-four Portuguese sentences on the one screen a shop
+# owner opens to find out what went wrong, and in the report tandem socorro
+# tells him to send to whoever is helping.
+MEMV="$TMPROOT/memvalor"; mkdir -p "$MEMV"
+memvalor() {                       # $1 = language, $2 = value
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$1" TANDEM_MEMORIA="$MEMV" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_resultado_amigavel "$1"' _ "$2"
+}
+equal "a memory value becomes a sentence in English" \
+      "The folder it is in does not allow running programs." \
+      "$(memvalor en 'pasta sem permissao')"
+equal "and the same value becomes a sentence in Arabic" \
+      "المجلد الذي يوجد فيه لا يسمح بتشغيل البرامج." \
+      "$(memvalor ar 'pasta sem permissao')"
+# "bitola" is Brazilian slang for gauge. It was on this screen, untranslated,
+# in all seven languages - no dictionary recovers it.
+contem "and Brazilian slang does not survive into another language" \
+       "processor width" "$(memvalor en 'bitola errada')"
+# The whole point of resolving at display time: what is written stays written.
+MEMPROG="$TMPROOT/memprog.bin"; printf 'x' > "$MEMPROG"
+TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=fr TANDEM_MEMORIA="$MEMV" \
+    bash -c '. "'"$ROOT"'/src/lib/common.sh"
+             t_memoria_grava "'"$MEMPROG"'" RESULTADO "pasta sem permissao"' 2>/dev/null
+equal "but what lands on disk is still the value every recipe already carries" \
+      "RESULTADO=pasta sem permissao" \
+      "$(grep -h '^RESULTADO=' "$MEMV"/*.txt 2>/dev/null | tail -1)"
+# An old memory file written by a version that knew a value this one does not
+# is the ordinary case, not an error - and it must never show a key name.
+equal "a value with no message prints itself, never a key name" \
+      "algo que ninguem escreveu" \
+      "$(memvalor en 'algo que ninguem escreveu')"
+
+# ---- the terminal confirmation accepts the letter it asked for
+#
+# This was "case \$r in s|S|sim|SIM)" in five handlers while the prompt beside
+# it came from the catalogue and reads [y/N] in English and [o/N] in French. An
+# English owner did what the screen told him, typed y, and was told the install
+# was cancelled. That is a correctness defect, and it sat on the .deb and .sh
+# paths - the two where the alternative to installing is being told that
+# nothing happened.
+confirmou() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$1" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_confirmou "$1" && echo sim || echo nao' _ "$2"
+}
+equal "an English reader who types the y the prompt asked for is understood" \
+      "sim" "$(confirmou en y)"
+equal "a French reader who types the o the prompt asked for is understood" \
+      "sim" "$(confirmou fr o)"
+equal "and s still works everywhere, because forums are in Portuguese" \
+      "sim" "$(confirmou fr s)"
+equal "no still means no" "nao" "$(confirmou en n)"
+equal "and an empty answer is not a yes" "nao" "$(confirmou en '')"
+# The prompt and the accepted letter have to agree, or the fix is only half of
+# one. Every language's [x/N] must offer a letter t_confirmou accepts.
+descasado=""
+for l in en pt_BR es fr zh_CN hi ar; do
+    letra="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$l" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_msg resposta_sim')"
+    [ "$(confirmou "$l" "$letra")" = "sim" ] || descasado="$descasado $l"
+done
+equal "every language's prompt letter is one the code accepts" "" "$descasado"
 
 # tandem-apk was the only one of the nine that wrote NOTHING to memory - not
 # even a RESULTADO. So "tandem memoria" knew nothing about an .apk, "tandem

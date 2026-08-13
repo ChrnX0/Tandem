@@ -2712,3 +2712,210 @@ outras pessoas: quais componentes do Windows cada programa precisou.
 Baixar não manda nada seu para lugar nenhum.
 
 Para baixar:   tandem lista atualizar
+
+@detalhes_tecnicos
+Detalhes técnicos:
+
+@botao_sim
+Sim
+
+@botao_nao
+Não
+
+@verbo_dotnet48
+.NET Framework 4.8 (demora uns 30 minutos)
+
+@verbo_xact
+DirectX Áudio
+
+@verbo_xinput
+DirectX (controles de jogo)
+
+@verbo_riched20
+Edição de texto formatado
+
+@verbo_openal
+OpenAL (áudio)
+
+@verbo_quartz
+DirectShow (vídeo)
+
+@verbo_dbghelp
+Depuração do Windows
+
+@verbo_secur32
+Segurança do Windows
+
+@verbo_usp10
+Desenho de texto (Uniscribe)
+
+@peca_wine
+Wine (roda os programas do Windows)
+
+@peca_wine32
+Suporte a programas antigos de 32 bits
+
+@peca_winetricks
+Instalador de componentes do Windows
+
+@peca_adb
+Instalador de pacotes Android divididos (.xapk)
+
+@peca_java
+Java (roda os programas .jar)
+
+@peca_fuse
+Suporte para abrir AppImage direto (FUSE)
+
+@peca_waydroid
+Android (Waydroid) - baixa cerca de 1 GB
+
+@limite_log_hardware
+este programa tentou falar direto com o hardware, do jeito que só um driver de sistema pode. O Wine deixou ele começar e devolveu zeros, e é por isso que ele abre e depois se comporta de um jeito estranho
+
+@limite_log_driver
+este programa tentou carregar um driver de sistema, e o Wine roda fora do núcleo do Linux
+
+@arq_memoria_cab1
+O que o Tandem aprendeu sobre este programa.
+
+@arq_memoria_cab2
+Pode ler, apagar e mandar para outra pessoa.
+
+@arq_receita_cab1
+Receita do Tandem: o que este programa precisou para funcionar.
+
+@arq_receita_cab2
+Pode ler, conferir e mandar para outra pessoa.
+
+@arq_receita_cab3
+Para usar:  tandem receita --importar <este arquivo> <o programa>
+
+@arq_config_cab
+Configuração do Tandem. Pode ler, editar e apagar.
+
+@col_programa
+Programa
+
+@appimage_comentario
+Instalado pelo Tandem a partir de {1}
+
+@verbo_d3dcompiler
+Compilador de shaders do DirectX
+
+@unidade_bytes
+{1} bytes
+
+@java_pede_desconhecido
+uma mais nova
+
+@java_tem_desconhecido
+o instalado aqui
+
+@deb_confirma_terminal
+Instalar? [s/N] 
+
+@script_confirma_terminal
+{1}? [s/N] 
+
+@resposta_sim
+s
+
+@res_abriu
+Abriu.
+
+@res_executou
+Executou.
+
+@res_instalado
+Instalado.
+
+@res_fechou_sozinho
+Abriu e fechou sozinho.
+
+@res_nao_abriu
+Não abriu.
+
+@res_nao_executou
+Não executou.
+
+@res_nao_instalou
+Não instalou.
+
+@res_nao_confirmou
+Disse que instalou, mas o sistema não tem.
+
+@res_incompleto
+O download não terminou.
+
+@res_cifrado
+O arquivo está cifrado pelo site que forneceu.
+
+@res_nao_e_android
+Não é um pacote Android.
+
+@res_android_antigo
+Precisa de um Android mais novo que o daqui.
+
+@res_so_arm
+Foi feito só para processadores de celular.
+
+@res_ja_instalado
+Já estava instalado.
+
+@res_versao_mais_nova
+Já tem uma versão mais nova instalada.
+
+@res_sem_espaco
+Não tinha espaço.
+
+@res_sem_assinatura
+O pacote não está assinado.
+
+@res_faltam_partes
+Faltam partes do pacote.
+
+@res_pacote_nao_abre
+O pacote não abre.
+
+@res_pacote_vazio
+O pacote não tem nada dentro.
+
+@res_java_antigo
+Precisa de um Java mais novo que o daqui.
+
+@res_falta_javafx
+Precisa do JavaFX, que não está instalado.
+
+@res_faltam_arquivos
+Faltam arquivos que ele precisa, do lado dele.
+
+@res_arquitetura_errada
+Foi feito para outro processador.
+
+@res_bitola_errada
+O que faltava chegou, mas na bitola errada.
+
+@res_sistema_antigo
+Este sistema é mais antigo do que o programa pede.
+
+@res_falta_biblioteca
+Falta no sistema uma biblioteca que ele usa.
+
+@res_pasta_sem_permissao
+A pasta onde ele está não deixa rodar programas.
+
+@res_faltam_dependencias
+Faltam no sistema coisas que este pacote precisa.
+
+@res_outra_familia_de_linux
+Foi feito para outra família de Linux.
+
+@res_so_abriu
+Abriu; ninguém confirmou que funciona.
+
+@res_confirmado
+O dono confirmou que funciona.
+
+@res_reprovado
+O dono disse que não funcionou.
