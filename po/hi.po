@@ -4816,3 +4816,15 @@ msgstr "मालिक ने पुष्टि की कि यह काम
 msgctxt "res_reprovado"
 msgid "The owner said it did not work."
 msgstr "मालिक ने कहा कि यह काम नहीं किया।"
+
+msgctxt "componente_porque"
+msgid "{1} — the program asked for {2}"
+msgstr "{1} — प्रोग्राम ने {2} माँगा"
+
+msgctxt "leitor_pe_incompleto"
+msgid ""
+"The download stopped part way: the program ends earlier than its own\n"
+"headers say it does. Downloading it again is the whole fix."
+msgstr ""
+"डाउनलोड बीच में रुक गया: यह प्रोग्राम अपने ही हेडर के बताए आकार से पहले\n"
+"खत्म हो जाता है। दोबारा डाउनलोड करना ही पूरा समाधान है।"

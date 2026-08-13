@@ -3785,3 +3785,13 @@ msgstr ""
 msgctxt "res_reprovado"
 msgid "The owner said it did not work."
 msgstr ""
+
+msgctxt "componente_porque"
+msgid "{1} — the program asked for {2}"
+msgstr ""
+
+msgctxt "leitor_pe_incompleto"
+msgid ""
+"The download stopped part way: the program ends earlier than its own\n"
+"headers say it does. Downloading it again is the whole fix."
+msgstr ""

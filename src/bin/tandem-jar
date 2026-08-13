@@ -41,6 +41,15 @@ JAVAFX="$(t_campo "$INFO" JAVAFX)"
 AGENTE="$(t_campo "$INFO" AGENTE)"
 DEPS="$(t_campo "$INFO" DEPENDENCIAS)"
 
+if [ -n "$ERRO" ] && t_parece_pagina_web "$PROG"; then
+    # BEFORE the truncation verdict, not after. An HTML error page named .jar
+    # fails as zip_invalido, because a zip's index lives at the end of the file
+    # - so the honest-looking "the download stopped part way" is exactly what
+    # this case produces, and it sends the owner back to the same link to fetch
+    # the same page, for ever.
+    t_erro "$(t_msg baixou_pagina_web "$(basename -- "$PROG")")"
+    exit 1
+fi
 if [ "$ERRO" = zip_invalido ]; then
     # The index of a .jar lives at the end of the file, so an interrupted
     # download always breaks it here - and it breaks looking like a corrupt

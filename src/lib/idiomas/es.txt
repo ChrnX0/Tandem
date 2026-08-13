@@ -2923,3 +2923,10 @@ El dueño confirmó que funciona.
 
 @res_reprovado
 El dueño dijo que no funcionó.
+
+@componente_porque
+{1} — el programa pidió {2}
+
+@leitor_pe_incompleto
+La descarga se detuvo a la mitad: el programa termina antes de lo que dice
+su propia cabecera. Descargarlo de nuevo lo arregla todo.

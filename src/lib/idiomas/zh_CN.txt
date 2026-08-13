@@ -2820,3 +2820,10 @@ y
 
 @res_reprovado
 机主说它不能用。
+
+@componente_porque
+{1} —— 程序要的是 {2}
+
+@leitor_pe_incompleto
+下载中途停了：这个程序比它自己的文件头所声明的还要短。
+重新下载就能解决。

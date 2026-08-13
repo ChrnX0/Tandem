@@ -20,6 +20,32 @@ tandem (4.8) unstable; urgency=medium
     column 1 now, which the suite already asserts is identical and in the same
     order across all seven tables.
 
+  * A saved web page is named as one by every handler, not only by .deb. A
+    download that goes wrong rarely produces nothing: the site answers with a
+    404, a login wall or a robot check, and the browser saves that HTML under
+    the name the link promised. t_parece_pagina_web has existed since 3.8 with
+    exactly two callers, so everywhere else the owner was told his download
+    stopped part way - which sends him back to the same link to fetch the same
+    page, for ever. The ordering is the interesting half and both cases were
+    measured: an HTML page named .jar fails as "zip_invalido", because a zip's
+    index lives at the END of the file, so it is indistinguishable from a real
+    truncation; and the .rpm reader answers "nao_e_rpm" rather than a
+    truncation token, so a check wired only into the incomplete-download branch
+    never fires.
+  * "Why this component?" - the screen where the owner agrees to a half-hour
+    download now names the file the program actually asked for, not just the
+    runtime: "Visual C++ 2015-2022 - the program asked for msvcp140.dll,
+    vcruntime140.dll". Tandem has known that pair since 3.3, where it exists so
+    delivery can be proved afterwards, and was throwing the useful half away.
+    It explains more and executes exactly the same.
+  * The .exe is asked whether the download finished. The same question is
+    already put to a .jar, an .AppImage and a .deb; the .exe was the one reader
+    never asked, and a 400 MB point-of-sale installer cut short over a shop
+    connection is the commonest broken thing that reaches this project. Wine's
+    answer was "Bad EXE format", after the wait. The check is ONE-SIDED on
+    purpose: only "shorter than its own headers declare" is a verdict, because
+    NSIS and Inno Setup append their payload after the last section, so every
+    real installer is legitimately longer than its section table accounts for.
  -- Tandem <rockx0@gmail.com>  Thu, 13 Aug 2026 21:33:09 +0000
 
 tandem (4.7) unstable; urgency=medium

@@ -2919,3 +2919,10 @@ O dono confirmou que funciona.
 
 @res_reprovado
 O dono disse que não funcionou.
+
+@componente_porque
+{1} — o programa pediu {2}
+
+@leitor_pe_incompleto
+O download parou pela metade: o programa termina antes do que o próprio
+cabeçalho dele diz. Baixar de novo resolve tudo.

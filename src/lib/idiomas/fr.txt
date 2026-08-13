@@ -2976,3 +2976,10 @@ Le propriétaire a confirmé que ça marche.
 
 @res_reprovado
 Le propriétaire a dit que ça n'a pas marché.
+
+@componente_porque
+{1} — le programme a demandé {2}
+
+@leitor_pe_incompleto
+Le téléchargement s'est arrêté en route : le programme se termine plus tôt
+que ne le dit son propre en-tête. Le retélécharger règle tout.

@@ -29,7 +29,16 @@ t_diz "snap local: $ARQ (nome provavel: $NOME)"
 # applies - and here it is the whole verdict, because a short snap is the most
 # likely reason somebody has a loose .snap that will not install.
 if ! head -c 4 -- "$ARQ" 2>/dev/null | grep -q 'hsqs'; then
-    t_erro "$(t_msg snap_nao_e_pacote "$(basename -- "$ARQ")")"
+    # Before the reader's own complaint, which is true and useless when the
+    # file is an error page the site handed back instead of the program: a
+    # download that goes wrong rarely produces nothing. Same ordering and
+    # same sentence tandem-deb has had since 3.8 - eight handlers were never
+    # wired to a detector and a translated message that already existed.
+    if t_parece_pagina_web "$ARQ"; then
+        t_erro "$(t_msg baixou_pagina_web "$(basename -- "$ARQ")")"
+    else
+        t_erro "$(t_msg snap_nao_e_pacote "$(basename -- "$ARQ")")"
+    fi
     exit 1
 fi
 

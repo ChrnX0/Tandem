@@ -509,7 +509,25 @@ $MAQUINA}"
         exit "$CODIGO"
     fi
 
-    LISTA="$(for v in $VERBOS; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)"
+    # "Why this component?" - each line names the runtime AND the file the
+    # program actually asked for. Tandem has known the pair since 3.3
+    # (t_pares_do_log keeps it so delivery can be proved afterwards) and was
+    # throwing the useful half away: the owner was asked to agree to a
+    # half-hour download on the strength of a product name alone. This explains
+    # more and executes exactly the same, which is the criterion this project
+    # holds itself to. A verb with no pair - one that came from the community
+    # list rather than from this run's log - keeps the bare name, because
+    # inventing a reason would be worse than not giving one.
+    LISTA="$(for v in $VERBOS; do
+        dlls="$(printf '%s\n' "$PARES" |
+                awk -F'\t' -v alvo="$v" '$2 == alvo { print $1 }' |
+                sort -u | tr '\n' ',' | sed 's/,$//; s/,/, /g')"
+        if [ -n "$dlls" ]; then
+            printf -- '- %s\n' "$(t_msg componente_porque "$(t_verbo_amigavel "$v")" "$dlls")"
+        else
+            printf -- '- %s\n' "$(t_verbo_amigavel "$v")"
+        fi
+    done)"
 
     # If the program is 64-bit and the component only exists in 32, the
     # install is almost certainly not going to solve it. We do not block - the

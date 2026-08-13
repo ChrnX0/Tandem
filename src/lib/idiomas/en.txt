@@ -2885,3 +2885,10 @@ The owner confirmed it works.
 
 @res_reprovado
 The owner said it did not work.
+
+@componente_porque
+{1} — the program asked for {2}
+
+@leitor_pe_incompleto
+The download stopped part way: the program ends earlier than its own
+headers say it does. Downloading it again is the whole fix.

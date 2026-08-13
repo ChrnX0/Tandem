@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1109120891 3393" "$soma_esperados"
+      "2734912140 3409" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5111,6 +5111,116 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "the .exe is asked whether the download finished"
+
+# The question is already asked of a .jar (its index lives at the end), of an
+# .AppImage (payload offset plus squashfs bytes_used) and of a .deb (a missing
+# data.tar member). It was never asked of the .exe - and a 400 MB
+# point-of-sale installer cut short over a shop connection is the commonest
+# broken thing that reaches this project. Wine's answer today is "Bad EXE
+# format", after the wait, which sends the owner looking for a defect in a
+# file that simply did not finish arriving.
+pe_erro() {
+    python3 "$ROOT/src/lib/peinfo.py" "$1" 2>&1 | sed -n 's/^ERRO=//p'
+}
+equal "an intact PE is not accused of being short" \
+      "" "$(pe_erro "$ARTIFACTS/importslimpo.exe")"
+python3 - "$ARTIFACTS/importslimpo.exe" "$TMPROOT/cortado.exe" <<'FIMPE'
+import sys
+d = open(sys.argv[1], "rb").read()
+open(sys.argv[2], "wb").write(d[:int(len(d) * 0.6)])
+FIMPE
+equal "a PE cut short is reported as an unfinished download" \
+      "pe_incompleto" "$(pe_erro "$TMPROOT/cortado.exe")"
+
+# THE HALF THAT MATTERS MORE, because getting it wrong would refuse to open
+# exactly the software this project exists for. NSIS and Inno Setup append
+# their payload AFTER the last section, so every real Windows installer is
+# longer than its section table accounts for. The check is one-sided on
+# purpose: only "shorter than declared" is ever a verdict.
+python3 - "$ARTIFACTS/importslimpo.exe" "$TMPROOT/comcarga.exe" <<'FIMPE2'
+import sys
+d = open(sys.argv[1], "rb").read()
+open(sys.argv[2], "wb").write(d + b"NSIS-PAYLOAD" * 50000)
+FIMPE2
+equal "an installer with its payload appended is NOT called incomplete" \
+      "" "$(pe_erro "$TMPROOT/comcarga.exe")"
+# And the token has to become a sentence, in the reader's language.
+contem "and the token becomes a sentence the owner can act on" \
+       "Downloading it again" \
+       "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+          bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_erro_do_leitor pe_incompleto')"
+
+section "why this component, not just which"
+
+# The screen where the owner agrees to a half-hour download named the runtime
+# and never the file the program actually asked for, so he was agreeing on
+# trust. Tandem has known the pair since 3.3 - t_pares_do_log keeps it so
+# delivery can be proved afterwards - and was throwing the useful half away.
+cat > "$TMPROOT/porque.log" <<'FIMLOG'
+0009:err:module:import_dll Library MSVCP140.dll (needed by Z:\x.exe) not found
+0009:err:module:import_dll Library VCRUNTIME140.dll (needed by Z:\x.exe) not found
+0009:err:module:import_dll Library mfc42.dll (needed by Z:\x.exe) not found
+FIMLOG
+lista_porque() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$1" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; . "'"$ROOT"'/src/lib/winedeps.sh"
+        PARES="$(t_pares_do_log "'"$TMPROOT"'/porque.log")"
+        for v in $(t_verbos_do_log "'"$TMPROOT"'/porque.log"); do
+            dlls="$(printf "%s\n" "$PARES" | awk -F"\t" -v alvo="$v" "\$2 == alvo { print \$1 }" |
+                    sort -u | tr "\n" "," | sed "s/,\$//; s/,/, /g")"
+            [ -n "$dlls" ] && t_msg componente_porque "$(t_verbo_amigavel "$v")" "$dlls" && printf "\n"
+        done' 2>/dev/null
+}
+PORQUE="$(lista_porque en)"
+contem "the install list names the file the program actually asked for" \
+       "the program asked for mfc42.dll" "$PORQUE"
+# Two DLLs from the same runtime are one line, not two installs.
+contem "and two files from one runtime are grouped on its single line" \
+       "msvcp140.dll, vcruntime140.dll" "$PORQUE"
+contem "and the reason is in the reader's own language" \
+       "程序要的是" "$(lista_porque zh_CN)"
+
+section "a saved web page is named as one, by every handler"
+
+# A download that goes wrong rarely produces nothing: the site answers with a
+# 404, a login wall or a robot check, and the browser saves that HTML under the
+# name the link promised. t_parece_pagina_web has existed since 3.8 and had
+# exactly TWO callers - tandem-deb and the CLI's content sniff, which a
+# double-clicked .jar never reaches. Everywhere else the owner was told his
+# download stopped part way, which is the worst possible answer: it sends him
+# back to the same link to fetch the same page, for ever.
+#
+# The .jar and .rpm orderings are the interesting half. A zip's index lives at
+# the END of the file, so an HTML page named .jar fails as "zip_invalido" -
+# indistinguishable from a real truncation - and the .rpm reader answers
+# "nao_e_rpm" rather than a truncation token, so a check wired only into the
+# incomplete-download branch never fires. Both were measured, not assumed.
+PAGINA="$TMPROOT/instalador-pagina"
+cat > "$PAGINA.html" <<'FIMHTML'
+<!DOCTYPE html>
+<html><head><title>404 Not Found</title></head>
+<body><h1>Not Found</h1><p>The requested URL was not found on this server.</p></body></html>
+FIMHTML
+for par in "apk:apk" "AppImage:appimage" "jar:jar" "rpm:rpm" "snap:snap" \
+           "flatpakref:flatpak" "deb:deb"; do
+    ext="${par%%:*}"; h="${par##*:}"
+    cp "$PAGINA.html" "$PAGINA.$ext"
+    saida="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+        timeout 60 bash "$ROOT/src/bin/tandem-$h" "$PAGINA.$ext" </dev/null 2>&1 | head -3)"
+    contem "tandem-$h says a .$ext that is really a web page is a web page" \
+           "it is a web page saved under a program" "$saida"
+done
+
+# And the negative, which is what stops this from being a fix that lies in the
+# other direction: a genuinely short file must still be reported as a stopped
+# download, not as a web page.
+head -c 200 /dev/zero > "$TMPROOT/curto.rpm"
+naocontem "but a genuinely truncated file is not called a web page" \
+          "web page saved under" \
+          "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+             bash "$ROOT/src/bin/tandem-rpm" "$TMPROOT/curto.rpm" </dev/null 2>&1 | head -2)"
 
 section "the badge on the front page does not lie"
 
