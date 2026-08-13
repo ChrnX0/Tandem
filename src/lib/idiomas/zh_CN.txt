@@ -254,6 +254,110 @@ sudo apt install winetricks
 @botao_tentar_sem_instalar
 不装也试试
 
+@leitor_desconhecido
+文件里有一处不符合这个格式的规定。
+
+@leitor_cru
+读取程序没读完就停了。技术细节记在日志里,用 "tandem logs" 可以看到。
+
+@leitor_uso
+Tandem 让读取程序去读文件,却没说是哪一个。
+
+@leitor_sem_arquivo
+文件不在原来的位置了,可能被移动或删除了。
+
+@leitor_nao_e_elf
+这根本不是 Linux 程序,连开头都不像。
+
+@leitor_sem_marca_ai
+它是个 Linux 程序,但不是 AppImage:AppImage 该有的标记不在里面。
+
+@leitor_geracao_desconhecida
+它说自己是一种这个版本还不认识的 AppImage(类型 {1})。
+
+@leitor_apk_corrompido
+文件坏了,或者它不是安卓安装包。下载中断的文件就是这个样子。
+
+@leitor_zip_invalido
+文件坏了,或者下载中断了。.jar 的目录放在文件末尾,所以传输一断总是在这里出问题。
+
+@leitor_nao_e_mz
+这不是 Windows 程序,开头就不像。
+
+@leitor_sem_assinatura_pe
+开头像 Windows 程序,后面就不像了。最可能是文件坏了。
+
+@leitor_pe_cabecalho_desconhecido
+这个 Windows 程序的构造方式是这个版本还不认识的。
+
+@leitor_nao_e_deb
+不管文件名怎么写,这不是 .deb 安装包。
+
+@leitor_pacote_incompleto
+下载中断了:安装包比它自己声明的短。重新下载就能解决。
+
+@leitor_pacote_sem_dados
+安装包里没有程序本身,只有它的说明。下载中断了。
+
+@leitor_deb_sem_control
+安装包没说自己是什么,也没说需要什么。
+
+@leitor_deb_sem_control_tar
+安装包缺少说明自己的那部分。
+
+@leitor_deb_control_danificado
+安装包里说明自己的那部分坏了。
+
+@leitor_deb_control_grande
+安装包里说明自己的那部分比它声明的还大,不能相信。
+
+@leitor_deb_control_nao_abriu
+安装包里被压缩的那部分打不开。
+
+@leitor_deb_tamanho_absurdo
+安装包说它的某一部分有 {1} 字节,这不是真实的大小。Tandem 不会去打开它。
+
+@leitor_sem_libzstd
+这台电脑没法打开这个安装包用的压缩格式。用应用商店或 "sudo apt install" 安装仍然可以。
+
+@leitor_nao_e_rpm
+不管文件名怎么写,这不是 .rpm 安装包。
+
+@leitor_rpm_cabecalho_curto
+下载中断了:说明这个安装包的那部分放不进文件里。
+
+@leitor_rpm_cabecalho_estranho
+这个 .rpm 里说明自己的那部分,不是 Tandem 认识的样子。
+
+@leitor_rpm_entradas
+这个 .rpm 说它的说明里有 {1} 条记录,这不可能是对的。文件坏了。
+
+@botao_sim_funcionou
+是的,可以用
+
+@botao_nao_deu_errado
+不,出了问题
+
+@botao_adicionar_loja
+添加这个商店
+
+@jar_pode_instalar_java
+现在安装 Java {1} 吗?
+
+@rep_reaplicadas
+文件关联已重新设置。
+
+@rep_linha
+  {1}
+      原来:  {2}
+      现在:  {3}
+
+@rep_nenhum
+没有程序
+
+@rep_saia_e_entre
+如果双击还是没反应,请退出账户再重新登录。
+
 @licao_origem_local
 上次这个程序需要
 
@@ -1571,6 +1675,12 @@ rm "{1}"
 
 @env_enviadas
 已发送 {1} 行。队列里还剩 {2} 行。
+
+@env_servidor_recusou
+列表服务器没有接受这些记录。什么都没有丢失：还有 {1} 条记录留在队列里,
+Tandem 会自己再试一次。
+
+如果一直这样,问题在对方那边——这台电脑上没有需要修的地方。
 
 @env_nao_conheco
 我不认识 "tandem enviar {1}"。

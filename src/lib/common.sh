@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.3"
+TANDEM_VERSAO="4.4"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1701,24 +1701,87 @@ t_lista_registro() {
     printf '%s\n' "$reg"
 }
 
+# Resolves every row the list holds about ONE file into a single answer, and
+# prints it as "verbs<TAB>machines". Both the query and the machine count read
+# from here, and that is the point of the function existing.
+#
+# It is written this way because of three losses the first version had, all of
+# them silent:
+#
+#  - it printed the FIRST confirmed row and exited, so whoever got into the
+#    file earliest owned that program for ever. A later row reporting a better
+#    lesson from more machines was dead text nobody would ever read;
+#  - it never ADDED UP two rows carrying the same verbs. Merging reports is the
+#    whole job of the machine count, and two rows saying "vcrun2022, 200
+#    machines" answered 200, not 400;
+#  - t_lista_maquinas did not filter by confidence at all, so on a file with a
+#    rejected row above a confirmed one it answered with the count of a row the
+#    verbs had NOT come from. The number the owner is shown to decide with
+#    described a different lesson than the one being offered.
+#
+# The winner is the verb set the most machines CONFIRM, and a set is dropped
+# when at least as many machines reported it rejected - a minority lesson does
+# not get spread just because the majority happens to be bad news. Ties break
+# on the most recent report, then on the fewest verbs (less to install for the
+# same claimed result), then alphabetically, so the answer never depends on the
+# order of the rows in the file.
+t_lista_linha() {
+    local id="$1"
+    [ -f "$TANDEM_LISTA" ] || return 1
+    [ -n "$id" ] || return 1
+    awk -F'\t' -v alvo="$id" '
+        function ganha(v, c, s, n) {
+            if (!achou) return 1
+            if (c != bc) return (c > bc)
+            if (s != bvisto) return (s > bvisto)
+            if (n != bn) return (n < bn)
+            return (v < bv)
+        }
+        /^#/ { next }
+        $1 != alvo || $3 == "-" || $3 == "" { next }
+        {
+            # An unmerged record carries no count of its own: it is one
+            # machine, which is exactly what it is worth.
+            m = ($6 ~ /^[0-9]+$/) ? $6 + 0 : 1
+            if ($5 == "confirmado") {
+                conf[$3] += m
+                if ($7 > visto[$3]) visto[$3] = $7
+            } else if ($5 == "reprovado") {
+                rep[$3] += m
+            }
+        }
+        END {
+            for (v in conf) {
+                if (conf[v] <= rep[v]) continue
+                n = split(v, _partes, ",")
+                if (ganha(v, conf[v], visto[v], n)) {
+                    achou = 1; bc = conf[v]; bvisto = visto[v]; bn = n; bv = v
+                }
+            }
+            if (achou) printf "%s\t%d\n", bv, bc
+            exit !achou
+        }' "$TANDEM_LISTA"
+}
+
 # Reads the downloaded list and returns the known verbs for this program.
 # It only answers when the lesson comes confirmed by people: that is the
 # difference between spreading knowledge and spreading error with the same
 # efficiency.
 t_lista_consulta() {
-    local prog="$1" id
-    [ -f "$TANDEM_LISTA" ] || return 1
+    local prog="$1" id linha
     id="$(t_memoria_id "$prog" 2>/dev/null)" || return 1
-    [ -n "$id" ] || return 1
-    awk -F'\t' -v alvo="$id" '
-        /^#/ { next }
-        $1 == alvo && $5 == "confirmado" && $3 != "-" { print $3; achou = 1; exit }
-        END { exit !achou }' "$TANDEM_LISTA" | tr ',' ' '
+    linha="$(t_lista_linha "$id")" || return 1
+    printf '%s\n' "$linha" | cut -f1 | tr ',' ' '
 }
 
+# How many machines agree with the lesson t_lista_consulta just gave - the
+# same lesson, by construction, because both come out of t_lista_linha. It is
+# a SUM over the rows carrying those verbs, so it may be larger than any
+# single row in the file.
 t_lista_maquinas() {
-    [ -f "$TANDEM_LISTA" ] || return 1
-    awk -F'\t' -v alvo="$1" '/^#/ {next} $1 == alvo { print $6; exit }' "$TANDEM_LISTA"
+    local linha
+    linha="$(t_lista_linha "$1")" || return 1
+    printf '%s\n' "$linha" | cut -f2
 }
 
 # Downloads the list. A malformed file does NOT replace the good one already
@@ -1785,7 +1848,8 @@ t_confirma_funcionou() {
 
     t_tem_gui || return 0
     command -v zenity >/dev/null 2>&1 || return 0
-    if t_pergunta "$(t_msg funcionou_como_esperava)" "Sim, funcionou" "Não, algo saiu errado"; then
+    if t_pergunta "$(t_msg funcionou_como_esperava)" \
+           "$(t_msg botao_sim_funcionou)" "$(t_msg botao_nao_deu_errado)"; then
         t_memoria_grava "$prog" CONFIRMADO sim
         t_diz "o dono confirmou que funcionou"
         # The only moment in the whole program where a lesson is worth anything
@@ -2619,7 +2683,8 @@ t_wd_tem_arm() {
 t_wd_garantir() {
     local estado
     if ! command -v waydroid >/dev/null 2>&1; then
-        if t_pergunta "$(t_msg waydroid_falta_pergunta)" "Instalar" "Agora não"; then
+        if t_pergunta "$(t_msg waydroid_falta_pergunta)" \
+            "$(t_msg botao_instalar)" "$(t_msg botao_agora_nao)"; then
             t_progresso_texto "$(t_msg waydroid_instalando)"
             t_como_root "$(t_script_instalacao waydroid)" >>"${LOG:-/dev/null}" 2>&1
         fi
@@ -2715,6 +2780,59 @@ t_arch_compativel() {
 # shape, so one function serves peinfo, apkinfo, appimageinfo and jarinfo.
 t_campo() {
     printf '%s\n' "$1" | sed -n "s/^$2=//p" | tail -1
+}
+
+# Turns the readers' ERRO field into a sentence in the owner's language.
+#
+# This function exists because of the fifteenth thing the literal counter could
+# not see, and it was the worst of them in one respect: the six Python readers
+# raised PORTUGUESE - "nao comeca com ELF", "o pacote nao traz um arquivo
+# control", about thirty of them - and the handlers printed the field straight
+# to the owner through t_msg nao_consegui_ler. So a third of a screen's worth of
+# user-facing prose lived in files no translation tool in this tree had ever
+# opened, and nothing measured it: ALVOS globs *.sh and src/bin only.
+#
+# Worse than untranslated: the catch-all branch is `print("ERRO=cru|%s" % e)`,
+# an arbitrary Python exception - "[Errno 13] Permission denied" - which is
+# English jargon whatever the owner's language is. That path now says what
+# happened in words and puts the exception in the log, where the person helping
+# will read it.
+#
+# An UNKNOWN token gets the generic sentence rather than nothing. A reader that
+# learns a new failure tomorrow must not be able to produce silence, and the
+# suite asserts that every token the readers can emit has a key - so an unknown
+# one means somebody added a failure without a message, which is a bug in the
+# commit rather than in the machine in front of the owner.
+t_erro_do_leitor() {
+    local bruto="$1" ficha dado
+    [ -n "$bruto" ] || return 1
+    # The whole field always goes to the log: the token, and the technical
+    # detail if there is one. "We could not read it" on the screen and nothing
+    # anywhere else would be a diagnosis nobody can follow up.
+    t_diz "leitor: $bruto"
+    ficha="${bruto%%|*}"
+    dado="${bruto#*|}"
+    [ "$dado" = "$bruto" ] && dado=""
+    case "$ficha" in
+        cru) t_msg leitor_cru ;;
+        # A token is a name, and anything else came from somewhere it should
+        # not have. Refusing it here keeps a reader's output from choosing a
+        # message key.
+        *[!a-z_0-9]*|"") t_msg leitor_desconhecido ;;
+        *)
+            # t_msg PRINTS THE KEY NAME when a key is missing everywhere, which
+            # is right for a maintainer reading a log and wrong here: it would
+            # put "leitor_xyz" on a shop owner's screen, which is exactly the
+            # jargon rule 2 forbids. So the existence of the key is checked
+            # first, and the generic sentence covers a reader that grew a
+            # failure nobody wrote a message for.
+            if [ -n "${T_MSG[leitor_$ficha]:-}${T_MSG_BASE[leitor_$ficha]:-}" ]; then
+                t_msg "leitor_$ficha" "$dado"
+            else
+                t_diz "leitor: nao existe a mensagem 'leitor_$ficha'"
+                t_msg leitor_desconhecido
+            fi ;;
+    esac
 }
 
 t_appimage_info() {
@@ -3232,6 +3350,16 @@ TANDEM_FILA="${TANDEM_FILA:-$TANDEM_ESTADO/enviar-fila.tsv}"
 TANDEM_LISTA_ENVIO="${TANDEM_LISTA_ENVIO:-}"
 # A machine cannot become a firehose, whatever it decides to install.
 TANDEM_ENVIO_POR_DIA="${TANDEM_ENVIO_POR_DIA:-20}"
+# ...and that cap only ever counted the lines that WENT. A failure cost
+# nothing, so a machine with no route to the address retried every queued line
+# on every run, for ever, twenty seconds of timeout each. A hundred queued
+# lessons on a shop's broken connection is over half an hour of a background
+# process that was never going to succeed, started again every time somebody
+# opens a program. After this many refusals in a row the pass stops: the first
+# failure already told it what the second one would say.
+TANDEM_ENVIO_FALHAS="${TANDEM_ENVIO_FALHAS:-3}"
+# And the queue then waits, rather than trying again on the next double click.
+TANDEM_ENVIO_ESPERA="${TANDEM_ENVIO_ESPERA:-3600}"
 
 # Percent-encoding, for putting a record into a prefilled form URL. The record
 # is TAB separated and a raw tab in a URL is not a tab by the time it arrives.
@@ -3349,18 +3477,60 @@ t_envio_pendentes() {
     awk 'END { print NR + 0 }' "$TANDEM_FILA" 2>/dev/null || printf '0'
 }
 
-# Sends what is queued, best effort. Returns the number sent.
+# Sends what is queued, best effort. PRINTS the number sent, and RETURNS why:
+# 0 nothing to report, 3 the server refused everything it was offered, 4 the
+# queue is inside the wait after a failed pass, 5 another pass already has it.
+# The count goes on stdout and the reason in the exit status because the caller
+# reads this through a command substitution, which is a subshell - a variable
+# set here would not survive it.
+#
+# "forcado" as the first argument skips the wait. The wait exists to stop
+# AUTOMATIC retries on every double click; an owner who typed "tandem enviar
+# agora" has asked, and answering a direct request with silence for an hour is
+# the failure this project is built against.
 #
 # Every line is put through the sieve again here. Checking only when the record
 # was built would trust that nothing touched the queue in between, and a
 # plain-text file in the state directory is exactly the kind of thing that gets
 # edited by hand.
+#
+# The argument really is passed - by "tandem enviar agora", which shellcheck
+# lints as a separate file and therefore cannot see from here.
+# shellcheck disable=SC2120
 t_envio_envia() {
-    local enviados=0 hoje contador reg resto
+    local forcado="${1:-}" enviados=0 falhas=0 hoje contador reg resto
+    local agora espera trava
     t_envio_ligado || return 0
     [ -n "$TANDEM_LISTA_ENVIO" ] || return 0
     [ -s "$TANDEM_FILA" ] || return 0
     command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 0
+
+    # One pass at a time. This is spawned detached every time a program is
+    # confirmed, and "tandem enviar agora" starts one too - so two passes over
+    # the same queue were entirely possible. Both truncate the same
+    # ".resto" file and both then move it over the queue, which does not merely
+    # send a line twice: the truncation lands in the middle of the other pass's
+    # appends and the lines already written are gone. The queue is the only
+    # copy of a lesson that has not left yet.
+    # The braces around the exec are the lesson from tandem-exe, and so is
+    # carrying on unlocked when the file cannot be created at all: an
+    # impossible lock and a busy lock are different cases.
+    trava="$TANDEM_TRAVAS/envio.lock"
+    if { exec 6> "$trava"; } 2>/dev/null; then
+        flock -n 6 || { t_diz "envio: outro envio ja esta em andamento"; return 5; }
+    else
+        t_diz "nao consegui criar a trava em $trava; seguindo sem ela"
+    fi
+
+    # A pass that failed does not get to try again on the next double click.
+    agora="$(date +%s)"
+    espera="$(t_config_le ENVIO_ESPERA_ATE 2>/dev/null)"
+    case "$espera" in ''|*[!0-9]*) espera=0 ;; esac
+    if [ "$agora" -lt "$espera" ] && [ "$forcado" != forcado ]; then
+        t_diz "envio: a tentativa anterior falhou; esperando (faltam $((espera - agora))s)"
+        { exec 6>&-; } 2>/dev/null
+        return 4
+    fi
 
     hoje="$(date +%F)"
     [ "$(t_config_le ENVIO_DIA 2>/dev/null)" = "$hoje" ] &&
@@ -3382,36 +3552,87 @@ t_envio_envia() {
             t_diz "envio: linha retida pelo filtro (guardada, nao enviada)"
             continue
         fi
-        if [ "$contador" -ge "$TANDEM_ENVIO_POR_DIA" ]; then
+        if [ "$contador" -ge "$TANDEM_ENVIO_POR_DIA" ] ||
+           [ "$falhas" -ge "$TANDEM_ENVIO_FALHAS" ]; then
             printf '%s\n' "$reg" >> "$resto"
             continue
         fi
         if t_envio_posta "$reg"; then
-            enviados=$((enviados+1)); contador=$((contador+1))
+            enviados=$((enviados+1)); contador=$((contador+1)); falhas=0
         else
+            falhas=$((falhas+1))
             printf '%s\n' "$reg" >> "$resto"
         fi
     done < "$TANDEM_FILA"
     mv -f "$resto" "$TANDEM_FILA" 2>/dev/null
     t_config_grava ENVIO_DIA "$hoje"
     t_config_grava ENVIO_HOJE "$contador"
-    [ "$enviados" -gt 0 ] && t_diz "envio: $enviados linha(s) enviada(s)"
+    if [ "$falhas" -ge "$TANDEM_ENVIO_FALHAS" ]; then
+        t_config_grava ENVIO_ESPERA_ATE "$((agora + TANDEM_ENVIO_ESPERA))"
+        t_diz "envio: $falhas recusas seguidas; a fila espera ${TANDEM_ENVIO_ESPERA}s"
+    elif [ "$enviados" -gt 0 ]; then
+        # The route works. Whatever it was waiting for is over.
+        t_config_grava ENVIO_ESPERA_ATE 0
+        t_diz "envio: $enviados linha(s) enviada(s)"
+    fi
+    { exec 6>&-; } 2>/dev/null
     printf '%s' "$enviados"
+    # "It refused" is only true if it was actually offered something. A pass
+    # that sent nothing because the daily ceiling was already spent is not a
+    # server problem, and saying so would send the owner looking for a defect
+    # somewhere neither he nor anybody else can reach.
+    [ "$enviados" = 0 ] && [ "$falhas" -gt 0 ] && return 3
     return 0
 }
 
+# Posts one line, and only counts it as sent when the server said so.
+#
+# The status code is read explicitly because of the one answer that used to be
+# read backwards: a REDIRECT. curl with no -L does not follow one and exits 0,
+# so a 301 or a 302 was ticked off as delivered - and the queue is rewritten
+# from what did not go, which means the lesson was deleted from the only place
+# it existed. An endpoint that has moved is exactly the shape of thing that
+# answers 301, so this was not a theoretical case.
+#
+# The redirect is NOT followed, and that is a decision rather than an
+# omission: the target of a redirect is chosen by whatever answered, not by
+# anybody here. A record exists precisely because it carries nothing personal,
+# and sending it to a host nobody picked would throw that away. If the address
+# moves, the address in the build moves.
 t_envio_posta() {
-    local reg="$1"
+    local reg="$1" codigo
     if command -v curl >/dev/null 2>&1; then
-        curl -fsS --max-time 20 -X POST \
+        codigo="$(curl -sS --max-time 20 -X POST \
              -H 'Content-Type: text/plain' \
              -H "User-Agent: tandem/$TANDEM_VERSAO" \
              --data-binary "$reg" \
-             "$TANDEM_LISTA_ENVIO" >>"${LOG:-/dev/null}" 2>&1 && return 0
+             -o /dev/null -w '%{http_code}' \
+             "$TANDEM_LISTA_ENVIO" 2>>"${LOG:-/dev/null}")" || {
+            t_diz "envio: nao consegui falar com o servidor"
+            return 1
+        }
     elif command -v wget >/dev/null 2>&1; then
-        wget -q -T 20 -O /dev/null --header='Content-Type: text/plain' \
-             --post-data="$reg" "$TANDEM_LISTA_ENVIO" >>"${LOG:-/dev/null}" 2>&1 && return 0
+        # --max-redirect=0 is the same decision. wget FOLLOWS redirects by
+        # default and turns the POST into a GET on the way, so the record was
+        # not posted at all while wget exited 0 - the same silent loss, by a
+        # different mechanism.
+        if wget -q -T 20 --max-redirect=0 -O /dev/null \
+             --header='Content-Type: text/plain' \
+             --header="User-Agent: tandem/$TANDEM_VERSAO" \
+             --post-data="$reg" "$TANDEM_LISTA_ENVIO" 2>>"${LOG:-/dev/null}"; then
+            return 0
+        fi
+        t_diz "envio: o servidor nao aceitou a linha (wget)"
+        return 1
+    else
+        return 1
     fi
+    case "$codigo" in
+        2??) return 0 ;;
+        3??) t_diz "envio: o servidor respondeu $codigo, um redirecionamento; a linha fica na fila" ;;
+        '')  t_diz "envio: o servidor nao respondeu nada" ;;
+        *)   t_diz "envio: o servidor respondeu $codigo; a linha fica na fila" ;;
+    esac
     return 1
 }
 

@@ -1,3 +1,105 @@
+tandem (4.4) unstable; urgency=medium
+
+  * The community list answered with the FIRST row it happened to read, so
+    whoever got into the file earliest owned that program for ever. Measured on
+    a two-row list: 3 machines confirming vcrun2010 beat 400 confirming
+    vcrun2022, and the 400 were dead text nobody would ever read.
+  * It also never added two rows up. Merging reports is the entire job of the
+    machine count, and two rows saying "vcrun2022, 200 machines" answered 200 -
+    which is not only a wrong number, it changes which lesson wins.
+  * And the count shown to the owner could describe a different lesson than the
+    one being offered: t_lista_maquinas did not filter by confidence at all, so
+    a rejected row sitting above a confirmed one supplied the number. Measured:
+    verbs from a 40-machine confirmation, presented as "7 machines".
+  * A verb set most machines report as NOT working is no longer suggested. 2
+    confirmations against 300 rejections used to win, because rejections were
+    not read at all - and spreading an error takes no more effort than
+    spreading a fix.
+  * Ties break on the most recent report, then on the fewest verbs, then
+    alphabetically, so the answer cannot depend on the order of the rows.
+  * A redirect was being counted as a delivery. curl with no -L does not follow
+    a 301 and exits 0, and the queue is rewritten from what did NOT go - so the
+    lesson was deleted from the only place it existed. The status code is read
+    explicitly now and only 2xx counts. The redirect is still not followed, on
+    purpose: its target is chosen by whatever answered, not by anybody here.
+  * wget lost the same line by a different route - it follows redirects by
+    default and turns the POST into a GET on the way, exiting 0 having posted
+    nothing. --max-redirect=0.
+  * The daily ceiling only ever counted the lines that WENT, so a failure cost
+    nothing: a machine with no route to the address retried every queued line
+    on every run, for ever, at twenty seconds of timeout each. A hundred
+    queued lessons is over half an hour of a background process that was never
+    going to succeed, started again every time somebody opens a program. Three
+    refusals in a row now end the pass, and the queue waits an hour.
+  * Two passes over the queue could run at once - sending is spawned detached
+    every time a program is confirmed, and "tandem enviar agora" starts one
+    too. Both truncated the same ".resto" file and both then moved it over the
+    queue, so the truncation landed in the middle of the other pass's appends
+    and the lines already written were gone. One lock, on the same pattern as
+    tandem-exe: an impossible lock is not a busy lock, and carries on without.
+  * The buttons of "did this program work as you expected?" were Portuguese in
+    a shipped release, and so were five other Install/Cancel/Not now pairs. The
+    literal counter reads the FIRST argument of a message call and stops, so a
+    line whose text is a clean t_msg lookup passed as finished while the two
+    words the owner actually clicks were never looked at by anything. Three of
+    the six buttons already had catalogue keys nobody had wired up.
+  * Worse, and larger: the prose-body rule keys off function NAMES - t_texto_*,
+    t_causa_*, acao_*, uso - and the eleven handler executables define no
+    functions at all. They are straight-line scripts. So in tandem-repair,
+    tandem-deb, tandem-jar and eight others, that rule and the printf rule were
+    dead code, and what they missed was the whole report of "tandem repair" -
+    the command an owner is told to run when a double click opens the wrong
+    program. It printed "Associações reaplicadas", "antes:", "agora:" and a
+    sentence telling them to log out and back in, in Portuguese, on a tree
+    whose counter said TOTAL 0. That report is now one message per row,
+    with the type and both handlers as data, so a translator places the labels
+    instead of receiving them as fragments.
+  * Widening the scope to whole files needs an exclusion rule, and it is about
+    where an argument GOES rather than what it looks like - "it looks like code"
+    is the guess that has failed thirteen times. A value handed to
+    t_memoria_grava lands in a state file and stays Portuguese by a standing
+    decision; an argument to t_como_root is executed, not read; a grep or sed
+    argument is a program for another tool.
+  * And the fifteenth is a whole FILE TYPE nothing had ever looked at. ALVOS
+    globs *.sh and src/bin, so in fifteen revisions the counter had never opened
+    a .py - and the six Python readers RAISED PORTUGUESE. About thirty
+    sentences: "nao comeca com ELF", "o pacote nao traz um arquivo control",
+    "zip invalido ou incompleto". Every one of them reached the owner verbatim,
+    because the handlers print the ERRO field through "nao consegui ler".
+  * The catch-all branch was worse than untranslated. print("ERRO=%s" % e) hands
+    over a raw Python exception - "[Errno 13] Permission denied" - which is
+    English jargon whatever language the owner reads. That path now says what
+    happened in words and puts the exception in the log, where the person who
+    is helping will read it.
+  * So the ERRO field carries a TOKEN, never a sentence, and t_erro_do_leitor
+    turns a token into a sentence in the owner's language - 25 tokens, 26 new
+    messages, seven languages. An unknown token gets a generic sentence rather
+    than the key name, because t_msg prints the key when a key is missing, which
+    is right for a log and would be jargon on a shop counter. A token with a
+    character that is not a name is refused: the field comes out of a program,
+    and a program's output is input.
+  * Counting that would not have held it, so the suite reads the READERS: every
+    token they can emit must have a catalogue key, and no reader may go back to
+    raising a sentence. A reader that grows a failure without a message fails in
+    the commit that adds it. The first version of that check found 21 of 25
+    tokens and reported "missing: none" - a completeness check that was itself
+    incomplete on its first run, in exactly the way the counter has been fifteen
+    times. It knew about raise but not about print.
+  * Half the suite's expected values were not actually guarded. The checksum
+    that exists so a bulk rename cannot quietly rewrite a comparison is
+    line-based, and 206 of 415 "equal" calls are written across two lines -
+    which is what you do as soon as an expected value is long, so precisely the
+    values most at risk were the ones nothing watched. It reads the file with
+    continuations joined now: 419 of 415 call sites and 93 of 97 case patterns,
+    the other four being bare fallbacks with no data in them.
+  * Joining the lines then made that guard checksum ITS OWN value, because
+    "grep -oE" cuts each match off after the second argument, so the filter
+    that drops the guard's own two lines never saw what identified them. Two
+    numbers chasing each other on every edit is a guard that can never be
+    green. The filter runs before the extraction now.
+
+ -- ChrnX0 <rockx0@gmail.com>  Thu, 13 Aug 2026 03:30:00 +0000
+
 tandem (4.3) unstable; urgency=medium
 
   * The literal counter can finally see the zenity panel, which is the only

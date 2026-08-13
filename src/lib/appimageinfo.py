@@ -23,7 +23,14 @@ ARQUITETURA=x86_64|i386|aarch64|armhf|riscv64|ppc64le|?
 DESLOCAMENTO=<where the payload starts, empty if it cannot be worked out>
 CARGA=squashfs|iso9660|?
 COMPLETO=1|0|?          1 = the payload fits in the file, 0 = truncated
-ERRO=<message, if something failed>
+ERRO=<token>[|<data>]  when something failed; see t_erro_do_leitor
+   The field carries a TOKEN, never a sentence. It used to carry Portuguese
+   prose, and the handler printed it straight to the owner - so this file held
+   user-facing messages that no translation tool in the tree had ever opened,
+   and a raw Python exception reached a shop owner in English. The shell turns
+   a token into a sentence in the owner's language; an unknown token is logged
+   and answered with a generic one, because a reader that learns a new failure
+   must not be able to produce silence.
 """
 import os
 import struct
@@ -66,14 +73,14 @@ def _u64(b, o):
 def cabecalho(cab):
     """(type, architecture) from the ELF header of an AppImage."""
     if len(cab) < 64 or cab[:4] != b"\x7fELF":
-        raise NaoEhAppImage("nao comeca com ELF")
+        raise NaoEhAppImage("nao_e_elf")
     # Bytes 8, 9 and 10 are ABI padding in the ELF specification, and the
     # AppImage standard writes its own mark there: 'A', 'I', generation.
     if cab[8:10] != b"AI":
-        raise NaoEhAppImage("nao tem a marca AI do AppImage")
+        raise NaoEhAppImage("sem_marca_ai")
     tipo = cab[10]
     if tipo not in (1, 2):
-        raise NaoEhAppImage("geracao de AppImage desconhecida: %d" % tipo)
+        raise NaoEhAppImage("geracao_desconhecida|%d" % tipo)
     arq = MAQUINAS.get(_u16(cab, 18), "?")
     return tipo, arq
 
@@ -155,11 +162,11 @@ def inspecionar(caminho):
 
 def main():
     if len(sys.argv) < 2:
-        print("ERRO=uso: appimageinfo.py <arquivo>")
+        print("ERRO=uso")
         return 2
     caminho = sys.argv[1]
     if not os.path.isfile(caminho):
-        print("ERRO=arquivo nao encontrado")
+        print("ERRO=sem_arquivo")
         return 2
     try:
         tipo, arq, off, tipo_carga, completo = inspecionar(caminho)
@@ -167,7 +174,7 @@ def main():
         print("ERRO=%s" % e)
         return 1
     except Exception as e:                        # truncated, chopped file
-        print("ERRO=%s" % str(e).replace("\n", " ")[:200])
+        print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
     print("TIPO=%d" % tipo)

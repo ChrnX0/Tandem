@@ -43,7 +43,8 @@ AMIGAVEL="${TITULO:-${NOME:-$(t_msg este_programa)}}"
 
 # ------------------------------------------------------- 1. Is flatpak here?
 if ! command -v flatpak >/dev/null 2>&1; then
-    if t_pergunta "$(t_msg flatpak_falta_pergunta "$AMIGAVEL")" "Instalar" "Agora não"; then
+    if t_pergunta "$(t_msg flatpak_falta_pergunta "$AMIGAVEL")" \
+       "$(t_msg botao_instalar)" "$(t_msg botao_agora_nao)"; then
         t_progresso_abre "$(t_msg flatpak_instalando_flatpak)"
         t_como_root "$(t_script_instalacao flatpak)" >>"$LOG" 2>&1
         t_progresso_fecha
@@ -57,7 +58,7 @@ fi
 # ---------------------------------------------------------- 2. A repository
 if [ "$EH_REPO" = 1 ]; then
     if ! t_pergunta "$(t_msg flatpak_e_uma_loja "${AMIGAVEL}${URL:+
-$URL}")" "Adicionar a loja" "Cancelar"; then
+$URL}")" "$(t_msg botao_adicionar_loja)" "$(t_msg botao_cancelar)"; then
         # This branch used to be a bare "exit 0", and with no graphical session
         # it produced exit code 0 and ZERO BYTES of output - the exact silent
         # failure this project treats as a defect. Found by running every new
@@ -93,7 +94,7 @@ fi
 
 if ! t_pergunta "$(t_msg flatpak_instalar_pergunta "$AMIGAVEL" "${URL:+
 
-$(t_msg flatpak_vem_de "$URL")}")" "Instalar" "Cancelar"; then
+$(t_msg flatpak_vem_de "$URL")}")" "$(t_msg botao_instalar)" "$(t_msg botao_cancelar)"; then
     if [ -t 0 ]; then
         printf "$(t_msg flatpak_instalar_terminal)" "$AMIGAVEL"
         read -r r

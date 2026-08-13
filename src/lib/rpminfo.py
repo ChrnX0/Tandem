@@ -27,7 +27,14 @@ ARQUITETURA=<x86_64|noarch|aarch64|i686...>
 DISTRIBUICAO=<Distribution, or the Vendor when there is no Distribution>
 DESCRICAO=<summary, one line>
 REQUER=<requirement names, comma separated, internal ones dropped>
-ERRO=<message, if something failed>
+ERRO=<token>[|<data>]  when something failed; see t_erro_do_leitor
+   The field carries a TOKEN, never a sentence. It used to carry Portuguese
+   prose, and the handler printed it straight to the owner - so this file held
+   user-facing messages that no translation tool in the tree had ever opened,
+   and a raw Python exception reached a shop owner in English. The shell turns
+   a token into a sentence in the owner's language; an unknown token is logged
+   and answered with a generic one, because a reader that learns a new failure
+   must not be able to produce silence.
 """
 import os
 import struct
@@ -66,17 +73,17 @@ def cabecalho(dados, pos):
     signature and the real one - with the same shape.
     """
     if pos + 16 > len(dados):
-        raise RpmRuim("arquivo incompleto: o cabecalho nao cabe no arquivo")
+        raise RpmRuim("rpm_cabecalho_curto")
     if dados[pos:pos + 3] != MAGIC_CAB:
-        raise RpmRuim("cabecalho rpm nao reconhecido")
+        raise RpmRuim("rpm_cabecalho_estranho")
     n, tam = struct.unpack_from(">II", dados, pos + 8)
     if n > TETO_ENTRADAS:
-        raise RpmRuim("cabecalho rpm com %d entradas: arquivo malformado" % n)
+        raise RpmRuim("rpm_entradas|%d" % n)
     inicio_indice = pos + 16
     inicio_loja = inicio_indice + n * 16
     fim = inicio_loja + tam
     if fim > len(dados):
-        raise RpmRuim("arquivo incompleto: o pacote termina antes do que ele diz")
+        raise RpmRuim("pacote_incompleto")
     entradas = []
     for i in range(n):
         p = inicio_indice + i * 16
@@ -114,7 +121,7 @@ def inspecionar(caminho):
     with open(caminho, "rb") as f:
         dados = f.read()
     if len(dados) < 96 or dados[:4] != MAGIC_LEAD:
-        raise RpmRuim("nao e um arquivo .rpm")
+        raise RpmRuim("nao_e_rpm")
     # The lead is a fixed 96 bytes, then the signature header, then the real one.
     # The signature is padded so the header that follows starts on an 8-byte
     # boundary; skipping that padding is the one step that is easy to get wrong
@@ -151,11 +158,11 @@ def uma_linha(s):
 
 def main():
     if len(sys.argv) < 2:
-        print("ERRO=uso: rpminfo.py <arquivo>")
+        print("ERRO=uso")
         return 2
     caminho = sys.argv[1]
     if not os.path.isfile(caminho):
-        print("ERRO=arquivo nao encontrado")
+        print("ERRO=sem_arquivo")
         return 2
     try:
         nome, versao, arq, dist, resumo, requer = inspecionar(caminho)
@@ -163,7 +170,7 @@ def main():
         print("ERRO=%s" % e)
         return 1
     except Exception as e:
-        print("ERRO=%s" % str(e).replace("\n", " ")[:200])
+        print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
     print("PACOTE=%s" % uma_linha(nome))

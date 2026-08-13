@@ -51,7 +51,7 @@ if [ "$CIFRADO" = 1 ]; then
 fi
 
 if [ -n "$ERRO" ]; then
-    t_erro "$(t_msg nao_consegui_ler "$ERRO")"; exit 1
+    t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO")")"; exit 1
 fi
 if [ "$FORMATO" = "desconhecido" ]; then
     t_erro "$(t_msg apk_nao_e_android)"; exit 1

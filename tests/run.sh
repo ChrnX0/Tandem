@@ -77,15 +77,37 @@ section "the comparisons themselves did not drift"
 
 # The guard excludes its own two lines: counting the checksum inside the thing
 # it checksums makes the two values chase each other on every edit.
-soma_esperados="$(grep -oE 'equal "[^"]*" +"[^"]*"' "$0" |
-                  grep -v 'soma_esperados\|soma_padroes' |
+#
+# Both halves read the file with its backslash continuations JOINED, and that is
+# not a detail - it is the difference between a guard and the appearance of one.
+# Measured: of 415 `equal` calls in this file, the line-based version saw 209.
+# The other 206 are written across two lines, which is what you do as soon as an
+# expected value is long - so exactly the values most likely to be rewritten by
+# a bulk edit were the ones nothing was watching. Same class of mistake as the
+# literal counter's twelve misses, and found the same way: by asking what the
+# measure cannot see instead of reading the number it prints.
+#
+# The pattern half also allows one level of $( ) inside a pattern and a branch
+# whose pass/fail sits on the next line: 93 of the 97 branches here, the other
+# four being bare `*)` fallbacks with no data to guard.
+# And the two lines below are dropped BEFORE the extraction, not after. That
+# ordering is load-bearing now and it was not before: joined, this guard's own
+# `equal` calls match the pattern, and `grep -oE` cuts the match off after the
+# second argument - so a filter applied downstream never sees the
+# "$soma_esperados" that identifies them, and the checksum ends up containing
+# its own value. Two values chasing each other on every edit, which is a guard
+# that can never be green.
+juntado="$(sed -e ':a' -e '/\\$/{N;s/\\\n[[:space:]]*/ /;ba' -e '}' "$0" |
+           grep -v 'soma_esperados\|soma_padroes')"
+soma_esperados="$(printf '%s\n' "$juntado" | grep -oE 'equal "[^"]*" +"[^"]*"' |
                   sed 's/.*" *"//;s/"$//' | cksum)"
-soma_padroes="$(grep -oE '^[[:space:]]+\*[^)]*\) *(pass|fail)' "$0" |
-                sed -E 's/ *(pass|fail)$//' | cksum)"
+soma_padroes="$(printf '%s\n' "$juntado" |
+                grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
+                sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2838595226 803" "$soma_esperados"
+      "789269210 3022" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "1417928664 1466" "$soma_padroes"
+      "3839351161 1679" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -462,9 +484,9 @@ equal "normalizes the names to lowercase" \
       "hasp_windows_x64.dll,kernel32.dll" \
       "$(pecampo "$ARTIFACTS/imports32.exe" DLLS)"
 equal "a file that is not a PE degrades with a message" \
-      "nao comeca com MZ" "$(pecampo "$ARTIFACTS/naoexe.exe" ERRO)"
+      "nao_e_mz" "$(pecampo "$ARTIFACTS/naoexe.exe" ERRO)"
 equal "a missing file degrades with a message" \
-      "arquivo nao encontrado" "$(pecampo /nao/existe.exe ERRO)"
+      "sem_arquivo" "$(pecampo /nao/existe.exe ERRO)"
 python3 src/lib/peinfo.py >/dev/null 2>&1
 equal "no argument returns a usage error" "2" "$?"
 
@@ -1081,13 +1103,13 @@ equal "apks: counts the parts"    "3"                     "$(campo "$ARTIFACTS/a
 equal "apks: no OBB"              "0"                     "$(campo "$ARTIFACTS/app.apks" OBB)"
 
 equal "a corrupt file degrades with a message" \
-      "arquivo corrompido ou nao e um pacote Android" \
+      "apk_corrompido" \
       "$(campo "$ARTIFACTS/corrompido.apk" ERRO)"
 equal "an empty file degrades with a message" \
-      "arquivo corrompido ou nao e um pacote Android" \
+      "apk_corrompido" \
       "$(campo "$ARTIFACTS/vazio.apk" ERRO)"
 equal "a missing file degrades with a message" \
-      "arquivo nao encontrado" \
+      "sem_arquivo" \
       "$(campo /nao/existe.apk ERRO)"
 
 python3 src/lib/apkinfo.py >/dev/null 2>&1
@@ -1527,6 +1549,32 @@ if [ -f "$ROOT/tools/conta-literais.py" ]; then
     # package and reading the output, and that is what was done for every screen
     # in this version: doctor, the panel, autoteste, the data screen and the two
     # list screens, in seven languages.
+    #
+    # AND THE 0 WAS FALSE AGAIN, twice over, and both were found by widening the
+    # instrument rather than by reading its number:
+    #
+    #   THIRTEENTH: the prose-body rule keys off function NAMES, and the eleven
+    #   handler executables define no functions at all - they are straight-line
+    #   scripts. So in tandem-repair, tandem-deb, tandem-jar and eight others
+    #   that rule and the printf rule were dead code, and what they missed was
+    #   the entire report of "tandem repair" - the command the README tells an
+    #   owner to run when a double click opens the wrong program.
+    #   FOURTEENTH: only the FIRST argument of a message call was ever read, so
+    #   the BUTTONS of "did this program actually work?" were Portuguese in a
+    #   shipped release, at six call sites.
+    #   FIFTEENTH: ALVOS globs *.sh and src/bin, so no version of this tool in
+    #   fifteen revisions had ever opened a .py file - and the six Python
+    #   readers RAISED PORTUGUESE, about thirty sentences, which the handlers
+    #   printed straight to the owner. That one is fixed rather than counted:
+    #   the readers emit tokens now and the shell turns a token into a sentence.
+    #
+    # So this reads 0 for the third time, and the two previous zeros were both
+    # false. What is different is not the number and not this counter: it is
+    # that the fifteenth miss was a whole FILE TYPE this tool cannot see, so a
+    # second instrument now covers it - the section below reads the readers
+    # themselves and demands a catalogue key for every token they can emit. A
+    # measure that can only look at shell will never notice Portuguese in
+    # Python, however many shapes it learns.
     TETO_LIT=0
     total_lit="$(cd "$ROOT" && python3 tools/conta-literais.py 2>&1 | awk '/^TOTAL/ { print $2 }')"
     if [ "${total_lit:-999}" -eq "$TETO_LIT" ] 2>/dev/null; then
@@ -1591,6 +1639,57 @@ FIM
 )"
     equal "the counter sees prose in a zenity argument inside a substitution" \
           "2 Instalar ou abrir um arquivo|O que você quer fazer?" "$painel"
+    # Miss fourteen, reduced: the buttons of a message call. The first argument
+    # is a clean t_msg lookup, so every earlier version read the whole line as
+    # finished and never looked at the two words the owner actually clicks.
+    printf 't_pergunta "$(t_msg funcionou)" "Sim, funcionou" "Não, algo saiu errado"\n' > "$ISCA"
+    botoes="$(cd "$ROOT" && python3 - "$ISCA" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+achados = m.literais(pathlib.Path(sys.argv[1]))
+print("%d %s" % (len(achados), "|".join(sorted(achados))))
+FIM
+)"
+    equal "the counter sees the BUTTONS of a message call, not just its text" \
+          "2 Não, algo saiu errado|Sim, funcionou" "$botoes"
+
+    # Miss thirteen, reduced, and the assertion is in two halves because the
+    # rule is about the FILE: the same bytes are prose in a handler executable
+    # (which has no functions to scope to) and out of scope in a library file
+    # (where the prose lives in named builders and everything else is plumbing).
+    ISCA_H="$TMPROOT/tandem-isca"
+    cat > "$ISCA_H" <<'FIMH'
+RELATORIO="Associações reaplicadas."
+zenity --info --text="$RELATORIO
+
+Se ainda não funcionar com dois cliques, saia e entre novamente."
+FIMH
+    cp "$ISCA_H" "$TMPROOT/isca-lib.sh"
+    conta_isca() {
+        cd "$ROOT" && python3 - "$1" <<'FIM'
+import sys, pathlib, importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/conta-literais.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(len(m.literais(pathlib.Path(sys.argv[1]))))
+FIM
+    }
+    equal "in a handler executable, prose outside any function is counted" \
+          "2" "$(conta_isca "$ISCA_H")"
+    equal "and the same bytes in a library file are not, which is the rule" \
+          "0" "$(conta_isca "$TMPROOT/isca-lib.sh")"
+
+    # The destination rules, which are what keeps the widened scope usable: an
+    # on-disk value and an executed script are not prose, and they are excluded
+    # because of where the argument GOES, not because of what it looks like.
+    cat > "$ISCA_H" <<'FIMD'
+t_memoria_grava "$PROG" RESULTADO "nao abriu"
+t_como_root "apt-get install -y -- '$PACOTE'"
+t_erro "Isto o dono lê."
+FIMD
+    equal "a state-file value and a root script are not messages; the sentence is" \
+          "1" "$(conta_isca "$ISCA_H")"
+
     # A composed message - several t_msg lookups plus data - must NOT be
     # reported. That is what a finished call site looks like.
     printf 't_erro "$(t_msg um)\n\n$(basename -- "$f")\n\n$(t_msg dois)"\n' > "$ISCA"
@@ -1606,6 +1705,89 @@ FIM
 else
     skip "a migrated file stays migrated" "tools/conta-literais.py is missing"
 fi
+
+section "the readers speak in tokens, and every token has a sentence"
+
+# This is the guard the fifteenth blind spot deserved. The six Python readers
+# used to raise PORTUGUESE - "nao comeca com ELF", "o pacote nao traz um arquivo
+# control" - and the handlers printed the field straight to the owner, so about
+# thirty user-facing sentences lived in files no translation tool here had ever
+# opened: conta-literais.py globs *.sh and src/bin only, and no version of it in
+# fifteen revisions looked at a .py.
+#
+# Counting them is not the fix - a count of a thing nothing checks goes stale.
+# What closes it is this: every token a reader can emit must have a catalogue
+# key, checked by reading the readers themselves. A reader that grows a new
+# failure tomorrow and does not bring a message fails here, in the commit that
+# adds it, instead of on a shop counter.
+# TWO patterns, because a reader emits a token two ways and the first version of
+# this check only knew one of them. `raise DebRuim("nao_e_deb")` goes through an
+# exception; `print("ERRO=sem_arquivo")` is written straight out. Matching only
+# the first found 21 of 25 and reported "missing: none" - a completeness check
+# that was itself incomplete, on its first run, in exactly the way the literal
+# counter has been fifteen times. Written down because catching it needed
+# printing the list and counting it by hand, not reading the verdict.
+FICHAS="$(
+  { grep -rhoE 'raise [A-Za-z]+\("[a-z_0-9]+' "$ROOT"/src/lib/*.py | sed -E 's/.*"//'
+    grep -rhoE '"ERRO=[a-z_0-9]+' "$ROOT"/src/lib/*.py | sed -E 's/.*=//'
+  } | sort -u | grep -v '^$')"
+if [ -z "$FICHAS" ]; then
+    fail "the readers' tokens were found at all" "some tokens" "none"
+else
+    pass "the readers' tokens were found at all ($(printf '%s\n' "$FICHAS" | wc -l))"
+    faltando=""
+    for f in $FICHAS; do
+        grep -q "^@leitor_$f\$" "$ROOT/src/lib/idiomas/en.txt" 2>/dev/null ||
+            faltando="$faltando $f"
+    done
+    if [ -z "$faltando" ]; then
+        pass "every token a reader can emit has a message in the catalogue"
+    else
+        fail "every token a reader can emit has a message in the catalogue" \
+             "a leitor_* key for each" "missing:$faltando"
+    fi
+fi
+# And no reader may go back to raising prose. A token is a name; a sentence has
+# spaces in it, and that is the whole difference the protocol rests on.
+prosa_py="$(grep -rhoE 'raise [A-Za-z]+\("[^"]*"' "$ROOT"/src/lib/*.py |
+            grep -E '"[^"]* [^"]*"' || true)"
+if [ -z "$prosa_py" ]; then
+    pass "no reader raises a sentence instead of a token"
+else
+    fail "no reader raises a sentence instead of a token" "tokens only" "$prosa_py"
+fi
+
+# The shell half: a known token becomes a sentence, an unknown one becomes the
+# generic sentence rather than the key name. t_msg prints the key when a key is
+# missing, which is right for a log and would be jargon on a shop owner's
+# screen.
+equal "a known token becomes a sentence" "0" \
+      "$(t_erro_do_leitor sem_marca_ai | grep -qi 'appimage'; echo $?)"
+equal "a token carrying data puts the data in the sentence" "0" \
+      "$(t_erro_do_leitor 'rpm_entradas|99999' | grep -q '99999'; echo $?)"
+case "$(t_erro_do_leitor coisa_que_ninguem_escreveu)" in
+    *leitor_*) fail "an unknown token does not put a key name on the screen" \
+                    "a sentence" "the key name" ;;
+    ?*) pass "an unknown token becomes the generic sentence, not a key name" ;;
+    *) fail "an unknown token becomes the generic sentence, not a key name" \
+            "a sentence" "zero bytes" ;;
+esac
+# A raw Python exception is English jargon whatever the owner's language is, so
+# it goes to the log and the screen gets words.
+case "$(t_erro_do_leitor 'cru|[Errno 13] Permission denied')" in
+    *Errno*) fail "a raw Python exception does not reach the screen" \
+                  "words" "the exception" ;;
+    ?*) pass "a raw Python exception does not reach the screen" ;;
+    *) fail "a raw Python exception does not reach the screen" "words" "zero bytes" ;;
+esac
+# A token cannot choose an arbitrary message key: the field comes out of a
+# program, and a program's output is input. Compared against the generic
+# sentence rather than pattern-matched for debris - the first version of this
+# looked for "*rm*" in the output and failed on the word "format", which is a
+# bad test rather than a bad fix, and it took reading the failure to see that.
+equal "a token with a shell character gets the generic sentence" \
+      "$(t_erro_do_leitor coisa_que_ninguem_escreveu)" \
+      "$(t_erro_do_leitor 'sem_marca_ai; rm -rf /')"
 
 section "language: .po is the source, and a stale translation cannot hide"
 
@@ -2447,10 +2629,10 @@ equal "recognizes an ARM AppImage" "aarch64" \
 AI_ELF="$TMPROOT/so-elf.AppImage"
 { printf '\177ELF\002\001\001\000\000\000\000\000\000\000\000\000'; head -c 48 /dev/zero; } > "$AI_ELF"
 equal "an ELF with no AI mark is not taken for an AppImage" \
-      "nao tem a marca AI do AppImage" "$(t_campo "$(t_appimage_info "$AI_ELF")" ERRO)"
+      "sem_marca_ai" "$(t_campo "$(t_appimage_info "$AI_ELF")" ERRO)"
 printf 'nao sou um ELF nenhum, so texto\n' > "$TMPROOT/texto.AppImage"
 equal "a text file is not taken for an AppImage" \
-      "nao comeca com ELF" "$(t_campo "$(t_appimage_info "$TMPROOT/texto.AppImage")" ERRO)"
+      "nao_e_elf" "$(t_campo "$(t_appimage_info "$TMPROOT/texto.AppImage")" ERRO)"
 
 # The verdict that is worth the most, and the one no other program gives: the
 # download was cut in the middle. The payload says how big it should be, and
@@ -2616,9 +2798,9 @@ equal "a folded Class-Path is put back together" \
 equal "JavaFX is found in the constant pool" "1" \
       "$(t_campo "$(t_jar_info "$JARS/fx.jar")" JAVAFX)"
 equal "an interrupted download is not reported as a broken program" \
-      "zip invalido ou incompleto" "$(t_campo "$(t_jar_info "$JARS/cortado.jar")" ERRO)"
+      "zip_invalido" "$(t_campo "$(t_jar_info "$JARS/cortado.jar")" ERRO)"
 equal "a file that is not a zip at all" \
-      "zip invalido ou incompleto" "$(t_campo "$(t_jar_info "$TMPROOT/texto.AppImage")" ERRO)"
+      "zip_invalido" "$(t_campo "$(t_jar_info "$TMPROOT/texto.AppImage")" ERRO)"
 
 # The installed Java's version, written two different ways by Java itself.
 # Reading only the first number turns Java 8 into Java 1 - and then Tandem
@@ -2715,7 +2897,7 @@ esac
 saida_n="$(correr_nativo tandem-appimage "$TMPROOT/nao-existe.AppImage")"
 case "$saida_n" in
     *"not found"*) pass "a missing file is reported by both new commands" ;;
-    *) fail "a missing file is reported by both new commands" "arquivo nao encontrado" \
+    *) fail "a missing file is reported by both new commands" "a sentence about the file" \
             "${saida_n:-zero bytes}" ;;
 esac
 
@@ -2846,21 +3028,21 @@ while p + 60 <= len(d):
     p += 60 + tam + (tam % 2)
 PYCORTE
 case "$(t_campo "$(t_deb_info "$DEBS/cortado.deb")" ERRO)" in
-    arquivo\ incompleto*) pass "an interrupted .deb download is recognised as interrupted" ;;
+    pacote_incompleto|pacote_sem_dados) pass "an interrupted .deb download is recognised as interrupted" ;;
     *) fail "an interrupted .deb download is recognised as interrupted" \
-            "arquivo incompleto..." "$(t_campo "$(t_deb_info "$DEBS/cortado.deb")" ERRO)" ;;
+            "a truncation token" "$(t_campo "$(t_deb_info "$DEBS/cortado.deb")" ERRO)" ;;
 esac
 case "$(t_campo "$(t_deb_info "$DEBS/cortado-limpo.deb")" ERRO)" in
-    arquivo\ incompleto*)
+    pacote_incompleto|pacote_sem_dados)
         pass "a .deb cut on a member boundary is still recognised as incomplete" ;;
     *) fail "a .deb cut on a member boundary is still recognised as incomplete" \
-            "arquivo incompleto..." \
+            "a truncation token" \
             "$(t_campo "$(t_deb_info "$DEBS/cortado-limpo.deb")" ERRO)" ;;
 esac
 printf 'nao sou um pacote\n' > "$DEBS/texto.deb"
 case "$(t_campo "$(t_deb_info "$DEBS/texto.deb")" ERRO)" in
-    *assinatura\ ar*) pass "a text file is not taken for a package" ;;
-    *) fail "a text file is not taken for a package" "falta a assinatura ar" \
+    nao_e_deb) pass "a text file is not taken for a package" ;;
+    *) fail "a text file is not taken for a package" "nao_e_deb" \
             "$(t_campo "$(t_deb_info "$DEBS/texto.deb")" ERRO)" ;;
 esac
 
@@ -2953,11 +3135,11 @@ equal "reads the summary out of an I18NSTRING" "Prints a greeting" \
       "$(t_campo "$info_rpm" DESCRICAO)"
 head -c 120 "$TMPROOT/teste.rpm" > "$TMPROOT/curto.rpm"
 case "$(t_campo "$(t_rpm_info "$TMPROOT/curto.rpm")" ERRO)" in
-    *incompleto*) pass "a truncated .rpm is recognised as truncated" ;;
-    *) fail "a truncated .rpm is recognised as truncated" "incompleto" \
+    rpm_cabecalho_curto|pacote_incompleto) pass "a truncated .rpm is recognised as truncated" ;;
+    *) fail "a truncated .rpm is recognised as truncated" "a truncation token" \
             "$(t_campo "$(t_rpm_info "$TMPROOT/curto.rpm")" ERRO)" ;;
 esac
-equal "a .deb is not taken for an .rpm" "nao e um arquivo .rpm" \
+equal "a .deb is not taken for an .rpm" "nao_e_rpm" \
       "$(t_campo "$(t_rpm_info "$DEBS/simples.deb")" ERRO)"
 
 # Flatpak reference files are INI, and the two kinds mean different things: one
@@ -3155,6 +3337,83 @@ equal "the machine count comes along" "340" "$(t_lista_maquinas "$ID_L")"
 } > "$TANDEM_LISTA"
 equal "an unconfirmed lesson is not suggested" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
 
+# ------------------------------------------------------------------
+# Several rows about the SAME file. This is the normal shape of a merged list,
+# and the first version of the query answered with the first row it happened to
+# read - so the earliest report owned that program for ever. Each of the four
+# cases below was measured failing against that version before this was written.
+lista_com() { { printf '# TANDEM-LISTA 1\n'; cat; } > "$TANDEM_LISTA"; }
+
+# 3 machines got in first; 400 agree on something else.
+lista_com <<L
+$ID_L	64	vcrun2010	-	confirmado	3	2026-06	-
+$ID_L	64	vcrun2022	-	confirmado	400	2026-08	-
+L
+equal "the earliest row does not own the program for ever" \
+      "vcrun2022" "$(t_lista_consulta "$PROG_L")"
+
+# Merging reports is the entire job of the machine count.
+lista_com <<L
+$ID_L	64	vcrun2022	-	confirmado	200	2026-07	-
+$ID_L	64	vcrun2022	-	confirmado	200	2026-08	-
+$ID_L	64	dotnet48	-	confirmado	300	2026-08	-
+L
+equal "two rows with the same verbs add up" "400" "$(t_lista_maquinas "$ID_L")"
+equal "and adding up changes which lesson wins" \
+      "vcrun2022" "$(t_lista_consulta "$PROG_L")"
+
+# The count shown to the owner has to describe the lesson he is being offered.
+# Here the rejected row is FIRST, and the old machine count came from it.
+lista_com <<L
+$ID_L	64	vcrun6	-	reprovado	7	2026-08	-
+$ID_L	64	vcrun2022	-	confirmado	40	2026-08	-
+L
+equal "the machine count comes from the row the verbs came from" \
+      "40" "$(t_lista_maquinas "$ID_L")"
+
+# 300 machines say those verbs do not fix it and 2 say they do. Spreading the
+# 2 is spreading an error with a receipt on it.
+lista_com <<L
+$ID_L	64	vcrun2022	-	confirmado	2	2026-08	-
+$ID_L	64	vcrun2022	-	reprovado	300	2026-08	-
+$ID_L	64	dotnet48	-	confirmado	1	2026-05	-
+L
+equal "a lesson most machines rejected is not suggested" \
+      "dotnet48" "$(t_lista_consulta "$PROG_L")"
+
+# Nothing left standing is silence, not a wrong answer.
+lista_com <<L
+$ID_L	64	vcrun2022	-	reprovado	300	2026-08	-
+L
+equal "with every lesson rejected the query stays quiet" \
+      "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+equal "and the machine count refuses too" \
+      "1" "$(t_lista_maquinas "$ID_L" >/dev/null 2>&1; echo $?)"
+
+# Two lessons the same number of machines confirm on the same date: the answer
+# still cannot depend on the order of the file.
+lista_com <<L
+$ID_L	64	dotnet48,vcrun2022	-	confirmado	5	2026-08	-
+$ID_L	64	vcrun2022	-	confirmado	5	2026-08	-
+L
+equal "a tie is broken by the cheaper lesson, not by the file order" \
+      "vcrun2022" "$(t_lista_consulta "$PROG_L")"
+
+# A record straight off one machine has not been merged and carries no count.
+lista_com <<L
+$ID_L	64	vcrun2022	-	confirmado	-	2026-08	-
+L
+equal "an unmerged record counts as the one machine it is" \
+      "1" "$(t_lista_maquinas "$ID_L")"
+
+# Another file's rows are not this file's evidence.
+lista_com <<L
+outro	64	mfc42	-	confirmado	900	2026-08	-
+$ID_L	64	vcrun2022	-	confirmado	4	2026-08	-
+L
+equal "rows about another file are not mixed in" \
+      "4" "$(t_lista_maquinas "$ID_L")"
+
 # The record that leaves this machine.
 t_memoria_esquece "$PROG_L" 2>/dev/null
 t_memoria_grava "$PROG_L" ARQUITETURA 64
@@ -3310,37 +3569,52 @@ equal "the queue survives having nowhere to go" "1" "$(linhas_de "$CASA_E/fila.t
 # mangled between the queue and the socket.
 if command -v python3 >/dev/null 2>&1; then
     RECEBIDO="$TMPROOT/recebido.txt"
-    PORTA_ARQ="$TMPROOT/porta.txt"
-    : > "$RECEBIDO"; : > "$PORTA_ARQ"
+    : > "$RECEBIDO"
     # The server picks its own free port and writes it down. Choosing one here
     # from $$ picks a port that may be taken, and the first version of this test
     # skipped itself for exactly that reason - a test that skips is a test that
     # proves nothing while looking tidy.
+    # The answer code is an argument, because the interesting answers are not
+    # the successful one. Every request is recorded whatever the code, so a
+    # test can ask "how many times did it actually try" - which is the only way
+    # to see a retry loop from outside.
     cat > "$TMPROOT/servidor.py" <<'PYSERV'
-import http.server, sys, threading
+import http.server, sys
 destino, porta_arq = sys.argv[1], sys.argv[2]
+codigo = int(sys.argv[3]) if len(sys.argv) > 3 else 204
 class H(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         n = int(self.headers.get('Content-Length') or 0)
         with open(destino, 'ab') as f:
             f.write(self.rfile.read(n) + b'\n')
-        self.send_response(204); self.end_headers()
+        self.send_response(codigo)
+        if 300 <= codigo < 400:
+            self.send_header('Location', 'http://127.0.0.1:1/outro')
+        self.end_headers()
     def log_message(self, *a): pass
 s = http.server.HTTPServer(('127.0.0.1', 0), H)
 with open(porta_arq, 'w') as f:
     f.write(str(s.server_address[1]))
 s.serve_forever()
 PYSERV
-    python3 "$TMPROOT/servidor.py" "$RECEBIDO" "$PORTA_ARQ" >/dev/null 2>&1 &
-    SERVIDOR=$!
-    PORTA=""
-    for _ in $(seq 1 50); do
-        PORTA="$(cat "$PORTA_ARQ" 2>/dev/null)"
-        [ -n "$PORTA" ] && (exec 3<>/dev/tcp/127.0.0.1/"$PORTA") 2>/dev/null &&
-            { exec 3>&-; break; }
-        PORTA=""
-        command -v sleep >/dev/null 2>&1 && sleep 0.1
-    done
+    # Prints the port once the socket really answers. Waiting for the FILE is
+    # not enough: it is written before serve_forever and a connection to a
+    # socket nobody is accepting on hangs instead of failing.
+    sobe_servidor() {
+        local destino="$1" codigo="${2:-204}" arq porta=""
+        arq="$TMPROOT/porta-$codigo.txt"; : > "$arq"
+        python3 "$TMPROOT/servidor.py" "$destino" "$arq" "$codigo" >/dev/null 2>&1 &
+        SERVIDOR=$!
+        for _ in $(seq 1 50); do
+            porta="$(cat "$arq" 2>/dev/null)"
+            [ -n "$porta" ] && (exec 3<>/dev/tcp/127.0.0.1/"$porta") 2>/dev/null &&
+                { exec 3>&-; break; }
+            porta=""
+            command -v sleep >/dev/null 2>&1 && sleep 0.1
+        done
+        printf '%s' "$porta"
+    }
+    PORTA="$(sobe_servidor "$RECEBIDO" 204)"
     if [ -n "$PORTA" ]; then
         enviados="$(TANDEM_LISTA_ENVIO_TESTE="http://127.0.0.1:$PORTA/" \
                     env_envio 't_envio_envia')"
@@ -3373,6 +3647,120 @@ PYSERV
         fi
     else
         skip "sending over the wire" "could not open a local listener"
+    fi
+    kill "$SERVIDOR" 2>/dev/null; wait "$SERVIDOR" 2>/dev/null
+
+    # ------------------------------------------------------------------
+    # The answers that are NOT a success, which is where the losses were. A
+    # queue line is the only copy of a lesson that has not left yet, so an
+    # answer read as "delivered" when it was not deletes it.
+    CASA_E3="$TMPROOT/casa-envio-3"; mkdir -p "$CASA_E3"
+    env_envio3() {
+        env HOME="$CASA_E3" TANDEM_LISTA_ENVIO="${TANDEM_LISTA_ENVIO_TESTE:-}" \
+            TANDEM_FILA="$CASA_E3/fila.tsv" \
+            bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1" 2>/dev/null
+    }
+    RECEBIDO_3="$TMPROOT/recebido-302.txt"; : > "$RECEBIDO_3"
+    PORTA_3="$(sobe_servidor "$RECEBIDO_3" 302)"
+    if [ -n "$PORTA_3" ]; then
+        ALVO_3="http://127.0.0.1:$PORTA_3/"
+        env_envio3 "t_envio_enfileira \"$REG_BOM\"" >/dev/null
+        # curl with no -L exits 0 on a 301, so this used to count as sent - and
+        # the queue is rewritten from what did NOT go.
+        equal "a redirect is not a delivery" "0" \
+              "$(TANDEM_LISTA_ENVIO_TESTE="$ALVO_3" env_envio3 't_envio_envia')"
+        equal "the line a redirect refused stays in the queue" "1" \
+              "$(linhas_de "$CASA_E3/fila.tsv")"
+        equal "and it really did try, exactly once" "1" "$(linhas_de "$RECEBIDO_3")"
+
+        # Six more lines and a server that refuses all of them: the pass has to
+        # stop, not spend twenty seconds of timeout on every one of them, on
+        # every double click, for ever.
+        for i in a b c d e f; do
+            env_envio3 "t_envio_enfileira \"\$(printf 'cap$i\t64\tv\t-\tconfirmado\t1\t2026-08\t-')\"" >/dev/null
+        done
+        : > "$RECEBIDO_3"
+        env_envio3 't_config_grava ENVIO_ESPERA_ATE 0' >/dev/null
+        TANDEM_LISTA_ENVIO_TESTE="$ALVO_3" TANDEM_ENVIO_FALHAS=2 \
+            env_envio3 't_envio_envia' >/dev/null
+        equal "after two refusals in a row the pass gives up" "2" "$(linhas_de "$RECEBIDO_3")"
+        equal "and every line is still there" "7" "$(linhas_de "$CASA_E3/fila.tsv")"
+
+        # And it waits before trying again, instead of retrying on the next
+        # double click.
+        : > "$RECEBIDO_3"
+        equal "a queue that just failed does not try again straight away" "" \
+              "$(TANDEM_LISTA_ENVIO_TESTE="$ALVO_3" env_envio3 't_envio_envia')"
+        equal "nothing reached the server during the wait" "0" "$(linhas_de "$RECEBIDO_3")"
+        equal "and the queue is intact" "7" "$(linhas_de "$CASA_E3/fila.tsv")"
+
+        # The reason travels in the exit status, because the count travels on
+        # stdout and the caller reads that through a subshell.
+        env_envio3 't_config_grava ENVIO_ESPERA_ATE 0' >/dev/null
+        equal "a pass the server refused says so in its exit status" "3" \
+              "$(TANDEM_LISTA_ENVIO_TESTE="$ALVO_3" TANDEM_ENVIO_FALHAS=1 \
+                 env_envio3 't_envio_envia >/dev/null; echo $?')"
+        equal "and being inside the wait is a different status" "4" \
+              "$(TANDEM_LISTA_ENVIO_TESTE="$ALVO_3" env_envio3 't_envio_envia >/dev/null; echo $?')"
+
+        # An owner who typed "tandem enviar agora" has asked. The wait exists to
+        # stop AUTOMATIC retries on every double click, not to answer a direct
+        # request with an hour of silence.
+        : > "$RECEBIDO_3"
+        TANDEM_LISTA_ENVIO_TESTE="$ALVO_3" TANDEM_ENVIO_FALHAS=1 \
+            env_envio3 't_envio_envia forcado' >/dev/null
+        if [ "$(linhas_de "$RECEBIDO_3")" -ge 1 ]; then
+            pass "asking for it explicitly gets through the wait"
+        else
+            fail "asking for it explicitly gets through the wait" "it tried" "it waited"
+        fi
+
+        # And the whole command, with nobody to show a window to. A refusal by
+        # the far end used to reach the owner as "0 line(s) sent", which reads
+        # as a defect on this computer.
+        SAIDA_ENV="$(env -i HOME="$CASA_E3" PATH="/usr/bin:/bin" \
+            TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+            TANDEM_FILA="$CASA_E3/fila.tsv" TANDEM_LISTA_ENVIO="$ALVO_3" \
+            TANDEM_IDIOMA_FORCADO=en TANDEM_ENVIO_FALHAS=1 \
+            timeout 60 bash "$ROOT/src/bin/tandem" enviar agora 2>&1)"
+        case "$SAIDA_ENV" in
+            *"did not accept"*) pass "tandem enviar agora explains a refusal by the far end" ;;
+            *) fail "tandem enviar agora explains a refusal by the far end" \
+                    "a sentence about the server" "$SAIDA_ENV" ;;
+        esac
+
+        # Two passes at once. Sending is spawned detached every time a program
+        # is confirmed and "tandem enviar agora" starts one too, so this is the
+        # ordinary case, not a corner. Both truncated the same ".resto" file and
+        # both then moved it over the queue: the truncation lands in the middle
+        # of the other pass's appends and the lines already written are gone.
+        if command -v flock >/dev/null 2>&1; then
+            TRAVAS_E3="$(env_envio3 'printf %s "$TANDEM_TRAVAS"')"
+            SEGURA="$TMPROOT/segura-envio"; SINAL="$TMPROOT/sinal-envio"
+            : > "$SEGURA"; rm -f "$SINAL"
+            ( exec 6> "$TRAVAS_E3/envio.lock"
+              flock 6 && printf ok > "$SINAL"
+              for _ in $(seq 1 100); do [ -f "$SEGURA" ] || break; sleep 0.1; done ) &
+            GUARDA=$!
+            for _ in $(seq 1 50); do [ -f "$SINAL" ] && break; sleep 0.1; done
+            env_envio3 't_config_grava ENVIO_ESPERA_ATE 0' >/dev/null
+            : > "$RECEBIDO_3"
+            if [ -f "$SINAL" ]; then
+                equal "with a pass already running, a second one does not start" "" \
+                      "$(TANDEM_LISTA_ENVIO_TESTE="$ALVO_3" env_envio3 't_envio_envia')"
+                equal "and the second pass touched nothing at all" "0" \
+                      "$(linhas_de "$RECEBIDO_3")"
+                equal "the queue is exactly as the first pass left it" "7" \
+                      "$(linhas_de "$CASA_E3/fila.tsv")"
+            else
+                skip "two sends at once" "could not take the lock to hold it"
+            fi
+            rm -f "$SEGURA"; wait "$GUARDA" 2>/dev/null
+        else
+            skip "two sends at once" "no flock"
+        fi
+    else
+        skip "the answers that are not a success" "could not open a local listener"
     fi
     kill "$SERVIDOR" 2>/dev/null; wait "$SERVIDOR" 2>/dev/null
 else

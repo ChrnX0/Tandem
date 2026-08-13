@@ -264,6 +264,127 @@ Annuler
 @botao_tentar_sem_instalar
 Essayer sans installer
 
+@leitor_desconhecido
+Quelque chose dans le fichier n'est pas conforme au format.
+
+@leitor_cru
+Le lecteur s'est arrêté avant la fin. Le détail technique est dans le
+journal - "tandem logs" l'affiche.
+
+@leitor_uso
+Tandem a demandé un fichier à un lecteur sans dire lequel.
+
+@leitor_sem_arquivo
+Le fichier n'est plus là où il était. Il a pu être déplacé ou supprimé.
+
+@leitor_nao_e_elf
+Ce n'est pas un programme Linux : il ne commence même pas comme tel.
+
+@leitor_sem_marca_ai
+C'est un programme Linux, mais pas un AppImage : la marque qu'un
+AppImage porte n'y est pas.
+
+@leitor_geracao_desconhecida
+Il se déclare AppImage d'un type que cette version ne connaît pas (type
+{1}).
+
+@leitor_apk_corrompido
+Le fichier est endommagé, ou ce n'est pas un paquet Android. Un
+téléchargement interrompu ressemble exactement à ça.
+
+@leitor_zip_invalido
+Le fichier est endommagé ou le téléchargement s'est arrêté. Un .jar garde
+son index à la FIN : un transfert interrompu casse toujours ici.
+
+@leitor_nao_e_mz
+Ce n'est pas un programme Windows : il ne commence pas comme tel.
+
+@leitor_sem_assinatura_pe
+Il ressemble à un programme Windows au début, puis plus du tout. Le plus
+probable est qu'il soit endommagé.
+
+@leitor_pe_cabecalho_desconhecido
+Ce programme Windows est construit d'une façon que cette version ne
+connaît pas.
+
+@leitor_nao_e_deb
+Ce n'est pas un paquet .deb, malgré son nom.
+
+@leitor_pacote_incompleto
+Le téléchargement s'est arrêté : le paquet finit plus tôt qu'annoncé. Le
+télécharger à nouveau règle tout.
+
+@leitor_pacote_sem_dados
+Le paquet ne contient pas le programme lui-même, seulement sa
+description. Le téléchargement s'est arrêté.
+
+@leitor_deb_sem_control
+Le paquet ne dit ni ce qu'il est ni ce dont il a besoin.
+
+@leitor_deb_sem_control_tar
+Il manque au paquet la partie qui le décrit.
+
+@leitor_deb_control_danificado
+La partie du paquet qui le décrit est endommagée.
+
+@leitor_deb_control_grande
+La partie qui décrit le paquet est plus grande que ce qu'il annonce : on ne
+peut pas s'y fier.
+
+@leitor_deb_control_nao_abriu
+La partie compressée du paquet ne s'est pas ouverte.
+
+@leitor_deb_tamanho_absurdo
+Le paquet annonce qu'une de ses parties fait {1} octets, ce qui n'est pas
+une taille réelle. Tandem ne va pas tenter de l'ouvrir.
+
+@leitor_sem_libzstd
+Cet ordinateur n'a pas de quoi ouvrir la compression utilisée par ce
+paquet. L'installer via la logithèque ou avec "sudo apt install" marche
+toujours.
+
+@leitor_nao_e_rpm
+Ce n'est pas un paquet .rpm, malgré son nom.
+
+@leitor_rpm_cabecalho_curto
+Le téléchargement s'est arrêté : la partie qui décrit le paquet ne tient
+pas dans le fichier.
+
+@leitor_rpm_cabecalho_estranho
+La partie de ce .rpm qui le décrit n'est pas dans un format que Tandem
+connaît.
+
+@leitor_rpm_entradas
+Ce .rpm annonce {1} entrées dans sa description, ce qui ne peut pas être
+juste. Le fichier est endommagé.
+
+@botao_sim_funcionou
+Oui, ça a marché
+
+@botao_nao_deu_errado
+Non, quelque chose n'a pas marché
+
+@botao_adicionar_loja
+Ajouter la boutique
+
+@jar_pode_instalar_java
+Faut-il installer Java {1} maintenant ?
+
+@rep_reaplicadas
+Associations de fichiers réappliquées.
+
+@rep_linha
+  {1}
+      avant :    {2}
+      maintenant : {3}
+
+@rep_nenhum
+personne
+
+@rep_saia_e_entre
+Si le double clic ne marche toujours pas, déconnectez-vous puis
+reconnectez-vous.
+
 @licao_origem_local
 La dernière fois, ce programme a eu besoin de
 
@@ -1669,6 +1790,13 @@ perdu, et rien n'est envoyé.
 
 @env_enviadas
 {1} ligne(s) envoyée(s). Il reste {2} en file.
+
+@env_servidor_recusou
+Le serveur de la liste n'a pas accepté les lignes. Rien n'est perdu : {1}
+ligne(s) restent dans la file et Tandem réessaiera tout seul.
+
+Si cela continue, le problème est de l'autre côté - il n'y a rien à réparer
+sur cet ordinateur.
 
 @env_nao_conheco
 Je ne connais pas « tandem enviar {1} ».

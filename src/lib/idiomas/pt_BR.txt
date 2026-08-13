@@ -262,6 +262,126 @@ Cancelar
 @botao_tentar_sem_instalar
 Tentar sem instalar
 
+@leitor_desconhecido
+Alguma coisa no arquivo não está como o formato manda.
+
+@leitor_cru
+O leitor parou antes de terminar. O detalhe técnico está no
+registro - "tandem logs" mostra.
+
+@leitor_uso
+O Tandem pediu um arquivo a um leitor e não disse qual.
+
+@leitor_sem_arquivo
+O arquivo não está mais onde estava. Pode ter sido movido ou apagado.
+
+@leitor_nao_e_elf
+Isto não é um programa de Linux: nem começa como um.
+
+@leitor_sem_marca_ai
+É um programa de Linux, mas não um AppImage: falta a marca que um
+AppImage carrega.
+
+@leitor_geracao_desconhecida
+Ele diz ser um AppImage de um tipo que esta versão não conhece (tipo
+{1}).
+
+@leitor_apk_corrompido
+O arquivo está danificado, ou não é um pacote de Android. Um download
+que parou no meio fica exatamente assim.
+
+@leitor_zip_invalido
+O arquivo está danificado ou o download parou no meio. Um .jar guarda o
+índice no FIM, então uma transferência interrompida sempre quebra aqui.
+
+@leitor_nao_e_mz
+Isto não é um programa de Windows: não começa como um.
+
+@leitor_sem_assinatura_pe
+Ele parece um programa de Windows no começo e depois deixa de parecer.
+O mais provável é que esteja danificado.
+
+@leitor_pe_cabecalho_desconhecido
+Este programa de Windows é montado de um jeito que esta versão não
+conhece.
+
+@leitor_nao_e_deb
+Isto não é um pacote .deb, apesar do nome.
+
+@leitor_pacote_incompleto
+O download parou no meio: o pacote termina antes do que ele diz.
+Baixar de novo resolve inteiro.
+
+@leitor_pacote_sem_dados
+O pacote não traz o programa em si, só a descrição dele. O download
+parou no meio.
+
+@leitor_deb_sem_control
+O pacote não diz o que ele é nem o que precisa.
+
+@leitor_deb_sem_control_tar
+Falta no pacote a parte que descreve ele.
+
+@leitor_deb_control_danificado
+A parte do pacote que descreve ele está danificada.
+
+@leitor_deb_control_grande
+A parte do pacote que descreve ele é maior do que ele mesmo diz, então
+não dá para confiar nela.
+
+@leitor_deb_control_nao_abriu
+A parte compactada do pacote não abriu.
+
+@leitor_deb_tamanho_absurdo
+O pacote diz que uma parte dele tem {1} bytes, o que não é um tamanho
+real. O Tandem não vai tentar abrir isso.
+
+@leitor_sem_libzstd
+Este computador não tem como abrir a compactação que este pacote usa.
+Instalar pela loja ou com "sudo apt install" continua funcionando.
+
+@leitor_nao_e_rpm
+Isto não é um pacote .rpm, apesar do nome.
+
+@leitor_rpm_cabecalho_curto
+O download parou no meio: a parte que descreve o pacote não cabe dentro
+do arquivo.
+
+@leitor_rpm_cabecalho_estranho
+A parte deste .rpm que descreve ele não está num formato que o Tandem
+conhece.
+
+@leitor_rpm_entradas
+Este .rpm diz ter {1} entradas na descrição dele, o que não pode estar
+certo. O arquivo está danificado.
+
+@botao_sim_funcionou
+Sim, funcionou
+
+@botao_nao_deu_errado
+Não, algo saiu errado
+
+@botao_adicionar_loja
+Adicionar a loja
+
+@jar_pode_instalar_java
+Posso instalar o Java {1} agora?
+
+@rep_reaplicadas
+Associações de arquivo reaplicadas.
+
+@rep_linha
+  {1}
+      antes:  {2}
+      agora:  {3}
+
+@rep_nenhum
+ninguém
+
+@rep_saia_e_entre
+Se ainda não funcionar com dois cliques, saia da sua conta e entre
+de novo.
+
 @licao_origem_local
 Da última vez, este programa precisou
 
@@ -1626,6 +1746,13 @@ Nada é perdido, e nada é enviado.
 
 @env_enviadas
 {1} linha(s) enviada(s). Restam {2} na fila.
+
+@env_servidor_recusou
+O servidor da lista não aceitou as linhas. Nada foi perdido: {1} linha(s)
+continuam na fila e o Tandem vai tentar de novo sozinho.
+
+Se isso continuar acontecendo, o problema está do outro lado - não tem nada
+para consertar neste computador.
 
 @env_nao_conheco
 Não conheço "tandem enviar {1}".

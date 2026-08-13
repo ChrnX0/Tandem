@@ -54,8 +54,11 @@ was found by somebody writing down what they actually saw.
    becomes "this app is made for phones only and does not run here". Every such
    sentence belongs in `po/`, never in the code. `tools/conta-literais.py`
    measures how far that is from true and the suite holds the number as a
-   ratchet: it may fall, never rise. **It is 145, not 0** — read the section on
-   the counter before you trust any number it prints.
+   ratchet: it may fall, never rise. **It reads 0 for the third time and the
+   first two zeros were false** — read the section on the counter before you
+   trust any number it prints. What is different is not the number: the
+   fifteenth miss was a whole file type this tool cannot see, so a second
+   instrument now covers it.
 3. **`set -e` only in the packager, never in the executables.** The wait loops
    depend on commands that fail on purpose (`grep -q ... && break`).
 4. **Never repeat an install already paid for.** `dotnet48` takes ~30 min; the
@@ -114,7 +117,8 @@ man/tandem.1              the manual; the other four are ".so" stubs
 src/mime/tandem.xml       registers .xapk/.apks/.apkm as a zip subclass
 src/lib/common.sh         log, messages, locale, progress, prefixes, PE, waydroid,
                           memory, recipes, alternatives, data, list, pre-flight,
-                          native formats (arch, java, fuse, menu entries)
+                          native formats (arch, java, fuse, menu entries),
+                          t_erro_do_leitor (reader token -> sentence)
 src/lib/winedeps.sh       DLL -> winetricks verb; DLLs with no translation
 src/lib/apkinfo.py        binary AndroidManifest reader, pure Python
 src/lib/peinfo.py         PE import-table reader, without executing anything
@@ -125,6 +129,8 @@ src/lib/jarinfo.py        jar manifest + bytecode major: is it a program, and
 src/lib/debinfo.py        .deb control by hand (ar + tar, zstd via libzstd):
                           name, arch, dependencies, and truncation
 src/lib/rpminfo.py        .rpm header: name, version, arch, distribution
+                          (all six readers answer ERRO=<token>, NEVER a
+                          sentence; t_erro_do_leitor translates it)
 src/lib/verbos.tsv        GENERATED DLL->verb index; do not edit by hand
 src/lib/limites.tsv       signatures of what will never work (dongle, driver)
 src/lib/alternativas.tsv  Linux programs that do the same job
@@ -175,7 +181,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 925 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 963 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -539,9 +545,49 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   carries an IP at the receiving end whatever the payload says, and the
   fingerprint identifies WHICH software a shop runs. Neither is in the record;
   both are inherent to sending anything at all.
+- **The DOWN path had never been asked what it does with more than one row about
+  the same file**, and that is the normal shape of a merged list rather than a
+  corner. `t_lista_consulta` printed the first `confirmado` row and exited, so
+  the earliest report owned a program for ever — measured: 3 machines beat 400.
+  It also never added two rows with the same verbs up, which is the entire job
+  of the machine count; it never read the `reprovado` rows at all, so 2
+  confirmations beat 300 rejections; and `t_lista_maquinas` did not filter by
+  confidence, so a rejected row above a confirmed one supplied the number the
+  owner is shown to decide with — verbs from 40 machines, presented as 7. Since
+  4.4 one resolver (`t_lista_linha`) answers both questions, so the verbs and
+  the count cannot come from different rows, and `docs/LIST-FORMAT.md` states
+  the four rules. The whole class of bug is one thing: **a query written for a
+  file with one row per program, against a format whose point is merging.**
 - **`grep -c` on an EMPTY file prints 0 and then exits 1**, so `grep -c ... ||
   echo 0` prints "0" twice. It reached the owner as a queue length of "0\n0".
   Use `awk 'END { print NR + 0 }'`.
+- **`curl` WITHOUT `-L` RETURNS 0 ON A 301**, and that made a redirect count as
+  a delivery. `t_envio_envia` rewrites the queue from what did *not* go, so the
+  line was deleted from the only place it existed — and an endpoint that has
+  moved is exactly the shape of thing that answers 301. Read the code
+  (`-o /dev/null -w '%{http_code}'`) and require `2??`. `wget` loses the same
+  line by the opposite mechanism: it FOLLOWS redirects by default and turns the
+  POST into a GET on the way, exiting 0 having posted nothing — hence
+  `--max-redirect=0`. Neither one follows a redirect on purpose: the target is
+  chosen by whatever answered, not by anybody here, and a record exists
+  precisely because it carries nothing personal.
+- **A cap on successes is not a cap.** `TANDEM_ENVIO_POR_DIA` only ever counted
+  the lines that WENT, so a failure cost nothing: a machine with no route to
+  the address retried every queued line on every run, for ever, at 20 s of
+  timeout each. A hundred queued lessons is over half an hour of a background
+  process that was never going to succeed, restarted every time somebody opens
+  a program. Count the refusals too, and make the queue wait.
+- **Two sends could run over the same queue at once**, and this was the ordinary
+  case rather than a corner: one is spawned detached every time a program is
+  confirmed, and `tandem enviar agora` starts another. Both truncate the same
+  `.resto` file and both then move it over the queue, so the truncation lands in
+  the middle of the other pass's appends and the lines already written are gone.
+  The queue is the only copy of a lesson that has not left yet.
+- **A reason cannot travel in a variable out of `$( )`.** `t_envio_envia` is read
+  through a command substitution, which is a subshell, so the count goes on
+  stdout and *why* goes in the exit status (3 refused, 4 waiting, 5 already
+  running). Without that, the far end refusing everything reached the owner as
+  `0 line(s) sent` — which reads as a defect on his own computer.
 - **A `while read` loop drops the last line of `od` output**, which has no
   trailing newline - so the URL escaper cut the final character off everything.
   Loop with `for` over the unquoted substitution instead.
@@ -692,7 +738,28 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 925 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 963 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- **The list's read path was measured against the OLD code before being fixed**,
+  which is why the four defects are stated as numbers rather than as risks: on a
+  two-row list the old query answered `vcrun2010` with 3 machines where 400
+  confirmed `vcrun2022`; two rows carrying the same verbs answered 200 instead
+  of 400; a rejected row above a confirmed one supplied "7 machines" for verbs
+  40 machines had confirmed; and 2 confirmations beat 300 rejections.
+- **`curl -fsS -X POST` against a real 302 exits 0** — measured against a local
+  server, which is what made a redirect count as a delivery and delete the
+  queued line. And old `wget` against a *reachable* redirect target exits 0
+  while the target receives `GET` with an **empty body**: the record was never
+  posted, and the request went to a host the server chose rather than us. With
+  an unreachable target wget exits 4, which looks like a safe failure — so the
+  claim only holds when the target answers, and that is the case that matters.
+- **The readers' messages closed on real malformed files**, in two languages: a
+  text file named `.deb`, a text file named `.rpm`, a truncated `.jar` and an
+  ELF named `.AppImage` each produced a translated sentence, and the log carries
+  the `leitor: <token>` line beside it. The raw-exception path is covered by the
+  helper test rather than end to end — as root there is no file the reader
+  cannot open.
+- **`tandem repair`'s report comes out in the machine's language** — checked in
+  en, pt_BR, fr and zh_CN on a real run, `nobody` included.
 - **The five remaining formats closed on real files**: a `.deb` built for an
   older release produced the release-mismatch verdict with `libssl1.1` and
   `libicu70` named and **no password asked**; an arm64 package produced the
@@ -792,10 +859,17 @@ repository, Waydroid 1.6.2 MAINLINE with GAPPS and libhoudini, `binderfs` with
   **`socorro`**, **`contribuir`**.
 - **Evidence gate, CI and a release pipeline.**
 
-## The language system (4.2)
+## The language system
 
 Seven languages: `pt_BR` (the original), `en`, `es`, `fr`, `zh_CN`, `hi`, `ar`.
 Read this before touching a message anywhere in the tree.
+
+**And it is not only the shell.** The six Python readers used to raise
+Portuguese and the handlers printed it verbatim — so the ERRO field of every
+reader now carries a TOKEN, and `t_erro_do_leitor` turns the token into a
+sentence. A reader must never raise prose; the suite reads the readers and
+refuses a `raise` whose argument has a space in it, and demands a
+`leitor_<token>` message for every token any reader can emit.
 
 - **`po/*.po` IS THE SOURCE. `src/lib/idiomas/*.txt` is generated from it** by
   `tools/po-para-catalogo.py`, and `build.py` refuses to package a catalogue
@@ -871,15 +945,22 @@ Read this before touching a message anywhere in the tree.
   shipping it without saying so is not. Getting those reviewed is the easiest
   contribution to ask for.
 
-### The migration is NOT finished, and the counter said it was
+### The migration, and the three times it was declared over
 
-**This section said "the migration is finished" and cited TOTAL 0. That was
-false, and the suite asserted the false number.** `tools/conta-literais.py` now
-reports **TOTAL 145**, all of it real: the whole of `tandem doctor`, the whole
-zenity panel including its eighteen menu rows, the `autoteste` report, the
-hardware-key advice and the longest message in the program - the fifteen-line
-paragraph about running a real Windows in a virtual machine. 449 keys in each of
-the seven catalogues, and 145 sentences that never got there.
+**This section has said "the migration is finished" twice and been wrong both
+times**, and the second of those zeros was *published*. It reads 0 again now,
+with 620 keys in each of the seven catalogues - so read the list of misses below
+before you take that as an answer, and read the last paragraph of this section
+before you widen this tool a sixteenth time.
+
+The two false zeros, in one line each. **The first** cited TOTAL 0 while 145
+sentences were in the code: the whole of `tandem doctor`, the whole zenity panel
+including its eighteen menu rows, the `autoteste` report, and the longest message
+in the program - the fifteen-line paragraph about running a real Windows in a
+virtual machine. **The second** cited TOTAL 0 while the buttons of "did this
+program work as you expected?" were Portuguese, the whole report of
+`tandem repair` was Portuguese, and the six Python readers were *raising*
+Portuguese that the handlers printed verbatim.
 
 **How a released product came to show an English-speaking user a Portuguese
 diagnostic:** it was found by installing the built `.deb` and reading the
@@ -889,12 +970,12 @@ printed English. Nothing in the tree could see it, because `acao_doctor`
 assembles its report as `out+="SISTEMA\n"` and the counter's assignment pattern
 was a **whitelist of variable names** that did not include `out`.
 
-The suite now asserts the measured number as a **ratchet**: it may fall, never
-rise. A hard 0 that is wrong is worse than a true 145 that can only shrink,
-because the 0 says the work is finished and the 145 says where it is not.
+The suite asserts the measured number as a **ratchet**: it may fall, never rise.
+A hard 0 that is wrong is worse than a true 145 that can only shrink, because
+the 0 says the work is finished and the 145 says where it is not.
 
 **The counter is the interesting part of this, not the translation.** It has now
-been wrong TWELVE times, each time narrower than reality, and it has never once
+been wrong FIFTEEN times, each time narrower than reality, and it has never once
 failed safe - every version reported zero for something that was there:
 
 1. "no accented character left in the file" - accent-free Portuguese walked
@@ -941,21 +1022,92 @@ failed safe - every version reported zero for something that was there:
    unread.** What works is a walk that descends INTO a substitution while
    refusing to glue its text into the sentence around it.
 
-**The rule stops chasing syntax, because syntax is what failed twelve times.**
+13. **The prose-body rule keys off function NAMES, and the eleven handler
+   executables define no functions at all.** They are straight-line scripts, so
+   in `tandem-repair`, `tandem-deb`, `tandem-jar` and eight others the
+   whole-body rule and the printf rule were **dead code** — the widest scoping
+   error this tool has had, and it was invisible because the number it produced
+   was zero. What it hid: the entire report of `tandem repair`, the command an
+   owner is told to run when a double click opens the wrong program. Fixed by a
+   rule about which FILES rather than which syntax — a handler *is* the body.
+14. **Only the FIRST argument of a message call was ever read.** `CHAMADA` is
+   `t_erro|t_pergunta|… "…"` and stops at that one string, so
+   `t_pergunta "$(t_msg funcionou_como_esperava)" "Sim, funcionou" "Não, algo
+   saiu errado"` read as finished: the text was a clean lookup and **the two
+   words the owner clicks were never looked at by anything**. Six call sites,
+   and three of the six buttons already had catalogue keys nobody had wired up.
+   Finding the rest of a call needs the same walk as everywhere else, because a
+   regex cannot find where a shell command ends when its arguments contain
+   quotes, `$( )` and escaped newlines.
+15. **`ALVOS` globs `*.sh` and `src/bin`, so no version of this tool in fifteen
+   revisions had ever opened a `.py` file** — and the six readers *raised
+   Portuguese*: `nao comeca com ELF`, `zip invalido ou incompleto`,
+   `o pacote nao traz um arquivo control`, about thirty of them, every one
+   reaching the owner verbatim through
+   `t_erro "$(t_msg nao_consegui_ler "$ERRO")"`. The catch-all was worse than
+   untranslated: `print("ERRO=%s" % e)` hands over a raw Python exception
+   (`[Errno 13] Permission denied`), English jargon whatever the owner reads.
+   **Fixed by making the ERRO field a TOKEN**, never a sentence, with
+   `t_erro_do_leitor` turning it into a sentence in the owner's language — 25
+   tokens, 26 messages, seven languages, and the raw exception goes to the log
+   while the screen gets words. An unknown token gets a generic sentence, not
+   the key name (`t_msg` prints the key when a key is missing, which is right
+   for a log and jargon on a counter), and a token with a character that is not
+   a name is refused, because a program's output is input.
+   **The lesson is the shape of the miss, not the strings.** Fifteen widenings
+   of one instrument could never have found this: a measure that reads only
+   shell will never see Portuguese in Python. So the guard is a *second*
+   instrument — the suite reads the readers and demands a catalogue key for
+   every token they can emit, and refuses a `raise` whose argument has a space
+   in it. Its own first version found 21 of 25 tokens and said "missing: none",
+   because it knew about `raise` and not about `print`; caught by printing the
+   list and counting by hand rather than by reading the verdict.
+
+**The rule stops chasing syntax, because syntax is what failed thirteen times.**
 Inside a body that exists to produce prose (`t_texto_*`, `t_causa_*`, `acao_*`,
-`uso`), **every** double-quoted string is examined, whatever surrounds it. What
-keeps that usable is `EXCECOES`, an auditable list of exact strings somebody had
-to add on purpose - and it is 22 entries of the 167 raw hits, which is why the
-number reads 145 rather than 167.
+`uso`) — and inside the **whole** of a handler executable, which has no such
+body to scope to — **every** double-quoted string is examined, whatever
+surrounds it. What keeps that usable is two things, neither of them a guess
+about shape: `EXCECOES`, an auditable list of exact strings somebody had to add
+on purpose, and a rule about where an argument **goes** — a value handed to
+`t_memoria_grava` lands in a state file, an argument to `t_como_root` is
+executed, a `grep`/`sed` argument is a program for another tool. Same footing as
+the `t_diz` exemption: not "this looks like code" but "nothing human is at the
+other end of this argument".
+
+**And the sixteenth widening will not help, which is the note to read before
+attempting one.** Fifteen revisions of this tool all answered the same question -
+"what shape of shell hides a sentence?" - and the fifteenth miss was not a shape
+at all: it was a FILE TYPE the tool does not open. The instrument that caught it
+is a different instrument, sitting beside this one, asking a question this one
+cannot ask (does every token the Python readers emit have a message?). When a
+measure has a shape, ask what shape it cannot see and build a second measure
+rather than a wider one. And its own first version was incomplete too - it knew
+`raise` and not `print`, found 21 of 25 tokens, and said "missing: none".
+
+**And the guard on the suite's own comparisons had the same hole.** The checksum
+that exists so a bulk rename cannot quietly rewrite an expected value is
+line-based, and **206 of 415 `equal` calls are written across two lines** —
+which is what you do as soon as an expected value is long, so precisely the
+values most at risk were the ones nothing watched. It reads the file with
+continuations joined now (419 call sites, 93 of 97 case patterns). Joining then
+made the guard checksum **its own value**, because `grep -oE` cuts each match
+off after the second argument so the filter that drops the guard's own two lines
+never saw what identified them; the filter has to run **before** the extraction.
+Two numbers chasing each other on every edit is a guard that can never be green.
 
 **The lesson, which is the reason this is written down:** a completeness check
 built from what happened to be in front of me will always pass. The measure only
 became trustworthy at the moment it caught something - so there is now a test
 that feeds it the panel's exact shape and fails if it goes blind again. The
-number has gone `0 → 75 → 107 → 167 → 145`, and only that last step is a
-reduction rather than a discovery. **Treat 145 as a floor, not a total** - twelve
-versions of this thing have under-reported, and the only method that has ever
-caught it is installing the package and reading what comes out.
+number has gone `0 → 75 → 107 → 167 → 145 → 0 → 44 → 2 → 0`, and the two zeros in
+that sequence were both **false** - the second one was published. **Treat any
+number this prints as a floor** - fifteen versions of it have under-reported, and
+the only method that has ever caught it is installing the package and reading
+what comes out. And the last zero is only as good as the SECOND instrument beside it: fifteen
+widenings of this one could not have found Portuguese in a `.py` file, because it
+does not read `.py` files. When a measure has a shape, ask what shape it cannot
+see, and build a different measure rather than a wider one.
 
 There is now a small list of exact strings the counter is told to ignore
 (`EXCECOES`), each with its reason: vendor product names the owner must search
@@ -1011,28 +1163,31 @@ for a reason.
 
 The queue, in order:
 
-0. **Migrate the 145 literals `tandem doctor` and the panel still hold.** This is
-   4.3's job and it is the largest honest gap in the product: an
-   English-speaking user runs the flagship diagnostic and gets Portuguese, and
-   the zenity panel asks `O que você quer fazer?` in Portuguese before anything
-   else appears. `tools/conta-literais.py --migrados` prints the list. Open a
-   `tandem (4.3)` changelog entry first; 4.2 is published and its entry is
-   history. Roughly 55 keys after dedup, seven languages each, and the shape to
-   follow is one key per line with `{1}` for the data — not fragments glued
-   together, which breaks word order in the other six.
+0. ~~Migrate the literals `tandem doctor`, the panel, the buttons, `tandem
+   repair` and the Python readers still hold.~~ **Done across 4.3 and 4.4**, and
+   `tools/conta-literais.py` reports TOTAL 0 — but read the section on the
+   counter before trusting that zero: it has read 0 twice before while
+   Portuguese was on the screen, and one of those zeros shipped. The only method
+   that has ever caught one is installing the package and reading what comes
+   out. Treat a new screen as unmeasured until somebody has run it, and treat a
+   new FILE TYPE as unmeasured until a second instrument looks at it — this one
+   reads shell and nothing else.
 
-0a. **Field-test 4.2 on the counter**, now that it can be installed from the
-   release page. Needs the owner's machine and nothing else: `tandem portas`
-   (32 phantom sockets collapsed into one line), `tandem intalar` (must say "I
-   do not know that command", not "unrecognised file type"), `tandem idioma`,
-   and a double click on a real `.xapk`, `.AppImage` and `.jar`.
+0a. **Field-test the current release on the counter**, now that it can be
+   installed from the release page. Needs the owner's machine and nothing else:
+   `tandem portas` (32 phantom sockets collapsed into one line), `tandem
+   intalar` (must say "I do not know that command", not "unrecognised file
+   type"), `tandem idioma`, and a double click on a real `.xapk`, `.AppImage`
+   and `.jar`.
 
-0b. **Five catalogues carry `X-Reviewed-By-Speaker: no`.** That is the whole of what is left
-   of the translation, and it is not engineering: it needs somebody who speaks
-   es, fr, zh_CN, hi or ar to read what is there. The files are plain text, the
-   format cannot execute anything, and a wrong line breaks nothing - it is the
-   easiest contribution this project can ask for. The data tables are complete
-   in all six.
+0b. **Five catalogues carry `X-Reviewed-By-Speaker: no`.** That is the whole of
+   what is left of the translation, and it is not engineering: it needs somebody
+   who speaks es, fr, zh_CN, hi or ar to read what is there. The files are plain
+   text, the format cannot execute anything, and a wrong line breaks nothing —
+   it is the easiest contribution this project can ask for. The data tables are
+   complete in all six. It is also the item that grows every time a message is
+   added: 4.4 added 34 keys, so five languages are now five languages plus 34
+   unreviewed lines each.
 
 1. **Fill the community list.** Half-solved in 3.9: the client side of automatic
    sending is built, tested against a real socket, and ON by default. What is
@@ -1040,6 +1195,16 @@ The queue, in order:
    an endpoint means somebody hosts it, moderates it and answers for the data.
    That is the architect's call. Until then the queue keeps what it learns, and
    `tandem enviar` says so out loud rather than pretending.
+   **Three mechanical reasons an address alone would not fill it**, established
+   by reading the tree rather than guessed, and each one is agent-only work that
+   can be done before any address exists: only `tandem-exe` writes the
+   `RESOLVERAM`/`CONFIRMADO` keys a record is built from, so **eight of the nine
+   formats can never produce one**; the down path has a single caller
+   (`tandem-exe`, and only when the local memory is empty); and no verb is needed
+   by any program in the reference set, so the first honest record will come from
+   commercial software nobody here has. The record format itself only describes
+   Wine dependencies — what an `.AppImage`, a `.deb` or a `.jar` learns has
+   nowhere to go in it.
 2. **A real shop program.** `tests/real-programs.sh` now runs real Windows
    software weekly and checks the window on screen, which closes the "no real
    binary has ever run on it" gap. What it does NOT close is commercial software
@@ -1079,22 +1244,28 @@ The queue, in order:
 to end on real files. `.AppImage` and `.jar` came in 3.7; `.deb`, `.rpm`,
 `.flatpakref`, `.snap` and shell installers in 3.8 — see the State section for exactly what was
 measured. The orphan-shortcut question is settled: it was never a defect. The
-real-program harness exists and is green. **v4.0, v4.1 and v4.2 are published** —
-tag, `.deb` and `.sha256` attached, and 4.0's and 4.2's published artifacts each
-verified byte-for-byte identical to a local build (sha256 `82544a90…` and
-`3d5ed79a…`). 3.7 through 3.9 were never released, so 4.0 is the first package
-the public gets with all nine formats in it. The next release goes out the same
-way; see the section below for why the browser path exists.
+real-program harness exists and is green. **v4.0, v4.1, v4.2 and v4.3 are
+published** — tag, `.deb` and `.sha256` attached, and 4.0's, 4.2's and 4.3's
+published artifacts each verified byte-for-byte identical to a local build
+(sha256 `82544a90…`, `3d5ed79a…` and `d6f2d792…`). 3.7 through 3.9 were never
+released, so 4.0 is the first package the public gets with all nine formats in
+it. The next release goes out the same way; see the section below for why the
+browser path exists.
 
-**v4.2 IS PUBLISHED** — 2026-08-12, tag `v4.2` at `4c1fb11`, `.deb` and
-`.sha256` attached, and the published artifact verified byte-for-byte against a
-local build: sha256 `3d5ed79a…` from all three of the release's own checksum
-file, the downloaded bytes, and a build made here. It carries the gettext
-migration, English as the default, the six data tables, sending on by default,
-the security fix on verb names, and the three Wine defects above. **The next
-version is 4.3 and its changelog entry has to be opened before anything is
-added** — `debian/control` still says 4.2 and the top changelog entry is now
-history.
+**v4.3 IS PUBLISHED** — 2026-08-12, tag `v4.3` at `d61461d`, `.deb`
+(335766 bytes) and `.sha256` attached, and the published artifact verified
+byte-for-byte against a local build: sha256 `d6f2d792…` from all three of the
+release's own checksum file, the downloaded bytes, and a build made here. The
+installed package answers `Tandem 4.3` and `tandem doctor` line 3 reads `SYSTEM`
+/ `SISTEMA` / `系统` / `النظام` — which is the point of the release: it carries
+the last 145 literals into the catalogues, so the flagship diagnostic and the
+zenity panel finally speak the machine's language. v4.2 before it carried the
+gettext migration, English as the default, the six data tables, sending on by
+default, the security fix on verb names and three Wine defects.
+
+**The version in the tree is now 4.4 and its changelog entry is open** —
+`debian/control`, `debian/changelog` and `TANDEM_VERSAO` all say 4.4. Add to
+that entry; do not touch 4.3's, which is history the public already has.
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

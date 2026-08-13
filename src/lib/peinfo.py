@@ -15,7 +15,14 @@ ARQUITETURA=32|64|arm64|?
 DOTNET=0|1
 DLLS=<comma-separated list, lowercase>
 ATRASADAS=<same, for the delayed imports>
-ERRO=<message, if something failed>
+ERRO=<token>[|<data>]  when something failed; see t_erro_do_leitor
+   The field carries a TOKEN, never a sentence. It used to carry Portuguese
+   prose, and the handler printed it straight to the owner - so this file held
+   user-facing messages that no translation tool in the tree had ever opened,
+   and a raw Python exception reached a shop owner in English. The shell turns
+   a token into a sentence in the owner's language; an unknown token is logged
+   and answered with a generic one, because a reader that learns a new failure
+   must not be able to produce silence.
 """
 import os
 import struct
@@ -44,10 +51,10 @@ def _u32(b, o):
 def cabecalho(dados):
     """Returns (architecture, start_of_optional, size_of_optional, n_sections)."""
     if len(dados) < 0x40 or dados[:2] != b"MZ":
-        raise NaoEhPE("nao comeca com MZ")
+        raise NaoEhPE("nao_e_mz")
     pe = _u32(dados, 0x3C)
     if pe <= 0 or pe + 24 > len(dados) or dados[pe:pe + 4] != b"PE\0\0":
-        raise NaoEhPE("nao tem assinatura PE")
+        raise NaoEhPE("sem_assinatura_pe")
     maquina = _u16(dados, pe + 4)
     n_secoes = _u16(dados, pe + 6)
     tam_opcional = _u16(dados, pe + 20)
@@ -66,7 +73,7 @@ def diretorios(dados, opcional):
     elif magia == 0x20B:
         base = opcional + 112
     else:
-        raise NaoEhPE("cabecalho opcional desconhecido")
+        raise NaoEhPE("pe_cabecalho_desconhecido")
     n = _u32(dados, base - 4)
     n = min(n, 16)
     saida = []
@@ -173,11 +180,11 @@ def inspecionar(caminho):
 
 def main():
     if len(sys.argv) < 2:
-        print("ERRO=uso: peinfo.py <arquivo>")
+        print("ERRO=uso")
         return 2
     caminho = sys.argv[1]
     if not os.path.isfile(caminho):
-        print("ERRO=arquivo nao encontrado")
+        print("ERRO=sem_arquivo")
         return 2
     try:
         arq, dotnet, dlls, atrasadas = inspecionar(caminho)
@@ -185,7 +192,7 @@ def main():
         print("ERRO=%s" % e)
         return 1
     except Exception as e:                        # truncated, chopped file
-        print("ERRO=%s" % str(e).replace("\n", " ")[:200])
+        print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
     print("ARQUITETURA=%s" % arq)

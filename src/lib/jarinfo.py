@@ -32,7 +32,14 @@ JAVAFX=0|1
 AGENTE=0|1              1 = a Java agent, which is not run by double clicking
 MULTI=0|1               1 = multi-release jar
 DEPENDENCIAS=<Class-Path from the manifest, comma separated>
-ERRO=<message, if something failed>
+ERRO=<token>[|<data>]  when something failed; see t_erro_do_leitor
+   The field carries a TOKEN, never a sentence. It used to carry Portuguese
+   prose, and the handler printed it straight to the owner - so this file held
+   user-facing messages that no translation tool in the tree had ever opened,
+   and a raw Python exception reached a shop owner in English. The shell turns
+   a token into a sentence in the owner's language; an unknown token is logged
+   and answered with a generic one, because a reader that learns a new failure
+   must not be able to produce silence.
 """
 import os
 import struct
@@ -145,7 +152,7 @@ def inspecionar(caminho):
     except zipfile.BadZipFile:
         # A .jar is a zip whose index lives at the END of the file, so an
         # interrupted download breaks it in a way that is always detectable.
-        raise JarRuim("zip invalido ou incompleto")
+        raise JarRuim("zip_invalido")
     except OSError as e:
         raise JarRuim(str(e))
     with z:
@@ -163,11 +170,11 @@ def inspecionar(caminho):
 
 def main():
     if len(sys.argv) < 2:
-        print("ERRO=uso: jarinfo.py <arquivo>")
+        print("ERRO=uso")
         return 2
     caminho = sys.argv[1]
     if not os.path.isfile(caminho):
-        print("ERRO=arquivo nao encontrado")
+        print("ERRO=sem_arquivo")
         return 2
     try:
         principal, maior, fx, agente, multi, deps = inspecionar(caminho)
@@ -175,7 +182,7 @@ def main():
         print("ERRO=%s" % e)
         return 1
     except Exception as e:
-        print("ERRO=%s" % str(e).replace("\n", " ")[:200])
+        print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
     print("PRINCIPAL=%s" % principal)

@@ -263,6 +263,125 @@ Cancelar
 @botao_tentar_sem_instalar
 Probar sin instalar
 
+@leitor_desconhecido
+Algo en el archivo no está como el formato exige.
+
+@leitor_cru
+El lector se detuvo antes de terminar. El detalle técnico está en el
+registro - "tandem logs" lo muestra.
+
+@leitor_uso
+Tandem le pidió un archivo a un lector y no dijo cuál.
+
+@leitor_sem_arquivo
+El archivo ya no está donde estaba. Puede haber sido movido o borrado.
+
+@leitor_nao_e_elf
+Esto no es un programa de Linux: ni empieza como uno.
+
+@leitor_sem_marca_ai
+Es un programa de Linux, pero no un AppImage: falta la marca que lleva
+un AppImage.
+
+@leitor_geracao_desconhecida
+Dice ser un AppImage de un tipo que esta versión no conoce (tipo {1}).
+
+@leitor_apk_corrompido
+El archivo está dañado, o no es un paquete de Android. Una descarga que
+se cortó a medias queda exactamente así.
+
+@leitor_zip_invalido
+El archivo está dañado o la descarga se cortó a medias. Un .jar guarda su
+índice al FINAL, así que una transferencia interrumpida siempre rompe aquí.
+
+@leitor_nao_e_mz
+Esto no es un programa de Windows: no empieza como uno.
+
+@leitor_sem_assinatura_pe
+Parece un programa de Windows al principio y luego deja de parecerlo.
+Lo más probable es que esté dañado.
+
+@leitor_pe_cabecalho_desconhecido
+Este programa de Windows está armado de una forma que esta versión no
+conoce.
+
+@leitor_nao_e_deb
+Esto no es un paquete .deb, a pesar del nombre.
+
+@leitor_pacote_incompleto
+La descarga se cortó a medias: el paquete termina antes de lo que dice.
+Descargarlo otra vez lo resuelve por completo.
+
+@leitor_pacote_sem_dados
+El paquete no trae el programa en sí, solo su descripción. La descarga se
+cortó a medias.
+
+@leitor_deb_sem_control
+El paquete no dice qué es ni qué necesita.
+
+@leitor_deb_sem_control_tar
+Al paquete le falta la parte que lo describe.
+
+@leitor_deb_control_danificado
+La parte del paquete que lo describe está dañada.
+
+@leitor_deb_control_grande
+La parte del paquete que lo describe es mayor de lo que él mismo dice, así
+que no se puede confiar en ella.
+
+@leitor_deb_control_nao_abriu
+La parte comprimida del paquete no se abrió.
+
+@leitor_deb_tamanho_absurdo
+El paquete dice que una de sus partes tiene {1} bytes, que no es un tamaño
+real. Tandem no va a intentar abrirlo.
+
+@leitor_sem_libzstd
+Esta computadora no tiene cómo abrir la compresión que usa este paquete.
+Instalarlo por la tienda o con "sudo apt install" sigue funcionando.
+
+@leitor_nao_e_rpm
+Esto no es un paquete .rpm, a pesar del nombre.
+
+@leitor_rpm_cabecalho_curto
+La descarga se cortó a medias: la parte que describe el paquete no cabe
+dentro del archivo.
+
+@leitor_rpm_cabecalho_estranho
+La parte de este .rpm que lo describe no está en un formato que Tandem
+conozca.
+
+@leitor_rpm_entradas
+Este .rpm dice tener {1} entradas en su descripción, lo que no puede ser
+correcto. El archivo está dañado.
+
+@botao_sim_funcionou
+Sí, funcionó
+
+@botao_nao_deu_errado
+No, algo salió mal
+
+@botao_adicionar_loja
+Añadir la tienda
+
+@jar_pode_instalar_java
+¿Instalo Java {1} ahora?
+
+@rep_reaplicadas
+Asociaciones de archivos vueltas a aplicar.
+
+@rep_linha
+  {1}
+      antes:  {2}
+      ahora:  {3}
+
+@rep_nenhum
+nadie
+
+@rep_saia_e_entre
+Si el doble clic sigue sin funcionar, cierra la sesión y vuelve a
+entrar.
+
 @licao_origem_local
 La última vez, este programa necesitó
 
@@ -1634,6 +1753,13 @@ pierde, y nada se envía.
 
 @env_enviadas
 {1} línea(s) enviada(s). Quedan {2} en la cola.
+
+@env_servidor_recusou
+El servidor de la lista no aceptó las líneas. No se perdió nada: {1} línea(s)
+siguen en la cola y Tandem lo intentará de nuevo por su cuenta.
+
+Si esto sigue pasando, el problema está del otro lado - no hay nada que
+arreglar en esta computadora.
 
 @env_nao_conheco
 No conozco "tandem enviar {1}".
