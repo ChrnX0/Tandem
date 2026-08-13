@@ -61,26 +61,34 @@ const CAMPOS = [
 // who runs it, not the list.
 const VERBO_MAX = 40;
 
+// Vercel's Node runtime gives status/send/json/setHeader and NOT Express's
+// res.type(). Every response path in this file went through one call to it, so
+// the function answered 500 to everything - including the GET that is supposed
+// to refuse before touching anything. Confirmed from the runtime stack trace
+// rather than guessed, and it is the same shape as the defects this project
+// keeps finding: not a wrong rule, a rule that could never run.
+function texto(res, codigo) {
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  return res.status(codigo);
+}
+
 function recusa(res, motivo) {
   // The reason goes back in plain text because the caller is a shell script
   // reading an HTTP code, and because a refusal nobody can read is the silent
   // failure this project exists to kill. It names WHAT was wrong and never
   // echoes the body back - an error page that quotes its input is a way to make
   // somebody else's data appear in somebody else's log.
-  res.status(400).type("text/plain").send(motivo + "\n");
+  texto(res, 400).send(motivo + "\n");
 }
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     // A GET here is somebody looking, not somebody contributing. Answer with
     // what this is, so a person who finds the URL can go read the code.
-    return res
-      .status(405)
-      .type("text/plain")
-      .send(
-        "Tandem community list intake. POST one TAB-separated record.\n" +
-          "Format: https://github.com/ChrnX0/Tandem/blob/main/docs/LIST-FORMAT.md\n"
-      );
+    return texto(res, 405).send(
+      "Tandem community list intake. POST one TAB-separated record.\n" +
+        "Format: https://github.com/ChrnX0/Tandem/blob/main/docs/LIST-FORMAT.md\n"
+    );
   }
 
   let corpo = typeof req.body === "string" ? req.body : "";
@@ -157,7 +165,7 @@ export default async function handler(req, res) {
     // trusting curl's exit status, which used to count a redirect as an
     // arrival and then delete the only copy of the lesson.
     console.error("store refused:", e && e.message);
-    return res.status(503).type("text/plain").send("store unavailable\n");
+    return texto(res, 503).send("store unavailable\n");
   }
 
   return res.status(204).end();
