@@ -385,9 +385,16 @@ would be forging a Microsoft licence identifier.
 
 ## The queue
 
-1. **Fill the community list.** The mechanism exists and is empty, and inventing
-   a line would be exactly the mistake the `confidence` field exists to prevent.
-   It only fills with reports from people.
+1. **Fill the community list.** The mechanism exists, it now has both ends —
+   `api/lista.js` receives and `.github/workflows/lista.yml` rebuilds — and it is
+   still empty. Inventing a line would be exactly the mistake the `confidence`
+   field exists to prevent. It only fills with reports from people.
+   **And it will fill slowly for a structural reason, not a missing feature:**
+   eight of the nine formats install native software, where what Tandem learns
+   is derivable from the file itself. The knowledge that is genuinely not
+   derivable — which winetricks verbs make an unknown Windows program run — only
+   comes from the `.exe` path. The list is about that path, and treating the
+   other eight as a gap to close was a misreading.
 2. Field-test what has not yet run on a real owner's machine: `preparar`,
    `desinstalar`, `dados`, `socorro`, and a double-click on a real `.xapk`,
    `.AppImage` and `.jar`.
