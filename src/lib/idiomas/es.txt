@@ -263,6 +263,33 @@ Cancelar
 @botao_tentar_sem_instalar
 Probar sin instalar
 
+@botao_sim_funcionou
+Sí, funcionó
+
+@botao_nao_deu_errado
+No, algo salió mal
+
+@botao_adicionar_loja
+Añadir la tienda
+
+@jar_pode_instalar_java
+¿Instalo Java {1} ahora?
+
+@rep_reaplicadas
+Asociaciones de archivos vueltas a aplicar.
+
+@rep_linha
+  {1}
+      antes:  {2}
+      ahora:  {3}
+
+@rep_nenhum
+nadie
+
+@rep_saia_e_entre
+Si el doble clic sigue sin funcionar, cierra la sesión y vuelve a
+entrar.
+
 @licao_origem_local
 La última vez, este programa necesitó
 
@@ -1634,6 +1661,13 @@ pierde, y nada se envía.
 
 @env_enviadas
 {1} línea(s) enviada(s). Quedan {2} en la cola.
+
+@env_servidor_recusou
+El servidor de la lista no aceptó las líneas. No se perdió nada: {1} línea(s)
+siguen en la cola y Tandem lo intentará de nuevo por su cuenta.
+
+Si esto sigue pasando, el problema está del otro lado - no hay nada que
+arreglar en esta computadora.
 
 @env_nao_conheco
 No conozco "tandem enviar {1}".

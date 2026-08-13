@@ -262,6 +262,33 @@ Cancelar
 @botao_tentar_sem_instalar
 Tentar sem instalar
 
+@botao_sim_funcionou
+Sim, funcionou
+
+@botao_nao_deu_errado
+Não, algo saiu errado
+
+@botao_adicionar_loja
+Adicionar a loja
+
+@jar_pode_instalar_java
+Posso instalar o Java {1} agora?
+
+@rep_reaplicadas
+Associações de arquivo reaplicadas.
+
+@rep_linha
+  {1}
+      antes:  {2}
+      agora:  {3}
+
+@rep_nenhum
+ninguém
+
+@rep_saia_e_entre
+Se ainda não funcionar com dois cliques, saia da sua conta e entre
+de novo.
+
 @licao_origem_local
 Da última vez, este programa precisou
 
@@ -1626,6 +1653,13 @@ Nada é perdido, e nada é enviado.
 
 @env_enviadas
 {1} linha(s) enviada(s). Restam {2} na fila.
+
+@env_servidor_recusou
+O servidor da lista não aceitou as linhas. Nada foi perdido: {1} linha(s)
+continuam na fila e o Tandem vai tentar de novo sozinho.
+
+Se isso continuar acontecendo, o problema está do outro lado - não tem nada
+para consertar neste computador.
 
 @env_nao_conheco
 Não conheço "tandem enviar {1}".

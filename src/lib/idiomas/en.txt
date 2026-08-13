@@ -264,6 +264,33 @@ Cancel
 @botao_tentar_sem_instalar
 Try without installing
 
+@botao_sim_funcionou
+Yes, it worked
+
+@botao_nao_deu_errado
+No, something went wrong
+
+@botao_adicionar_loja
+Add the store
+
+@jar_pode_instalar_java
+Shall I install Java {1} now?
+
+@rep_reaplicadas
+File associations reapplied.
+
+@rep_linha
+  {1}
+      before:  {2}
+      now:     {3}
+
+@rep_nenhum
+nobody
+
+@rep_saia_e_entre
+If a double click still does not work, log out of your account and log back
+in.
+
 @licao_origem_local
 Last time, this program needed
 
@@ -1637,6 +1664,13 @@ lost, and nothing is sent.
 
 @env_enviadas
 {1} line(s) sent. {2} left in the queue.
+
+@env_servidor_recusou
+The list server did not accept the lines. Nothing was lost: {1} line(s) are
+still in the queue and Tandem will try again on its own.
+
+If this keeps happening, it is on the other end - there is nothing to fix on
+this computer.
 
 @env_nao_conheco
 I do not know "tandem enviar {1}".

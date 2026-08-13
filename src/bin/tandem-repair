@@ -161,23 +161,27 @@ DEPOIS_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/
 DEPOIS_APPIMAGE="$(xdg-mime query default application/vnd.appimage 2>/dev/null)"
 DEPOIS_JAR="$(xdg-mime query default application/java-archive 2>/dev/null)"
 DEPOIS_DEB="$(xdg-mime query default application/vnd.debian.binary-package 2>/dev/null)"
-RES="  .exe        antes: ${ANTES_EXE:-nenhum}
-              agora: ${DEPOIS_EXE:-nenhum}
+# One message per row, with the type and both handlers as data, so a translator
+# can put the labels where that language puts them instead of receiving
+# "before:" and "now:" as loose fragments to slot into an order somebody else
+# chose. NENHUM is a word the owner reads - "nobody owns this type" - so it is
+# a message too, not a placeholder.
+NENHUM="$(t_msg rep_nenhum)"
+linha_do_tipo() {
+    t_msg rep_linha "$1" "${2:-$NENHUM}" "${3:-$NENHUM}"
+}
+RES="$(linha_do_tipo ".exe" "$ANTES_EXE" "$DEPOIS_EXE")
 
-  .apk        antes: ${ANTES_APK:-nenhum}
-              agora: ${DEPOIS_APK:-nenhum}
+$(linha_do_tipo ".apk" "$ANTES_APK" "$DEPOIS_APK")
 
-  .AppImage   antes: ${ANTES_APPIMAGE:-nenhum}
-              agora: ${DEPOIS_APPIMAGE:-nenhum}
+$(linha_do_tipo ".AppImage" "$ANTES_APPIMAGE" "$DEPOIS_APPIMAGE")
 
-  .jar        antes: ${ANTES_JAR:-nenhum}
-              agora: ${DEPOIS_JAR:-nenhum}
+$(linha_do_tipo ".jar" "$ANTES_JAR" "$DEPOIS_JAR")
 
-  .deb        antes: ${ANTES_DEB:-nenhum}
-              agora: ${DEPOIS_DEB:-nenhum}"
+$(linha_do_tipo ".deb" "$ANTES_DEB" "$DEPOIS_DEB")"
 t_diz "$RES"
 
-RELATORIO="Associações reaplicadas.
+RELATORIO="$(t_msg rep_reaplicadas)
 
 $RES"
 
@@ -197,6 +201,6 @@ if [ -t 1 ]; then
 elif ! { t_tem_gui && command -v zenity >/dev/null 2>&1 &&
          zenity --info --no-wrap --title="Tandem" --text="$RELATORIO
 
-Se ainda não funcionar com dois cliques, saia e entre novamente na sua conta." 2>/dev/null; }; then
+$(t_msg rep_saia_e_entre)" 2>/dev/null; }; then
     printf '%s\n' "$RELATORIO"
 fi

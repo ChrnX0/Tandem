@@ -1143,7 +1143,15 @@ acao_enviar() {
                 t_erro "$(t_msg env_sem_endereco)"
                 return 1
             fi
-            local n; n="$(t_envio_envia)"
+            # "forcado": he asked, so the wait after a failed pass does not
+            # apply to him. And a pass where the server refused everything gets
+            # a sentence instead of a bare "0 sent", which reads like a defect
+            # on this machine when it is not one.
+            local n rc; n="$(t_envio_envia forcado)"; rc=$?
+            if [ "$rc" = 3 ]; then
+                t_erro "$(t_msg env_servidor_recusou "$(t_envio_pendentes)")"
+                return 1
+            fi
             t_ok "$(t_msg env_enviadas "${n:-0}" "$(t_envio_pendentes)")"
             return 0 ;;
         ''|status|ver) ;;

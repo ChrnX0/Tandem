@@ -54,8 +54,10 @@ was found by somebody writing down what they actually saw.
    becomes "this app is made for phones only and does not run here". Every such
    sentence belongs in `po/`, never in the code. `tools/conta-literais.py`
    measures how far that is from true and the suite holds the number as a
-   ratchet: it may fall, never rise. **It is 145, not 0** — read the section on
-   the counter before you trust any number it prints.
+   ratchet: it may fall, never rise. **It is 2, not 0, and the 0 it read before
+   was false twice** — read the section on the counter before you trust any
+   number it prints. The 2 is not debris: it is the Python readers' Portuguese,
+   which nothing has ever measured.
 3. **`set -e` only in the packager, never in the executables.** The wait loops
    depend on commands that fail on purpose (`grep -q ... && break`).
 4. **Never repeat an install already paid for.** `dotnet48` takes ~30 min; the
@@ -175,7 +177,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 925 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 947 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -539,9 +541,49 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   carries an IP at the receiving end whatever the payload says, and the
   fingerprint identifies WHICH software a shop runs. Neither is in the record;
   both are inherent to sending anything at all.
+- **The DOWN path had never been asked what it does with more than one row about
+  the same file**, and that is the normal shape of a merged list rather than a
+  corner. `t_lista_consulta` printed the first `confirmado` row and exited, so
+  the earliest report owned a program for ever — measured: 3 machines beat 400.
+  It also never added two rows with the same verbs up, which is the entire job
+  of the machine count; it never read the `reprovado` rows at all, so 2
+  confirmations beat 300 rejections; and `t_lista_maquinas` did not filter by
+  confidence, so a rejected row above a confirmed one supplied the number the
+  owner is shown to decide with — verbs from 40 machines, presented as 7. Since
+  4.4 one resolver (`t_lista_linha`) answers both questions, so the verbs and
+  the count cannot come from different rows, and `docs/LIST-FORMAT.md` states
+  the four rules. The whole class of bug is one thing: **a query written for a
+  file with one row per program, against a format whose point is merging.**
 - **`grep -c` on an EMPTY file prints 0 and then exits 1**, so `grep -c ... ||
   echo 0` prints "0" twice. It reached the owner as a queue length of "0\n0".
   Use `awk 'END { print NR + 0 }'`.
+- **`curl` WITHOUT `-L` RETURNS 0 ON A 301**, and that made a redirect count as
+  a delivery. `t_envio_envia` rewrites the queue from what did *not* go, so the
+  line was deleted from the only place it existed — and an endpoint that has
+  moved is exactly the shape of thing that answers 301. Read the code
+  (`-o /dev/null -w '%{http_code}'`) and require `2??`. `wget` loses the same
+  line by the opposite mechanism: it FOLLOWS redirects by default and turns the
+  POST into a GET on the way, exiting 0 having posted nothing — hence
+  `--max-redirect=0`. Neither one follows a redirect on purpose: the target is
+  chosen by whatever answered, not by anybody here, and a record exists
+  precisely because it carries nothing personal.
+- **A cap on successes is not a cap.** `TANDEM_ENVIO_POR_DIA` only ever counted
+  the lines that WENT, so a failure cost nothing: a machine with no route to
+  the address retried every queued line on every run, for ever, at 20 s of
+  timeout each. A hundred queued lessons is over half an hour of a background
+  process that was never going to succeed, restarted every time somebody opens
+  a program. Count the refusals too, and make the queue wait.
+- **Two sends could run over the same queue at once**, and this was the ordinary
+  case rather than a corner: one is spawned detached every time a program is
+  confirmed, and `tandem enviar agora` starts another. Both truncate the same
+  `.resto` file and both then move it over the queue, so the truncation lands in
+  the middle of the other pass's appends and the lines already written are gone.
+  The queue is the only copy of a lesson that has not left yet.
+- **A reason cannot travel in a variable out of `$( )`.** `t_envio_envia` is read
+  through a command substitution, which is a subshell, so the count goes on
+  stdout and *why* goes in the exit status (3 refused, 4 waiting, 5 already
+  running). Without that, the far end refusing everything reached the owner as
+  `0 line(s) sent` — which reads as a defect on his own computer.
 - **A `while read` loop drops the last line of `od` output**, which has no
   trailing newline - so the URL escaper cut the final character off everything.
   Loop with `for` over the unquoted substitution instead.
@@ -941,21 +983,73 @@ failed safe - every version reported zero for something that was there:
    unread.** What works is a walk that descends INTO a substitution while
    refusing to glue its text into the sentence around it.
 
+13. **The prose-body rule keys off function NAMES, and the eleven handler
+   executables define no functions at all.** They are straight-line scripts, so
+   in `tandem-repair`, `tandem-deb`, `tandem-jar` and eight others the
+   whole-body rule and the printf rule were **dead code** — the widest scoping
+   error this tool has had, and it was invisible because the number it produced
+   was zero. What it hid: the entire report of `tandem repair`, the command an
+   owner is told to run when a double click opens the wrong program. Fixed by a
+   rule about which FILES rather than which syntax — a handler *is* the body.
+14. **Only the FIRST argument of a message call was ever read.** `CHAMADA` is
+   `t_erro|t_pergunta|… "…"` and stops at that one string, so
+   `t_pergunta "$(t_msg funcionou_como_esperava)" "Sim, funcionou" "Não, algo
+   saiu errado"` read as finished: the text was a clean lookup and **the two
+   words the owner clicks were never looked at by anything**. Six call sites,
+   and three of the six buttons already had catalogue keys nobody had wired up.
+   Finding the rest of a call needs the same walk as everywhere else, because a
+   regex cannot find where a shell command ends when its arguments contain
+   quotes, `$( )` and escaped newlines.
+15. **`ALVOS` has never opened a `.py` file**, and the six readers raise
+   Portuguese: `nao comeca com ELF`, `zip invalido ou incompleto`,
+   `o pacote nao traz um arquivo control`, ~34 of them. Every one reaches the
+   owner through `t_erro "$(t_msg nao_consegui_ler "$ERRO")"`. **This is not
+   fixed** — the counter reads 2 because of it, those two being the shell
+   comparing `$ERRO` (a field it PRINTS verbatim) against one of those
+   sentences, and they are left in the count on purpose: the number is the
+   pointer to the work. `tandem-appimage` and `tandem-jar` came OFF the
+   `MIGRADOS` list for the same reason, and go back on the day the readers emit
+   a token. Two further hits WERE excepted rather than counted, and the
+   difference is the rule: they are values of the `FORMATO` field, which the
+   handler compares and never shows. The fix is for a reader to
+   emit a token and the shell to translate it, which also removes the worst part
+   of that path — `print("ERRO=%s" % e)` hands the owner a raw Python exception
+   in English, which is the jargon rule 2 forbids.
+
 **The rule stops chasing syntax, because syntax is what failed twelve times.**
 Inside a body that exists to produce prose (`t_texto_*`, `t_causa_*`, `acao_*`,
-`uso`), **every** double-quoted string is examined, whatever surrounds it. What
-keeps that usable is `EXCECOES`, an auditable list of exact strings somebody had
-to add on purpose - and it is 22 entries of the 167 raw hits, which is why the
-number reads 145 rather than 167.
+`uso`) — and inside the **whole** of a handler executable, which has no such
+body to scope to — **every** double-quoted string is examined, whatever
+surrounds it. What keeps that usable is two things, neither of them a guess
+about shape: `EXCECOES`, an auditable list of exact strings somebody had to add
+on purpose, and a rule about where an argument **goes** — a value handed to
+`t_memoria_grava` lands in a state file, an argument to `t_como_root` is
+executed, a `grep`/`sed` argument is a program for another tool. Same footing as
+the `t_diz` exemption: not "this looks like code" but "nothing human is at the
+other end of this argument".
+
+**And the guard on the suite's own comparisons had the same hole.** The checksum
+that exists so a bulk rename cannot quietly rewrite an expected value is
+line-based, and **206 of 415 `equal` calls are written across two lines** —
+which is what you do as soon as an expected value is long, so precisely the
+values most at risk were the ones nothing watched. It reads the file with
+continuations joined now (419 call sites, 93 of 97 case patterns). Joining then
+made the guard checksum **its own value**, because `grep -oE` cuts each match
+off after the second argument so the filter that drops the guard's own two lines
+never saw what identified them; the filter has to run **before** the extraction.
+Two numbers chasing each other on every edit is a guard that can never be green.
 
 **The lesson, which is the reason this is written down:** a completeness check
 built from what happened to be in front of me will always pass. The measure only
 became trustworthy at the moment it caught something - so there is now a test
 that feeds it the panel's exact shape and fails if it goes blind again. The
-number has gone `0 → 75 → 107 → 167 → 145`, and only that last step is a
-reduction rather than a discovery. **Treat 145 as a floor, not a total** - twelve
-versions of this thing have under-reported, and the only method that has ever
-caught it is installing the package and reading what comes out.
+number has gone `0 → 75 → 107 → 167 → 145 → 0 → 44 → 2`, and the two zeros in
+that sequence were both **false** - the second one was published. **Treat any
+number this prints as a floor** - fifteen versions of it have under-reported, and
+the only method that has ever caught it is installing the package and reading
+what comes out. The 2 it reads today is a floor with a name on it: the six Python
+readers raise ~34 Portuguese sentences that reach the owner through
+`nao_consegui_ler`, and no version of this tool has ever opened a `.py` file.
 
 There is now a small list of exact strings the counter is told to ignore
 (`EXCECOES`), each with its reason: vendor product names the owner must search
@@ -1011,21 +1105,19 @@ for a reason.
 
 The queue, in order:
 
-0. **Migrate the 145 literals `tandem doctor` and the panel still hold.** This is
-   4.3's job and it is the largest honest gap in the product: an
-   English-speaking user runs the flagship diagnostic and gets Portuguese, and
-   the zenity panel asks `O que você quer fazer?` in Portuguese before anything
-   else appears. `tools/conta-literais.py --migrados` prints the list. Open a
-   `tandem (4.3)` changelog entry first; 4.2 is published and its entry is
-   history. Roughly 55 keys after dedup, seven languages each, and the shape to
-   follow is one key per line with `{1}` for the data — not fragments glued
-   together, which breaks word order in the other six.
+0. ~~Migrate the 145 literals `tandem doctor` and the panel still hold.~~
+   **Done in 4.3**, and `tools/conta-literais.py` reports TOTAL 0 — but read the
+   section on the counter before trusting that zero: twelve versions of it
+   reported zero for something that was there, and the only method that has ever
+   caught one is installing the package and reading what comes out. Treat a new
+   screen as unmeasured until somebody has run it.
 
-0a. **Field-test 4.2 on the counter**, now that it can be installed from the
-   release page. Needs the owner's machine and nothing else: `tandem portas`
-   (32 phantom sockets collapsed into one line), `tandem intalar` (must say "I
-   do not know that command", not "unrecognised file type"), `tandem idioma`,
-   and a double click on a real `.xapk`, `.AppImage` and `.jar`.
+0a. **Field-test the current release on the counter**, now that it can be
+   installed from the release page. Needs the owner's machine and nothing else:
+   `tandem portas` (32 phantom sockets collapsed into one line), `tandem
+   intalar` (must say "I do not know that command", not "unrecognised file
+   type"), `tandem idioma`, and a double click on a real `.xapk`, `.AppImage`
+   and `.jar`.
 
 0b. **Five catalogues carry `X-Reviewed-By-Speaker: no`.** That is the whole of what is left
    of the translation, and it is not engineering: it needs somebody who speaks
@@ -1040,6 +1132,16 @@ The queue, in order:
    an endpoint means somebody hosts it, moderates it and answers for the data.
    That is the architect's call. Until then the queue keeps what it learns, and
    `tandem enviar` says so out loud rather than pretending.
+   **Three mechanical reasons an address alone would not fill it**, established
+   by reading the tree rather than guessed, and each one is agent-only work that
+   can be done before any address exists: only `tandem-exe` writes the
+   `RESOLVERAM`/`CONFIRMADO` keys a record is built from, so **eight of the nine
+   formats can never produce one**; the down path has a single caller
+   (`tandem-exe`, and only when the local memory is empty); and no verb is needed
+   by any program in the reference set, so the first honest record will come from
+   commercial software nobody here has. The record format itself only describes
+   Wine dependencies — what an `.AppImage`, a `.deb` or a `.jar` learns has
+   nowhere to go in it.
 2. **A real shop program.** `tests/real-programs.sh` now runs real Windows
    software weekly and checks the window on screen, which closes the "no real
    binary has ever run on it" gap. What it does NOT close is commercial software
@@ -1079,22 +1181,28 @@ The queue, in order:
 to end on real files. `.AppImage` and `.jar` came in 3.7; `.deb`, `.rpm`,
 `.flatpakref`, `.snap` and shell installers in 3.8 — see the State section for exactly what was
 measured. The orphan-shortcut question is settled: it was never a defect. The
-real-program harness exists and is green. **v4.0, v4.1 and v4.2 are published** —
-tag, `.deb` and `.sha256` attached, and 4.0's and 4.2's published artifacts each
-verified byte-for-byte identical to a local build (sha256 `82544a90…` and
-`3d5ed79a…`). 3.7 through 3.9 were never released, so 4.0 is the first package
-the public gets with all nine formats in it. The next release goes out the same
-way; see the section below for why the browser path exists.
+real-program harness exists and is green. **v4.0, v4.1, v4.2 and v4.3 are
+published** — tag, `.deb` and `.sha256` attached, and 4.0's, 4.2's and 4.3's
+published artifacts each verified byte-for-byte identical to a local build
+(sha256 `82544a90…`, `3d5ed79a…` and `d6f2d792…`). 3.7 through 3.9 were never
+released, so 4.0 is the first package the public gets with all nine formats in
+it. The next release goes out the same way; see the section below for why the
+browser path exists.
 
-**v4.2 IS PUBLISHED** — 2026-08-12, tag `v4.2` at `4c1fb11`, `.deb` and
-`.sha256` attached, and the published artifact verified byte-for-byte against a
-local build: sha256 `3d5ed79a…` from all three of the release's own checksum
-file, the downloaded bytes, and a build made here. It carries the gettext
-migration, English as the default, the six data tables, sending on by default,
-the security fix on verb names, and the three Wine defects above. **The next
-version is 4.3 and its changelog entry has to be opened before anything is
-added** — `debian/control` still says 4.2 and the top changelog entry is now
-history.
+**v4.3 IS PUBLISHED** — 2026-08-12, tag `v4.3` at `d61461d`, `.deb`
+(335766 bytes) and `.sha256` attached, and the published artifact verified
+byte-for-byte against a local build: sha256 `d6f2d792…` from all three of the
+release's own checksum file, the downloaded bytes, and a build made here. The
+installed package answers `Tandem 4.3` and `tandem doctor` line 3 reads `SYSTEM`
+/ `SISTEMA` / `系统` / `النظام` — which is the point of the release: it carries
+the last 145 literals into the catalogues, so the flagship diagnostic and the
+zenity panel finally speak the machine's language. v4.2 before it carried the
+gettext migration, English as the default, the six data tables, sending on by
+default, the security fix on verb names and three Wine defects.
+
+**The version in the tree is now 4.4 and its changelog entry is open** —
+`debian/control`, `debian/changelog` and `TANDEM_VERSAO` all say 4.4. Add to
+that entry; do not touch 4.3's, which is history the public already has.
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

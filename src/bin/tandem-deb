@@ -177,7 +177,7 @@ PERGUNTA="$PERGUNTA
 
 $(t_msg precisa_da_senha)"
 
-if ! t_pergunta "$PERGUNTA" "Instalar" "Cancelar"; then
+if ! t_pergunta "$PERGUNTA" "$(t_msg botao_instalar)" "$(t_msg botao_cancelar)"; then
     if [ -t 0 ]; then
         printf '%s\n\nInstalar? [s/N] ' "$PERGUNTA"
         read -r r

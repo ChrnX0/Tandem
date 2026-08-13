@@ -37,10 +37,18 @@ ALVOS = sorted(RAIZ.glob("src/bin/tandem*")) + sorted(RAIZ.glob("src/lib/*.sh"))
 # an "out+=" append or a printf whose prose is in the argument rather than the
 # format. Declaring a file finished is a claim about the file, not about the
 # tool, and the two got confused for two versions.
+# tandem-appimage and tandem-jar came OFF this list, and taking them off is the
+# honest state rather than a dodge. Each compares $ERRO against a Portuguese
+# sentence, and $ERRO is a field the six Python readers produce and the handler
+# prints verbatim through `t_msg nao_consegui_ler`. So the sentence is real prose
+# reaching a real owner - it just does not live in a file this tool has ever
+# opened. They go back on when the readers emit a token and the shell translates
+# it. Declaring them done today would be the same mistake as the two false
+# zeros: a claim about the file resting on what the instrument can see.
 MIGRADOS = {
     "tandem-exe", "tandem-script", "tandem-snap", "tandem-rpm",
     "tandem-android", "tandem-deb", "tandem-apk", "tandem-flatpak",
-    "tandem-jar", "tandem-appimage", "winedeps.sh",
+    "winedeps.sh",
 }
 
 # Exact strings this counter is told to ignore, each with the reason. A LIST OF
@@ -83,6 +91,15 @@ EXCECOES = {
     "CodeMeter CodeMeterLin",
     # The port label with its device path, one field of a report line.
     "COM$n|$p",
+    # Two values of the FORMATO field the Android reader produces, compared
+    # against and never shown - the handler answers each with a message of its
+    # own. They read like Portuguese because the reader's output protocol was
+    # written in Portuguese, and it is an on-disk-format decision of the same
+    # kind as the memory files: changing one here changes it in apkinfo.py too,
+    # or nothing matches. The ERRO field is a DIFFERENT case and deliberately
+    # not excepted - that one is printed verbatim to the owner, which is why
+    # the count still reads 4.
+    "desconhecido", "apk",
 }
 
 CHAMADA = re.compile(
@@ -454,11 +471,128 @@ def sem_linhas_de_log(corpo):
     return T_DIZ.sub("", corpo)
 
 
-def citadas_com_prosa(texto):
+# Widening the scope to whole handler files brought in three kinds of string
+# that no person ever reads, and they have to be excluded by DESTINATION rather
+# than by looking like code - "it looks like code" is the guess that failed
+# thirteen times, while "nothing human is at the other end of this argument" is
+# checkable. Same footing as the t_diz exemption above.
+#
+#   t_memoria_grava / t_config_grava  the value goes into a state file, and
+#       those values stay Portuguese by a standing decision - translating one
+#       silently breaks memory files and recipes already on somebody's machine.
+#   t_como_root / t_script_instalacao  the argument is a shell script that gets
+#       EXECUTED. "apt-get install -y" is not a sentence.
+#   grep / sed / awk  the argument is a program for another tool.
+#
+# The commands are blanked with spaces rather than deleted, so every offset in
+# the file stays where it was and the comment and log rules keep working.
+DESTINO_NAO_HUMANO = re.compile(
+    r"(?:^|[\s;(){}&|])(t_memoria_grava|t_config_grava|t_como_root"
+    r"|t_script_instalacao|grep|sed|awk)\s")
+
+
+def sem_destinos_nao_humanos(corpo):
+    pedacos = list(corpo)
+    for m in DESTINO_NAO_HUMANO.finditer(corpo):
+        for j in range(m.end(), _fim_do_comando(corpo, m.end())):
+            if pedacos[j] != "\n":
+                pedacos[j] = " "
+    return "".join(pedacos)
+
+
+def citadas_com_prosa(texto, tudo=False):
+    """Every readable string in the prose-producing bodies - or in the whole
+    file when `tudo`, which is what a handler executable needs.
+
+    THIRTEENTH miss, and it is the largest scoping error this tool has had: the
+    prose-body rule keys off function names (t_texto_*, t_causa_*, acao_*,
+    uso), and **the eleven handler executables define no functions at all**.
+    They are straight-line scripts. So in tandem-repair, tandem-deb,
+    tandem-jar and the eight others, this rule and printfs_com_prosa were
+    dead code - and what they missed was not a corner: the whole report of
+    `tandem repair`, the command the README tells an owner to run when a
+    double click opens the wrong program, printed "Associações reaplicadas",
+    "antes:", "agora:", "nenhum" and a sentence telling them to log out and
+    back in, in Portuguese, while this tool printed TOTAL 0.
+    """
     achados = []
-    for _nome, corpo in corpos_de_mensagem(texto):
-        for bruto in citadas_do_topo(sem_linhas_de_log(corpo)):
-            if bruto in EXCECOES:
+    corpos = ([("(arquivo)", texto)] if tudo
+              else list(corpos_de_mensagem(texto)))
+    for _nome, corpo in corpos:
+        limpo = sem_destinos_nao_humanos(sem_linhas_de_log(corpo))
+        for bruto in citadas_do_topo(limpo):
+            if bruto in EXCECOES or bruto.strip() in EXCECOES:
+                continue
+            if _e_prosa(bruto):
+                achados.append(bruto)
+    return achados
+
+
+# FOURTEENTH, found in the same reading and worth its own rule because it is a
+# different shape: CHAMADA above captures the FIRST quoted argument of a
+# message call and stops there. So
+#
+#     t_pergunta "$(t_msg funcionou_como_esperava)" "Sim, funcionou" "Não, algo saiu errado"
+#
+# read as clean - the first argument is a t_msg lookup with no prose of its own,
+# and the two BUTTON LABELS were never looked at by anything. Those buttons are
+# how the owner answers "did this program actually work?", the question the whole
+# silent-success mechanism exists to ask, and they were Portuguese in a shipped
+# release. Five more call sites had the same two words.
+#
+# The fix is to read the WHOLE command rather than one argument of it, which
+# needs the same walk as everywhere else: a regex cannot find where a shell
+# command ends when its arguments contain quotes, $( ) and escaped newlines.
+MENSAGEIRO = re.compile(
+    r"(?:^|[\s;(){}&|])(t_(?:erro|aviso|ok|pergunta|texto"
+    r"|progresso_abre|progresso_texto))\s")
+
+
+def _fim_do_comando(corpo, i):
+    """Index just past the simple command whose arguments start at i.
+
+    A backslash-newline continues the command, which is why the escape branch
+    comes first: three of the calls this had to find are written across two
+    lines.
+    """
+    n = len(corpo)
+    while i < n:
+        c = corpo[i]
+        if c == "\\":
+            i += 2
+            continue
+        if c == "'":
+            j = corpo.find("'", i + 1)
+            i = n if j < 0 else j + 1
+            continue
+        if c == '"':
+            _texto, i, _aninhadas = _le_string(corpo, i)
+            continue
+        if corpo.startswith("$(", i) or corpo.startswith("${", i):
+            i = _fim_da_expansao(corpo, i)
+            continue
+        if c in ";|&\n)}":
+            return i
+        i += 1
+    return n
+
+
+def _em_comentario(texto, pos):
+    inicio = texto.rfind("\n", 0, pos) + 1
+    return "#" in texto[inicio:pos]
+
+
+def chamadas_com_prosa(texto):
+    achados = []
+    limpo = sem_destinos_nao_humanos(sem_linhas_de_log(texto))
+    for m in MENSAGEIRO.finditer(limpo):
+        # These same call shapes are quoted in the comments that explain them,
+        # and a comment is not a message.
+        if _em_comentario(limpo, m.start(1)):
+            continue
+        i = m.end()
+        for bruto in citadas_do_topo(limpo[i:_fim_do_comando(limpo, i)]):
+            if bruto in EXCECOES or bruto.strip() in EXCECOES:
                 continue
             if _e_prosa(bruto):
                 achados.append(bruto)
@@ -474,8 +608,13 @@ def literais(caminho):
     # but not the single-quoted one - which is exactly how the t_texto_*
     # builders write their formats - so both still run. The dedup keeps a
     # string found by two routes from being counted twice.
+    # A handler executable has no prose-named function to scope to, because it
+    # has no functions: the file IS the body. That is a rule about which files,
+    # not about which syntax - and syntax is what failed twelve times.
+    tudo = caminho.name.startswith("tandem-")
     todos = (achados + printfs_com_prosa(texto) + heredocs_com_prosa(texto)
-             + citadas_com_prosa(texto))
+             + citadas_com_prosa(texto, tudo=tudo)
+             + chamadas_com_prosa(texto))
     vistos = set()
     unicos = []
     for a in todos:

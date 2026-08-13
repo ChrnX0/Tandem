@@ -257,6 +257,32 @@ sudo apt install winetricks
 @botao_tentar_sem_instalar
 جرّب دون تثبيت
 
+@botao_sim_funcionou
+نعم، عمل
+
+@botao_nao_deu_errado
+لا، حدث خطأ ما
+
+@botao_adicionar_loja
+إضافة المتجر
+
+@jar_pode_instalar_java
+هل أُثبّت Java {1} الآن؟
+
+@rep_reaplicadas
+أُعيد تعيين ارتباطات الملفات.
+
+@rep_linha
+  {1}
+      قبل:  {2}
+      الآن: {3}
+
+@rep_nenhum
+لا أحد
+
+@rep_saia_e_entre
+إذا لم تعمل النقرة المزدوجة بعد، فاخرج من حسابك ثم عد إليه.
+
 @licao_origem_local
 في المرّة الماضية احتاج هذا البرنامج إلى
 
@@ -1595,6 +1621,12 @@ rm "{1}"
 
 @env_enviadas
 أُرسل {1} من السطور. تبقّى {2} في الطابور.
+
+@env_servidor_recusou
+لم يقبل خادم القائمة هذه السطور. لم يُفقد شيء: ما زال هناك {1} سطر في قائمة
+الانتظار وسيحاول Tandem من جديد وحده.
+
+إذا استمر هذا، فالمشكلة في الطرف الآخر - لا يوجد شيء لإصلاحه على هذا الحاسوب.
 
 @env_nao_conheco
 لا أعرف "tandem enviar {1}".

@@ -69,7 +69,8 @@ t_diz "classe principal: $PRINCIPAL, pede java ${PEDE:-?}"
 
 # --------------------------------------------------------------- 3. The Java
 if ! command -v java >/dev/null 2>&1; then
-    if t_pergunta "$(t_msg jar_falta_java_pergunta)" "Instalar" "Agora não"; then
+    if t_pergunta "$(t_msg jar_falta_java_pergunta)" \
+       "$(t_msg botao_instalar)" "$(t_msg botao_agora_nao)"; then
         t_progresso_abre "$(t_msg jar_instalando_java)"
         t_como_root "$(t_script_instalacao java)" >>"$LOG" 2>&1
         t_progresso_fecha
@@ -88,7 +89,8 @@ if [ -n "$PEDE" ] && [ -n "$TEM" ] && [ "$PEDE" -gt "$TEM" ] 2>/dev/null; then
     t_memoria_grava "$PROG" JAVA "$PEDE" 2>/dev/null
     if t_pergunta "$(t_texto_java_antigo "$PEDE" "$TEM")
 
-Posso instalar o Java $PEDE agora?" "Instalar" "Agora não"; then
+$(t_msg jar_pode_instalar_java "$PEDE")" \
+       "$(t_msg botao_instalar)" "$(t_msg botao_agora_nao)"; then
         t_progresso_abre "$(t_msg jar_instalando_java_versao "$PEDE")"
         t_como_root "$(t_script_instalacao "java$PEDE")" >>"$LOG" 2>&1
         t_progresso_fecha

@@ -254,6 +254,32 @@ sudo apt install winetricks
 @botao_tentar_sem_instalar
 不装也试试
 
+@botao_sim_funcionou
+是的,可以用
+
+@botao_nao_deu_errado
+不,出了问题
+
+@botao_adicionar_loja
+添加这个商店
+
+@jar_pode_instalar_java
+现在安装 Java {1} 吗?
+
+@rep_reaplicadas
+文件关联已重新设置。
+
+@rep_linha
+  {1}
+      原来:  {2}
+      现在:  {3}
+
+@rep_nenhum
+没有程序
+
+@rep_saia_e_entre
+如果双击还是没反应,请退出账户再重新登录。
+
 @licao_origem_local
 上次这个程序需要
 
@@ -1571,6 +1597,12 @@ rm "{1}"
 
 @env_enviadas
 已发送 {1} 行。队列里还剩 {2} 行。
+
+@env_servidor_recusou
+列表服务器没有接受这些记录。什么都没有丢失：还有 {1} 条记录留在队列里,
+Tandem 会自己再试一次。
+
+如果一直这样,问题在对方那边——这台电脑上没有需要修的地方。
 
 @env_nao_conheco
 我不认识 "tandem enviar {1}"。

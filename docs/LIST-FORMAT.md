@@ -88,6 +88,41 @@ weight. Since Wine's characteristic failure with commercial software is
 lessons as efficiently as right ones — and faster, because errors take no effort
 to produce.
 
+## Several rows about the same file
+
+This is the normal shape of a merged list, not a corner case: two shops report
+different verb sets for the same installer, or one reports it working and
+another reports it broken. So the file format has to say how those resolve, and
+until 4.4 it did not — the reader took the first confirmed row it happened to
+read and stopped, which meant **whoever got into the file earliest owned that
+program for ever**. A later row from four hundred machines was dead text.
+
+The rules, in order:
+
+1. **Rows carrying the same verbs are added up.** Merging reports is the whole
+   job of the `machines` field, so two rows saying `vcrun2022` with 200 each are
+   400, not 200. A row whose `machines` is `-` has not been merged and counts as
+   the one machine it is.
+2. **A verb set at least as many machines `reprovado` as `confirmado` is
+   dropped.** Rejections used to be read by nobody at all, so two confirmations
+   could beat three hundred rejections. Spreading an error takes no more effort
+   than spreading a fix.
+3. **Of what survives, the most-confirmed verb set wins.** Ties break on the
+   most recent `seen`, then on the fewest verbs — less to install for the same
+   claimed result — then alphabetically, so the answer never depends on the
+   order of the rows in the file.
+4. **The machine count shown to the owner is the count of the row that won.**
+   It used to be read from the first row matching the identity, ignoring
+   confidence entirely, so a rejected row sitting above a confirmed one supplied
+   the number: verbs from a 40-machine confirmation, presented as "7 machines".
+   The number exists so the owner can decide, and a number describing a
+   different lesson is worse than no number.
+
+Whoever builds the merge job on the publishing side does not have to follow
+this — the reader is defensive on purpose, because the file arrives from
+somewhere else. But a merge that does follow it produces a smaller file that
+answers identically.
+
 ## What the list does NOT do
 
 - **It installs nothing on its own.** It becomes a suggestion; Tandem still
