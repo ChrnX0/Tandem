@@ -53,6 +53,26 @@ const CAMPOS = [
   // field a sieve has to guess about. Widen it the day there is a reason, with
   // the rules from LIST-FORMAT.md applied here first.
   { nome: "note",       ok: (v) => v === "-" },
+  // --- appended in 4.9. The header still says TANDEM-LISTA 1 because every
+  // reader of this format indexes by column, so adding columns at the end is
+  // compatible by construction: a 4.6 client reads fields 1-8 and ignores the
+  // rest. Bumping the version would make those clients reject the whole file
+  // and lose the list, to gain nothing. Append only, never reorder.
+  //
+  // The two versions are the STACK. WineHQ's AppDB has the rule this project
+  // had not adopted: a test report is worthless unless you know what produced
+  // it. Two shops can need different verbs for the same program and both be
+  // right, because one is on Wine 8 and the other on Wine 10.
+  { nome: "wine",       ok: (v) => /^[A-Za-z0-9._-]{1,24}$/.test(v) },
+  { nome: "winetricks", ok: (v) => /^[A-Za-z0-9._-]{1,24}$/.test(v) },
+  // The deduplication token, and the shape of it is the whole privacy
+  // argument: HMAC(secret that never leaves the sender, file identity). It
+  // tells us two records about THE SAME PROGRAM came from one machine, which
+  // is all deduplication needs, and it cannot tell us two records about
+  // DIFFERENT programs did - without the secret those tokens are unrelated
+  // values. So it is not a machine identifier and cannot become one by
+  // accumulation. Sixteen hex characters, or "-" from a client that has none.
+  { nome: "dedup",      ok: (v) => v === "-" || /^[0-9a-f]{16}$/.test(v) },
 ];
 
 // A verb name arriving from outside is a name, never a command line. This is

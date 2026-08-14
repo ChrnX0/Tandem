@@ -1,3 +1,45 @@
+tandem (4.9) unstable; urgency=medium
+
+  * The community list learns what produced a report. WineHQ's AppDB has had
+    the rule for twenty years and this project had not adopted it: a test
+    report is worthless unless you know exactly what produced it. Two shops can
+    run the same program, need different verbs, and BOTH be right - one is on
+    Wine 8 and the other on Wine 10 - and merging those two reports produces an
+    answer that was never true anywhere. Each record now carries the Wine and
+    winetricks versions, and the resolver weighs a report from a different
+    major version at half.
+  * A report also decays with age, and the decay is deliberately MILD - it has
+    a floor of a quarter. That floor is the whole design: no amount of age lets
+    ONE fresh report overturn a verb set four hundred machines confirmed. The
+    "downgrade, do not overwrite" rule falls out of the arithmetic instead of
+    being a rule of its own, so a sudden verb-set flip on an established
+    fingerprint loses on weight until enough machines actually report it.
+  * The three new fields are APPENDED and the header still says TANDEM-LISTA 1.
+    Every reader of this format indexes by column, so appending is compatible
+    by construction: a 4.6 client in the field reads fields 1-8 and ignores the
+    rest, which is exactly its old behaviour. Bumping the version would make
+    those clients reject the whole file and lose the list, to gain nothing. The
+    rule to keep is append only - never reorder, never repurpose a column.
+  * Each machine is counted once per lesson, without the list keeping anything
+    that identifies a machine. The token is an HMAC of the file's identity
+    under a secret that never leaves the sender, so the intake can tell that
+    two records about THE SAME PROGRAM came from one machine - which is all
+    deduplication needs - and cannot tell that two records about DIFFERENT
+    programs did, because without the secret those tokens are unrelated values.
+    It is not a machine identifier and cannot become one by accumulation. The
+    rebuild does not republish it: it did its job at the intake, and putting it
+    in a file the whole world downloads would turn a per-program token into
+    something anybody can correlate against.
+  * The leak sieve skips the three new fields, for a measured reason rather
+    than for convenience: a Wine version with four numeric components
+    ("9.0.0.1") is indistinguishable from an IPv4 address to its regex, so
+    leaving them in its scope would park every honest record from such a
+    machine for ever - and a parked record is a lesson that never leaves. The
+    sieve guards FREE TEXT; a machine-generated field with a fixed shape gets a
+    shape check instead, at the point it is built and again at the intake.
+
+ -- Tandem <rockx0@gmail.com>  Fri, 14 Aug 2026 04:03:22 +0000
+
 tandem (4.8) unstable; urgency=medium
 
   * Column 4 of limites.tsv is translated. It is the WAY OUT - what a

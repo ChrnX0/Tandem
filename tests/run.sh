@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2880994793 3449" "$soma_esperados"
+      "1851707672 3513" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -3805,8 +3805,13 @@ t_memoria_grava "$PROG_L" ARQUITETURA 64
 t_memoria_junta "$PROG_L" RESOLVERAM vcrun2022
 t_memoria_grava "$PROG_L" CONFIRMADO sim
 REG_L="$(t_lista_registro "$PROG_L")"
-equal "the record has the format's eight fields" \
-      "8" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
+# Eight until 4.9, eleven since: the stack (Wine and winetricks versions) and
+# the dedup token were APPENDED. Appending is the only change this format
+# allows - every reader indexes by column, so an old client reads 1-8 and
+# ignores the rest, while reordering or repurposing a column would silently
+# change what every published row means.
+equal "the record has the format's eleven fields" \
+      "11" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
 case "$REG_L" in
     "$ID_L"*) pass "the record starts with the file identity" ;;
     *) fail "the record starts with the file identity" "$ID_L..." "$REG_L" ;;
@@ -5111,6 +5116,101 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "the list weighs the stack, the age, and counts each machine once"
+
+# WineHQ AppDB's hard rule, which this project had not adopted: a test report
+# is worthless unless you know exactly what produced it. Two shops can run the
+# same program, need different verbs, and BOTH be right - one is on Wine 8 and
+# the other on Wine 10. Merging those two produces an answer that was never
+# true anywhere.
+LST="$TMPROOT/lista-v2.tsv"
+cat > "$LST" <<'FIMLST'
+# TANDEM-LISTA 1
+aaaa1111aaaa1111aaaa1111aaaa1111	64	vcrun2022	-	confirmado	400	2024-01	-	9.0	20240105	-
+aaaa1111aaaa1111aaaa1111aaaa1111	64	verbofalso	-	confirmado	1	2026-08	-	9.0	20240105	-
+bbbb2222bbbb2222bbbb2222bbbb2222	64	vcrun2010	-	confirmado	50	2026-08	-	8.0	20240105	-
+bbbb2222bbbb2222bbbb2222bbbb2222	64	vcrun2022	-	confirmado	40	2026-08	-	9.0	20240105	-
+cccc3333cccc3333cccc3333cccc3333	64	mfc42	-	confirmado	10	2026-08	-
+FIMLST
+resolve() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_LISTA="$LST" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_stack_wine() { printf "9.0"; }
+        t_lista_linha "$1"' _ "$1" 2>/dev/null
+}
+# THE LOAD-BEARING ONE. The decay has a floor of a quarter precisely so that no
+# amount of age lets ONE fresh report overturn a set four hundred machines
+# confirmed. That is "downgrade, do not overwrite" falling out of the
+# arithmetic instead of being a rule of its own - a sudden verb-set flip on an
+# established fingerprint loses on weight until enough machines report it.
+equal "one fresh report does not overturn four hundred older ones" \
+      "vcrun2022	400" "$(resolve aaaa1111aaaa1111aaaa1111aaaa1111)"
+# Same recency on both sides, so only the stack separates them: 40 reports on
+# THIS Wine beat 50 on a different major version.
+equal "forty reports on our own Wine beat fifty on a different one" \
+      "vcrun2022	40" "$(resolve bbbb2222bbbb2222bbbb2222bbbb2222)"
+# Every row written before 4.9 has eight fields. The format is append-only, so
+# an old row is short, not malformed, and must still answer.
+equal "a row written before the stack existed still answers" \
+      "mfc42	10" "$(resolve cccc3333cccc3333cccc3333cccc3333)"
+# The number shown is the honest count of reports. "3.7 reports" would be a
+# number nobody can check against the file he can download and read.
+naocontem "and the number shown is reports, not the internal weight" \
+          "." "$(resolve cccc3333cccc3333cccc3333cccc3333 | cut -f2)"
+
+# ---- the record carries the stack, and the sieve does not eat it
+REGV2="$TMPROOT/regv2"; mkdir -p "$REGV2"
+CAMPOS="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_ESTADO="$REGV2" TANDEM_MEMORIA="$REGV2/mem" \
+    bash -c '. "'"$ROOT"'/src/lib/common.sh"
+             export TANDEM_ESTADO="'"$REGV2"'" TANDEM_MEMORIA="'"$REGV2"'/mem"
+             F=$(mktemp); printf x > "$F"
+             t_memoria_grava "$F" RESOLVERAM vcrun2022
+             t_memoria_grava "$F" RESULTADO abriu
+             t_lista_registro "$F" | awk -F"\t" "{print NF}"; rm -f "$F"' 2>/dev/null)"
+equal "a record carries eleven fields now" "11" "$CAMPOS"
+
+# A Wine version with four numeric components is indistinguishable from an
+# IPv4 address to the leak sieve's regex. Leaving the stack fields in its scope
+# would park every honest record from such a machine for ever - and a parked
+# record is a lesson that never leaves.
+VAZOU="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"
+    r="$(printf "aaaa1111aaaa1111aaaa1111aaaa1111\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-\t9.0.0.1\t20240105\tabcdef0123456789")"
+    t_lista_vaza "$r" && echo RECUSADO || echo PASSOU' 2>/dev/null)"
+equal "a four-part Wine version is not mistaken for an IP address" "PASSOU" "$VAZOU"
+# But the sieve still guards the fields it exists for.
+VAZOU2="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"
+    r="$(printf "aaaa1111aaaa1111aaaa1111aaaa1111\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t/home/joao/pdv.exe\t9.0\t20240105\t-")"
+    t_lista_vaza "$r" && echo RECUSADO || echo PASSOU' 2>/dev/null)"
+equal "and a path in the free-text field is still refused" "RECUSADO" "$VAZOU2"
+
+# ---- the deduplication token, and what it deliberately cannot do
+DD="$TMPROOT/dedup"; mkdir -p "$DD/a" "$DD/b"
+tok() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_ESTADO="$1" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; export TANDEM_ESTADO="$1"; t_dedup_token "$2"' \
+        _ "$1" "$2" 2>/dev/null
+}
+A1="$(tok "$DD/a" 1111111111111111aaaaaaaaaaaaaaaa)"
+A1B="$(tok "$DD/a" 1111111111111111aaaaaaaaaaaaaaaa)"
+A2="$(tok "$DD/a" 2222222222222222bbbbbbbbbbbbbbbb)"
+B1="$(tok "$DD/b" 1111111111111111aaaaaaaaaaaaaaaa)"
+equal "the same machine and the same program give the same token" "$A1" "$A1B"
+# THE PRIVACY PROPERTY, and the reason this is defensible at all. Without the
+# secret these two are unrelated values, so the token cannot be accumulated
+# into a machine identifier.
+if [ -n "$A1" ] && [ "$A1" != "$A2" ]; then
+    pass "two programs on one machine give unrelated tokens"
+else
+    fail "two programs on one machine give unrelated tokens" "different" "$A1 / $A2"
+fi
+if [ -n "$B1" ] && [ "$A1" != "$B1" ]; then
+    pass "and two machines give different tokens for one program"
+else
+    fail "and two machines give different tokens for one program" "different" "$A1 / $B1"
+fi
+equal "the secret is readable only by its owner" "600" \
+      "$(stat -c '%a' "$DD/a/.envio-segredo" 2>/dev/null)"
 
 section "two programs do not install into one prefix at the same time"
 

@@ -46,9 +46,14 @@ EXCLUIDAS = {
     "3f376993b2da855c5e6e291da008d5d6": "test record from the intake bring-up",
 }
 
+# Eight fields, optionally followed by the three appended in 4.9: the Wine and
+# winetricks versions and the dedup token. Optional rather than required
+# because the published file has to keep carrying rows written by 4.6 clients -
+# the format is append-only, so an old row is short, not malformed.
 FORMA = re.compile(
     r"^[0-9a-f]{32}\t(32|64|arm64|-)\t\S+\t\S+\t"
-    r"(confirmado|so-abriu|reprovado)\t\d+\t\d{4}-\d{2}\t\S+$"
+    r"(confirmado|so-abriu|reprovado)\t\d+\t\d{4}-\d{2}\t\S+"
+    r"(\t[A-Za-z0-9._-]{1,24}\t[A-Za-z0-9._-]{1,24}\t(-|[0-9a-f]{16}))?$"
 )
 
 # A verb name is a NAME, never a command line. This mirrors t_verbo_valido in
@@ -112,6 +117,7 @@ def monta(texto):
     """
     grupos = defaultdict(lambda: {"n": 0, "visto": ""})
     recusadas = []
+    vistos_dedup = set()
     for linha in texto.splitlines():
         linha = linha.rstrip("\n")
         if not linha or linha.startswith("#"):
@@ -131,16 +137,36 @@ def monta(texto):
         if not ok_v or not ok_f:
             recusadas.append(("unsafe verb: " + (motivo_v or motivo_f), linha))
             continue
-        chave = (campos[0], campos[1], campos[2], campos[3], campos[4])
+        # The stack is part of the key since 4.9: merging a report from Wine 8
+        # with one from Wine 10 produces a row that was never true anywhere,
+        # which is the whole reason those columns exist. A row from before 4.9
+        # has no stack and groups under "-", where the client weighs it as
+        # "unknown" rather than as "wrong".
+        wine = campos[8] if len(campos) > 8 else "-"
+        wt = campos[9] if len(campos) > 9 else "-"
+        dedup = campos[10] if len(campos) > 10 else "-"
+        # One report per (machine, program, lesson). The token cannot link two
+        # different programs to one machine, so this deduplicates without the
+        # store ever holding something that identifies a sender.
+        if dedup != "-":
+            marca = (campos[0], campos[2], campos[4], dedup)
+            if marca in vistos_dedup:
+                recusadas.append(("duplicate report of the same lesson", linha))
+                continue
+            vistos_dedup.add(marca)
+        chave = (campos[0], campos[1], campos[2], campos[3], campos[4], wine, wt)
         g = grupos[chave]
         g["n"] += int(campos[5])
         if campos[6] > g["visto"]:
             g["visto"] = campos[6]
 
     linhas = []
-    for (ident, arch, verbos, falhos, conf), g in grupos.items():
+    for (ident, arch, verbos, falhos, conf, wine, wt), g in grupos.items():
+        # The dedup token is NOT republished: it did its job at the intake and
+        # putting it in a file the whole world downloads would turn a
+        # per-program token into something anybody can correlate against.
         linhas.append("\t".join([ident, arch, verbos, falhos, conf,
-                                 str(g["n"]), g["visto"], "-"]))
+                                 str(g["n"]), g["visto"], "-", wine, wt, "-"]))
     linhas.sort()
     return linhas, recusadas
 
