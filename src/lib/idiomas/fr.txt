@@ -3003,3 +3003,12 @@ Il a appelé quelque chose que ce Wine n'a pas encore.
 
 @esperando_outra_instalacao
 Un autre programme installe en ce moment des composants Windows dans le même environnement. Je vais attendre qu'il finisse avant de commencer - faire les deux en même temps abîme l'environnement. Cela peut prendre du temps.
+
+@portas_invisiveis
+Ceux-ci sont branchés et Linux les voit, mais Wine ne leur a donné aucun numéro de COM :
+
+  {1}
+
+Cela arrive quand il manque quelque chose avant, dans la même série - débrancher et rebrancher un adaptateur suffit. Le programme ne trouvera pas l'appareil tant qu'il n'aura pas de numéro :
+
+  tandem portas fixar COM2 {2}

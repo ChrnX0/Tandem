@@ -48,3 +48,5 @@ winscard.dll	pcsc	这个程序用读卡器或证书令牌（A3）	Wine 把读卡
 clisitef*.dll	tef	这个程序用 CliSiTef 刷卡库	制作 CliSiTef 的公司（Software Express）已经发布了它的 Linux 版本。这不是您来安装的：需要用它的是您收银系统的供应商。值得向他提出来——在 Linux 上密码键盘通常显示为 /dev/ttyACM0。
 pgweblib*.dll	tef	这个程序用 PayGo 刷卡库	PayGo 已经发布了它的 Linux 库。这不是您来安装的：需要用它的是您收银系统的供应商。值得向他提出来。
 acbrlib*.dll	tef	这个程序用 ACBrLib 来开票或刷卡	ACBrLib 也有 Linux 版本，32 位和 64 位都有。这不是您来安装的：需要用它的是您系统的供应商。值得向他提出来。
+newdev.dll	instalador-driver	这个文件是驱动安装程序。Wine 会让它运行并复制文件，它也会说安装成功——但真正把驱动绑定到设备的那一步什么都不做，所以什么都没变，也看不到任何错误	几乎所有情况下设备都不需要它：这些光盘针对的串口和 USB 转换芯片，Linux 本来就能驱动，设备通常已经在工作了。运行 "tandem portas" 查看各个端口上是哪个设备。如果是打印机，Linux 通过 CUPS 打印，根本不用 Windows 驱动。只有真正的扩展卡或不常见的实验室设备才真的需要 Windows 驱动，而那种情况没有出路。
+difxapi.dll	instalador-driver	这个文件是驱动安装程序。Wine 会让它运行并复制文件，它也会说安装成功——但真正把驱动绑定到设备的那一步什么都不做，所以什么都没变，也看不到任何错误	几乎所有情况下设备都不需要它：这些光盘针对的串口和 USB 转换芯片，Linux 本来就能驱动，设备通常已经在工作了。运行 "tandem portas" 查看各个端口上是哪个设备。如果是打印机，Linux 通过 CUPS 打印，根本不用 Windows 驱动。只有真正的扩展卡或不常见的实验室设备才真的需要 Windows 驱动，而那种情况没有出路。

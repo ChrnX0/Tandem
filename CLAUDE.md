@@ -1411,9 +1411,15 @@ The queue, in order:
    `.github/workflows/lista.yml` opens a PULL REQUEST rather than publishing,
    because anybody can POST and a poisoned row that publishes itself reaches
    every Tandem at once.
-   **No secret is created by hand anywhere in the chain** — Vercel injects the
-   Blob credential when the store is connected, and the rebuild reads a public
-   URL. That was the requirement and it drove the design: every alternative
+   **CORRECTED, 4.9: there is now exactly ONE hand-made secret**, and it is the
+   list's signing key. Everything else in the chain still creates none — Vercel
+   injects the Blob credential when the store is connected, and the rebuild
+   reads a public URL — but the owner decided knowingly that a key in Actions
+   secrets is worth it. State the trade-off with it: whoever controls the
+   repository can sign, so this does not protect against a bad row being
+   merged; it protects against a copy modified anywhere that is not GitHub. The
+   private half is generated on the owner's machine and has never touched this
+   repository or an agent session; only the public half ships. That was the requirement and it drove the design: every alternative
    ended with somebody pasting a token somewhere.
    **It was deliberately NOT put in the owner's existing Supabase project**,
    which was the free option: that project is a live gym management system with

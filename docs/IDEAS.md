@@ -467,6 +467,194 @@ Six lenses (the counter, the silences, the `.exe` loop, the native formats, the 
 | **Check `lista.tsv` against the intake in CI, the way `build.py --check` checks the package.** A `--check` mode on `tools/monta-lista.py` that re-derives the file from the public `acumulado` URL and fails when the committed file carries a row the intake does not support. Needs no key, no secret and no decision — it verifies one published file against a second public source. | The only gate today is a human reading a pull request body, and a verb name is exactly what a human cannot eyeball. A row from a hand edit or a bad merge is indistinguishable from one four hundred shops reported, and it installs into somebody's prefix with a permanent receipt. | **LATER** — blocked until there is a first published row: today it passes because the file is empty, and a guard green for lack of input is the vacuous-guard failure this repository has written up at length. It must skip rather than fail on a 503. |
 | **Review credit per entry, not one header bit for 648.** `escreve_catalogo` reads `X-Reviewed-By-Speaker` once for the whole file (tools/po-para-catalogo.py:128) and `t_idioma_revisado` greps for the result, so a speaker who reads 200 sentences cannot record it and the next reviewer starts from zero. Move the mark to the entry, compute the header from the count, and have `tandem idioma` say how many of the 648 a speaker has checked. | The flag will also start lying the moment a review finishes: 4.4 added 34 keys, so a catalogue marked `yes` silently becomes partly unreviewed on the next release and nothing notices. | **LATER** — nobody has reviewed a single entry in any of the five catalogues; building divisible-credit machinery and changing the one authoring path this project calls "exactly ONE path", on a bet about a Poedit round trip, is building for a demand nobody has shown. |
 
+
+## Drivers: the 2026-08-14 investigation, and why the answer was not "no"
+
+The owner pushed back on a flat "Wine runs in user space, a .sys cannot load,
+impossible" - *"o tandem deveria ser essa ponte, essa é a filosofia dele"* - and
+he was right to. Six lenses were run against the installed Wine and the current
+vendor documentation, each verified adversarially. **"Driver" turned out to be
+eight different things, and five of them have a route.** Three of the findings
+were shipped defects and are fixed in 4.9; the rest are below with verdicts.
+
+# Drivers: what Tandem can bridge, what it cannot, and where the line is
+
+Synthesised from six lenses and an adversarial verifier. Everything below marked "measured here" I re-ran myself in this session on the installed wine-9.0 (Ubuntu noble, the Zorin 18 base); everything marked otherwise says whose measurement it is and how strong it is.
+
+---
+
+## 1. The decomposition
+
+The owner is right: "driver" is not one thing. It is eight, and only three of them are genuinely closed.
+
+| What the shopkeeper calls a "driver" | Can Tandem bridge it? |
+|---|---|
+| **A licence daemon** (Sentinel/HASP, CodeMeter) — a Linux service owns the USB key, the Windows DLL asks it over loopback TCP 1947/22350 | **Yes, by diagnosis.** The route exists and the vendor documents it. Tandem can say which of three things is missing before the wait, and must not install the vendor package. |
+| **A bridge-chip shim** (FTDI, CH340/CH341, CP210x, PL2303, CDC-ACM) — the "driver CD" for a pinpad, scale or scanner | **Nothing to bridge.** Linux drove it before the CD was opened; Wine maps it to a COM port with nothing installed. Tandem's job is to say so and give the number. |
+| **A print driver** | **Already bridged.** CUPS *is* the driver; Wine forwards the queue list. Windows itself stopped accepting new third-party print drivers in 2026, so the file he was told to install is wrong on both operating systems. |
+| **A PC/SC smart-card stack** (A3 tokens, CCID readers) | **Yes, and it is the cleanest one.** `winscard.so` is hard-linked to `libpcsclite.so.1` (measured here) and udev already grants the reader to the logged-in user. Two absent apt packages are the entire failure. |
+| **A HID device** (Rockey keys, some pads and scales) | **Bridged in Wine, blocked by a file mode.** `winebus.so` links libudev and enumerates `/dev/hidraw*`; `hid.dll` stubs only `HidD_`/`HidP_` oddities. Tandem can *name* the permission; it should not change it. |
+| **Raw USB** (WinUSB, libusb-win32) | **No — and not for the usual reason.** Wine's `winusb.dll` has 22 exports and 21 are `__wine_stub_` (measured here; the only implemented one is `WinUsb_Free`). The missing one is `WinUsb_Initialize`, the first call. No permission on the machine changes that. |
+| **A real kernel driver that touches hardware** (winio, inpout32, dlportio, giveio, PCI cards, anti-cheat) | **No, and it is worse than "no".** It *loads* into `winedevice.exe` and finds nothing underneath. |
+| **A driver *installer*, as a file** | **A fifth thing nobody had named.** Not a driver at all: `DiInstallDriverW` and `UpdateDriverForPlugAndPlayDevicesW` are *soft* stubs (measured here — they are absent from newdev.dll's `__wine_stub_` list), so the installer runs, copies files, reports success and binds nothing. |
+
+Five of eight have a route. That is the answer to the push-back.
+
+---
+
+## 2. What Tandem could actually do, ranked by value to a shopkeeper
+
+### 1. Fix the serial-port gap — Tandem currently prints a COM number Wine never created
+
+**Reproduced here, twice.** Wine's `detect_devices()` counts from 0 per family and `break`s at the first missing index. Measured: with `/dev/ttyUSB1` present and `/dev/ttyUSB0` absent, a fresh `wineboot -u` produced **only** `com1 -> /dev/ttyS0`. I restored the node and the identical command produced `com1`, `com2 -> /dev/ttyUSB0`, `com3 -> /dev/ttyUSB1`. Then, with the hole back in place, `t_portas_seriais` printed `/dev/ttyS0` and `/dev/ttyUSB1` — which `t_texto_portas` numbers COM1 and COM2. **Tandem tells the owner his pinpad is on COM2 when Wine has created no COM2 at all.** A hole is routine: unplug and replug an adapter, a two-port converter, a hub that re-enumerates.
+
+Wrong in the invisible direction, inside the one command written to end exactly this confusion.
+
+- **Files:** `src/lib/common.sh` (`t_portas_seriais`, `t_texto_portas`), `tests/run.sh` against a synthetic layout — `TANDEM_SYS` already exists for this.
+- **Root:** no. **Feasibility:** works today. The rescue is already built and already rule-1 safe (`acao_portas fixar` checks `t_prefixo_protegido` at `src/bin/tandem:963`, and `tandem portas fixar COM2 /dev/ttyUSB1` both rescues the invisible device and lands it inside COM1–COM4, where old POS software insists on looking).
+- **Bonus, measured here:** `[Software\\Wow6432Node\\Wine\\Ports]` in `system.reg` carries `#link`. The "`wine reg` writes the view it is not read from" hazard in CLAUDE.md **does not bite this key**. Write that down so nobody "fixes" a working command.
+
+### 2. Read the `.inf`, not the `.exe` — the driver CD that is a no-op
+
+The single commonest "driver" a Brazilian counter meets, and the flagship pre-flight is blind to it: `limites.tsv` matches the imports of a *program*, and an NSIS/Inno wrapper's import table says nothing about the `.sys` inside.
+
+An `.inf` is plain text (usually UTF-16LE) carrying `Class=`/`ClassGuid=` and hardware IDs of the shape `USB\VID_xxxx&PID_yyyy`. Two branches out of one parser:
+
+- **Class `Ports`/`HIDClass`/`Printer`/`SmartCardReader`/`USBDevice`** → "This installs a Windows driver for a Gertec PPC930. Linux already recognised that device by itself and it is on COM3. You do not need this file." Gate on **three positives** (VID/PID in sysfs **and** a kernel driver bound **and** a tty node) — anything less says "I could not confirm", the same discipline `t_prefixo_arquitetura` already follows.
+- **Class `System`/`Net`/`SCSIAdapter`/`Volume`** → the dead end, said before the download instead of after it.
+
+Ship both branches together, or the permissive one arrives without its brake.
+
+- **Files:** new `src/lib/infinfo.py` in the `peinfo.py` shape, new `src/bin/tandem-inf` (or a pre-flight branch of `tandem-exe`), `src/mime/tandem.xml`, `src/lib/limites.tsv` + six translations, `po/en.po`.
+- **Root:** no. **Feasibility:** the parse works today; **the sysfs half is untested** — this container has no `/sys/bus/usb` at all, so it must be exercised on the reference machine before it ships.
+- **Free win nobody proposed:** name the device from udev's own shipped hwdb (`/usr/lib/udev/hwdb.d/20-usb-vendor-model.hwdb` maps `usb:v0529p0001` to "HASP copy protection dongle"). A database already on his machine, no table of ours to maintain.
+- **Dropped:** the brltty/CH340 theft. Falsified — noble's brltty filters `1a86/7523` to the Baum display behind its own hub and has the generic FTDI/CP210x rules commented out. That was a 22.04 bug.
+
+### 3. Printing — three defects, and one of them is a finished feature that has never fired
+
+For shop software, printing *is* the program, and there is no printing code anywhere in the tree.
+
+- **The dead glob.** `common.sh:2618` looks for `/dev/usblp[0-9]*`. The kernel's usblp driver registers `lp%d` through a `usblp_devnode` that prepends `usb/` — the node is `/dev/usb/lp0`. **The repository already contradicts itself:** `alternativas.tsv` says `/dev/usb/lp0` correctly in all seven languages (verified here). So `portas_impressora_usb` — a complete, translated, seven-language message naming the exact fix command — has never fired on any machine on Earth. And if it did fire it would be wrong twice, because mountmgr maps only `/dev/lp%u` to LPT (measured here: the file contains exactly `/dev/ttyS%u`, `/dev/ttyUSB%u`, `/dev/ttyACM%u`, `/dev/lp%u` and nothing else) — a USB receipt printer is never an LPT port.
+- **Nothing ever asks what printers the program will see.** `lpstat -r` / `lpstat -p` is the authority and needs no prefix. The prefix's `Print\Printers` key is a *second* opinion at best: it is written lazily when winspool first loads, so absence means "no program has printed here yet", not "no printers".
+- **libcups is `dlopen`'d and only Recommended.** Measured here: `objdump -p winspool.so` shows `NEEDED ntdll.so, libc.so.6` only — libcups appears as a string, loaded at runtime — and `apt-cache show libwine` puts `libcups2t64` under Recommends while libusb, libpcsclite, libgphoto2 and libpcap are hard Depends. A machine without it has zero printers and says nothing. Ask the loader per architecture (`ldconfig -p | grep libcups.so.2`), the same instrument the project already blessed for libfuse and for the same renaming reason. Narrower than the lens claimed: both arches are present here, so this is a check that costs nothing and occasionally saves everything, not a common cause.
+- **The permission is a group, not a udev rule.** Measured here: `50-udev-default.rules:89` gives `GROUP="lp"` to any usb_device with interface class `0701??`. For a USB printer the fix is `usermod -aG lp` — one command, the exact shape of the existing `dialout` sentence, which `t_texto_portas` does not currently check even while printing LPT and usblp lines.
+
+- **Files:** `common.sh` (`t_texto_portas`, a doctor line), `src/bin/tandem` (`acao_doctor`), `po/en.po`.
+- **Root:** no for all the reading; only installing a missing library or joining a group. **Feasibility:** works today.
+- **Hold back:** creating a CUPS queue, and the sentence "your queue must be raw or the paper comes out blank". Nothing tells Tandem the printer is thermal, and no thermal printer has ever been in front of this code. `docs/IDEAS.md` §2 parks that as LATER twice; it stays LATER, tied to the field harness.
+
+### 4. Generalise the daemon probe into a bridge table
+
+Wine's `x86_64-unix` directory *is* the driver-bridge table, and each entry is a runtime dlopen of one Linux library. `t_chave_estado` already asks the right question — is the Linux side here — for exactly two licence families, and only after the program has failed.
+
+Turn it into a table (family → services, port, vendor product name, message) and add the families that are missing: **pcscd** and **CUPS**. Both are the `apt-get install -s` pattern the project already trusts: ask the thing that already knows, before the password.
+
+- **The PC/SC row is the best-conditioned item in the whole set.** Measured here: `winscard.so` is genuinely `NEEDED`-linked to `libpcsclite.so.1`; `70-uaccess.rules:51` is an unconditional `ENV{ID_SMARTCARD_READER}=="?*", TAG+="uaccess"`, so a real CCID reader is handed to the logged-in user with zero udev work; and `pcscd`, `libccid` and `pcsc-tools` all answer `Installed: (none)` on this stock image. That absence is usually the whole answer, and `limites.tsv` row 39 currently hands the owner a four-step procedure with no way to find out which step he is stuck on.
+- **The ceiling must travel with it, unchanged:** the reader appearing does not mean the certificate will sign. That sentence is the most valuable one in the file and must not be softened by a green tick above it.
+- **Files:** `common.sh` (`t_chave_estado`, `t_texto_chave`), `limites.tsv` row 39 + six translations. **Root:** no for the diagnosis. **Feasibility:** works today.
+
+### 5. Move the Sentinel sentence from post-mortem to pre-flight — and say which Wine is underneath
+
+`grep -rn t_texto_chave src/` returns only `tandem-exe:531-532`, both inside the branch that runs *after* the program has failed — while `LIMITE` is computed at `tandem-exe:200`, before anything runs. The sentence is available before the wait and is not used there.
+
+Split today's single verdict into three measured cases: the key is not plugged in (VID `0529` absent from `/sys/bus/usb/*/idVendor`), the runtime was never installed (no `/usr/sbin/aksusbd*`, no `/etc/udev/rules.d/80-hasp.rules`), or it is installed and stopped (one `pkexec`, root asked once and named).
+
+**Two defects found on the way, and the second is new:**
+
+- `t_servico_vivo` is `pgrep -x "$1"`, an exact match, while Thales' own installed-files list names the binaries `aksusbd_x86_64` and `hasplmd_x86_64`. Only the systemd half rescues a `.deb` install; a script install answers "not running" about a daemon that is running. Match both `name` and `name_x86_64`.
+- **Thales names Wine 10.0; this machine offers 9.0 and nothing else.** Measured here: `apt-cache policy wine` → Installed `9.0~repack-4build3`, Candidate the same, and `tandem preparar` runs `apt-get install -y wine`. So `limites.tsv` tells a Sentinel owner the manufacturer publishes that it works on Wine 10.0, on a machine Tandem itself just gave 9.0, and nothing says so. Tandem already knows the version and already has the posture for this (`t_falta_no_wine` names the Wine version and stops).
+
+- **Root:** no for diagnosis; one `systemctl start` if it is installed and stopped. **Feasibility:** works today. **Never fetch the RTE** — Thales' distribution page addresses the software *vendor*, and the download portal is a human-navigated ServiceNow KB. Name the file, open the page, say the supplier hands it over.
+- **CodeMeter stays where it is.** Its loopback joint is undocumented at the one place that matters, and no Wine success report exists in 2025–2026. Keep "nobody has reported getting it to work on Wine yet" word for word in all seven tables. One cheap defect to fix regardless: `t_chave_estado` uses `servicos="CodeMeter CodeMeterLin"` while the Linux unit is reportedly lowercase `codemeter.service` — reported by the lens, **not measured here**, so check it against a real install before changing it.
+
+### 6. Unmute the three device channels — a prerequisite, and it costs nothing
+
+`tandem-exe:78` is `export WINEDEBUG=fixme-all,fixme+ntoskrnl,fixme+hal`. That tuning was made for the kernel-driver verdict and never revisited when USB, HID and smartcards went into `limites.tsv`. It silences the one line Thales says you will see (`hidclass.sys`: "Unsupported ioctl %#lx…", a FIXME on channel `hid`), plus `wineusb`'s "Unhandled ioctl" and "Failed to open device: %s".
+
+**Measured here at steady state:** the current setting produced 0 bytes and `…,fixme+hid,fixme+wineusb,fixme+plugplay` also produced 0 bytes. Those channels are silent unless a device is involved. Without them, items 5 and 8 have no evidence to read.
+
+- **Files:** `src/bin/tandem-exe:78`, `common.sh` (`t_limite_do_log`), `po/en.po`. **Root:** no. **Guard:** keep the new lines outside the slice `t_palavras_do_programa` shows the owner, or the 4.5 defect returns by a new door.
+
+### 7. Recognise the driver installer that reports success and binds nothing
+
+Measured here: `newdev.dll`'s stub list is `DiInstallDevice, DiRollbackDriver, DiUninstallDevice, DiShowUpdateDevice, InstallWindowsUpdateDriver` and the `pDi*` family — `DiInstallDriverA/W` and `UpdateDriverForPlugAndPlayDevicesA/W` are **not** in it. They are hand-written *soft* stubs: they log a FIXME and return. `difxapi.dll` ships too. `setupapi` really does export `SetupCopyOEMInfW`, so files genuinely get copied.
+
+That distinction is the whole point. A *hard* stub raises "Call from … to unimplemented function", which `t_falta_no_wine` already catches. A soft stub is invisible to every instrument this project owns — the installer looks like it worked, and the owner reboots wondering why nothing changed.
+
+- **Files:** `limites.tsv` new class + six translations, `po/en.po`. `t_pe_dlls` already reads `ATRASADAS=`, so a delay-loaded `newdev` is caught too.
+- **Match on `newdev`/`difxapi` plus a `.sys` or `.inf` inside; never on `setupapi` alone; never refuse to run.** **Root:** no. **Feasibility:** works today.
+
+### 8. Split the `driver` class, and sharpen the two dead ends
+
+`limites.tsv` has ten `driver` rows and all ten are no-way-out, because `t_limite_sem_saida` (`common.sh:1525`) returns 0 for `dongle|driver|anticheat|usb`. So the bare `*.sys` catch-all answers identically for a `.sys` that pokes hardware (hopeless) and a `.sys` that is a licence or IOCTL shim doing no hardware access (loads fine in `winedevice.exe`, often works). That is the same over-strict error the 4.0 correction fixed for dongles, still standing one class over — and it is the row where items 2 and 3 would have rescued somebody.
+
+The escape hatch already runs twice in this same file (7 `dongle` rows have no way out while 10 `dongle-*` rows do; 2 `usb` rows have none while `usb-talvez` does), so this is the third application of a pattern that works.
+
+**One correction that makes it a code change, not a table edit:** column 4 is appended *inside* `limite_sem_saida_txt`, whose opening line is "This program did not open, and Wine has no way to fix it" (verified in `src/lib/idiomas/en.txt:198`). A `driver` row with a way out would deny a way out and then supply one. It needs a new class routed through `limite_com_caminho`, i.e. `t_limite_sem_saida` gets edited.
+
+- **Files:** `common.sh:1525`, `limites.tsv` + six translations, `po/en.po` (`limite_log_hardware`, `limite_log_driver`). **Root:** no.
+
+### 9. Name the permission; do not change it
+
+Read-only, and it corrects a shipped message. Measured here: the only hidraw uaccess rule in the whole tree is `70-uaccess.rules:89`, gated on `ID_AV_PRODUCTION_CONTROLLER`, so a generic HID dongle stays root-only; and `50-udev-default.rules:72` leaves usb_device nodes at `MODE="0664"` root:root.
+
+So `limites.tsv` row 22's guess ("what may be missing is read permission on the device") is right about HID, and can be stated rather than guessed — and corrected, because feature reports are writes, so it is read-**write** that is missing. Row 38 (`hid.dll`) currently gives *claimed* devices advice that cannot work: read `/sys/bus/usb/devices/*/…/driver` and split the sentence — "Linux is already using this device for something else" (point at the ports report) versus "the device is there and this program cannot open it".
+
+**Not proposed: writing a udev rule.** Two of the three verifiers rejected it outright and the third held it. Reasons, in order: for WinUSB there is nothing on the far side to reach (item 3 of §3 below); a `TAG+="uaccess"` rule numbered above 73 is a silent no-op because `73-seat-late.rules` is what runs the builtin, so the button would ask for a password, write a file, change nothing and report success — rule 4, exactly; and for a pinpad or scale it is a permanent system-wide device grant made on behalf of one program, on hardware nobody here has, with `wineusb.so` importing no `libusb_claim_interface` and no `libusb_detach_kernel_driver` (so a device Linux already bound stays contested anyway). This project's only precedent is a polkit rule shipped in the `.deb`, reviewed once, scoped to one systemd unit.
+
+---
+
+## 3. What is genuinely impossible
+
+Three things, and ending the search fast is the product here.
+
+**Raw USB through WinUSB or libusb-win32.** Measured here on 9.0 and confirmed by the lenses against Wine master in August 2026: 21 of 22 exports are `__wine_stub_`, and the only implemented one is `WinUsb_Free`, which frees a handle you can never obtain. Wine 11 does not fix it.
+> *To the shopkeeper:* "The part of Wine your program needs to open this device has not been written yet — there is nothing you can install here that changes it." Name the Wine version, because a version is a fact that can change. This one is already caught loudly after the fact: `WinUsb_Initialize` is a hard stub, so it produces "Call from … to unimplemented function", which `t_falta_no_wine` already reads. Only the static row is softer than the truth — "Wine only does part of that" invites exactly the investigation that ends here.
+
+**A `.sys` that touches hardware.** Wine's `load_driver()` takes almost any `.sys` into `winedevice.exe`, an ordinary user process, so the driver *loads*. Measured here: `MmMapIoSpace` is present as a soft stub returning NULL, `IoConnectInterrupt` is `__wine_stub_`, and in `hal.dll` the `READ_PORT_USHORT`/`WRITE_PORT_USHORT` and all six BUFFER variants are hard stubs — so some calls abort loudly and some return zeros silently.
+> *To the shopkeeper:* "This program loaded its driver and then found nothing behind it. If it is behaving strangely rather than crashing, that is why — anything it shows you now may be wrong." That sentence currently lives only in a source comment; it needs to reach `limite_log_hardware`. It is the silent-wrong failure this project exists to catch, and today it reads the same as the loud one.
+
+**Kernel anti-cheat, and HASP4/Hardlock.** Anti-cheat runs in the kernel and refuses VMs by design, so nothing on the machine changes the answer. HASP4/Hardlock is the vendor's own position, not ours: Thales' page (last updated 11 May 2026) says those keys "are not expected to work".
+> *To the shopkeeper:* for the old purple dongle — "the company that made this key stopped supporting it outside Windows, and a virtual machine may not rescue it either." That last clause is missing today and it matters, because it is the difference between an honest dead end and a trap with a receipt on it.
+
+---
+
+## 4. The line Tandem must not cross
+
+**The virtual machine: name it, never manage it.** Settled in 4.0 and nothing here reopens it. A real Windows in QEMU/KVM genuinely reaches both dead ends above — the kernel is real, so a `.sys` loads for real and a dongle is handed over with `-device usb-host,vendorid=…,productid=…`. It also costs a Windows Pro or Enterprise licence (Home cannot host RemoteApp at all), KVM in the BIOS, ~4 GB RAM and ~32 GB of disk that stop being the shop's. WinBoat's own USB passthrough is experimental, Docker-only with Podman explicitly unsupported, with open bugs on dongle recognition. `t_vm_possivel` already checks whether the machine could carry one and `tandem-exe:515` already excludes anti-cheat on purpose. The **only** change worth making is one clause: the paragraph never mentions the device, which is the sole reason a dongle owner would consider a VM at all. A message edit, not a route.
+
+**Do not write into `/etc`.** No udev rules. See item 9.
+
+**Do not install a vendor's runtime.** Sentinel's RTE, CodeMeter's, a printer vendor's `.so` — third-party root packages, licensing components, and the vendor's to support. Name it, check whether it is already there, stop. This is rule 1 applied off the Wine prefix.
+
+**Do not give fiscal or legal advice.** One lens proposed a SAT/NFC-e sentence for `limites.tsv` and got the tense wrong: São Paulo's CF-e-SAT ended on 31 December 2025, eight months ago, so it would have shipped *expired* tax advice into a shop in seven languages, as a flagship message. Keep the *shape* and delete every acronym, date and state: "the equipment this program is asking for belongs to a generation that has been retired; what replaced it prints on an ordinary thermal printer and needs no driver at all; the person who changes that is whoever supplies your sales system." That is decision, translation and diagnosis. The dated version is none of the three, and it is the owner's call, not the agent's.
+
+**Do not claim a chain nobody has walked.** The "Elgin ships a Linux virtual COM driver, so the printer becomes a COM port Wine maps" story did not survive checking — the virtual-COM driver in that bundle is a *Windows* driver, and what Elgin publishes for Linux is a `.so`, which is unreachable from a Windows `.exe`. That is the answer `limites.tsv` already gives for CliSiTef, PayGo and ACBrLib: your supplier has to use it. New vendor rows are welcome; they get the CodeMeter hedge until somebody reports otherwise.
+
+---
+
+## 5. What this changes about the project's own description of itself
+
+**`limites.tsv` is no longer a table of impossibility. It is a routing table with an impossible tail, and it should say so.**
+
+That is not a rebrand — it is what the file already does and what the code has not caught up with. Fifteen of forty-two rows carry a way out; the fourth column *is* the product of the 4.0 correction. What is wrong is the classification underneath it. `t_limite_sem_saida` still declares four whole classes hopeless, and after this work that list is wrong in **both** directions at once:
+
+- **`driver` is too strict.** Ten rows, all no-way-out, covering a `.sys` that pokes hardware and a `.sys` that only checks a licence with the same sentence. Split it.
+- **`usb` is too soft.** "Wine only does part of that, and devices Linux is already using end up contested" reads as a permission problem with a fix behind it, and it is not: the door is missing from Wine. It should stay no-way-out with a *harder* sentence, not gain a fourth column.
+- **`dongle` is right and stays right**, on the vendor's own authority.
+
+So the posture question — "does the table describe routes it could partly automate?" — has a two-part answer.
+
+**Yes, and that is the defect.** Four rows hand the owner a procedure and never look to see which step he is stuck on: `winscard.dll` (install three packages, run `pcsc-scan`), `hid.dll` (it is almost always read permission), `rockey*.dll` (same guess), and the Sentinel family (a technician installs it, once). Every one of those is checkable by reading, unprivileged, before the download. The project already decided this shape is right when it built `apt-get install -s` into `tandem-deb` — nobody types a password to be told no — and then did not apply it to the one table whose whole job is telling people what to try. A row that describes a route without checking it is prose, and constraint 5 says prose is not a bridge.
+
+**And no, the descriptions themselves should not become executions.** Everything in §2 explains more and executes the same: it reads sysfs, `ldconfig`, `lpstat`, `ss`, an `.inf`, the Wine log and the prefix's own registry. The only new writes are a registry value in a prefix Tandem created (already guarded) and, at most, a group membership the owner is asked for by name. Nothing installs a vendor package, nothing touches `/etc`, nothing manages a VM.
+
+One line to add to the project's own description, because it is the general answer to the owner's question and it was discovered in 4.0 and never generalised: **a "driver" that has a Linux counterpart is not a driver problem, it is a routing problem** — and routing is decision, translation and diagnosis, which is exactly the three things this project says it is. The Sentinel row works because the key never crosses into Windows. The pinpad works because the chip never needed a driver. The printer works because CUPS is the driver. The `.sys` fails because there is no counterpart, and no amount of layering invents one.
+
+---
+
+*Nothing was changed in the tree. Before any of this lands, `debian/control`, `debian/changelog` and `TANDEM_VERSAO` all still say 4.5 and 4.5's entry is published history — 4.6 has to be opened first.*
+
 ## The queue
 
 1. **Fill the community list.** The mechanism exists, it now has both ends —

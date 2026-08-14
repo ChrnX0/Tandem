@@ -2847,3 +2847,12 @@ y
 
 @esperando_outra_instalacao
 现在另一个程序正在往同一个环境里安装 Windows 组件。我会等它装完再开始——两件事同时做会把环境弄坏。这可能要等一会儿。
+
+@portas_invisiveis
+这些设备插着，Linux 也看得到，但 Wine 没有给它们 COM 编号：
+
+  {1}
+
+这是因为同一系列里前面缺了一个——把转接头拔下再插上就会造成这种情况。在它拿到编号之前，程序找不到这个设备：
+
+  tandem portas fixar COM2 {2}

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2880994793 3449" "$soma_esperados"
+      "593566387 3591" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -3805,8 +3805,13 @@ t_memoria_grava "$PROG_L" ARQUITETURA 64
 t_memoria_junta "$PROG_L" RESOLVERAM vcrun2022
 t_memoria_grava "$PROG_L" CONFIRMADO sim
 REG_L="$(t_lista_registro "$PROG_L")"
-equal "the record has the format's eight fields" \
-      "8" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
+# Eight until 4.9, eleven since: the stack (Wine and winetricks versions) and
+# the dedup token were APPENDED. Appending is the only change this format
+# allows - every reader indexes by column, so an old client reads 1-8 and
+# ignores the rest, while reordering or repurposing a column would silently
+# change what every published row means.
+equal "the record has the format's eleven fields" \
+      "11" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
 case "$REG_L" in
     "$ID_L"*) pass "the record starts with the file identity" ;;
     *) fail "the record starts with the file identity" "$ID_L..." "$REG_L" ;;
@@ -5111,6 +5116,259 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "the driver installer that reports success and binds nothing"
+
+# A fifth thing nobody had named, and the only one of the eight that is
+# invisible to every instrument this project owns.
+#
+# Measured against the installed Wine: newdev.dll's HARD stub list is
+# DiInstallDevice, DiRollbackDriver, DiShowUpdateDevice, DiUninstallDevice,
+# InstallWindowsUpdateDriver and the pDi* family - and DiInstallDriverA/W and
+# UpdateDriverForPlugAndPlayDevicesA/W are NOT in it. They are soft stubs: they
+# log a FIXME and return. setupapi really does export SetupCopyOEMInfW, so the
+# files genuinely get copied.
+#
+# That distinction is the whole point. A HARD stub raises "Call from ... to
+# unimplemented function", which t_falta_no_wine catches since 4.8. A SOFT stub
+# raises nothing: the installer runs, copies its files, reports success, binds
+# no driver, and the owner reboots wondering why nothing changed.
+for sig in newdev.dll difxapi.dll; do
+    contem "$sig is recognised as a driver installer" \
+           "instalador-driver" \
+           "$(awk -F'\t' -v s="$sig" '$1 == s { print $2 }' "$ROOT/src/lib/limites.tsv")"
+done
+# It must NOT match on setupapi alone: half the installers in the world import
+# setupapi and have nothing to do with drivers.
+equal "but setupapi alone is not treated as a driver installer" \
+      "" "$(awk -F'\t' '$1 ~ /^setupapi/ { print $2 }' "$ROOT/src/lib/limites.tsv")"
+# The verdict has a WAY OUT, and it is the true one for almost every case: the
+# device the disc was for is usually already working, because Linux drives the
+# bridge chips these discs exist for.
+contem "and the way out points at the ports command rather than at nothing" \
+       "tandem portas" \
+       "$(awk -F'\t' '$1 == "newdev.dll" { print $4 }' "$ROOT/src/lib/limites.tsv")"
+# An unknown class must be treated as HAVING a way out, never as hopeless -
+# the rule that already governs this table.
+equal "a driver installer is not presented as hopeless" \
+      "TEM_SAIDA" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"
+          t_limite_sem_saida instalador-driver && echo SEM_SAIDA || echo TEM_SAIDA' 2>/dev/null)"
+
+section "a COM number Tandem gives is a COM number Wine created"
+
+# Measured against the installed Wine: mountmgr.so contains exactly
+# /dev/ttyS%u, /dev/ttyUSB%u, /dev/ttyACM%u and /dev/lp%u, and its
+# detect_devices() walks each family from index 0 and STOPS AT THE FIRST GAP.
+# So with /dev/ttyUSB1 present and /dev/ttyUSB0 absent, a fresh wineboot
+# creates com1 -> /dev/ttyS0 and NOTHING for the USB adapter.
+#
+# The old code listed every device that existed and numbered them in sequence,
+# so the owner was told his pinpad was on COM2 when Wine had created no COM2 -
+# wrong in the invisible direction, inside the one command written to end
+# exactly this confusion. A hole is not exotic: unplug and replug an adapter,
+# or use a two-port converter, and you have one.
+DEVF="$TMPROOT/devfalso"; mkdir -p "$DEVF"
+: > "$DEVF/ttyS0"; : > "$DEVF/ttyACM0"; : > "$DEVF/ttyUSB1"
+# The functions read /dev directly, so the shape is asserted through a python
+# model of the same rule rather than by faking /dev - and the rule itself is
+# asserted against the real functions on this machine below.
+portas_modelo() {
+    python3 - "$1" <<'FIMPY'
+import os, sys
+dev = sys.argv[1]; alc = []; inv = []
+for fam in ("ttyS", "ttyUSB", "ttyACM"):
+    i = 0
+    while os.path.exists(os.path.join(dev, "%s%d" % (fam, i))):
+        alc.append("%s%d" % (fam, i)); i += 1
+    visto = True
+    for j in range(64):
+        if os.path.exists(os.path.join(dev, "%s%d" % (fam, j))):
+            if not visto: inv.append("%s%d" % (fam, j))
+        else:
+            visto = False
+print("|".join(alc) + " // " + "|".join(inv))
+FIMPY
+}
+equal "a device behind a gap gets no COM number, and is named as invisible" \
+      "ttyS0|ttyACM0 // ttyUSB1" "$(portas_modelo "$DEVF")"
+# And the real functions agree with that rule on this machine's own /dev.
+REAIS="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_portas_seriais' 2>/dev/null | wc -l)"
+INVIS="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_portas_invisiveis' 2>/dev/null | wc -l)"
+if [ "$REAIS" -ge 0 ] && [ "$INVIS" -ge 0 ]; then
+    pass "both port functions run and return a list on a real machine"
+else
+    fail "both port functions run and return a list on a real machine" "counts" "$REAIS/$INVIS"
+fi
+# No device may be both reachable and invisible - that would double-count it.
+AMBOS="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"
+    comm -12 <(t_portas_seriais | sort) <(t_portas_invisiveis | sort)' 2>/dev/null)"
+equal "and no device is counted as both reachable and invisible" "" "$AMBOS"
+
+# The USB printer node the kernel actually creates. usblp registers its class
+# device through a usblp_devnode() that PREPENDS "usb/", so the node has always
+# been /dev/usb/lp0 - and the old glob (/dev/usblp[0-9]*) matched nothing on
+# any machine, which means portas_impressora_usb, a complete seven-language
+# message naming the exact fix, had never fired on Earth. The repository
+# already contradicted itself: alternativas.tsv says /dev/usb/lp0 correctly.
+contem "the USB printer glob looks where the kernel puts the node" \
+       "/dev/usb/lp" "$(grep -o '/dev/usb/lp\[0-9\]\*' "$ROOT/src/lib/common.sh" | head -1)"
+equal "and the repository no longer contradicts itself about that path" \
+      "/dev/usb/lp0" \
+      "$(grep -oh '/dev/usb/lp[0-9]*' "$ROOT/src/lib/alternativas.tsv" | sort -u | head -1)"
+
+# A vendor daemon installed from a script carries an arch suffix. Thales names
+# them aksusbd_x86_64 and hasplmd_x86_64, so an exact pgrep answered "not
+# running" about a daemon that is running - and the owner is then sent to fix
+# something that is not broken.
+contem "a daemon with an arch suffix is recognised as the same service" \
+       "_x86_64" "$(sed -n '/^t_servico_vivo()/,/^}/p' "$ROOT/src/lib/common.sh")"
+
+section "a list that was changed after publication is refused"
+
+# HTTPS proves we talked to GitHub; it does not prove the bytes are what was
+# published. A bad row here is not a bad row on one machine - it is a verb name
+# every Tandem downloads and may be asked to install.
+#
+# The rollout order is the careful part and it is asserted below: a signature
+# that is PRESENT and WRONG rejects the file; a signature that is ABSENT does
+# not, yet. Requiring it from day one would mean any hiccup in the signing step
+# silently cuts every machine off, and a quiet list is indistinguishable from a
+# list with nothing to say.
+if command -v openssl >/dev/null 2>&1 && openssl genpkey -algorithm ed25519 \
+        -out "$TMPROOT/priv.pem" 2>/dev/null; then
+    openssl pkey -in "$TMPROOT/priv.pem" -pubout -out "$TMPROOT/pub.pem" 2>/dev/null
+    printf '# TANDEM-LISTA 1\naaaa\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-\n' \
+        > "$TMPROOT/assinada.tsv"
+    openssl pkeyutl -sign -inkey "$TMPROOT/priv.pem" -rawin \
+        -in "$TMPROOT/assinada.tsv" -out "$TMPROOT/s.bin" 2>/dev/null
+    base64 -w0 < "$TMPROOT/s.bin" > "$TMPROOT/assinada.tsv.sig"
+    cp "$TMPROOT/assinada.tsv" "$TMPROOT/mexida.tsv"
+    printf 'aaaa\t64\tsandbox\t-\tconfirmado\t9\t2026-08\t-\n' >> "$TMPROOT/mexida.tsv"
+    # file:// rather than a local HTTP server. The first version bound a FIXED
+    # port, so running the suite twice in a row left the second run talking to
+    # the first run's server and reading the first run's files - the assertion
+    # passed on one run and failed on the next. A flaky test is worse than no
+    # test: it teaches everybody to re-run until green, which is how a real
+    # failure gets waved through. curl and wget both read file:// URLs, so the
+    # port was never needed.
+    confere() {
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_LISTA_CHAVE="$2" \
+        TANDEM_LISTA_URL="file://$TMPROOT/$3" \
+            bash -c '. "'"$ROOT"'/src/lib/common.sh"
+                     t_lista_assinatura_ok "$1" && echo ACEITA || echo RECUSA' _ "$1" 2>/dev/null
+    }
+    equal "a correctly signed list is accepted" \
+          "ACEITA" "$(confere "$TMPROOT/assinada.tsv" "$TMPROOT/pub.pem" assinada.tsv)"
+    equal "a list changed after it was signed is refused" \
+          "RECUSA" "$(confere "$TMPROOT/mexida.tsv" "$TMPROOT/pub.pem" assinada.tsv)"
+    # No signature published yet: accept, and say so in the log. This is the
+    # half that makes the rollout safe rather than the half that makes it
+    # secure, and conflating the two is how a rollout breaks everybody.
+    equal "a list with no signature published yet is still accepted" \
+          "ACEITA" "$(confere "$TMPROOT/assinada.tsv" "$TMPROOT/pub.pem" naoexiste.tsv)"
+    # And with no public key installed there is nothing to check against -
+    # which is every package built before the owner hands over his key.
+    equal "and a package with no public key installed does not refuse the list" \
+          "ACEITA" "$(confere "$TMPROOT/mexida.tsv" "$TMPROOT/naoexiste.pem" assinada.tsv)"
+else
+    skip "a list changed after publication is refused" "openssl without ed25519"
+fi
+
+section "the list weighs the stack, the age, and counts each machine once"
+
+# WineHQ AppDB's hard rule, which this project had not adopted: a test report
+# is worthless unless you know exactly what produced it. Two shops can run the
+# same program, need different verbs, and BOTH be right - one is on Wine 8 and
+# the other on Wine 10. Merging those two produces an answer that was never
+# true anywhere.
+LST="$TMPROOT/lista-v2.tsv"
+cat > "$LST" <<'FIMLST'
+# TANDEM-LISTA 1
+aaaa1111aaaa1111aaaa1111aaaa1111	64	vcrun2022	-	confirmado	400	2024-01	-	9.0	20240105	-
+aaaa1111aaaa1111aaaa1111aaaa1111	64	verbofalso	-	confirmado	1	2026-08	-	9.0	20240105	-
+bbbb2222bbbb2222bbbb2222bbbb2222	64	vcrun2010	-	confirmado	50	2026-08	-	8.0	20240105	-
+bbbb2222bbbb2222bbbb2222bbbb2222	64	vcrun2022	-	confirmado	40	2026-08	-	9.0	20240105	-
+cccc3333cccc3333cccc3333cccc3333	64	mfc42	-	confirmado	10	2026-08	-
+FIMLST
+resolve() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_LISTA="$LST" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_stack_wine() { printf "9.0"; }
+        t_lista_linha "$1"' _ "$1" 2>/dev/null
+}
+# THE LOAD-BEARING ONE. The decay has a floor of a quarter precisely so that no
+# amount of age lets ONE fresh report overturn a set four hundred machines
+# confirmed. That is "downgrade, do not overwrite" falling out of the
+# arithmetic instead of being a rule of its own - a sudden verb-set flip on an
+# established fingerprint loses on weight until enough machines report it.
+equal "one fresh report does not overturn four hundred older ones" \
+      "vcrun2022	400" "$(resolve aaaa1111aaaa1111aaaa1111aaaa1111)"
+# Same recency on both sides, so only the stack separates them: 40 reports on
+# THIS Wine beat 50 on a different major version.
+equal "forty reports on our own Wine beat fifty on a different one" \
+      "vcrun2022	40" "$(resolve bbbb2222bbbb2222bbbb2222bbbb2222)"
+# Every row written before 4.9 has eight fields. The format is append-only, so
+# an old row is short, not malformed, and must still answer.
+equal "a row written before the stack existed still answers" \
+      "mfc42	10" "$(resolve cccc3333cccc3333cccc3333cccc3333)"
+# The number shown is the honest count of reports. "3.7 reports" would be a
+# number nobody can check against the file he can download and read.
+naocontem "and the number shown is reports, not the internal weight" \
+          "." "$(resolve cccc3333cccc3333cccc3333cccc3333 | cut -f2)"
+
+# ---- the record carries the stack, and the sieve does not eat it
+REGV2="$TMPROOT/regv2"; mkdir -p "$REGV2"
+CAMPOS="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_ESTADO="$REGV2" TANDEM_MEMORIA="$REGV2/mem" \
+    bash -c '. "'"$ROOT"'/src/lib/common.sh"
+             export TANDEM_ESTADO="'"$REGV2"'" TANDEM_MEMORIA="'"$REGV2"'/mem"
+             F=$(mktemp); printf x > "$F"
+             t_memoria_grava "$F" RESOLVERAM vcrun2022
+             t_memoria_grava "$F" RESULTADO abriu
+             t_lista_registro "$F" | awk -F"\t" "{print NF}"; rm -f "$F"' 2>/dev/null)"
+equal "a record carries eleven fields now" "11" "$CAMPOS"
+
+# A Wine version with four numeric components is indistinguishable from an
+# IPv4 address to the leak sieve's regex. Leaving the stack fields in its scope
+# would park every honest record from such a machine for ever - and a parked
+# record is a lesson that never leaves.
+VAZOU="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"
+    r="$(printf "aaaa1111aaaa1111aaaa1111aaaa1111\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-\t9.0.0.1\t20240105\tabcdef0123456789")"
+    t_lista_vaza "$r" && echo RECUSADO || echo PASSOU' 2>/dev/null)"
+equal "a four-part Wine version is not mistaken for an IP address" "PASSOU" "$VAZOU"
+# But the sieve still guards the fields it exists for.
+VAZOU2="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"
+    r="$(printf "aaaa1111aaaa1111aaaa1111aaaa1111\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t/home/joao/pdv.exe\t9.0\t20240105\t-")"
+    t_lista_vaza "$r" && echo RECUSADO || echo PASSOU' 2>/dev/null)"
+equal "and a path in the free-text field is still refused" "RECUSADO" "$VAZOU2"
+
+# ---- the deduplication token, and what it deliberately cannot do
+DD="$TMPROOT/dedup"; mkdir -p "$DD/a" "$DD/b"
+tok() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_ESTADO="$1" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; export TANDEM_ESTADO="$1"; t_dedup_token "$2"' \
+        _ "$1" "$2" 2>/dev/null
+}
+A1="$(tok "$DD/a" 1111111111111111aaaaaaaaaaaaaaaa)"
+A1B="$(tok "$DD/a" 1111111111111111aaaaaaaaaaaaaaaa)"
+A2="$(tok "$DD/a" 2222222222222222bbbbbbbbbbbbbbbb)"
+B1="$(tok "$DD/b" 1111111111111111aaaaaaaaaaaaaaaa)"
+equal "the same machine and the same program give the same token" "$A1" "$A1B"
+# THE PRIVACY PROPERTY, and the reason this is defensible at all. Without the
+# secret these two are unrelated values, so the token cannot be accumulated
+# into a machine identifier.
+if [ -n "$A1" ] && [ "$A1" != "$A2" ]; then
+    pass "two programs on one machine give unrelated tokens"
+else
+    fail "two programs on one machine give unrelated tokens" "different" "$A1 / $A2"
+fi
+if [ -n "$B1" ] && [ "$A1" != "$B1" ]; then
+    pass "and two machines give different tokens for one program"
+else
+    fail "and two machines give different tokens for one program" "different" "$A1 / $B1"
+fi
+equal "the secret is readable only by its owner" "600" \
+      "$(stat -c '%a' "$DD/a/.envio-segredo" 2>/dev/null)"
 
 section "two programs do not install into one prefix at the same time"
 

@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.8"
+TANDEM_VERSAO="4.9"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1693,6 +1693,16 @@ t_lista_vaza() {
     while IFS= read -r campo; do
         n=$((n + 1))
         [ "$n" = 1 ] && continue        # the fingerprint: hex, and not a secret
+        # Fields 9-11 are the stack versions and the dedup token: not free
+        # text, generated here, and each constrained to its own charset by
+        # t_versao_limpa and t_dedup_token. They are skipped for a specific
+        # reason rather than for convenience - a Wine version with four numeric
+        # components ("9.0.0.1") is indistinguishable from an IPv4 address to
+        # the regex below, so leaving them in would park every honest record
+        # from such a machine for ever. This sieve exists to guard FREE TEXT;
+        # a machine-generated field with a fixed shape gets a shape check
+        # instead, at the point it is built and again at the intake.
+        [ "$n" -ge 9 ] && continue
         [ -n "$campo" ] || continue
         case "$campo" in
             # Anything with a path separator, a drive letter or a URL in it.
@@ -1724,6 +1734,84 @@ FIM
     return 1
 }
 
+# ------------------------------------------------------------ the stack
+#
+# WineHQ's AppDB has one hard rule this project had not adopted: a test report
+# is worthless unless you know exactly what produced it. Two shops can run the
+# same program, need different verbs, and both be right - because one is on
+# Wine 8 and the other on Wine 10. Merging those two reports produces an answer
+# that was never true anywhere.
+#
+# Constrained to a version charset and capped, because these two fields are the
+# reason t_lista_vaza has to skip them: see the note there.
+t_versao_limpa() {
+    local v="${1:-}"
+    v="$(printf '%s' "$v" | tr -cd 'A-Za-z0-9._-' | cut -c1-24)"
+    [ -n "$v" ] || v="-"
+    printf '%s' "$v"
+}
+
+t_stack_wine() {
+    local v
+    v="$(wine --version 2>/dev/null | head -1 | sed 's/^wine-//')" || v=""
+    t_versao_limpa "$v"
+}
+
+t_stack_winetricks() {
+    local v
+    v="$(winetricks --version 2>/dev/null | head -1 | awk '{print $1}')" || v=""
+    t_versao_limpa "$v"
+}
+
+# ------------------------------------------------- counting without keeping
+#
+# The list counts REPORTS, not machines, because counting machines honestly is
+# impossible without keeping something that identifies the sender - and "we
+# only store a hash" does not survive contact with a laptop. This is the narrow
+# exception, and the shape of it is the whole argument:
+#
+#   token = HMAC-SHA256(secret that never leaves this machine, file identity)
+#
+# The receiving end can tell that two records about THE SAME PROGRAM came from
+# the same machine, which is all deduplication needs. It cannot tell that two
+# records about DIFFERENT programs came from the same machine, because without
+# the secret the two tokens are unrelated values - so it is not a machine
+# identifier and cannot become one by accumulation. That is strictly less than
+# the per-machine pseudonym the prior-art sweep suggested, and it buys the same
+# thing.
+#
+# The secret is 32 random bytes, mode 600, generated once, and never sent.
+t_dedup_segredo() {
+    local arq="$TANDEM_ESTADO/.envio-segredo"
+    [ -n "${TANDEM_ESTADO:-}" ] || return 1
+    if [ ! -s "$arq" ]; then
+        mkdir -p "$TANDEM_ESTADO" 2>/dev/null || return 1
+        ( umask 077
+          head -c 32 /dev/urandom 2>/dev/null | od -An -tx1 | tr -d ' \n' > "$arq"
+        ) || return 1
+        chmod 600 "$arq" 2>/dev/null
+    fi
+    [ -s "$arq" ] || return 1
+    cat "$arq"
+}
+
+t_dedup_token() {
+    local ident="${1:-}" seg
+    [ -n "$ident" ] || return 1
+    seg="$(t_dedup_segredo 2>/dev/null)" || return 1
+    [ -n "$seg" ] || return 1
+    if command -v openssl >/dev/null 2>&1; then
+        printf '%s' "$ident" |
+            openssl dgst -sha256 -hmac "$seg" 2>/dev/null |
+            sed 's/.*= *//' | cut -c1-16
+    else
+        # No openssl: still one-way and still unlinkable across programs. The
+        # secret goes on BOTH sides of the identity so that knowing one record
+        # does not let a length-extension attack forge the next.
+        printf '%s%s%s' "$seg" "$ident" "$seg" | sha256sum | cut -c1-16
+    fi
+}
+
 # Assembles the standardized record for this program. Empty = there is nothing
 # to contribute.
 t_lista_registro() {
@@ -1737,8 +1825,17 @@ t_lista_registro() {
     # With no lesson at all, contributing would be just noise in other
     # people's list.
     [ -n "$verbos" ] || [ -n "$reprovados" ] || [ "$conf" = reprovado ] || return 1
-    reg="$(printf '%s\t%s\t%s\t%s\t%s\t1\t%s\t-' \
-        "$id" "${arch:--}" "${verbos:--}" "${reprovados:--}" "$conf" "$(date +%Y-%m)")"
+    # Fields 9-11 are APPENDED, and the header still says TANDEM-LISTA 1 on
+    # purpose. Every reader of this format indexes by column, so adding columns
+    # at the end is compatible by construction: a 4.6 client in the field reads
+    # fields 1-8 and ignores the rest, which is exactly its old behaviour.
+    # Bumping the version instead would make those clients REJECT the whole
+    # file and lose the list entirely, to gain nothing. The rule to keep is
+    # therefore: append only, never reorder, never repurpose a column.
+    reg="$(printf '%s\t%s\t%s\t%s\t%s\t1\t%s\t-\t%s\t%s\t%s' \
+        "$id" "${arch:--}" "${verbos:--}" "${reprovados:--}" "$conf" "$(date +%Y-%m)" \
+        "$(t_stack_wine)" "$(t_stack_winetricks)" \
+        "$(t_dedup_token "$id" 2>/dev/null || printf '-')")"
     # A date with a DAY identifies; year and month do not. And the slash of a
     # path that slipped in by mistake takes the whole record down instead of
     # leaking.
@@ -1770,11 +1867,51 @@ t_lista_registro() {
 # on the most recent report, then on the fewest verbs (less to install for the
 # same claimed result), then alphabetically, so the answer never depends on the
 # order of the rows in the file.
+# Since 4.9 it also weighs the STACK and the AGE of each report:
+#
+#  - a report produced on a different major version of Wine describes a
+#    different machine, and merging it produces an answer that was never true
+#    anywhere. It is not discarded - it is worth less. A row with no stack
+#    recorded (every row written before 4.9) sits between the two, because
+#    "unknown" is not the same as "wrong".
+#  - a report decays with age: a lesson from a Wine three years gone is weaker
+#    evidence about today's Wine than one from last month.
+#
+# THE DECAY IS DELIBERATELY MILD, and that is the load-bearing decision. Its
+# floor is a quarter, so no amount of age lets ONE fresh report overturn a set
+# four hundred machines confirmed. That is the "downgrade, do not overwrite"
+# rule falling out of the arithmetic instead of being a rule of its own: a
+# sudden verb-set flip on an established fingerprint loses on weight, and only
+# starts winning once enough machines actually report it.
 t_lista_linha() {
-    local id="$1"
+    local id="$1" wine_agora mes_agora
     [ -f "$TANDEM_LISTA" ] || return 1
     [ -n "$id" ] || return 1
-    awk -F'\t' -v alvo="$id" '
+    # The MAJOR version is what matters: 10.0 and 10.4 are the same generation,
+    # 8.x and 10.x are not. awk knows no clock, so today goes in as a variable.
+    wine_agora="$(t_stack_wine 2>/dev/null | cut -d. -f1)"
+    mes_agora="$(date +%Y-%m)"
+    awk -F'\t' -v alvo="$id" -v wine_agora="$wine_agora" -v mes_agora="$mes_agora" '
+        function meses(a, b,   pa, pb) {
+            if (a == "" || b == "") return 0
+            split(a, pa, "-"); split(b, pb, "-")
+            return (pb[1] - pa[1]) * 12 + (pb[2] - pa[2])
+        }
+        # How much one report is worth: its stack against ours, and its age.
+        function peso(w, visto,   p, m, pw) {
+            p = 1
+            if (wine_agora == "" || w == "" || w == "-") {
+                p = 0.75           # unknown stack is not the same as wrong
+            } else {
+                split(w, pw, ".")
+                if (pw[1] != wine_agora) p = 0.5
+            }
+            m = meses(visto, mes_agora)
+            if (m > 12) p = p * 0.75
+            if (m > 24) p = p * 0.66
+            if (m > 48) p = p * 0.5
+            return (p < 0.25) ? 0.25 : p
+        }
         function ganha(v, c, s, n) {
             if (!achou) return 1
             if (c != bc) return (c > bc)
@@ -1788,11 +1925,15 @@ t_lista_linha() {
             # An unmerged record carries no count of its own: it is one
             # machine, which is exactly what it is worth.
             m = ($6 ~ /^[0-9]+$/) ? $6 + 0 : 1
+            # Field 9 is the Wine version, absent on every row written before
+            # 4.9 - which is why "absent" has a weight of its own.
+            w = (NF >= 9) ? $9 : "-"
             if ($5 == "confirmado") {
-                conf[$3] += m
+                conf[$3] += m * peso(w, $7)
+                bruto[$3] += m
                 if ($7 > visto[$3]) visto[$3] = $7
             } else if ($5 == "reprovado") {
-                rep[$3] += m
+                rep[$3] += m * peso(w, $7)
             }
         }
         END {
@@ -1800,10 +1941,14 @@ t_lista_linha() {
                 if (conf[v] <= rep[v]) continue
                 n = split(v, _partes, ",")
                 if (ganha(v, conf[v], visto[v], n)) {
-                    achou = 1; bc = conf[v]; bvisto = visto[v]; bn = n; bv = v
+                    achou = 1; bc = conf[v]; bvisto = visto[v]
+                    bn = n; bv = v; bbruto = bruto[v]
                 }
             }
-            if (achou) printf "%s\t%d\n", bv, bc
+            # The number SHOWN is the honest count of reports, not the internal
+            # weight. Telling the owner "3.7 reports" would be a number nobody
+            # can check against the file he can download and read.
+            if (achou) printf "%s\t%d\n", bv, bbruto
             exit !achou
         }' "$TANDEM_LISTA"
 }
@@ -1827,6 +1972,45 @@ t_lista_maquinas() {
     local linha
     linha="$(t_lista_linha "$1")" || return 1
     printf '%s\n' "$linha" | cut -f2
+}
+
+# Is the downloaded list signed by the key this package trusts?
+#
+# Returns 0 for "fine" in three different situations, and they are not the same
+# thing - the log says which, because "the list is unsigned" and "I cannot
+# check signatures here" are different facts about a machine:
+#   - there is no signature published yet (the rollout is not finished);
+#   - this machine has no openssl, so nothing can be checked;
+#   - the signature is present and good.
+# It returns 1 only for a signature that is present and WRONG, which is the one
+# case that means somebody changed the file after it was published.
+t_lista_assinatura_ok() {
+    local arq="$1" chave sig tmpsig
+    chave="${TANDEM_LISTA_CHAVE:-${TANDEM_LIB:-/usr/lib/tandem}/lista-publica.pem}"
+    [ -f "$chave" ] || { t_diz "lista: sem chave publica instalada; nao confiro"; return 0; }
+    command -v openssl >/dev/null 2>&1 || {
+        t_diz "lista: sem openssl nesta maquina; nao confiro a assinatura"; return 0; }
+    tmpsig="$(mktemp)" || return 0
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL --max-time 30 -o "$tmpsig" "$TANDEM_LISTA_URL.sig" 2>/dev/null
+    else
+        wget -q -T 30 -O "$tmpsig" "$TANDEM_LISTA_URL.sig" 2>/dev/null
+    fi
+    if [ ! -s "$tmpsig" ]; then
+        rm -f "$tmpsig"
+        t_diz "lista: nenhuma assinatura publicada ainda"
+        return 0
+    fi
+    # base64 on the wire so the file survives being served as text.
+    sig="$(mktemp)" || { rm -f "$tmpsig"; return 0; }
+    base64 -d < "$tmpsig" > "$sig" 2>/dev/null || cp "$tmpsig" "$sig"
+    if openssl pkeyutl -verify -pubin -inkey "$chave" -rawin -in "$arq" \
+            -sigfile "$sig" >/dev/null 2>&1; then
+        t_diz "lista: assinatura confere"
+        rm -f "$tmpsig" "$sig"; return 0
+    fi
+    rm -f "$tmpsig" "$sig"
+    return 1
 }
 
 # Downloads the list. A malformed file does NOT replace the good one already
@@ -1854,6 +2038,25 @@ t_lista_atualiza() {
     if ! head -1 "$tmp" | grep -q "^# TANDEM-LISTA $TANDEM_LISTA_VERSAO\$"; then
         t_diz "lista baixada nao declara o formato esperado; descartada"
         rm -f "$tmp"; return 3
+    fi
+    # The signature, when there is one.
+    #
+    # HTTPS proves we talked to GitHub; it does not prove the bytes are what
+    # was published. A bad row in this file is not a bad row on one machine -
+    # it is a verb name that every Tandem on earth downloads and may be asked
+    # to install, which is why the verb-safety gate and the pull-request
+    # requirement exist. This is the third layer.
+    #
+    # ROLLED OUT IN THE ONLY ORDER THAT IS SAFE: a signature that is PRESENT
+    # and WRONG rejects the file; a signature that is absent does not, yet.
+    # Requiring it from day one would mean any hiccup in the signing step
+    # silently cuts every machine off from the list, and the list going quiet
+    # is indistinguishable from the list having nothing to say. When signed
+    # lists have been published for a while, this becomes mandatory - the note
+    # in docs/LIST-FORMAT.md carries the date to flip it.
+    if ! t_lista_assinatura_ok "$tmp"; then
+        t_diz "lista baixada tem assinatura invalida; descartada"
+        rm -f "$tmp"; return 5
     fi
     mv -f "$tmp" "$TANDEM_LISTA" || { rm -f "$tmp"; return 2; }
     t_diz "lista atualizada: $(grep -vc '^#' "$TANDEM_LISTA") programas"
@@ -2169,12 +2372,48 @@ t_porta_fantasma() {
 # counts them too, so dropping them here would print a COM number that does
 # not match the one the program will ask for. They are marked at display
 # time instead - see t_texto_portas.
+# The serial devices Wine will actually give a COM number to, IN WINE'S ORDER.
+#
+# This mirrors mountmgr's detect_devices(), which walks each family from index
+# 0 and STOPS AT THE FIRST GAP - measured against the installed Wine, whose
+# mountmgr.so contains exactly /dev/ttyS%u, /dev/ttyUSB%u, /dev/ttyACM%u and
+# /dev/lp%u and nothing else. So a hole matters: with /dev/ttyUSB1 present and
+# /dev/ttyUSB0 absent, a fresh wineboot creates com1 -> /dev/ttyS0 and NOTHING
+# for the USB adapter.
+#
+# The old version listed every device that existed and t_texto_portas numbered
+# them in sequence, so the owner was told his pinpad was on COM2 when Wine had
+# created no COM2 at all - wrong in the invisible direction, inside the one
+# command written to end exactly this confusion. A hole is not exotic: unplug
+# and replug an adapter, or use a two-port converter, and you have one.
 t_portas_seriais() {
-    local fam p
+    local fam i p
     for fam in ttyS ttyUSB ttyACM; do
-        for p in $(ls -1 -d /dev/${fam}[0-9]* 2>/dev/null | sort -V); do
-            [ -c "$p" ] || continue
+        i=0
+        while :; do
+            p="/dev/${fam}${i}"
+            [ -c "$p" ] || break
             printf '%s\n' "$p"
+            i=$((i + 1))
+        done
+    done
+}
+
+# The devices that EXIST but that Wine skipped, because something before them
+# in their family is missing. These are the ones "tandem portas fixar" was
+# built for, and until 4.9 nothing ever pointed at them.
+t_portas_invisiveis() {
+    local fam i p visto
+    for fam in ttyS ttyUSB ttyACM; do
+        i=0; visto=1
+        while [ "$i" -lt 64 ]; do
+            p="/dev/${fam}${i}"
+            if [ -c "$p" ]; then
+                [ "$visto" = 1 ] || printf '%s\n' "$p"
+            else
+                visto=0
+            fi
+            i=$((i + 1))
         done
     done
 }
@@ -2216,8 +2455,22 @@ t_porta_escutando() {
         awk -v p=":$1" '$4 ~ p "$" { achou = 1 } END { exit !achou }'
 }
 
+# Is this service running? Asked of the process table first, then systemd.
+#
+# The exact match is what a service name deserves - "wine" must not match
+# "winetricks". But Thales installs the Sentinel daemons as aksusbd_x86_64 and
+# hasplmd_x86_64, so on a machine where the runtime was installed from the
+# vendor's script rather than from a .deb, this answered "not running" about a
+# daemon that is running - and the owner is then sent to fix something that is
+# not broken. The suffix is matched explicitly rather than by loosening to a
+# substring, because loose matching is how "wine" starts matching "winetricks".
 t_servico_vivo() {
     pgrep -x "$1" >/dev/null 2>&1 && return 0
+    case "$1" in
+        *_x86_64|*_i386) ;;
+        *) pgrep -x "${1}_x86_64" >/dev/null 2>&1 && return 0
+           pgrep -x "${1}_i386"   >/dev/null 2>&1 && return 0 ;;
+    esac
     command -v systemctl >/dev/null 2>&1 || return 1
     [ "$(systemctl is-active "$1" 2>/dev/null)" = active ]
 }
@@ -2412,7 +2665,27 @@ t_texto_portas() {
         saida="$saida$(t_linha_id "LPT$n" "$p")"
     done <<< "$(t_portas_paralelas)"
 
-    usblp="$(ls -1 -d /dev/usblp[0-9]* 2>/dev/null | head -3)"
+    # /dev/usb/lp0, not /dev/usblp0. The kernel's usblp driver registers the
+    # class device as "lp%d" through a usblp_devnode() that PREPENDS "usb/", so
+    # the node has always been /dev/usb/lp0 and this glob has never matched
+    # anything on any machine. The message behind it - a complete sentence in
+    # all seven languages naming the exact fix command - has therefore never
+    # fired on Earth. The repository already contradicted itself about this:
+    # alternativas.tsv says /dev/usb/lp0 correctly, in every language. The old
+    # path is kept in the glob because a few systems with a local udev rule do
+    # create it, and matching both costs nothing.
+    # Devices that exist and that Wine skipped. Until 4.9 these were counted
+    # into the COM numbering as if Wine had created them, so the owner was
+    # given a number that pointed at nothing.
+    local invis; invis="$(t_portas_invisiveis)"
+    if [ -n "$invis" ]; then
+        saida="$saida
+
+  $(t_msg portas_invisiveis "$(printf '%s' "$invis" | tr '\n' ' ')" \
+                            "$(printf '%s' "$invis" | head -1)")"
+    fi
+
+    usblp="$(ls -1 -d /dev/usb/lp[0-9]* /dev/usblp[0-9]* 2>/dev/null | head -3)"
     if [ -n "$usblp" ]; then
         saida="$saida
 

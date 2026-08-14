@@ -36,6 +36,54 @@ jobs:
           python3 tools/monta-lista.py \
             "https://tandem-psi-ten.vercel.app/api/acumulado" | tee saida.txt
 
+      # Signing. The ONE hand-made secret in this project, and it is here
+      # because the owner decided the trade-off knowingly: a key in Actions
+      # means whoever controls this repository can sign, which is most of the
+      # threat back again - but it costs him nothing weekly, and the realistic
+      # attack (a modified copy served from somewhere that is not GitHub) is
+      # closed by it. CLAUDE.md said "no secret is created by hand anywhere in
+      # the chain" for four versions; that sentence is now wrong, and the note
+      # beside it says so rather than being quietly deleted.
+      #
+      # It signs whatever the rebuild produced, in the same job, before the
+      # pull request - so what a human reviews on the PR page is exactly the
+      # bytes that were signed.
+      - name: Sign the rebuilt list
+        env:
+          LISTA_CHAVE_PRIVADA: ${{ secrets.LISTA_CHAVE_PRIVADA }}
+        run: |
+          set -euo pipefail
+          # The absence check is INSIDE the script on purpose. A step-level
+          # `if:` reading its own `env:` is the kind of expression that either
+          # always skips or always runs depending on how the runner resolves
+          # contexts, and both failure modes are silent: one never signs and
+          # says nothing, the other fails every rebuild. Here it is a plain
+          # shell test whose behaviour is obvious from reading it.
+          if [ -z "${LISTA_CHAVE_PRIVADA:-}" ]; then
+            echo "no signing key configured yet - publishing the list unsigned"
+            exit 0
+          fi
+          if [ ! -f src/lib/lista-publica.pem ]; then
+            echo "a private key is configured but no public key is committed;"
+            echo "signing now would produce a signature nothing can check."
+            exit 1
+          fi
+          umask 077
+          printf '%s' "$LISTA_CHAVE_PRIVADA" > /tmp/lista.key
+          # -rawin is what Ed25519 needs: it signs the message, not a digest.
+          openssl pkeyutl -sign -inkey /tmp/lista.key -rawin \
+              -in lista/lista.tsv -out /tmp/lista.sig
+          base64 -w0 < /tmp/lista.sig > lista/lista.tsv.sig
+          shred -u /tmp/lista.key /tmp/lista.sig 2>/dev/null || rm -f /tmp/lista.key /tmp/lista.sig
+          # Proves the signature verifies against the PUBLISHED public key
+          # before it goes anywhere near a pull request. A signature nobody
+          # checked is a signature that can be wrong for a month.
+          base64 -d < lista/lista.tsv.sig > /tmp/check.sig
+          openssl pkeyutl -verify -pubin -inkey src/lib/lista-publica.pem -rawin \
+              -in lista/lista.tsv -sigfile /tmp/check.sig
+          rm -f /tmp/check.sig
+          echo "signature verifies against the shipped public key"
+
       - name: Open a pull request when the list actually changed
         env:
           GH_TOKEN: ${{ github.token }}
