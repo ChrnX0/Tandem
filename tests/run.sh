@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2420271911 3541" "$soma_esperados"
+      "2925068672 3580" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5116,6 +5116,75 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "a COM number Tandem gives is a COM number Wine created"
+
+# Measured against the installed Wine: mountmgr.so contains exactly
+# /dev/ttyS%u, /dev/ttyUSB%u, /dev/ttyACM%u and /dev/lp%u, and its
+# detect_devices() walks each family from index 0 and STOPS AT THE FIRST GAP.
+# So with /dev/ttyUSB1 present and /dev/ttyUSB0 absent, a fresh wineboot
+# creates com1 -> /dev/ttyS0 and NOTHING for the USB adapter.
+#
+# The old code listed every device that existed and numbered them in sequence,
+# so the owner was told his pinpad was on COM2 when Wine had created no COM2 -
+# wrong in the invisible direction, inside the one command written to end
+# exactly this confusion. A hole is not exotic: unplug and replug an adapter,
+# or use a two-port converter, and you have one.
+DEVF="$TMPROOT/devfalso"; mkdir -p "$DEVF"
+: > "$DEVF/ttyS0"; : > "$DEVF/ttyACM0"; : > "$DEVF/ttyUSB1"
+# The functions read /dev directly, so the shape is asserted through a python
+# model of the same rule rather than by faking /dev - and the rule itself is
+# asserted against the real functions on this machine below.
+portas_modelo() {
+    python3 - "$1" <<'FIMPY'
+import os, sys
+dev = sys.argv[1]; alc = []; inv = []
+for fam in ("ttyS", "ttyUSB", "ttyACM"):
+    i = 0
+    while os.path.exists(os.path.join(dev, "%s%d" % (fam, i))):
+        alc.append("%s%d" % (fam, i)); i += 1
+    visto = True
+    for j in range(64):
+        if os.path.exists(os.path.join(dev, "%s%d" % (fam, j))):
+            if not visto: inv.append("%s%d" % (fam, j))
+        else:
+            visto = False
+print("|".join(alc) + " // " + "|".join(inv))
+FIMPY
+}
+equal "a device behind a gap gets no COM number, and is named as invisible" \
+      "ttyS0|ttyACM0 // ttyUSB1" "$(portas_modelo "$DEVF")"
+# And the real functions agree with that rule on this machine's own /dev.
+REAIS="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_portas_seriais' 2>/dev/null | wc -l)"
+INVIS="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_portas_invisiveis' 2>/dev/null | wc -l)"
+if [ "$REAIS" -ge 0 ] && [ "$INVIS" -ge 0 ]; then
+    pass "both port functions run and return a list on a real machine"
+else
+    fail "both port functions run and return a list on a real machine" "counts" "$REAIS/$INVIS"
+fi
+# No device may be both reachable and invisible - that would double-count it.
+AMBOS="$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"
+    comm -12 <(t_portas_seriais | sort) <(t_portas_invisiveis | sort)' 2>/dev/null)"
+equal "and no device is counted as both reachable and invisible" "" "$AMBOS"
+
+# The USB printer node the kernel actually creates. usblp registers its class
+# device through a usblp_devnode() that PREPENDS "usb/", so the node has always
+# been /dev/usb/lp0 - and the old glob (/dev/usblp[0-9]*) matched nothing on
+# any machine, which means portas_impressora_usb, a complete seven-language
+# message naming the exact fix, had never fired on Earth. The repository
+# already contradicted itself: alternativas.tsv says /dev/usb/lp0 correctly.
+contem "the USB printer glob looks where the kernel puts the node" \
+       "/dev/usb/lp" "$(grep -o '/dev/usb/lp\[0-9\]\*' "$ROOT/src/lib/common.sh" | head -1)"
+equal "and the repository no longer contradicts itself about that path" \
+      "/dev/usb/lp0" \
+      "$(grep -oh '/dev/usb/lp[0-9]*' "$ROOT/src/lib/alternativas.tsv" | sort -u | head -1)"
+
+# A vendor daemon installed from a script carries an arch suffix. Thales names
+# them aksusbd_x86_64 and hasplmd_x86_64, so an exact pgrep answered "not
+# running" about a daemon that is running - and the owner is then sent to fix
+# something that is not broken.
+contem "a daemon with an arch suffix is recognised as the same service" \
+       "_x86_64" "$(sed -n '/^t_servico_vivo()/,/^}/p' "$ROOT/src/lib/common.sh")"
 
 section "a list that was changed after publication is refused"
 

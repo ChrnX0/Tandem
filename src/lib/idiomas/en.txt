@@ -2912,3 +2912,12 @@ It called something this Wine does not have yet.
 
 @esperando_outra_instalacao
 Another program is installing Windows components into the same environment right now. I am waiting for it to finish before starting - doing both at once damages the environment. This may take a while.
+
+@portas_invisiveis
+These are plugged in and Linux can see them, but Wine gave them no COM number:
+
+  {1}
+
+That happens when something earlier in the same series is missing - unplug and replug an adapter and you get exactly this. The program will not find the device until you give it a number:
+
+  tandem portas fixar COM2 {2}

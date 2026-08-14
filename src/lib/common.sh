@@ -2372,12 +2372,48 @@ t_porta_fantasma() {
 # counts them too, so dropping them here would print a COM number that does
 # not match the one the program will ask for. They are marked at display
 # time instead - see t_texto_portas.
+# The serial devices Wine will actually give a COM number to, IN WINE'S ORDER.
+#
+# This mirrors mountmgr's detect_devices(), which walks each family from index
+# 0 and STOPS AT THE FIRST GAP - measured against the installed Wine, whose
+# mountmgr.so contains exactly /dev/ttyS%u, /dev/ttyUSB%u, /dev/ttyACM%u and
+# /dev/lp%u and nothing else. So a hole matters: with /dev/ttyUSB1 present and
+# /dev/ttyUSB0 absent, a fresh wineboot creates com1 -> /dev/ttyS0 and NOTHING
+# for the USB adapter.
+#
+# The old version listed every device that existed and t_texto_portas numbered
+# them in sequence, so the owner was told his pinpad was on COM2 when Wine had
+# created no COM2 at all - wrong in the invisible direction, inside the one
+# command written to end exactly this confusion. A hole is not exotic: unplug
+# and replug an adapter, or use a two-port converter, and you have one.
 t_portas_seriais() {
-    local fam p
+    local fam i p
     for fam in ttyS ttyUSB ttyACM; do
-        for p in $(ls -1 -d /dev/${fam}[0-9]* 2>/dev/null | sort -V); do
-            [ -c "$p" ] || continue
+        i=0
+        while :; do
+            p="/dev/${fam}${i}"
+            [ -c "$p" ] || break
             printf '%s\n' "$p"
+            i=$((i + 1))
+        done
+    done
+}
+
+# The devices that EXIST but that Wine skipped, because something before them
+# in their family is missing. These are the ones "tandem portas fixar" was
+# built for, and until 4.9 nothing ever pointed at them.
+t_portas_invisiveis() {
+    local fam i p visto
+    for fam in ttyS ttyUSB ttyACM; do
+        i=0; visto=1
+        while [ "$i" -lt 64 ]; do
+            p="/dev/${fam}${i}"
+            if [ -c "$p" ]; then
+                [ "$visto" = 1 ] || printf '%s\n' "$p"
+            else
+                visto=0
+            fi
+            i=$((i + 1))
         done
     done
 }
@@ -2419,8 +2455,22 @@ t_porta_escutando() {
         awk -v p=":$1" '$4 ~ p "$" { achou = 1 } END { exit !achou }'
 }
 
+# Is this service running? Asked of the process table first, then systemd.
+#
+# The exact match is what a service name deserves - "wine" must not match
+# "winetricks". But Thales installs the Sentinel daemons as aksusbd_x86_64 and
+# hasplmd_x86_64, so on a machine where the runtime was installed from the
+# vendor's script rather than from a .deb, this answered "not running" about a
+# daemon that is running - and the owner is then sent to fix something that is
+# not broken. The suffix is matched explicitly rather than by loosening to a
+# substring, because loose matching is how "wine" starts matching "winetricks".
 t_servico_vivo() {
     pgrep -x "$1" >/dev/null 2>&1 && return 0
+    case "$1" in
+        *_x86_64|*_i386) ;;
+        *) pgrep -x "${1}_x86_64" >/dev/null 2>&1 && return 0
+           pgrep -x "${1}_i386"   >/dev/null 2>&1 && return 0 ;;
+    esac
     command -v systemctl >/dev/null 2>&1 || return 1
     [ "$(systemctl is-active "$1" 2>/dev/null)" = active ]
 }
@@ -2615,7 +2665,27 @@ t_texto_portas() {
         saida="$saida$(t_linha_id "LPT$n" "$p")"
     done <<< "$(t_portas_paralelas)"
 
-    usblp="$(ls -1 -d /dev/usblp[0-9]* 2>/dev/null | head -3)"
+    # /dev/usb/lp0, not /dev/usblp0. The kernel's usblp driver registers the
+    # class device as "lp%d" through a usblp_devnode() that PREPENDS "usb/", so
+    # the node has always been /dev/usb/lp0 and this glob has never matched
+    # anything on any machine. The message behind it - a complete sentence in
+    # all seven languages naming the exact fix command - has therefore never
+    # fired on Earth. The repository already contradicted itself about this:
+    # alternativas.tsv says /dev/usb/lp0 correctly, in every language. The old
+    # path is kept in the glob because a few systems with a local udev rule do
+    # create it, and matching both costs nothing.
+    # Devices that exist and that Wine skipped. Until 4.9 these were counted
+    # into the COM numbering as if Wine had created them, so the owner was
+    # given a number that pointed at nothing.
+    local invis; invis="$(t_portas_invisiveis)"
+    if [ -n "$invis" ]; then
+        saida="$saida
+
+  $(t_msg portas_invisiveis "$(printf '%s' "$invis" | tr '\n' ' ')" \
+                            "$(printf '%s' "$invis" | head -1)")"
+    fi
+
+    usblp="$(ls -1 -d /dev/usb/lp[0-9]* /dev/usblp[0-9]* 2>/dev/null | head -3)"
     if [ -n "$usblp" ]; then
         saida="$saida
 
