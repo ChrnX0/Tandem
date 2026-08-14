@@ -36,6 +36,40 @@ jobs:
           python3 tools/monta-lista.py \
             "https://tandem-psi-ten.vercel.app/api/acumulado" | tee saida.txt
 
+      # Signing. The ONE hand-made secret in this project, and it is here
+      # because the owner decided the trade-off knowingly: a key in Actions
+      # means whoever controls this repository can sign, which is most of the
+      # threat back again - but it costs him nothing weekly, and the realistic
+      # attack (a modified copy served from somewhere that is not GitHub) is
+      # closed by it. CLAUDE.md said "no secret is created by hand anywhere in
+      # the chain" for four versions; that sentence is now wrong, and the note
+      # beside it says so rather than being quietly deleted.
+      #
+      # It signs whatever the rebuild produced, in the same job, before the
+      # pull request - so what a human reviews on the PR page is exactly the
+      # bytes that were signed.
+      - name: Sign the rebuilt list
+        if: ${{ env.LISTA_CHAVE_PRIVADA != '' }}
+        env:
+          LISTA_CHAVE_PRIVADA: ${{ secrets.LISTA_CHAVE_PRIVADA }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$LISTA_CHAVE_PRIVADA" > /tmp/lista.key
+          # -rawin is what Ed25519 needs: it signs the message, not a digest.
+          openssl pkeyutl -sign -inkey /tmp/lista.key -rawin \
+              -in lista/lista.tsv -out /tmp/lista.sig
+          base64 -w0 < /tmp/lista.sig > lista/lista.tsv.sig
+          shred -u /tmp/lista.key /tmp/lista.sig 2>/dev/null || rm -f /tmp/lista.key /tmp/lista.sig
+          # Proves the signature verifies against the PUBLISHED public key
+          # before it goes anywhere near a pull request. A signature nobody
+          # checked is a signature that can be wrong for a month.
+          base64 -d < lista/lista.tsv.sig > /tmp/check.sig
+          openssl pkeyutl -verify -pubin -inkey src/lib/lista-publica.pem -rawin \
+              -in lista/lista.tsv -sigfile /tmp/check.sig
+          rm -f /tmp/check.sig
+          echo "signature verifies against the shipped public key"
+
       - name: Open a pull request when the list actually changed
         env:
           GH_TOKEN: ${{ github.token }}

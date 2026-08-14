@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1851707672 3513" "$soma_esperados"
+      "2420271911 3541" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5115,6 +5115,57 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
     done
 else
     skip "desktop-file-validate" "not installed"
+fi
+
+section "a list that was changed after publication is refused"
+
+# HTTPS proves we talked to GitHub; it does not prove the bytes are what was
+# published. A bad row here is not a bad row on one machine - it is a verb name
+# every Tandem downloads and may be asked to install.
+#
+# The rollout order is the careful part and it is asserted below: a signature
+# that is PRESENT and WRONG rejects the file; a signature that is ABSENT does
+# not, yet. Requiring it from day one would mean any hiccup in the signing step
+# silently cuts every machine off, and a quiet list is indistinguishable from a
+# list with nothing to say.
+if command -v openssl >/dev/null 2>&1 && openssl genpkey -algorithm ed25519 \
+        -out "$TMPROOT/priv.pem" 2>/dev/null; then
+    openssl pkey -in "$TMPROOT/priv.pem" -pubout -out "$TMPROOT/pub.pem" 2>/dev/null
+    printf '# TANDEM-LISTA 1\naaaa\t64\tvcrun2022\t-\tconfirmado\t1\t2026-08\t-\n' \
+        > "$TMPROOT/assinada.tsv"
+    openssl pkeyutl -sign -inkey "$TMPROOT/priv.pem" -rawin \
+        -in "$TMPROOT/assinada.tsv" -out "$TMPROOT/s.bin" 2>/dev/null
+    base64 -w0 < "$TMPROOT/s.bin" > "$TMPROOT/assinada.tsv.sig"
+    cp "$TMPROOT/assinada.tsv" "$TMPROOT/mexida.tsv"
+    printf 'aaaa\t64\tsandbox\t-\tconfirmado\t9\t2026-08\t-\n' >> "$TMPROOT/mexida.tsv"
+    # file:// rather than a local HTTP server. The first version bound a FIXED
+    # port, so running the suite twice in a row left the second run talking to
+    # the first run's server and reading the first run's files - the assertion
+    # passed on one run and failed on the next. A flaky test is worse than no
+    # test: it teaches everybody to re-run until green, which is how a real
+    # failure gets waved through. curl and wget both read file:// URLs, so the
+    # port was never needed.
+    confere() {
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_LISTA_CHAVE="$2" \
+        TANDEM_LISTA_URL="file://$TMPROOT/$3" \
+            bash -c '. "'"$ROOT"'/src/lib/common.sh"
+                     t_lista_assinatura_ok "$1" && echo ACEITA || echo RECUSA' _ "$1" 2>/dev/null
+    }
+    equal "a correctly signed list is accepted" \
+          "ACEITA" "$(confere "$TMPROOT/assinada.tsv" "$TMPROOT/pub.pem" assinada.tsv)"
+    equal "a list changed after it was signed is refused" \
+          "RECUSA" "$(confere "$TMPROOT/mexida.tsv" "$TMPROOT/pub.pem" assinada.tsv)"
+    # No signature published yet: accept, and say so in the log. This is the
+    # half that makes the rollout safe rather than the half that makes it
+    # secure, and conflating the two is how a rollout breaks everybody.
+    equal "a list with no signature published yet is still accepted" \
+          "ACEITA" "$(confere "$TMPROOT/assinada.tsv" "$TMPROOT/pub.pem" naoexiste.tsv)"
+    # And with no public key installed there is nothing to check against -
+    # which is every package built before the owner hands over his key.
+    equal "and a package with no public key installed does not refuse the list" \
+          "ACEITA" "$(confere "$TMPROOT/mexida.tsv" "$TMPROOT/naoexiste.pem" assinada.tsv)"
+else
+    skip "a list changed after publication is refused" "openssl without ed25519"
 fi
 
 section "the list weighs the stack, the age, and counts each machine once"

@@ -1974,6 +1974,45 @@ t_lista_maquinas() {
     printf '%s\n' "$linha" | cut -f2
 }
 
+# Is the downloaded list signed by the key this package trusts?
+#
+# Returns 0 for "fine" in three different situations, and they are not the same
+# thing - the log says which, because "the list is unsigned" and "I cannot
+# check signatures here" are different facts about a machine:
+#   - there is no signature published yet (the rollout is not finished);
+#   - this machine has no openssl, so nothing can be checked;
+#   - the signature is present and good.
+# It returns 1 only for a signature that is present and WRONG, which is the one
+# case that means somebody changed the file after it was published.
+t_lista_assinatura_ok() {
+    local arq="$1" chave sig tmpsig
+    chave="${TANDEM_LISTA_CHAVE:-${TANDEM_LIB:-/usr/lib/tandem}/lista-publica.pem}"
+    [ -f "$chave" ] || { t_diz "lista: sem chave publica instalada; nao confiro"; return 0; }
+    command -v openssl >/dev/null 2>&1 || {
+        t_diz "lista: sem openssl nesta maquina; nao confiro a assinatura"; return 0; }
+    tmpsig="$(mktemp)" || return 0
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL --max-time 30 -o "$tmpsig" "$TANDEM_LISTA_URL.sig" 2>/dev/null
+    else
+        wget -q -T 30 -O "$tmpsig" "$TANDEM_LISTA_URL.sig" 2>/dev/null
+    fi
+    if [ ! -s "$tmpsig" ]; then
+        rm -f "$tmpsig"
+        t_diz "lista: nenhuma assinatura publicada ainda"
+        return 0
+    fi
+    # base64 on the wire so the file survives being served as text.
+    sig="$(mktemp)" || { rm -f "$tmpsig"; return 0; }
+    base64 -d < "$tmpsig" > "$sig" 2>/dev/null || cp "$tmpsig" "$sig"
+    if openssl pkeyutl -verify -pubin -inkey "$chave" -rawin -in "$arq" \
+            -sigfile "$sig" >/dev/null 2>&1; then
+        t_diz "lista: assinatura confere"
+        rm -f "$tmpsig" "$sig"; return 0
+    fi
+    rm -f "$tmpsig" "$sig"
+    return 1
+}
+
 # Downloads the list. A malformed file does NOT replace the good one already
 # on disk: a broken list would silence the second opinion with nobody
 # noticing.
@@ -1999,6 +2038,25 @@ t_lista_atualiza() {
     if ! head -1 "$tmp" | grep -q "^# TANDEM-LISTA $TANDEM_LISTA_VERSAO\$"; then
         t_diz "lista baixada nao declara o formato esperado; descartada"
         rm -f "$tmp"; return 3
+    fi
+    # The signature, when there is one.
+    #
+    # HTTPS proves we talked to GitHub; it does not prove the bytes are what
+    # was published. A bad row in this file is not a bad row on one machine -
+    # it is a verb name that every Tandem on earth downloads and may be asked
+    # to install, which is why the verb-safety gate and the pull-request
+    # requirement exist. This is the third layer.
+    #
+    # ROLLED OUT IN THE ONLY ORDER THAT IS SAFE: a signature that is PRESENT
+    # and WRONG rejects the file; a signature that is absent does not, yet.
+    # Requiring it from day one would mean any hiccup in the signing step
+    # silently cuts every machine off from the list, and the list going quiet
+    # is indistinguishable from the list having nothing to say. When signed
+    # lists have been published for a while, this becomes mandatory - the note
+    # in docs/LIST-FORMAT.md carries the date to flip it.
+    if ! t_lista_assinatura_ok "$tmp"; then
+        t_diz "lista baixada tem assinatura invalida; descartada"
+        rm -f "$tmp"; return 5
     fi
     mv -f "$tmp" "$TANDEM_LISTA" || { rm -f "$tmp"; return 2; }
     t_diz "lista atualizada: $(grep -vc '^#' "$TANDEM_LISTA") programas"
