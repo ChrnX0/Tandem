@@ -1,3 +1,25 @@
+tandem (4.11) unstable; urgency=medium
+
+  * "tandem repair" asks who owns a type with the tool the file manager
+    actually uses. This repository proved two versions ago that xdg-mime is the
+    wrong instrument - Nautilus uses GIO, and GIO resolves the MIME SUBCLASS
+    CHAIN while xdg-mime does not - and the command had it exactly half right:
+    it WRITES the association through both tools and read it back through
+    xdg-mime alone. So the before/after report, which is the entire point of
+    that command and the thing the owner reads to find out who held the type,
+    could answer "nobody" about a type a text editor really owns.
+  * .flatpakref is the case that makes it matter: it is declared sub-class-of
+    text/plain, so with Tandem's association gone a double-clicked one opens in
+    a TEXT EDITOR rather than doing nothing - and "nobody" is then both wrong
+    and a milder story than the truth. Re-measured on this machine: gio mime
+    text/sgml answers vim.desktop and xdg-mime query default answers nothing.
+  * xdg-mime stays as the fallback rather than as the authority, because a
+    machine with no GIO is one where it is the only answer available - not one
+    where its answer is as good. Setting the association still goes through
+    both tools, since setting it in one is not enough.
+
+ -- Tandem <rockx0@gmail.com>  Fri, 14 Aug 2026 14:22:40 +0000
+
 tandem (4.10) unstable; urgency=medium
 
   * The stack field carries the version and nothing else. 4.9 shipped it

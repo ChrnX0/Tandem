@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3663130455 3619" "$soma_esperados"
+      "3752581645 3630" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5116,6 +5116,45 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "who owns a type is asked of the tool the file manager uses"
+
+# This repository already proved xdg-mime is the wrong instrument: Nautilus
+# uses GIO, and GIO resolves the MIME SUBCLASS CHAIN while xdg-mime does not.
+# tandem-repair had it half right - it WRITES the association with both tools
+# and read it back with xdg-mime alone, so the before/after report (the whole
+# point of that command) could say "nobody" about a type a text editor really
+# owns through text/plain.
+#
+# .flatpakref is declared sub-class-of text/plain, which is exactly the case
+# where "nobody" is both wrong and worse than the truth: with Tandem's
+# association gone, a double-clicked .flatpakref opens in a text editor rather
+# than doing nothing.
+if command -v gio >/dev/null 2>&1; then
+    # A type Tandem never touches, so the answer is the system's own.
+    GIO_DIZ="$(gio mime text/sgml 2>/dev/null | sed -n 's/^Default application for .*: *//p' | head -1)"
+    XDG_DIZ="$(xdg-mime query default text/sgml 2>/dev/null | head -1)"
+    NOSSO="$(TANDEM_LIB="$ROOT/src/lib" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; t_dono_do_tipo text/sgml' 2>/dev/null)"
+    equal "Tandem's answer is the file manager's answer" "$GIO_DIZ" "$NOSSO"
+    # And this machine is one where the two tools actually disagree, so the
+    # assertion above is not passing by coincidence. If they ever agree here,
+    # the test says so rather than quietly proving nothing.
+    if [ "$GIO_DIZ" != "$XDG_DIZ" ]; then
+        pass "and the two tools really do disagree on this machine"
+    else
+        skip "the two tools disagree on this machine" \
+             "gio and xdg-mime agree on text/sgml here, so this proves nothing"
+    fi
+else
+    skip "who owns a type is asked of the tool the file manager uses" "no gio"
+fi
+# No read site in tandem-repair may go back to the weaker tool.
+equal "tandem-repair asks no ownership question through xdg-mime" \
+      "0" "$(grep -c 'xdg-mime query default' "$ROOT/src/bin/tandem-repair")"
+# But WRITING still goes through both, because setting it in one is not enough.
+contem "while setting the association still goes through both tools" \
+       "xdg-mime default" "$(cat "$ROOT/src/bin/tandem-repair")"
 
 section "the stack field carries the version and nothing else"
 

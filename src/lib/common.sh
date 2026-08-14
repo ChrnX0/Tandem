@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.10"
+TANDEM_VERSAO="4.11"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -2470,6 +2470,35 @@ t_porta_escutando() {
     command -v ss >/dev/null 2>&1 || return 2
     ss -H -ltn 2>/dev/null |
         awk -v p=":$1" '$4 ~ p "$" { achou = 1 } END { exit !achou }'
+}
+
+# Who owns this MIME type, as the FILE MANAGER would answer it.
+#
+# `xdg-mime query default` is the wrong instrument and this repository already
+# proved it: Nautilus uses GIO, and GIO resolves the MIME SUBCLASS CHAIN while
+# xdg-mime does not. Re-measured here on a type Tandem never touches -
+# `gio mime text/sgml` answers vim.desktop, `xdg-mime query default text/sgml`
+# answers nothing.
+#
+# tandem-repair had it half right: it WRITES the association with both tools
+# and then READS it back with xdg-mime alone. So the before/after report - the
+# whole point of that command, the thing the owner reads to find out who held
+# the type - could say "nobody" about a type a text editor really owns through
+# text/plain. .flatpakref is declared sub-class-of text/plain, which is exactly
+# the case where "nobody" is wrong AND worse than the truth: with Tandem's
+# association gone, a double-clicked .flatpakref opens in a text editor rather
+# than doing nothing.
+t_dono_do_tipo() {
+    local tipo="$1" dono=""
+    if command -v gio >/dev/null 2>&1; then
+        dono="$(gio mime "$tipo" 2>/dev/null |
+                sed -n 's/^Default application for .*: *//p' | head -1)"
+    fi
+    # xdg-mime is the fallback rather than the authority, and it is kept
+    # because a machine with no GIO is a machine where it is the only answer
+    # available - not because its answer is as good.
+    [ -n "$dono" ] || dono="$(xdg-mime query default "$tipo" 2>/dev/null | head -1)"
+    printf '%s' "$dono"
 }
 
 # Is this service running? Asked of the process table first, then systemd.
