@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2925068672 3580" "$soma_esperados"
+      "593566387 3591" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5116,6 +5116,44 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "the driver installer that reports success and binds nothing"
+
+# A fifth thing nobody had named, and the only one of the eight that is
+# invisible to every instrument this project owns.
+#
+# Measured against the installed Wine: newdev.dll's HARD stub list is
+# DiInstallDevice, DiRollbackDriver, DiShowUpdateDevice, DiUninstallDevice,
+# InstallWindowsUpdateDriver and the pDi* family - and DiInstallDriverA/W and
+# UpdateDriverForPlugAndPlayDevicesA/W are NOT in it. They are soft stubs: they
+# log a FIXME and return. setupapi really does export SetupCopyOEMInfW, so the
+# files genuinely get copied.
+#
+# That distinction is the whole point. A HARD stub raises "Call from ... to
+# unimplemented function", which t_falta_no_wine catches since 4.8. A SOFT stub
+# raises nothing: the installer runs, copies its files, reports success, binds
+# no driver, and the owner reboots wondering why nothing changed.
+for sig in newdev.dll difxapi.dll; do
+    contem "$sig is recognised as a driver installer" \
+           "instalador-driver" \
+           "$(awk -F'\t' -v s="$sig" '$1 == s { print $2 }' "$ROOT/src/lib/limites.tsv")"
+done
+# It must NOT match on setupapi alone: half the installers in the world import
+# setupapi and have nothing to do with drivers.
+equal "but setupapi alone is not treated as a driver installer" \
+      "" "$(awk -F'\t' '$1 ~ /^setupapi/ { print $2 }' "$ROOT/src/lib/limites.tsv")"
+# The verdict has a WAY OUT, and it is the true one for almost every case: the
+# device the disc was for is usually already working, because Linux drives the
+# bridge chips these discs exist for.
+contem "and the way out points at the ports command rather than at nothing" \
+       "tandem portas" \
+       "$(awk -F'\t' '$1 == "newdev.dll" { print $4 }' "$ROOT/src/lib/limites.tsv")"
+# An unknown class must be treated as HAVING a way out, never as hopeless -
+# the rule that already governs this table.
+equal "a driver installer is not presented as hopeless" \
+      "TEM_SAIDA" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"
+          t_limite_sem_saida instalador-driver && echo SEM_SAIDA || echo TEM_SAIDA' 2>/dev/null)"
 
 section "a COM number Tandem gives is a COM number Wine created"
 

@@ -84,6 +84,23 @@ tandem (4.9) unstable; urgency=medium
     broken. The suffix is matched explicitly rather than by loosening to a
     substring, because loose matching is how "wine" starts matching
     "winetricks".
+  * The driver installer that reports success and binds nothing is recognised.
+    It is a fifth thing nobody had named, and the only one of the eight kinds of
+    "driver" that is invisible to every instrument this project owns. Measured
+    against the installed Wine: newdev.dll's HARD stub list is DiInstallDevice,
+    DiRollbackDriver, DiShowUpdateDevice, DiUninstallDevice,
+    InstallWindowsUpdateDriver and the pDi* family - and DiInstallDriverW and
+    UpdateDriverForPlugAndPlayDevicesW are NOT in it. They are soft stubs: they
+    log a FIXME and return. setupapi genuinely exports SetupCopyOEMInfW, so the
+    files really do get copied. A hard stub raises "unimplemented function",
+    which 4.8 catches; a soft stub raises nothing, so the installer looks like
+    it worked and the owner reboots wondering why nothing changed.
+  * Its way out is the true one for almost every case rather than a shrug: the
+    device the disc was for is usually already working, because Linux drives the
+    serial and USB bridge chips these discs exist for - so the verdict points at
+    "tandem portas" instead of at nothing. It matches newdev/difxapi and never
+    setupapi alone, because half the installers in the world import setupapi and
+    have nothing to do with drivers.
  -- Tandem <rockx0@gmail.com>  Fri, 14 Aug 2026 04:03:22 +0000
 
 tandem (4.8) unstable; urgency=medium
