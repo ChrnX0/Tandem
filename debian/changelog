@@ -1,3 +1,21 @@
+tandem (4.10) unstable; urgency=medium
+
+  * The stack field carries the version and nothing else. 4.9 shipped it
+    carrying "9.0Ubuntu9.0repack-4buil" - `wine --version` answers "wine-9.0
+    (Ubuntu 9.0~repack-4build3)" and the cleaner stripped every character that
+    was not a version character and glued the rest together, then truncated it
+    mid-word at 24. Found by installing the published 4.9 package and READING
+    the field, which is the only method that has ever caught anything here.
+  * It mattered beyond ugliness, which is why it is a release of its own rather
+    than a note: tools/monta-lista.py GROUPS BY THE STACK, so the same Wine 9.0
+    packaged by Ubuntu, by Debian and built from source would have produced
+    three different strings and fragmented the list into three rows of one
+    report each instead of one row of three - the exact opposite of what the
+    field was added to do in 4.9. No published record carries the malformed
+    value, because the list is still empty.
+
+ -- Tandem <rockx0@gmail.com>  Fri, 14 Aug 2026 08:24:51 +0000
+
 tandem (4.9) unstable; urgency=medium
 
   * The community list learns what produced a report. WineHQ's AppDB has had

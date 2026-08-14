@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "593566387 3591" "$soma_esperados"
+      "3663130455 3619" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5116,6 +5116,41 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "the stack field carries the version and nothing else"
+
+# Found by installing the built 4.9 package and READING the field, which is the
+# only method that has ever caught anything in this project. `wine --version`
+# answers "wine-9.0 (Ubuntu 9.0~repack-4build3)", and the first version of
+# t_versao_limpa stripped every character that was not a version character and
+# glued the rest together: "9.0Ubuntu9.0repack-4buil", truncated mid-word.
+#
+# It matters beyond ugliness. tools/monta-lista.py GROUPS BY THE STACK, so the
+# same Wine 9.0 packaged by Ubuntu, by Debian and built from source would have
+# produced three different strings and fragmented the list into three rows of
+# one report each instead of one row of three - the exact opposite of what the
+# field was added to do.
+vlimpa() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; t_versao_limpa "$1"' _ "$1" 2>/dev/null
+}
+# The three real shapes, verbatim from what the tools actually print.
+equal "Ubuntu's packaging of Wine 9.0 reads as 9.0" \
+      "9.0" "$(vlimpa '9.0 (Ubuntu 9.0~repack-4build3)')"
+equal "Debian's packaging of the same Wine reads the same" \
+      "9.0" "$(vlimpa '9.0 (Debian 9.0-1)')"
+equal "and a source build of it reads the same again" \
+      "9.0" "$(vlimpa '9.0')"
+# winetricks prints its version followed by a checksum trailer. The trailer
+# goes; the "-next" suffix STAYS, because it is part of the version - a -next
+# build and a release build are not interchangeable evidence, which is the
+# whole reason this field exists. My first expectation here was "20240105" and
+# it was the expectation that was wrong, not the code.
+equal "winetricks' version keeps its suffix and loses its checksum trailer" \
+      "20240105-next" "$(vlimpa '20240105-next - sha256sum: abc123')"
+# Absent stays absent rather than becoming an empty field, which would shift
+# every column after it.
+equal "and nothing becomes a dash, never an empty column" "-" "$(vlimpa '')"
 
 section "the driver installer that reports success and binds nothing"
 

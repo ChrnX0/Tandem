@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.9"
+TANDEM_VERSAO="4.10"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1744,9 +1744,26 @@ FIM
 #
 # Constrained to a version charset and capped, because these two fields are the
 # reason t_lista_vaza has to skip them: see the note there.
+# The version, and ONLY the version.
+#
+# The first version of this stripped everything that was not a version
+# character and glued the rest together, so `wine --version`'s real output -
+# "wine-9.0 (Ubuntu 9.0~repack-4build3)" - became "9.0Ubuntu9.0repack-4buil",
+# truncated mid-word at 24 characters. Found by installing the built package and
+# reading the field, which is the only method that has ever caught anything in
+# this project.
+#
+# It matters beyond ugliness: the same Wine 9.0 packaged by Ubuntu, by Debian
+# and built from source would have produced three DIFFERENT stack strings, and
+# tools/monta-lista.py groups by the stack - so the list would have fragmented
+# into three rows of one report each instead of one row of three, which is the
+# exact opposite of what the stack field was added to do.
+#
+# So: take the FIRST whitespace-delimited token, which is where every tool of
+# this kind puts the version, and only then constrain the charset.
 t_versao_limpa() {
     local v="${1:-}"
-    v="$(printf '%s' "$v" | tr -cd 'A-Za-z0-9._-' | cut -c1-24)"
+    v="$(printf '%s' "$v" | awk '{print $1}' | tr -cd 'A-Za-z0-9._-' | cut -c1-24)"
     [ -n "$v" ] || v="-"
     printf '%s' "$v"
 }
