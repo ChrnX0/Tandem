@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3752581645 3630" "$soma_esperados"
+      "1440219154 3638" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5115,6 +5115,56 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
     done
 else
     skip "desktop-file-validate" "not installed"
+fi
+
+section "the catalogue and the code agree, in both directions"
+
+# Three questions this project is one edit away from failing, and the third is
+# the one that puts nonsense on a shop counter:
+#   1. a key called and not defined - t_msg prints the KEY NAME, which is right
+#      for a log and is jargon on screen;
+#   2. a key defined and never called - translator effort in seven languages on
+#      a message nobody reads, and five catalogues are still unreviewed;
+#   3. PLACEHOLDER PARITY - a message reading "it asks for Java {1} and the one
+#      here is {2}" called with one argument renders a literal "{2}".
+if [ -f "$ROOT/tools/chaves-e-chamadas.py" ]; then
+    SAIDA_CC="$(cd "$ROOT" && python3 tools/chaves-e-chamadas.py 2>&1)"
+    N_CC="$(printf '%s\n' "$SAIDA_CC" | awk '/^CHAMADAS/ { print $2 }')"
+    if [ "${N_CC:-999}" = "0" ]; then
+        pass "every t_msg call matches the message it calls"
+    else
+        fail "every t_msg call matches the message it calls" "0" "$SAIDA_CC"
+    fi
+
+    # It has to actually catch one, and the argument counter's FIRST version
+    # did not: it returned a number for everything, counted the words inside a
+    # "$(...)" argument, and matched t_msg inside a COMMENT - nine findings,
+    # nine of them wrong. A count that is mostly noise gets ignored, and that is
+    # how a real finding goes unread. It refuses to guess now: a call whose
+    # arguments nest a substitution is reported as unchecked, never as clean.
+    PROVA_CC="$(cd "$ROOT" && python3 - <<'FIMCC'
+import importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/chaves-e-chamadas.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+casos = [('t_msg k 21', 1), ('t_msg k "$A" "$B"', 2),
+         ('t_msg k "$(basename -- "$P")"', None), ('t_msg k', 0),
+         ('t_msg k a b c', 3), ("t_msg k 'um so'", 1)]
+saida = []
+for txt, esperado in casos:
+    mm = m.CHAMADA.search(txt)
+    saida.append("1" if m.conta_argumentos(txt, mm.end()) == esperado else "0")
+t = m.sem_comentarios('# t_msg fantasma\nt_erro "$(t_msg real)"')
+saida.append("1" if ("t_msg fantasma" not in t and "t_msg real" in t) else "0")
+print("".join(saida))
+FIMCC
+)"
+    equal "the argument counter is right, and a comment is not a call" \
+          "1111111" "$PROVA_CC"
+    # And the unchecked calls are REPORTED rather than counted as clean.
+    contem "and the calls it cannot count are reported, not assumed clean" \
+           "NAO CONFERIDAS" "$SAIDA_CC"
+else
+    skip "the catalogue and the code agree" "tools/chaves-e-chamadas.py is missing"
 fi
 
 section "who owns a type is asked of the tool the file manager uses"

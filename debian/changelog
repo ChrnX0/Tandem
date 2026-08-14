@@ -18,6 +18,21 @@ tandem (4.11) unstable; urgency=medium
     where its answer is as good. Setting the association still goes through
     both tools, since setting it in one is not enough.
 
+  * A third instrument: tools/chaves-e-chamadas.py checks the catalogue against
+    the code in BOTH directions and checks placeholder parity. The third of
+    those is the one that puts nonsense on a counter - a message reading "it
+    asks for Java {1} and the one here is {2}" called with one argument renders
+    a literal "{2}" to the owner, and nothing in this tree could see that.
+  * Its own first version produced NINE findings and all nine were wrong: it
+    counted the words inside a "$(...)" argument and it matched a t_msg named
+    inside a COMMENT. That is the failure this project fears most in an
+    instrument - a count that is mostly noise gets ignored, and that is how a
+    real finding goes unread. It refuses to guess now: a call whose arguments
+    nest a substitution is reported as UNCHECKED, never as clean. 88% of the
+    732 call sites are checked and the remaining 86 are named as unchecked.
+  * Proven by injecting the defect it exists for, with an assert on the
+    injection - because the first attempt at that proof silently replaced
+    nothing and "passed".
  -- Tandem <rockx0@gmail.com>  Fri, 14 Aug 2026 14:22:40 +0000
 
 tandem (4.10) unstable; urgency=medium
