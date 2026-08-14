@@ -28,7 +28,14 @@ CHANGED="$(git diff --name-only "$BASE"..HEAD | grep -Ev '(guards\.d/|^\.proofga
 [ -n "$CHANGED" ] || { echo "✅ version-release: nothing in the diff"; exit 0; }
 
 # Manifests whose "version" is the number a user reads.
-MANIFESTS='(^|/)(package\.json|plugin\.json|marketplace\.json|Cargo\.toml|pyproject\.toml|composer\.json|\.csproj|gemspec|build\.gradle(\.kts)?|pubspec\.yaml|app\.json)$'
+#
+# LOCAL ADAPTATION - belongs upstream in ChrnX0/proofgate. debian/control is the
+# manifest of every .deb ever built, and it was not on this list, so this guard
+# has been printing "no version manifest in the diff" on every single Tandem
+# release. That is precisely the scar written at the top of this file: a version
+# bumped, invisible to everyone not reading the diff, with no tag cut. The guard
+# existed and could not see the case it was written for.
+MANIFESTS='(^|/)(package\.json|plugin\.json|marketplace\.json|Cargo\.toml|pyproject\.toml|composer\.json|\.csproj|gemspec|build\.gradle(\.kts)?|pubspec\.yaml|app\.json|debian/control)$'
 TOCADOS="$(printf '%s\n' "$CHANGED" | grep -E "$MANIFESTS" || true)"
 [ -n "$TOCADOS" ] || { echo "✅ version-release: no version manifest in the diff"; exit 0; }
 
@@ -36,9 +43,13 @@ TOCADOS="$(printf '%s\n' "$CHANGED" | grep -E "$MANIFESTS" || true)"
 SUBIU=""
 while IFS= read -r f; do
   [ -n "$f" ] || continue
+  # -i, because Debian's field is "Version:" with a capital V and the rest of
+  # the world writes it lowercase. Without it this guard found the manifest,
+  # read the added line, and still reported "no version number raised" - which
+  # is a worse failure than not looking at all, because it looks like a check.
   if git diff -U0 "$BASE"..HEAD -- "$f" 2>/dev/null \
       | grep -E '^\+' \
-      | grep -Eq '"?version"?[[:space:]]*[:=][[:space:]]*"?[0-9]+\.[0-9]+'; then
+      | grep -Eqi '"?version"?[[:space:]]*[:=][[:space:]]*"?[0-9]+\.[0-9]+'; then
     SUBIU="$SUBIU $f"
   fi
 done <<EOF
