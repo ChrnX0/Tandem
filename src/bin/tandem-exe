@@ -301,7 +301,13 @@ FIMAVISO
             for v in $PENDENTES; do
                 t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"
                 t_diz ">>> winetricks -q $v (da memoria)"
-                if $INIBIR_MEM winetricks -q "$v" >>"$LOG" 2>&1; then
+                # Through t_progresso_longo, so the bar SAYS SOMETHING while
+                # this runs. dotnet48 is half an hour, and behind a counter
+                # "downloading slowly" and "stuck on a dead mirror" were the
+                # same unchanging picture.
+                if t_progresso_longo \
+                       "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")" \
+                       $INIBIR_MEM winetricks -q "$v" >>"$LOG" 2>&1; then
                     # The proof of delivery applies here too. This path used
                     # to write a receipt based on the exit code alone - that
                     # is, it bypassed the whole thesis of 3.3, and precisely
@@ -554,7 +560,26 @@ $(t_msg ainda_pedindo "${PEDIDAS# }")"
 
     if [ -z "$VERBOS" ]; then
         if [ -n "$ORFAS" ]; then
-            t_erro "$(t_msg faltam_arquivos_junto "$(printf '%s\n' "$ORFAS" | tr '\n' ' ')")"
+            # WHERE it was opened from, when the place itself is the cause.
+            # Every other pre-flight reads the file's contents; this reads its
+            # situation, which no reader can see. Commercial software reaches a
+            # Brazilian shop as a zip over WhatsApp, and double-clicking the
+            # .exe inside the archive-manager window extracts that ONE file
+            # without the .msi, the data folder and the DLLs beside it. "Files
+            # are missing next to it" is true and gives him nothing to do.
+            ONDE=""
+            case "$(t_origem_do_arquivo "$PROG" 2>/dev/null)" in
+                zip)       ONDE="
+
+$(t_msg origem_zip)" ;;
+                portal)    ONDE="
+
+$(t_msg origem_portal)" ;;
+                removivel) ONDE="
+
+$(t_msg origem_removivel)" ;;
+            esac
+            t_erro "$(t_msg faltam_arquivos_junto "$(printf '%s\n' "$ORFAS" | tr '\n' ' ')")$ONDE"
         elif grep -qi 'Bad EXE format\|not a valid Win32' "$LOG" 2>/dev/null; then
             t_erro "$(t_msg nao_e_programa_windows)"
         elif grep -qi '32-bit installation\|64-bit installation\|WINEARCH' "$LOG" 2>/dev/null; then
@@ -715,7 +740,9 @@ $MAQUINA}"
         t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"
         t_diz ">>> winetricks -q $v"
         MARCA_WT="$(t_log_marca "wt-$v")"
-        if $INIBIR winetricks -q "$v" >>"$LOG" 2>&1; then
+        if t_progresso_longo \
+               "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")" \
+               $INIBIR winetricks -q "$v" >>"$LOG" 2>&1; then
             # ------------------------------------ proof of delivery
             # winetricks exiting 0 says that IT finished, not that the file
             # that was missing arrived. Without this check, a wrong

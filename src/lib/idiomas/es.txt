@@ -192,6 +192,13 @@ propio entorno, que es de 64 bits.
 @licao_instalando
 Instalando lo que este programa ya pidió antes...
 
+@progresso_ha_minutos
+Sigue trabajando. Ya van {1} minuto(s) — este tarda de verdad, es normal.
+
+@progresso_sem_novidade
+Nada nuevo desde hace {1} minuto(s). Todavia puede terminar — pero si sigue
+asi, la conexion a internet es lo primero que hay que revisar.
+
 @instalando_componente
 Instalando {1}...
 
@@ -202,6 +209,25 @@ Abriendo {1}...
 Ya instalé lo que este programa pedía:{1}
 
 Y sigue sin abrir. Probablemente depende de algo que Wine todavía no admite, o de un archivo que debería venir con él.
+
+@origem_zip
+Y es casi seguro lo que paso aqui: este programa se abrio DESDE DENTRO de una
+carpeta comprimida. Abrirlo asi saca solo el archivo en el que hizo clic y deja
+atras todo lo que estaba a su lado.
+
+Guarde primero la carpeta comprimida entera en algun sitio — el Escritorio
+sirve —, abrala alli para que salgan todos los archivos, y solo entonces haga
+doble clic en el programa.
+
+@origem_portal
+Este programa lo entrego otra aplicacion, asi que no puedo ver la carpeta donde
+esta realmente. Si vino dentro de una carpeta comprimida o de un adjunto,
+guarde todo en una carpeta suya primero y abralo desde ahi.
+
+@origem_removivel
+Este programa se esta ejecutando directamente desde un pendrive o un movil.
+Copie la carpeta entera a este ordenador primero: los instaladores suelen
+buscar archivos a su lado, y una unidad extraible puede desaparecer a medias.
 
 @faltam_arquivos_junto
 El programa no abrió porque faltan archivos que debería traer consigo:

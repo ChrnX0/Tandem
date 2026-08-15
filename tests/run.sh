@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1168234846 3945" "$soma_esperados"
+      "2774970559 3997" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -6154,6 +6154,95 @@ for palavra in lista_recebendo_auto lista_recebendo_nao; do
         fail "tandem lista says which way the switch is set" "$palavra" "absent"
 done
 pass "tandem lista says which way the switch is set"
+
+section "opened from inside a zip, which no reader can see"
+
+# Every pre-flight in this project reads the file's CONTENTS. None can see its
+# SITUATION, and one situation accounts for a whole class of "files it should
+# have brought with it are missing": commercial software reaches a Brazilian
+# shop as a zip over WhatsApp, and the owner double-clicks the .exe inside the
+# archive-manager window. The manager extracts that ONE file to a temporary
+# folder - without the .msi, the data folder and the DLLs beside it.
+orig() { TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_origem_do_arquivo "$1" || printf nada' _ "$1" 2>/dev/null; }
+equal "file-roller's temp folder is recognised" "zip" "$(orig /tmp/.fr-Ab3xY/setup.exe)"
+equal "so is engrampa's" "zip" "$(orig /tmp/engrampa-x/setup.exe)"
+equal "the document portal is recognised as its own case" "portal" \
+      "$(orig /run/user/1000/doc/a1b2/sistema.exe)"
+equal "a pen drive is recognised" "removivel" "$(orig /media/zero/PENDRIVE/inst.exe)"
+equal "and so is a card reader under /run/media" "removivel" \
+      "$(orig /run/media/zero/CARTAO/y.exe)"
+equal "an ordinary folder says nothing, which is the normal case" "nada" \
+      "$(orig /home/zero/Downloads/normal.exe)"
+# NOT an AppImage's own mount point. The first version of the pattern matched
+# /tmp/.mount_* and would have told somebody to "save the compressed folder
+# first" about a mounted AppImage - confident, and wrong.
+equal "an AppImage's mount point is not called a zip" "nada" \
+      "$(orig /tmp/.mount_AppXYZ/x.exe)"
+# It answers a TOKEN, never a sentence - the same rule the Python readers
+# follow, so the wording lives in the catalogue and gets translated.
+for tok in zip portal removivel; do
+    contem "the $tok case has a sentence in the catalogue" \
+           "origem_$tok" "$(cat "$ROOT/src/lib/idiomas/en.txt")"
+done
+contem "and the missing-files message carries it" \
+       "t_origem_do_arquivo" "$(cat "$ROOT/src/bin/tandem-exe")"
+
+section "something is said during the half-hour wait"
+
+# Nothing in this program ever spoke during the wait. t_progresso_abre opens a
+# pulsating bar with one static line and t_progresso_texto is called once per
+# component, so `winetricks -q dotnet48` - half an hour - showed an identical
+# unchanging bar for its whole duration. Behind a counter, "downloading
+# slowly", "stuck on a dead mirror" and "finished three seconds ago" are the
+# same picture, and he has a customer in front of him.
+PLOG="$TMPROOT/progresso.log"
+# THE CRITICAL ONE: the exit status has to survive the wrapper. Getting this
+# wrong would make Tandem read a failed install as a success and write a
+# permanent receipt for a component that is not there - the exact damage the
+# delivery proof exists to prevent, arriving by a new route.
+for par in "true 0" "false 1"; do
+    set -- $par
+    equal "the exit status of '$1' survives the wrapper" "$2" \
+          "$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+             . "'"$ROOT"'/src/lib/common.sh"
+             TANDEM_PROGRESSO_PASSO=1 t_progresso_longo x '"$1"'; echo $?' 2>/dev/null)"
+done
+equal "and so does a code that is neither 0 nor 1" "7" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+         . "'"$ROOT"'/src/lib/common.sh"
+         TANDEM_PROGRESSO_PASSO=1 t_progresso_longo x sh -c "exit 7"; echo $?' 2>/dev/null)"
+
+# While the log keeps growing, it says the work is still going.
+FALA="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    LOG="'"$PLOG"'"; : > "$LOG"
+    t_progresso_texto() { printf "%s\n" "$1" | tail -1; }
+    escreve() { for i in 1 2 3; do printf "x\n" >> "'"$PLOG"'"; sleep 1; done; }
+    TANDEM_PROGRESSO_PASSO=1 TANDEM_PROGRESSO_FALA=2 TANDEM_PROGRESSO_CALADO=999 \
+        t_progresso_longo "base" escreve' 2>/dev/null | tail -1)"
+contem "while it is working, it says so" "Still working" "$FALA"
+# ...and when nothing has been written for a while, it says THAT, which is the
+# sentence that tells him to go and look at his internet.
+CALADO="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    LOG="'"$PLOG"'"; : > "$LOG"
+    t_progresso_texto() { printf "%s\n" "$1" | tail -1; }
+    TANDEM_PROGRESSO_PASSO=1 TANDEM_PROGRESSO_FALA=999 TANDEM_PROGRESSO_CALADO=2 \
+        t_progresso_longo "base" sleep 4' 2>/dev/null | tail -1)"
+contem "and when it goes quiet, it says to check the connection" \
+       "internet connection" "$CALADO"
+naocontem "and never reports zero minutes, which reads as a program that cannot count" \
+          "0 minute" "$CALADO$FALA"
+# It must never abort. Killing a slow-but-working dotnet48 is worse than the
+# silence this replaces.
+naocontem "it only ever talks, and never kills the command" \
+          "kill -9" "$(sed -n '/^t_progresso_longo()/,/^}/p' "$ROOT/src/lib/common.sh")"
+# And the two long installs actually go through it.
+# CALL SITES, not mentions: the first version of this line counted a comment
+# that names the function and reported three.
+equal "both winetricks calls talk while they run" "2" \
+      "$(grep -cE '^ *if t_progresso_longo' "$ROOT/src/bin/tandem-exe")"
 
 section "the log is cut by a marker, not by counting lines"
 

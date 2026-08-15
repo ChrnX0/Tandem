@@ -193,6 +193,13 @@ May I install them before trying to open it?
 @licao_instalando
 Installing what this program has asked for before...
 
+@progresso_ha_minutos
+Still working. {1} minute(s) so far — this one is slow, it is normal.
+
+@progresso_sem_novidade
+Nothing new for {1} minute(s). It may still finish — but if it stays like
+this, the internet connection is the first thing to check.
+
 @instalando_componente
 Installing {1}...
 
@@ -203,6 +210,26 @@ Opening {1}...
 I already installed what this program was asking for:{1}
 
 And it still does not open. It probably depends on something Wine does not support yet, or on a file that should have come with it.
+
+@origem_zip
+And that is almost certainly what happened here: this program was opened from
+INSIDE a compressed folder. Opening it that way takes out only the file you
+clicked, leaving behind everything that was next to it.
+
+Save the whole compressed folder somewhere first — the Desktop is fine — open
+it there so that all the files come out, and only then double-click the
+program.
+
+@origem_portal
+This program was handed over by another application, so I cannot see the
+folder it really lives in. If it came inside a compressed folder or an
+attachment, save everything to a folder of your own first and open it from
+there.
+
+@origem_removivel
+This program is being run straight off a pen drive or a phone. Copy the whole
+folder to this computer first: installers often look for files beside them,
+and a removable drive can disappear in the middle.
 
 @faltam_arquivos_junto
 The program did not open because files it should have brought with it are missing:

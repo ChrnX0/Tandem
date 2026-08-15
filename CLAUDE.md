@@ -198,7 +198,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 1174 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1193 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -850,7 +850,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 1174 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 1193 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The list's read path was measured against the OLD code before being fixed**,
   which is why the four defects are stated as numbers rather than as risks: on a
   two-row list the old query answered `vcrun2010` with 3 machines where 400
@@ -1403,6 +1403,18 @@ The full idea ledger — the 52 ideas from both panels, each with a verdict, and
 the rejected ones with the reason written down — lives in `docs/IDEAS.md`. Read
 it before proposing anything new; half the obvious ideas were already turned down
 for a reason.
+
+**The ledger was corrected on 2026-08-15 and the correction is itself worth
+reading.** It listed 22 items as NEXT; verified one by one against the code,
+eighteen of them had been done — some three versions earlier — and only the
+verdict line was never changed. A ledger that overstates what is left is worse
+than no ledger: it is the file this file tells you to read before proposing
+anything, and it was sending the next session to build things that exist. When
+you finish an item, change its verdict in the same commit, not later.
+
+What genuinely remains there is small and mostly NOT code: a real shop program
+(needs the owner's machine), the list's signing policy (needs his key), and two
+items blocked on the list having a first published row.
 
 The queue, in order:
 
