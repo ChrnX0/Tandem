@@ -1626,7 +1626,22 @@ Tandem 现在知道这个程序在发来的人那台机器上要过什么了。
 Tandem - 社区清单
 
 @lista_uso
-用法：  tandem lista  |  tandem lista atualizar
+用法：tandem lista | tandem lista atualizar | tandem lista desligar
+
+@lista_recebendo_auto
+Tandem 会自己在后台每天更新一次这份清单。
+它只做下载：这台机器的任何信息都不会由此发出。
+要停止：tandem lista desligar
+
+@lista_recebendo_nao
+自动更新已关闭。这份清单只在您要求时才会变化。
+要重新开启：tandem lista ligar
+
+@lista_receber_ligado
+好的。我会自己每天更新一次这份清单。
+
+@lista_receber_desligado
+好的。我不会再自己去取这份清单了。
 
 @contrib_diga_qual
 请说明是哪个程序。

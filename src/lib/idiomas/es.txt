@@ -1702,7 +1702,22 @@ Falta curl o wget para descargar la lista.
 Tandem - Lista de la comunidad
 
 @lista_uso
-Usa:  tandem lista  |  tandem lista atualizar
+Uso:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar
+
+@lista_recebendo_auto
+Tandem mantiene esta lista al dia solo, una vez al dia, en segundo plano.
+Solo DESCARGA: nada sobre esta maquina sale por aqui.
+Para pararlo:  tandem lista desligar
+
+@lista_recebendo_nao
+La actualizacion automatica esta APAGADA. La lista solo cambia si usted la pide.
+Para encenderla de nuevo:  tandem lista ligar
+
+@lista_receber_ligado
+De acuerdo. Mantendre la lista al dia yo solo, una vez al dia.
+
+@lista_receber_desligado
+De acuerdo. Ya no buscare la lista por mi cuenta.
 
 @contrib_diga_qual
 Di qué programa.

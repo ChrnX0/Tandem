@@ -2243,7 +2243,28 @@ msgid "Tandem - Community list"
 msgstr ""
 
 msgctxt "lista_uso"
-msgid "Use:  tandem lista  |  tandem lista atualizar"
+msgid "Use:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar"
+msgstr ""
+
+msgctxt "lista_recebendo_auto"
+msgid ""
+"Tandem keeps this list up to date on its own, once a day, in the background.\n"
+"It only DOWNLOADS: nothing about this machine goes out this way.\n"
+"To stop it:  tandem lista desligar"
+msgstr ""
+
+msgctxt "lista_recebendo_nao"
+msgid ""
+"Automatic updating is OFF. The list only changes when you ask for it.\n"
+"To turn it back on:  tandem lista ligar"
+msgstr ""
+
+msgctxt "lista_receber_ligado"
+msgid "Right. I will keep the list up to date on my own, once a day."
+msgstr ""
+
+msgctxt "lista_receber_desligado"
+msgid "Right. I will not fetch the list on my own any more."
 msgstr ""
 
 msgctxt "contrib_diga_qual"

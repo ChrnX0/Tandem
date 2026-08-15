@@ -1097,14 +1097,32 @@ acao_lista() {
                 *) t_erro "$(t_msg lista_falta_curl)" ;;
             esac
             return $c ;;
+        ligar|receber)
+            t_config_grava RECEBER sim
+            t_ok "$(t_msg lista_receber_ligado)"
+            return 0 ;;
+        desligar)
+            t_config_grava RECEBER nao
+            t_ok "$(t_msg lista_receber_desligado)"
+            return 0 ;;
         ver|"")
+            # The state of the switch goes on this screen whichever way it is
+            # set. Receiving became automatic in 4.11, and an automatic thing
+            # the owner cannot see is an automatic thing he cannot turn off.
+            local estado
+            if t_lista_receber_ligado; then
+                estado="$(t_msg lista_recebendo_auto)"
+            else
+                estado="$(t_msg lista_recebendo_nao)"
+            fi
             if [ ! -f "$TANDEM_LISTA" ]; then
-                printf '%s\n' "$(t_msg lista_ainda_nao_baixada)" | t_texto "$(t_msg lista_titulo)"
+                printf '%s\n\n%s\n' "$(t_msg lista_ainda_nao_baixada)" "$estado" |
+                    t_texto "$(t_msg lista_titulo)"
                 return 1
             fi
-            printf '%s\n' "$(t_msg lista_resumo \
+            printf '%s\n\n%s\n' "$(t_msg lista_resumo \
                 "$(grep -vc '^#' "$TANDEM_LISTA")" "$TANDEM_LISTA" \
-                "$(head -1 "$TANDEM_LISTA")")" | t_texto "$(t_msg lista_titulo)"
+                "$(head -1 "$TANDEM_LISTA")")" "$estado" | t_texto "$(t_msg lista_titulo)"
             return 0 ;;
         *) t_erro "$(t_msg lista_uso)"; return 1 ;;
     esac

@@ -291,9 +291,23 @@ Mostra a lista da comunidade: o que já deu certo na máquina de outras
 pessoas, por programa.
 .TP
 .B tandem lista atualizar
-Baixa a lista. É um arquivo de texto público, buscado por HTTPS — o modelo
-das listas de filtro de bloqueador de anúncio. Nada desta máquina é enviado,
-e nada é instalado: a lista vira sugestão, e o Tandem continua perguntando.
+Baixa a lista agora. É um arquivo de texto público, buscado por HTTPS — o
+modelo das listas de filtro de bloqueador de anúncio. Nada desta máquina é
+enviado, e nada é instalado: a lista vira sugestão, e o Tandem continua
+perguntando.
+.IP
+O Tandem também busca sozinho, no máximo uma vez por dia, em segundo plano, na
+primeira vez que encontra um programa do Windows que ele não conhece. Esse
+sentido só BAIXA — é a metade da lista que não custa nada para a loja — e nunca
+atrasa um clique duplo, que é a razão de uma busca começada agora ajudar a
+partir da próxima vez, e não desta.
+.TP
+.B tandem lista desligar
+Desliga a busca automática.
+.B tandem lista ligar
+liga de novo. De um jeito ou de outro,
+.B tandem lista
+diz qual dos dois está valendo.
 .TP
 .BI "tandem contribuir " programa
 Monta a linha padronizada com o que este Tandem aprendeu e mostra ela

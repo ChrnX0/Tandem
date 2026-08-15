@@ -1685,7 +1685,22 @@ Tandem पूछेगा कि दूसरों के लिए जो क�
 Tandem - समुदाय की सूची
 
 @lista_uso
-इस्तेमाल:  tandem lista  |  tandem lista atualizar
+उपयोग:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar
+
+@lista_recebendo_auto
+Tandem यह सूची खुद ही, दिन में एक बार, पृष्ठभूमि में अपडेट रखता है।
+यह सिर्फ़ डाउनलोड करता है: इस मशीन की कोई जानकारी यहाँ से बाहर नहीं जाती।
+रोकने के लिए:  tandem lista desligar
+
+@lista_recebendo_nao
+अपने आप अपडेट होना बंद है। सूची तभी बदलेगी जब आप कहेंगे।
+फिर से चालू करने के लिए:  tandem lista ligar
+
+@lista_receber_ligado
+ठीक है। मैं सूची को खुद, दिन में एक बार, अपडेट रखूँगा।
+
+@lista_receber_desligado
+ठीक है। अब मैं खुद से सूची नहीं लाऊँगा।
 
 @contrib_diga_qual
 कौन सा प्रोग्राम, यह बताइए।

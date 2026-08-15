@@ -1706,7 +1706,22 @@ curl or wget is missing, and one of them is needed to download the list.
 Tandem - Community list
 
 @lista_uso
-Use:  tandem lista  |  tandem lista atualizar
+Use:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar
+
+@lista_recebendo_auto
+Tandem keeps this list up to date on its own, once a day, in the background.
+It only DOWNLOADS: nothing about this machine goes out this way.
+To stop it:  tandem lista desligar
+
+@lista_recebendo_nao
+Automatic updating is OFF. The list only changes when you ask for it.
+To turn it back on:  tandem lista ligar
+
+@lista_receber_ligado
+Right. I will keep the list up to date on my own, once a day.
+
+@lista_receber_desligado
+Right. I will not fetch the list on my own any more.
 
 @contrib_diga_qual
 Say which program.

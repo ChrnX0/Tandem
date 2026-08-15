@@ -207,6 +207,11 @@ SABIDOS="$(t_memoria_le "$PROG" RESOLVERAM 2>/dev/null)"
 # may know. It decides nothing: it becomes exactly the same kind of suggestion
 # as the local memory, and goes through the same question.
 if [ -z "$SABIDOS" ]; then
+    # Keep the copy fresh, in the background, at most once a day. Before 4.11
+    # nothing here ever fetched it: the list only existed on a machine whose
+    # owner had typed `tandem lista atualizar`, so for everybody else this
+    # consultation asked a file that was never going to be there.
+    t_lista_talvez_atualiza 2>/dev/null
     DA_LISTA="$(t_lista_consulta "$PROG" 2>/dev/null)"
     if [ -n "$DA_LISTA" ]; then
         SABIDOS="$DA_LISTA"

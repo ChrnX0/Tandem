@@ -145,6 +145,29 @@ tandem (4.11) unstable; urgency=medium
   * The defect is GUI-ONLY - on a terminal t_ok prints the whole text and the
     old code looked fine - so the guard is structural: a test that cannot open
     a window checks that a window is what gets asked for.
+
+  * The community list is received without anybody typing a command.
+    t_lista_atualiza had exactly ONE caller in the whole tree - "tandem lista
+    atualizar", typed by hand - so on a machine whose owner has never heard of
+    that command the list file never existed, the query always answered
+    nothing, and every merge rule 4.4, 4.9 and 4.11 added was unreachable code.
+    Meanwhile SENDING has been on by default since 4.2. A machine that gives
+    and does not take is the wrong way round.
+  * This reverses "Automatic sync on install - REJECTED" in docs/IDEAS.md, and
+    the argument is narrow enough to state in one line: 4.2 already reversed
+    that stance for the direction that carries data OUT, and this direction
+    carries nothing out. It only ever DOWNLOADS.
+  * It mirrors the send path deliberately: a named off-switch ("tandem lista
+    desligar"), whose state is on the "tandem lista" screen either way - an
+    automatic thing the owner cannot see is an automatic thing he cannot turn
+    off - and at most one fetch a day. The stamp is written BEFORE the attempt,
+    not after, so a machine with no route to the address makes ONE failed
+    request a day instead of one per double click. That is the same lesson the
+    send path learned when a cap counting only successes turned out not to be
+    a cap at all.
+  * DETACHED, and the cost is stated rather than hidden: the fetch never delays
+    a double click, so a list fetched now helps from the NEXT run and not this
+    one. That is a real limitation, and it beats helping on no run ever.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium

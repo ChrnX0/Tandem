@@ -2062,6 +2062,59 @@ t_lista_assinatura_ok() {
 # Downloads the list. A malformed file does NOT replace the good one already
 # on disk: a broken list would silence the second opinion with nobody
 # noticing.
+# Is this machine allowed to RECEIVE the list? Default yes, and the default is
+# the whole point of this function existing.
+#
+# Until 4.11 t_lista_atualiza had exactly ONE caller in the entire tree -
+# `tandem lista atualizar`, typed by hand - so on a machine whose owner has
+# never heard of that command the list file never existed, t_lista_consulta
+# always returned nothing, and every merge rule 4.4, 4.9 and 4.11 added was
+# unreachable code. Meanwhile SENDING is on by default. A machine that gives
+# and does not take is the wrong way round.
+#
+# This reverses "Automatic sync on install - REJECTED" in docs/IDEAS.md, and
+# the new argument is narrow: 4.2 already reversed that stance for the
+# direction that actually carries data OUT. Receiving carries nothing out. What
+# it costs is an HTTP GET, and what it buys is the half of the list that helps
+# the shop rather than the project.
+#
+# The switch is named, so somebody can find and turn it off, and it is asked
+# with the same shape as ENVIAR.
+t_lista_receber_ligado() {
+    case "$(t_config_le RECEBER 2>/dev/null)" in
+        nao|não|no) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+# Fetches the list if it is allowed and has not been fetched today, DETACHED.
+#
+# Detached, never blocking, and that is a deliberate trade rather than a
+# convenience: the alternative is a double click waiting on a network round
+# trip, and on a machine with no route to the address that is a stall on every
+# unknown program. The cost of detaching is that the list helps from the NEXT
+# run rather than this one - which is a real limitation and is still infinitely
+# better than the current behaviour, where it helps on no run ever.
+#
+# Once a day, by the same stamp mechanism the send path uses. A shop machine
+# that opens the same program forty times in a morning makes one request.
+t_lista_talvez_atualiza() {
+    local hoje
+    t_lista_receber_ligado || { t_diz "lista: receber esta desligado"; return 1; }
+    [ -n "$TANDEM_ESTADO" ] || return 1
+    command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 1
+    hoje="$(date +%F)"
+    [ "$(t_config_le LISTA_DIA 2>/dev/null)" = "$hoje" ] && return 1
+    # Stamped BEFORE the attempt, not after. A machine with no internet must
+    # make one failed request a day, not one per double click - the same lesson
+    # the send path learned when a cap that only counted successes turned out
+    # not to be a cap at all.
+    t_config_grava LISTA_DIA "$hoje"
+    t_diz "lista: buscando a lista da comunidade em segundo plano"
+    ( t_lista_atualiza >/dev/null 2>&1 & ) 2>/dev/null
+    return 0
+}
+
 t_lista_atualiza() {
     local tmp rc
     command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 2

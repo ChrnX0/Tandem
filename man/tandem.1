@@ -298,9 +298,22 @@ Shows the community list: what has already worked on other people's machines,
 per program.
 .TP
 .B tandem lista atualizar
-Downloads the list. It is a public text file, fetched over HTTPS \(em the model
-of an ad blocker's filter lists. Nothing from this machine is sent, and nothing
-is installed: the list becomes a suggestion, and Tandem goes on asking.
+Downloads the list now. It is a public text file, fetched over HTTPS \(em the
+model of an ad blocker's filter lists. Nothing from this machine is sent, and
+nothing is installed: the list becomes a suggestion, and Tandem goes on asking.
+.IP
+Tandem also fetches it on its own, at most once a day, in the background, the
+first time it meets a Windows program it knows nothing about. That direction
+only ever DOWNLOADS \(em it is the half of the list that costs the shop nothing
+\(em and it never delays a double click, which is why a fetch started now helps
+from the next run rather than this one.
+.TP
+.B tandem lista desligar
+Stops the automatic download.
+.B tandem lista ligar
+turns it back on. Either way,
+.B tandem lista
+says which of the two is in force.
 .TP
 .BI "tandem contribuir " program
 Assembles the standard line with what this Tandem has learnt and shows it in

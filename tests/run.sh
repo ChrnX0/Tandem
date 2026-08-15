@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3285986482 3811" "$soma_esperados"
+      "2985128605 3821" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "187201822 2386" "$soma_padroes"
 
@@ -6031,6 +6031,53 @@ naocontem "but a genuinely truncated file is not called a web page" \
           "web page saved under" \
           "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
              bash "$ROOT/src/bin/tandem-rpm" "$TMPROOT/curto.rpm" </dev/null 2>&1 | head -2)"
+
+section "the list is received without anybody typing a command"
+
+# t_lista_atualiza had exactly ONE caller in the whole tree until 4.11 -
+# `tandem lista atualizar`, typed by hand. So on a machine whose owner has
+# never heard of that command, TANDEM_LISTA never existed, t_lista_consulta
+# always answered nothing, and every merge rule 4.4, 4.9 and 4.11 added was
+# unreachable code. Meanwhile sending is on by default: a machine that gives
+# and does not take is the wrong way round.
+RECV="$TMPROOT/receber"; mkdir -p "$RECV/home" "$RECV/estado"
+receber() {
+    env HOME="$RECV/home" XDG_CONFIG_HOME="$RECV/home/.config" \
+        TANDEM_ESTADO="$RECV/estado" TANDEM_LISTA_URL="file:///nao-existe-nunca" \
+        TANDEM_LIB="$ROOT/src/lib" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; '"$1"'' 2>/dev/null
+}
+equal "receiving is on by default, the way sending is" "0" \
+      "$(receber 't_lista_receber_ligado; echo $?')"
+equal "the first call of the day goes" "0" \
+      "$(receber 't_lista_talvez_atualiza >/dev/null; echo $?')"
+# Stamped BEFORE the attempt, not after: a machine with no route to the address
+# must make ONE failed request a day, not one per double click. That is the same
+# lesson the send path learned when a cap that counted only successes turned out
+# not to be a cap at all.
+equal "the second call the same day does not" "1" \
+      "$(receber 't_lista_talvez_atualiza >/dev/null; echo $?')"
+equal "and the switch turns it off by name" "1" \
+      "$(receber 't_config_grava RECEBER nao; t_config_grava LISTA_DIA ""
+                 t_lista_talvez_atualiza >/dev/null; echo $?')"
+equal "which t_lista_receber_ligado agrees with" "1" \
+      "$(receber 't_lista_receber_ligado; echo $?')"
+
+# tandem-exe is the one consumer - the record format describes Wine
+# dependencies and nothing else - and it is where the fetch has to be wired.
+if grep -q 't_lista_talvez_atualiza' "$ROOT/src/bin/tandem-exe"; then
+    pass "tandem-exe keeps the list fresh instead of asking a file nobody fetched"
+else
+    fail "tandem-exe keeps the list fresh instead of asking a file nobody fetched" \
+         "a call to t_lista_talvez_atualiza" "absent"
+fi
+# An automatic thing the owner cannot see is an automatic thing he cannot turn
+# off, so the state of the switch is on the screen either way.
+for palavra in lista_recebendo_auto lista_recebendo_nao; do
+    grep -q "$palavra" "$ROOT/src/bin/tandem" ||
+        fail "tandem lista says which way the switch is set" "$palavra" "absent"
+done
+pass "tandem lista says which way the switch is set"
 
 section "the report gets to a second human"
 

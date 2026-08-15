@@ -1659,7 +1659,22 @@ tandem portas soltar COM2               يلغي التثبيت
 Tandem - قائمة المجتمع
 
 @lista_uso
-الاستخدام:  tandem lista  |  tandem lista atualizar
+الاستعمال:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar
+
+@lista_recebendo_auto
+يبقي Tandem هذه القائمة محدثة من تلقاء نفسه، مرة في اليوم، في الخلفية.
+إنه ينزّل فقط: لا شيء عن هذا الجهاز يخرج من هنا.
+لإيقافه:  tandem lista desligar
+
+@lista_recebendo_nao
+التحديث التلقائي مُطفأ. لا تتغير القائمة إلا حين تطلب ذلك.
+لإعادة تشغيله:  tandem lista ligar
+
+@lista_receber_ligado
+حسنًا. سأبقي القائمة محدثة بنفسي، مرة في اليوم.
+
+@lista_receber_desligado
+حسنًا. لن أجلب القائمة من تلقاء نفسي بعد الآن.
 
 @contrib_diga_qual
 حدِّد البرنامج.
