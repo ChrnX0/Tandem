@@ -247,12 +247,40 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
     done
     if [ -n "$PENDENTES" ]; then
         t_diz "memoria: ja resolveram este programa ->$PENDENTES"
+        # Does the list already know one of these was tried and did not help?
+        #
+        # Field 4 of the record - the components installed that did NOT fix it
+        # - has been written by every client, accepted by the intake, published
+        # by the rebuild and downloaded to every machine since 3.4, and read by
+        # NOBODY: t_lista_linha's awk touches fields 1, 3, 5, 6 and 7. So a
+        # shop could be one click from half an hour of dotnet48 that sixty
+        # other shops had already burned on this exact installer, with that
+        # fact sitting on its own disk.
+        #
+        # It is said, not acted on. A component that failed elsewhere can be
+        # exactly right here, so this adds a sentence to the question and
+        # changes no default: he is the one deciding whether to spend the
+        # afternoon.
+        AVISO_INUTEIS=""
+        if ID_LISTA="$(t_memoria_id "$PROG" 2>/dev/null)"; then
+            while IFS="$(printf '\t')" read -r v_mau n_mau; do
+                [ -n "$v_mau" ] || continue
+                case " $PENDENTES " in
+                    *" $v_mau "*)
+                        AVISO_INUTEIS="${AVISO_INUTEIS}
+$(t_msg lista_ja_nao_ajudou "$(t_verbo_amigavel "$v_mau")" "$n_mau")" ;;
+                esac
+            done <<FIMAVISO
+$(t_lista_inuteis "$ID_LISTA" 2>/dev/null)
+FIMAVISO
+            [ -n "$AVISO_INUTEIS" ] && t_diz "lista: ja tentaram sem sucesso ->$AVISO_INUTEIS"
+        fi
         ORIGEM_LICAO="$(t_msg licao_origem_local)"
         if [ -n "${DE_QUANTAS:-}" ] && [ "${DE_QUANTAS:-0}" -gt 1 ] 2>/dev/null; then
             ORIGEM_LICAO="$(t_msg licao_origem_lista "$DE_QUANTAS")"
         fi
         if t_pergunta "$(t_msg licao_pergunta "$ORIGEM_LICAO" \
-             "$(for v in $PENDENTES; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)")" \
+             "$(for v in $PENDENTES; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)")${AVISO_INUTEIS}" \
              "$(t_msg botao_instalar)" "$(t_msg botao_tentar_sem_instalar)"; then
             # This shortcut can also run dotnet48, which takes half an hour:
             # suspending in the middle corrupts the prefix just the same.

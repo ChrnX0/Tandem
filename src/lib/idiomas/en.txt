@@ -404,6 +404,12 @@ nobody
 If a double click still does not work, log out of your account and log back
 in.
 
+@lista_ja_nao_ajudou
+
+Careful with {1}: on this same file, {2} report(s) say it was installed and
+did NOT help. It may still be right here - but if it is a long download, that
+is worth knowing before you start.
+
 @licao_origem_local
 Last time, this program needed
 

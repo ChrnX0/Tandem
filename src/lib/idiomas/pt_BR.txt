@@ -404,6 +404,12 @@ ninguém
 Se ainda não funcionar com dois cliques, saia da sua conta e entre
 de novo.
 
+@lista_ja_nao_ajudou
+
+Cuidado com {1}: neste mesmo arquivo, {2} relato(s) dizem que ele foi
+instalado e NAO ajudou. Ainda pode ser o certo aqui - mas se for um download
+demorado, vale saber disso antes de comecar.
+
 @licao_origem_local
 Da última vez, este programa precisou
 

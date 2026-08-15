@@ -24,6 +24,28 @@ tandem (4.13) unstable; urgency=medium
     nao-avisar" stopped the network call and went on printing the notice for
     ever. Found by running the four states in order, not by reading the code.
 
+
+  * The list finally opens the field that says what did NOT work. Field 4 of
+    the record - the components installed that did not fix it - has been
+    written by every client, accepted by the intake, published by the rebuild
+    and downloaded to every machine since 3.4, and read by NOBODY:
+    t_lista_linha's awk touches fields 1, 3, 5, 6 and 7. So a shop could be one
+    click away from half an hour of dotnet48 that sixty other shops had already
+    burned on this exact installer, with that fact sitting on its own disk.
+  * The sentence is attached to the QUESTION, which is the only moment it is
+    worth anything: after the install starts, knowing is too late. It weighs
+    the reports the same way the resolver does, so an old report from a
+    different Wine counts for less here too, and it sums across rows - the
+    thing the read path got wrong once already.
+  * It warns and never vetoes. A component that failed on somebody else's
+    machine can be exactly right on this one, so it adds a sentence and changes
+    no default; the owner is the one deciding whether to spend the afternoon.
+    A test asserts it never removes anything from the offer.
+  * And "nobody got this working" is finally readable: a row whose verbs field
+    is "-" is a machine saying it tried and nothing helped - the record the
+    intake goes out of its way to accept and the resolver drops on its first
+    line. It answers only when there is no working lesson at all, because one
+    shop failing where four hundred succeeded is a fact about that shop.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 18:40:00 +0000
 
 tandem (4.12) unstable; urgency=medium

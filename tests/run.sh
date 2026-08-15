@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3939407060 3841" "$soma_esperados"
+      "3749165941 3889" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -6149,6 +6149,57 @@ for palavra in lista_recebendo_auto lista_recebendo_nao; do
         fail "tandem lista says which way the switch is set" "$palavra" "absent"
 done
 pass "tandem lista says which way the switch is set"
+
+section "the list knows what did NOT work, and finally says so"
+
+# Field 4 of the record - the components installed that did NOT fix it - has
+# been written by every client, accepted by the intake, published by the
+# rebuild and downloaded to every machine since 3.4, and read by NOBODY:
+# t_lista_linha's awk touches fields 1, 3, 5, 6 and 7 only. So a shop could be
+# one click from half an hour of dotnet48 that sixty other shops had already
+# burned on this exact installer, with that fact sitting on its own disk.
+INU="$TMPROOT/inuteis.tsv"
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf 'abc\t64\tvcrun2022\t-\tconfirmado\t400\t2026-08\t-\t10.0\t20240105\t-\n'
+  printf 'abc\t64\t-\tdotnet48,vcrun6\treprovado\t60\t2026-08\t-\t10.0\t20240105\t-\n'
+  printf 'abc\t64\t-\tdotnet48\treprovado\t30\t2026-08\t-\t10.0\t20240105\t-\n'
+  printf 'xyz\t64\t-\tdotnet48\treprovado\t300\t2026-08\t-\t10.0\t20240105\t-\n'
+} > "$INU"
+inut() { TANDEM_LISTA="$INU" TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; '"$1" 2>/dev/null; }
+
+# Two rows name dotnet48; the count is their SUM, which is the whole job of
+# the machine count and the thing the read path got wrong once already.
+equal "reports about the same useless component add up" \
+      "dotnet48$(printf '\t')90" "$(inut 't_lista_inuteis abc' | head -1)"
+equal "and the worst-attested one comes first" \
+      "dotnet48 vcrun6" "$(inut 't_lista_inuteis abc' | cut -f1 | tr '\n' ' ' | sed 's/ $//')"
+equal "a file nobody has reported failures for says nothing" "" \
+      "$(inut 't_lista_inuteis naoexiste')"
+
+# "Nobody got this working" is a record the intake goes out of its way to
+# accept and the resolver drops on its first line - it is looking for a lesson
+# and this is the absence of one.
+equal "with only failures, it says how many reported them" "300" \
+      "$(inut 't_lista_ninguem_conseguiu xyz')"
+# ...but one shop failing where four hundred succeeded is a fact about that
+# shop, not about the program.
+equal "with a working lesson present, it stays quiet" "1" \
+      "$(inut 't_lista_ninguem_conseguiu abc >/dev/null; echo $?')"
+
+# The warning has to reach the QUESTION, which is the only moment it is worth
+# anything - after the install has started, knowing is too late.
+contem "tandem-exe warns before asking whether to spend the time" \
+       "lista_ja_nao_ajudou" "$(cat "$ROOT/src/bin/tandem-exe")"
+contem "and the warning is attached to the question itself" \
+       'AVISO_INUTEIS' \
+       "$(grep -A 2 't_pergunta "\$(t_msg licao_pergunta' "$ROOT/src/bin/tandem-exe")"
+# It must not become a veto: a component that failed elsewhere can be exactly
+# right here, and this project does not let a rejection outrank a confirmation.
+naocontem "it warns and never removes the component from the offer" \
+          "PENDENTES=" "$(sed -n '/AVISO_INUTEIS=""/,/^        ORIGEM_LICAO=/p' \
+                          "$ROOT/src/bin/tandem-exe")"
 
 section "Tandem says there is a newer Tandem, and never installs it"
 

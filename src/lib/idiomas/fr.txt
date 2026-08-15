@@ -407,6 +407,12 @@ personne
 Si le double clic ne marche toujours pas, déconnectez-vous puis
 reconnectez-vous.
 
+@lista_ja_nao_ajudou
+
+Attention a {1} : sur ce meme fichier, {2} rapport(s) disent qu'il a ete
+installe et n'a PAS aide. Il peut encore etre le bon ici - mais si c'est un
+long telechargement, autant le savoir avant de commencer.
+
 @licao_origem_local
 La dernière fois, ce programme a eu besoin de
 

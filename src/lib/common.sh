@@ -2035,6 +2035,87 @@ t_lista_linha() {
         }' "$TANDEM_LISTA"
 }
 
+# What other people installed on THIS file and found useless, as
+# "verb<TAB>reports" lines, worst first.
+#
+# The list has carried this since 3.4 and nothing ever read it: t_lista_linha's
+# awk touches fields 1, 3, 5, 6 and 7, and field 4 - the components that were
+# installed and did NOT fix it - was written by every client, accepted by the
+# intake, published by the rebuild, downloaded to every machine, and opened by
+# nobody. So a shop could be about to spend half an hour on dotnet48 that sixty
+# other shops had already burned on this exact installer without it helping,
+# with that fact sitting on the disk.
+#
+# It NEVER blocks and never subtracts from a suggestion: a verb can fail on one
+# machine and be exactly right on the next, which is why this returns a count
+# and a sentence rather than a veto. The weighting is the resolver's, so an old
+# report from a different Wine counts for less here too.
+t_lista_inuteis() {
+    local id="$1"
+    [ -f "$TANDEM_LISTA" ] || return 1
+    [ -n "$id" ] || return 1
+    local wine_agora mes_agora
+    wine_agora="$(t_stack_wine 2>/dev/null | cut -d. -f1)"
+    mes_agora="$(date +%Y-%m)"
+    awk -F'\t' -v alvo="$id" -v wine_agora="$wine_agora" -v mes_agora="$mes_agora" '
+        function meses(a, b,   pa, pb) {
+            if (a == "" || b == "") return 0
+            split(a, pa, "-"); split(b, pb, "-")
+            return (pb[1] - pa[1]) * 12 + (pb[2] - pa[2])
+        }
+        function peso(w, visto,   p, m, pw) {
+            p = 1
+            if (wine_agora == "" || w == "" || w == "-") { p = 0.75 }
+            else { split(w, pw, "."); if (pw[1] != wine_agora) p = 0.5 }
+            m = meses(visto, mes_agora)
+            if (m > 12) p = p * 0.75
+            if (m > 24) p = p * 0.66
+            if (m > 48) p = p * 0.5
+            return (p < 0.25) ? 0.25 : p
+        }
+        /^#/ { next }
+        $1 != alvo || $4 == "-" || $4 == "" { next }
+        {
+            m = ($6 ~ /^[0-9]+$/) ? $6 + 0 : 1
+            w = (NF >= 9) ? $9 : "-"
+            n = split($4, vs, ",")
+            for (i = 1; i <= n; i++) {
+                if (vs[i] == "") continue
+                # The honest count of REPORTS is what gets shown, exactly as in
+                # t_lista_linha - telling somebody "3.7 shops" is a number he
+                # cannot check against the file he can download and read.
+                bruto[vs[i]] += m
+                peso_de[vs[i]] += m * peso(w, $7)
+            }
+        }
+        END {
+            for (v in bruto) printf "%s\t%d\t%.3f\n", v, bruto[v], peso_de[v]
+        }' "$TANDEM_LISTA" 2>/dev/null |
+    sort -t"$(printf '\t')" -k3,3gr | cut -f1,2
+}
+
+# Has ANYBODY got this program working? A row whose verbs field is "-" is a
+# machine saying "I tried and nothing I installed helped" - the record the
+# intake goes out of its way to accept and the resolver drops on its first
+# line, because it is looking for a lesson and this is the absence of one.
+#
+# Returns 0 and prints the report count when that is the ONLY thing the list
+# knows about this file. Deliberately not when there is also a working lesson:
+# one shop failing where four hundred succeeded is a fact about that shop.
+t_lista_ninguem_conseguiu() {
+    local id="$1" nada
+    [ -f "$TANDEM_LISTA" ] || return 1
+    [ -n "$id" ] || return 1
+    t_lista_linha "$id" >/dev/null 2>&1 && return 1
+    nada="$(awk -F'\t' -v alvo="$id" '
+        /^#/ { next }
+        $1 != alvo { next }
+        ($3 == "-" || $3 == "") { n += ($6 ~ /^[0-9]+$/) ? $6 + 0 : 1 }
+        END { print n + 0 }' "$TANDEM_LISTA" 2>/dev/null)"
+    [ "${nada:-0}" -gt 0 ] || return 1
+    printf '%s' "$nada"
+}
+
 # Reads the downloaded list and returns the known verbs for this program.
 # It only answers when the lesson comes confirmed by people: that is the
 # difference between spreading knowledge and spreading error with the same

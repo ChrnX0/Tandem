@@ -404,6 +404,12 @@ nadie
 Si el doble clic sigue sin funcionar, cierra la sesión y vuelve a
 entrar.
 
+@lista_ja_nao_ajudou
+
+Cuidado con {1}: en este mismo archivo, {2} relato(s) dicen que se instalo
+y NO ayudo. Todavia puede ser el correcto aqui - pero si es una descarga
+larga, conviene saberlo antes de empezar.
+
 @licao_origem_local
 La última vez, este programa necesitó
 
