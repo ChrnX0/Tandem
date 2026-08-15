@@ -35,8 +35,16 @@ tandem (4.15) unstable; urgency=medium
     abbreviation for seconds, and it reads as one of these dodges. It is
     "seconds:" now, aligned with the labels above it. The three languages whose
     label uses a native abbreviation keep it.
+  * CI stopped failing its own gate on its own footprint. The ProofGate step
+    vendors .proofgate/ into the working tree and then, one line later, the
+    same tool checks whether the tree is clean - so every run reported
+    "UNCOMMITTED changes present" about a directory it had just created. The
+    step is non-blocking, which is worse rather than better: a red line that
+    is always there and never means anything is a line people learn to scroll
+    past, and that is how the one that matters goes unread. One .gitignore
+    entry, and the check answers about the delivery again.
 
- -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 21:15:00 +0000
+ -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 21:52:00 +0000
 
 tandem (4.14) unstable; urgency=medium
 
