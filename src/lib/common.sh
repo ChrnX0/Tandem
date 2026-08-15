@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.14"
+TANDEM_VERSAO="4.15"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -347,6 +347,83 @@ t_msg() {
     printf '%s' "$texto"
 }
 
+# Which plural form a count takes, 0-based, in the language now loaded.
+#
+# THE RULE IS CODE AND THE FORMS ARE DATA, and that split is deliberate. gettext
+# ships its rule as a C expression inside the catalogue header, and honouring
+# one here would mean putting $(( )) around text that arrived from a stranger -
+# throwing away the property this whole format exists to have, which is that a
+# message can never be code. There is a test that hands the loader a hostile
+# catalogue and proves it cannot act; evaluating a plural rule would walk it
+# straight back in through the header.
+#
+# So the counts live in tools/po-para-catalogo.py for the translator's tool and
+# here for the program, and a test asserts the two agree. Duplication that a
+# test pins is cheaper than an evaluator.
+t_plural_indice() {
+    local n="${1:-0}"
+    # A count that is not a number is not worth a bash arithmetic error on the
+    # owner's screen. Form 0 always exists, so it is the safe answer.
+    case "$n" in ''|*[!0-9]*) printf '0'; return 0 ;; esac
+    case "${TANDEM_IDIOMA:-$TANDEM_IDIOMA_PADRAO}" in
+        # One form. Two would ask a translator to invent a distinction Chinese
+        # does not make.
+        zh_CN) printf '0' ;;
+        # Portuguese and French count zero as singular: "0 minuto", "0 minute".
+        pt_BR|fr)
+            if [ "$n" -gt 1 ]; then printf '1'; else printf '0'; fi ;;
+        ar)
+            if   [ "$n" -eq 0 ]; then printf '0'
+            elif [ "$n" -eq 1 ]; then printf '1'
+            elif [ "$n" -eq 2 ]; then printf '2'
+            elif [ $((n % 100)) -ge 3 ] && [ $((n % 100)) -le 10 ]; then printf '3'
+            elif [ $((n % 100)) -ge 11 ]; then printf '4'
+            else printf '5'; fi ;;
+        *)
+            if [ "$n" -eq 1 ]; then printf '0'; else printf '1'; fi ;;
+    esac
+}
+
+# How many forms each language has. Kept beside the rule above so the two cannot
+# drift, and asserted against the compiler's table by the suite.
+t_plural_formas() {
+    case "${1:-${TANDEM_IDIOMA:-$TANDEM_IDIOMA_PADRAO}}" in
+        zh_CN) printf '1' ;;
+        ar)    printf '6' ;;
+        *)     printf '2' ;;
+    esac
+}
+
+# t_msg_n <key> <count> [arg1 arg2 ...] - like t_msg, but picks a plural form.
+#
+# The count only CHOOSES the form; it is not substituted automatically, because
+# it is not always {1}: "on this same file, {2} reports say" counts on the
+# second slot. Pass it in the arguments as well, wherever it belongs.
+#
+# The fallback chain is the reason this is safe to adopt one message at a time:
+#
+#   this language's form N  ->  this language's form 0  ->  this language's
+#   plain key  ->  and only then the same three in English
+#
+# So a language that has translated nothing plural keeps the single sentence it
+# already had, in its own language. Reaching for English the moment a form is
+# missing would have made every Arabic and Hindi count switch to English the
+# day this arrived, which is a regression dressed as a feature.
+t_msg_n() {
+    local chave="$1" n="$2"; shift 2
+    local i c alvo=""
+    i="$(t_plural_indice "$n")"
+    for c in "$chave#$i" "$chave#0" "$chave"; do
+        if [ -n "${T_MSG[$c]:-}" ]; then alvo="$c"; break; fi
+    done
+    if [ -z "$alvo" ]; then
+        for c in "$chave#$i" "$chave#0" "$chave"; do
+            if [ -n "${T_MSG_BASE[$c]:-}" ]; then alvo="$c"; break; fi
+        done
+    fi
+    t_msg "${alvo:-$chave}" "$@"
+}
+
 # Is this "program" actually a web page?
 #
 # A download that goes wrong rarely produces nothing: the site answers with an
@@ -667,11 +744,11 @@ t_progresso_longo() {
             # count.
             local mudo=$(( parado / 60 )); [ "$mudo" -lt 1 ] && mudo=1
             t_progresso_texto "$base
-$(t_msg progresso_sem_novidade "$mudo")"
+$(t_msg_n progresso_sem_novidade "$mudo" "$mudo")"
         elif [ $(( agora - inicio )) -ge "${TANDEM_PROGRESSO_FALA:-60}" ]; then
             [ "$decorrido" -lt 1 ] && decorrido=1
             t_progresso_texto "$base
-$(t_msg progresso_ha_minutos "$decorrido")"
+$(t_msg_n progresso_ha_minutos "$decorrido" "$decorrido")"
         fi
     done
     wait "$pid"
@@ -2582,7 +2659,7 @@ t_confirma_funcionou() {
         # itself before anybody could use it. Saying "it opened!" would be a
         # lie.
         t_memoria_grava "$prog" RESULTADO "fechou sozinho"
-        t_aviso "$(t_msg abriu_e_fechou_sozinho "$durou")"
+        t_aviso "$(t_msg_n abriu_e_fechou_sozinho "$durou" "$durou")"
     fi
 
     # Nobody to ask - no window, or no zenity to draw one. That used to be the

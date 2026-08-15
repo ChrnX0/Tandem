@@ -198,7 +198,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 1193 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1268 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -850,7 +850,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 1193 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 1268 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The list's read path was measured against the OLD code before being fixed**,
   which is why the four defects are stated as numbers rather than as risks: on a
   two-row list the old query answered `vcrun2010` with 3 machines where 400
@@ -1128,11 +1128,42 @@ refuses a `raise` whose argument has a space in it, and demands a
   `1 linha(s)`) and, most importantly, **Poedit and Weblate** - the blocker on
   five unreviewed catalogues is getting humans to read them, and no human has
   tooling for a bespoke `@key` format.
+  **CORRECTED, 4.15: one of those two reasons had never actually worked.**
+  `msgstr[0] ` does not start with `msgstr `, so `le_po` matched none of the
+  three lines a plural entry is made of, the whole entry fell through, and the
+  compiler wrote a catalogue without it - no output, no warning, exit 0.
+  Measured, not deduced: a probe entry appended to `po/en.po` came back absent
+  from `en.txt` with the tool reporting the same count as before. So gettext
+  was adopted partly FOR plurals and then silently discarded every one, for
+  three versions, while nine messages went on saying `minuto(s)`. **The people
+  that silence discards are the volunteers item 0b needs**, which is what makes
+  it worse than a wrong sentence.
   **Why NOT the gettext runtime**, which is the other half of the decision:
   `msgfmt` at build time breaks rule 5 (the packager depends on nothing and
   runs on Windows), and a `.po` parser is sixty lines of Python. `%1$s` would
   also undo the `{1}` decision below. `msgmerge` is not used either, for the
   same reason: the development machine is Windows.
+- **Plurals: THE RULE IS CODE, THE FORMS ARE DATA**, and that split is not
+  style. gettext ships its rule as a C expression in the header
+  (`plural=(n%100>=3 && n%100<=10 ? 3 : ...)`); evaluating one would put
+  `$(( ))` around text that arrived from a stranger, and bash arithmetic on a
+  hostile string executes. That undoes the property this format exists to have
+  and which has its own test. So `t_plural_indice` is shell, `PLURAIS` in
+  `tools/po-para-catalogo.py` is the same counts for the translator's tool, and
+  a test pins the two together. **Duplication a test pins is cheaper than an
+  evaluator.**
+  The catalogue carries `@key#0`, `@key#1`… and `t_msg_n` falls back **form N →
+  form 0 → the plain key → and only then English**, all three tried in the
+  chosen language first. Reaching for English on the first missing form would
+  have switched every Arabic and Hindi count to English the day this arrived.
+  **Four rules, not one:** en/es/hi put zero with the plural, pt_BR/fr put it
+  with the singular (`0 minuto`), zh_CN has one form, ar has six.
+  **And the seeding branch written to protect that migration was deleted, not
+  kept.** It read as a safety net and was unreachable: an entry that gains
+  plural forms is an entry whose English changed, so the fuzzy mark drops it
+  before the seeding can run. Chinese, Hindi and Arabic instead carry the
+  sentence they were already shipping, in every form - which is not a new
+  translation and must not be counted as one.
 - **There is exactly ONE path for adding, changing or removing a message**, and
   it is the answer to "where do I edit this": `po/en.po`, then
   `tools/atualiza-po.py`, then `tools/po-para-catalogo.py`. Skipping the middle

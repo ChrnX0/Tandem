@@ -86,6 +86,7 @@ def le_cru(caminho):
     itens, _cab = compilador.le_po(caminho)
     por_chave = {}
     ids = {}
+    ids_plural = {}
     # msgid per key, needed to notice that English changed
     chave = None
     campo = None
@@ -97,25 +98,65 @@ def le_cru(caminho):
                 [compilador.CITADA.match(crua[8:].strip()).group(1)])
             campo, partes = None, []
             continue
+        if crua.startswith("msgid_plural ") and chave is not None:
+            if campo == "msgid":
+                ids[chave] = compilador.descita(partes)
+            campo, partes = "msgid_plural", []
+            m = compilador.CITADA.match(crua[13:].strip())
+            if m and m.group(1):
+                partes.append(m.group(1))
+            continue
         if crua.startswith("msgid ") and chave is not None:
             campo, partes = "msgid", []
             m = compilador.CITADA.match(crua[6:].strip())
             if m and m.group(1):
                 partes.append(m.group(1))
             continue
-        if crua.startswith("msgstr ") and chave is not None:
+        # "msgstr" and not "msgstr ": msgstr[0] closes the msgid above it just
+        # as msgstr does, and reading only the spaced form is precisely how the
+        # compiler used to lose a whole plural entry without saying so.
+        if crua.startswith("msgstr") and chave is not None:
             if campo == "msgid":
                 ids[chave] = compilador.descita(partes)
+            elif campo == "msgid_plural":
+                ids_plural[chave] = compilador.descita(partes)
             campo, partes = None, []
             continue
         m = compilador.CITADA.match(crua)
-        if m is not None and campo == "msgid":
+        if m is not None and campo in ("msgid", "msgid_plural"):
             partes.append(m.group(1))
     if chave is not None and campo == "msgid":
         ids[chave] = compilador.descita(partes)
+    elif chave is not None and campo == "msgid_plural":
+        ids_plural[chave] = compilador.descita(partes)
     for k, t, f in itens:
-        por_chave[k] = (ids.get(k, ""), t, f)
+        if isinstance(t, list):
+            por_chave[k] = ((ids.get(k, ""), ids_plural.get(k, "")), t, f)
+        else:
+            por_chave[k] = (ids.get(k, ""), t, f)
     return cabecalho, por_chave
+
+
+# A plural entry is a LIST, and ["", ""] is a true value in Python while meaning
+# "nobody has written a word of this". Asking "if traducao" would count an empty
+# Arabic plural as translated, mark it fuzzy against the English, and report it
+# as kept - three wrong answers from one truthiness test. It lives in the
+# compiler for the same reason the parser does: one copy, so it cannot drift.
+tem_texto = compilador.tem_texto
+
+
+def fonte_id(valor):
+    """What gets written as the msgid of a translation, for drift comparison.
+
+    Singular: the English sentence. Plural: the (singular, plural) pair, so a
+    change to EITHER English form marks the translations fuzzy. Comparing a
+    tuple against a list would never match and would mark every plural entry
+    fuzzy on every run - which drops it from the catalogue, silently, one step
+    downstream.
+    """
+    if isinstance(valor, list):
+        return (valor[0], valor[-1])
+    return valor
 
 
 def escreve_po(caminho, cabecalho, ordem, ingles, existente, lingua):
@@ -131,19 +172,40 @@ def escreve_po(caminho, cabecalho, ordem, ingles, existente, lingua):
             id_antigo, traducao, fuzzy = antes
             if lingua == PADRAO:
                 traducao = ingles[chave]      # the source language never drifts
-            elif traducao and id_antigo != ingles[chave]:
+            elif tem_texto(traducao) and id_antigo != fonte_id(ingles[chave]):
                 fuzzy = True
-            if fuzzy and traducao:
+            if fuzzy and tem_texto(traducao):
                 difusas += 1
-            elif traducao:
+            elif tem_texto(traducao):
                 mantidas += 1
             else:
                 novas += 1
-        if fuzzy and traducao:
+        if fuzzy and tem_texto(traducao):
             saida.append("#, fuzzy")
         saida.append('msgctxt "%s"' % chave)
-        saida.append("msgid %s" % cita(ingles[chave]))
-        saida.append("msgstr %s" % cita(traducao))
+        if isinstance(ingles[chave], list):
+            # A plural entry is written with THIS language's number of forms,
+            # not English's. That is the whole point of the exercise: Arabic
+            # gets six boxes in Poedit and Chinese gets one, instead of the two
+            # a template hard-coded for everybody.
+            fontes = ingles[chave]
+            saida.append("msgid %s" % cita(fontes[0]))
+            saida.append("msgid_plural %s" % cita(fontes[-1]))
+            # A translation that is still a single string belongs to an entry
+            # whose English has just gained plural forms, so it is already
+            # marked fuzzy above and its text is not carried over. Seeding the
+            # forms from it was tried here and removed: the fuzzy mark drops the
+            # entry anyway, so the code read as a safety net while being
+            # unreachable - the shape this project keeps catching in its own
+            # instruments. A message that becomes plural gets its forms written
+            # in every language, by hand, in the same commit.
+            tem = traducao if isinstance(traducao, list) else []
+            for i in range(compilador.formas(lingua)):
+                saida.append("msgstr[%d] %s"
+                             % (i, cita(tem[i] if i < len(tem) else "")))
+        else:
+            saida.append("msgid %s" % cita(ingles[chave]))
+            saida.append("msgstr %s" % cita(traducao))
         saida.append("")
     removidas = [k for k in existente if k not in ingles]
     io.open(caminho, "w", encoding="utf-8").write("\n".join(saida).rstrip("\n") + "\n")
@@ -159,7 +221,7 @@ def main():
     ordem = list(en.keys())
     ingles = {k: v[1] for k, v in en.items()}
 
-    faltando = [k for k in ordem if not ingles[k]]
+    faltando = [k for k in ordem if not tem_texto(ingles[k])]
     if faltando:
         print("po/%s.po has %d entries with an empty msgstr: %s"
               % (PADRAO, len(faltando), ", ".join(faltando[:5])))
@@ -175,9 +237,19 @@ def main():
            '"MIME-Version: 1.0\\n"',
            '"Content-Type: text/plain; charset=UTF-8\\n"',
            '"Content-Transfer-Encoding: 8bit\\n"',
-           '"Plural-Forms: nplurals=2; plural=(n != 1);\\n"', ""]
+           # A TEMPLATE has no language, so it cannot have a plural rule. The
+           # placeholder is gettext's own convention and it is what makes
+           # "msginit -l ar" fill in Arabic's six forms; the English rule sat
+           # here until 4.15, which is a rule for exactly one of seven.
+           '"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\\n"', ""]
     for chave in ordem:
-        pot += ['msgctxt "%s"' % chave, "msgid %s" % cita(ingles[chave]), 'msgstr ""', ""]
+        pot += ['msgctxt "%s"' % chave]
+        if isinstance(ingles[chave], list):
+            pot += ["msgid %s" % cita(ingles[chave][0]),
+                    "msgid_plural %s" % cita(ingles[chave][-1]),
+                    'msgstr[0] ""', 'msgstr[1] ""', ""]
+        else:
+            pot += ["msgid %s" % cita(ingles[chave]), 'msgstr ""', ""]
     io.open(os.path.join(PO, "tandem.pot"), "w", encoding="utf-8").write(
         "\n".join(pot).rstrip("\n") + "\n")
     print("po/tandem.pot  %d entries" % len(ordem))

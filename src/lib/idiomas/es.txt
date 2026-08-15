@@ -192,11 +192,18 @@ propio entorno, que es de 64 bits.
 @licao_instalando
 Instalando lo que este programa ya pidió antes...
 
-@progresso_ha_minutos
-Sigue trabajando. Ya van {1} minuto(s) — este tarda de verdad, es normal.
+@progresso_ha_minutos#0
+Sigue trabajando. Ya va {1} minuto — este tarda de verdad, es normal.
 
-@progresso_sem_novidade
-Nada nuevo desde hace {1} minuto(s). Todavia puede terminar — pero si sigue
+@progresso_ha_minutos#1
+Sigue trabajando. Ya van {1} minutos — este tarda de verdad, es normal.
+
+@progresso_sem_novidade#0
+Nada nuevo desde hace {1} minuto. Todavia puede terminar — pero si sigue
+asi, la conexion a internet es lo primero que hay que revisar.
+
+@progresso_sem_novidade#1
+Nada nuevo desde hace {1} minutos. Todavia puede terminar — pero si sigue
 asi, la conexion a internet es lo primero que hay que revisar.
 
 @instalando_componente
@@ -430,9 +437,15 @@ nadie
 Si el doble clic sigue sin funcionar, cierra la sesión y vuelve a
 entrar.
 
-@lista_ja_nao_ajudou
+@lista_ja_nao_ajudou#0
 
-Cuidado con {1}: en este mismo archivo, {2} relato(s) dicen que se instalo
+Cuidado con {1}: en este mismo archivo, {2} relato dice que se instalo
+y NO ayudo. Todavia puede ser el correcto aqui - pero si es una descarga
+larga, conviene saberlo antes de empezar.
+
+@lista_ja_nao_ajudou#1
+
+Cuidado con {1}: en este mismo archivo, {2} relatos dicen que se instalo
 y NO ayudo. Todavia puede ser el correcto aqui - pero si es una descarga
 larga, conviene saberlo antes de empezar.
 
@@ -1122,8 +1135,11 @@ Listo. Busca en el menú de aplicaciones:
 
 {1}
 
-@abriu_e_fechou_sozinho
-El programa se abrió y se cerró solo en {1} segundo(s), sin dar tiempo a usarlo.
+@abriu_e_fechou_sozinho#0
+El programa se abrió y se cerró solo en {1} segundo, sin dar tiempo a usarlo.
+
+@abriu_e_fechou_sozinho#1
+El programa se abrió y se cerró solo en {1} segundos, sin dar tiempo a usarlo.
 
 @funcionou_como_esperava
 ¿El programa funcionó como esperabas?
@@ -1832,11 +1848,21 @@ No hay dirección a donde mandar en esta versión de Tandem.
 Las líneas se quedan en la cola y van cuando exista una dirección. Nada se
 pierde, y nada se envía.
 
-@env_enviadas
-{1} línea(s) enviada(s). Quedan {2} en la cola.
+@env_enviadas#0
+{1} línea enviada. Aún hay {2} en la cola.
 
-@env_servidor_recusou
-El servidor de la lista no aceptó las líneas. No se perdió nada: {1} línea(s)
+@env_enviadas#1
+{1} líneas enviadas. Aún hay {2} en la cola.
+
+@env_servidor_recusou#0
+El servidor de la lista no aceptó las líneas. No se perdió nada: {1} línea
+sigue en la cola y Tandem lo intentará de nuevo por su cuenta.
+
+Si esto sigue pasando, el problema está del otro lado - no hay nada que
+arreglar en esta computadora.
+
+@env_servidor_recusou#1
+El servidor de la lista no aceptó las líneas. No se perdió nada: {1} líneas
 siguen en la cola y Tandem lo intentará de nuevo por su cuenta.
 
 Si esto sigue pasando, el problema está del otro lado - no hay nada que
@@ -2023,8 +2049,11 @@ Tandem - Lo que aprendí
 @esq_diga_o_nome
 Di el nombre del programa a olvidar.
 
-@esq_esqueci
-Olvidé lo que sabía sobre {1} programa(s). La próxima vez lo descubre de nuevo.
+@esq_esqueci#0
+Olvidé lo que sabía sobre {1} programa. La próxima vez lo descubre de nuevo.
+
+@esq_esqueci#1
+Olvidé lo que sabía sobre {1} programas. La próxima vez lo descubre de nuevo.
 
 @id_titulo_janela
 Tandem - identidad de la máquina
@@ -2088,7 +2117,7 @@ resolvieron:
 no resolvieron: 
 
 @mem_campo_segundos
-tardó (s): 
+segundos:   
 
 @mem_campo_visto_em
 visto en:   
@@ -2190,8 +2219,12 @@ Lineas que ya salieron de esta maquina, en total: {1}
 Ver todo lo que ya salio:  cat {1}
 Borrar ese registro:  tandem esquecer enviados
 
-@esq_enviados_apagado
-Borrado: el registro de {1} linea(s) que esta maquina habia enviado.
+@esq_enviados_apagado#0
+Borrado: el registro de {1} linea que esta maquina habia enviado.
+Lo que ya se envio sigue enviado - esto solo borra la copia guardada aqui.
+
+@esq_enviados_apagado#1
+Borrado: el registro de {1} lineas que esta maquina habia enviado.
 Lo que ya se envio sigue enviado - esto solo borra la copia guardada aqui.
 
 @esq_enviados_vazio
@@ -2672,8 +2705,11 @@ se reconoció la versión de Java ({1})
 @at_protegido_nao
 un perfil de su lista no está siendo protegido
 
-@at_protegido_ok
-los {1} perfil(es) de su lista son rechazados por la automatización
+@at_protegido_ok#0
+el perfil de su lista es rechazado por la automatización
+
+@at_protegido_ok#1
+los {1} perfiles de su lista son rechazados por la automatización
 
 @prog_titulo_janela
 Tandem - Programas instalados
