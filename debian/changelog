@@ -185,6 +185,25 @@ tandem (4.11) unstable; urgency=medium
     record carries only the month: a date with a day identifies. And
     "tandem socorro" sweeps only *.log, so the ledger is never swept into a
     report the owner sends to somebody else.
+
+  * An unreviewed translation says so to the people who did not choose it.
+    t_idioma_revisado had exactly two call sites, both inside "tandem idioma" -
+    the command a person types to CHANGE the language. But the language is
+    normally resolved from the system locale with nobody typing anything, which
+    is how almost everybody outside Brazil arrives. So this project's own
+    principle - shipping an unreviewed translation is defensible, shipping it
+    without saying so is not - was honoured only for the minority, and everybody
+    else got the unreviewed prose with the honesty stripped off.
+  * It is also the only recruitment channel the five unreviewed catalogues
+    have: the people running them are native speakers who do not know there is
+    anything to review. The notice says how to help and is three lines, not the
+    seven-line paragraph shown to somebody who asked.
+  * On stderr, never a dialog, once per (language, version) - a new version
+    adds new lines to those catalogues, so it is worth repeating then and not
+    before, and a notice on every command is one people learn to scroll past.
+    It names the LANGUAGE, not the locale code. And it is deliberately NOT
+    wired into tandem-exe, with a test asserting so: nothing belongs between
+    the double click and the program.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium

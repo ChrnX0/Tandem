@@ -48,6 +48,11 @@ I do not know the language "{1}".
 
 See the list with:  tandem idioma
 
+@idioma_nao_revisado_aviso
+Note: Tandem's {1} translation has not been read by a native speaker yet.
+If a sentence sounds wrong, that is why - and saying so is the easiest help
+this project can be given:  tandem idioma
+
 @idioma_nao_revisado
 An honest warning: this translation has not yet been checked by somebody who
 speaks {1} as their first language. It was made with care, but it may hold a

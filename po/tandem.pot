@@ -55,6 +55,13 @@ msgid ""
 "See the list with:  tandem idioma"
 msgstr ""
 
+msgctxt "idioma_nao_revisado_aviso"
+msgid ""
+"Note: Tandem's {1} translation has not been read by a native speaker yet.\n"
+"If a sentence sounds wrong, that is why - and saying so is the easiest help\n"
+"this project can be given:  tandem idioma"
+msgstr ""
+
 msgctxt "idioma_nao_revisado"
 msgid ""
 "An honest warning: this translation has not yet been checked by somebody who\n"

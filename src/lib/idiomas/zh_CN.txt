@@ -48,6 +48,11 @@ Tandem 界面语言：{1}
 
 用这个命令查看列表：  tandem idioma
 
+@idioma_nao_revisado_aviso
+提示：Tandem 的{1}翻译还没有母语者读过。
+如果某句话读起来别扭，原因就在这里——把它指出来，
+是这个项目最容易得到的帮助：tandem idioma
+
 @idioma_nao_revisado
 坦白说明：这份翻译还没有经过以{1}为母语的人校对。它是用心做的，但可能
 有些地方读起来像翻译腔，而不像地道的{1}。

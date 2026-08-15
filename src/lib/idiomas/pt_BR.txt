@@ -48,6 +48,11 @@ Não conheço o idioma "{1}".
 
 Veja a lista com:  tandem idioma
 
+@idioma_nao_revisado_aviso
+Aviso: a traducao do Tandem para {1} ainda nao foi lida por quem fala
+essa lingua de nascenca. Se alguma frase soar estranha, e por isso - e
+dizer isso e a ajuda mais facil que este projeto pode receber:  tandem idioma
+
 @idioma_nao_revisado
 Aviso honesto: esta tradução ainda não foi conferida por alguém que fale
 {1} de berço. Ela foi feita com cuidado, mas pode ter erro de português

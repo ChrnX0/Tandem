@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "438581406 3825" "$soma_esperados"
+      "1128207659 3827" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "1067571207 2401" "$soma_padroes"
+      "1776500573 2424" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -6053,6 +6053,55 @@ naocontem "but a genuinely truncated file is not called a web page" \
           "web page saved under" \
           "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
              bash "$ROOT/src/bin/tandem-rpm" "$TMPROOT/curto.rpm" </dev/null 2>&1 | head -2)"
+
+section "an unreviewed translation says so to the people who did not choose it"
+
+# t_idioma_revisado had exactly two call sites, both inside acao_idioma - the
+# command a person types to CHANGE the language. But step 3 of t_idioma_escolhe
+# resolves from the system locale with nobody typing anything, which is how
+# almost everybody outside Brazil arrives. So this project's own principle -
+# shipping an unreviewed translation is defensible, shipping it without saying
+# so is not - was honoured only for the minority.
+REVV="$TMPROOT/revisao"; mkdir -p "$REVV/home"
+avisa() {
+    rm -rf "$REVV/home/.config"
+    # { cmd >/dev/null; } 2>&1 and not `2>&1 >/dev/null`: both keep stderr
+    # only, and shellcheck flags the second because it is the shape of a very
+    # common mistake. The suite demands zero warnings, and the clarified form
+    # says what it means anyway.
+    { env HOME="$REVV/home" XDG_CONFIG_HOME="$REVV/home/.config" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$1" \
+        bash "$ROOT/src/bin/tandem" version >/dev/null; } 2>&1
+}
+for l in fr es zh_CN hi ar; do
+    [ -n "$(avisa "$l")" ] ||
+        fail "an unreviewed catalogue announces itself ($l)" "a notice" "silence"
+done
+pass "every unreviewed catalogue announces itself without being asked"
+for l in en pt_BR; do
+    equal "a reviewed catalogue says nothing ($l)" "" "$(avisa "$l")"
+done
+# The name, not the locale code: "fr" is a thing a programmer reads, and
+# t_idioma_nome exists precisely for this.
+case "$(avisa fr)" in
+    *"French"*) pass "the notice names the language rather than the locale code" ;;
+    *) fail "the notice names the language rather than the locale code" \
+            "French" "$(avisa fr | head -1)" ;;
+esac
+# Once per (language, version). A new version adds new lines to those
+# catalogues, so it is worth repeating then and not before - and a notice on
+# every single command is a notice people learn to scroll past.
+env HOME="$REVV/home" XDG_CONFIG_HOME="$REVV/home/.config" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=fr \
+    bash "$ROOT/src/bin/tandem" version >/dev/null 2>&1
+equal "and it does not repeat on the next command" "" \
+      "$({ env HOME="$REVV/home" XDG_CONFIG_HOME="$REVV/home/.config" \
+             TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=fr \
+             bash "$ROOT/src/bin/tandem" version >/dev/null; } 2>&1)"
+# NOT from t_primeira_vez, which tandem-exe calls at line 9 - between the double
+# click and the program. Nothing belongs there.
+naocontem "the notice is not wired into the double-click path" \
+          "idioma_nao_revisado_aviso" "$(cat "$ROOT/src/bin/tandem-exe")"
 
 section "the list is received without anybody typing a command"
 

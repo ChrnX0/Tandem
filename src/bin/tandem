@@ -1408,6 +1408,34 @@ acao_painel() {
 }
 
 # ------------------------------------------------------------------ main
+#
+# Say the translation is unreviewed, on the path people ACTUALLY arrive by.
+#
+# t_idioma_revisado had exactly two call sites, both inside acao_idioma - the
+# command a person types to CHANGE the language. But step 3 of
+# t_idioma_escolhe resolves from the system locale with nobody typing
+# anything, which is how almost everybody outside Brazil gets here. So this
+# project's own principle - shipping an unreviewed translation is defensible,
+# shipping it without saying so is not - was honoured only for the minority,
+# and everybody else got the unreviewed prose with the honesty stripped off.
+#
+# It is also the only recruitment channel that exists for the five catalogues
+# waiting on review: the people running them are native speakers who do not
+# know there is anything to review.
+#
+# On stderr and never a dialog, once per (language, version) - a new version
+# adds new lines to those catalogues, so the notice is worth repeating then and
+# not before. And deliberately NOT from t_primeira_vez, which tandem-exe calls
+# at line 9, between the double click and the program: nothing belongs there.
+if [ -n "${TANDEM_IDIOMA:-}" ] && ! t_idioma_revisado "$TANDEM_IDIOMA" &&
+   [ "$(t_config_le REVISAO_AVISADA 2>/dev/null)" != "$TANDEM_IDIOMA:$VERSAO" ]; then
+    t_config_grava REVISAO_AVISADA "$TANDEM_IDIOMA:$VERSAO"
+    # The NAME, not the locale code. "fr" is a thing a programmer reads;
+    # t_idioma_nome exists and every other screen already uses it.
+    printf '%s\n' "$(t_msg idioma_nao_revisado_aviso \
+                     "$(t_idioma_nome "$TANDEM_IDIOMA")")" >&2
+fi
+
 case "${1:-}" in
     ""|painel|panel)      acao_painel ;;
     install|instalar|abrir) shift; acao_install "$@" ;;
