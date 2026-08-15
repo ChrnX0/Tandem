@@ -4,10 +4,3 @@ __pycache__/
 build/
 dist/
 tests/telas/
-
-# Vendored by the ProofGate step in CI, one line before the same tool checks
-# whether the working tree is clean - so every run reported "UNCOMMITTED
-# changes present" about a directory it had just created itself. A gate that
-# fails on its own footprint every time is a gate people learn to scroll past,
-# which is how the failure that matters goes unread.
-.proofgate/
