@@ -275,7 +275,7 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
                 case " $PENDENTES " in
                     *" $v_mau "*)
                         AVISO_INUTEIS="${AVISO_INUTEIS}
-$(t_msg lista_ja_nao_ajudou "$(t_verbo_amigavel "$v_mau")" "$n_mau")" ;;
+$(t_msg_n lista_ja_nao_ajudou "$n_mau" "$(t_verbo_amigavel "$v_mau")" "$n_mau")" ;;
                 esac
             done <<FIMAVISO
 $(t_lista_inuteis "$ID_LISTA" 2>/dev/null)

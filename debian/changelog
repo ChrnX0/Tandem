@@ -1,3 +1,43 @@
+tandem (4.15) unstable; urgency=medium
+
+  * "1 minuto(s)" is what a program says when it cannot count, and nine
+    messages said it. The parentheses were never laziness: the catalogue could
+    not carry a second form, so the only honest thing a translator could write
+    was the dodge. Plural forms were one of the two reasons this project moved
+    to gettext in the first place, and they had never worked.
+  * The measured defect underneath is worse than the wording. tools/po-para-
+    catalogo.py DROPPED any .po entry carrying msgid_plural - "msgstr[0] " does
+    not start with "msgstr ", so the whole entry fell through the parser. No
+    output, no warning, exit 0. Proven by appending a probe entry to po/en.po
+    and watching the compiled catalogue come back without it, reporting the
+    same count as before. The people that silently discards are exactly the
+    volunteers the format was adopted to attract, and getting five unreviewed
+    catalogues read by native speakers is the top item on this project's list.
+  * THE RULE IS CODE AND THE FORMS ARE DATA. gettext ships its plural rule as a
+    C expression inside the file; honouring one would mean $(( )) around text
+    that arrived from a stranger, undoing the property this format exists to
+    have - that a message can never be code, which has its own test.
+    So t_plural_indice is shell, and the .po carries the rule as documentation
+    for Poedit and Weblate. Two tables, and a test that pins them together.
+  * Nine messages, seven languages, four different rules: English and Spanish
+    put zero with the plural, Portuguese and French put it with the singular
+    ("0 minuto"), Chinese has one form, and Arabic has six. Exercised in all
+    six at 0, 1, 2, 3, 11 and 100.
+  * A form numbered past the end of a language's own rule is now REFUSED, by
+    name, with a non-zero exit - it can never be reached by any count, so
+    shipping it quietly would spend somebody's afternoon and deliver nothing.
+  * The seeding branch written to protect the migration was removed rather than
+    kept: the fuzzy mark drops the entry before it can run, so the code read as
+    a safety net while being unreachable. Chinese, Hindi and Arabic instead
+    carry the sentence they were already shipping, in every form their language
+    has - not a new translation, and it should not be described as one.
+  * "took (s):" on the memory screen was never a plural at all - the (s) was an
+    abbreviation for seconds, and it reads as one of these dodges. It is
+    "seconds:" now, aligned with the labels above it. The three languages whose
+    label uses a native abbreviation keep it.
+
+ -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 21:15:00 +0000
+
 tandem (4.14) unstable; urgency=medium
 
   * Something is said during the half-hour wait. t_progresso_abre opens a

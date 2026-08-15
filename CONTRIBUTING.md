@@ -63,6 +63,18 @@ python3 tools/po-para-catalogo.py    # regenerate the shipped catalogues
 bash tests/run.sh
 ```
 
+**Plural forms work, and your language's own rule is what you get.** A handful
+of messages count things, and Poedit will show you as many boxes as your
+language actually needs — one for Chinese, two for Spanish, six for Arabic.
+Fill in every box: a form left empty falls back to form 0, which answers with
+the wrong agreement. Until 4.15 these entries were **silently discarded** by
+the tool that builds the catalogues, so if you tried this before and your work
+vanished, that was a bug here and not something you did.
+
+Three of the languages currently repeat one sentence in every form — that is
+the sentence they already shipped, put where every count can reach it, and it
+is exactly the kind of thing worth splitting properly if you speak one of them.
+
 When you have read a whole file, change its header:
 
 ```

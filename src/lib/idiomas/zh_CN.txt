@@ -182,10 +182,10 @@ sudo apt install wine32
 @licao_instalando
 正在安装这个程序以前要过的东西……
 
-@progresso_ha_minutos
+@progresso_ha_minutos#0
 还在处理。已经 {1} 分钟了——这一项本来就慢，属于正常。
 
-@progresso_sem_novidade
+@progresso_sem_novidade#0
 已经 {1} 分钟没有任何动静了。它仍可能完成——但如果一直这样，
 首先要检查的就是网络连接。
 
@@ -401,7 +401,7 @@ Tandem 让读取程序去读文件,却没说是哪一个。
 @rep_saia_e_entre
 如果双击还是没反应,请退出账户再重新登录。
 
-@lista_ja_nao_ajudou
+@lista_ja_nao_ajudou#0
 
 请注意 {1}：在同一个文件上，有 {2} 份报告说装了它但没有帮助。
 在这里它仍可能是对的——不过如果下载很久，这件事值得在开始前知道。
@@ -1066,7 +1066,7 @@ chmod +x "{1}"
 
 {1}
 
-@abriu_e_fechou_sozinho
+@abriu_e_fechou_sozinho#0
 程序自己在 {1} 秒内开了又关，根本没来得及用。
 
 @funcionou_como_esperava
@@ -1747,10 +1747,10 @@ rm "{1}"
 
 这些记录留在队列里，等有了地址再一起发出去。什么都不会丢，也什么都不会发。
 
-@env_enviadas
+@env_enviadas#0
 已发送 {1} 行。队列里还剩 {2} 行。
 
-@env_servidor_recusou
+@env_servidor_recusou#0
 列表服务器没有接受这些记录。什么都没有丢失：还有 {1} 条记录留在队列里,
 Tandem 会自己再试一次。
 
@@ -1930,7 +1930,7 @@ Tandem - 我学到的东西
 @esq_diga_o_nome
 请说出要忘掉的程序名。
 
-@esq_esqueci
+@esq_esqueci#0
 我已经忘掉关于 {1} 个程序所知道的事。下次会重新摸索。
 
 @id_titulo_janela
@@ -2094,7 +2094,7 @@ Tandem 把这里能实测的都测了，全都有回应。
 查看已经发出去的全部内容：cat {1}
 清除这份记录：tandem esquecer enviados
 
-@esq_enviados_apagado
+@esq_enviados_apagado#0
 已清除：这台机器发出过的 {1} 行的记录。
 已经发出去的仍然发出去了——这只清除保存在本机的副本。
 
@@ -2571,7 +2571,7 @@ Java 的版本已被识别（{1}）
 @at_protegido_nao
 您列表里有一个环境没有被保护
 
-@at_protegido_ok
+@at_protegido_ok#0
 您列表里的 {1} 个环境会被自动化拒绝
 
 @prog_titulo_janela

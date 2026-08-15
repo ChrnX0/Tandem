@@ -193,11 +193,18 @@ May I install them before trying to open it?
 @licao_instalando
 Installing what this program has asked for before...
 
-@progresso_ha_minutos
-Still working. {1} minute(s) so far — this one is slow, it is normal.
+@progresso_ha_minutos#0
+Still working. {1} minute so far — this one is slow, it is normal.
 
-@progresso_sem_novidade
-Nothing new for {1} minute(s). It may still finish — but if it stays like
+@progresso_ha_minutos#1
+Still working. {1} minutes so far — this one is slow, it is normal.
+
+@progresso_sem_novidade#0
+Nothing new for {1} minute. It may still finish — but if it stays like
+this, the internet connection is the first thing to check.
+
+@progresso_sem_novidade#1
+Nothing new for {1} minutes. It may still finish — but if it stays like
 this, the internet connection is the first thing to check.
 
 @instalando_componente
@@ -431,9 +438,15 @@ nobody
 If a double click still does not work, log out of your account and log back
 in.
 
-@lista_ja_nao_ajudou
+@lista_ja_nao_ajudou#0
 
-Careful with {1}: on this same file, {2} report(s) say it was installed and
+Careful with {1}: on this same file, {2} report says it was installed and
+did NOT help. It may still be right here - but if it is a long download, that
+is worth knowing before you start.
+
+@lista_ja_nao_ajudou#1
+
+Careful with {1}: on this same file, {2} reports say it was installed and
 did NOT help. It may still be right here - but if it is a long download, that
 is worth knowing before you start.
 
@@ -1124,8 +1137,11 @@ Done. Look in the applications menu for:
 
 {1}
 
-@abriu_e_fechou_sozinho
-The program opened and closed on its own in {1} second(s), with no time to use it.
+@abriu_e_fechou_sozinho#0
+The program opened and closed on its own in {1} second, with no time to use it.
+
+@abriu_e_fechou_sozinho#1
+The program opened and closed on its own in {1} seconds, with no time to use it.
 
 @funcionou_como_esperava
 Did the program work the way you expected?
@@ -1836,11 +1852,21 @@ There is no address to send to in this version of Tandem.
 The lines stay in the queue and go along once an address exists. Nothing is
 lost, and nothing is sent.
 
-@env_enviadas
-{1} line(s) sent. {2} left in the queue.
+@env_enviadas#0
+{1} line sent. {2} left in the queue.
 
-@env_servidor_recusou
-The list server did not accept the lines. Nothing was lost: {1} line(s) are
+@env_enviadas#1
+{1} lines sent. {2} left in the queue.
+
+@env_servidor_recusou#0
+The list server did not accept the lines. Nothing was lost: {1} line is
+still in the queue and Tandem will try again on its own.
+
+If this keeps happening, it is on the other end - there is nothing to fix on
+this computer.
+
+@env_servidor_recusou#1
+The list server did not accept the lines. Nothing was lost: {1} lines are
 still in the queue and Tandem will try again on its own.
 
 If this keeps happening, it is on the other end - there is nothing to fix on
@@ -2026,8 +2052,11 @@ Tandem - What I have learnt
 @esq_diga_o_nome
 Say the name of the program to forget.
 
-@esq_esqueci
-I have forgotten what I knew about {1} program(s). Next time it works it out again.
+@esq_esqueci#0
+I have forgotten what I knew about {1} program. Next time it works it out again.
+
+@esq_esqueci#1
+I have forgotten what I knew about {1} programs. Next time it works it out again.
 
 @id_titulo_janela
 Tandem - machine identity
@@ -2091,7 +2120,7 @@ fixed it:
 did not fix it: 
 
 @mem_campo_segundos
-took (s):  
+seconds:    
 
 @mem_campo_visto_em
 last seen:  
@@ -2193,8 +2222,12 @@ Lines that have left this machine, ever: {1}
 See everything that has left:  cat {1}
 Erase that record:  tandem esquecer enviados
 
-@esq_enviados_apagado
-Erased: the record of {1} line(s) this machine had sent.
+@esq_enviados_apagado#0
+Erased: the record of {1} line this machine had sent.
+What was already sent stays sent - this only erases the copy kept here.
+
+@esq_enviados_apagado#1
+Erased: the record of {1} lines this machine had sent.
 What was already sent stays sent - this only erases the copy kept here.
 
 @esq_enviados_vazio
@@ -2673,8 +2706,11 @@ the Java version was recognised ({1})
 @at_protegido_nao
 a profile on your list is not being protected
 
-@at_protegido_ok
-the {1} profile(s) on your list are refused by the automation
+@at_protegido_ok#0
+the profile on your list is refused by the automation
+
+@at_protegido_ok#1
+the {1} profiles on your list are refused by the automation
 
 @prog_titulo_janela
 Tandem - Installed programs

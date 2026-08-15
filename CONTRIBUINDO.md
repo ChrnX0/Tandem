@@ -62,6 +62,18 @@ python3 tools/po-para-catalogo.py    # regera os catálogos que vão no pacote
 bash tests/run.sh
 ```
 
+**Plural funciona, e com a regra do seu idioma.** Algumas mensagens contam
+coisas, e o Poedit vai te mostrar quantas caixas o seu idioma realmente precisa
+— uma para o chinês, duas para o espanhol, seis para o árabe. Preencha todas:
+uma forma vazia cai na forma 0, que responde com a concordância errada. Até a
+4.15 essas entradas eram **descartadas em silêncio** pela ferramenta que monta
+os catálogos, então se você já tentou isso e o seu trabalho sumiu, o defeito
+era daqui e não seu.
+
+Três idiomas hoje repetem a mesma frase em todas as formas — é a frase que eles
+já entregavam, colocada onde toda contagem alcança, e é exatamente o tipo de
+coisa que vale separar direito se você fala um deles.
+
 Quando você tiver lido um arquivo inteiro, mude o cabeçalho dele:
 
 ```

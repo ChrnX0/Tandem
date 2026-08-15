@@ -193,11 +193,18 @@ Je les installe avant d'essayer de l'ouvrir ?
 @licao_instalando
 Installation de ce que ce programme avait déjà demandé...
 
-@progresso_ha_minutos
-Toujours en cours. Deja {1} minute(s) — celui-ci est long, c'est normal.
+@progresso_ha_minutos#0
+Toujours en cours. Deja {1} minute — celui-ci est long, c'est normal.
 
-@progresso_sem_novidade
-Rien de nouveau depuis {1} minute(s). Cela peut encore aboutir — mais si ca
+@progresso_ha_minutos#1
+Toujours en cours. Deja {1} minutes — celui-ci est long, c'est normal.
+
+@progresso_sem_novidade#0
+Rien de nouveau depuis {1} minute. Cela peut encore aboutir — mais si ca
+reste ainsi, la connexion internet est la premiere chose a verifier.
+
+@progresso_sem_novidade#1
+Rien de nouveau depuis {1} minutes. Cela peut encore aboutir — mais si ca
 reste ainsi, la connexion internet est la premiere chose a verifier.
 
 @instalando_componente
@@ -433,9 +440,15 @@ personne
 Si le double clic ne marche toujours pas, déconnectez-vous puis
 reconnectez-vous.
 
-@lista_ja_nao_ajudou
+@lista_ja_nao_ajudou#0
 
-Attention a {1} : sur ce meme fichier, {2} rapport(s) disent qu'il a ete
+Attention a {1} : sur ce meme fichier, {2} rapport dit qu'il a ete
+installe et n'a PAS aide. Il peut encore etre le bon ici - mais si c'est un
+long telechargement, autant le savoir avant de commencer.
+
+@lista_ja_nao_ajudou#1
+
+Attention a {1} : sur ce meme fichier, {2} rapports disent qu'il a ete
 installe et n'a PAS aide. Il peut encore etre le bon ici - mais si c'est un
 long telechargement, autant le savoir avant de commencer.
 
@@ -1135,8 +1148,12 @@ C'est fait. Cherchez dans le menu des applications :
 
 {1}
 
-@abriu_e_fechou_sozinho
-Le programme s'est ouvert et refermé tout seul en {1} seconde(s), sans laisser
+@abriu_e_fechou_sozinho#0
+Le programme s'est ouvert et refermé tout seul en {1} seconde, sans laisser
+le temps de s'en servir.
+
+@abriu_e_fechou_sozinho#1
+Le programme s'est ouvert et refermé tout seul en {1} secondes, sans laisser
 le temps de s'en servir.
 
 @funcionou_como_esperava
@@ -1869,12 +1886,22 @@ Il n'y a pas d'adresse où envoyer dans cette version de Tandem.
 Les lignes restent en file et partiront quand une adresse existera. Rien n'est
 perdu, et rien n'est envoyé.
 
-@env_enviadas
-{1} ligne(s) envoyée(s). Il reste {2} en file.
+@env_enviadas#0
+{1} ligne envoyée. Il reste {2} en file.
 
-@env_servidor_recusou
+@env_enviadas#1
+{1} lignes envoyées. Il reste {2} en file.
+
+@env_servidor_recusou#0
 Le serveur de la liste n'a pas accepté les lignes. Rien n'est perdu : {1}
-ligne(s) restent dans la file et Tandem réessaiera tout seul.
+ligne reste dans la file et Tandem réessaiera tout seul.
+
+Si cela continue, le problème est de l'autre côté - il n'y a rien à réparer
+sur cet ordinateur.
+
+@env_servidor_recusou#1
+Le serveur de la liste n'a pas accepté les lignes. Rien n'est perdu : {1}
+lignes restent dans la file et Tandem réessaiera tout seul.
 
 Si cela continue, le problème est de l'autre côté - il n'y a rien à réparer
 sur cet ordinateur.
@@ -2064,8 +2091,12 @@ Tandem - Ce que j'ai appris
 @esq_diga_o_nome
 Indiquez le nom du programme à oublier.
 
-@esq_esqueci
-J'ai oublié ce que je savais sur {1} programme(s). La prochaine fois, il le
+@esq_esqueci#0
+J'ai oublié ce que je savais sur {1} programme. La prochaine fois, il le
+retrouvera.
+
+@esq_esqueci#1
+J'ai oublié ce que je savais sur {1} programmes. La prochaine fois, il le
 retrouvera.
 
 @id_titulo_janela
@@ -2130,7 +2161,7 @@ ont réglé :
 n'ont pas réglé : 
 
 @mem_campo_segundos
-a pris (s) : 
+secondes :  
 
 @mem_campo_visto_em
 vu le :     
@@ -2234,8 +2265,12 @@ Lignes deja parties de cette machine, au total : {1}
 Voir tout ce qui est parti :  cat {1}
 Effacer ce registre :  tandem esquecer enviados
 
-@esq_enviados_apagado
-Efface : le registre de {1} ligne(s) que cette machine avait envoyees.
+@esq_enviados_apagado#0
+Efface : le registre de {1} ligne que cette machine avait envoyee.
+Ce qui est parti reste parti - ceci n'efface que la copie gardee ici.
+
+@esq_enviados_apagado#1
+Efface : le registre de {1} lignes que cette machine avait envoyees.
 Ce qui est parti reste parti - ceci n'efface que la copie gardee ici.
 
 @esq_enviados_vazio
@@ -2718,8 +2753,11 @@ la version de Java a été reconnue ({1})
 @at_protegido_nao
 un profil de votre liste n'est pas protégé
 
-@at_protegido_ok
-les {1} profil(s) de votre liste sont refusés par l'automatisation
+@at_protegido_ok#0
+le profil de votre liste est refusé par l'automatisation
+
+@at_protegido_ok#1
+les {1} profils de votre liste sont refusés par l'automatisation
 
 @prog_titulo_janela
 Tandem - Programmes installés

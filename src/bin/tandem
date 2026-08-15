@@ -862,7 +862,7 @@ acao_autoteste() {
     if [ -n "$desprotegidos" ]; then
         falha "$(t_msg at_protegido_nao)" "$desprotegidos"
     elif [ "$protegidos" -gt 0 ]; then
-        passa "$(t_msg at_protegido_ok "$protegidos")"
+        passa "$(t_msg_n at_protegido_ok "$protegidos" "$protegidos")"
     else
         saida="$saida  --      $(t_msg auto_pulou_protecao)"$'\n'
     fi
@@ -1024,7 +1024,7 @@ acao_esquecer() {
         if [ -f "$TANDEM_FILA.enviados" ]; then
             n="$(t_envio_ja_enviados)"
             rm -f -- "$TANDEM_FILA.enviados"
-            t_ok "$(t_msg esq_enviados_apagado "$n")"
+            t_ok "$(t_msg_n esq_enviados_apagado "$n" "$n")"
             return 0
         fi
         t_erro "$(t_msg esq_enviados_vazio)"
@@ -1036,7 +1036,7 @@ acao_esquecer() {
         case "${prog,,}" in *"${filtro,,}"*) rm -f -- "$arq"; n=$((n+1)) ;; esac
     done
     [ "$n" -gt 0 ] || { t_erro "$(t_msg mem_nao_achei "$filtro")"; return 1; }
-    t_ok "$(t_msg esq_esqueci "$n")"
+    t_ok "$(t_msg_n esq_esqueci "$n" "$n")"
 }
 
 # ------------------------------------------------------ identity and ports
@@ -1287,12 +1287,13 @@ acao_enviar() {
             # apply to him. And a pass where the server refused everything gets
             # a sentence instead of a bare "0 sent", which reads like a defect
             # on this machine when it is not one.
-            local n rc; n="$(t_envio_envia forcado)"; rc=$?
+            local n rc restam; n="$(t_envio_envia forcado)"; rc=$?
+            restam="$(t_envio_pendentes)"
             if [ "$rc" = 3 ]; then
-                t_erro "$(t_msg env_servidor_recusou "$(t_envio_pendentes)")"
+                t_erro "$(t_msg_n env_servidor_recusou "$restam" "$restam")"
                 return 1
             fi
-            t_ok "$(t_msg env_enviadas "${n:-0}" "$(t_envio_pendentes)")"
+            t_ok "$(t_msg_n env_enviadas "${n:-0}" "${n:-0}" "$restam")"
             return 0 ;;
         ''|status|ver) ;;
         *) t_erro "$(t_msg env_nao_conheco "$sub")"

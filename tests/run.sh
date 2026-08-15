@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2774970559 3997" "$soma_esperados"
+      "1668397178 4083" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -1528,6 +1528,89 @@ contem "a Hindi machine reads the Hindi table" \
 contem "a language with no table of its own falls back to English" \
        "edits images" "$(tabela_para "fi")"
 
+section "language: one, two, and the four different ways to say it"
+
+# "1 minuto(s)" is what a program says when it cannot count, and until 4.15
+# nine messages said it. The parentheses were not laziness: the catalogue
+# format could not carry a second form, and the compiler DROPPED any .po entry
+# that tried - silently, exit 0.
+#
+# The rule lives here as shell and the forms live in the catalogue as data, and
+# that split is the whole security design. gettext ships its rule as a C
+# expression inside the file; honouring one would mean $(( )) around text from
+# a stranger, which is the property this format exists to deny.
+for _caso in "en 1 0" "en 0 1" "en 2 1" "en 100 1" \
+             "pt_BR 0 0" "pt_BR 1 0" "pt_BR 2 1" \
+             "fr 0 0" "fr 1 0" "fr 2 1" \
+             "zh_CN 0 0" "zh_CN 1 0" "zh_CN 5 0" "zh_CN 100 0" \
+             "hi 1 0" "hi 3 1" \
+             "ar 0 0" "ar 1 1" "ar 2 2" "ar 3 3" "ar 10 3" "ar 11 4" "ar 100 5"; do
+    set -- $_caso
+    equal "in $1, a count of $2 takes plural form $3" "$3" \
+          "$(TANDEM_IDIOMA_FORCADO=$1 bash -c ". '$ROOT/src/lib/common.sh'; t_plural_indice $2")"
+done
+
+# Portuguese and French put ZERO with the singular and English does not. Get
+# that backwards and the two languages this program was written in are the ones
+# that read wrong.
+equal "Portuguese says 0 minuto, not 0 minutos" "0" \
+      "$(TANDEM_IDIOMA_FORCADO=pt_BR bash -c ". '$ROOT/src/lib/common.sh'; t_plural_indice 0")"
+equal "English says 0 minutes" "1" \
+      "$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'; t_plural_indice 0")"
+
+# A count that is not a number must not put a bash arithmetic error on the
+# owner's screen. Form 0 always exists, so it is the safe answer.
+equal "a count that is not a number answers form 0 and says nothing" "0" \
+      "$(TANDEM_IDIOMA_FORCADO="ar" bash -c ". '$ROOT/src/lib/common.sh'
+         t_plural_indice 'nao-e-numero' 2>&1")"
+
+# THE FALLBACK CHAIN, which is what made this safe to adopt one message at a
+# time: this language's form N, then its form 0, then its plain key, and only
+# then English. Reaching for English the moment a form is missing would have
+# switched every Arabic and Hindi count to English the day this arrived.
+_pl_dir="$TMPROOT/plural-catalogo"
+mkdir -p "$_pl_dir"
+printf '@so_singular#0\nform zero only\n\n@so_nua\na plain key with no forms\n' \
+       > "$_pl_dir/en.txt"
+printf '@so_nua\numa chave sem formas\n' > "$_pl_dir/pt_BR.txt"
+equal "a missing form falls back to form 0 of the same language" "form zero only" \
+      "$(TANDEM_IDIOMAS_DIR="$_pl_dir" TANDEM_IDIOMA_FORCADO=en \
+         bash -c ". '$ROOT/src/lib/common.sh'; t_idioma_carrega; t_msg_n so_singular 7")"
+equal "a message with no forms at all still answers, from the plain key" \
+      "uma chave sem formas" \
+      "$(TANDEM_IDIOMAS_DIR="$_pl_dir" TANDEM_IDIOMA_FORCADO=pt_BR \
+         bash -c ". '$ROOT/src/lib/common.sh'; t_idioma_carrega; t_msg_n so_nua 5")"
+equal "and it answers in ITS OWN language, not in English" "uma chave sem formas" \
+      "$(TANDEM_IDIOMAS_DIR="$_pl_dir" TANDEM_IDIOMA_FORCADO=pt_BR \
+         bash -c ". '$ROOT/src/lib/common.sh'; t_idioma_carrega; t_msg_n so_nua 1")"
+
+# End to end, in the shipped catalogues, on the message this was found in.
+contem "the shipped English says '1 minute' and not '1 minute(s)'" "1 minute so far" \
+       "$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_msg_n progresso_ha_minutos 1 1")"
+contem "and '2 minutes' with no parentheses anywhere" "2 minutes so far" \
+       "$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_msg_n progresso_ha_minutos 2 2")"
+contem "Portuguese agrees the verb too: 'Ja vai 1 minuto'" "Ja vai 1 minuto" \
+       "$(TANDEM_IDIOMA_FORCADO=pt_BR bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_msg_n progresso_ha_minutos 1 1")"
+contem "and 'Ja vao 2 minutos'" "Ja vao 2 minutos" \
+       "$(TANDEM_IDIOMA_FORCADO=pt_BR bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_msg_n progresso_ha_minutos 2 2")"
+
+# The nine that were converted must have no caller left on the old road: a
+# t_msg on a plural key finds no plain entry in the catalogue and prints the
+# KEY NAME, which is jargon on a counter.
+for _k in progresso_ha_minutos progresso_sem_novidade lista_ja_nao_ajudou \
+          abriu_e_fechou_sozinho env_enviadas env_servidor_recusou \
+          esq_esqueci esq_enviados_apagado at_protegido_ok; do
+    equal "no caller still asks t_msg for the plural key $_k" "" \
+          "$(grep -rhoE "t_msg $_k\b" "$ROOT/src/bin" "$ROOT/src/lib" \
+             --exclude-dir=idiomas 2>/dev/null | head -1)"
+    equal "and $_k really is plural in the shipped English catalogue" "1" \
+          "$(grep -c "^@$_k#0\$" "$ROOT/src/lib/idiomas/en.txt" || true)"
+done
+
 section "language: a migrated file stays migrated"
 
 # The check used during the first migration pass was WRONG, and it is worth
@@ -2181,19 +2264,100 @@ spec = importlib.util.spec_from_file_location("c", "tools/po-para-catalogo.py")
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 itens, cab = m.le_po(sys.argv[1])
 saida = m.escreve_catalogo("fr", itens, cab)
-print("%s %s %d" % (
+# A plural entry is ONE msgctxt and SEVERAL catalogue keys, so what should
+# survive is summed from what was parsed rather than counted from msgctxt
+# lines. Counting msgctxt was right until the first plural message arrived
+# and then read as a defect in the compiler, which it was not.
+esperadas = sum(len([f for f in t if f]) if isinstance(t, list) else 1
+                for k, t, fz in itens if t and not fz)
+print("%s %s %d %d" % (
     ",".join(k for k, t, f in itens if f),
     "omitida" if "@sem_arquivo\n" not in saida else "MANTIDA",
-    saida.count("\n@")))
+    saida.count("\n@"), esperadas))
 FIM
 )"
-    # One less entry than the catalogue has keys: the fuzzy one is dropped. The
-    # number is computed rather than written down, because a hard number here
-    # fails on the next message somebody adds and teaches them to edit the
-    # expectation instead of reading the test.
-    N_CHAVES="$(grep -c '^msgctxt ' "$ROOT/po/en.po")"
+    # The fuzzy one is dropped and every other key survives. Both numbers are
+    # computed, because a hard number here fails on the next message somebody
+    # adds and teaches them to edit the expectation instead of reading the test.
     equal "a fuzzy entry is seen, dropped, and the rest kept" \
-          "sem_arquivo omitida $(( N_CHAVES - 1 ))" "$resultado"
+          "sem_arquivo omitida yes" \
+          "$(printf '%s' "$resultado" |
+             awk '{ print $1, $2, ($3 == $4 ? "yes" : "no:" $3 "/" $4) }')"
+
+    # PLURALS. The bug this exists for was measured, not supposed: a probe
+    # entry appended to po/en.po compiled to a catalogue that did not contain
+    # it, the tool printed the same count as before, and it exited 0. Every
+    # line of a translator's plural work went nowhere without a word - and the
+    # people that discards are exactly the volunteers this format was adopted
+    # to attract.
+    PLURAL_PO="$TMPROOT/po-plural"
+    mkdir -p "$PLURAL_PO"
+    cp "$ROOT"/po/en.po "$PLURAL_PO/en.po"
+    cat >> "$PLURAL_PO/en.po" <<'FIM'
+
+msgctxt "chave_plural_de_teste"
+msgid "one thing"
+msgid_plural "{1} things"
+msgstr[0] "one thing"
+msgstr[1] "{1} things"
+FIM
+    plural_saida="$(cd "$ROOT" && python3 - "$PLURAL_PO/en.po" <<'FIM'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("c", "tools/po-para-catalogo.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+itens, cab = m.le_po(sys.argv[1])
+saida = m.escreve_catalogo("en", itens, cab)
+print("%s|%s|%s" % (
+    "#0" if "@chave_plural_de_teste#0\none thing\n" in saida else "SEM-0",
+    "#1" if "@chave_plural_de_teste#1\n{1} things\n" in saida else "SEM-1",
+    "sem-chave-nua" if "@chave_plural_de_teste\n" not in saida else "CHAVE-NUA"))
+FIM
+)"
+    equal "a plural entry reaches the catalogue as one key per form" \
+          "#0|#1|sem-chave-nua" "$plural_saida"
+
+    # A form NUMBERED PAST THE END of the language's own rule can never be
+    # reached by any count. Shipping it quietly would spend somebody's
+    # afternoon and deliver nothing, so the compiler refuses and says which
+    # entry - the opposite of how it used to behave.
+    cp "$ROOT"/po/ar.po "$PLURAL_PO/ar.po"
+    cat >> "$PLURAL_PO/ar.po" <<'FIM'
+
+msgctxt "chave_plural_demais"
+msgid "one thing"
+msgid_plural "{1} things"
+msgstr[0] "form zero"
+msgstr[6] "a seventh form, and Arabic has six"
+FIM
+    demais="$(cd "$ROOT" && python3 - "$PLURAL_PO/ar.po" <<'FIM'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("c", "tools/po-para-catalogo.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+itens, cab = m.le_po(sys.argv[1])
+print(m.confere_plurais("ar", itens, cab))
+FIM
+)"
+    contem "a form past the end of the language's rule is refused, loudly" \
+           "chave_plural_demais" "$demais"
+    contem "and the refusal counts, so the tool exits non-zero" \
+           "1" "$(printf '%s\n' "$demais" | tail -1)"
+
+    # The gaps between the two tables. The counts live in the compiler for the
+    # translator's tool and in common.sh for the program, because the RULE may
+    # never be evaluated from a catalogue - see t_plural_indice. Duplication a
+    # test pins is cheaper than an evaluator.
+    for pl in en pt_BR es fr zh_CN hi ar; do
+        n_py="$(cd "$ROOT" && python3 -c "
+import importlib.util
+spec = importlib.util.spec_from_file_location('c', 'tools/po-para-catalogo.py')
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(m.formas('$pl'))")"
+        equal "the two plural tables agree for $pl" \
+              "$n_py" "$(TANDEM_IDIOMA_FORCADO=$pl bash -c ". '$ROOT/src/lib/common.sh'; t_plural_formas $pl")"
+        declarada="$(grep -m1 'Plural-Forms' "$ROOT/po/$pl.po" | grep -oE 'nplurals=[0-9]+' | cut -d= -f2)"
+        equal "and po/$pl.po declares the same to Poedit and Weblate" \
+              "$n_py" "$declarada"
+    done
 
     # That parser was wrong the first time it was written, in a way that made it
     # report NO fuzzy entries at all - the flag is a comment BEFORE the entry,
@@ -2674,13 +2838,40 @@ XPTO" "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
 # Every key in the original has to exist in every translation, or fall back to
 # it. The fallback is what makes a half-finished translation safe; the test is
 # what stops one from staying half-finished by accident.
-CHAVES_PT="$(grep -c '^@' "$IDIOMAS_DIR/pt_BR.txt")"
+#
+# Plural keys are compared WITHOUT their "#N" suffix, and that is not a
+# loosening: Chinese has one plural form and Arabic has six, so demanding that
+# every language carry every form of every key would report Chinese as
+# incomplete for not inventing a distinction its grammar does not make. What
+# each language owes per form is asserted just below, against its own count.
+CHAVES_PT="$(grep '^@' "$IDIOMAS_DIR/pt_BR.txt" | sed 's/#[0-9]*$//' | sort -u | wc -l)"
 for l in $LINGUAS; do
     faltando=""
     while IFS= read -r k; do
-        grep -qxF "$k" "$IDIOMAS_DIR/$l.txt" || faltando="$faltando ${k#@}"
-    done < <(grep '^@' "$IDIOMAS_DIR/pt_BR.txt")
+        grep -qE "^${k}(#[0-9]+)?\$" "$IDIOMAS_DIR/$l.txt" || faltando="$faltando ${k#@}"
+    done < <(grep '^@' "$IDIOMAS_DIR/pt_BR.txt" | sed 's/#[0-9]*$//' | sort -u)
     equal "$l has every key the original has ($CHAVES_PT)" "" "$faltando"
+done
+
+# And per form, against each language's OWN count. A plural message that is
+# missing a form still answers - the chain falls back to form 0 and then to the
+# plain key - but it answers with the wrong number agreement, which is the
+# defect this whole mechanism was built to remove. Silently half-migrated is
+# exactly how "1 minuto(s)" survived seven versions.
+for l in $LINGUAS; do
+    n_formas="$(TANDEM_IDIOMA_FORCADO="$l" bash -c ". '$ROOT/src/lib/common.sh'; t_plural_formas '$l'")"
+    incompletas=""
+    while IFS= read -r base; do
+        f=0
+        while [ "$f" -lt "$n_formas" ]; do
+            grep -qxF "${base}#${f}" "$IDIOMAS_DIR/$l.txt" ||
+                incompletas="$incompletas ${base#@}#$f"
+            f=$((f + 1))
+        done
+    done < <(grep -oE '^@[a-z0-9_]+#[0-9]+' "$IDIOMAS_DIR/en.txt" |
+             sed 's/#[0-9]*$//' | sort -u)
+    equal "$l fills all $n_formas of its plural forms, in every message" \
+          "" "$incompletas"
 done
 
 # An empty value is worse than a missing one: a missing key falls back to

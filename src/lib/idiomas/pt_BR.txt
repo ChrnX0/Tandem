@@ -191,11 +191,18 @@ Posso instalar antes de tentar abrir?
 @licao_instalando
 Instalando o que este programa já pediu antes...
 
-@progresso_ha_minutos
-Ainda trabalhando. Ja vao {1} minuto(s) — este e demorado mesmo, e normal.
+@progresso_ha_minutos#0
+Ainda trabalhando. Ja vai {1} minuto — este e demorado mesmo, e normal.
 
-@progresso_sem_novidade
-Nada de novo ha {1} minuto(s). Ainda pode terminar — mas se ficar assim,
+@progresso_ha_minutos#1
+Ainda trabalhando. Ja vao {1} minutos — este e demorado mesmo, e normal.
+
+@progresso_sem_novidade#0
+Nada de novo ha {1} minuto. Ainda pode terminar — mas se ficar assim,
+a conexao com a internet e a primeira coisa a conferir.
+
+@progresso_sem_novidade#1
+Nada de novo ha {1} minutos. Ainda pode terminar — mas se ficar assim,
 a conexao com a internet e a primeira coisa a conferir.
 
 @instalando_componente
@@ -430,9 +437,15 @@ ninguém
 Se ainda não funcionar com dois cliques, saia da sua conta e entre
 de novo.
 
-@lista_ja_nao_ajudou
+@lista_ja_nao_ajudou#0
 
-Cuidado com {1}: neste mesmo arquivo, {2} relato(s) dizem que ele foi
+Cuidado com {1}: neste mesmo arquivo, {2} relato diz que ele foi
+instalado e NAO ajudou. Ainda pode ser o certo aqui - mas se for um download
+demorado, vale saber disso antes de comecar.
+
+@lista_ja_nao_ajudou#1
+
+Cuidado com {1}: neste mesmo arquivo, {2} relatos dizem que ele foi
 instalado e NAO ajudou. Ainda pode ser o certo aqui - mas se for um download
 demorado, vale saber disso antes de comecar.
 
@@ -1118,8 +1131,11 @@ Pronto. Procure no menu de aplicativos por:
 
 {1}
 
-@abriu_e_fechou_sozinho
-O programa abriu e fechou sozinho em {1} segundo(s), sem dar tempo de usar.
+@abriu_e_fechou_sozinho#0
+O programa abriu e fechou sozinho em {1} segundo, sem dar tempo de usar.
+
+@abriu_e_fechou_sozinho#1
+O programa abriu e fechou sozinho em {1} segundos, sem dar tempo de usar.
 
 @funcionou_como_esperava
 O programa funcionou como você esperava?
@@ -1825,11 +1841,21 @@ Não há endereço para onde mandar nesta versão do Tandem.
 As linhas ficam guardadas na fila e vão junto quando existir um endereço.
 Nada é perdido, e nada é enviado.
 
-@env_enviadas
-{1} linha(s) enviada(s). Restam {2} na fila.
+@env_enviadas#0
+{1} linha enviada. Ainda ha {2} na fila.
 
-@env_servidor_recusou
-O servidor da lista não aceitou as linhas. Nada foi perdido: {1} linha(s)
+@env_enviadas#1
+{1} linhas enviadas. Ainda ha {2} na fila.
+
+@env_servidor_recusou#0
+O servidor da lista não aceitou as linhas. Nada foi perdido: {1} linha
+continua na fila e o Tandem vai tentar de novo sozinho.
+
+Se isso continuar acontecendo, o problema está do outro lado - não tem nada
+para consertar neste computador.
+
+@env_servidor_recusou#1
+O servidor da lista não aceitou as linhas. Nada foi perdido: {1} linhas
 continuam na fila e o Tandem vai tentar de novo sozinho.
 
 Se isso continuar acontecendo, o problema está do outro lado - não tem nada
@@ -2016,8 +2042,11 @@ Tandem - O que eu aprendi
 @esq_diga_o_nome
 Diga o nome do programa a esquecer.
 
-@esq_esqueci
-Esqueci o que sabia sobre {1} programa(s). Da próxima vez ele descobre de novo.
+@esq_esqueci#0
+Esqueci o que sabia sobre {1} programa. Da próxima vez ele descobre de novo.
+
+@esq_esqueci#1
+Esqueci o que sabia sobre {1} programas. Da próxima vez ele descobre de novo.
 
 @id_titulo_janela
 Tandem - identidade da máquina
@@ -2081,7 +2110,7 @@ resolveram:
 não resolveram: 
 
 @mem_campo_segundos
-levou (s): 
+segundos:   
 
 @mem_campo_visto_em
 visto em:   
@@ -2184,8 +2213,12 @@ Linhas que ja sairam desta maquina, no total: {1}
 Ver tudo o que ja saiu:  cat {1}
 Apagar esse registro:  tandem esquecer enviados
 
-@esq_enviados_apagado
-Apagado: o registro de {1} linha(s) que esta maquina tinha enviado.
+@esq_enviados_apagado#0
+Apagado: o registro de {1} linha que esta maquina tinha enviado.
+O que ja foi enviado continua enviado - isto apaga so a copia guardada aqui.
+
+@esq_enviados_apagado#1
+Apagado: o registro de {1} linhas que esta maquina tinha enviado.
 O que ja foi enviado continua enviado - isto apaga so a copia guardada aqui.
 
 @esq_enviados_vazio
@@ -2667,8 +2700,11 @@ a versão do Java foi reconhecida ({1})
 @at_protegido_nao
 um perfil da lista não está sendo protegido
 
-@at_protegido_ok
-os {1} perfil(is) da sua lista são recusados pela automação
+@at_protegido_ok#0
+o perfil da sua lista é recusado pela automação
+
+@at_protegido_ok#1
+os {1} perfis da sua lista são recusados pela automação
 
 @prog_titulo_janela
 Tandem - Programas instalados
