@@ -1,3 +1,31 @@
+tandem (4.13) unstable; urgency=medium
+
+  * Tandem says when there is a newer Tandem, and never installs it. The owner
+    left the choice to me and this is the half that needs nothing from him: it
+    reads the version number of the newest published release once a day, in the
+    background, and says so once. The fetch never delays a command - the answer
+    is used on the NEXT run, exactly like the community list.
+  * IT WILL NOT UPDATE ITSELF, and that is a decision rather than an unfinished
+    edge. Fetching the list is data that only ever becomes a suggestion; a .deb
+    is code that runs as root. The moment Tandem can replace its own binary from
+    the internet, whoever controls the release address owns every shop machine
+    at once - and the machine this was born on runs a point-of-sale system.
+    That is rule No 1 turned on Tandem itself. A test asserts the whole path
+    contains no apt-get, no dpkg -i, no t_como_root, no pkexec and no sudo.
+  * The proper destination is an apt repository, where the update arrives
+    through the updater the owner already trusts and already gets asked about.
+    That needs a signing key, which is a secret only he can make, so it waits
+    for him - this exists in the meantime rather than instead of it.
+  * dpkg does the comparing, because a string compare calls 4.9 newer than
+    4.10 - which is this project's own numbering. sort -V is the fallback and
+    "equal" answers no in both.
+  * The off switch turns off the thing he can SEE. Gating only the fetch left
+    the version a previous run had already stored, so "tandem versao
+    nao-avisar" stopped the network call and went on printing the notice for
+    ever. Found by running the four states in order, not by reading the code.
+
+ -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 18:40:00 +0000
+
 tandem (4.12) unstable; urgency=medium
 
   * The panel shows which Tandem this is, and stops showing its own plumbing.

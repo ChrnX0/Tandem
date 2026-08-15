@@ -48,6 +48,23 @@ No conozco el idioma "{1}".
 
 Consulta la lista con:  tandem idioma
 
+@versao_nova_aviso
+Hay un Tandem mas nuevo: {1}. Este es el {2}.
+
+Tandem no lo instala solo, a proposito: significaria que este programa puede
+reemplazarse a si mismo por internet, y en una maquina de tienda ese riesgo no
+compensa la comodidad. Para actualizar, cuando tenga un minuto:
+
+    https://github.com/ChrnX0/Tandem/releases/latest
+
+Para parar este aviso:  tandem versao nao-avisar
+
+@versao_avisar_desligado
+De acuerdo. Ya no le avisare de versiones nuevas.
+
+@versao_avisar_ligado
+De acuerdo. Le avisare cuando haya un Tandem mas nuevo.
+
 @idioma_nao_revisado_aviso
 Aviso: la traduccion de Tandem a {1} todavia no la ha leido un hablante
 nativo. Si alguna frase suena rara, es por eso - y decirlo es la ayuda mas

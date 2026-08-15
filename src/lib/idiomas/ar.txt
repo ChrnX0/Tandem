@@ -48,6 +48,23 @@
 
 اطّلع على القائمة عبر:  tandem idioma
 
+@versao_nova_aviso
+يوجد Tandem أحدث: {1}. وهذا هو {2}.
+
+لا يثبّته Tandem بنفسه، عن قصد: فذلك يعني أن هذا البرنامج يستطيع استبدال
+نفسه عبر الإنترنت، وعلى جهاز متجر لا يستحق ذلك الخطر هذه الراحة.
+للتحديث، حين تجد دقيقة:
+
+    https://github.com/ChrnX0/Tandem/releases/latest
+
+لإيقاف هذا التنبيه:  tandem versao nao-avisar
+
+@versao_avisar_desligado
+حسنًا. لن أنبّهك إلى الإصدارات الجديدة بعد الآن.
+
+@versao_avisar_ligado
+حسنًا. سأخبرك حين يصدر Tandem أحدث.
+
 @idioma_nao_revisado_aviso
 ملاحظة: ترجمة Tandem إلى {1} لم يقرأها بعد أحد لغته الأم.
 إن بدت جملة غريبة فهذا هو السبب - وقول ذلك أسهل مساعدة يمكن أن

@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.12"
+TANDEM_VERSAO="4.13"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -2134,6 +2134,103 @@ t_lista_receber_ligado() {
 #
 # Once a day, by the same stamp mechanism the send path uses. A shop machine
 # that opens the same program forty times in a morning makes one request.
+# ============================================ is there a newer Tandem?
+#
+# THE DECISION BEHIND THIS, because the shape of it is the whole point:
+# Tandem does NOT update itself, and will not. Fetching the community list is
+# data that only ever becomes a suggestion; a .deb is code that runs as root.
+# The moment Tandem can replace its own binary from the internet, whoever
+# controls the release address owns every shop machine at once - and the
+# machine this was born on runs a point-of-sale system. That is rule №1 turned
+# on Tandem itself.
+#
+# So this only ever LOOKS. It reads the version number of the newest published
+# release and says so; installing stays a thing a person does, with a command
+# he can read, on a package he can check the checksum of.
+#
+# The proper destination is an apt repository, where the update arrives through
+# the same updater the owner already trusts and already gets asked about. That
+# needs a signing key, which is a secret only he can make - so it waits for
+# him, and this exists in the meantime rather than instead.
+TANDEM_VERSAO_URL="${TANDEM_VERSAO_URL:-https://api.github.com/repos/ChrnX0/Tandem/releases/latest}"
+
+t_versao_avisar_ligado() {
+    case "$(t_config_le AVISAR_VERSAO 2>/dev/null)" in
+        nao|não|no) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+# Is A strictly newer than B? dpkg knows the rules for Debian version strings
+# and this package is a .deb, so ask it rather than inventing a comparison.
+# sort -V is the fallback, and "equal" must answer NO in both.
+t_versao_mais_nova() {
+    local nova="$1" atual="$2" topo
+    [ -n "$nova" ] && [ -n "$atual" ] || return 1
+    [ "$nova" = "$atual" ] && return 1
+    if command -v dpkg >/dev/null 2>&1; then
+        dpkg --compare-versions "$nova" gt "$atual" && return 0
+        return 1
+    fi
+    topo="$(printf '%s\n%s\n' "$nova" "$atual" | sort -V | tail -1)"
+    [ "$topo" = "$nova" ]
+}
+
+# Reads the newest published version and remembers it. Runs in the BACKGROUND,
+# so nothing here ever delays a command - the answer is used on the next run,
+# exactly like the community list, and for the same reason.
+t_versao_busca() {
+    local corpo nova
+    [ -n "$TANDEM_VERSAO_URL" ] || return 1
+    if command -v curl >/dev/null 2>&1; then
+        corpo="$(curl -fsSL --max-time 20 "$TANDEM_VERSAO_URL" 2>/dev/null)" || return 1
+    elif command -v wget >/dev/null 2>&1; then
+        corpo="$(wget -q -T 20 -O - "$TANDEM_VERSAO_URL" 2>/dev/null)" || return 1
+    else
+        return 1
+    fi
+    # One field out of the JSON, without a JSON parser and without eval: the
+    # answer is somebody else's document, so it goes through t_versao_limpa
+    # before it is stored or ever shown.
+    nova="$(printf '%s' "$corpo" |
+            sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' |
+            head -1)"
+    nova="$(t_versao_limpa "$nova")"
+    [ "$nova" = "-" ] && return 1
+    t_config_grava VERSAO_DISPONIVEL "$nova"
+    t_diz "versao publicada mais recente: $nova (esta: $TANDEM_VERSAO)"
+    return 0
+}
+
+t_versao_talvez_verifica() {
+    local hoje
+    t_versao_avisar_ligado || return 1
+    [ -n "$TANDEM_ESTADO" ] || return 1
+    command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 1
+    hoje="$(date +%F)"
+    [ "$(t_config_le VERSAO_DIA 2>/dev/null)" = "$hoje" ] && return 1
+    # Stamped before the attempt, like the list: a machine with no route makes
+    # one failed request a day, not one per command.
+    t_config_grava VERSAO_DIA "$hoje"
+    ( t_versao_busca >/dev/null 2>&1 & ) 2>/dev/null
+    return 0
+}
+
+# The version to tell him about, or nothing. Reads only what a previous run
+# stored, so it costs no network and cannot delay anything.
+t_versao_nova_conhecida() {
+    local nova
+    # The switch is checked HERE and not only where the fetch happens, and that
+    # is a defect found by running it: gating only the fetch left the value a
+    # previous run had already stored, so "tandem versao nao-avisar" stopped
+    # the network call and went on printing the notice for ever. An off switch
+    # has to turn off the thing the owner can SEE, not the thing he cannot.
+    t_versao_avisar_ligado || return 1
+    nova="$(t_config_le VERSAO_DISPONIVEL 2>/dev/null)" || return 1
+    t_versao_mais_nova "$nova" "$TANDEM_VERSAO" || return 1
+    printf '%s' "$nova"
+}
+
 t_lista_talvez_atualiza() {
     local hoje
     t_lista_receber_ligado || { t_diz "lista: receber esta desligado"; return 1; }

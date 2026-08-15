@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-1147-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-1161-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -351,6 +351,7 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem memoria` · `tandem esquecer <name>` | see and clear what it learned |
 | `tandem lista` · `tandem contribuir <file>` | the community list, both directions |
 | `tandem enviar [sim\|nao]` | send what it learns automatically — **on**, and announced at install |
+| `tandem versao [nao-avisar]` | which Tandem this is, and whether a newer one exists. It never installs it |
 | `tandem socorro` | one file with everything, to ask for help |
 | `tandem logs` | the latest log |
 
@@ -497,7 +498,7 @@ The five rules that do not bend, and the evidence bar that "done" has to clear, 
 
 ```bash
 python3 build.py --check   # packages; no Debian host, no dpkg-deb
-bash tests/run.sh          # 1147 tests; no Wine, no Waydroid, no install
+bash tests/run.sh          # 1161 tests; no Wine, no Waydroid, no install
 ```
 
 The suite sources the shell libraries straight from `src/lib` and synthesises Android packages including a real binary `AndroidManifest.xml`, so the manifest parser runs on the same code path a real APK takes. Optional tools (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) are used when present and skipped when absent, so it passes on a bare machine.

@@ -7,7 +7,7 @@
 **Nove formatos. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![testes](https://img.shields.io/badge/testes-1147-brightgreen)](tests/run.sh)
+[![testes](https://img.shields.io/badge/testes-1161-brightgreen)](tests/run.sh)
 [![programas reais](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
 [![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
@@ -329,6 +329,7 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem memoria` · `tandem esquecer <nome>` | vê e apaga o que ele aprendeu |
 | `tandem lista` · `tandem contribuir <arquivo>` | a lista da comunidade, nos dois sentidos |
 | `tandem enviar [sim\|nao]` | manda sozinho o que ele aprende — **ligado**, e avisado na instalação |
+| `tandem versao [nao-avisar]` | qual Tandem é este, e se saiu um mais novo. Ele nunca instala sozinho |
 | `tandem socorro` | um arquivo só com tudo, para pedir ajuda |
 | `tandem logs` | o registro mais recente |
 
@@ -462,7 +463,7 @@ As cinco regras que não se quebram, e a régua de evidência que "pronto" preci
 
 ```bash
 python3 build.py --check   # empacota; sem Debian, sem dpkg-deb
-bash tests/run.sh          # 1147 testes; sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 1161 testes; sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android sintéticos com `AndroidManifest.xml` binário de verdade, então o leitor de manifesto roda no mesmo caminho de código de um APK real. Ferramenta opcional (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) é usada quando existe e pulada quando não existe, então a suíte passa numa máquina pelada.

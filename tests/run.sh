@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "528430704 3831" "$soma_esperados"
+      "3939407060 3841" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -6149,6 +6149,51 @@ for palavra in lista_recebendo_auto lista_recebendo_nao; do
         fail "tandem lista says which way the switch is set" "$palavra" "absent"
 done
 pass "tandem lista says which way the switch is set"
+
+section "Tandem says there is a newer Tandem, and never installs it"
+
+# The decision first, because it is the point: Tandem does NOT update itself.
+# Fetching the community list is data that only ever becomes a suggestion; a
+# .deb is code that runs as root. The moment Tandem can replace its own binary
+# from the internet, whoever controls the release address owns every shop
+# machine at once - rule 1 turned on Tandem itself. So this only ever LOOKS.
+VERV="$TMPROOT/versao"; mkdir -p "$VERV/home"
+printf '{"tag_name":"v9.9","name":"Tandem 9.9"}' > "$VERV/rel.json"
+tv() {
+    env HOME="$VERV/home" XDG_CONFIG_HOME="$VERV/home/.config" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_VERSAO_URL="file://$VERV/rel.json" \
+        TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem" "$@" 2>&1
+}
+# dpkg knows Debian version ordering; a string compare would call 4.9 newer
+# than 4.10, which is the trap this project would hit on its own numbering.
+comp() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c \
+      '. "'"$ROOT"'/src/lib/common.sh"; t_versao_mais_nova "$1" "$2"; echo $?' _ "$1" "$2"
+}
+equal "4.12 is newer than 4.11" "0" "$(comp 4.12 4.11)"
+equal "4.11 is not newer than 4.12" "1" "$(comp 4.11 4.12)"
+equal "the same version is not newer than itself" "1" "$(comp 4.11 4.11)"
+equal "4.10 is newer than 4.9, which a string compare gets backwards" "0" "$(comp 4.10 4.9)"
+equal "and 4.9 is not newer than 4.10" "1" "$(comp 4.9 4.10)"
+
+tv version >/dev/null 2>&1        # first run: fetches in the background
+sleep 2
+contem "it says there is a newer one" "9.9" "$(tv version)"
+naocontem "and it does not repeat itself on the next command" "9.9" "$(tv version)"
+# The off switch has to turn off the thing he can SEE. Gating only the fetch
+# left the value a previous run had stored, so the notice went on for ever -
+# found by running it, not by reading it.
+tv versao nao-avisar >/dev/null 2>&1
+sed -i '/VERSAO_AVISADA/d' "$VERV/home/.config/tandem/configuracao.txt"
+naocontem "switched off, it stays quiet even though it knows" "9.9" "$(tv version)"
+tv versao avisar >/dev/null 2>&1
+contem "and switched back on, it speaks again" "9.9" "$(tv version)"
+# Nothing in this path may install, download a package, or ask for a password.
+CODIGO_VERSAO="$(sed -n '/is there a newer Tandem?/,/^t_lista_talvez_atualiza()/p' \
+                 "$ROOT/src/lib/common.sh")"
+for proibido in 'apt-get' 'dpkg -i' 't_como_root' 'pkexec' 'sudo'; do
+    naocontem "the version check never runs $proibido" "$proibido" "$CODIGO_VERSAO"
+done
 
 section "a command typed at a prompt answers at that prompt"
 
