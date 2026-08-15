@@ -914,10 +914,10 @@ sudo apt install flatpak
 هذا ما قاله:
 
 @flatpak_loja_terminal
-أأضيف المتجر "%s"؟ [y/N] 
+أأضيف المتجر "{1}"؟ [y/N] 
 
 @flatpak_instalar_terminal
-أأثبّت "%s"؟ [y/N] 
+أأثبّت "{1}"؟ [y/N] 
 
 @este_programa
 هذا البرنامج
@@ -1967,7 +1967,7 @@ Tandem - اللغة
 للإزالة:  tandem desinstalar "<جزء من الاسم>"
 
 @desinst_terminal
-أأُزيل "%s"؟ ستُحذف ملفاته. [y/N] 
+أأُزيل "{1}"؟ ستُحذف ملفاته. [y/N] 
 
 @alt_cabecalho
 برامج لينكس التي تؤدّي عمل "{1}":
@@ -2059,7 +2059,7 @@ Tandem {1} — اختبار ذاتي على هذا الجهاز
 
 @prep_terminal
 يستطيع Tandem تثبيت ما ينقص:
-%s
+{1}
 
 يحتاج إلى الإنترنت وإلى كلمة مرورك. أأتابع؟ [y/N] 
 

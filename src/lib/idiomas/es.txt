@@ -941,10 +941,10 @@ No pude instalar {1}.
 Esto es lo que dijo:
 
 @flatpak_loja_terminal
-¿Añadir la tienda "%s"? [s/N] 
+¿Añadir la tienda "{1}"? [s/N] 
 
 @flatpak_instalar_terminal
-¿Instalar "%s"? [s/N] 
+¿Instalar "{1}"? [s/N] 
 
 @este_programa
 este programa
@@ -2017,7 +2017,7 @@ Programas de Windows que se pueden quitar:
 Para quitar:  tandem desinstalar "<parte del nombre>"
 
 @desinst_terminal
-¿Quitar "%s"? Sus archivos se borrarán. [s/N] 
+¿Quitar "{1}"? Sus archivos se borrarán. [s/N] 
 
 @alt_cabecalho
 Programas de Linux que hacen el trabajo de "{1}":
@@ -2111,7 +2111,7 @@ REGISTROS TÉCNICOS
 
 @prep_terminal
 Tandem puede instalar lo que falta:
-%s
+{1}
 
 Hace falta internet y tu contraseña. ¿Continuar? [s/N] 
 

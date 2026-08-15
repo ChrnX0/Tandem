@@ -106,6 +106,25 @@ tandem (4.11) unstable; urgency=medium
     which is exactly the shape of a program started from a file manager rather
     than from a login shell. The list is deduplicated, since on a real desktop
     those paths overlap and a doubled entry would announce every program twice.
+
+  * No catalogue message is handed to printf as its FORMAT STRING any more.
+    Four were - prep_terminal, desinst_terminal and the two flatpak prompts -
+    and they carried printf's %s in all seven catalogues, which is the one
+    format this project decided against. The value being safe was never the
+    point: these files will one day arrive from strangers, and a translator who
+    writes "100% seguro" breaks a prompt in a language nobody here reads.
+    Measured rather than asserted - under the old form that sentence rendered
+    as "100eguro", because printf ate the "% s". A translator is not somebody
+    who should have to know what a printf conversion is.
+  * "tandem preparar" and "tandem desinstalar" accept the letter their own
+    screen asks for. Both still ran `case "$r" in s|S|sim|SIM)` after printing
+    [y/N] in English and [o/N] in French - the exact correctness defect
+    t_confirmou was written for, fixed in all five HANDLERS and missed here
+    twice because the CLI is not a handler. Same scoping shape as the
+    thirteenth miss of the literal counter. These are the two commands where
+    the alternative to acting is being told nothing happened.
+  * Two guards, both proven by putting the defect back: no catalogue may carry
+    a printf conversion, and no message may be used as a format string.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1694816217 3805" "$soma_esperados"
+      "3414769235 3809" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "4011700690 2310" "$soma_padroes"
 
@@ -1895,6 +1895,15 @@ for l in en pt_BR es fr zh_CN hi ar; do
 done
 equal "every language's prompt letter is one the code accepts" "" "$descasado"
 
+# ...and every prompt has to go THROUGH t_confirmou for that to mean anything.
+# The `case "$r" in s|S|sim|SIM)` comparison was copied into five handlers and
+# fixed in all five - and missed in src/bin/tandem, twice, because the CLI is
+# not a handler. That is the same scoping shape as the thirteenth miss of the
+# literal counter, and it left `tandem preparar` and `tandem desinstalar`
+# printing [y/N] in English and refusing the y the screen asked for.
+cru="$(grep -rn 'case "\$r" in *s|S|sim|SIM' "$ROOT"/src/bin/ 2>/dev/null || true)"
+equal "no prompt compares the answer by hand instead of asking t_confirmou" "" "$cru"
+
 # tandem-apk was the only one of the nine that wrote NOTHING to memory - not
 # even a RESULTADO. So "tandem memoria" knew nothing about an .apk, "tandem
 # socorro" carried nothing about Android, and a second attempt at the same file
@@ -2716,6 +2725,28 @@ equal "a value with a percent sign in it survives substitution" \
 /mnt/50% off/x.exe" \
       "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
          '. "'"$ROOT"'/src/lib/common.sh"; t_msg arquivo_sumiu "/mnt/50% off/x.exe"')"
+
+# ...and NO catalogue may carry a printf conversion at all, which the test above
+# could not see. Four messages did until 4.11 - prep_terminal, desinst_terminal
+# and the two flatpak prompts - because four call sites handed the message to
+# printf as its FORMAT STRING instead of substituting through t_msg. The value
+# being safe is not the point: these files will one day arrive from strangers,
+# and a translator who writes "100% seguro" would break a prompt in a language
+# nobody here reads. A translator is not somebody who should have to know what
+# a printf conversion is.
+com_conversao=""
+for c in "$ROOT"/src/lib/idiomas/*.txt; do
+    grep -qE '%[-+ #0-9.]*[sdiouxXeEfgGc]' "$c" 2>/dev/null &&
+        com_conversao="$com_conversao $(basename -- "$c")"
+done
+equal "no catalogue carries a printf conversion" "" "$com_conversao"
+
+# The other half, and the one that would let it back in: no message may be used
+# AS a format string. The {1} decision is only worth anything if nothing routes
+# around it.
+usado_como_formato="$(grep -rn 'printf "\$(t_msg' "$ROOT"/src/bin/ "$ROOT"/src/lib/ 2>/dev/null |
+                      grep -v '^\s*#' | grep -cv '# NOT' || true)"
+equal "no catalogue message is handed to printf as its format" "0" "$usado_como_formato"
 
 # Picking the language: the environment beats the file, the file beats the
 # system, and anything unrecognised lands on Portuguese rather than changing

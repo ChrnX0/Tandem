@@ -895,10 +895,10 @@ Flatpak 会把程序和它运行所需的东西一起下载。第一次通常下
 它是这么说的：
 
 @flatpak_loja_terminal
-要添加“%s”这个商店吗？[y/N] 
+要添加“{1}”这个商店吗？[y/N] 
 
 @flatpak_instalar_terminal
-要安装“%s”吗？[y/N] 
+要安装“{1}”吗？[y/N] 
 
 @este_programa
 这个程序
@@ -1933,7 +1933,7 @@ Tandem 装过的程序：
 要卸载：  tandem desinstalar "<名字的一部分>"
 
 @desinst_terminal
-要卸载“%s”吗？它的文件会被删掉。[y/N] 
+要卸载“{1}”吗？它的文件会被删掉。[y/N] 
 
 @alt_cabecalho
 能顶替“{1}”干活的 Linux 程序：
@@ -2025,7 +2025,7 @@ Tandem 关于这些程序学到的东西。记录里会出现您的文件路径�
 
 @prep_terminal
 Tandem 可以把缺的东西装上：
-%s
+{1}
 
 需要联网和您的密码。要继续吗？[y/N] 
 

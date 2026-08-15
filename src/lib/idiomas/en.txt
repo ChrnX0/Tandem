@@ -941,10 +941,10 @@ I could not install {1}.
 This is what it said:
 
 @flatpak_loja_terminal
-Add the store "%s"? [y/N] 
+Add the store "{1}"? [y/N] 
 
 @flatpak_instalar_terminal
-Install "%s"? [y/N] 
+Install "{1}"? [y/N] 
 
 @este_programa
 this program
@@ -2020,7 +2020,7 @@ Windows programs that can be removed:
 To remove one:  tandem desinstalar "<part of the name>"
 
 @desinst_terminal
-Remove "%s"? Its files will be deleted. [y/N] 
+Remove "{1}"? Its files will be deleted. [y/N] 
 
 @alt_cabecalho
 Linux programs that do the job of "{1}":
@@ -2113,7 +2113,7 @@ TECHNICAL LOGS
 
 @prep_terminal
 Tandem can install what is missing:
-%s
+{1}
 
 It needs the internet and your password. Continue? [y/N] 
 

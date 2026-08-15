@@ -378,9 +378,22 @@ acao_preparar() {
 
     if ! t_pergunta "$(t_msg prep_pergunta "$plano")" "$(t_msg botao_instalar_tudo)" "$(t_msg botao_agora_nao)"; then
         if [ -t 0 ]; then
-            printf "$(t_msg prep_terminal)" "$plano"
+            # NOT `printf "$(t_msg ...)" "$plano"`, which handed a catalogue
+            # message to printf as its FORMAT STRING - the one thing the {1}
+            # decision exists to prevent. These files will arrive from
+            # strangers, and a translator who writes "100% seguro" should not
+            # be able to break a prompt; a path with a percent sign in it is
+            # the other half, and this project already has a test with a folder
+            # called "50% off".
+            printf '%s' "$(t_msg prep_terminal "$plano")"
             read -r r
-            case "$r" in s|S|sim|SIM) ;; *) printf '%s\n' "$(t_msg cancelado)"; return 1 ;; esac
+            # And t_confirmou, not `case s|S|sim|SIM`. That comparison was
+            # copied into five HANDLERS and fixed in all five - and missed here,
+            # because the CLI is not a handler. Same scoping shape as the
+            # thirteenth miss of the literal counter. The screen prints [y/N] in
+            # English and [o/N] in French, so an owner who does exactly what it
+            # asks was told his install was cancelled.
+            t_confirmou "$r" || { printf '%s\n' "$(t_msg cancelado)"; return 1; }
         else
             t_erro "$(t_msg prep_sem_confirmacao)"
             return 1
@@ -551,9 +564,9 @@ acao_uninstall() {
     # risk, and giving up silently is a defect.
     if ! t_pergunta "$(t_msg desinst_pergunta "$nome")" "$(t_msg botao_remover)" "$(t_msg botao_cancelar)"; then
         if [ -t 0 ]; then
-            printf "$(t_msg desinst_terminal)" "$nome"
+            printf '%s' "$(t_msg desinst_terminal "$nome")"
             read -r r
-            case "$r" in s|S|sim|SIM) ;; *) printf '%s\n' "$(t_msg cancelado)"; return 1 ;; esac
+            t_confirmou "$r" || { printf '%s\n' "$(t_msg cancelado)"; return 1; }
         else
             t_erro "$(t_msg desinst_sem_confirmacao "$nome")"
             return 1
