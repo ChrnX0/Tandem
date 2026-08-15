@@ -42,6 +42,16 @@ tandem (4.12) unstable; urgency=medium
     before, not less: the message-building path is now checked on every machine
     instead of being short-circuited away on the graphical ones.
 
+
+  * "tandem restore" tells you how to make the thing it is missing. It said
+    "No backup found in your home folder." and stopped there - naming the
+    problem and not the way out, which is the one thing this project treats as
+    a defect rather than a limitation. The owner hit it from the panel and
+    reasonably went looking for a .tar.gz to DOWNLOAD; there is none, because
+    Tandem is what makes it. The message now names "tandem backup", and draws
+    the distinction that matters on a shop machine: backup saves the
+    ENVIRONMENT, which Tandem can rebuild anyway, while "tandem dados" saves
+    HIS files, which nothing can.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 13:10:00 +0000
 
 tandem (4.11) unstable; urgency=medium

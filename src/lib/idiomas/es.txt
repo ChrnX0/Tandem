@@ -1875,7 +1875,16 @@ tandem dados salvar
 No pude guardar la copia.
 
 @rst_nenhum_backup
-No se encontró ninguna copia en tu carpeta personal.
+No se encontro ningun respaldo en su carpeta personal.
+
+No hay nada que descargar: quien lo crea es el propio Tandem. Ejecute esto
+primero y guardara todo el entorno Windows en su carpeta personal:
+
+    tandem backup
+
+Eso guarda el ENTORNO, que Tandem sabe rehacer igualmente. Para guardar SUS
+archivos - documentos, hojas de calculo, la base del programa - use:
+    tandem dados
 
 @rst_pergunta
 ¿Restaurar el entorno de Windows a partir de:

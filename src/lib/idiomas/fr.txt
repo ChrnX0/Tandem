@@ -1914,7 +1914,16 @@ tandem dados salvar
 Je n'ai pas pu enregistrer la sauvegarde.
 
 @rst_nenhum_backup
-Aucune sauvegarde trouvée dans votre dossier personnel.
+Aucune sauvegarde trouvee dans votre dossier personnel.
+
+Il n'y a rien a telecharger : c'est Tandem qui la cree. Lancez ceci d'abord,
+et il enregistre tout l'environnement Windows dans votre dossier personnel :
+
+    tandem backup
+
+Cela enregistre l'ENVIRONNEMENT, que Tandem sait refaire de toute facon. Pour
+enregistrer VOS fichiers - documents, tableurs, la base du programme - :
+    tandem dados
 
 @rst_pergunta
 Restaurer l'environnement Windows à partir de :

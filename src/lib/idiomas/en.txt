@@ -1880,6 +1880,14 @@ I could not save the backup.
 @rst_nenhum_backup
 No backup found in your home folder.
 
+There is nothing to download: Tandem is what makes one. Run this first, and
+it saves the whole Windows environment into your home folder:
+
+    tandem backup
+
+That saves the ENVIRONMENT, which Tandem can rebuild anyway. To save YOUR
+files - documents, spreadsheets, the program's database - use:  tandem dados
+
 @rst_pergunta
 Restore the Windows environment from:
 

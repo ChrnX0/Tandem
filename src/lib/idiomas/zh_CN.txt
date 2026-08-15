@@ -1797,6 +1797,14 @@ tandem dados salvar
 @rst_nenhum_backup
 在您的主目录里没有找到备份。
 
+没有什么可下载的：备份是 Tandem 自己做的。先运行这个，
+它会把整个 Windows 环境保存到您的主目录：
+
+    tandem backup
+
+那保存的是“环境”，而环境 Tandem 本来就会重建。要保存“您自己的”文件
+（文档、表格、程序的数据库），请用：tandem dados
+
 @rst_pergunta
 从这里恢复 Windows 环境：
 

@@ -1870,6 +1870,15 @@ Não consegui salvar o backup.
 @rst_nenhum_backup
 Nenhum backup encontrado na sua pasta pessoal.
 
+Nao ha nada para baixar: quem faz o backup e o proprio Tandem. Rode isto
+primeiro, e ele guarda o ambiente Windows inteiro na sua pasta pessoal:
+
+    tandem backup
+
+Isso guarda o AMBIENTE, que o Tandem sabe refazer de qualquer jeito. Para
+guardar os SEUS arquivos - documentos, planilhas, o banco do programa - use:
+    tandem dados
+
 @rst_pergunta
 Restaurar o ambiente Windows a partir de:
 
