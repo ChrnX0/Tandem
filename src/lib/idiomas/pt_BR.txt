@@ -1932,6 +1932,23 @@ Tandem - identidade da máquina
 @logs_nenhum
 Ainda não há registros.
 
+@soc_titulo
+Relatorio para quem for te ajudar
+
+@soc_caminho_copiado
+Copiei o lugar do arquivo. Cole onde voce precisar.
+
+@soc_abrir_pasta
+Abro a pasta onde este arquivo esta, para voce anexar numa mensagem?
+
+@botao_abrir_pasta
+Abrir a pasta
+
+@soc_sem_gerenciador
+Nao consegui abrir a pasta aqui. O arquivo esta em:
+
+{1}
+
 @soc_pronto
 Relatório pronto:
 

@@ -1857,6 +1857,23 @@ Tandem - 机器身份
 @logs_nenhum
 还没有任何记录。
 
+@soc_titulo
+给帮助您的人看的报告
+
+@soc_caminho_copiado
+我已复制这个文件的位置，您可以粘贴到需要的地方。
+
+@soc_abrir_pasta
+要我打开这个文件所在的文件夹吗？这样您可以把它附在消息里。
+
+@botao_abrir_pasta
+打开文件夹
+
+@soc_sem_gerenciador
+我在这里打不开文件夹。文件在：
+
+{1}
+
 @soc_pronto
 报告已生成：
 

@@ -3295,6 +3295,32 @@ msgctxt "logs_nenhum"
 msgid "There are no logs yet."
 msgstr "还没有任何记录。"
 
+msgctxt "soc_titulo"
+msgid "Report for whoever is helping you"
+msgstr "给帮助您的人看的报告"
+
+msgctxt "soc_caminho_copiado"
+msgid "I copied the file's location. Paste it wherever you need it."
+msgstr "我已复制这个文件的位置，您可以粘贴到需要的地方。"
+
+msgctxt "soc_abrir_pasta"
+msgid "Shall I open the folder this file is in, so you can attach it to a message?"
+msgstr "要我打开这个文件所在的文件夹吗？这样您可以把它附在消息里。"
+
+msgctxt "botao_abrir_pasta"
+msgid "Open the folder"
+msgstr "打开文件夹"
+
+msgctxt "soc_sem_gerenciador"
+msgid ""
+"I could not open the folder here. The file is at:\n"
+"\n"
+"{1}"
+msgstr ""
+"我在这里打不开文件夹。文件在：\n"
+"\n"
+"{1}"
+
 msgctxt "soc_pronto"
 msgid ""
 "Report ready:\n"

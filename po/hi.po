@@ -3370,6 +3370,32 @@ msgctxt "logs_nenhum"
 msgid "There are no logs yet."
 msgstr "अभी कोई ब्यौरा नहीं है।"
 
+msgctxt "soc_titulo"
+msgid "Report for whoever is helping you"
+msgstr "जो आपकी मदद करेगा उसके लिए रिपोर्ट"
+
+msgctxt "soc_caminho_copiado"
+msgid "I copied the file's location. Paste it wherever you need it."
+msgstr "मैंने फ़ाइल की जगह कॉपी कर दी। जहाँ चाहिए वहाँ चिपका दीजिए।"
+
+msgctxt "soc_abrir_pasta"
+msgid "Shall I open the folder this file is in, so you can attach it to a message?"
+msgstr "क्या मैं वह फ़ोल्डर खोल दूँ जहाँ यह फ़ाइल है, ताकि आप इसे संदेश में लगा सकें?"
+
+msgctxt "botao_abrir_pasta"
+msgid "Open the folder"
+msgstr "फ़ोल्डर खोलें"
+
+msgctxt "soc_sem_gerenciador"
+msgid ""
+"I could not open the folder here. The file is at:\n"
+"\n"
+"{1}"
+msgstr ""
+"मैं यहाँ फ़ोल्डर नहीं खोल सका। फ़ाइल यहाँ है:\n"
+"\n"
+"{1}"
+
 msgctxt "soc_pronto"
 msgid ""
 "Report ready:\n"

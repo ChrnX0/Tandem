@@ -1127,13 +1127,7 @@ acao_contribuir() {
     # empty is the measurement of how many people take them. These two shortcuts
     # need no server: the clipboard, and a form that arrives already filled in.
     if t_tem_gui; then
-        if command -v xclip >/dev/null 2>&1; then
-            printf '%s' "$reg" | xclip -selection clipboard 2>/dev/null &&
-                t_ok "$(t_msg contrib_copiada)"
-        elif command -v wl-copy >/dev/null 2>&1; then
-            printf '%s' "$reg" | wl-copy 2>/dev/null &&
-                t_ok "$(t_msg contrib_copiada)"
-        fi
+        t_copia_para_area "$reg" && t_ok "$(t_msg contrib_copiada)"
         # The query parameter has to be the issue form's FIELD ID, and it was
         # "linha" while .github/ISSUE_TEMPLATE/list.yml calls that field
         # "record" - so the one shortcut that works opened an EMPTY form, while
@@ -1273,7 +1267,28 @@ acao_socorro() {
     } > "$arq" 2>/dev/null
 
     if [ -s "$arq" ]; then
-        t_ok "$(t_msg soc_pronto "$arq")"
+        # NOT t_ok. This is the "send me the diagnosis" button, and t_ok returns
+        # as soon as notify-send succeeds - so on a graphical machine the whole
+        # message became a ten-second toast, and the owner was left to find a
+        # file in his home directory from a notification that had vanished.
+        # Worse, the paragraph that goes with it is the one that makes this
+        # feature defensible: the file holds HIS file paths, and a path
+        # sometimes carries a customer's name. He only really decides to send it
+        # if he has read that, and a toast is not somewhere anybody reads.
+        #
+        # A window, then the same two shortcuts acao_contribuir has had all
+        # along, thirty lines above this one.
+        printf '%s\n' "$(t_msg soc_pronto "$arq")" | t_texto "$(t_msg soc_titulo)"
+        t_copia_para_area "$arq" && t_ok "$(t_msg soc_caminho_copiado)"
+        if t_tem_gui && command -v xdg-open >/dev/null 2>&1 &&
+           t_pergunta "$(t_msg soc_abrir_pasta)" \
+                      "$(t_msg botao_abrir_pasta)" "$(t_msg botao_nao_obrigado)"; then
+            # Checked, not backgrounded: with no file manager xdg-open exits
+            # non-zero and saying nothing would be the silent failure this whole
+            # command exists to help somebody diagnose.
+            xdg-open "$(dirname -- "$arq")" >/dev/null 2>&1 ||
+                t_erro "$(t_msg soc_sem_gerenciador "$arq")"
+        fi
         return 0
     fi
     t_erro "$(t_msg soc_nao_gerou)"

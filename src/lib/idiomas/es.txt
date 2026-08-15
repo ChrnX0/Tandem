@@ -1939,6 +1939,23 @@ Tandem - identidad de la máquina
 @logs_nenhum
 Todavía no hay registros.
 
+@soc_titulo
+Informe para quien vaya a ayudarle
+
+@soc_caminho_copiado
+Copie la ubicacion del archivo. Peguela donde la necesite.
+
+@soc_abrir_pasta
+¿Abro la carpeta donde esta este archivo, para que lo adjunte a un mensaje?
+
+@botao_abrir_pasta
+Abrir la carpeta
+
+@soc_sem_gerenciador
+No pude abrir la carpeta aqui. El archivo esta en:
+
+{1}
+
 @soc_pronto
 Informe listo:
 

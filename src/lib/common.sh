@@ -373,6 +373,25 @@ t_aviso() {
     return 0
 }
 
+# Puts a string on the clipboard, whichever of the two systems this desktop
+# runs. Returns 1 when there is no way to do it, so the caller can say so
+# instead of silently promising a copy that never happened.
+#
+# Extracted from acao_contribuir in 4.11, where it was inline - and inline it
+# could not be shared, which is why "tandem socorro" spent two versions ending
+# in a ten-second toast while the command thirty lines above it already had
+# both shortcuts written.
+t_copia_para_area() {
+    local texto="$1"
+    t_tem_gui || return 1
+    if command -v xclip >/dev/null 2>&1; then
+        printf '%s' "$texto" | xclip -selection clipboard 2>/dev/null && return 0
+    elif command -v wl-copy >/dev/null 2>&1; then
+        printf '%s' "$texto" | wl-copy 2>/dev/null && return 0
+    fi
+    return 1
+}
+
 t_ok() {
     t_diz "ok: $1"
     if t_tem_gui && command -v notify-send >/dev/null 2>&1 &&

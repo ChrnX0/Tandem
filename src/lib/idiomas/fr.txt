@@ -1981,6 +1981,23 @@ Tandem - identité de la machine
 @logs_nenhum
 Il n'y a pas encore de journaux.
 
+@soc_titulo
+Rapport pour la personne qui vous aide
+
+@soc_caminho_copiado
+J'ai copie l'emplacement du fichier. Collez-le ou vous en avez besoin.
+
+@soc_abrir_pasta
+J'ouvre le dossier ou se trouve ce fichier, pour que vous le joigniez a un message ?
+
+@botao_abrir_pasta
+Ouvrir le dossier
+
+@soc_sem_gerenciador
+Je n'ai pas pu ouvrir le dossier ici. Le fichier est dans :
+
+{1}
+
 @soc_pronto
 Rapport prêt :
 

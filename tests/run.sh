@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3414769235 3809" "$soma_esperados"
+      "3285986482 3811" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "4011700690 2310" "$soma_padroes"
+      "187201822 2386" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -6031,6 +6031,54 @@ naocontem "but a genuinely truncated file is not called a web page" \
           "web page saved under" \
           "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
              bash "$ROOT/src/bin/tandem-rpm" "$TMPROOT/curto.rpm" </dev/null 2>&1 | head -2)"
+
+section "the report gets to a second human"
+
+# acao_socorro ended with t_ok, and t_ok RETURNS as soon as notify-send
+# succeeds - so on a graphical machine the whole message was a ten-second
+# toast, and the owner was left to find a file in his home directory from a
+# notification that had vanished. What went with it is the third paragraph, the
+# one that makes the feature defensible: the file shows names and paths of his
+# files. He only really decides to send it if he has read that.
+SOCV="$TMPROOT/socorro"; mkdir -p "$SOCV/home" "$SOCV/estado" "$SOCV/mem"
+SAIDA_SOC="$(HOME="$SOCV/home" TANDEM_ESTADO="$SOCV/estado" TANDEM_MEMORIA="$SOCV/mem" \
+             TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+             bash "$ROOT/src/bin/tandem" socorro 2>&1)"
+case "$SAIDA_SOC" in
+    *"names and paths of files"*)
+        pass "the warning about what the report contains reaches the owner" ;;
+    *) fail "the warning about what the report contains reaches the owner" \
+            "the paragraph about file paths" "$(printf '%s' "$SAIDA_SOC" | tail -5)" ;;
+esac
+case "$SAIDA_SOC" in
+    *tandem-socorro-*.txt*) pass "and it names the file it just wrote" ;;
+    *) fail "and it names the file it just wrote" "a path" "$SAIDA_SOC" ;;
+esac
+# Structural, because the defect is GUI-ONLY: on a terminal t_ok prints the
+# whole text and the old code looked fine here. The window is the fix, and a
+# test that cannot open a window has to check that the window is what is asked
+# for.
+if grep -q 't_ok "$(t_msg soc_pronto' "$ROOT/src/bin/tandem"; then
+    fail "the report is shown in a window, not a toast that vanishes" \
+         "soc_pronto through t_texto" "still going through t_ok"
+else
+    pass "the report is shown in a window, not a toast that vanishes"
+fi
+for atalho in t_copia_para_area soc_abrir_pasta; do
+    if grep -q "$atalho" "$ROOT/src/bin/tandem"; then
+        pass "socorro offers $atalho, the way contribuir already did"
+    else
+        fail "socorro offers $atalho, the way contribuir already did" \
+             "a call" "absent"
+    fi
+done
+# With nobody to show anything to there is nothing to copy to, and saying so is
+# the difference between a shortcut that failed and a promise that was never
+# kept.
+equal "with no graphical session there is no clipboard to copy to" "1" \
+      "$( ( unset DISPLAY WAYLAND_DISPLAY
+            TANDEM_LIB="$ROOT/src/lib" bash -c \
+            '. "'"$ROOT"'/src/lib/common.sh"; t_copia_para_area x; echo $?' ) 2>/dev/null )"
 
 section "a snap and a flatpak land where nothing was looking"
 

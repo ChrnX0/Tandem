@@ -125,6 +125,26 @@ tandem (4.11) unstable; urgency=medium
     the alternative to acting is being told nothing happened.
   * Two guards, both proven by putting the defect back: no catalogue may carry
     a printf conversion, and no message may be used as a format string.
+
+  * "tandem socorro" gets the report to a second human. Its last step was
+    t_ok, and t_ok RETURNS as soon as notify-send succeeds - so on a graphical
+    machine the whole thing was a ten-second toast, and the owner was left to
+    find a file in his home directory from a notification that had vanished.
+    This is the "send me the diagnosis" button.
+  * What went with it matters more than the path: the third paragraph is the
+    one that makes the feature defensible - the file shows names and paths of
+    HIS files, and a path sometimes carries a customer's name. He only really
+    decides to send it if he has read that, and a toast is not somewhere
+    anybody reads. It goes in a window now, with the path on the clipboard and
+    a checked xdg-open on the folder - the same two shortcuts "tandem
+    contribuir" has had all along, thirty lines above it in the same file.
+  * The clipboard half became t_copia_para_area in the library. Inline in
+    acao_contribuir it could not be shared, which is exactly why socorro spent
+    two versions ending in a toast while its neighbour was already doing this
+    properly.
+  * The defect is GUI-ONLY - on a terminal t_ok prints the whole text and the
+    old code looked fine - so the guard is structural: a test that cannot open
+    a window checks that a window is what gets asked for.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium

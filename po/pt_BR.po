@@ -3389,6 +3389,32 @@ msgctxt "logs_nenhum"
 msgid "There are no logs yet."
 msgstr "Ainda não há registros."
 
+msgctxt "soc_titulo"
+msgid "Report for whoever is helping you"
+msgstr "Relatorio para quem for te ajudar"
+
+msgctxt "soc_caminho_copiado"
+msgid "I copied the file's location. Paste it wherever you need it."
+msgstr "Copiei o lugar do arquivo. Cole onde voce precisar."
+
+msgctxt "soc_abrir_pasta"
+msgid "Shall I open the folder this file is in, so you can attach it to a message?"
+msgstr "Abro a pasta onde este arquivo esta, para voce anexar numa mensagem?"
+
+msgctxt "botao_abrir_pasta"
+msgid "Open the folder"
+msgstr "Abrir a pasta"
+
+msgctxt "soc_sem_gerenciador"
+msgid ""
+"I could not open the folder here. The file is at:\n"
+"\n"
+"{1}"
+msgstr ""
+"Nao consegui abrir a pasta aqui. O arquivo esta em:\n"
+"\n"
+"{1}"
+
 msgctxt "soc_pronto"
 msgid ""
 "Report ready:\n"

@@ -3442,6 +3442,32 @@ msgctxt "logs_nenhum"
 msgid "There are no logs yet."
 msgstr "Il n'y a pas encore de journaux."
 
+msgctxt "soc_titulo"
+msgid "Report for whoever is helping you"
+msgstr "Rapport pour la personne qui vous aide"
+
+msgctxt "soc_caminho_copiado"
+msgid "I copied the file's location. Paste it wherever you need it."
+msgstr "J'ai copie l'emplacement du fichier. Collez-le ou vous en avez besoin."
+
+msgctxt "soc_abrir_pasta"
+msgid "Shall I open the folder this file is in, so you can attach it to a message?"
+msgstr "J'ouvre le dossier ou se trouve ce fichier, pour que vous le joigniez a un message ?"
+
+msgctxt "botao_abrir_pasta"
+msgid "Open the folder"
+msgstr "Ouvrir le dossier"
+
+msgctxt "soc_sem_gerenciador"
+msgid ""
+"I could not open the folder here. The file is at:\n"
+"\n"
+"{1}"
+msgstr ""
+"Je n'ai pas pu ouvrir le dossier ici. Le fichier est dans :\n"
+"\n"
+"{1}"
+
 msgctxt "soc_pronto"
 msgid ""
 "Report ready:\n"

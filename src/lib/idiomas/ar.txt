@@ -1891,6 +1891,23 @@ Tandem - هوية الجهاز
 @logs_nenhum
 لا توجد سجلات بعد.
 
+@soc_titulo
+تقرير لمن سيساعدك
+
+@soc_caminho_copiado
+نسخت مكان الملف. الصقه حيث تحتاجه.
+
+@soc_abrir_pasta
+هل أفتح المجلد الذي فيه هذا الملف، لترفقه برسالة؟
+
+@botao_abrir_pasta
+افتح المجلد
+
+@soc_sem_gerenciador
+لم أستطع فتح المجلد هنا. الملف في:
+
+{1}
+
 @soc_pronto
 التقرير جاهز:
 

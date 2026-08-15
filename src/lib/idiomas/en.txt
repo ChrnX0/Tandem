@@ -1942,6 +1942,23 @@ Tandem - machine identity
 @logs_nenhum
 There are no logs yet.
 
+@soc_titulo
+Report for whoever is helping you
+
+@soc_caminho_copiado
+I copied the file's location. Paste it wherever you need it.
+
+@soc_abrir_pasta
+Shall I open the folder this file is in, so you can attach it to a message?
+
+@botao_abrir_pasta
+Open the folder
+
+@soc_sem_gerenciador
+I could not open the folder here. The file is at:
+
+{1}
+
 @soc_pronto
 Report ready:
 
