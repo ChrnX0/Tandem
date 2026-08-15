@@ -53,7 +53,8 @@ EXCLUIDAS = {
 FORMA = re.compile(
     r"^[0-9a-f]{32}\t(32|64|arm64|-)\t\S+\t\S+\t"
     r"(confirmado|entregue|so-abriu|reprovado)\t\d+\t\d{4}-\d{2}\t\S+"
-    r"(\t[A-Za-z0-9._-]{1,24}\t[A-Za-z0-9._-]{1,24}\t(-|[0-9a-f]{16}))?$"
+    r"(\t[A-Za-z0-9._-]{1,24}\t[A-Za-z0-9._-]{1,24}\t(-|[0-9a-f]{16})"
+    r"(\t(proprio|aplicado))?)?$"
 )
 
 # A verb name is a NAME, never a command line. This mirrors t_verbo_valido in
@@ -154,19 +155,25 @@ def monta(texto):
                 recusadas.append(("duplicate report of the same lesson", linha))
                 continue
             vistos_dedup.add(marca)
-        chave = (campos[0], campos[1], campos[2], campos[3], campos[4], wine, wt)
+        # The ORIGIN is part of the key, so a shop that discovered the
+        # lesson and one that applied it never merge into a single count.
+        # A row from before 4.13 has no field 12 and groups as "proprio",
+        # which is what it was.
+        origem = campos[11] if len(campos) > 11 else "proprio"
+        chave = (campos[0], campos[1], campos[2], campos[3], campos[4], wine, wt, origem)
         g = grupos[chave]
         g["n"] += int(campos[5])
         if campos[6] > g["visto"]:
             g["visto"] = campos[6]
 
     linhas = []
-    for (ident, arch, verbos, falhos, conf, wine, wt), g in grupos.items():
+    for (ident, arch, verbos, falhos, conf, wine, wt, origem), g in grupos.items():
         # The dedup token is NOT republished: it did its job at the intake and
         # putting it in a file the whole world downloads would turn a
         # per-program token into something anybody can correlate against.
         linhas.append("\t".join([ident, arch, verbos, falhos, conf,
-                                 str(g["n"]), g["visto"], "-", wine, wt, "-"]))
+                                 str(g["n"]), g["visto"], "-", wine, wt, "-",
+                                 origem]))
     linhas.sort()
     return linhas, recusadas
 

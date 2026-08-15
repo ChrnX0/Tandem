@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "528430704 3831" "$soma_esperados"
+      "1168234846 3945" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -3891,8 +3891,8 @@ REG_L="$(t_lista_registro "$PROG_L")"
 # allows - every reader indexes by column, so an old client reads 1-8 and
 # ignores the rest, while reordering or repurposing a column would silently
 # change what every published row means.
-equal "the record has the format's eleven fields" \
-      "11" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
+equal "the record has the format's twelve fields" \
+      "12" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
 case "$REG_L" in
     "$ID_L"*) pass "the record starts with the file identity" ;;
     *) fail "the record starts with the file identity" "$ID_L..." "$REG_L" ;;
@@ -5684,7 +5684,7 @@ CAMPOS="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_ESTADO="$REGV2" TANDEM_MEMORIA="$REG
              t_memoria_grava "$F" RESOLVERAM vcrun2022
              t_memoria_grava "$F" RESULTADO abriu
              t_lista_registro "$F" | awk -F"\t" "{print NF}"; rm -f "$F"' 2>/dev/null)"
-equal "a record carries eleven fields now" "11" "$CAMPOS"
+equal "a record carries twelve fields now" "12" "$CAMPOS"
 
 # A Wine version with four numeric components is indistinguishable from an
 # IPv4 address to the leak sieve's regex. Leaving the stack fields in its scope
@@ -5932,11 +5932,16 @@ contem "which is exactly what the old whole-tail slice got wrong" \
        "internet" "$(causa "$TMPROOT/wt-mudo-mais-sucesso.log")"
 # And the slice really is taken per verb, inside the loop, not after it.
 naocontem "so the slice is taken when a verb fails, not after the loop" \
-          'tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO"' \
+          't_log_desde "$MARCA_WT" > "$RESTO"' \
           "$(cat "$ROOT/src/bin/tandem-exe")"
 contem "and it is appended from the failure branch" \
-       'tail -n +"$((MARCA_WT+1))" "$LOG" >> "$RESTO"' \
+       't_log_desde "$MARCA_WT" >> "$RESTO"' \
        "$(cat "$ROOT/src/bin/tandem-exe")"
+# ...and by a MARKER, never by a line count. A line count is only correct
+# while this process is the only writer, and Tandem now spawns background
+# work - the list fetch, the version check - into the same log.
+naocontem "and never by counting lines, which a background writer shifts" \
+          "wc -l < \"\$LOG\"" "$(cat "$ROOT/src/bin/tandem-exe")"
 
 # A Brazilian date order inside a sentence that IS translated. The wrong-clock
 # message reaches en, zh_CN, hi and ar readers with dd/mm/yyyy in the middle of
@@ -6149,6 +6154,150 @@ for palavra in lista_recebendo_auto lista_recebendo_nao; do
         fail "tandem lista says which way the switch is set" "$palavra" "absent"
 done
 pass "tandem lista says which way the switch is set"
+
+section "the log is cut by a marker, not by counting lines"
+
+# MEASURED, not feared. Two runs of an IDENTICAL commit in CI, one green and
+# one red, on a test whose second pass suddenly failed to detect a DLL that was
+# plainly in the log. tandem-exe took MARCA=$(wc -l < "$LOG") and later sliced
+# with tail -n +$((MARCA+1)); that is only correct while this process is the
+# ONLY writer, and Tandem now spawns background work into the same file - the
+# community-list fetch and the version check. A writer landing between the
+# count and the slice moves the window, and the detector reads the wrong part.
+#
+# The owner saw the same shape from the other side on his own machine the same
+# day: lines from `tandem socorro` appearing under the heading of `tandem
+# version`.
+LOGM="$TMPROOT/marcador.log"
+marcador() {
+    TANDEM_LIB="$ROOT/src/lib" LOG="$LOGM" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        LOG="'"$LOGM"'"; : > "$LOG"
+        printf "antes\n" >> "$LOG"
+        M="$(t_log_marca 1)"
+        printf "primeira\n" >> "$LOG"
+        printf "INTRUSO de outro processo\n" >> "$LOG"
+        printf "segunda\n" >> "$LOG"
+        t_log_desde "$M"' 2>/dev/null
+}
+equal "everything after the marker comes back, intruder included" \
+      "primeira INTRUSO de outro processo segunda" \
+      "$(marcador | tr '\n' ' ' | sed 's/ $//')"
+# The marker itself must not come back: it is Tandem's own bookkeeping, and
+# t_palavras_do_programa would show it to the owner as if the program had said
+# it - the defect that put an internal Portuguese line under "this is what it
+# said" in 4.5.
+naocontem "and the marker itself is not part of the slice" "---8<---" "$(marcador)"
+# Two attempts in one run must not share a marker, or the second slice would
+# start at the first attempt and carry its output.
+DOIS="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    LOG="'"$TMPROOT"'/marcador2.log"; : > "$LOG"
+    a="$(t_log_marca 1)"; b="$(t_log_marca 2)"
+    [ "$a" = "$b" ] && echo iguais || echo diferentes' 2>/dev/null)"
+equal "two attempts of one run get different markers" "diferentes" "$DOIS"
+# With no marker there is no "since", and guessing a line number is what this
+# replaced.
+equal "an absent marker returns nothing rather than guessing" "1" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+         . "'"$ROOT"'/src/lib/common.sh"; LOG="'"$LOGM"'"
+         t_log_desde "" >/dev/null; echo $?' 2>/dev/null)"
+
+section "the list knows what did NOT work, and finally says so"
+
+# Field 4 of the record - the components installed that did NOT fix it - has
+# been written by every client, accepted by the intake, published by the
+# rebuild and downloaded to every machine since 3.4, and read by NOBODY:
+# t_lista_linha's awk touches fields 1, 3, 5, 6 and 7 only. So a shop could be
+# one click from half an hour of dotnet48 that sixty other shops had already
+# burned on this exact installer, with that fact sitting on its own disk.
+INU="$TMPROOT/inuteis.tsv"
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf 'abc\t64\tvcrun2022\t-\tconfirmado\t400\t2026-08\t-\t10.0\t20240105\t-\n'
+  printf 'abc\t64\t-\tdotnet48,vcrun6\treprovado\t60\t2026-08\t-\t10.0\t20240105\t-\n'
+  printf 'abc\t64\t-\tdotnet48\treprovado\t30\t2026-08\t-\t10.0\t20240105\t-\n'
+  printf 'xyz\t64\t-\tdotnet48\treprovado\t300\t2026-08\t-\t10.0\t20240105\t-\n'
+} > "$INU"
+inut() { TANDEM_LISTA="$INU" TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; '"$1" 2>/dev/null; }
+
+# Two rows name dotnet48; the count is their SUM, which is the whole job of
+# the machine count and the thing the read path got wrong once already.
+equal "reports about the same useless component add up" \
+      "dotnet48$(printf '\t')90" "$(inut 't_lista_inuteis abc' | head -1)"
+equal "and the worst-attested one comes first" \
+      "dotnet48 vcrun6" "$(inut 't_lista_inuteis abc' | cut -f1 | tr '\n' ' ' | sed 's/ $//')"
+equal "a file nobody has reported failures for says nothing" "" \
+      "$(inut 't_lista_inuteis naoexiste')"
+
+# "Nobody got this working" is a record the intake goes out of its way to
+# accept and the resolver drops on its first line - it is looking for a lesson
+# and this is the absence of one.
+equal "with only failures, it says how many reported them" "300" \
+      "$(inut 't_lista_ninguem_conseguiu xyz')"
+# ...but one shop failing where four hundred succeeded is a fact about that
+# shop, not about the program.
+equal "with a working lesson present, it stays quiet" "1" \
+      "$(inut 't_lista_ninguem_conseguiu abc >/dev/null; echo $?')"
+
+# The warning has to reach the QUESTION, which is the only moment it is worth
+# anything - after the install has started, knowing is too late.
+contem "tandem-exe warns before asking whether to spend the time" \
+       "lista_ja_nao_ajudou" "$(cat "$ROOT/src/bin/tandem-exe")"
+contem "and the warning is attached to the question itself" \
+       'AVISO_INUTEIS' \
+       "$(grep -A 2 't_pergunta "\$(t_msg licao_pergunta' "$ROOT/src/bin/tandem-exe")"
+# It must not become a veto: a component that failed elsewhere can be exactly
+# right here, and this project does not let a rejection outrank a confirmation.
+naocontem "it warns and never removes the component from the offer" \
+          "PENDENTES=" "$(sed -n '/AVISO_INUTEIS=""/,/^        ORIGEM_LICAO=/p' \
+                          "$ROOT/src/bin/tandem-exe")"
+
+section "Tandem says there is a newer Tandem, and never installs it"
+
+# The decision first, because it is the point: Tandem does NOT update itself.
+# Fetching the community list is data that only ever becomes a suggestion; a
+# .deb is code that runs as root. The moment Tandem can replace its own binary
+# from the internet, whoever controls the release address owns every shop
+# machine at once - rule 1 turned on Tandem itself. So this only ever LOOKS.
+VERV="$TMPROOT/versao"; mkdir -p "$VERV/home"
+printf '{"tag_name":"v9.9","name":"Tandem 9.9"}' > "$VERV/rel.json"
+tv() {
+    env HOME="$VERV/home" XDG_CONFIG_HOME="$VERV/home/.config" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_VERSAO_URL="file://$VERV/rel.json" \
+        TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem" "$@" 2>&1
+}
+# dpkg knows Debian version ordering; a string compare would call 4.9 newer
+# than 4.10, which is the trap this project would hit on its own numbering.
+comp() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c \
+      '. "'"$ROOT"'/src/lib/common.sh"; t_versao_mais_nova "$1" "$2"; echo $?' _ "$1" "$2"
+}
+equal "4.12 is newer than 4.11" "0" "$(comp 4.12 4.11)"
+equal "4.11 is not newer than 4.12" "1" "$(comp 4.11 4.12)"
+equal "the same version is not newer than itself" "1" "$(comp 4.11 4.11)"
+equal "4.10 is newer than 4.9, which a string compare gets backwards" "0" "$(comp 4.10 4.9)"
+equal "and 4.9 is not newer than 4.10" "1" "$(comp 4.9 4.10)"
+
+tv version >/dev/null 2>&1        # first run: fetches in the background
+sleep 2
+contem "it says there is a newer one" "9.9" "$(tv version)"
+naocontem "and it does not repeat itself on the next command" "9.9" "$(tv version)"
+# The off switch has to turn off the thing he can SEE. Gating only the fetch
+# left the value a previous run had stored, so the notice went on for ever -
+# found by running it, not by reading it.
+tv versao nao-avisar >/dev/null 2>&1
+sed -i '/VERSAO_AVISADA/d' "$VERV/home/.config/tandem/configuracao.txt"
+naocontem "switched off, it stays quiet even though it knows" "9.9" "$(tv version)"
+tv versao avisar >/dev/null 2>&1
+contem "and switched back on, it speaks again" "9.9" "$(tv version)"
+# Nothing in this path may install, download a package, or ask for a password.
+CODIGO_VERSAO="$(sed -n '/is there a newer Tandem?/,/^t_lista_talvez_atualiza()/p' \
+                 "$ROOT/src/lib/common.sh")"
+for proibido in 'apt-get' 'dpkg -i' 't_como_root' 'pkexec' 'sudo'; do
+    naocontem "the version check never runs $proibido" "$proibido" "$CODIGO_VERSAO"
+done
 
 section "a command typed at a prompt answers at that prompt"
 

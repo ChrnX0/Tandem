@@ -322,6 +322,21 @@ turns it back on. Either way,
 .B tandem lista
 says which of the two is in force.
 .TP
+.B tandem versao
+Says which Tandem this is. Tandem also checks once a day, in the background,
+whether a newer one has been published, and tells you once when there is.
+.IP
+It never installs it, and that is deliberate rather than unfinished: a program
+that can replace itself from the internet hands whoever controls that address
+every machine running it, and a shop counter is not the place to take that
+trade for the convenience. The notice carries the address; updating stays
+something you do, with a command you can read and a checksum you can check.
+.IP
+.B tandem versao nao-avisar
+stops the notice;
+.B tandem versao avisar
+turns it back on.
+.TP
 .BI "tandem contribuir " program
 Assembles the standard line with what this Tandem has learnt and shows it in
 full, for you to check and send if you want. Tandem never sends on its own.

@@ -1,3 +1,90 @@
+tandem (4.13) unstable; urgency=medium
+
+  * Tandem says when there is a newer Tandem, and never installs it. The owner
+    left the choice to me and this is the half that needs nothing from him: it
+    reads the version number of the newest published release once a day, in the
+    background, and says so once. The fetch never delays a command - the answer
+    is used on the NEXT run, exactly like the community list.
+  * IT WILL NOT UPDATE ITSELF, and that is a decision rather than an unfinished
+    edge. Fetching the list is data that only ever becomes a suggestion; a .deb
+    is code that runs as root. The moment Tandem can replace its own binary from
+    the internet, whoever controls the release address owns every shop machine
+    at once - and the machine this was born on runs a point-of-sale system.
+    That is rule No 1 turned on Tandem itself. A test asserts the whole path
+    contains no apt-get, no dpkg -i, no t_como_root, no pkexec and no sudo.
+  * The proper destination is an apt repository, where the update arrives
+    through the updater the owner already trusts and already gets asked about.
+    That needs a signing key, which is a secret only he can make, so it waits
+    for him - this exists in the meantime rather than instead of it.
+  * dpkg does the comparing, because a string compare calls 4.9 newer than
+    4.10 - which is this project's own numbering. sort -V is the fallback and
+    "equal" answers no in both.
+  * The off switch turns off the thing he can SEE. Gating only the fetch left
+    the version a previous run had already stored, so "tandem versao
+    nao-avisar" stopped the network call and went on printing the notice for
+    ever. Found by running the four states in order, not by reading the code.
+
+
+  * The list finally opens the field that says what did NOT work. Field 4 of
+    the record - the components installed that did not fix it - has been
+    written by every client, accepted by the intake, published by the rebuild
+    and downloaded to every machine since 3.4, and read by NOBODY:
+    t_lista_linha's awk touches fields 1, 3, 5, 6 and 7. So a shop could be one
+    click away from half an hour of dotnet48 that sixty other shops had already
+    burned on this exact installer, with that fact sitting on its own disk.
+  * The sentence is attached to the QUESTION, which is the only moment it is
+    worth anything: after the install starts, knowing is too late. It weighs
+    the reports the same way the resolver does, so an old report from a
+    different Wine counts for less here too, and it sums across rows - the
+    thing the read path got wrong once already.
+  * It warns and never vetoes. A component that failed on somebody else's
+    machine can be exactly right on this one, so it adds a sentence and changes
+    no default; the owner is the one deciding whether to spend the afternoon.
+    A test asserts it never removes anything from the offer.
+  * And "nobody got this working" is finally readable: a row whose verbs field
+    is "-" is a machine saying it tried and nothing helped - the record the
+    intake goes out of its way to accept and the resolver drops on its first
+    line. It answers only when there is no working lesson at all, because one
+    shop failing where four hundred succeeded is a fact about that shop.
+
+  * THE LOG IS CUT BY A MARKER, NOT BY COUNTING LINES - and this one was caught
+    by CI disagreeing with itself. Two runs of an IDENTICAL commit, one green
+    and one red, on a test whose second pass suddenly failed to detect a DLL
+    that was plainly in the log. tandem-exe took MARCA=$(wc -l < "$LOG") and
+    later sliced with tail -n +$((MARCA+1)), which is only correct while this
+    process is the ONLY writer - and Tandem now spawns background work into the
+    same file, the community-list fetch and the version check. A writer landing
+    between the count and the slice moves the window, and the detector reads
+    the wrong part of the log.
+  * The owner saw the same shape from the other side on his own machine the
+    same day: lines from "tandem socorro" appearing under the heading of
+    "tandem version". One cause, two symptoms, and the flaky CI run is what
+    made it undeniable.
+  * A marker is written INTO the stream it will be used to cut, so whatever
+    else lands before or after it, the text after the marker is exactly the
+    text written after the marker. Distinct per process and per attempt, and
+    the marker itself never comes back in the slice - it would otherwise be
+    shown to the owner as if the program had said it, which is the defect 4.5
+    fixed for tandem-script.
+
+  * A lesson taken from the list can finally be corroborated back into it.
+    INSTALADOS_AGORA was only ever appended to inside the detector loop, so a
+    lesson APPLIED from the list or from a recipe left RESOLVERAM empty, the
+    record was never built, and the count on that lesson could never rise above
+    the shops that had rediscovered it from scratch - which is precisely what
+    the shortcut exists to stop happening.
+  * Field 12 keeps the two apart: "proprio" is a shop that worked it out for
+    itself, "aplicado" is one that applied somebody else's and found it worked.
+    They must NEVER be summed, or four hundred machines applying one suggestion
+    read as eight hundred discovering it - the list confirming itself out of
+    its own output. So "aplicado" rows never select a lesson and are counted
+    separately, and a row from before 4.13 reads as "proprio", which is what it
+    was.
+  * The first attempt at this put the initialisation of INSTALADOS_AGORA BELOW
+    the shortcut that fills it, silently wiping it - caught by reading the
+    order, since no test reaches that path.
+ -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 18:40:00 +0000
+
 tandem (4.12) unstable; urgency=medium
 
   * The panel shows which Tandem this is, and stops showing its own plumbing.

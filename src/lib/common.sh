@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.12"
+TANDEM_VERSAO="4.13"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -50,6 +50,45 @@ t_log_init() {
 }
 
 t_diz() { printf '%s\n' "$*" >> "${LOG:-/dev/null}" 2>/dev/null; }
+
+# ---------------------------------------------------- slicing the log safely
+#
+# Everything that reads Wine's output back needs "the part written since I
+# started this attempt", and the way to get it was MARCA=$(wc -l < "$LOG")
+# followed by tail -n +$((MARCA+1)). That is only correct while this process is
+# the ONLY writer, and it is not: one log file per handler, no PID in the name,
+# and Tandem itself now spawns background work - the community-list fetch, the
+# version check - that appends to the same file.
+#
+# Measured, not feared. Two runs of the identical commit in CI, one green and
+# one red, on a test whose second pass suddenly failed to detect a DLL that was
+# plainly in the log: a background writer had shifted the line numbers between
+# the count and the slice, so the detector read the wrong window. The owner saw
+# the same shape from the other side on his own machine the same day - lines
+# from `tandem socorro` appearing under the heading of `tandem version`.
+#
+# A marker cannot drift. It is written INTO the stream it will be used to cut,
+# so whatever else lands before or after it, the text after the marker is
+# exactly the text written after the marker.
+t_log_marca() {
+    local m
+    # Distinct per process AND per call: SECONDS moves, $$ does not, and two
+    # attempts of the same run must not share a marker or the second slice
+    # would start at the first attempt.
+    m="---8<--- tandem $$ ${1:-0} ---8<---"
+    printf '%s\n' "$m" >> "${LOG:-/dev/null}" 2>/dev/null
+    printf '%s' "$m"
+}
+
+# Everything after that marker. Prints nothing if the marker is not there,
+# which is honest: with no marker there is no "since", and guessing a line
+# number is what this replaced.
+t_log_desde() {
+    local marca="$1"
+    [ -n "$marca" ] || return 1
+    [ -f "${LOG:-}" ] || return 1
+    awk -v m="$marca" 'achou { print } $0 == m { achou = 1 }' "$LOG" 2>/dev/null
+}
 
 # -------------------------------------------------------------- messages
 #
@@ -1904,10 +1943,19 @@ t_lista_registro() {
     # Bumping the version instead would make those clients REJECT the whole
     # file and lose the list entirely, to gain nothing. The rule to keep is
     # therefore: append only, never reorder, never repurpose a column.
-    reg="$(printf '%s\t%s\t%s\t%s\t%s\t1\t%s\t-\t%s\t%s\t%s' \
+    # Field 12, appended under the same rule as 9-11: WHERE this lesson came
+    # from. "proprio" is a shop that worked it out for itself; "aplicado" is a
+    # shop that applied somebody else's and found it worked. They are different
+    # evidence and the far end must never add them together, or four hundred
+    # machines applying one suggestion read as eight hundred discovering it -
+    # the list confirming itself out of its own output.
+    local origem
+    origem="$(t_memoria_le "$prog" ORIGEM_LICAO 2>/dev/null)"
+    case "$origem" in aplicado) ;; *) origem=proprio ;; esac
+    reg="$(printf '%s\t%s\t%s\t%s\t%s\t1\t%s\t-\t%s\t%s\t%s\t%s' \
         "$id" "${arch:--}" "${verbos:--}" "${reprovados:--}" "$conf" "$(date +%Y-%m)" \
         "$(t_stack_wine)" "$(t_stack_winetricks)" \
-        "$(t_dedup_token "$id" 2>/dev/null || printf '-')")"
+        "$(t_dedup_token "$id" 2>/dev/null || printf '-')" "$origem")"
     # A date with a DAY identifies; year and month do not. And the slash of a
     # path that slipped in by mistake takes the whole record down instead of
     # leaking.
@@ -2000,6 +2048,14 @@ t_lista_linha() {
             # Field 9 is the Wine version, absent on every row written before
             # 4.9 - which is why "absent" has a weight of its own.
             w = (NF >= 9) ? $9 : "-"
+            # Field 12 is the ORIGIN, and a corroboration never SELECTS a
+            # lesson. A shop that applied a suggestion from this very list and found
+            # it worked is real evidence, and it is evidence downstream of the
+            # list itself - letting it feed the count that chooses the answer
+            # would be the list confirming itself out of its own output. It is
+            # counted separately, by t_lista_corroboracoes, and shown as its
+            # own number.
+            if (NF >= 12 && $12 == "aplicado") next
             if ($5 == "confirmado") {
                 conf[$3] += m * peso(w, $7)
                 bruto[$3] += m
@@ -2033,6 +2089,105 @@ t_lista_linha() {
             if (achou) printf "%s\t%d\n", bv, bbruto
             exit !achou
         }' "$TANDEM_LISTA"
+}
+
+# What other people installed on THIS file and found useless, as
+# "verb<TAB>reports" lines, worst first.
+#
+# The list has carried this since 3.4 and nothing ever read it: t_lista_linha's
+# awk touches fields 1, 3, 5, 6 and 7, and field 4 - the components that were
+# installed and did NOT fix it - was written by every client, accepted by the
+# intake, published by the rebuild, downloaded to every machine, and opened by
+# nobody. So a shop could be about to spend half an hour on dotnet48 that sixty
+# other shops had already burned on this exact installer without it helping,
+# with that fact sitting on the disk.
+#
+# It NEVER blocks and never subtracts from a suggestion: a verb can fail on one
+# machine and be exactly right on the next, which is why this returns a count
+# and a sentence rather than a veto. The weighting is the resolver's, so an old
+# report from a different Wine counts for less here too.
+t_lista_inuteis() {
+    local id="$1"
+    [ -f "$TANDEM_LISTA" ] || return 1
+    [ -n "$id" ] || return 1
+    local wine_agora mes_agora
+    wine_agora="$(t_stack_wine 2>/dev/null | cut -d. -f1)"
+    mes_agora="$(date +%Y-%m)"
+    awk -F'\t' -v alvo="$id" -v wine_agora="$wine_agora" -v mes_agora="$mes_agora" '
+        function meses(a, b,   pa, pb) {
+            if (a == "" || b == "") return 0
+            split(a, pa, "-"); split(b, pb, "-")
+            return (pb[1] - pa[1]) * 12 + (pb[2] - pa[2])
+        }
+        function peso(w, visto,   p, m, pw) {
+            p = 1
+            if (wine_agora == "" || w == "" || w == "-") { p = 0.75 }
+            else { split(w, pw, "."); if (pw[1] != wine_agora) p = 0.5 }
+            m = meses(visto, mes_agora)
+            if (m > 12) p = p * 0.75
+            if (m > 24) p = p * 0.66
+            if (m > 48) p = p * 0.5
+            return (p < 0.25) ? 0.25 : p
+        }
+        /^#/ { next }
+        $1 != alvo || $4 == "-" || $4 == "" { next }
+        {
+            m = ($6 ~ /^[0-9]+$/) ? $6 + 0 : 1
+            w = (NF >= 9) ? $9 : "-"
+            n = split($4, vs, ",")
+            for (i = 1; i <= n; i++) {
+                if (vs[i] == "") continue
+                # The honest count of REPORTS is what gets shown, exactly as in
+                # t_lista_linha - telling somebody "3.7 shops" is a number he
+                # cannot check against the file he can download and read.
+                bruto[vs[i]] += m
+                peso_de[vs[i]] += m * peso(w, $7)
+            }
+        }
+        END {
+            for (v in bruto) printf "%s\t%d\t%.3f\n", v, bruto[v], peso_de[v]
+        }' "$TANDEM_LISTA" 2>/dev/null |
+    sort -t"$(printf '\t')" -k3,3gr | cut -f1,2
+}
+
+# Has ANYBODY got this program working? A row whose verbs field is "-" is a
+# machine saying "I tried and nothing I installed helped" - the record the
+# intake goes out of its way to accept and the resolver drops on its first
+# line, because it is looking for a lesson and this is the absence of one.
+#
+# Returns 0 and prints the report count when that is the ONLY thing the list
+# knows about this file. Deliberately not when there is also a working lesson:
+# one shop failing where four hundred succeeded is a fact about that shop.
+t_lista_ninguem_conseguiu() {
+    local id="$1" nada
+    [ -f "$TANDEM_LISTA" ] || return 1
+    [ -n "$id" ] || return 1
+    t_lista_linha "$id" >/dev/null 2>&1 && return 1
+    nada="$(awk -F'\t' -v alvo="$id" '
+        /^#/ { next }
+        $1 != alvo { next }
+        ($3 == "-" || $3 == "") { n += ($6 ~ /^[0-9]+$/) ? $6 + 0 : 1 }
+        END { print n + 0 }' "$TANDEM_LISTA" 2>/dev/null)"
+    [ "${nada:-0}" -gt 0 ] || return 1
+    printf '%s' "$nada"
+}
+
+# How many reports say "I applied this lesson and it worked", for a given verb
+# set. Kept apart from the count that chooses the lesson on purpose - see the
+# note in t_lista_linha. This is the number that answers "has anybody else
+# actually got this to work using it?", which is a different and useful
+# question from "how many shops discovered it".
+t_lista_corroboracoes() {
+    local id="$1" verbos="$2"
+    [ -f "$TANDEM_LISTA" ] || return 1
+    [ -n "$id" ] && [ -n "$verbos" ] || return 1
+    awk -F'\t' -v alvo="$id" -v vs="$verbos" '
+        /^#/ { next }
+        $1 != alvo { next }
+        NF < 12 || $12 != "aplicado" { next }
+        $3 != vs { next }
+        $5 == "confirmado" || $5 == "entregue" { n += ($6 ~ /^[0-9]+$/) ? $6 + 0 : 1 }
+        END { if (n > 0) print n + 0 }' "$TANDEM_LISTA" 2>/dev/null
 }
 
 # Reads the downloaded list and returns the known verbs for this program.
@@ -2134,6 +2289,103 @@ t_lista_receber_ligado() {
 #
 # Once a day, by the same stamp mechanism the send path uses. A shop machine
 # that opens the same program forty times in a morning makes one request.
+# ============================================ is there a newer Tandem?
+#
+# THE DECISION BEHIND THIS, because the shape of it is the whole point:
+# Tandem does NOT update itself, and will not. Fetching the community list is
+# data that only ever becomes a suggestion; a .deb is code that runs as root.
+# The moment Tandem can replace its own binary from the internet, whoever
+# controls the release address owns every shop machine at once - and the
+# machine this was born on runs a point-of-sale system. That is rule №1 turned
+# on Tandem itself.
+#
+# So this only ever LOOKS. It reads the version number of the newest published
+# release and says so; installing stays a thing a person does, with a command
+# he can read, on a package he can check the checksum of.
+#
+# The proper destination is an apt repository, where the update arrives through
+# the same updater the owner already trusts and already gets asked about. That
+# needs a signing key, which is a secret only he can make - so it waits for
+# him, and this exists in the meantime rather than instead.
+TANDEM_VERSAO_URL="${TANDEM_VERSAO_URL:-https://api.github.com/repos/ChrnX0/Tandem/releases/latest}"
+
+t_versao_avisar_ligado() {
+    case "$(t_config_le AVISAR_VERSAO 2>/dev/null)" in
+        nao|não|no) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+# Is A strictly newer than B? dpkg knows the rules for Debian version strings
+# and this package is a .deb, so ask it rather than inventing a comparison.
+# sort -V is the fallback, and "equal" must answer NO in both.
+t_versao_mais_nova() {
+    local nova="$1" atual="$2" topo
+    [ -n "$nova" ] && [ -n "$atual" ] || return 1
+    [ "$nova" = "$atual" ] && return 1
+    if command -v dpkg >/dev/null 2>&1; then
+        dpkg --compare-versions "$nova" gt "$atual" && return 0
+        return 1
+    fi
+    topo="$(printf '%s\n%s\n' "$nova" "$atual" | sort -V | tail -1)"
+    [ "$topo" = "$nova" ]
+}
+
+# Reads the newest published version and remembers it. Runs in the BACKGROUND,
+# so nothing here ever delays a command - the answer is used on the next run,
+# exactly like the community list, and for the same reason.
+t_versao_busca() {
+    local corpo nova
+    [ -n "$TANDEM_VERSAO_URL" ] || return 1
+    if command -v curl >/dev/null 2>&1; then
+        corpo="$(curl -fsSL --max-time 20 "$TANDEM_VERSAO_URL" 2>/dev/null)" || return 1
+    elif command -v wget >/dev/null 2>&1; then
+        corpo="$(wget -q -T 20 -O - "$TANDEM_VERSAO_URL" 2>/dev/null)" || return 1
+    else
+        return 1
+    fi
+    # One field out of the JSON, without a JSON parser and without eval: the
+    # answer is somebody else's document, so it goes through t_versao_limpa
+    # before it is stored or ever shown.
+    nova="$(printf '%s' "$corpo" |
+            sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' |
+            head -1)"
+    nova="$(t_versao_limpa "$nova")"
+    [ "$nova" = "-" ] && return 1
+    t_config_grava VERSAO_DISPONIVEL "$nova"
+    t_diz "versao publicada mais recente: $nova (esta: $TANDEM_VERSAO)"
+    return 0
+}
+
+t_versao_talvez_verifica() {
+    local hoje
+    t_versao_avisar_ligado || return 1
+    [ -n "$TANDEM_ESTADO" ] || return 1
+    command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 1
+    hoje="$(date +%F)"
+    [ "$(t_config_le VERSAO_DIA 2>/dev/null)" = "$hoje" ] && return 1
+    # Stamped before the attempt, like the list: a machine with no route makes
+    # one failed request a day, not one per command.
+    t_config_grava VERSAO_DIA "$hoje"
+    ( t_versao_busca >/dev/null 2>&1 & ) 2>/dev/null
+    return 0
+}
+
+# The version to tell him about, or nothing. Reads only what a previous run
+# stored, so it costs no network and cannot delay anything.
+t_versao_nova_conhecida() {
+    local nova
+    # The switch is checked HERE and not only where the fetch happens, and that
+    # is a defect found by running it: gating only the fetch left the value a
+    # previous run had already stored, so "tandem versao nao-avisar" stopped
+    # the network call and went on printing the notice for ever. An off switch
+    # has to turn off the thing the owner can SEE, not the thing he cannot.
+    t_versao_avisar_ligado || return 1
+    nova="$(t_config_le VERSAO_DISPONIVEL 2>/dev/null)" || return 1
+    t_versao_mais_nova "$nova" "$TANDEM_VERSAO" || return 1
+    printf '%s' "$nova"
+}
+
 t_lista_talvez_atualiza() {
     local hoje
     t_lista_receber_ligado || { t_diz "lista: receber esta desligado"; return 1; }

@@ -1190,6 +1190,24 @@ acao_lista() {
     esac
 }
 
+# The switch behind the "there is a newer Tandem" notice. It exists because a
+# notice with no off switch is a nuisance, and a nuisance is something people
+# learn to dismiss unread - which costs the notice that actually matters.
+acao_versao() {
+    case "${1:-}" in
+        nao-avisar|nao|não|desligar)
+            t_config_grava AVISAR_VERSAO nao
+            t_ok "$(t_msg versao_avisar_desligado)" ;;
+        avisar|ligar|sim)
+            t_config_grava AVISAR_VERSAO sim
+            t_ok "$(t_msg versao_avisar_ligado)" ;;
+        # The same idiom the `version` command uses at the bottom of this
+        # file, and exempt for the same reason: a product name is not prose.
+        *)  echo "Tandem $VERSAO" ;;
+    esac
+    return 0
+}
+
 # Assembles the record for the owner to check and send. It sends NOTHING: a
 # shop's machine does not talk to any server by decision of an automation.
 acao_contribuir() {
@@ -1496,6 +1514,21 @@ if [ -n "${TANDEM_IDIOMA:-}" ] && ! t_idioma_revisado "$TANDEM_IDIOMA" &&
                      "$(t_idioma_nome "$TANDEM_IDIOMA")")" >&2
 fi
 
+# Is there a newer Tandem? It only ever LOOKS - see t_versao_busca for why this
+# will never install anything by itself. The check runs in the background and
+# the answer is used on the NEXT run, so nothing here waits on a network.
+#
+# Told once per version found, not once a day: a notice that repeats is a
+# notice people learn to scroll past, and this one has to survive being ignored
+# until he has a quiet minute.
+t_versao_talvez_verifica 2>/dev/null
+VERSAO_NOVA="$(t_versao_nova_conhecida 2>/dev/null)"
+if [ -n "$VERSAO_NOVA" ] &&
+   [ "$(t_config_le VERSAO_AVISADA 2>/dev/null)" != "$VERSAO_NOVA" ]; then
+    t_config_grava VERSAO_AVISADA "$VERSAO_NOVA"
+    printf '%s\n' "$(t_msg versao_nova_aviso "$VERSAO_NOVA" "$VERSAO")" >&2
+fi
+
 case "${1:-}" in
     ""|painel|panel)      acao_painel ;;
     install|instalar|abrir) shift; acao_install "$@" ;;
@@ -1518,6 +1551,7 @@ case "${1:-}" in
     memoria|memória)      shift; acao_memoria "$@" ;;
     esquecer|esqueca)     shift; acao_esquecer "$@" ;;
     lista)                shift; acao_lista "$@" ;;
+    versao|versão)        shift; acao_versao "$@" ;;
     enviar|envio)         shift; acao_enviar "$@" ;;
     contribuir|contribuicao) shift; acao_contribuir "$@" ;;
     socorro|ajuda-tecnica) acao_socorro ;;

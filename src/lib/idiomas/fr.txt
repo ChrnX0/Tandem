@@ -48,6 +48,23 @@ Je ne connais pas la langue « {1} ».
 
 Voir la liste avec :  tandem idioma
 
+@versao_nova_aviso
+Il existe un Tandem plus recent : {1}. Celui-ci est le {2}.
+
+Tandem ne l'installe pas tout seul, volontairement : cela voudrait dire que ce
+programme peut se remplacer lui-meme par internet, et sur une machine de
+commerce ce risque ne vaut pas la commodite. Pour mettre a jour, a votre aise :
+
+    https://github.com/ChrnX0/Tandem/releases/latest
+
+Pour arreter cet avis :  tandem versao nao-avisar
+
+@versao_avisar_desligado
+Entendu. Je ne vous signalerai plus les nouvelles versions.
+
+@versao_avisar_ligado
+Entendu. Je vous previendrai quand il y aura un Tandem plus recent.
+
 @idioma_nao_revisado_aviso
 Note : la traduction de Tandem en {1} n'a pas encore ete relue par une
 personne dont c'est la langue maternelle. Si une phrase sonne faux, c'est
@@ -389,6 +406,12 @@ personne
 @rep_saia_e_entre
 Si le double clic ne marche toujours pas, déconnectez-vous puis
 reconnectez-vous.
+
+@lista_ja_nao_ajudou
+
+Attention a {1} : sur ce meme fichier, {2} rapport(s) disent qu'il a ete
+installe et n'a PAS aide. Il peut encore etre le bon ici - mais si c'est un
+long telechargement, autant le savoir avant de commencer.
 
 @licao_origem_local
 La dernière fois, ce programme a eu besoin de

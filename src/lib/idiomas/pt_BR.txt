@@ -48,6 +48,23 @@ Não conheço o idioma "{1}".
 
 Veja a lista com:  tandem idioma
 
+@versao_nova_aviso
+Existe um Tandem mais novo: {1}. Este e o {2}.
+
+O Tandem nao instala sozinho, de proposito: isso significaria que este
+programa pode se trocar a si mesmo pela internet, e numa maquina de loja esse
+risco nao compensa a comodidade. Para atualizar, quando tiver um minuto:
+
+    https://github.com/ChrnX0/Tandem/releases/latest
+
+Para parar este aviso:  tandem versao nao-avisar
+
+@versao_avisar_desligado
+Certo. Nao vou mais avisar sobre versoes novas.
+
+@versao_avisar_ligado
+Certo. Aviso quando houver um Tandem mais novo.
+
 @idioma_nao_revisado_aviso
 Aviso: a traducao do Tandem para {1} ainda nao foi lida por quem fala
 essa lingua de nascenca. Se alguma frase soar estranha, e por isso - e
@@ -386,6 +403,12 @@ ninguém
 @rep_saia_e_entre
 Se ainda não funcionar com dois cliques, saia da sua conta e entre
 de novo.
+
+@lista_ja_nao_ajudou
+
+Cuidado com {1}: neste mesmo arquivo, {2} relato(s) dizem que ele foi
+instalado e NAO ajudou. Ainda pode ser o certo aqui - mas se for um download
+demorado, vale saber disso antes de comecar.
 
 @licao_origem_local
 Da última vez, este programa precisou

@@ -48,6 +48,22 @@ Tandem 界面语言：{1}
 
 用这个命令查看列表：  tandem idioma
 
+@versao_nova_aviso
+有更新的 Tandem：{1}。当前这个是 {2}。
+
+Tandem 故意不自动安装：那会意味着这个程序能通过网络替换它自己，
+在店面的机器上，这个风险不值得那点方便。等您有空时再更新：
+
+    https://github.com/ChrnX0/Tandem/releases/latest
+
+要停止这个提示：tandem versao nao-avisar
+
+@versao_avisar_desligado
+好的。我不会再提示新版本了。
+
+@versao_avisar_ligado
+好的。有更新的 Tandem 时我会告诉您。
+
 @idioma_nao_revisado_aviso
 提示：Tandem 的{1}翻译还没有母语者读过。
 如果某句话读起来别扭，原因就在这里——把它指出来，
@@ -362,6 +378,11 @@ Tandem 让读取程序去读文件,却没说是哪一个。
 
 @rep_saia_e_entre
 如果双击还是没反应,请退出账户再重新登录。
+
+@lista_ja_nao_ajudou
+
+请注意 {1}：在同一个文件上，有 {2} 份报告说装了它但没有帮助。
+在这里它仍可能是对的——不过如果下载很久，这件事值得在开始前知道。
 
 @licao_origem_local
 上次这个程序需要

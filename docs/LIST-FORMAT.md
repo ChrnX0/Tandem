@@ -66,6 +66,7 @@ identity  arch  verbs           failed       confidence  machines  seen        n
 | `machines` | how many REPORTS carried the same lesson — see below, it is not machines | `340` |
 | `seen` | date of the most recent report, `YYYY-MM` | `2026-08` |
 | `note` | one sentence, or empty | `needs the 32-bit build` |
+| `origin` | `proprio` (discovered here) or `aplicado` (applied from this list) — never summed | `proprio` |
 
 An empty field is `-`. A line starting with `#` is a comment. The first line
 declares the format version:
@@ -116,6 +117,30 @@ use: `bitola-errada` (arrived in a width this program cannot load),
 check for — half the winetricks verbs have no same-named DLL). `sem-alvo` is
 deliberately distinct from "nothing was wrong": conflating those two is the
 defect the whole field exists to fix, one level down.
+
+### Field 12, `origin`: who is telling you this
+
+`proprio` — a shop that worked the components out for itself, from its own
+failures. `aplicado` — a shop that applied a lesson already in this list, and
+found it worked.
+
+**They are never added together, and that is the whole reason the field
+exists.** A lesson taken from the list and reported back is corroboration, and
+corroboration is downstream of the list itself: if four hundred machines each
+applied one suggestion and their reports were summed with the original, the row
+would read as eight hundred independent discoveries. The list would be
+confirming itself out of its own output, and the number the owner is shown to
+decide with would be manufactured.
+
+So `aplicado` rows never select a lesson — `t_lista_linha` skips them outright —
+and are counted separately by `t_lista_corroboracoes`, which answers a
+different and genuinely useful question: *has anybody else actually got this to
+work using it?*
+
+A row written before 4.13 has no field 12 and is read as `proprio`, which is
+what it was: before this, the only lesson that could ever be reported was one
+the shop had rediscovered from scratch, because the shortcut that applies
+somebody else's never recorded anything at all.
 
 ### What `machines` actually counts, which is less than the name says
 

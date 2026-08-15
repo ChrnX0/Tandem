@@ -48,6 +48,23 @@ I do not know the language "{1}".
 
 See the list with:  tandem idioma
 
+@versao_nova_aviso
+There is a newer Tandem: {1}. This one is {2}.
+
+Tandem does not install it by itself, on purpose: it would mean this program
+can replace itself from the internet, and on a shop machine that is not a
+risk worth taking for the convenience. To update, when you have a minute:
+
+    https://github.com/ChrnX0/Tandem/releases/latest
+
+To stop this notice:  tandem versao nao-avisar
+
+@versao_avisar_desligado
+Right. I will not tell you about new versions any more.
+
+@versao_avisar_ligado
+Right. I will tell you when there is a newer Tandem.
+
 @idioma_nao_revisado_aviso
 Note: Tandem's {1} translation has not been read by a native speaker yet.
 If a sentence sounds wrong, that is why - and saying so is the easiest help
@@ -386,6 +403,12 @@ nobody
 @rep_saia_e_entre
 If a double click still does not work, log out of your account and log back
 in.
+
+@lista_ja_nao_ajudou
+
+Careful with {1}: on this same file, {2} report(s) say it was installed and
+did NOT help. It may still be right here - but if it is a long download, that
+is worth knowing before you start.
 
 @licao_origem_local
 Last time, this program needed
