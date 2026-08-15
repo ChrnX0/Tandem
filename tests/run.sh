@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "14474794 3952" "$soma_esperados"
+      "2774970559 3997" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -6154,6 +6154,39 @@ for palavra in lista_recebendo_auto lista_recebendo_nao; do
         fail "tandem lista says which way the switch is set" "$palavra" "absent"
 done
 pass "tandem lista says which way the switch is set"
+
+section "opened from inside a zip, which no reader can see"
+
+# Every pre-flight in this project reads the file's CONTENTS. None can see its
+# SITUATION, and one situation accounts for a whole class of "files it should
+# have brought with it are missing": commercial software reaches a Brazilian
+# shop as a zip over WhatsApp, and the owner double-clicks the .exe inside the
+# archive-manager window. The manager extracts that ONE file to a temporary
+# folder - without the .msi, the data folder and the DLLs beside it.
+orig() { TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_origem_do_arquivo "$1" || printf nada' _ "$1" 2>/dev/null; }
+equal "file-roller's temp folder is recognised" "zip" "$(orig /tmp/.fr-Ab3xY/setup.exe)"
+equal "so is engrampa's" "zip" "$(orig /tmp/engrampa-x/setup.exe)"
+equal "the document portal is recognised as its own case" "portal" \
+      "$(orig /run/user/1000/doc/a1b2/sistema.exe)"
+equal "a pen drive is recognised" "removivel" "$(orig /media/zero/PENDRIVE/inst.exe)"
+equal "and so is a card reader under /run/media" "removivel" \
+      "$(orig /run/media/zero/CARTAO/y.exe)"
+equal "an ordinary folder says nothing, which is the normal case" "nada" \
+      "$(orig /home/zero/Downloads/normal.exe)"
+# NOT an AppImage's own mount point. The first version of the pattern matched
+# /tmp/.mount_* and would have told somebody to "save the compressed folder
+# first" about a mounted AppImage - confident, and wrong.
+equal "an AppImage's mount point is not called a zip" "nada" \
+      "$(orig /tmp/.mount_AppXYZ/x.exe)"
+# It answers a TOKEN, never a sentence - the same rule the Python readers
+# follow, so the wording lives in the catalogue and gets translated.
+for tok in zip portal removivel; do
+    contem "the $tok case has a sentence in the catalogue" \
+           "origem_$tok" "$(cat "$ROOT/src/lib/idiomas/en.txt")"
+done
+contem "and the missing-files message carries it" \
+       "t_origem_do_arquivo" "$(cat "$ROOT/src/bin/tandem-exe")"
 
 section "something is said during the half-hour wait"
 

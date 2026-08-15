@@ -689,6 +689,49 @@ t_progresso_fecha() {
 # ---------------------------------------------------------------- prefix
 
 # Walks up the directory tree looking for the root of a Wine prefix.
+# WHERE this file is being opened from, when the place itself is the problem.
+#
+# Every pre-flight in this project reads the file's CONTENTS. None of them can
+# see its SITUATION, and one situation accounts for a whole class of "files it
+# should have brought with it are missing": commercial software reaches a
+# Brazilian shop as a zip over WhatsApp, and the owner double-clicks the .exe
+# inside the archive-manager window. The manager extracts that ONE file to a
+# temporary folder - without the .msi, the data folder and the DLLs beside it -
+# and hands it to us. "Files are missing next to it" is true and tells him
+# nothing he can act on.
+#
+# Answers a token, never a sentence, the same shape the readers use:
+#   zip       - a temporary folder an archive manager unpacked into
+#   portal    - handed over through the desktop portal, so the real folder is
+#               not visible to us either
+#   removivel - a pen drive or a phone, mounted under /media or /run/media
+# Prints nothing when the place says nothing, which is the normal case.
+#
+# The temp-directory naming is a CONVENTION, not an interface, so this is
+# additive only: a wrong guess costs an extra sentence, never a refusal.
+t_origem_do_arquivo() {
+    local f="${1:-}" d
+    [ -n "$f" ] || return 1
+    d="$(dirname -- "$f")"
+    case "$d" in
+        # file-roller unpacks to /tmp/.fr-XXXXXX; Ark and xarchiver use their
+        # own names under the same temp root.
+        # NOT /tmp/.mount_* : that is an AppImage's own FUSE mount, a
+        # different thing entirely, and telling somebody to "save the
+        # compressed folder first" about it would be confident wrong advice.
+        /tmp/.fr-*|/tmp/.ark*|/tmp/xarchiver*|\
+        /tmp/file-roller*|/tmp/engrampa*|/var/tmp/.fr-*)
+            printf 'zip'; return 0 ;;
+        # The document portal: the path is a per-application view, and the file
+        # the owner can actually see lives somewhere else entirely.
+        /run/user/*/doc/*|/run/user/*/gvfs/*|/run/flatpak/doc/*)
+            printf 'portal'; return 0 ;;
+        /media/*|/run/media/*|/mnt/*)
+            printf 'removivel'; return 0 ;;
+    esac
+    return 1
+}
+
 t_prefixo_do_arquivo() {
     local d
     d="$(dirname -- "$1")"

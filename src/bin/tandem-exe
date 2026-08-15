@@ -560,7 +560,26 @@ $(t_msg ainda_pedindo "${PEDIDAS# }")"
 
     if [ -z "$VERBOS" ]; then
         if [ -n "$ORFAS" ]; then
-            t_erro "$(t_msg faltam_arquivos_junto "$(printf '%s\n' "$ORFAS" | tr '\n' ' ')")"
+            # WHERE it was opened from, when the place itself is the cause.
+            # Every other pre-flight reads the file's contents; this reads its
+            # situation, which no reader can see. Commercial software reaches a
+            # Brazilian shop as a zip over WhatsApp, and double-clicking the
+            # .exe inside the archive-manager window extracts that ONE file
+            # without the .msi, the data folder and the DLLs beside it. "Files
+            # are missing next to it" is true and gives him nothing to do.
+            ONDE=""
+            case "$(t_origem_do_arquivo "$PROG" 2>/dev/null)" in
+                zip)       ONDE="
+
+$(t_msg origem_zip)" ;;
+                portal)    ONDE="
+
+$(t_msg origem_portal)" ;;
+                removivel) ONDE="
+
+$(t_msg origem_removivel)" ;;
+            esac
+            t_erro "$(t_msg faltam_arquivos_junto "$(printf '%s\n' "$ORFAS" | tr '\n' ' ')")$ONDE"
         elif grep -qi 'Bad EXE format\|not a valid Win32' "$LOG" 2>/dev/null; then
             t_erro "$(t_msg nao_e_programa_windows)"
         elif grep -qi '32-bit installation\|64-bit installation\|WINEARCH' "$LOG" 2>/dev/null; then

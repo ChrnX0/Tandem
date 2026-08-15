@@ -209,6 +209,25 @@ Já instalei o que este programa pedia:{1}
 
 E ele continua não abrindo. Provavelmente depende de algo que o Wine ainda não suporta, ou de um arquivo que deveria vir junto com ele.
 
+@origem_zip
+E foi quase certamente isso que aconteceu aqui: este programa foi aberto de
+DENTRO de uma pasta compactada. Abrir assim tira so o arquivo em que voce
+clicou, e deixa para tras tudo o que estava do lado.
+
+Salve a pasta compactada inteira em algum lugar primeiro — a Area de Trabalho
+serve —, abra ela ali para todos os arquivos sairem, e so entao de dois
+cliques no programa.
+
+@origem_portal
+Este programa foi entregue por outro aplicativo, entao nao consigo ver a pasta
+onde ele realmente esta. Se veio dentro de uma pasta compactada ou de um anexo,
+salve tudo numa pasta sua primeiro e abra a partir dali.
+
+@origem_removivel
+Este programa esta rodando direto de um pen drive ou de um celular. Copie a
+pasta inteira para este computador primeiro: instalador costuma procurar
+arquivos do lado dele, e um dispositivo removivel pode sumir no meio.
+
 @faltam_arquivos_junto
 O programa não abriu porque faltam arquivos que ele deveria trazer junto:
 

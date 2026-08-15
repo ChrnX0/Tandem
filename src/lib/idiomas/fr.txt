@@ -211,6 +211,25 @@ J'ai déjà installé ce que ce programme demandait :{1}
 
 Et il ne s'ouvre toujours pas. Il dépend sans doute de quelque chose que Wine ne gère pas encore, ou d'un fichier qui aurait dû l'accompagner.
 
+@origem_zip
+Et c'est presque surement ce qui est arrive ici : ce programme a ete ouvert
+DEPUIS L'INTERIEUR d'un dossier compresse. L'ouvrir ainsi n'en sort que le
+fichier clique, et laisse derriere tout ce qui etait a cote.
+
+Enregistrez d'abord le dossier compresse entier quelque part — le Bureau fait
+l'affaire —, ouvrez-le la pour que tous les fichiers en sortent, et seulement
+ensuite double-cliquez sur le programme.
+
+@origem_portal
+Ce programme a ete transmis par une autre application, je ne vois donc pas le
+dossier ou il se trouve vraiment. S'il venait d'un dossier compresse ou d'une
+piece jointe, enregistrez le tout dans un dossier a vous et ouvrez-le de la.
+
+@origem_removivel
+Ce programme s'execute directement depuis une cle USB ou un telephone. Copiez
+d'abord le dossier entier sur cet ordinateur : un installateur cherche souvent
+des fichiers a cote de lui, et un support amovible peut disparaitre en route.
+
 @faltam_arquivos_junto
 Le programme ne s'est pas ouvert parce qu'il manque des fichiers qu'il aurait dû apporter avec lui :
 

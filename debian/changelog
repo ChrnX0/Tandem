@@ -25,6 +25,25 @@ tandem (4.14) unstable; urgency=medium
     damage the delivery proof exists to prevent, arriving by a new route.
     Pinned for 0, 1 and 7.
 
+
+  * Tandem says when a program was opened from INSIDE a compressed folder.
+    Every pre-flight here reads the file's CONTENTS; none could see its
+    SITUATION, and one situation accounts for a whole class of "files it should
+    have brought with it are missing". Commercial software reaches a Brazilian
+    shop as a zip over WhatsApp, and double-clicking the .exe inside the
+    archive-manager window extracts that ONE file to a temporary folder -
+    without the .msi, the data folder and the DLLs beside it. "Files are
+    missing next to it" was true and gave him nothing to do about it.
+  * Three situations, three sentences: a temporary folder an archive manager
+    unpacked into, a file handed over through the desktop portal (where the
+    real folder is not visible to us either), and a pen drive or phone. The
+    reader answers a TOKEN and never a sentence, the same rule the Python
+    readers follow, so the wording lives in the catalogue and gets translated.
+  * Additive only, and it never refuses: the temp-directory naming is a
+    convention rather than an interface, so a wrong guess costs one extra
+    sentence. The first version of the pattern matched /tmp/.mount_* - an
+    AppImage's own FUSE mount - and would have told somebody to "save the
+    compressed folder first" about a mounted AppImage. Confident, and wrong.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 20:05:00 +0000
 
 tandem (4.13) unstable; urgency=medium
