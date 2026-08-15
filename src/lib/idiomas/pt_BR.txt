@@ -191,6 +191,13 @@ Posso instalar antes de tentar abrir?
 @licao_instalando
 Instalando o que este programa já pediu antes...
 
+@progresso_ha_minutos
+Ainda trabalhando. Ja vao {1} minuto(s) — este e demorado mesmo, e normal.
+
+@progresso_sem_novidade
+Nada de novo ha {1} minuto(s). Ainda pode terminar — mas se ficar assim,
+a conexao com a internet e a primeira coisa a conferir.
+
 @instalando_componente
 Instalando {1}...
 

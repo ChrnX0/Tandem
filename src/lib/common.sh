@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.13"
+TANDEM_VERSAO="4.14"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -614,6 +614,67 @@ t_progresso_texto() {
     fi
     printf '# %s\n' "$1" >&8 2>/dev/null
     return 0
+}
+
+# Runs a command that takes a long time, and SAYS SOMETHING while it runs.
+#
+# Nothing in this program ever spoke during the wait. t_progresso_abre opens a
+# pulsating bar with one static line of text and t_progresso_texto is called
+# once per component - so `winetricks -q dotnet48`, which is half an hour,
+# showed an identical unchanging bar for its whole duration. Behind a counter,
+# "downloading slowly", "stuck on a dead mirror" and "finished three seconds
+# ago" are the same picture, and the owner has a customer in front of him and
+# no way to tell whether to wait or give up.
+#
+# What it can honestly say is not a percentage - winetricks does not give one -
+# but two facts it does have: how long this has been going, and whether
+# anything has been written recently. "Still working, 6 minutes" and "nothing
+# new for 4 minutes" are different sentences, and the second is the one that
+# tells him it is worth checking his internet.
+#
+# It NEVER aborts. Killing a slow-but-working dotnet48 is worse than the
+# silence this replaces, so this only ever talks.
+#
+# The command runs in the BACKGROUND and this shell polls, rather than a
+# watcher process updating the bar: the main shell keeps sole ownership of
+# descriptor 8, so there is nothing to reap and no second writer to race with -
+# which is the same class of bug the log marker was written for.
+t_progresso_longo() {
+    local base="$1"; shift
+    local pid inicio agora decorrido tam_antes tam_agora parado=0
+    "$@" &
+    pid=$!
+    inicio=$SECONDS
+    tam_antes=0
+    while kill -0 "$pid" 2>/dev/null; do
+        sleep "${TANDEM_PROGRESSO_PASSO:-5}"
+        kill -0 "$pid" 2>/dev/null || break
+        agora=$SECONDS
+        decorrido=$(( (agora - inicio) / 60 ))
+        tam_agora="$(stat -c%s "${LOG:-/dev/null}" 2>/dev/null || echo 0)"
+        if [ "$tam_agora" != "$tam_antes" ]; then
+            parado=0
+            tam_antes="$tam_agora"
+        else
+            parado=$(( parado + ${TANDEM_PROGRESSO_PASSO:-5} ))
+        fi
+        # Only after a while, and only in whole minutes: a bar that changes
+        # every five seconds is noise, and "nothing new for 10 seconds" is
+        # normal for anything that downloads.
+        if [ "$parado" -ge "${TANDEM_PROGRESSO_CALADO:-120}" ]; then
+            # At least 1, never "nothing new for 0 minutes" - which is what a
+            # tuned-down threshold produces and reads as a program that cannot
+            # count.
+            local mudo=$(( parado / 60 )); [ "$mudo" -lt 1 ] && mudo=1
+            t_progresso_texto "$base
+$(t_msg progresso_sem_novidade "$mudo")"
+        elif [ $(( agora - inicio )) -ge "${TANDEM_PROGRESSO_FALA:-60}" ]; then
+            [ "$decorrido" -lt 1 ] && decorrido=1
+            t_progresso_texto "$base
+$(t_msg progresso_ha_minutos "$decorrido")"
+        fi
+    done
+    wait "$pid"
 }
 
 t_progresso_fecha() {

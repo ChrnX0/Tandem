@@ -193,6 +193,13 @@ May I install them before trying to open it?
 @licao_instalando
 Installing what this program has asked for before...
 
+@progresso_ha_minutos
+Still working. {1} minute(s) so far — this one is slow, it is normal.
+
+@progresso_sem_novidade
+Nothing new for {1} minute(s). It may still finish — but if it stays like
+this, the internet connection is the first thing to check.
+
 @instalando_componente
 Installing {1}...
 

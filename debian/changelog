@@ -1,3 +1,32 @@
+tandem (4.14) unstable; urgency=medium
+
+  * Something is said during the half-hour wait. t_progresso_abre opens a
+    pulsating bar with one static line and t_progresso_texto is called once per
+    component, so "winetricks -q dotnet48" showed an identical unchanging
+    picture for its whole half hour. Behind a counter, "downloading slowly",
+    "stuck on a dead mirror" and "finished three seconds ago" look the same,
+    and the owner has a customer in front of him and no way to tell whether to
+    wait or give up.
+  * It cannot show a percentage - winetricks does not give one - so it says the
+    two things it does know: how long this has been going, and whether anything
+    has been written recently. "Still working, 6 minutes" and "nothing new for
+    4 minutes" are different sentences, and the second is the one that tells
+    him it is worth looking at his internet.
+  * It NEVER aborts. Killing a slow-but-working dotnet48 is worse than the
+    silence it replaces, so this only ever talks.
+  * The command runs in the background and this shell polls, rather than a
+    watcher process updating the bar: the main shell keeps sole ownership of
+    descriptor 8, so there is nothing to reap and no second writer to race
+    with - the same class of bug the log marker was written for one version
+    ago.
+  * The exit status survives the wrapper, and that is the test that matters
+    most: losing it would make Tandem read a failed install as a success and
+    write a permanent receipt for a component that is not there - the exact
+    damage the delivery proof exists to prevent, arriving by a new route.
+    Pinned for 0, 1 and 7.
+
+ -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 20:05:00 +0000
+
 tandem (4.13) unstable; urgency=medium
 
   * Tandem says when there is a newer Tandem, and never installs it. The owner

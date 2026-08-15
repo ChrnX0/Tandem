@@ -186,6 +186,13 @@ sudo apt install wine32
 @licao_instalando
 جارٍ تثبيت ما سبق أن طلبه هذا البرنامج…
 
+@progresso_ha_minutos
+ما زال يعمل. مضت {1} دقيقة — هذا بطيء فعلًا، وهذا طبيعي.
+
+@progresso_sem_novidade
+لا جديد منذ {1} دقيقة. قد ينتهي رغم ذلك — لكن إن بقي هكذا،
+فاتصال الإنترنت هو أول ما ينبغي فحصه.
+
 @instalando_componente
 جارٍ تثبيت {1}…
 

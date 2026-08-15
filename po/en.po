@@ -343,6 +343,18 @@ msgctxt "licao_instalando"
 msgid "Installing what this program has asked for before..."
 msgstr "Installing what this program has asked for before..."
 
+msgctxt "progresso_ha_minutos"
+msgid "Still working. {1} minute(s) so far — this one is slow, it is normal."
+msgstr "Still working. {1} minute(s) so far — this one is slow, it is normal."
+
+msgctxt "progresso_sem_novidade"
+msgid ""
+"Nothing new for {1} minute(s). It may still finish — but if it stays like\n"
+"this, the internet connection is the first thing to check."
+msgstr ""
+"Nothing new for {1} minute(s). It may still finish — but if it stays like\n"
+"this, the internet connection is the first thing to check."
+
 msgctxt "instalando_componente"
 msgid "Installing {1}..."
 msgstr "Installing {1}..."

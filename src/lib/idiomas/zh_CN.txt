@@ -182,6 +182,13 @@ sudo apt install wine32
 @licao_instalando
 正在安装这个程序以前要过的东西……
 
+@progresso_ha_minutos
+还在处理。已经 {1} 分钟了——这一项本来就慢，属于正常。
+
+@progresso_sem_novidade
+已经 {1} 分钟没有任何动静了。它仍可能完成——但如果一直这样，
+首先要检查的就是网络连接。
+
 @instalando_componente
 正在安装 {1}……
 

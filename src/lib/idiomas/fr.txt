@@ -193,6 +193,13 @@ Je les installe avant d'essayer de l'ouvrir ?
 @licao_instalando
 Installation de ce que ce programme avait déjà demandé...
 
+@progresso_ha_minutos
+Toujours en cours. Deja {1} minute(s) — celui-ci est long, c'est normal.
+
+@progresso_sem_novidade
+Rien de nouveau depuis {1} minute(s). Cela peut encore aboutir — mais si ca
+reste ainsi, la connexion internet est la premiere chose a verifier.
+
 @instalando_componente
 Installation de {1}...
 

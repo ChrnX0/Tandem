@@ -192,6 +192,13 @@ propio entorno, que es de 64 bits.
 @licao_instalando
 Instalando lo que este programa ya pidió antes...
 
+@progresso_ha_minutos
+Sigue trabajando. Ya van {1} minuto(s) — este tarda de verdad, es normal.
+
+@progresso_sem_novidade
+Nada nuevo desde hace {1} minuto(s). Todavia puede terminar — pero si sigue
+asi, la conexion a internet es lo primero que hay que revisar.
+
 @instalando_componente
 Instalando {1}...
 
