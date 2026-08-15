@@ -48,6 +48,11 @@ Não conheço o idioma "{1}".
 
 Veja a lista com:  tandem idioma
 
+@idioma_nao_revisado_aviso
+Aviso: a traducao do Tandem para {1} ainda nao foi lida por quem fala
+essa lingua de nascenca. Se alguma frase soar estranha, e por isso - e
+dizer isso e a ajuda mais facil que este projeto pode receber:  tandem idioma
+
 @idioma_nao_revisado
 Aviso honesto: esta tradução ainda não foi conferida por alguém que fale
 {1} de berço. Ela foi feita com cuidado, mas pode ter erro de português
@@ -938,10 +943,10 @@ Não consegui instalar {1}.
 Foi isto que ele disse:
 
 @flatpak_loja_terminal
-Adicionar a loja "%s"? [s/N] 
+Adicionar a loja "{1}"? [s/N] 
 
 @flatpak_instalar_terminal
-Instalar "%s"? [s/N] 
+Instalar "{1}"? [s/N] 
 
 @este_programa
 este programa
@@ -1657,6 +1662,10 @@ A receita vai sair marcada assim. Pense duas vezes antes de mandar para alguém.
 Esta receita vale o que vale: o programa abriu sem erro, mas ninguém
 confirmou que funcionou de verdade. Ela sai marcada como "so-abriu".
 
+@rec_entregue
+Eu conferi que o que faltava chegou mesmo, mas ninguem confirmou que o
+programa funciona. Ela sai marcada como "entregue".
+
 @rec_nada_aprendido
 Ainda não aprendi nada sobre este programa.
 
@@ -1691,7 +1700,22 @@ Falta o curl ou o wget para baixar a lista.
 Tandem - Lista da comunidade
 
 @lista_uso
-Use:  tandem lista  |  tandem lista atualizar
+Uso:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar
+
+@lista_recebendo_auto
+O Tandem mantem esta lista atualizada sozinho, uma vez por dia, em segundo plano.
+Ele so BAIXA: nada sobre esta maquina sai por aqui.
+Para parar:  tandem lista desligar
+
+@lista_recebendo_nao
+A atualizacao automatica esta DESLIGADA. A lista so muda quando voce pedir.
+Para ligar de novo:  tandem lista ligar
+
+@lista_receber_ligado
+Certo. Vou manter a lista atualizada sozinho, uma vez por dia.
+
+@lista_receber_desligado
+Certo. Nao vou mais buscar a lista sozinho.
 
 @contrib_diga_qual
 Diga qual programa.
@@ -1928,6 +1952,23 @@ Tandem - identidade da máquina
 @logs_nenhum
 Ainda não há registros.
 
+@soc_titulo
+Relatorio para quem for te ajudar
+
+@soc_caminho_copiado
+Copiei o lugar do arquivo. Cole onde voce precisar.
+
+@soc_abrir_pasta
+Abro a pasta onde este arquivo esta, para voce anexar numa mensagem?
+
+@botao_abrir_pasta
+Abrir a pasta
+
+@soc_sem_gerenciador
+Nao consegui abrir a pasta aqui. O arquivo esta em:
+
+{1}
+
 @soc_pronto
 Relatório pronto:
 
@@ -1944,6 +1985,18 @@ Não consegui gerar o relatório.
 
 @mem_campo_resultado
 resultado:  
+
+@mem_campo_confirmado
+voce disse: 
+
+@mem_dono_disse_sim
+funcionou do jeito que voce esperava.
+
+@mem_dono_disse_nao
+NAO funcionou direito. A sua resposta vale mais que tudo abaixo.
+
+@mem_campo_prova
+conferi:    
 
 @mem_campo_arquitetura
 arquitetura: 
@@ -1994,7 +2047,7 @@ Programas do Windows que podem ser removidos:
 Para remover:  tandem desinstalar "<parte do nome>"
 
 @desinst_terminal
-Remover "%s"? Os arquivos dele serão apagados. [s/N] 
+Remover "{1}"? Os arquivos dele serão apagados. [s/N] 
 
 @alt_cabecalho
 Programas de Linux que fazem o trabalho de "{1}":
@@ -2051,6 +2104,20 @@ Ligar:     tandem enviar sim
 @env_desligar
 Desligar:  tandem enviar nao
 
+@env_ja_sairam
+Linhas que ja sairam desta maquina, no total: {1}
+
+@env_ver_enviados
+Ver tudo o que ja saiu:  cat {1}
+Apagar esse registro:  tandem esquecer enviados
+
+@esq_enviados_apagado
+Apagado: o registro de {1} linha(s) que esta maquina tinha enviado.
+O que ja foi enviado continua enviado - isto apaga so a copia guardada aqui.
+
+@esq_enviados_vazio
+Esta maquina ainda nao mandou nada, entao nao ha nada para apagar.
+
 @env_ver_fila
 Ver a fila inteira:  cat {1}
 
@@ -2089,7 +2156,7 @@ REGISTROS TÉCNICOS
 
 @prep_terminal
 O Tandem pode instalar o que está faltando:
-%s
+{1}
 
 Precisa de internet e da sua senha. Continuar? [s/N] 
 
@@ -2820,6 +2887,15 @@ Instalar? [s/N]
 
 @resposta_sim
 s
+
+@res_entregue
+O arquivo que faltava chegou mesmo, na bitola que este programa usa.
+
+@res_nao_chegou
+O que foi instalado nao colocou o arquivo que falta onde o programa procura.
+
+@res_sem_alvo
+Nao havia arquivo nenhum para eu conferir, entao nao posso dizer nem que sim nem que nao.
 
 @res_abriu
 Abriu.

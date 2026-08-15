@@ -378,9 +378,22 @@ acao_preparar() {
 
     if ! t_pergunta "$(t_msg prep_pergunta "$plano")" "$(t_msg botao_instalar_tudo)" "$(t_msg botao_agora_nao)"; then
         if [ -t 0 ]; then
-            printf "$(t_msg prep_terminal)" "$plano"
+            # NOT `printf "$(t_msg ...)" "$plano"`, which handed a catalogue
+            # message to printf as its FORMAT STRING - the one thing the {1}
+            # decision exists to prevent. These files will arrive from
+            # strangers, and a translator who writes "100% seguro" should not
+            # be able to break a prompt; a path with a percent sign in it is
+            # the other half, and this project already has a test with a folder
+            # called "50% off".
+            printf '%s' "$(t_msg prep_terminal "$plano")"
             read -r r
-            case "$r" in s|S|sim|SIM) ;; *) printf '%s\n' "$(t_msg cancelado)"; return 1 ;; esac
+            # And t_confirmou, not `case s|S|sim|SIM`. That comparison was
+            # copied into five HANDLERS and fixed in all five - and missed here,
+            # because the CLI is not a handler. Same scoping shape as the
+            # thirteenth miss of the literal counter. The screen prints [y/N] in
+            # English and [o/N] in French, so an owner who does exactly what it
+            # asks was told his install was cancelled.
+            t_confirmou "$r" || { printf '%s\n' "$(t_msg cancelado)"; return 1; }
         else
             t_erro "$(t_msg prep_sem_confirmacao)"
             return 1
@@ -551,9 +564,9 @@ acao_uninstall() {
     # risk, and giving up silently is a defect.
     if ! t_pergunta "$(t_msg desinst_pergunta "$nome")" "$(t_msg botao_remover)" "$(t_msg botao_cancelar)"; then
         if [ -t 0 ]; then
-            printf "$(t_msg desinst_terminal)" "$nome"
+            printf '%s' "$(t_msg desinst_terminal "$nome")"
             read -r r
-            case "$r" in s|S|sim|SIM) ;; *) printf '%s\n' "$(t_msg cancelado)"; return 1 ;; esac
+            t_confirmou "$r" || { printf '%s\n' "$(t_msg cancelado)"; return 1; }
         else
             t_erro "$(t_msg desinst_sem_confirmacao "$nome")"
             return 1
@@ -874,6 +887,8 @@ acao_receita() {
     case "$(t_confianca_da_licao "$prog")" in
         reprovado)
             t_aviso "$(t_msg rec_marcada_reprovado)" ;;
+        entregue)
+            t_aviso "$(t_msg rec_entregue)" ;;
         so-abriu)
             t_aviso "$(t_msg rec_so_abriu)" ;;
     esac
@@ -909,8 +924,35 @@ acao_memoria() {
         # "nao confirmou", "pasta sem permissao", "bitola errada". This is the
         # screen a shop owner opens to find out what happened, and the same
         # text goes into the tandem socorro report he sends to whoever helps.
+        # THE OWNER'S ANSWER COMES FIRST, because it outranks everything below
+        # it. Until now this screen did not show it AT ALL - `grep CONFIRMADO
+        # src/bin/tandem` returned nothing - while faithfully printing
+        # RESULTADO=abriu, which the exit code sets and the "no" branch of
+        # t_confirma_funcionou deliberately leaves alone. So the one program he
+        # had told Tandem was broken was reported back to him as "Result: it
+        # opened", and `tandem socorro` embeds this screen verbatim - meaning
+        # the report he sends to whoever is helping him ASSERTS the program
+        # works.
+        #
+        # RESULTADO stays on the screen underneath rather than being
+        # overwritten: "it launched and he says it does not work" is a more
+        # useful pair of facts than either one alone, and it is the shape of
+        # the case somebody helping him needs to see.
+        res="$(sed -n 's/^CONFIRMADO=//p' "$arq" | tail -1)"
+        case "$res" in
+            sim) saida="$saida  $(t_msg mem_campo_confirmado)$(t_msg mem_dono_disse_sim)"$'\n' ;;
+            nao) saida="$saida  $(t_msg mem_campo_confirmado)$(t_msg mem_dono_disse_nao)"$'\n' ;;
+        esac
         res="$(sed -n 's/^RESULTADO=//p' "$arq" | tail -1)"
         [ -n "$res" ] && saida="$saida  $(t_msg mem_campo_resultado)$(t_resultado_amigavel "$res")"$'\n'
+        # PROVA is what TANDEM checked, as opposed to what the owner said, and
+        # it is on this screen for the reason at the top of this function: a
+        # memory he cannot see is a memory he cannot correct. It is also the
+        # field that explains an otherwise baffling pair - two runs of the same
+        # program, both unanswered, one of which contributes to the list and one
+        # of which does not.
+        res="$(sed -n 's/^PROVA=//p' "$arq" | tail -1)"
+        [ -n "$res" ] && saida="$saida  $(t_msg mem_campo_prova)$(t_resultado_amigavel "$res")"$'\n'
         saida="$saida$(sed -n "
             s/^ARQUITETURA=/  $(t_msg mem_campo_arquitetura)/p
             s/^RESOLVERAM=/  $(t_msg mem_campo_resolveram)/p
@@ -926,6 +968,22 @@ acao_memoria() {
 acao_esquecer() {
     local filtro="${1:-}" arq prog n=0
     [ -n "$filtro" ] || { t_erro "$(t_msg esq_diga_o_nome)"; return 1; }
+    # The ledger of what has left this machine is the owner's to erase, and
+    # that is not a courtesy: section 3 of the idea ledger rejected telemetry
+    # on the rule "nothing the owner cannot see and cannot delete", and a
+    # record kept for his benefit that he cannot remove is a record kept
+    # against him. Erasing it changes nothing at the far end - what is sent is
+    # sent - and it says so.
+    if [ "$filtro" = enviados ]; then
+        if [ -f "$TANDEM_FILA.enviados" ]; then
+            n="$(t_envio_ja_enviados)"
+            rm -f -- "$TANDEM_FILA.enviados"
+            t_ok "$(t_msg esq_enviados_apagado "$n")"
+            return 0
+        fi
+        t_erro "$(t_msg esq_enviados_vazio)"
+        return 1
+    fi
     for arq in "$TANDEM_MEMORIA"/*.txt; do
         [ -f "$arq" ] || continue
         prog="$(sed -n 's/^PROGRAMA=//p' "$arq" | head -1)"
@@ -1055,14 +1113,32 @@ acao_lista() {
                 *) t_erro "$(t_msg lista_falta_curl)" ;;
             esac
             return $c ;;
+        ligar|receber)
+            t_config_grava RECEBER sim
+            t_ok "$(t_msg lista_receber_ligado)"
+            return 0 ;;
+        desligar)
+            t_config_grava RECEBER nao
+            t_ok "$(t_msg lista_receber_desligado)"
+            return 0 ;;
         ver|"")
+            # The state of the switch goes on this screen whichever way it is
+            # set. Receiving became automatic in 4.11, and an automatic thing
+            # the owner cannot see is an automatic thing he cannot turn off.
+            local estado
+            if t_lista_receber_ligado; then
+                estado="$(t_msg lista_recebendo_auto)"
+            else
+                estado="$(t_msg lista_recebendo_nao)"
+            fi
             if [ ! -f "$TANDEM_LISTA" ]; then
-                printf '%s\n' "$(t_msg lista_ainda_nao_baixada)" | t_texto "$(t_msg lista_titulo)"
+                printf '%s\n\n%s\n' "$(t_msg lista_ainda_nao_baixada)" "$estado" |
+                    t_texto "$(t_msg lista_titulo)"
                 return 1
             fi
-            printf '%s\n' "$(t_msg lista_resumo \
+            printf '%s\n\n%s\n' "$(t_msg lista_resumo \
                 "$(grep -vc '^#' "$TANDEM_LISTA")" "$TANDEM_LISTA" \
-                "$(head -1 "$TANDEM_LISTA")")" | t_texto "$(t_msg lista_titulo)"
+                "$(head -1 "$TANDEM_LISTA")")" "$estado" | t_texto "$(t_msg lista_titulo)"
             return 0 ;;
         *) t_erro "$(t_msg lista_uso)"; return 1 ;;
     esac
@@ -1085,13 +1161,7 @@ acao_contribuir() {
     # empty is the measurement of how many people take them. These two shortcuts
     # need no server: the clipboard, and a form that arrives already filled in.
     if t_tem_gui; then
-        if command -v xclip >/dev/null 2>&1; then
-            printf '%s' "$reg" | xclip -selection clipboard 2>/dev/null &&
-                t_ok "$(t_msg contrib_copiada)"
-        elif command -v wl-copy >/dev/null 2>&1; then
-            printf '%s' "$reg" | wl-copy 2>/dev/null &&
-                t_ok "$(t_msg contrib_copiada)"
-        fi
+        t_copia_para_area "$reg" && t_ok "$(t_msg contrib_copiada)"
         # The query parameter has to be the issue form's FIELD ID, and it was
         # "linha" while .github/ISSUE_TEMPLATE/list.yml calls that field
         # "record" - so the one shortcut that works opened an EMPTY form, while
@@ -1178,6 +1248,14 @@ acao_enviar() {
             printf '%s\n' "$(t_msg env_ninguem_decidiu)"
         fi
         printf '%s\n' "$(t_msg env_fila "$fila")"
+        # What has actually LEFT. Until 4.11 the machine kept no record of it:
+        # the sieve refusal and the 4xx refusal both park their line, and the
+        # one branch that succeeded destroyed it. So "what has this machine
+        # sent about my shop?" had no answer here - which is the question a
+        # shopkeeper, or whoever audits him, actually asks, and section 3 of
+        # the idea ledger rejected telemetry on exactly this rule: nothing the
+        # owner cannot see and cannot delete.
+        printf '%s\n' "$(t_msg env_ja_sairam "$(t_envio_ja_enviados)")"
         if [ -n "$TANDEM_LISTA_ENVIO" ]; then
             printf '%s\n' "$(t_msg env_endereco "$TANDEM_LISTA_ENVIO")"
         else
@@ -1188,6 +1266,8 @@ acao_enviar() {
         printf '%s\n' "$(t_msg env_ligar)"
         printf '%s\n' "$(t_msg env_desligar)"
         printf '%s\n' "$(t_msg env_ver_fila "$TANDEM_FILA")"
+        [ "$(t_envio_ja_enviados)" != 0 ] &&
+            printf '%s\n' "$(t_msg env_ver_enviados "$TANDEM_FILA.enviados")"
     } | t_texto "$(t_msg env_titulo)"
     return 0
 }
@@ -1231,7 +1311,28 @@ acao_socorro() {
     } > "$arq" 2>/dev/null
 
     if [ -s "$arq" ]; then
-        t_ok "$(t_msg soc_pronto "$arq")"
+        # NOT t_ok. This is the "send me the diagnosis" button, and t_ok returns
+        # as soon as notify-send succeeds - so on a graphical machine the whole
+        # message became a ten-second toast, and the owner was left to find a
+        # file in his home directory from a notification that had vanished.
+        # Worse, the paragraph that goes with it is the one that makes this
+        # feature defensible: the file holds HIS file paths, and a path
+        # sometimes carries a customer's name. He only really decides to send it
+        # if he has read that, and a toast is not somewhere anybody reads.
+        #
+        # A window, then the same two shortcuts acao_contribuir has had all
+        # along, thirty lines above this one.
+        printf '%s\n' "$(t_msg soc_pronto "$arq")" | t_texto "$(t_msg soc_titulo)"
+        t_copia_para_area "$arq" && t_ok "$(t_msg soc_caminho_copiado)"
+        if t_tem_gui && command -v xdg-open >/dev/null 2>&1 &&
+           t_pergunta "$(t_msg soc_abrir_pasta)" \
+                      "$(t_msg botao_abrir_pasta)" "$(t_msg botao_nao_obrigado)"; then
+            # Checked, not backgrounded: with no file manager xdg-open exits
+            # non-zero and saying nothing would be the silent failure this whole
+            # command exists to help somebody diagnose.
+            xdg-open "$(dirname -- "$arq")" >/dev/null 2>&1 ||
+                t_erro "$(t_msg soc_sem_gerenciador "$arq")"
+        fi
         return 0
     fi
     t_erro "$(t_msg soc_nao_gerou)"
@@ -1307,6 +1408,34 @@ acao_painel() {
 }
 
 # ------------------------------------------------------------------ main
+#
+# Say the translation is unreviewed, on the path people ACTUALLY arrive by.
+#
+# t_idioma_revisado had exactly two call sites, both inside acao_idioma - the
+# command a person types to CHANGE the language. But step 3 of
+# t_idioma_escolhe resolves from the system locale with nobody typing
+# anything, which is how almost everybody outside Brazil gets here. So this
+# project's own principle - shipping an unreviewed translation is defensible,
+# shipping it without saying so is not - was honoured only for the minority,
+# and everybody else got the unreviewed prose with the honesty stripped off.
+#
+# It is also the only recruitment channel that exists for the five catalogues
+# waiting on review: the people running them are native speakers who do not
+# know there is anything to review.
+#
+# On stderr and never a dialog, once per (language, version) - a new version
+# adds new lines to those catalogues, so the notice is worth repeating then and
+# not before. And deliberately NOT from t_primeira_vez, which tandem-exe calls
+# at line 9, between the double click and the program: nothing belongs there.
+if [ -n "${TANDEM_IDIOMA:-}" ] && ! t_idioma_revisado "$TANDEM_IDIOMA" &&
+   [ "$(t_config_le REVISAO_AVISADA 2>/dev/null)" != "$TANDEM_IDIOMA:$VERSAO" ]; then
+    t_config_grava REVISAO_AVISADA "$TANDEM_IDIOMA:$VERSAO"
+    # The NAME, not the locale code. "fr" is a thing a programmer reads;
+    # t_idioma_nome exists and every other screen already uses it.
+    printf '%s\n' "$(t_msg idioma_nao_revisado_aviso \
+                     "$(t_idioma_nome "$TANDEM_IDIOMA")")" >&2
+fi
+
 case "${1:-}" in
     ""|painel|panel)      acao_painel ;;
     install|instalar|abrir) shift; acao_install "$@" ;;

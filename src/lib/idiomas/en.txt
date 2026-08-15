@@ -48,6 +48,11 @@ I do not know the language "{1}".
 
 See the list with:  tandem idioma
 
+@idioma_nao_revisado_aviso
+Note: Tandem's {1} translation has not been read by a native speaker yet.
+If a sentence sounds wrong, that is why - and saying so is the easiest help
+this project can be given:  tandem idioma
+
 @idioma_nao_revisado
 An honest warning: this translation has not yet been checked by somebody who
 speaks {1} as their first language. It was made with care, but it may hold a
@@ -941,10 +946,10 @@ I could not install {1}.
 This is what it said:
 
 @flatpak_loja_terminal
-Add the store "%s"? [y/N] 
+Add the store "{1}"? [y/N] 
 
 @flatpak_instalar_terminal
-Install "%s"? [y/N] 
+Install "{1}"? [y/N] 
 
 @este_programa
 this program
@@ -1668,6 +1673,10 @@ The recipe goes out marked that way. Think twice before sending it to somebody.
 This recipe is worth what it is worth: the program opened with no error, but
 nobody confirmed it actually worked. It goes out marked "so-abriu".
 
+@rec_entregue
+I checked that what was missing really did arrive, but nobody confirmed the
+program itself works. It goes out marked "entregue".
+
 @rec_nada_aprendido
 I have not learnt anything about this program yet.
 
@@ -1702,7 +1711,22 @@ curl or wget is missing, and one of them is needed to download the list.
 Tandem - Community list
 
 @lista_uso
-Use:  tandem lista  |  tandem lista atualizar
+Use:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar
+
+@lista_recebendo_auto
+Tandem keeps this list up to date on its own, once a day, in the background.
+It only DOWNLOADS: nothing about this machine goes out this way.
+To stop it:  tandem lista desligar
+
+@lista_recebendo_nao
+Automatic updating is OFF. The list only changes when you ask for it.
+To turn it back on:  tandem lista ligar
+
+@lista_receber_ligado
+Right. I will keep the list up to date on my own, once a day.
+
+@lista_receber_desligado
+Right. I will not fetch the list on my own any more.
 
 @contrib_diga_qual
 Say which program.
@@ -1938,6 +1962,23 @@ Tandem - machine identity
 @logs_nenhum
 There are no logs yet.
 
+@soc_titulo
+Report for whoever is helping you
+
+@soc_caminho_copiado
+I copied the file's location. Paste it wherever you need it.
+
+@soc_abrir_pasta
+Shall I open the folder this file is in, so you can attach it to a message?
+
+@botao_abrir_pasta
+Open the folder
+
+@soc_sem_gerenciador
+I could not open the folder here. The file is at:
+
+{1}
+
 @soc_pronto
 Report ready:
 
@@ -1954,6 +1995,18 @@ I could not produce the report.
 
 @mem_campo_resultado
 result:     
+
+@mem_campo_confirmado
+you said:   
+
+@mem_dono_disse_sim
+it worked the way you expected.
+
+@mem_dono_disse_nao
+it did NOT work properly. Your answer outranks everything below.
+
+@mem_campo_prova
+I checked:  
 
 @mem_campo_arquitetura
 architecture:
@@ -2004,7 +2057,7 @@ Windows programs that can be removed:
 To remove one:  tandem desinstalar "<part of the name>"
 
 @desinst_terminal
-Remove "%s"? Its files will be deleted. [y/N] 
+Remove "{1}"? Its files will be deleted. [y/N] 
 
 @alt_cabecalho
 Linux programs that do the job of "{1}":
@@ -2060,6 +2113,20 @@ Turn on:   tandem enviar sim
 @env_desligar
 Turn off:  tandem enviar nao
 
+@env_ja_sairam
+Lines that have left this machine, ever: {1}
+
+@env_ver_enviados
+See everything that has left:  cat {1}
+Erase that record:  tandem esquecer enviados
+
+@esq_enviados_apagado
+Erased: the record of {1} line(s) this machine had sent.
+What was already sent stays sent - this only erases the copy kept here.
+
+@esq_enviados_vazio
+This machine has not sent anything yet, so there is nothing to erase.
+
 @env_ver_fila
 See the whole queue:  cat {1}
 
@@ -2097,7 +2164,7 @@ TECHNICAL LOGS
 
 @prep_terminal
 Tandem can install what is missing:
-%s
+{1}
 
 It needs the internet and your password. Continue? [y/N] 
 
@@ -2786,6 +2853,15 @@ Install? [y/N]
 
 @resposta_sim
 y
+
+@res_entregue
+The file it was missing did arrive, in the width this program can use.
+
+@res_nao_chegou
+What was installed did not put the missing file where the program looks.
+
+@res_sem_alvo
+There was no file I could check for, so I cannot say either way.
 
 @res_abriu
 It opened.

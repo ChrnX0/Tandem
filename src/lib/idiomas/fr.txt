@@ -48,6 +48,11 @@ Je ne connais pas la langue « {1} ».
 
 Voir la liste avec :  tandem idioma
 
+@idioma_nao_revisado_aviso
+Note : la traduction de Tandem en {1} n'a pas encore ete relue par une
+personne dont c'est la langue maternelle. Si une phrase sonne faux, c'est
+pour cela - et le dire est l'aide la plus simple a apporter :  tandem idioma
+
 @idioma_nao_revisado
 Un avertissement honnête : cette traduction n'a pas encore été relue par une
 personne dont {1} est la langue maternelle. Elle a été faite avec soin, mais
@@ -951,10 +956,10 @@ Je n'ai pas pu installer {1}.
 Voici ce qu'il a dit :
 
 @flatpak_loja_terminal
-Ajouter la logithèque « %s » ? [o/N] 
+Ajouter la logithèque « {1} » ? [o/N] 
 
 @flatpak_instalar_terminal
-Installer « %s » ? [o/N] 
+Installer « {1} » ? [o/N] 
 
 @este_programa
 ce programme
@@ -1697,6 +1702,10 @@ Cette recette vaut ce qu'elle vaut : le programme s'est ouvert sans erreur,
 mais personne n'a confirmé qu'il fonctionnait vraiment. Elle sort marquée
 « so-abriu ».
 
+@rec_entregue
+J'ai verifie que ce qui manquait est bien arrive, mais personne n'a confirme
+que le programme fonctionne. Elle sort marquee « entregue ».
+
 @rec_nada_aprendido
 Je n'ai encore rien appris sur ce programme.
 
@@ -1732,7 +1741,22 @@ curl ou wget manque pour télécharger la liste.
 Tandem - Liste de la communauté
 
 @lista_uso
-Utilisez :  tandem lista  |  tandem lista atualizar
+Usage :  tandem lista  |  tandem lista atualizar  |  tandem lista desligar
+
+@lista_recebendo_auto
+Tandem tient cette liste a jour tout seul, une fois par jour, en arriere-plan.
+Il ne fait que TELECHARGER : rien de cette machine ne sort par la.
+Pour l'arreter :  tandem lista desligar
+
+@lista_recebendo_nao
+La mise a jour automatique est DESACTIVEE. La liste ne change que si vous le demandez.
+Pour la reactiver :  tandem lista ligar
+
+@lista_receber_ligado
+Entendu. Je tiendrai la liste a jour tout seul, une fois par jour.
+
+@lista_receber_desligado
+Entendu. Je n'irai plus chercher la liste tout seul.
 
 @contrib_diga_qual
 Indiquez quel programme.
@@ -1977,6 +2001,23 @@ Tandem - identité de la machine
 @logs_nenhum
 Il n'y a pas encore de journaux.
 
+@soc_titulo
+Rapport pour la personne qui vous aide
+
+@soc_caminho_copiado
+J'ai copie l'emplacement du fichier. Collez-le ou vous en avez besoin.
+
+@soc_abrir_pasta
+J'ouvre le dossier ou se trouve ce fichier, pour que vous le joigniez a un message ?
+
+@botao_abrir_pasta
+Ouvrir le dossier
+
+@soc_sem_gerenciador
+Je n'ai pas pu ouvrir le dossier ici. Le fichier est dans :
+
+{1}
+
 @soc_pronto
 Rapport prêt :
 
@@ -1993,6 +2034,18 @@ Je n'ai pas pu générer le rapport.
 
 @mem_campo_resultado
 résultat :  
+
+@mem_campo_confirmado
+vous :      
+
+@mem_dono_disse_sim
+il a marche comme vous l'attendiez.
+
+@mem_dono_disse_nao
+il n'a PAS bien marche. Votre reponse prime sur tout ce qui suit.
+
+@mem_campo_prova
+verifie :   
 
 @mem_campo_arquitetura
 architecture:
@@ -2043,7 +2096,7 @@ Programmes Windows qui peuvent être supprimés :
 Pour supprimer :  tandem desinstalar "<partie du nom>"
 
 @desinst_terminal
-Supprimer « %s » ? Ses fichiers seront effacés. [o/N] 
+Supprimer « {1} » ? Ses fichiers seront effacés. [o/N] 
 
 @alt_cabecalho
 Programmes Linux qui font le travail de « {1} » :
@@ -2101,6 +2154,20 @@ Activer :  tandem enviar sim
 @env_desligar
 Désactiver : tandem enviar nao
 
+@env_ja_sairam
+Lignes deja parties de cette machine, au total : {1}
+
+@env_ver_enviados
+Voir tout ce qui est parti :  cat {1}
+Effacer ce registre :  tandem esquecer enviados
+
+@esq_enviados_apagado
+Efface : le registre de {1} ligne(s) que cette machine avait envoyees.
+Ce qui est parti reste parti - ceci n'efface que la copie gardee ici.
+
+@esq_enviados_vazio
+Cette machine n'a encore rien envoye, il n'y a donc rien a effacer.
+
 @env_ver_fila
 Voir toute la file :  cat {1}
 
@@ -2139,7 +2206,7 @@ JOURNAUX TECHNIQUES
 
 @prep_terminal
 Tandem peut installer ce qui manque :
-%s
+{1}
 
 Il faut internet et votre mot de passe. Continuer ? [o/N] 
 
@@ -2877,6 +2944,15 @@ Installer ? [o/N]
 
 @resposta_sim
 o
+
+@res_entregue
+Le fichier qui manquait est bien arrive, dans la largeur que ce programme utilise.
+
+@res_nao_chegou
+Ce qui a ete installe n'a pas mis le fichier manquant la ou le programme le cherche.
+
+@res_sem_alvo
+Il n'y avait aucun fichier a verifier, je ne peux donc dire ni oui ni non.
 
 @res_abriu
 Il s'est ouvert.

@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3663130455 3619" "$soma_esperados"
+      "1128207659 3827" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "2376315265 2030" "$soma_padroes"
+      "1776500573 2424" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1895,6 +1895,15 @@ for l in en pt_BR es fr zh_CN hi ar; do
 done
 equal "every language's prompt letter is one the code accepts" "" "$descasado"
 
+# ...and every prompt has to go THROUGH t_confirmou for that to mean anything.
+# The `case "$r" in s|S|sim|SIM)` comparison was copied into five handlers and
+# fixed in all five - and missed in src/bin/tandem, twice, because the CLI is
+# not a handler. That is the same scoping shape as the thirteenth miss of the
+# literal counter, and it left `tandem preparar` and `tandem desinstalar`
+# printing [y/N] in English and refusing the y the screen asked for.
+cru="$(grep -rn 'case "\$r" in *s|S|sim|SIM' "$ROOT"/src/bin/ 2>/dev/null || true)"
+equal "no prompt compares the answer by hand instead of asking t_confirmou" "" "$cru"
+
 # tandem-apk was the only one of the nine that wrote NOTHING to memory - not
 # even a RESULTADO. So "tandem memoria" knew nothing about an .apk, "tandem
 # socorro" carried nothing about Android, and a second attempt at the same file
@@ -2716,6 +2725,28 @@ equal "a value with a percent sign in it survives substitution" \
 /mnt/50% off/x.exe" \
       "$(TANDEM_IDIOMAS_DIR="$IDIOMAS_DIR" TANDEM_LIB="$ROOT/src/lib" bash -c \
          '. "'"$ROOT"'/src/lib/common.sh"; t_msg arquivo_sumiu "/mnt/50% off/x.exe"')"
+
+# ...and NO catalogue may carry a printf conversion at all, which the test above
+# could not see. Four messages did until 4.11 - prep_terminal, desinst_terminal
+# and the two flatpak prompts - because four call sites handed the message to
+# printf as its FORMAT STRING instead of substituting through t_msg. The value
+# being safe is not the point: these files will one day arrive from strangers,
+# and a translator who writes "100% seguro" would break a prompt in a language
+# nobody here reads. A translator is not somebody who should have to know what
+# a printf conversion is.
+com_conversao=""
+for c in "$ROOT"/src/lib/idiomas/*.txt; do
+    grep -qE '%[-+ #0-9.]*[sdiouxXeEfgGc]' "$c" 2>/dev/null &&
+        com_conversao="$com_conversao $(basename -- "$c")"
+done
+equal "no catalogue carries a printf conversion" "" "$com_conversao"
+
+# The other half, and the one that would let it back in: no message may be used
+# AS a format string. The {1} decision is only worth anything if nothing routes
+# around it.
+usado_como_formato="$(grep -rn 'printf "\$(t_msg' "$ROOT"/src/bin/ "$ROOT"/src/lib/ 2>/dev/null |
+                      grep -v '^\s*#' | grep -cv '# NOT' || true)"
+equal "no catalogue message is handed to printf as its format" "0" "$usado_como_formato"
 
 # Picking the language: the environment beats the file, the file beats the
 # system, and anything unrecognised lands on Portuguese rather than changing
@@ -3791,6 +3822,56 @@ L
 equal "an unmerged record counts as the one machine it is" \
       "1" "$(t_lista_maquinas "$ID_L")"
 
+# ------------------------------------------------------------------
+# "entregue" (4.11): Tandem proved the missing file arrived, in the right
+# width, and the owner never answered. Weaker than his word, stronger than a
+# shrug - and until 4.11 it was recorded as a shrug, so it contributed nothing
+# at all.
+lista_com <<L
+$ID_L	64	vcrun2022	-	entregue	9	2026-08	-
+L
+equal "a proven delivery is worth suggesting, unlike a bare so-abriu" \
+      "vcrun2022" "$(t_lista_consulta "$PROG_L")"
+equal "and the count shown is the honest number of reports, not the weight" \
+      "9" "$(t_lista_maquinas "$ID_L")"
+
+# The halving, stated as the only thing that can decide the row. 100 proven
+# deliveries weigh 50; 60 people who looked at the screen weigh 60. If the
+# weight were 1.0 the first row would win, so this test fails the moment
+# somebody "simplifies" entregue into a full report.
+lista_com <<L
+$ID_L	64	vcrun2010	-	entregue	100	2026-08	-
+$ID_L	64	vcrun2022	-	confirmado	60	2026-08	-
+L
+equal "a person's word outweighs nearly twice as many proven deliveries" \
+      "vcrun2022" "$(t_lista_consulta "$PROG_L")"
+
+# ...and the halving is not a veto: enough of them still win.
+lista_com <<L
+$ID_L	64	vcrun2010	-	entregue	200	2026-08	-
+$ID_L	64	vcrun2022	-	confirmado	60	2026-08	-
+L
+equal "enough proven deliveries do outweigh a smaller set of confirmations" \
+      "vcrun2010" "$(t_lista_consulta "$PROG_L")"
+
+# A rejection is a person saying it does NOT work, and it weighs a full report.
+# So an equal number of proven deliveries loses - which is the right way round:
+# the file arriving proves nothing about the program.
+lista_com <<L
+$ID_L	64	vcrun2022	-	entregue	50	2026-08	-
+$ID_L	64	vcrun2022	-	reprovado	50	2026-08	-
+L
+equal "as many rejections as proven deliveries silences the row" \
+      "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+
+# The record actually written by the send path has to be one the intake and the
+# rebuild both accept - the three have drifted apart before.
+lista_com <<L
+$ID_L	64	vcrun2022	-	so-abriu	9	2026-08	-
+L
+equal "a bare so-abriu still contributes nothing" \
+      "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+
 # Another file's rows are not this file's evidence.
 lista_com <<L
 outro	64	mfc42	-	confirmado	900	2026-08	-
@@ -4016,6 +4097,28 @@ PYSERV
         # The bytes that arrived have to be the record, and nothing else.
         equal "what arrived is exactly the record, byte for byte" \
               "$REG_BOM" "$(head -1 "$RECEBIDO" 2>/dev/null)"
+        # And the machine keeps a record of what left it. Until 4.11 the 2xx
+        # branch was the ONLY one of the three that destroyed its line: the
+        # sieve refusal and the 4xx refusal both park theirs under an explicit
+        # written rule. So "what has this machine sent about my shop?" had no
+        # answer on the machine - which is the question a shopkeeper, or
+        # whoever audits him, actually asks, and section 3 of the idea ledger
+        # rejected telemetry on exactly that rule: nothing the owner cannot see
+        # and cannot delete.
+        equal "a line that left is written down" "1" \
+              "$(linhas_de "$CASA_E/fila.tsv.enviados")"
+        # The month and not the day, for the same reason the record carries
+        # only the month: a date with a day identifies.
+        case "$(head -1 "$CASA_E/fila.tsv.enviados" 2>/dev/null)" in
+            [0-9][0-9][0-9][0-9]-[0-9][0-9]$(printf '\t')*"$REG_BOM")
+                pass "with the month it left, and the record beside it" ;;
+            *) fail "with the month it left, and the record beside it" \
+                    "YYYY-MM<TAB>$REG_BOM" \
+                    "$(head -1 "$CASA_E/fila.tsv.enviados" 2>/dev/null)" ;;
+        esac
+        equal "and the count the owner is shown is that many" "1" \
+              "$(env HOME="$CASA_E" TANDEM_FILA="$CASA_E/fila.tsv" \
+                 bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_envio_ja_enviados')"
         # The rate limit: a machine cannot be turned into a firehose.
         # Five DISTINCT records. The first version of this passed the counter as
         # an extra argument to bash -c, where it became $0 instead of feeding the
@@ -4253,6 +4356,114 @@ t_memoria_esquece "$PROG_S" 2>/dev/null
 equal "without a window, it does not invent a confirmation" \
       "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
 t_memoria_esquece "$PROG_S" 2>/dev/null
+
+# ------------------------------------------------------------------
+# The delivery proof reaching the LESSON (4.11).
+#
+# Before this, the proof computed three distinct outcomes and recorded none of
+# them: "I verified the missing file arrived and he never clicked" and "there
+# was nothing to verify and he never clicked" both came out "so-abriu", and
+# both travelled to somebody else's machine, in a recipe and in a list record,
+# as the same word.
+
+# Which outcome speaks for a whole run. The order is the entire content of the
+# function, so every pair that could be got backwards is pinned here.
+equal "one file proven to arrive, nothing wrong: the run is entregue" \
+      "entregue" "$(t_prova_do_run "entregue entregue")"
+equal "nothing checkable is not the same as nothing wrong" \
+      "sem-alvo" "$(t_prova_do_run "")"
+equal "a proven arrival outranks a verb there was nothing to check for" \
+      "entregue" "$(t_prova_do_run "entregue")"
+equal "one file provably missing sinks the whole run" \
+      "nao-chegou" "$(t_prova_do_run "entregue nao-chegou entregue")"
+equal "the wrong width sinks a run that was otherwise proven" \
+      "bitola-errada" "$(t_prova_do_run "entregue bitola-errada")"
+# The ordering defect this function was extracted to make visible: inline and
+# as a plain assignment, the LAST outcome spoke for the run, so a wrong-width
+# after a missing file reported the milder of the two.
+equal "a later wrong width does not overwrite an earlier missing file" \
+      "nao-chegou" "$(t_prova_do_run "nao-chegou bitola-errada")"
+equal "and the same holds in the other order" \
+      "nao-chegou" "$(t_prova_do_run "bitola-errada nao-chegou")"
+
+t_memoria_esquece "$PROG_S" 2>/dev/null
+t_memoria_grava "$PROG_S" PROVA entregue
+equal "a proven delivery with no answer is worth more than a shrug" \
+      "entregue" "$(t_confianca_da_licao "$PROG_S")"
+# The whole point of the four levels: only ONE of them lifts the lesson.
+for nivel in sem-alvo nao-chegou bitola-errada; do
+    t_memoria_grava "$PROG_S" PROVA "$nivel"
+    equal "PROVA=$nivel does not lift the lesson above so-abriu" \
+          "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
+done
+# The owner's word outranks any file check, in both directions. Getting this
+# backwards would let a file check overrule a person who looked at the screen
+# and said the program does not work.
+t_memoria_grava "$PROG_S" PROVA entregue
+t_memoria_grava "$PROG_S" CONFIRMADO nao
+equal "the owner saying no outranks a proven delivery" \
+      "reprovado" "$(t_confianca_da_licao "$PROG_S")"
+t_memoria_grava "$PROG_S" CONFIRMADO sim
+equal "the owner saying yes outranks a proven delivery too" \
+      "confirmado" "$(t_confianca_da_licao "$PROG_S")"
+t_memoria_esquece "$PROG_S" 2>/dev/null
+
+# ------------------------------------------------------------------
+# The owner's answer on the screen built to show him what Tandem learned.
+#
+# It was collected and never displayed: `grep CONFIRMADO src/bin/tandem`
+# returned NOTHING, while the screen faithfully printed RESULTADO=abriu, which
+# the exit code sets and the "no" branch deliberately leaves alone. So the one
+# program he had told Tandem was broken came back to him as "result: it
+# opened" - and `tandem socorro` embeds this screen verbatim, so the report he
+# sends to whoever is helping asserted that the program works.
+#
+# Run against the real command, not the library: this whole class of defect
+# lives in the gap between what a function stores and what a screen prints, and
+# only running the command can see it.
+MEMC="$TMPROOT/mem-confirmado"; mkdir -p "$MEMC"
+{
+    printf 'PROGRAMA=quebrado.exe\n'
+    printf 'RESULTADO=abriu\n'
+    printf 'CONFIRMADO=nao\n'
+} > "$MEMC/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt"
+TELA="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en TANDEM_MEMORIA="$MEMC" \
+        bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+case "$TELA" in
+    *"did NOT work"*) pass "the screen says the owner rejected the program" ;;
+    *) fail "the screen says the owner rejected the program" \
+            "a line about his answer" "$TELA" ;;
+esac
+# And it comes FIRST, because it outranks the exit code's verdict printed below
+# it. A screen that leads with "it opened" and mentions the rejection further
+# down is read as "it worked" by somebody skimming.
+LINHA_DONO="$(printf '%s\n' "$TELA" | grep -n "did NOT work" | cut -d: -f1)"
+LINHA_RES="$(printf '%s\n' "$TELA" | grep -n "result:" | cut -d: -f1)"
+if [ -n "$LINHA_DONO" ] && [ -n "$LINHA_RES" ] && [ "$LINHA_DONO" -lt "$LINHA_RES" ]; then
+    pass "the owner's answer is printed above the exit code's verdict"
+else
+    fail "the owner's answer is printed above the exit code's verdict" \
+         "his answer on an earlier line than result:" \
+         "answer=$LINHA_DONO result=$LINHA_RES"
+fi
+# The other answer, so the case statement cannot be one-sided.
+sed -i 's/^CONFIRMADO=nao/CONFIRMADO=sim/' "$MEMC/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt"
+TELA="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en TANDEM_MEMORIA="$MEMC" \
+        bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+case "$TELA" in
+    *"worked the way you expected"*) pass "and it says so when he confirmed it" ;;
+    *) fail "and it says so when he confirmed it" "a line about his answer" "$TELA" ;;
+esac
+# A memory with no answer must not invent one. The case statement matches only
+# sim and nao, and an absent field has to fall through both.
+sed -i '/^CONFIRMADO=/d' "$MEMC/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt"
+TELA="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en TANDEM_MEMORIA="$MEMC" \
+        bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+case "$TELA" in
+    *"you said"*) fail "with no answer it does not invent one" "no 'you said' line" "$TELA" ;;
+    *) pass "with no answer it does not invent one" ;;
+esac
+rm -rf "$MEMC"
 
 section "bitness: arriving is not arriving where this program looks"
 
@@ -5007,6 +5218,29 @@ else
          "newer than $DATA_2" "$DATA_1"
 fi
 
+# And the WEEKDAY has to be the weekday that date really was. lintian refuses
+# "debian-changelog-has-wrong-day-of-week" as a warning, the release step runs
+# it with --fail-on warning, and this has now cost the project a red CI run: an
+# entry written by hand said Fri for 2026-08-15, which was a Saturday. Nobody
+# checks a day name by eye, and the ordering guard above cannot see it - both
+# dates parse fine and sort correctly, because `date -d` simply ignores a
+# weekday that disagrees with the rest of the field.
+#
+# It is checked on every entry, not only the top one: an old entry's wrong day
+# is just as fatal to `lintian --fail-on warning`, and finding it during a
+# release is the wrong order.
+DIA_MAU=""
+while IFS= read -r d; do
+    dia_dito="${d%%,*}"
+    dia_real="$(date -d "${d#*, }" +%a 2>/dev/null)" || continue
+    [ -n "$dia_real" ] || continue
+    [ "$dia_dito" = "$dia_real" ] || DIA_MAU="$DIA_MAU$d (was a $dia_real) "
+done <<EOF
+$(grep '^ -- ' debian/changelog | sed 's/^ -- [^>]*>  //')
+EOF
+equal "every changelog entry names the weekday that date really was" \
+      "" "$DIA_MAU"
+
 # lintian refuses a changelog line over 80 columns, and the release step runs it
 # with --fail-on warning while demanding ZERO output - so eight lines at 81 and
 # 82 columns turned a green suite into a red release. Found by CI rather than
@@ -5116,6 +5350,95 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 else
     skip "desktop-file-validate" "not installed"
 fi
+
+section "the catalogue and the code agree, in both directions"
+
+# Three questions this project is one edit away from failing, and the third is
+# the one that puts nonsense on a shop counter:
+#   1. a key called and not defined - t_msg prints the KEY NAME, which is right
+#      for a log and is jargon on screen;
+#   2. a key defined and never called - translator effort in seven languages on
+#      a message nobody reads, and five catalogues are still unreviewed;
+#   3. PLACEHOLDER PARITY - a message reading "it asks for Java {1} and the one
+#      here is {2}" called with one argument renders a literal "{2}".
+if [ -f "$ROOT/tools/chaves-e-chamadas.py" ]; then
+    SAIDA_CC="$(cd "$ROOT" && python3 tools/chaves-e-chamadas.py 2>&1)"
+    N_CC="$(printf '%s\n' "$SAIDA_CC" | awk '/^CHAMADAS/ { print $2 }')"
+    if [ "${N_CC:-999}" = "0" ]; then
+        pass "every t_msg call matches the message it calls"
+    else
+        fail "every t_msg call matches the message it calls" "0" "$SAIDA_CC"
+    fi
+
+    # It has to actually catch one, and the argument counter's FIRST version
+    # did not: it returned a number for everything, counted the words inside a
+    # "$(...)" argument, and matched t_msg inside a COMMENT - nine findings,
+    # nine of them wrong. A count that is mostly noise gets ignored, and that is
+    # how a real finding goes unread. It refuses to guess now: a call whose
+    # arguments nest a substitution is reported as unchecked, never as clean.
+    PROVA_CC="$(cd "$ROOT" && python3 - <<'FIMCC'
+import importlib.util
+spec = importlib.util.spec_from_file_location("c", "tools/chaves-e-chamadas.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+casos = [('t_msg k 21', 1), ('t_msg k "$A" "$B"', 2),
+         ('t_msg k "$(basename -- "$P")"', None), ('t_msg k', 0),
+         ('t_msg k a b c', 3), ("t_msg k 'um so'", 1)]
+saida = []
+for txt, esperado in casos:
+    mm = m.CHAMADA.search(txt)
+    saida.append("1" if m.conta_argumentos(txt, mm.end()) == esperado else "0")
+t = m.sem_comentarios('# t_msg fantasma\nt_erro "$(t_msg real)"')
+saida.append("1" if ("t_msg fantasma" not in t and "t_msg real" in t) else "0")
+print("".join(saida))
+FIMCC
+)"
+    equal "the argument counter is right, and a comment is not a call" \
+          "1111111" "$PROVA_CC"
+    # And the unchecked calls are REPORTED rather than counted as clean.
+    contem "and the calls it cannot count are reported, not assumed clean" \
+           "NAO CONFERIDAS" "$SAIDA_CC"
+else
+    skip "the catalogue and the code agree" "tools/chaves-e-chamadas.py is missing"
+fi
+
+section "who owns a type is asked of the tool the file manager uses"
+
+# This repository already proved xdg-mime is the wrong instrument: Nautilus
+# uses GIO, and GIO resolves the MIME SUBCLASS CHAIN while xdg-mime does not.
+# tandem-repair had it half right - it WRITES the association with both tools
+# and read it back with xdg-mime alone, so the before/after report (the whole
+# point of that command) could say "nobody" about a type a text editor really
+# owns through text/plain.
+#
+# .flatpakref is declared sub-class-of text/plain, which is exactly the case
+# where "nobody" is both wrong and worse than the truth: with Tandem's
+# association gone, a double-clicked .flatpakref opens in a text editor rather
+# than doing nothing.
+if command -v gio >/dev/null 2>&1; then
+    # A type Tandem never touches, so the answer is the system's own.
+    GIO_DIZ="$(gio mime text/sgml 2>/dev/null | sed -n 's/^Default application for .*: *//p' | head -1)"
+    XDG_DIZ="$(xdg-mime query default text/sgml 2>/dev/null | head -1)"
+    NOSSO="$(TANDEM_LIB="$ROOT/src/lib" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; t_dono_do_tipo text/sgml' 2>/dev/null)"
+    equal "Tandem's answer is the file manager's answer" "$GIO_DIZ" "$NOSSO"
+    # And this machine is one where the two tools actually disagree, so the
+    # assertion above is not passing by coincidence. If they ever agree here,
+    # the test says so rather than quietly proving nothing.
+    if [ "$GIO_DIZ" != "$XDG_DIZ" ]; then
+        pass "and the two tools really do disagree on this machine"
+    else
+        skip "the two tools disagree on this machine" \
+             "gio and xdg-mime agree on text/sgml here, so this proves nothing"
+    fi
+else
+    skip "who owns a type is asked of the tool the file manager uses" "no gio"
+fi
+# No read site in tandem-repair may go back to the weaker tool.
+equal "tandem-repair asks no ownership question through xdg-mime" \
+      "0" "$(grep -c 'xdg-mime query default' "$ROOT/src/bin/tandem-repair")"
+# But WRITING still goes through both, because setting it in one is not enough.
+contem "while setting the association still goes through both tools" \
+       "xdg-mime default" "$(cat "$ROOT/src/bin/tandem-repair")"
 
 section "the stack field carries the version and nothing else"
 
@@ -5730,6 +6053,231 @@ naocontem "but a genuinely truncated file is not called a web page" \
           "web page saved under" \
           "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
              bash "$ROOT/src/bin/tandem-rpm" "$TMPROOT/curto.rpm" </dev/null 2>&1 | head -2)"
+
+section "an unreviewed translation says so to the people who did not choose it"
+
+# t_idioma_revisado had exactly two call sites, both inside acao_idioma - the
+# command a person types to CHANGE the language. But step 3 of t_idioma_escolhe
+# resolves from the system locale with nobody typing anything, which is how
+# almost everybody outside Brazil arrives. So this project's own principle -
+# shipping an unreviewed translation is defensible, shipping it without saying
+# so is not - was honoured only for the minority.
+REVV="$TMPROOT/revisao"; mkdir -p "$REVV/home"
+avisa() {
+    rm -rf "$REVV/home/.config"
+    # { cmd >/dev/null; } 2>&1 and not `2>&1 >/dev/null`: both keep stderr
+    # only, and shellcheck flags the second because it is the shape of a very
+    # common mistake. The suite demands zero warnings, and the clarified form
+    # says what it means anyway.
+    { env HOME="$REVV/home" XDG_CONFIG_HOME="$REVV/home/.config" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$1" \
+        bash "$ROOT/src/bin/tandem" version >/dev/null; } 2>&1
+}
+for l in fr es zh_CN hi ar; do
+    [ -n "$(avisa "$l")" ] ||
+        fail "an unreviewed catalogue announces itself ($l)" "a notice" "silence"
+done
+pass "every unreviewed catalogue announces itself without being asked"
+for l in en pt_BR; do
+    equal "a reviewed catalogue says nothing ($l)" "" "$(avisa "$l")"
+done
+# The name, not the locale code: "fr" is a thing a programmer reads, and
+# t_idioma_nome exists precisely for this.
+case "$(avisa fr)" in
+    *"French"*) pass "the notice names the language rather than the locale code" ;;
+    *) fail "the notice names the language rather than the locale code" \
+            "French" "$(avisa fr | head -1)" ;;
+esac
+# Once per (language, version). A new version adds new lines to those
+# catalogues, so it is worth repeating then and not before - and a notice on
+# every single command is a notice people learn to scroll past.
+env HOME="$REVV/home" XDG_CONFIG_HOME="$REVV/home/.config" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=fr \
+    bash "$ROOT/src/bin/tandem" version >/dev/null 2>&1
+equal "and it does not repeat on the next command" "" \
+      "$({ env HOME="$REVV/home" XDG_CONFIG_HOME="$REVV/home/.config" \
+             TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=fr \
+             bash "$ROOT/src/bin/tandem" version >/dev/null; } 2>&1)"
+# NOT from t_primeira_vez, which tandem-exe calls at line 9 - between the double
+# click and the program. Nothing belongs there.
+naocontem "the notice is not wired into the double-click path" \
+          "idioma_nao_revisado_aviso" "$(cat "$ROOT/src/bin/tandem-exe")"
+
+section "the list is received without anybody typing a command"
+
+# t_lista_atualiza had exactly ONE caller in the whole tree until 4.11 -
+# `tandem lista atualizar`, typed by hand. So on a machine whose owner has
+# never heard of that command, TANDEM_LISTA never existed, t_lista_consulta
+# always answered nothing, and every merge rule 4.4, 4.9 and 4.11 added was
+# unreachable code. Meanwhile sending is on by default: a machine that gives
+# and does not take is the wrong way round.
+RECV="$TMPROOT/receber"; mkdir -p "$RECV/home" "$RECV/estado"
+receber() {
+    env HOME="$RECV/home" XDG_CONFIG_HOME="$RECV/home/.config" \
+        TANDEM_ESTADO="$RECV/estado" TANDEM_LISTA_URL="file:///nao-existe-nunca" \
+        TANDEM_LIB="$ROOT/src/lib" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; '"$1"'' 2>/dev/null
+}
+equal "receiving is on by default, the way sending is" "0" \
+      "$(receber 't_lista_receber_ligado; echo $?')"
+equal "the first call of the day goes" "0" \
+      "$(receber 't_lista_talvez_atualiza >/dev/null; echo $?')"
+# Stamped BEFORE the attempt, not after: a machine with no route to the address
+# must make ONE failed request a day, not one per double click. That is the same
+# lesson the send path learned when a cap that counted only successes turned out
+# not to be a cap at all.
+equal "the second call the same day does not" "1" \
+      "$(receber 't_lista_talvez_atualiza >/dev/null; echo $?')"
+equal "and the switch turns it off by name" "1" \
+      "$(receber 't_config_grava RECEBER nao; t_config_grava LISTA_DIA ""
+                 t_lista_talvez_atualiza >/dev/null; echo $?')"
+equal "which t_lista_receber_ligado agrees with" "1" \
+      "$(receber 't_lista_receber_ligado; echo $?')"
+
+# tandem-exe is the one consumer - the record format describes Wine
+# dependencies and nothing else - and it is where the fetch has to be wired.
+if grep -q 't_lista_talvez_atualiza' "$ROOT/src/bin/tandem-exe"; then
+    pass "tandem-exe keeps the list fresh instead of asking a file nobody fetched"
+else
+    fail "tandem-exe keeps the list fresh instead of asking a file nobody fetched" \
+         "a call to t_lista_talvez_atualiza" "absent"
+fi
+# An automatic thing the owner cannot see is an automatic thing he cannot turn
+# off, so the state of the switch is on the screen either way.
+for palavra in lista_recebendo_auto lista_recebendo_nao; do
+    grep -q "$palavra" "$ROOT/src/bin/tandem" ||
+        fail "tandem lista says which way the switch is set" "$palavra" "absent"
+done
+pass "tandem lista says which way the switch is set"
+
+section "the report gets to a second human"
+
+# acao_socorro ended with t_ok, and t_ok RETURNS as soon as notify-send
+# succeeds - so on a graphical machine the whole message was a ten-second
+# toast, and the owner was left to find a file in his home directory from a
+# notification that had vanished. What went with it is the third paragraph, the
+# one that makes the feature defensible: the file shows names and paths of his
+# files. He only really decides to send it if he has read that.
+SOCV="$TMPROOT/socorro"; mkdir -p "$SOCV/home" "$SOCV/estado" "$SOCV/mem"
+SAIDA_SOC="$(HOME="$SOCV/home" TANDEM_ESTADO="$SOCV/estado" TANDEM_MEMORIA="$SOCV/mem" \
+             TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+             bash "$ROOT/src/bin/tandem" socorro 2>&1)"
+case "$SAIDA_SOC" in
+    *"names and paths of files"*)
+        pass "the warning about what the report contains reaches the owner" ;;
+    *) fail "the warning about what the report contains reaches the owner" \
+            "the paragraph about file paths" "$(printf '%s' "$SAIDA_SOC" | tail -5)" ;;
+esac
+case "$SAIDA_SOC" in
+    *tandem-socorro-*.txt*) pass "and it names the file it just wrote" ;;
+    *) fail "and it names the file it just wrote" "a path" "$SAIDA_SOC" ;;
+esac
+# Structural, because the defect is GUI-ONLY: on a terminal t_ok prints the
+# whole text and the old code looked fine here. The window is the fix, and a
+# test that cannot open a window has to check that the window is what is asked
+# for.
+if grep -q 't_ok "$(t_msg soc_pronto' "$ROOT/src/bin/tandem"; then
+    fail "the report is shown in a window, not a toast that vanishes" \
+         "soc_pronto through t_texto" "still going through t_ok"
+else
+    pass "the report is shown in a window, not a toast that vanishes"
+fi
+for atalho in t_copia_para_area soc_abrir_pasta; do
+    if grep -q "$atalho" "$ROOT/src/bin/tandem"; then
+        pass "socorro offers $atalho, the way contribuir already did"
+    else
+        fail "socorro offers $atalho, the way contribuir already did" \
+             "a call" "absent"
+    fi
+done
+# With nobody to show anything to there is nothing to copy to, and saying so is
+# the difference between a shortcut that failed and a promise that was never
+# kept.
+equal "with no graphical session there is no clipboard to copy to" "1" \
+      "$( ( unset DISPLAY WAYLAND_DISPLAY
+            TANDEM_LIB="$ROOT/src/lib" bash -c \
+            '. "'"$ROOT"'/src/lib/common.sh"; t_copia_para_area x; echo $?' ) 2>/dev/null )"
+
+section "a snap and a flatpak land where nothing was looking"
+
+# t_atalhos_do_sistema looked in /usr/share/applications and
+# /usr/local/share/applications and nowhere else, so `tandem programas`' whole
+# promise - GNOME under Wayland does not re-read the menu, and a program the
+# owner cannot find is a program he does not have - was quietly unkept for three
+# of the four package managers since 3.8. tandem-snap's "look in the menu for"
+# line had never once appeared, and tandem-flatpak did not call it at all.
+ATAJ="$TMPROOT/atalhos"
+mkdir -p "$ATAJ/xdg/applications" \
+         "$ATAJ/casa/.local/share/applications" \
+         "$ATAJ/casa/.local/share/flatpak/exports/share/applications"
+printf '[Desktop Entry]\nName=Do XDG_DATA_DIRS\n' > "$ATAJ/xdg/applications/a.desktop"
+printf '[Desktop Entry]\nName=Do XDG_DATA_HOME\n' > "$ATAJ/casa/.local/share/applications/b.desktop"
+printf '[Desktop Entry]\nName=Do flatpak do usuario\n' > "$ATAJ/casa/.local/share/flatpak/exports/share/applications/c.desktop"
+
+atalhos_com() {
+    env HOME="$ATAJ/casa" XDG_DATA_DIRS="$1" XDG_DATA_HOME="$2" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_atalhos_do_sistema' 2>/dev/null
+}
+
+LISTA_A="$(atalhos_com "$ATAJ/xdg" "")"
+case "$LISTA_A" in
+    *"/xdg/applications/a.desktop"*) pass "XDG_DATA_DIRS is read" ;;
+    *) fail "XDG_DATA_DIRS is read" "a.desktop in the list" "$LISTA_A" ;;
+esac
+case "$LISTA_A" in
+    *"/casa/.local/share/flatpak/exports/share/applications/c.desktop"*)
+        pass "a per-user flatpak export is found with no variable set for it" ;;
+    *) fail "a per-user flatpak export is found with no variable set for it" \
+            "c.desktop in the list" "$LISTA_A" ;;
+esac
+# The default for XDG_DATA_HOME is ~/.local/share, and a machine that leaves the
+# variable unset is the normal case rather than a corner - this container has
+# both variables EMPTY while all three export directories exist and hold files,
+# which is exactly the shape of a program started from a file manager.
+case "$LISTA_A" in
+    *"/casa/.local/share/applications/b.desktop"*)
+        pass "XDG_DATA_HOME falls back to ~/.local/share" ;;
+    *) fail "XDG_DATA_HOME falls back to ~/.local/share" "b.desktop in the list" "$LISTA_A" ;;
+esac
+
+# The same directory reachable two ways must not be walked twice: on a normal
+# desktop XDG_DATA_DIRS already contains /usr/share, and a doubled entry would
+# announce every newly installed program twice.
+# Anchored on the whole path on purpose: this function looks at the REAL system
+# directories too, by design, and the first version of this line counted
+# `a\.desktop` anywhere - which matched /usr/share/applications/openjdk-21-java
+# .desktop on the machine running the suite and reported a dedup failure that
+# was not there. A pattern loose enough to hit a real file is a test that
+# accuses the code of somebody else's filename.
+DOBRADO="$(atalhos_com "$ATAJ/xdg:$ATAJ/xdg" "" | grep -c "^$ATAJ/xdg/applications/a\.desktop\$" || true)"
+equal "a directory reachable twice is walked once" "1" "$DOBRADO"
+
+# The three export directories have to be named EXPLICITLY, because reading the
+# variables is not enough - measured, not assumed. This is the check that
+# catches somebody tidying the list back down to two entries.
+faltando=""
+for d in /var/lib/snapd/desktop /var/lib/flatpak/exports/share flatpak/exports/share; do
+    grep -q -- "$d" "$ROOT/src/lib/common.sh" || faltando="$faltando $d"
+done
+equal "snapd's and flatpak's export directories are named explicitly" "" "$faltando"
+
+# And the announcement reports only what is NEW, which is the whole point of
+# taking the list before the install.
+ANTES_T="$(atalhos_com "$ATAJ/xdg" "")"
+printf '[Desktop Entry]\nName=Recem instalado\n' > "$ATAJ/xdg/applications/novo.desktop"
+NOVOS="$(env HOME="$ATAJ/casa" XDG_DATA_DIRS="$ATAJ/xdg" XDG_DATA_HOME="" \
+    bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_anuncia_atalhos_do_sistema "$1"' _ "$ANTES_T" 2>/dev/null)"
+equal "only the newly appeared shortcut is announced" "Recem instalado" "$NOVOS"
+
+# tandem-flatpak is the handler that never asked at all.
+for b in tandem-snap tandem-deb tandem-flatpak; do
+    if grep -q 't_anuncia_atalhos_do_sistema' "$ROOT/src/bin/$b"; then
+        pass "$b tells the owner where the program went"
+    else
+        fail "$b tells the owner where the program went" \
+             "a call to t_anuncia_atalhos_do_sistema" "no call"
+    fi
+done
 
 section "the badge on the front page does not lie"
 

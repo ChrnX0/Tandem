@@ -48,6 +48,11 @@
 
 اطّلع على القائمة عبر:  tandem idioma
 
+@idioma_nao_revisado_aviso
+ملاحظة: ترجمة Tandem إلى {1} لم يقرأها بعد أحد لغته الأم.
+إن بدت جملة غريبة فهذا هو السبب - وقول ذلك أسهل مساعدة يمكن أن
+يتلقاها هذا المشروع:  tandem idioma
+
 @idioma_nao_revisado
 تنبيه صريح: هذه الترجمة لم يراجعها بعدُ شخص لغته الأم {1}. أُعِدَّت بعناية،
 لكنها قد تحتوي على عبارة تبدو مترجمة لا مكتوبة بـ{1}.
@@ -914,10 +919,10 @@ sudo apt install flatpak
 هذا ما قاله:
 
 @flatpak_loja_terminal
-أأضيف المتجر "%s"؟ [y/N] 
+أأضيف المتجر "{1}"؟ [y/N] 
 
 @flatpak_instalar_terminal
-أأثبّت "%s"؟ [y/N] 
+أأثبّت "{1}"؟ [y/N] 
 
 @este_programa
 هذا البرنامج
@@ -1622,6 +1627,10 @@ tandem portas soltar COM2               يلغي التثبيت
 لهذه الوصفة قيمتها بقدرها: فُتح البرنامج دون خطأ، لكن لم يؤكّد أحد أنه عمل
 فعلًا. تخرج موسومة بـ"so-abriu".
 
+@rec_entregue
+تحققت من أن الناقص وصل فعلًا، لكن لا أحد أكد أن البرنامج يعمل.
+تخرج موسومة بـ"entregue".
+
 @rec_nada_aprendido
 لم أتعلّم شيئًا عن هذا البرنامج بعد.
 
@@ -1655,7 +1664,22 @@ tandem portas soltar COM2               يلغي التثبيت
 Tandem - قائمة المجتمع
 
 @lista_uso
-الاستخدام:  tandem lista  |  tandem lista atualizar
+الاستعمال:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar
+
+@lista_recebendo_auto
+يبقي Tandem هذه القائمة محدثة من تلقاء نفسه، مرة في اليوم، في الخلفية.
+إنه ينزّل فقط: لا شيء عن هذا الجهاز يخرج من هنا.
+لإيقافه:  tandem lista desligar
+
+@lista_recebendo_nao
+التحديث التلقائي مُطفأ. لا تتغير القائمة إلا حين تطلب ذلك.
+لإعادة تشغيله:  tandem lista ligar
+
+@lista_receber_ligado
+حسنًا. سأبقي القائمة محدثة بنفسي، مرة في اليوم.
+
+@lista_receber_desligado
+حسنًا. لن أجلب القائمة من تلقاء نفسي بعد الآن.
 
 @contrib_diga_qual
 حدِّد البرنامج.
@@ -1887,6 +1911,23 @@ Tandem - هوية الجهاز
 @logs_nenhum
 لا توجد سجلات بعد.
 
+@soc_titulo
+تقرير لمن سيساعدك
+
+@soc_caminho_copiado
+نسخت مكان الملف. الصقه حيث تحتاجه.
+
+@soc_abrir_pasta
+هل أفتح المجلد الذي فيه هذا الملف، لترفقه برسالة؟
+
+@botao_abrir_pasta
+افتح المجلد
+
+@soc_sem_gerenciador
+لم أستطع فتح المجلد هنا. الملف في:
+
+{1}
+
 @soc_pronto
 التقرير جاهز:
 
@@ -1901,6 +1942,18 @@ Tandem - هوية الجهاز
 
 @mem_campo_resultado
 النتيجة:    
+
+@mem_campo_confirmado
+قلت:        
+
+@mem_dono_disse_sim
+عمل بالطريقة التي توقعتها.
+
+@mem_dono_disse_nao
+لم يعمل بشكل صحيح. إجابتك تعلو على كل ما يلي.
+
+@mem_campo_prova
+تحققت:      
 
 @mem_campo_arquitetura
 المعمارية:  
@@ -1951,7 +2004,7 @@ Tandem - اللغة
 للإزالة:  tandem desinstalar "<جزء من الاسم>"
 
 @desinst_terminal
-أأُزيل "%s"؟ ستُحذف ملفاته. [y/N] 
+أأُزيل "{1}"؟ ستُحذف ملفاته. [y/N] 
 
 @alt_cabecalho
 برامج لينكس التي تؤدّي عمل "{1}":
@@ -2006,6 +2059,20 @@ Tandem {1} — اختبار ذاتي على هذا الجهاز
 @env_desligar
 التعطيل:   tandem enviar nao
 
+@env_ja_sairam
+الأسطر التي غادرت هذا الجهاز، إجمالًا: {1}
+
+@env_ver_enviados
+اعرض كل ما غادر:  cat {1}
+امسح هذا السجل:  tandem esquecer enviados
+
+@esq_enviados_apagado
+مُسِح: سجل {1} سطر(أسطر) كان هذا الجهاز قد أرسلها.
+ما أُرسل يبقى مُرسَلًا - هذا يمسح النسخة المحفوظة هنا فقط.
+
+@esq_enviados_vazio
+لم يرسل هذا الجهاز شيئًا بعد، فلا يوجد ما يُمسح.
+
 @env_ver_fila
 اطّلع على الطابور كاملًا:  cat {1}
 
@@ -2043,7 +2110,7 @@ Tandem {1} — اختبار ذاتي على هذا الجهاز
 
 @prep_terminal
 يستطيع Tandem تثبيت ما ينقص:
-%s
+{1}
 
 يحتاج إلى الإنترنت وإلى كلمة مرورك. أأتابع؟ [y/N] 
 
@@ -2762,6 +2829,15 @@ Android (Waydroid) - ينزّل نحو 1 غيغابايت
 
 @resposta_sim
 y
+
+@res_entregue
+الملف الناقص وصل فعلًا، وبالعرض الذي يستخدمه هذا البرنامج.
+
+@res_nao_chegou
+ما جرى تثبيته لم يضع الملف الناقص في المكان الذي يبحث فيه البرنامج.
+
+@res_sem_alvo
+لم يكن هناك ملف أتحقق منه، لذا لا أستطيع القول لا نعم ولا لا.
 
 @res_abriu
 فُتِح.

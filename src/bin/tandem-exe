@@ -207,6 +207,11 @@ SABIDOS="$(t_memoria_le "$PROG" RESOLVERAM 2>/dev/null)"
 # may know. It decides nothing: it becomes exactly the same kind of suggestion
 # as the local memory, and goes through the same question.
 if [ -z "$SABIDOS" ]; then
+    # Keep the copy fresh, in the background, at most once a day. Before 4.11
+    # nothing here ever fetched it: the list only existed on a machine whose
+    # owner had typed `tandem lista atualizar`, so for everybody else this
+    # consultation asked a file that was never going to be there.
+    t_lista_talvez_atualiza 2>/dev/null
     DA_LISTA="$(t_lista_consulta "$PROG" 2>/dev/null)"
     if [ -n "$DA_LISTA" ]; then
         SABIDOS="$DA_LISTA"
@@ -618,6 +623,11 @@ $MAQUINA}"
     # binary exists - the lesson from the self-test applied here, after the
     # shortcut cost an installation.
     INIBIR="$(t_inibidor)"
+    # How well this run's delivery was PROVEN, as opposed to whether the owner
+    # answered. The loop only COLLECTS outcomes here; t_prova_do_run decides
+    # which of them speaks for the run, and it lives in the library so the
+    # ordering can be exercised without making a real winetricks fail.
+    PROVA_VISTAS=""
     t_trava_prefixo_pega "$WINEPREFIX"
 
     t_progresso_abre "$(t_msg instalando_componentes)"
@@ -657,14 +667,25 @@ $MAQUINA}"
                          awk -F'\t' -v alvo="$v" '$2 == alvo { print $1 }'); do
                 t_dll_no_prefixo "$dll" "$ARCH"
                 case $? in
-                    0) ;;
+                    0) # PROVEN: the file that was missing is now there, in the
+                       # bitness this program can use. Until 4.11 this outcome
+                       # was computed and thrown away - the memory recorded only
+                       # whether the OWNER answered, so "I verified the file
+                       # arrived and he never clicked" and "there was nothing to
+                       # verify and he never clicked" both became "so-abriu" and
+                       # travelled to another machine, in a recipe and in a list
+                       # record, as the same word. Absence of proof and proof
+                       # are not the same evidence.
+                       PROVA_VISTAS="$PROVA_VISTAS entregue" ;;
                     2) # It arrived, in the wrong bitness. This is not a wrong
                        # translation - the verb did what it promised - so the
                        # receipt holds: reinstalling is pointless. The next
                        # round recognizes the case by reading the disk and
                        # explains it to the owner.
-                       t_diz "!!! $v entregou $dll na bitola errada para um programa de ${ARCH:-?} bits" ;;
-                    *) FALTOU="$FALTOU $dll" ;;
+                       t_diz "!!! $v entregou $dll na bitola errada para um programa de ${ARCH:-?} bits"
+                       PROVA_VISTAS="$PROVA_VISTAS bitola-errada" ;;
+                    *) FALTOU="$FALTOU $dll"
+                       PROVA_VISTAS="$PROVA_VISTAS nao-chegou" ;;
                 esac
             done
             if [ -n "$FALTOU" ]; then
@@ -691,6 +712,9 @@ $MAQUINA}"
     wineserver -w
     t_progresso_fecha
     t_trava_prefixo_solta
+    # The run's verdict on its own delivery, written where the lesson lives so
+    # it travels with the recipe and with the list record.
+    t_memoria_grava "$PROG" PROVA "$(t_prova_do_run "$PROVA_VISTAS")" 2>/dev/null
 
     # If winetricks could not download, saying "I installed the dependencies
     # and it still does not open" would be a lie - and would send the owner

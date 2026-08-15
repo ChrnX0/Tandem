@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.10"
+TANDEM_VERSAO="4.11"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -371,6 +371,25 @@ t_aviso() {
     printf 'Tandem: %s\n' "$1" >&2
     command -v logger >/dev/null 2>&1 && logger -t tandem "$1"
     return 0
+}
+
+# Puts a string on the clipboard, whichever of the two systems this desktop
+# runs. Returns 1 when there is no way to do it, so the caller can say so
+# instead of silently promising a copy that never happened.
+#
+# Extracted from acao_contribuir in 4.11, where it was inline - and inline it
+# could not be shared, which is why "tandem socorro" spent two versions ending
+# in a ten-second toast while the command thirty lines above it already had
+# both shortcuts written.
+t_copia_para_area() {
+    local texto="$1"
+    t_tem_gui || return 1
+    if command -v xclip >/dev/null 2>&1; then
+        printf '%s' "$texto" | xclip -selection clipboard 2>/dev/null && return 0
+    elif command -v wl-copy >/dev/null 2>&1; then
+        printf '%s' "$texto" | wl-copy 2>/dev/null && return 0
+    fi
+    return 1
 }
 
 t_ok() {
@@ -1949,6 +1968,16 @@ t_lista_linha() {
                 conf[$3] += m * peso(w, $7)
                 bruto[$3] += m
                 if ($7 > visto[$3]) visto[$3] = $7
+            } else if ($5 == "entregue") {
+                # Half a report. Tandem verified the missing file arrived, in
+                # the right bitness, and the owner never said whether the
+                # PROGRAM works - so it is real evidence about the file and only
+                # a hint about the question the list answers. Before 4.11 a run
+                # like this contributed NOTHING: it was recorded as "so-abriu"
+                # and the resolver ignores those entirely.
+                conf[$3] += m * peso(w, $7) * 0.5
+                bruto[$3] += m
+                if ($7 > visto[$3]) visto[$3] = $7
             } else if ($5 == "reprovado") {
                 rep[$3] += m * peso(w, $7)
             }
@@ -2033,6 +2062,59 @@ t_lista_assinatura_ok() {
 # Downloads the list. A malformed file does NOT replace the good one already
 # on disk: a broken list would silence the second opinion with nobody
 # noticing.
+# Is this machine allowed to RECEIVE the list? Default yes, and the default is
+# the whole point of this function existing.
+#
+# Until 4.11 t_lista_atualiza had exactly ONE caller in the entire tree -
+# `tandem lista atualizar`, typed by hand - so on a machine whose owner has
+# never heard of that command the list file never existed, t_lista_consulta
+# always returned nothing, and every merge rule 4.4, 4.9 and 4.11 added was
+# unreachable code. Meanwhile SENDING is on by default. A machine that gives
+# and does not take is the wrong way round.
+#
+# This reverses "Automatic sync on install - REJECTED" in docs/IDEAS.md, and
+# the new argument is narrow: 4.2 already reversed that stance for the
+# direction that actually carries data OUT. Receiving carries nothing out. What
+# it costs is an HTTP GET, and what it buys is the half of the list that helps
+# the shop rather than the project.
+#
+# The switch is named, so somebody can find and turn it off, and it is asked
+# with the same shape as ENVIAR.
+t_lista_receber_ligado() {
+    case "$(t_config_le RECEBER 2>/dev/null)" in
+        nao|não|no) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+# Fetches the list if it is allowed and has not been fetched today, DETACHED.
+#
+# Detached, never blocking, and that is a deliberate trade rather than a
+# convenience: the alternative is a double click waiting on a network round
+# trip, and on a machine with no route to the address that is a stall on every
+# unknown program. The cost of detaching is that the list helps from the NEXT
+# run rather than this one - which is a real limitation and is still infinitely
+# better than the current behaviour, where it helps on no run ever.
+#
+# Once a day, by the same stamp mechanism the send path uses. A shop machine
+# that opens the same program forty times in a morning makes one request.
+t_lista_talvez_atualiza() {
+    local hoje
+    t_lista_receber_ligado || { t_diz "lista: receber esta desligado"; return 1; }
+    [ -n "$TANDEM_ESTADO" ] || return 1
+    command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 1
+    hoje="$(date +%F)"
+    [ "$(t_config_le LISTA_DIA 2>/dev/null)" = "$hoje" ] && return 1
+    # Stamped BEFORE the attempt, not after. A machine with no internet must
+    # make one failed request a day, not one per double click - the same lesson
+    # the send path learned when a cap that only counted successes turned out
+    # not to be a cap at all.
+    t_config_grava LISTA_DIA "$hoje"
+    t_diz "lista: buscando a lista da comunidade em segundo plano"
+    ( t_lista_atualiza >/dev/null 2>&1 & ) 2>/dev/null
+    return 0
+}
+
 t_lista_atualiza() {
     local tmp rc
     command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 2
@@ -2111,8 +2193,22 @@ t_confirma_funcionou() {
         t_aviso "$(t_msg abriu_e_fechou_sozinho "$durou")"
     fi
 
-    t_tem_gui || return 0
-    command -v zenity >/dev/null 2>&1 || return 0
+    # Nobody to ask - no window, or no zenity to draw one. That used to be the
+    # end of the lesson: with no answer there was no confidence, and with no
+    # confidence there was nothing worth passing on. Since 4.11 there is a level
+    # underneath his word: Tandem checked, on this machine, that what was
+    # missing actually arrived. A lesson carrying that is worth offering even
+    # though nobody clicked - and it goes out labelled "entregue", which says
+    # exactly that nobody confirmed it, and the resolver weighs it at half a
+    # report on the other side.
+    #
+    # It is offered HERE and not before the branch below, because the "yes"
+    # branch offers too and calling both would queue the same lesson twice.
+    if ! t_tem_gui || ! command -v zenity >/dev/null 2>&1; then
+        [ "$(t_confianca_da_licao "$prog")" = entregue ] &&
+            t_envio_oferece "$prog" >/dev/null 2>&1
+        return 0
+    fi
     if t_pergunta "$(t_msg funcionou_como_esperava)" \
            "$(t_msg botao_sim_funcionou)" "$(t_msg botao_nao_deu_errado)"; then
         t_memoria_grava "$prog" CONFIRMADO sim
@@ -2132,12 +2228,67 @@ t_confirma_funcionou() {
 
 # The confidence level of a lesson, in a single word. It is what separates "a
 # person looked and said it works" from "the process finished without error".
+# How much this lesson is worth, and WHY - which are two different questions
+# that were one answer until 4.11.
+#
+# The owner's word still outranks everything: he looked at the screen and said
+# it works, or said it does not. Nothing a file check can do beats that.
+#
+# What was missing sat underneath. The delivery proof computes three distinct
+# outcomes - the file arrived in the right bitness, it arrived in the wrong one,
+# it is provably still missing - and NONE of them reached the lesson. So a run
+# where Tandem verified the missing file had arrived, and the owner simply closed
+# the window without answering, produced the same "so-abriu" as a run where
+# there was nothing to verify at all. Those two travel to somebody else's
+# machine, in a recipe and in a list record, as the same word.
+#
+# "entregue" is that middle level: not a human's word, but not a shrug either.
+# The list weighs it at half a report, which is the honest arithmetic - it is
+# evidence about the FILE, and the question the list answers is about the
+# PROGRAM.
 t_confianca_da_licao() {
     case "$(t_memoria_le "$1" CONFIRMADO 2>/dev/null)" in
         sim) printf 'confirmado' ;;
         nao) printf 'reprovado' ;;
-        *)   printf 'so-abriu' ;;
+        *)
+            case "$(t_memoria_le "$1" PROVA 2>/dev/null)" in
+                entregue) printf 'entregue' ;;
+                *)        printf 'so-abriu' ;;
+            esac ;;
     esac
+}
+
+# The verdict a whole install run gives on ITS OWN delivery, out of the outcome
+# of every DLL it checked. $1 is that list of outcomes, space-separated, in
+# whatever order the loop produced them.
+#
+# Four levels, and their ORDER is the entire content of this function:
+#
+#   nao-chegou     something is provably still missing. It outranks everything
+#                  else because one absent file is enough for the program to go
+#                  on failing, however well the other verbs behaved.
+#   bitola-errada  everything arrived and at least one arrived in a width this
+#                  program cannot use - the dead end with a receipt on top.
+#   entregue       at least one file was proven to arrive in the right width,
+#                  and nothing was found wrong.
+#   sem-alvo       nothing could be checked at all: half the winetricks verbs
+#                  have no same-named DLL in the table. This is NOT the same as
+#                  "nothing was wrong", and conflating those two is the whole
+#                  defect this field exists to fix.
+#
+# It is a function, and not four lines inline in the install loop, for the
+# reason t_causa_do_winetricks was extracted: inline, the only way to reach it
+# is to make a real winetricks fail, so an ordering mistake here is invisible
+# until it has reached somebody else's machine as a lesson. And an ordering
+# mistake here is not hypothetical - the first version of this WAS inline, as a
+# plain assignment, which let the LAST DLL of the LAST verb speak for the whole
+# run. That is the same shape as the MARCA_WT defect 4.8 fixed one screen up.
+t_prova_do_run() {
+    local vistas=" ${1:-} " nivel
+    for nivel in nao-chegou bitola-errada entregue; do
+        case "$vistas" in *" $nivel "*) printf '%s' "$nivel"; return 0 ;; esac
+    done
+    printf 'sem-alvo'
 }
 
 # =============================================================== DATA
@@ -2470,6 +2621,35 @@ t_porta_escutando() {
     command -v ss >/dev/null 2>&1 || return 2
     ss -H -ltn 2>/dev/null |
         awk -v p=":$1" '$4 ~ p "$" { achou = 1 } END { exit !achou }'
+}
+
+# Who owns this MIME type, as the FILE MANAGER would answer it.
+#
+# `xdg-mime query default` is the wrong instrument and this repository already
+# proved it: Nautilus uses GIO, and GIO resolves the MIME SUBCLASS CHAIN while
+# xdg-mime does not. Re-measured here on a type Tandem never touches -
+# `gio mime text/sgml` answers vim.desktop, `xdg-mime query default text/sgml`
+# answers nothing.
+#
+# tandem-repair had it half right: it WRITES the association with both tools
+# and then READS it back with xdg-mime alone. So the before/after report - the
+# whole point of that command, the thing the owner reads to find out who held
+# the type - could say "nobody" about a type a text editor really owns through
+# text/plain. .flatpakref is declared sub-class-of text/plain, which is exactly
+# the case where "nobody" is wrong AND worse than the truth: with Tandem's
+# association gone, a double-clicked .flatpakref opens in a text editor rather
+# than doing nothing.
+t_dono_do_tipo() {
+    local tipo="$1" dono=""
+    if command -v gio >/dev/null 2>&1; then
+        dono="$(gio mime "$tipo" 2>/dev/null |
+                sed -n 's/^Default application for .*: *//p' | head -1)"
+    fi
+    # xdg-mime is the fallback rather than the authority, and it is kept
+    # because a machine with no GIO is a machine where it is the only answer
+    # available - not because its answer is as good.
+    [ -n "$dono" ] || dono="$(xdg-mime query default "$tipo" 2>/dev/null | head -1)"
+    printf '%s' "$dono"
 }
 
 # Is this service running? Asked of the process table first, then systemd.
@@ -3692,9 +3872,40 @@ t_causa_apt() {
 # provides for Windows software, and for the same reason: on Wayland the menu
 # does not refresh, so a program the owner cannot find is a program he does not
 # have.
+#
+# It looked in TWO directories until 4.11, and a snap and a flatpak land in
+# neither - so the promise above has been quietly unkept for three of the four
+# package managers since 3.8, and `tandem-snap`'s "look in the menu for" line
+# had never once appeared on anybody's screen. snapd exports to
+# /var/lib/snapd/desktop/applications; flatpak to
+# /var/lib/flatpak/exports/share/applications for the system and to
+# ~/.local/share/flatpak/exports/share/applications for the user.
+#
+# XDG_DATA_DIRS is asked first, because it is the right answer and it picks up
+# whatever else a distribution invents. It is NOT enough on its own, and that
+# is measured rather than assumed: in this session's own container both
+# XDG_DATA_DIRS and XDG_DATA_HOME are EMPTY while all three directories above
+# exist and hold files - which is exactly the shape of a program started from a
+# file manager rather than a login shell. So the three are named explicitly as
+# well, and the list is deduplicated because on a normal desktop they overlap.
 t_atalhos_do_sistema() {
-    find /usr/share/applications /usr/local/share/applications \
-         -maxdepth 1 -name '*.desktop' -type f 2>/dev/null | sort
+    local dirs="" d visto=""
+    for d in ${XDG_DATA_DIRS:+${XDG_DATA_DIRS//:/ }} \
+             "${XDG_DATA_HOME:-$HOME/.local/share}" \
+             /usr/share /usr/local/share \
+             /var/lib/snapd/desktop \
+             /var/lib/flatpak/exports/share \
+             "$HOME/.local/share/flatpak/exports/share"; do
+        [ -n "$d" ] || continue
+        d="${d%/}/applications"
+        case " $visto " in *" $d "*) continue ;; esac
+        visto="$visto $d"
+        [ -d "$d" ] || continue
+        dirs="$dirs $d"
+    done
+    [ -n "$dirs" ] || return 0
+    # shellcheck disable=SC2086
+    find $dirs -maxdepth 1 -name '*.desktop' -type f 2>/dev/null | sort
 }
 
 t_anuncia_atalhos_do_sistema() {
@@ -3959,6 +4170,13 @@ t_envio_pendentes() {
     awk 'END { print NR + 0 }' "$TANDEM_FILA" 2>/dev/null || printf '0'
 }
 
+# How many lines have actually LEFT this machine, ever. Same arithmetic, and
+# the same trap: grep -c on an empty file prints 0 and exits 1.
+t_envio_ja_enviados() {
+    [ -f "$TANDEM_FILA.enviados" ] || { printf '0'; return 0; }
+    awk 'END { print NR + 0 }' "$TANDEM_FILA.enviados" 2>/dev/null || printf '0'
+}
+
 # Sends what is queued, best effort. PRINTS the number sent, and RETURNS why:
 # 0 nothing to report, 3 the server refused everything it was offered, 4 the
 # queue is inside the wait after a failed pass, 5 another pass already has it.
@@ -4041,6 +4259,22 @@ t_envio_envia() {
         fi
         t_envio_posta "$reg"; resposta=$?
         if [ "$resposta" = 0 ]; then
+            # WRITTEN DOWN. Until 4.11 this was the only branch of the three
+            # that destroyed the line: the sieve refusal and the 4xx refusal
+            # both park theirs under an explicit rule, and a line that actually
+            # LEFT was the one thing the machine kept no record of.
+            #
+            # That is not tidiness, it is the rule section 3 of docs/IDEAS.md
+            # rejected telemetry on - "nothing the owner cannot see and cannot
+            # delete". Sending is on by default and defended by a notice; a
+            # year later, "what has this machine sent about my shop?" had no
+            # answer ON the machine, and that is the question a shopkeeper, or
+            # whoever audits him, actually asks.
+            #
+            # The month and not the day, for the same reason the record itself
+            # carries only the month: a date with a day identifies.
+            printf '%s\t%s\n' "$(date +%Y-%m)" "$reg" \
+                >> "$TANDEM_FILA.enviados" 2>/dev/null
             enviados=$((enviados+1)); contador=$((contador+1)); falhas=0
         elif [ "$resposta" = 2 ]; then
             # Refused for good. It leaves the queue so it cannot block the

@@ -196,10 +196,33 @@ e entrada vinda de fora não pode carregar comando.
 .BI "tandem memoria " [nome]
 Mostra o que o Tandem aprendeu sobre cada programa: quais componentes
 resolveram, quais não resolveram, se abriu e quanto tempo levou.
+.IP
+A linha
+.B conferi
+é o que o próprio Tandem verificou, e não o que você contou a ele. Depois de
+instalar um componente que faltava, ele procura no disco o arquivo que o
+programa pediu, na bitola que o programa consegue carregar de verdade, e anota
+uma de quatro respostas: o arquivo chegou, chegou feito para a outra bitola,
+continua faltando, ou não havia nada que ele pudesse conferir. Esta última não
+é a mesma coisa que \(lqnão havia nada errado\(rq, e ela diz isso.
+.IP
+Uma lição em que o Tandem provou que o arquivo chegou mas ninguém confirmou que
+o programa funciona vale mais que uma execução calada e menos que a sua
+palavra. Se você compartilhar \(em como receita ou com a lista da comunidade
+\(em ela sai marcada como
+.BR entregue ,
+e a lista conta como meio relato.
 .TP
 .BI "tandem esquecer " nome
 Apaga o que ele aprendeu sobre um programa. Da próxima vez ele descobre de
 novo.
+.IP
+.B tandem esquecer enviados
+apaga outra coisa: o registro que esta máquina guarda das linhas que já mandou
+para a lista da comunidade. Esse registro existe para você poder responder "o
+que esta máquina já mandou sobre a minha loja?" sem depender da palavra de
+ninguém — o que também quer dizer que ele tem de ser seu para apagar. Apagar não
+muda nada do outro lado: o que foi mandado foi mandado.
 .TP
 .B tandem repair
 Reaplica as associações de arquivo. Use quando o duplo clique abrir o
@@ -275,9 +298,23 @@ Mostra a lista da comunidade: o que já deu certo na máquina de outras
 pessoas, por programa.
 .TP
 .B tandem lista atualizar
-Baixa a lista. É um arquivo de texto público, buscado por HTTPS — o modelo
-das listas de filtro de bloqueador de anúncio. Nada desta máquina é enviado,
-e nada é instalado: a lista vira sugestão, e o Tandem continua perguntando.
+Baixa a lista agora. É um arquivo de texto público, buscado por HTTPS — o
+modelo das listas de filtro de bloqueador de anúncio. Nada desta máquina é
+enviado, e nada é instalado: a lista vira sugestão, e o Tandem continua
+perguntando.
+.IP
+O Tandem também busca sozinho, no máximo uma vez por dia, em segundo plano, na
+primeira vez que encontra um programa do Windows que ele não conhece. Esse
+sentido só BAIXA — é a metade da lista que não custa nada para a loja — e nunca
+atrasa um clique duplo, que é a razão de uma busca começada agora ajudar a
+partir da próxima vez, e não desta.
+.TP
+.B tandem lista desligar
+Desliga a busca automática.
+.B tandem lista ligar
+liga de novo. De um jeito ou de outro,
+.B tandem lista
+diz qual dos dois está valendo.
 .TP
 .BI "tandem contribuir " programa
 Monta a linha padronizada com o que este Tandem aprendeu e mostra ela

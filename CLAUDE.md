@@ -198,7 +198,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 1034 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1134 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -449,6 +449,34 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   checked in `system32`/`syswow64` before the receipt is written. **Absence of
   proof does not condemn** — only a proven contradiction holds the receipt back,
   because not every verb delivers a same-named DLL.
+- **That proof computed three outcomes and recorded NONE of them until 4.11**,
+  and the shape of the miss is worth more than the fix. The check was correct,
+  it ran on every install, and its answer went nowhere: the memory recorded only
+  whether the OWNER answered. So "I verified the missing file arrived, in the
+  right width, and he closed the window without clicking" and "there was nothing
+  I could check and he closed the window without clicking" both came out
+  `so-abriu` — and both travelled to another machine, in a recipe and in a list
+  record, as the same word. **A measurement that is never written down is not a
+  measurement**; look for this shape wherever a function returns a rich verdict
+  and its caller keeps a boolean.
+  `PROVA=` now carries four levels, and only one of them becomes a confidence:
+  `entregue` (proven to arrive, correctly) is a level of its own, while
+  `bitola-errada`, `nao-chegou` and `sem-alvo` stay in the memory file because
+  they say nothing another machine can use. **`sem-alvo` is deliberately not
+  `entregue`** — half the winetricks verbs have no same-named DLL in the table,
+  and "I could not check" is not "nothing was wrong".
+  **The list weighs `entregue` at HALF a report**, and the arithmetic is the
+  argument: it is evidence about the FILE, and the question the list answers is
+  about the PROGRAM. Sixty people who looked at a screen outweigh a hundred
+  proven deliveries; two hundred proven deliveries outweigh sixty people. Both
+  directions are tests, so the constant cannot be quietly rounded to 1.
+- **The ordering of those four levels is `t_prova_do_run`, in the library, and
+  it was inline for exactly one revision.** Inline it was a plain assignment, so
+  the LAST DLL of the LAST verb spoke for the whole run and a wrong-width found
+  after a missing file reported the milder of the two — the same shape as the
+  `MARCA_WT` defect 4.8 fixed one screen higher. The rule this keeps producing:
+  **when a loop accumulates a verdict, the resolution belongs in a function that
+  can be called with the cases in either order.**
 - **The executables honour `TANDEM_LIB`** when locating the libraries
   (`. "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"`). With the path hard-coded
   there was no way to exercise the run→detect→install loop without installing the
@@ -822,7 +850,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 976 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 1134 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The list's read path was measured against the OLD code before being fixed**,
   which is why the four defects are stated as numbers rather than as risks: on a
   two-row list the old query answered `vcrun2010` with 3 machines where 400
@@ -1547,6 +1575,30 @@ must be within 15 of what the suite actually runs. The first version of that
 badge guard was itself one-sided and blocked a good release, because CI runs
 two more checks than a bare container: **a guard that stops a good release is
 worse than the drift it was written for.**
+
+**A third one joined them in 4.11, and it is the same lesson a third time.**
+lintian also refuses `debian-changelog-has-wrong-day-of-week`, as a *warning* —
+and the release step runs it with `--fail-on warning`, so a hand-written `Fri`
+for 2026-08-15, which was a Saturday, turned CI red. **The date-ordering guard
+beside it could not see this**: both dates parse and sort correctly, because
+`date -d` simply ignores a weekday that disagrees with the rest of the field.
+That is now the third changelog-date defect lintian has caught here and the
+first one a test catches first. It checks EVERY entry, not the top one — an old
+entry's wrong day is just as fatal, and finding it during a release is the
+wrong order. Proven by putting the defect back and watching it speak, with an
+assert on the injection.
+
+**And the proofgate `coupled-files` guard gained `"direction": "a-implies-b"`,
+for the reason above rather than for convenience.** The
+`src/lib/winedeps.sh → tests/run.sh` pair is genuinely one-way: changing the
+DLL→verb table without a test is walking without the auditor, but almost every
+commit here touches `tests/run.sh`, so the symmetric form warned on nearly
+every delivery about the harmless direction. **A warning that is almost always
+noise is a warning nobody reads**, which is how the one that matters goes
+unread. The `debian/control ↔ debian/changelog` and `src/bin/tandem ↔
+man/tandem.1` pairs stay symmetric. Verified on real commits in all three
+directions — and the first attempt at that proof was vacuous, because the guard
+diffs COMMITS and the probe changed only the working tree.
 
 ## What an agent session cannot do here
 

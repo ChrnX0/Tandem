@@ -48,6 +48,11 @@ Tandem 界面语言：{1}
 
 用这个命令查看列表：  tandem idioma
 
+@idioma_nao_revisado_aviso
+提示：Tandem 的{1}翻译还没有母语者读过。
+如果某句话读起来别扭，原因就在这里——把它指出来，
+是这个项目最容易得到的帮助：tandem idioma
+
 @idioma_nao_revisado
 坦白说明：这份翻译还没有经过以{1}为母语的人校对。它是用心做的，但可能
 有些地方读起来像翻译腔，而不像地道的{1}。
@@ -895,10 +900,10 @@ Flatpak 会把程序和它运行所需的东西一起下载。第一次通常下
 它是这么说的：
 
 @flatpak_loja_terminal
-要添加“%s”这个商店吗？[y/N] 
+要添加“{1}”这个商店吗？[y/N] 
 
 @flatpak_instalar_terminal
-要安装“%s”吗？[y/N] 
+要安装“{1}”吗？[y/N] 
 
 @este_programa
 这个程序
@@ -1589,6 +1594,10 @@ Tandem 现在知道这个程序在发来的人那台机器上要过什么了。
 这个配方的分量就这么多：程序打开时没报错，但没人确认它真的能用。
 它会带着 "so-abriu" 的标记发出去。
 
+@rec_entregue
+我核对过：缺的东西确实到位了，但没有人确认这个程序能用。
+它会带着 "entregue" 的标记发出去。
+
 @rec_nada_aprendido
 关于这个程序我还什么都没学到。
 
@@ -1622,7 +1631,22 @@ Tandem 现在知道这个程序在发来的人那台机器上要过什么了。
 Tandem - 社区清单
 
 @lista_uso
-用法：  tandem lista  |  tandem lista atualizar
+用法：tandem lista | tandem lista atualizar | tandem lista desligar
+
+@lista_recebendo_auto
+Tandem 会自己在后台每天更新一次这份清单。
+它只做下载：这台机器的任何信息都不会由此发出。
+要停止：tandem lista desligar
+
+@lista_recebendo_nao
+自动更新已关闭。这份清单只在您要求时才会变化。
+要重新开启：tandem lista ligar
+
+@lista_receber_ligado
+好的。我会自己每天更新一次这份清单。
+
+@lista_receber_desligado
+好的。我不会再自己去取这份清单了。
 
 @contrib_diga_qual
 请说明是哪个程序。
@@ -1853,6 +1877,23 @@ Tandem - 机器身份
 @logs_nenhum
 还没有任何记录。
 
+@soc_titulo
+给帮助您的人看的报告
+
+@soc_caminho_copiado
+我已复制这个文件的位置，您可以粘贴到需要的地方。
+
+@soc_abrir_pasta
+要我打开这个文件所在的文件夹吗？这样您可以把它附在消息里。
+
+@botao_abrir_pasta
+打开文件夹
+
+@soc_sem_gerenciador
+我在这里打不开文件夹。文件在：
+
+{1}
+
 @soc_pronto
 报告已生成：
 
@@ -1867,6 +1908,18 @@ Tandem - 机器身份
 
 @mem_campo_resultado
 结果：      
+
+@mem_campo_confirmado
+您说：      
+
+@mem_dono_disse_sim
+它按您预期的那样正常工作了。
+
+@mem_dono_disse_nao
+它没有正常工作。您的回答比下面所有内容都更有分量。
+
+@mem_campo_prova
+我核对了：  
 
 @mem_campo_arquitetura
 架构：       
@@ -1917,7 +1970,7 @@ Tandem 装过的程序：
 要卸载：  tandem desinstalar "<名字的一部分>"
 
 @desinst_terminal
-要卸载“%s”吗？它的文件会被删掉。[y/N] 
+要卸载“{1}”吗？它的文件会被删掉。[y/N] 
 
 @alt_cabecalho
 能顶替“{1}”干活的 Linux 程序：
@@ -1972,6 +2025,20 @@ Tandem 把这里能实测的都测了，全都有回应。
 @env_desligar
 关闭：     tandem enviar nao
 
+@env_ja_sairam
+从这台机器发出去过的行数，总计：{1}
+
+@env_ver_enviados
+查看已经发出去的全部内容：cat {1}
+清除这份记录：tandem esquecer enviados
+
+@esq_enviados_apagado
+已清除：这台机器发出过的 {1} 行的记录。
+已经发出去的仍然发出去了——这只清除保存在本机的副本。
+
+@esq_enviados_vazio
+这台机器还没有发出过任何东西，所以没有可清除的记录。
+
 @env_ver_fila
 查看整个队列：  cat {1}
 
@@ -2009,7 +2076,7 @@ Tandem 关于这些程序学到的东西。记录里会出现您的文件路径�
 
 @prep_terminal
 Tandem 可以把缺的东西装上：
-%s
+{1}
 
 需要联网和您的密码。要继续吗？[y/N] 
 
@@ -2721,6 +2788,15 @@ DirectX 着色器编译器
 
 @resposta_sim
 y
+
+@res_entregue
+缺少的文件确实到位了，而且是这个程序能用的位数。
+
+@res_nao_chegou
+装上去的东西并没有把缺少的文件放到程序会去找的地方。
+
+@res_sem_alvo
+没有可供我核对的文件，所以我说不上是好是坏。
 
 @res_abriu
 已打开。

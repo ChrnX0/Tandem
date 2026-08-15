@@ -73,7 +73,7 @@ $URL}")" "$(t_msg botao_adicionar_loja)" "$(t_msg botao_cancelar)"; then
         # failure this project treats as a defect. Found by running every new
         # handler with no window and no terminal and demanding a sentence.
         if [ -t 0 ]; then
-            printf "$(t_msg flatpak_loja_terminal)" "$AMIGAVEL"
+            printf '%s' "$(t_msg flatpak_loja_terminal "$AMIGAVEL")"
             read -r r
             if ! t_confirmou "$r"; then printf '%s\n' "$(t_msg cancelado)"; exit 0; fi
         else
@@ -105,7 +105,7 @@ if ! t_pergunta "$(t_msg flatpak_instalar_pergunta "$AMIGAVEL" "${URL:+
 
 $(t_msg flatpak_vem_de "$URL")}")" "$(t_msg botao_instalar)" "$(t_msg botao_cancelar)"; then
     if [ -t 0 ]; then
-        printf "$(t_msg flatpak_instalar_terminal)" "$AMIGAVEL"
+        printf '%s' "$(t_msg flatpak_instalar_terminal "$AMIGAVEL")"
         read -r r
         if ! t_confirmou "$r"; then printf '%s\n' "$(t_msg cancelado)"; exit 0; fi
     else
@@ -122,6 +122,12 @@ if [ -n "$REPO_RUNTIME" ]; then
         t_como_root "flatpak remote-add --if-not-exists flathub '$REPO_RUNTIME'" >>"$LOG" 2>&1
 fi
 
+# Taken BEFORE the install, so the announcement below can name what appeared.
+# This handler never called it at all until 4.11 - `tandem programas` exists
+# because GNOME under Wayland does not re-read the menu, and a program the owner
+# cannot find again is a program he has not installed. flatpak exports its
+# shortcuts to a directory of its own, which is the other half of the same fix.
+ANTES_ATALHOS="$(t_atalhos_do_sistema)"
 MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
 t_progresso_abre "$(t_msg flatpak_instalando "$AMIGAVEL")"
 # Installed for this user, without a password. That is not a shortcut: a program
@@ -169,7 +175,11 @@ fi
 
 if [ "$INSTALOU" = 1 ]; then
     t_memoria_grava "$ARQ" RESULTADO instalado 2>/dev/null
-    t_ok "$(t_msg flatpak_instalado "$AMIGAVEL")"
+    ONDE="$(t_anuncia_atalhos_do_sistema "$ANTES_ATALHOS")"
+    t_ok "$(t_msg flatpak_instalado "$AMIGAVEL")${ONDE:+
+
+$(t_msg procure_no_menu_por)
+$(printf '%s\n' "$ONDE" | sed 's/^/  /')}"
     exit 0
 fi
 

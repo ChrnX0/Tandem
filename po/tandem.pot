@@ -55,6 +55,13 @@ msgid ""
 "See the list with:  tandem idioma"
 msgstr ""
 
+msgctxt "idioma_nao_revisado_aviso"
+msgid ""
+"Note: Tandem's {1} translation has not been read by a native speaker yet.\n"
+"If a sentence sounds wrong, that is why - and saying so is the easiest help\n"
+"this project can be given:  tandem idioma"
+msgstr ""
+
 msgctxt "idioma_nao_revisado"
 msgid ""
 "An honest warning: this translation has not yet been checked by somebody who\n"
@@ -1240,11 +1247,11 @@ msgid "This is what it said:"
 msgstr ""
 
 msgctxt "flatpak_loja_terminal"
-msgid "Add the store \"%s\"? [y/N] "
+msgid "Add the store \"{1}\"? [y/N] "
 msgstr ""
 
 msgctxt "flatpak_instalar_terminal"
-msgid "Install \"%s\"? [y/N] "
+msgid "Install \"{1}\"? [y/N] "
 msgstr ""
 
 msgctxt "este_programa"
@@ -2192,6 +2199,12 @@ msgid ""
 "nobody confirmed it actually worked. It goes out marked \"so-abriu\"."
 msgstr ""
 
+msgctxt "rec_entregue"
+msgid ""
+"I checked that what was missing really did arrive, but nobody confirmed the\n"
+"program itself works. It goes out marked \"entregue\"."
+msgstr ""
+
 msgctxt "rec_nada_aprendido"
 msgid ""
 "I have not learnt anything about this program yet.\n"
@@ -2237,7 +2250,28 @@ msgid "Tandem - Community list"
 msgstr ""
 
 msgctxt "lista_uso"
-msgid "Use:  tandem lista  |  tandem lista atualizar"
+msgid "Use:  tandem lista  |  tandem lista atualizar  |  tandem lista desligar"
+msgstr ""
+
+msgctxt "lista_recebendo_auto"
+msgid ""
+"Tandem keeps this list up to date on its own, once a day, in the background.\n"
+"It only DOWNLOADS: nothing about this machine goes out this way.\n"
+"To stop it:  tandem lista desligar"
+msgstr ""
+
+msgctxt "lista_recebendo_nao"
+msgid ""
+"Automatic updating is OFF. The list only changes when you ask for it.\n"
+"To turn it back on:  tandem lista ligar"
+msgstr ""
+
+msgctxt "lista_receber_ligado"
+msgid "Right. I will keep the list up to date on my own, once a day."
+msgstr ""
+
+msgctxt "lista_receber_desligado"
+msgid "Right. I will not fetch the list on my own any more."
 msgstr ""
 
 msgctxt "contrib_diga_qual"
@@ -2551,6 +2585,29 @@ msgctxt "logs_nenhum"
 msgid "There are no logs yet."
 msgstr ""
 
+msgctxt "soc_titulo"
+msgid "Report for whoever is helping you"
+msgstr ""
+
+msgctxt "soc_caminho_copiado"
+msgid "I copied the file's location. Paste it wherever you need it."
+msgstr ""
+
+msgctxt "soc_abrir_pasta"
+msgid "Shall I open the folder this file is in, so you can attach it to a message?"
+msgstr ""
+
+msgctxt "botao_abrir_pasta"
+msgid "Open the folder"
+msgstr ""
+
+msgctxt "soc_sem_gerenciador"
+msgid ""
+"I could not open the folder here. The file is at:\n"
+"\n"
+"{1}"
+msgstr ""
+
 msgctxt "soc_pronto"
 msgid ""
 "Report ready:\n"
@@ -2570,6 +2627,22 @@ msgstr ""
 
 msgctxt "mem_campo_resultado"
 msgid "result:     "
+msgstr ""
+
+msgctxt "mem_campo_confirmado"
+msgid "you said:   "
+msgstr ""
+
+msgctxt "mem_dono_disse_sim"
+msgid "it worked the way you expected."
+msgstr ""
+
+msgctxt "mem_dono_disse_nao"
+msgid "it did NOT work properly. Your answer outranks everything below."
+msgstr ""
+
+msgctxt "mem_campo_prova"
+msgid "I checked:  "
 msgstr ""
 
 msgctxt "mem_campo_arquitetura"
@@ -2637,7 +2710,7 @@ msgid "To remove one:  tandem desinstalar \"<part of the name>\""
 msgstr ""
 
 msgctxt "desinst_terminal"
-msgid "Remove \"%s\"? Its files will be deleted. [y/N] "
+msgid "Remove \"{1}\"? Its files will be deleted. [y/N] "
 msgstr ""
 
 msgctxt "alt_cabecalho"
@@ -2713,6 +2786,26 @@ msgctxt "env_desligar"
 msgid "Turn off:  tandem enviar nao"
 msgstr ""
 
+msgctxt "env_ja_sairam"
+msgid "Lines that have left this machine, ever: {1}"
+msgstr ""
+
+msgctxt "env_ver_enviados"
+msgid ""
+"See everything that has left:  cat {1}\n"
+"Erase that record:  tandem esquecer enviados"
+msgstr ""
+
+msgctxt "esq_enviados_apagado"
+msgid ""
+"Erased: the record of {1} line(s) this machine had sent.\n"
+"What was already sent stays sent - this only erases the copy kept here."
+msgstr ""
+
+msgctxt "esq_enviados_vazio"
+msgid "This machine has not sent anything yet, so there is nothing to erase."
+msgstr ""
+
 msgctxt "env_ver_fila"
 msgid "See the whole queue:  cat {1}"
 msgstr ""
@@ -2763,7 +2856,7 @@ msgstr ""
 msgctxt "prep_terminal"
 msgid ""
 "Tandem can install what is missing:\n"
-"%s\n"
+"{1}\n"
 "\n"
 "It needs the internet and your password. Continue? [y/N] "
 msgstr ""
@@ -3652,6 +3745,18 @@ msgstr ""
 
 msgctxt "resposta_sim"
 msgid "y"
+msgstr ""
+
+msgctxt "res_entregue"
+msgid "The file it was missing did arrive, in the width this program can use."
+msgstr ""
+
+msgctxt "res_nao_chegou"
+msgid "What was installed did not put the missing file where the program looks."
+msgstr ""
+
+msgctxt "res_sem_alvo"
+msgid "There was no file I could check for, so I cannot say either way."
 msgstr ""
 
 msgctxt "res_abriu"

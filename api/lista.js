@@ -42,7 +42,11 @@ const CAMPOS = [
   { nome: "arch",       ok: (v) => /^(32|64|arm64|-)$/.test(v) },
   { nome: "verbs",      ok: (v) => v === "-" || /^[a-z0-9_]+(,[a-z0-9_]+)*$/.test(v) },
   { nome: "failed",     ok: (v) => v === "-" || /^[a-z0-9_]+(,[a-z0-9_]+)*$/.test(v) },
-  { nome: "confidence", ok: (v) => /^(confirmado|so-abriu|reprovado)$/.test(v) },
+  // "entregue" arrived in 4.11: Tandem verified the missing file was
+  // delivered in the right bitness and the owner never answered. It is
+  // weaker than his word and stronger than a shrug, and the resolver
+  // weighs it at half a report.
+  { nome: "confidence", ok: (v) => /^(confirmado|entregue|so-abriu|reprovado)$/.test(v) },
   // Not "any number": exactly one. One POST is one report, and the sender does
   // not get to speak for a hundred shops it has never met.
   { nome: "machines",   ok: (v) => v === "1" },

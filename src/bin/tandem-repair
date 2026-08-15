@@ -77,11 +77,11 @@ TIPOS_SNAP="application/vnd.snap"
 
 # Who owned the types before? Zorin already installs "Windows App Support" and
 # Waydroid installs waydroid.app.install.desktop - both fight with Tandem.
-ANTES_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
-ANTES_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
-ANTES_APPIMAGE="$(xdg-mime query default application/vnd.appimage 2>/dev/null)"
-ANTES_JAR="$(xdg-mime query default application/java-archive 2>/dev/null)"
-ANTES_DEB="$(xdg-mime query default application/vnd.debian.binary-package 2>/dev/null)"
+ANTES_EXE="$(t_dono_do_tipo application/x-ms-dos-executable)"
+ANTES_APK="$(t_dono_do_tipo application/vnd.android.package-archive 2>/dev/null)"
+ANTES_APPIMAGE="$(t_dono_do_tipo application/vnd.appimage 2>/dev/null)"
+ANTES_JAR="$(t_dono_do_tipo application/java-archive 2>/dev/null)"
+ANTES_DEB="$(t_dono_do_tipo application/vnd.debian.binary-package 2>/dev/null)"
 t_diz "antes: exe=$ANTES_EXE apk=$ANTES_APK appimage=$ANTES_APPIMAGE jar=$ANTES_JAR deb=$ANTES_DEB"
 
 # Which types this run is responsible for.
@@ -156,11 +156,11 @@ done
 
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 
-DEPOIS_EXE="$(xdg-mime query default application/x-ms-dos-executable 2>/dev/null)"
-DEPOIS_APK="$(xdg-mime query default application/vnd.android.package-archive 2>/dev/null)"
-DEPOIS_APPIMAGE="$(xdg-mime query default application/vnd.appimage 2>/dev/null)"
-DEPOIS_JAR="$(xdg-mime query default application/java-archive 2>/dev/null)"
-DEPOIS_DEB="$(xdg-mime query default application/vnd.debian.binary-package 2>/dev/null)"
+DEPOIS_EXE="$(t_dono_do_tipo application/x-ms-dos-executable)"
+DEPOIS_APK="$(t_dono_do_tipo application/vnd.android.package-archive 2>/dev/null)"
+DEPOIS_APPIMAGE="$(t_dono_do_tipo application/vnd.appimage 2>/dev/null)"
+DEPOIS_JAR="$(t_dono_do_tipo application/java-archive 2>/dev/null)"
+DEPOIS_DEB="$(t_dono_do_tipo application/vnd.debian.binary-package 2>/dev/null)"
 # One message per row, with the type and both handlers as data, so a translator
 # can put the labels where that language puts them instead of receiving
 # "before:" and "now:" as loose fragments to slot into an order somebody else
