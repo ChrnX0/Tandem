@@ -670,7 +670,27 @@ acao_autoteste() {
 
     # 1. Does the error message reach SOMEWHERE? Without this, all the rest of
     #    the diagnosis is useless: the owner would never learn of the problem.
-    if [ -n "$(t_erro "$(t_msg auto_ignore)" 2>&1 1>/dev/null)" ] || t_tem_gui; then
+    #
+    #    WITH THE DESKTOP HALF DELIBERATELY SWITCHED OFF, and that is the whole
+    #    point of the subshell. This probe called t_erro for real, and t_erro on
+    #    a graphical machine fires a CRITICAL desktop notification - so running
+    #    the self-test popped a red alarm reading "self-test: ignore this
+    #    message", and `tandem socorro`, which embeds the self-test, popped it
+    #    at somebody who is already in trouble and reading carefully. Found in
+    #    a real log from the owner's machine, not here.
+    #
+    #    The old form was `[ -n "$(t_erro ...)" ] || t_tem_gui`, and the shape
+    #    of the mistake is worth keeping: bash evaluates the left side FIRST, so
+    #    the alarm fired on exactly the machines where `|| t_tem_gui` then made
+    #    the result independent of it. It frightened the owner to learn nothing.
+    #
+    #    Unsetting the display exercises MORE than the old version, not less:
+    #    the message-building path is now checked on every machine instead of
+    #    being short-circuited away on the graphical ones. What it stops
+    #    claiming is that notify-send works - which the old code never checked
+    #    either, since it ignored notify-send's result.
+    if [ -n "$( unset DISPLAY WAYLAND_DISPLAY
+                t_erro "$(t_msg auto_ignore)" 2>&1 1>/dev/null )" ]; then
         passa "$(t_msg at_erro_ok)"
     else
         falha "$(t_msg at_erro_nao)" "$(t_msg at_erro_porque)"
@@ -905,7 +925,7 @@ acao_receita() {
 # memory: if he cannot SEE what was stored, he has no way to trust it and no
 # way to correct it.
 acao_memoria() {
-    local filtro="${1:-}" arq prog res saida="" n=0
+    local filtro="${1:-}" arq prog res lim saida="" n=0
     if [ ! -d "$TANDEM_MEMORIA" ] || [ -z "$(ls -A "$TANDEM_MEMORIA" 2>/dev/null)" ]; then
         t_erro "$(t_msg mem_nada_aprendido)"
         return 1
@@ -958,8 +978,34 @@ acao_memoria() {
             s/^RESOLVERAM=/  $(t_msg mem_campo_resolveram)/p
             s/^NAO_RESOLVERAM=/  $(t_msg mem_campo_nao_resolveram)/p
             s/^SEGUNDOS=/  $(t_msg mem_campo_segundos)/p
-            s/^VISTO_EM=/  $(t_msg mem_campo_visto_em)/p
-            s/^LIMITE=/  $(t_msg mem_campo_limite)/p" "$arq")"$'\n\n'
+            s/^VISTO_EM=/  $(t_msg mem_campo_visto_em)/p" "$arq")"$'\n'
+        # LIMITE is the ONLY field here that is neither a single word nor a
+        # plain sentence, and it was printed by the sed map above like all the
+        # rest. Found in the field, on a real .deb built for arm64, and it
+        # reached the owner exactly like this:
+        #
+        #   limite:  arquitetura|Este pacote foi feito para outro tipo de
+        #   processador.\n\nEle e para arm64 e este computador e amd64.\n\n...
+        #
+        # Two leaks in one line. The "arquitetura|" is the internal separator
+        # that carries the CLASS of the limit - on-disk format, of the kind
+        # t_resultado_amigavel exists to keep off the screen. And the \n are
+        # literal backslash-n because t_memoria_grava escapes newlines on write
+        # so a value stays on one line, and t_memoria_le undoes that with
+        # printf '%b' on read - which the sed map above bypasses entirely.
+        #
+        # So the rule this project already had was right and this one field
+        # walked around it: read it the way the library reads it, drop the
+        # class, and indent the continuation lines so the block still reads as
+        # one field.
+        lim="$(sed -n 's/^LIMITE=//p' "$arq" | tail -1)"
+        if [ -n "$lim" ]; then
+            lim="$(printf '%b' "${lim//%/%%}")"
+            lim="${lim#*|}"
+            saida="$saida  $(t_msg mem_campo_limite)$(printf '%s' "$lim" |
+                   sed "2,\${/./s/^/              /}")"$'\n'
+        fi
+        saida="$saida"$'\n'
     done
     [ "$n" -gt 0 ] || { t_erro "$(t_msg mem_nao_achei "$filtro")"; return 1; }
     printf '%s' "$saida" | t_texto "$(t_msg mem_titulo)"
@@ -1347,12 +1393,26 @@ acao_painel() {
     while :; do
         # The action names are the machine-readable half and stay Portuguese
         # forever - "case $esc in" matches them, and a command copied off a
-        # forum has to work on any machine. Everything a person reads comes
-        # from the catalogue.
-        esc="$(zenity --list --title="Tandem" --width=520 --height=400 \
+        # forum has to work on any machine.
+        #
+        # But until 4.12 they were also SHOWN, as the first and leftmost column
+        # of the only screen a shop owner who never opens a terminal ever sees.
+        # "identidade", "restore", "autoteste" are words he has to decode before
+        # he can read the sentence beside them, and decoding them buys him
+        # nothing: he is clicking a row, not typing a command. --hide-column
+        # keeps the token as the value zenity RETURNS while taking it off the
+        # screen, so "case $esc in" below is untouched and the panel becomes one
+        # column of plain sentences. Verified with xdotool driving a real
+        # zenity: with column 1 hidden it still answers "instalar".
+        #
+        # The VERSION goes in the title, and the reason is the owner's: to find
+        # out which Tandem he is running he had to open a terminal - the exact
+        # thing this program exists to spare him.
+        esc="$(zenity --list --title="Tandem $VERSAO" --width=560 --height=430 \
             --text="$(t_msg pan_pergunta)" \
             --column="$(t_msg pan_col_acao)" \
             --column="$(t_msg pan_col_descricao)" --hide-header \
+            --hide-column=1 --print-column=1 \
             "instalar"   "$(t_msg pan_instalar)" \
             "preparar"   "$(t_msg pan_preparar)" \
             "programas"  "$(t_msg pan_programas)" \

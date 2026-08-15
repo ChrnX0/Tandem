@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1128207659 3827" "$soma_esperados"
+      "886899406 3829" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "1776500573 2424" "$soma_padroes"
+      "406821495 2443" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -6149,6 +6149,81 @@ for palavra in lista_recebendo_auto lista_recebendo_nao; do
         fail "tandem lista says which way the switch is set" "$palavra" "absent"
 done
 pass "tandem lista says which way the switch is set"
+
+section "what the owner reads is never the format it is stored in"
+
+# All three found in the FIELD, on the owner's machine, on the day 4.11 went
+# out - not by any check in this repository.
+
+# 1. The memory screen printed the LIMITE field raw, and it reached him as
+#    "limite: arquitetura|Este pacote...\n\nEle e para arm64...". Two leaks in
+#    one line: "arquitetura|" is the internal separator carrying the CLASS of
+#    the limit, and the \n were literal backslash-n, because t_memoria_grava
+#    escapes newlines so a value stays on one line and t_memoria_le undoes that
+#    on read - which the sed field map bypassed entirely.
+MEMLIM="$TMPROOT/mem-limite"; mkdir -p "$MEMLIM"
+{
+    printf 'PROGRAMA=anydesk_8.0.4-1_arm64.deb\n'
+    printf 'ARQUITETURA=arm64\n'
+    printf 'LIMITE=arquitetura|Feito para outro processador.\\n\\nEle e para arm64.\n'
+} > "$MEMLIM/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt"
+TELA_LIM="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+            TANDEM_MEMORIA="$MEMLIM" bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+naocontem "the class token never reaches the screen" "arquitetura|" "$TELA_LIM"
+case "$TELA_LIM" in
+    *'\n'*) fail "an escaped newline is shown as a line break, not as letters" \
+                 "no literal backslash-n" "$TELA_LIM" ;;
+    *) pass "an escaped newline is shown as a line break, not as letters" ;;
+esac
+contem "and the sentence itself survives intact" \
+       "Feito para outro processador." "$TELA_LIM"
+# A blank continuation line must not be padded out with spaces.
+if printf '%s\n' "$TELA_LIM" | grep -q '^ \+$'; then
+    fail "blank lines in a limit are not padded with spaces" "no space-only line" "found one"
+else
+    pass "blank lines in a limit are not padded with spaces"
+fi
+rm -rf "$MEMLIM"
+
+# 2. The self-test's first check calls t_erro for real to prove the error path
+#    works - and t_erro on a graphical machine fires a CRITICAL desktop
+#    notification. So the self-test popped a red "ignore this message" alarm,
+#    and `tandem socorro`, which embeds it, popped it at somebody already in
+#    trouble. The old form was `[ -n "$(t_erro ...)" ] || t_tem_gui`, and bash
+#    evaluates the LEFT side first - so it alarmed exactly the machines where
+#    the result then did not depend on it.
+ALARME="$TMPROOT/alarme"; mkdir -p "$ALARME/bin" "$ALARME/home"
+printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "$NOTIFLOG"\n' > "$ALARME/bin/notify-send"
+chmod +x "$ALARME/bin/notify-send"
+: > "$ALARME/notif.txt"
+PATH="$ALARME/bin:$PATH" NOTIFLOG="$ALARME/notif.txt" HOME="$ALARME/home" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+    bash "$ROOT/src/bin/tandem" autoteste >/dev/null 2>&1
+# awk and not `grep -c ... || printf 0`: on an EMPTY file grep prints 0 and
+# THEN exits 1, so the fallback fires too and the count comes out as "00".
+# This repository already learned that once - it reached the owner as a queue
+# length of "0\n0" - and this line walked straight back into it.
+equal "the self-test raises no desktop alarm to prove alarms work" "0" \
+      "$(awk '/critical/ { n++ } END { print n + 0 }' "$ALARME/notif.txt" 2>/dev/null)"
+# ...and it still actually exercises the error path rather than skipping it.
+contem "and it still exercises the error path" "t_erro" \
+       "$(sed -n '/1\. Does the error message reach/,/^    fi/p' "$ROOT/src/bin/tandem")"
+naocontem "without the short-circuit that made the alarm pointless" \
+          '"$(t_erro "$(t_msg auto_ignore)" 2>&1 1>/dev/null)" ] || t_tem_gui' \
+          "$(cat "$ROOT/src/bin/tandem")"
+rm -rf "$ALARME"
+
+# 3. The panel is the only screen a shop owner who never opens a terminal ever
+#    sees. It showed the internal command name as its first, leftmost column -
+#    "identidade", "restore", "autoteste" - and showed no version at all, so
+#    finding out which Tandem he had meant opening a terminal.
+PAINEL="$(sed -n '/^acao_painel()/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "the panel names its own version" '--title="Tandem $VERSAO"' "$PAINEL"
+contem "the command tokens are returned but not displayed" \
+       "--hide-column=1 --print-column=1" "$PAINEL"
+# The tokens must still be there: they are what `case "$esc" in` matches, and
+# hiding a column must never turn into deleting it.
+contem "and the token is still the value the case matches" '"instalar"' "$PAINEL"
 
 section "the report gets to a second human"
 

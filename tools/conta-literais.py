@@ -72,6 +72,13 @@ EXCECOES = {
     # name is a name that finds nothing.
     "Tandem",
     "Tandem $VERSAO\\n\\n",
+    # The same pair again, as the PANEL's window title. 4.12 put the version
+    # there because the owner asked the obvious question: the panel is the only
+    # screen somebody who never opens a terminal ever sees, and finding out
+    # which Tandem he was running meant opening one. Exempt for the reason
+    # directly above - a product name is not prose, and translating it produces
+    # a name that finds nothing.
+    "Tandem $VERSAO",
     # THE COMMAND NAMES, which stay Portuguese forever - that is a standing
     # decision, not an oversight: a command copied off a forum has to work on
     # any machine, so these cannot move with the language. In the zenity panel
