@@ -1016,6 +1016,41 @@ labels are covered by a separate assertion instead), anything behind a tool the
 machine lacks — skipped probes are REPORTED, never counted as clean — and a
 one-word literal, which is below both thresholds.
 
+### The check whose pass and whose wrong premise look the same — 4.15
+
+The same disease outside the counters, and it cost twenty-four files. Reading
+a CI log I saw `UNCOMMITTED changes present` and assumed `.proofgate/` was
+untracked debris the CI step had just made. The check written to confirm that
+was:
+
+```bash
+mkdir -p .proofgate && touch .proofgate/verify.sh .proofgate/lib.sh
+git status --short | grep -i proofgate || echo "IGNORED"
+rm -rf .proofgate
+```
+
+`git status` was empty and that was read as proof the path was ignored. It was
+empty for the OPPOSITE reason: the files were already tracked and already
+there, so touching two of them changed nothing. The `rm` then deleted all
+twenty-four tracked files, `git add -A` staged the deletions, and it was
+pushed. Restored byte-identical in the next commit.
+
+**The rule, which generalises past git:** before believing a check, ask what it
+prints when your premise is WRONG. If that is the same thing it prints when
+your premise is right, it has measured nothing and you will read into it
+whatever you already believed. This one could not tell *ignored* from *tracked
+and unmodified* — and `.gitignore` never applies to a tracked file anyway, so
+the fix could not have worked even had the diagnosis been right.
+
+**Still open, and deliberately not guessed at:** why the CI working tree is
+dirty at all. The hypothesis is that `install.sh` re-vendors `.proofgate/` over
+the committed copy, so the tree goes dirty whenever upstream has moved. It is
+NOT verified — running that installer is a curl-to-bash refused in the agent
+environment — so nothing has been changed on the strength of it. The
+`winedeps.sh ↔ tests/run.sh` pair warning in CI despite its
+`direction: a-implies-b` is unexplained for the same reason: the guard lives in
+another repository.
+
 ### Column 4 of `limites.tsv` — fixed in 4.8, and worth reading as a pattern
 
 It was byte-identical Portuguese in ALL SEVEN tables, the English default
@@ -1591,11 +1626,24 @@ rather than "it worked", and one that prints a line gets "Terminou sem erro"
 followed by its own words only — no Tandem log lines under "this is what it
 said", which is the defect the guard uncovered.
 
-**The next version is 4.6 and its changelog entry has to be OPENED before
+**v4.15 IS PUBLISHED** — 2026-08-15, tag `v4.15` at `5e7d48d`, `.deb`
+(442920 bytes) and `.sha256` attached, and the published artifact verified
+byte-for-byte three ways: sha256 `fe74c0e8…` from the release's own checksum
+file, from the downloaded bytes, and from a local build at that same commit.
+Exercised from the INSTALLED package, which is the only method that has ever
+caught anything here: `t_msg_n progresso_ha_minutos` renders "1 minute" /
+"2 minutes" in English, "Ja vai 1 minuto" / "Ja vao 2 minutos" in Portuguese
+(the verb agrees, which `(s)` could not express), one single form in Chinese
+and two distinct Arabic forms at 1 and 2; `tandem memoria` shows `seconds:` /
+`segundos:` where it used to say `took (s):`; **`grep -c '(s)'` is 0 in all
+seven installed catalogues**; and `tandem autoteste` answers 17 passed,
+0 failed.
+
+**The next version is 4.16 and its changelog entry has to be OPENED before
 anything is added** — `debian/control`, `debian/changelog` and `TANDEM_VERSAO`
-all still say 4.5, and 4.5's entry is now history the public has. A doc-only
+all still say 4.15, and 4.15's entry is now history the public has. A doc-only
 commit after a release is fine and the guard allows it; a bullet appended to
-4.5's entry is not.
+4.15's entry is not.
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
