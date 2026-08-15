@@ -1851,7 +1851,16 @@ Seus arquivos foram devolvidos.
 Não consegui devolver os arquivos.
 
 @bkp_sem_ambiente
-Não há ambiente Windows para salvar ainda.
+O Tandem ainda nao criou nenhum ambiente Windows nesta maquina, entao nao
+ha nada aqui para ele salvar.
+
+Ele cria um sozinho na primeira vez que voce abre um programa do Windows por
+ele - e so dar dois cliques num .exe e deixar terminar. Depois disso, este
+comando passa a ter o que salvar.
+
+Se voce ja tinha perfis do Wine seus nesta maquina, eles sao SEUS: o Tandem
+nunca escreve dentro deles, e pela mesma razao tambem nao faz backup deles.
+Para esses, use a sua propria ferramenta.
 
 @bkp_salvando
 Salvando o ambiente Windows. Pode demorar.

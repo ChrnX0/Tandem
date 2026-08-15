@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "886899406 3829" "$soma_esperados"
+      "528430704 3831" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -6149,6 +6149,61 @@ for palavra in lista_recebendo_auto lista_recebendo_nao; do
         fail "tandem lista says which way the switch is set" "$palavra" "absent"
 done
 pass "tandem lista says which way the switch is set"
+
+section "a command typed at a prompt answers at that prompt"
+
+# THE CARDINAL RULE, broken from the inside. Reported from the owner's own
+# machine: he typed `tandem backup` and the terminal "simplesmente nao
+# retornou nada". The command had a perfectly good answer - there is no
+# Windows environment yet - and t_erro handed it to notify-send, because a
+# graphical session existed. It went into a bubble over his desktop while he
+# sat looking at a silent prompt.
+#
+# t_texto has had the right rule since 3.4; t_erro, t_ok and t_aviso never
+# adopted it. A notification is what you use when there is NOBODY at a
+# terminal - the double-click case. When somebody is there, that is where they
+# are looking.
+GUIB="$TMPROOT/gui-bin"; mkdir -p "$GUIB"
+printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "$NOTIF"\nexit 0\n' > "$GUIB/notify-send"
+chmod +x "$GUIB/notify-send"
+
+if command -v script >/dev/null 2>&1; then
+    # A REAL tty, with a graphical session also present. Nothing short of this
+    # reproduces it: with stdout redirected the old code printed too.
+    SAIDA_TTY="$(PATH="$GUIB:$PATH" NOTIF=/dev/null DISPLAY=:99 \
+        HOME="$TMPROOT/sem-ambiente" TANDEM_LIB="$ROOT/src/lib" \
+        script -qec "TANDEM_IDIOMA_FORCADO=en bash '$ROOT/src/bin/tandem' backup" \
+        /dev/null 2>&1)"
+    if [ -n "$(printf '%s' "$SAIDA_TTY" | tr -d '[:space:]')" ]; then
+        pass "with a terminal AND a desktop, the answer reaches the terminal"
+    else
+        fail "with a terminal AND a desktop, the answer reaches the terminal" \
+             "a sentence" "zero bytes - the silence the owner reported"
+    fi
+else
+    skip "the terminal-beats-desktop rule" "no script(1) to make a real tty"
+fi
+
+# ...and the double-click path must NOT lose its notification, which is the
+# only way to reach somebody who has no terminal at all.
+: > "$TMPROOT/notif-dc.txt"
+( PATH="$GUIB:$PATH" NOTIF="$TMPROOT/notif-dc.txt" DISPLAY=:99 \
+  HOME="$TMPROOT/sem-ambiente" TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+  bash "$ROOT/src/bin/tandem" backup ) </dev/null >/dev/null 2>&1
+if [ "$(awk 'END { print NR + 0 }' "$TMPROOT/notif-dc.txt")" -gt 0 ]; then
+    pass "with no terminal, the desktop notification is still how it reaches somebody"
+else
+    fail "with no terminal, the desktop notification is still how it reaches somebody" \
+         "at least one notification" "none"
+fi
+
+# The rule itself. With both descriptors redirected there is nobody at a
+# terminal, and it has to say so - the answer is written to fd 3 precisely so
+# that checking it does not hand the function a terminal to find.
+equal "with neither descriptor on a terminal, it says so" "1" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"
+          { t_tem_terminal; echo $? >&3; } >/dev/null 2>&1' 3>&1)"
 
 section "what the owner reads is never the format it is stored in"
 

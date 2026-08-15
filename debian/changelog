@@ -63,6 +63,34 @@ tandem (4.12) unstable; urgency=medium
     would take every archive on the machine away from the archive manager,
     which is the exact harm the association work exists to avoid - so the fix
     is a sentence telling him not to click it, not an association.
+
+  * A COMMAND TYPED AT A PROMPT ANSWERS AT THAT PROMPT. The owner typed
+    "tandem backup" and the terminal returned nothing at all - "simplesmente
+    nao retornou nada". The command had a perfectly good answer for him, and
+    t_erro handed it to notify-send because a graphical session existed. It
+    went into a bubble over his desktop while he sat looking at a silent
+    prompt.
+  * This is the cardinal rule of the whole project broken from the inside, and
+    not in one command: t_erro, t_ok and t_aviso all preferred the desktop
+    whenever a desktop existed, so EVERY command typed at a terminal on a
+    machine that has one - which is every shop machine there is - could answer
+    into thin air. t_texto has had the right rule since 3.4 and the other three
+    never adopted it.
+  * The rule, now shared as t_tem_terminal: a notification is what you use when
+    there is NOBODY at a terminal, which is the double-click case. When
+    somebody is there, that is where they are looking. Both descriptors are
+    checked, because a caller may redirect either one and still have a person
+    at the other. For t_erro the terminal wins OUTRIGHT rather than as well - a
+    modal dialog that blocks until somebody clicks it is the wrong answer to a
+    typed command.
+  * Measured both ways under a real tty with a display present: the old code
+    produced ZERO BYTES, and the double-click path still notifies.
+  * "tandem backup" also explains which environment it means. It said "There is
+    no Windows environment to save yet." to somebody with TWO Wine prefixes on
+    the machine, which reads as a lie. It now says Tandem has not created one
+    YET, that opening a Windows program through it creates one, and that the
+    profiles he already had are his - never written into, and for the same
+    reason never backed up.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 13:10:00 +0000
 
 tandem (4.11) unstable; urgency=medium

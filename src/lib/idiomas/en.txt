@@ -1861,7 +1861,16 @@ Your files have been put back.
 I could not put the files back.
 
 @bkp_sem_ambiente
-There is no Windows environment to save yet.
+Tandem has not created a Windows environment on this machine yet, so there is
+nothing here for it to save.
+
+It creates one by itself the first time you open a Windows program through
+it - just double-click an .exe and let it finish. After that, this command
+has something to save.
+
+If you already had Wine profiles of your own on this machine, those are
+YOURS: Tandem never writes into them, and for the same reason it never backs
+them up either. Use your own tool for those.
 
 @bkp_salvando
 Saving the Windows environment. This may take a while.
