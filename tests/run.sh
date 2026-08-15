@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3749165941 3889" "$soma_esperados"
+      "1168234846 3945" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -3891,8 +3891,8 @@ REG_L="$(t_lista_registro "$PROG_L")"
 # allows - every reader indexes by column, so an old client reads 1-8 and
 # ignores the rest, while reordering or repurposing a column would silently
 # change what every published row means.
-equal "the record has the format's eleven fields" \
-      "11" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
+equal "the record has the format's twelve fields" \
+      "12" "$(printf '%s' "$REG_L" | awk -F'\t' '{print NF}')"
 case "$REG_L" in
     "$ID_L"*) pass "the record starts with the file identity" ;;
     *) fail "the record starts with the file identity" "$ID_L..." "$REG_L" ;;
@@ -5684,7 +5684,7 @@ CAMPOS="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_ESTADO="$REGV2" TANDEM_MEMORIA="$REG
              t_memoria_grava "$F" RESOLVERAM vcrun2022
              t_memoria_grava "$F" RESULTADO abriu
              t_lista_registro "$F" | awk -F"\t" "{print NF}"; rm -f "$F"' 2>/dev/null)"
-equal "a record carries eleven fields now" "11" "$CAMPOS"
+equal "a record carries twelve fields now" "12" "$CAMPOS"
 
 # A Wine version with four numeric components is indistinguishable from an
 # IPv4 address to the leak sieve's regex. Leaving the stack fields in its scope
@@ -5932,11 +5932,16 @@ contem "which is exactly what the old whole-tail slice got wrong" \
        "internet" "$(causa "$TMPROOT/wt-mudo-mais-sucesso.log")"
 # And the slice really is taken per verb, inside the loop, not after it.
 naocontem "so the slice is taken when a verb fails, not after the loop" \
-          'tail -n +"$((MARCA_WT+1))" "$LOG" > "$RESTO"' \
+          't_log_desde "$MARCA_WT" > "$RESTO"' \
           "$(cat "$ROOT/src/bin/tandem-exe")"
 contem "and it is appended from the failure branch" \
-       'tail -n +"$((MARCA_WT+1))" "$LOG" >> "$RESTO"' \
+       't_log_desde "$MARCA_WT" >> "$RESTO"' \
        "$(cat "$ROOT/src/bin/tandem-exe")"
+# ...and by a MARKER, never by a line count. A line count is only correct
+# while this process is the only writer, and Tandem now spawns background
+# work - the list fetch, the version check - into the same log.
+naocontem "and never by counting lines, which a background writer shifts" \
+          "wc -l < \"\$LOG\"" "$(cat "$ROOT/src/bin/tandem-exe")"
 
 # A Brazilian date order inside a sentence that IS translated. The wrong-clock
 # message reaches en, zh_CN, hi and ar readers with dd/mm/yyyy in the middle of
@@ -6149,6 +6154,54 @@ for palavra in lista_recebendo_auto lista_recebendo_nao; do
         fail "tandem lista says which way the switch is set" "$palavra" "absent"
 done
 pass "tandem lista says which way the switch is set"
+
+section "the log is cut by a marker, not by counting lines"
+
+# MEASURED, not feared. Two runs of an IDENTICAL commit in CI, one green and
+# one red, on a test whose second pass suddenly failed to detect a DLL that was
+# plainly in the log. tandem-exe took MARCA=$(wc -l < "$LOG") and later sliced
+# with tail -n +$((MARCA+1)); that is only correct while this process is the
+# ONLY writer, and Tandem now spawns background work into the same file - the
+# community-list fetch and the version check. A writer landing between the
+# count and the slice moves the window, and the detector reads the wrong part.
+#
+# The owner saw the same shape from the other side on his own machine the same
+# day: lines from `tandem socorro` appearing under the heading of `tandem
+# version`.
+LOGM="$TMPROOT/marcador.log"
+marcador() {
+    TANDEM_LIB="$ROOT/src/lib" LOG="$LOGM" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        LOG="'"$LOGM"'"; : > "$LOG"
+        printf "antes\n" >> "$LOG"
+        M="$(t_log_marca 1)"
+        printf "primeira\n" >> "$LOG"
+        printf "INTRUSO de outro processo\n" >> "$LOG"
+        printf "segunda\n" >> "$LOG"
+        t_log_desde "$M"' 2>/dev/null
+}
+equal "everything after the marker comes back, intruder included" \
+      "primeira INTRUSO de outro processo segunda" \
+      "$(marcador | tr '\n' ' ' | sed 's/ $//')"
+# The marker itself must not come back: it is Tandem's own bookkeeping, and
+# t_palavras_do_programa would show it to the owner as if the program had said
+# it - the defect that put an internal Portuguese line under "this is what it
+# said" in 4.5.
+naocontem "and the marker itself is not part of the slice" "---8<---" "$(marcador)"
+# Two attempts in one run must not share a marker, or the second slice would
+# start at the first attempt and carry its output.
+DOIS="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    LOG="'"$TMPROOT"'/marcador2.log"; : > "$LOG"
+    a="$(t_log_marca 1)"; b="$(t_log_marca 2)"
+    [ "$a" = "$b" ] && echo iguais || echo diferentes' 2>/dev/null)"
+equal "two attempts of one run get different markers" "diferentes" "$DOIS"
+# With no marker there is no "since", and guessing a line number is what this
+# replaced.
+equal "an absent marker returns nothing rather than guessing" "1" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+         . "'"$ROOT"'/src/lib/common.sh"; LOG="'"$LOGM"'"
+         t_log_desde "" >/dev/null; echo $?' 2>/dev/null)"
 
 section "the list knows what did NOT work, and finally says so"
 

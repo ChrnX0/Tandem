@@ -231,6 +231,13 @@ t_memoria_grava "$PROG" ARQUITETURA "${ARCH:-?}" 2>/dev/null
 # The memory SUGGESTS, it never decides. Installing on its own based on a past
 # lesson would be repeating a mistake forever - and in a shop owner's prefix
 # that costs dearly. So it only shortens the path if he says so.
+# Declared HERE, above the memory shortcut, and not further down where it used
+# to live: the shortcut installs BEFORE the detector loop, so an initialisation
+# below it silently wiped whatever the shortcut had recorded. That is the bug
+# this very change introduced on its first attempt, caught by reading the order
+# rather than by any test - the shortcut path has no test that reaches it.
+INSTALADOS_AGORA=""
+APLICOU_LICAO=0
 if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null 2>&1; then
     PENDENTES=""
     for v in $SABIDOS; do
@@ -305,6 +312,22 @@ FIMAVISO
                     ALVO="$(t_dll_do_verbo "$v")"
                     if [ -z "$ALVO" ] || t_dll_no_prefixo "$ALVO" "$ARCH"; then
                         printf '%s\n' "$v" >> "$WINEPREFIX/.tandem-verbos"
+                        # RECORDED. Until now this branch installed the verb and
+                        # told nobody: INSTALADOS_AGORA was only ever appended to
+                        # inside the detector loop far below, so a lesson APPLIED
+                        # from the list or from a recipe left RESOLVERAM empty,
+                        # t_lista_registro refused to build a record, and the
+                        # count on that lesson could never rise above the shops
+                        # that had rediscovered it from scratch - which is
+                        # precisely what this shortcut exists to stop happening.
+                        INSTALADOS_AGORA="$INSTALADOS_AGORA $v"
+                        # And WHERE it came from, because the two are not the
+                        # same evidence. A shop that worked the lesson out for
+                        # itself is an independent discovery; a shop that
+                        # applied somebody else's and found it worked is
+                        # corroboration. Summing them would let the list
+                        # manufacture confidence out of its own output.
+                        APLICOU_LICAO=1
                     else
                         t_diz "!!! $v (da memoria) saiu 0 e nao entregou $ALVO"
                         t_anota_suspeita "$ALVO" "$v"
@@ -338,13 +361,17 @@ executar() {
 MAX=3
 tentativa=1
 ATALHOS_ANTES="$(t_atalhos_wine)"
-INSTALADOS_AGORA=""
 # "dll<TAB>verb" pairs that this run has already proven undelivered.
 SUSPEITAS=""
 # Pairs that did arrive, in the bitness this program cannot use.
 BITOLA=""
 while :; do
-    MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+    # A marker, not a line count: background writers (the community-list
+    # fetch, the version check) share this log and shift the numbers
+    # between the count and the slice. That made two runs of an IDENTICAL
+    # commit in CI go green once and red once, on a detector that suddenly
+    # could not see a DLL sitting plainly in the log.
+    MARCA="$(t_log_marca "$tentativa")"
     t_aviso "$(t_msg abrindo "$(basename -- "$PROG")")"
     # The clock that decides "it opened and closed by itself" has to time THE
     # RUN, not everything that led up to it. INICIO is set once, near the top,
@@ -364,6 +391,17 @@ while :; do
         # it. Keeping only the ones that came now avoids crediting the recipe
         # with something that was already in the prefix for another reason.
         for v in $INSTALADOS_AGORA; do t_memoria_junta "$PROG" RESOLVERAM "$v"; done
+        # WHERE the lesson came from, which is not the same evidence as WHAT it
+        # was. A shop that worked the components out for itself is an
+        # independent discovery; a shop that applied somebody else's lesson and
+        # found it worked is corroboration. Summing the two would let the list
+        # manufacture confidence out of its own output - four hundred machines
+        # applying one suggestion would read as eight hundred discovering it.
+        #
+        # On disk, and in the record, so the far end can keep them apart. The
+        # value is the on-disk vocabulary, never translated.
+        [ "$APLICOU_LICAO" = 1 ] &&
+            t_memoria_grava "$PROG" ORIGEM_LICAO aplicado 2>/dev/null
         DUROU=$((SECONDS-INICIO))
         t_memoria_grava "$PROG" RESULTADO abriu
         t_memoria_grava "$PROG" SEGUNDOS "$DUROU"
@@ -394,7 +432,7 @@ while :; do
 
     # Looks only at the stretch of the log generated in this attempt.
     PARCIAL="$TANDEM_TRAVAS/parcial.$$"
-    tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+    t_log_desde "$MARCA" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
 
     VERBOS="$(t_verbos_do_log "$PARCIAL")"
     ORFAS="$(t_dlls_sem_traducao "$PARCIAL")"
@@ -676,7 +714,7 @@ $MAQUINA}"
     for v in $VERBOS; do
         t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"
         t_diz ">>> winetricks -q $v"
-        MARCA_WT=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+        MARCA_WT="$(t_log_marca "wt-$v")"
         if $INIBIR winetricks -q "$v" >>"$LOG" 2>&1; then
             # ------------------------------------ proof of delivery
             # winetricks exiting 0 says that IT finished, not that the file
@@ -734,7 +772,7 @@ $MAQUINA}"
             t_diz "!!! winetricks falhou em $v"
             FALHARAM="$FALHARAM $v"
             # Taken HERE, while the mark still belongs to this verb.
-            tail -n +"$((MARCA_WT+1))" "$LOG" >> "$RESTO" 2>/dev/null || :
+            t_log_desde "$MARCA_WT" >> "$RESTO" 2>/dev/null || :
         fi
     done
     wineserver -w

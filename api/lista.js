@@ -77,6 +77,12 @@ const CAMPOS = [
   // values. So it is not a machine identifier and cannot become one by
   // accumulation. Sixteen hex characters, or "-" from a client that has none.
   { nome: "dedup",      ok: (v) => v === "-" || /^[0-9a-f]{16}$/.test(v) },
+  // Field 12, since 4.13: where this lesson came from. "proprio" is a shop
+  // that worked it out for itself; "aplicado" is one that applied somebody
+  // else's and found it worked. They must never be added together, or four
+  // hundred machines applying one suggestion read as eight hundred
+  // discovering it - the list confirming itself out of its own output.
+  { nome: "origem",     ok: (v) => /^(proprio|aplicado)$/.test(v) },
 ];
 
 // A verb name arriving from outside is a name, never a command line. This is

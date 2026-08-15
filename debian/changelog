@@ -46,6 +46,43 @@ tandem (4.13) unstable; urgency=medium
     intake goes out of its way to accept and the resolver drops on its first
     line. It answers only when there is no working lesson at all, because one
     shop failing where four hundred succeeded is a fact about that shop.
+
+  * THE LOG IS CUT BY A MARKER, NOT BY COUNTING LINES - and this one was caught
+    by CI disagreeing with itself. Two runs of an IDENTICAL commit, one green
+    and one red, on a test whose second pass suddenly failed to detect a DLL
+    that was plainly in the log. tandem-exe took MARCA=$(wc -l < "$LOG") and
+    later sliced with tail -n +$((MARCA+1)), which is only correct while this
+    process is the ONLY writer - and Tandem now spawns background work into the
+    same file, the community-list fetch and the version check. A writer landing
+    between the count and the slice moves the window, and the detector reads
+    the wrong part of the log.
+  * The owner saw the same shape from the other side on his own machine the
+    same day: lines from "tandem socorro" appearing under the heading of
+    "tandem version". One cause, two symptoms, and the flaky CI run is what
+    made it undeniable.
+  * A marker is written INTO the stream it will be used to cut, so whatever
+    else lands before or after it, the text after the marker is exactly the
+    text written after the marker. Distinct per process and per attempt, and
+    the marker itself never comes back in the slice - it would otherwise be
+    shown to the owner as if the program had said it, which is the defect 4.5
+    fixed for tandem-script.
+
+  * A lesson taken from the list can finally be corroborated back into it.
+    INSTALADOS_AGORA was only ever appended to inside the detector loop, so a
+    lesson APPLIED from the list or from a recipe left RESOLVERAM empty, the
+    record was never built, and the count on that lesson could never rise above
+    the shops that had rediscovered it from scratch - which is precisely what
+    the shortcut exists to stop happening.
+  * Field 12 keeps the two apart: "proprio" is a shop that worked it out for
+    itself, "aplicado" is one that applied somebody else's and found it worked.
+    They must NEVER be summed, or four hundred machines applying one suggestion
+    read as eight hundred discovering it - the list confirming itself out of
+    its own output. So "aplicado" rows never select a lesson and are counted
+    separately, and a row from before 4.13 reads as "proprio", which is what it
+    was.
+  * The first attempt at this put the initialisation of INSTALADOS_AGORA BELOW
+    the shortcut that fills it, silently wiping it - caught by reading the
+    order, since no test reaches that path.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 18:40:00 +0000
 
 tandem (4.12) unstable; urgency=medium
