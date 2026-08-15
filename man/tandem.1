@@ -195,6 +195,21 @@ and input from outside cannot carry a command.
 .BI "tandem memoria " [name]
 Shows what Tandem has learnt about each program: which components fixed it,
 which did not, whether it opened, and how long it took.
+.IP
+The
+.B I checked
+line is what Tandem verified for itself, as opposed to what you told it. After
+installing a missing component it looks on disk for the file the program asked
+for, in a width the program can actually load, and records one of four answers:
+the file arrived, it arrived built for the other processor width, it is still
+missing, or there was nothing it could check for. The last of those is not the
+same as \(lqnothing was wrong\(rq, and it says so.
+.IP
+A lesson where Tandem proved the file arrived but nobody confirmed the program
+itself works is worth more than a silent run and less than your word. If you
+share it \(em as a recipe or with the community list \(em it goes out labelled
+.BR entregue ,
+and the list counts it as half a report.
 .TP
 .BI "tandem esquecer " name
 Erases what it learnt about a program. Next time it works it out again.

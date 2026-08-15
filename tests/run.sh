@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "189750911 3785" "$soma_esperados"
+      "3544938649 3786" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -5107,6 +5107,29 @@ else
     fail "the newest changelog entry is dated after the one before it" \
          "newer than $DATA_2" "$DATA_1"
 fi
+
+# And the WEEKDAY has to be the weekday that date really was. lintian refuses
+# "debian-changelog-has-wrong-day-of-week" as a warning, the release step runs
+# it with --fail-on warning, and this has now cost the project a red CI run: an
+# entry written by hand said Fri for 2026-08-15, which was a Saturday. Nobody
+# checks a day name by eye, and the ordering guard above cannot see it - both
+# dates parse fine and sort correctly, because `date -d` simply ignores a
+# weekday that disagrees with the rest of the field.
+#
+# It is checked on every entry, not only the top one: an old entry's wrong day
+# is just as fatal to `lintian --fail-on warning`, and finding it during a
+# release is the wrong order.
+DIA_MAU=""
+while IFS= read -r d; do
+    dia_dito="${d%%,*}"
+    dia_real="$(date -d "${d#*, }" +%a 2>/dev/null)" || continue
+    [ -n "$dia_real" ] || continue
+    [ "$dia_dito" = "$dia_real" ] || DIA_MAU="$DIA_MAU$d (was a $dia_real) "
+done <<EOF
+$(grep '^ -- ' debian/changelog | sed 's/^ -- [^>]*>  //')
+EOF
+equal "every changelog entry names the weekday that date really was" \
+      "" "$DIA_MAU"
 
 # lintian refuses a changelog line over 80 columns, and the release step runs it
 # with --fail-on warning while demanding ZERO output - so eight lines at 81 and

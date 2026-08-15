@@ -70,7 +70,7 @@ tandem (4.11) unstable; urgency=medium
   * The counter caught the three on-disk tokens this added to tandem-exe, which
     is what it is for - they went on the exceptions list with the reason, beside
     "confirmado" and "abriu", rather than into the catalogues.
- -- Tandem <rockx0@gmail.com>  Fri, 15 Aug 2026 09:40:00 +0000
+ -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium
 
