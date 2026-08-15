@@ -1404,6 +1404,18 @@ the rejected ones with the reason written down — lives in `docs/IDEAS.md`. Rea
 it before proposing anything new; half the obvious ideas were already turned down
 for a reason.
 
+**The ledger was corrected on 2026-08-15 and the correction is itself worth
+reading.** It listed 22 items as NEXT; verified one by one against the code,
+eighteen of them had been done — some three versions earlier — and only the
+verdict line was never changed. A ledger that overstates what is left is worse
+than no ledger: it is the file this file tells you to read before proposing
+anything, and it was sending the next session to build things that exist. When
+you finish an item, change its verdict in the same commit, not later.
+
+What genuinely remains there is small and mostly NOT code: a real shop program
+(needs the owner's machine), the list's signing policy (needs his key), and two
+items blocked on the list having a first published row.
+
 The queue, in order:
 
 0. ~~Migrate the literals `tandem doctor`, the panel, the buttons, `tandem
