@@ -2020,6 +2020,20 @@ Tandem 把这里能实测的都测了，全都有回应。
 @env_desligar
 关闭：     tandem enviar nao
 
+@env_ja_sairam
+从这台机器发出去过的行数，总计：{1}
+
+@env_ver_enviados
+查看已经发出去的全部内容：cat {1}
+清除这份记录：tandem esquecer enviados
+
+@esq_enviados_apagado
+已清除：这台机器发出过的 {1} 行的记录。
+已经发出去的仍然发出去了——这只清除保存在本机的副本。
+
+@esq_enviados_vazio
+这台机器还没有发出过任何东西，所以没有可清除的记录。
+
 @env_ver_fila
 查看整个队列：  cat {1}
 

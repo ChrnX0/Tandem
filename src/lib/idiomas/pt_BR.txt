@@ -2099,6 +2099,20 @@ Ligar:     tandem enviar sim
 @env_desligar
 Desligar:  tandem enviar nao
 
+@env_ja_sairam
+Linhas que ja sairam desta maquina, no total: {1}
+
+@env_ver_enviados
+Ver tudo o que ja saiu:  cat {1}
+Apagar esse registro:  tandem esquecer enviados
+
+@esq_enviados_apagado
+Apagado: o registro de {1} linha(s) que esta maquina tinha enviado.
+O que ja foi enviado continua enviado - isto apaga so a copia guardada aqui.
+
+@esq_enviados_vazio
+Esta maquina ainda nao mandou nada, entao nao ha nada para apagar.
+
 @env_ver_fila
 Ver a fila inteira:  cat {1}
 

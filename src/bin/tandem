@@ -968,6 +968,22 @@ acao_memoria() {
 acao_esquecer() {
     local filtro="${1:-}" arq prog n=0
     [ -n "$filtro" ] || { t_erro "$(t_msg esq_diga_o_nome)"; return 1; }
+    # The ledger of what has left this machine is the owner's to erase, and
+    # that is not a courtesy: section 3 of the idea ledger rejected telemetry
+    # on the rule "nothing the owner cannot see and cannot delete", and a
+    # record kept for his benefit that he cannot remove is a record kept
+    # against him. Erasing it changes nothing at the far end - what is sent is
+    # sent - and it says so.
+    if [ "$filtro" = enviados ]; then
+        if [ -f "$TANDEM_FILA.enviados" ]; then
+            n="$(t_envio_ja_enviados)"
+            rm -f -- "$TANDEM_FILA.enviados"
+            t_ok "$(t_msg esq_enviados_apagado "$n")"
+            return 0
+        fi
+        t_erro "$(t_msg esq_enviados_vazio)"
+        return 1
+    fi
     for arq in "$TANDEM_MEMORIA"/*.txt; do
         [ -f "$arq" ] || continue
         prog="$(sed -n 's/^PROGRAMA=//p' "$arq" | head -1)"
@@ -1232,6 +1248,14 @@ acao_enviar() {
             printf '%s\n' "$(t_msg env_ninguem_decidiu)"
         fi
         printf '%s\n' "$(t_msg env_fila "$fila")"
+        # What has actually LEFT. Until 4.11 the machine kept no record of it:
+        # the sieve refusal and the 4xx refusal both park their line, and the
+        # one branch that succeeded destroyed it. So "what has this machine
+        # sent about my shop?" had no answer here - which is the question a
+        # shopkeeper, or whoever audits him, actually asks, and section 3 of
+        # the idea ledger rejected telemetry on exactly this rule: nothing the
+        # owner cannot see and cannot delete.
+        printf '%s\n' "$(t_msg env_ja_sairam "$(t_envio_ja_enviados)")"
         if [ -n "$TANDEM_LISTA_ENVIO" ]; then
             printf '%s\n' "$(t_msg env_endereco "$TANDEM_LISTA_ENVIO")"
         else
@@ -1242,6 +1266,8 @@ acao_enviar() {
         printf '%s\n' "$(t_msg env_ligar)"
         printf '%s\n' "$(t_msg env_desligar)"
         printf '%s\n' "$(t_msg env_ver_fila "$TANDEM_FILA")"
+        [ "$(t_envio_ja_enviados)" != 0 ] &&
+            printf '%s\n' "$(t_msg env_ver_enviados "$TANDEM_FILA.enviados")"
     } | t_texto "$(t_msg env_titulo)"
     return 0
 }

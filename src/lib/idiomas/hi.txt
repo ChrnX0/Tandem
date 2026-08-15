@@ -2085,6 +2085,20 @@ tandem contribuir <फ़ाइल>
 @env_desligar
 बंद करें:   tandem enviar nao
 
+@env_ja_sairam
+इस मशीन से अब तक जा चुकी पंक्तियाँ, कुल: {1}
+
+@env_ver_enviados
+जो कुछ जा चुका है वह सब देखें:  cat {1}
+वह रिकॉर्ड मिटाएँ:  tandem esquecer enviados
+
+@esq_enviados_apagado
+मिटा दिया: {1} पंक्तियों का वह रिकॉर्ड जो इस मशीन ने भेजी थीं।
+जो भेजा जा चुका वह भेजा ही रहेगा - यह सिर्फ़ यहाँ रखी प्रति मिटाता है।
+
+@esq_enviados_vazio
+इस मशीन ने अभी तक कुछ नहीं भेजा, इसलिए मिटाने को कुछ नहीं है।
+
 @env_ver_fila
 पूरी कतार देखिए:  cat {1}
 

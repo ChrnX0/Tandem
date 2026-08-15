@@ -2105,6 +2105,20 @@ Activar:   tandem enviar sim
 @env_desligar
 Desactivar: tandem enviar nao
 
+@env_ja_sairam
+Lineas que ya salieron de esta maquina, en total: {1}
+
+@env_ver_enviados
+Ver todo lo que ya salio:  cat {1}
+Borrar ese registro:  tandem esquecer enviados
+
+@esq_enviados_apagado
+Borrado: el registro de {1} linea(s) que esta maquina habia enviado.
+Lo que ya se envio sigue enviado - esto solo borra la copia guardada aqui.
+
+@esq_enviados_vazio
+Esta maquina todavia no ha enviado nada, asi que no hay nada que borrar.
+
 @env_ver_fila
 Ver la cola entera:  cat {1}
 

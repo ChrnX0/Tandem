@@ -4170,6 +4170,13 @@ t_envio_pendentes() {
     awk 'END { print NR + 0 }' "$TANDEM_FILA" 2>/dev/null || printf '0'
 }
 
+# How many lines have actually LEFT this machine, ever. Same arithmetic, and
+# the same trap: grep -c on an empty file prints 0 and exits 1.
+t_envio_ja_enviados() {
+    [ -f "$TANDEM_FILA.enviados" ] || { printf '0'; return 0; }
+    awk 'END { print NR + 0 }' "$TANDEM_FILA.enviados" 2>/dev/null || printf '0'
+}
+
 # Sends what is queued, best effort. PRINTS the number sent, and RETURNS why:
 # 0 nothing to report, 3 the server refused everything it was offered, 4 the
 # queue is inside the wait after a failed pass, 5 another pass already has it.
@@ -4252,6 +4259,22 @@ t_envio_envia() {
         fi
         t_envio_posta "$reg"; resposta=$?
         if [ "$resposta" = 0 ]; then
+            # WRITTEN DOWN. Until 4.11 this was the only branch of the three
+            # that destroyed the line: the sieve refusal and the 4xx refusal
+            # both park theirs under an explicit rule, and a line that actually
+            # LEFT was the one thing the machine kept no record of.
+            #
+            # That is not tidiness, it is the rule section 3 of docs/IDEAS.md
+            # rejected telemetry on - "nothing the owner cannot see and cannot
+            # delete". Sending is on by default and defended by a notice; a
+            # year later, "what has this machine sent about my shop?" had no
+            # answer ON the machine, and that is the question a shopkeeper, or
+            # whoever audits him, actually asks.
+            #
+            # The month and not the day, for the same reason the record itself
+            # carries only the month: a date with a day identifies.
+            printf '%s\t%s\n' "$(date +%Y-%m)" "$reg" \
+                >> "$TANDEM_FILA.enviados" 2>/dev/null
             enviados=$((enviados+1)); contador=$((contador+1)); falhas=0
         elif [ "$resposta" = 2 ]; then
             # Refused for good. It leaves the queue so it cannot block the

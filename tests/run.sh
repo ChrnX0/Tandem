@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2985128605 3821" "$soma_esperados"
+      "438581406 3825" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "187201822 2386" "$soma_padroes"
+      "1067571207 2401" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -4097,6 +4097,28 @@ PYSERV
         # The bytes that arrived have to be the record, and nothing else.
         equal "what arrived is exactly the record, byte for byte" \
               "$REG_BOM" "$(head -1 "$RECEBIDO" 2>/dev/null)"
+        # And the machine keeps a record of what left it. Until 4.11 the 2xx
+        # branch was the ONLY one of the three that destroyed its line: the
+        # sieve refusal and the 4xx refusal both park theirs under an explicit
+        # written rule. So "what has this machine sent about my shop?" had no
+        # answer on the machine - which is the question a shopkeeper, or
+        # whoever audits him, actually asks, and section 3 of the idea ledger
+        # rejected telemetry on exactly that rule: nothing the owner cannot see
+        # and cannot delete.
+        equal "a line that left is written down" "1" \
+              "$(linhas_de "$CASA_E/fila.tsv.enviados")"
+        # The month and not the day, for the same reason the record carries
+        # only the month: a date with a day identifies.
+        case "$(head -1 "$CASA_E/fila.tsv.enviados" 2>/dev/null)" in
+            [0-9][0-9][0-9][0-9]-[0-9][0-9]$(printf '\t')*"$REG_BOM")
+                pass "with the month it left, and the record beside it" ;;
+            *) fail "with the month it left, and the record beside it" \
+                    "YYYY-MM<TAB>$REG_BOM" \
+                    "$(head -1 "$CASA_E/fila.tsv.enviados" 2>/dev/null)" ;;
+        esac
+        equal "and the count the owner is shown is that many" "1" \
+              "$(env HOME="$CASA_E" TANDEM_FILA="$CASA_E/fila.tsv" \
+                 bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_envio_ja_enviados')"
         # The rate limit: a machine cannot be turned into a firehose.
         # Five DISTINCT records. The first version of this passed the counter as
         # an extra argument to bash -c, where it became $0 instead of feeding the

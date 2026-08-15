@@ -2108,6 +2108,20 @@ Turn on:   tandem enviar sim
 @env_desligar
 Turn off:  tandem enviar nao
 
+@env_ja_sairam
+Lines that have left this machine, ever: {1}
+
+@env_ver_enviados
+See everything that has left:  cat {1}
+Erase that record:  tandem esquecer enviados
+
+@esq_enviados_apagado
+Erased: the record of {1} line(s) this machine had sent.
+What was already sent stays sent - this only erases the copy kept here.
+
+@esq_enviados_vazio
+This machine has not sent anything yet, so there is nothing to erase.
+
 @env_ver_fila
 See the whole queue:  cat {1}
 

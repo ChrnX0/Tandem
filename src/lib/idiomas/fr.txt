@@ -2149,6 +2149,20 @@ Activer :  tandem enviar sim
 @env_desligar
 Désactiver : tandem enviar nao
 
+@env_ja_sairam
+Lignes deja parties de cette machine, au total : {1}
+
+@env_ver_enviados
+Voir tout ce qui est parti :  cat {1}
+Effacer ce registre :  tandem esquecer enviados
+
+@esq_enviados_apagado
+Efface : le registre de {1} ligne(s) que cette machine avait envoyees.
+Ce qui est parti reste parti - ceci n'efface que la copie gardee ici.
+
+@esq_enviados_vazio
+Cette machine n'a encore rien envoye, il n'y a donc rien a effacer.
+
 @env_ver_fila
 Voir toute la file :  cat {1}
 

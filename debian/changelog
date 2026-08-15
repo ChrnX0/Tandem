@@ -168,6 +168,23 @@ tandem (4.11) unstable; urgency=medium
   * DETACHED, and the cost is stated rather than hidden: the fetch never delays
     a double click, so a list fetched now helps from the NEXT run and not this
     one. That is a real limitation, and it beats helping on no run ever.
+
+  * The machine writes down what it has sent. Of the three branches in the send
+    path, the sieve refusal and the 4xx refusal both PARK their line under an
+    explicit written rule - and the one branch that succeeded was the only one
+    that destroyed it. So "what has this machine sent about my shop?" had no
+    answer on the machine, and that is the question a shopkeeper, or whoever
+    audits him, actually asks.
+  * This is not tidiness. Section 3 of docs/IDEAS.md rejected telemetry on the
+    rule "nothing the owner cannot see and cannot delete", and what had left
+    this machine was neither. So both halves are built: "tandem enviar" shows
+    the running total and where to read the whole thing, and "tandem esquecer
+    enviados" erases it - saying plainly that erasing changes nothing at the
+    far end, because what is sent is sent.
+  * The MONTH is recorded, not the day, for the same reason the published
+    record carries only the month: a date with a day identifies. And
+    "tandem socorro" sweeps only *.log, so the ledger is never swept into a
+    report the owner sends to somebody else.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium
