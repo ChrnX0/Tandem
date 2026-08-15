@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1440219154 3638" "$soma_esperados"
+      "189750911 3785" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2376315265 2030" "$soma_padroes"
 
@@ -3791,6 +3791,56 @@ L
 equal "an unmerged record counts as the one machine it is" \
       "1" "$(t_lista_maquinas "$ID_L")"
 
+# ------------------------------------------------------------------
+# "entregue" (4.11): Tandem proved the missing file arrived, in the right
+# width, and the owner never answered. Weaker than his word, stronger than a
+# shrug - and until 4.11 it was recorded as a shrug, so it contributed nothing
+# at all.
+lista_com <<L
+$ID_L	64	vcrun2022	-	entregue	9	2026-08	-
+L
+equal "a proven delivery is worth suggesting, unlike a bare so-abriu" \
+      "vcrun2022" "$(t_lista_consulta "$PROG_L")"
+equal "and the count shown is the honest number of reports, not the weight" \
+      "9" "$(t_lista_maquinas "$ID_L")"
+
+# The halving, stated as the only thing that can decide the row. 100 proven
+# deliveries weigh 50; 60 people who looked at the screen weigh 60. If the
+# weight were 1.0 the first row would win, so this test fails the moment
+# somebody "simplifies" entregue into a full report.
+lista_com <<L
+$ID_L	64	vcrun2010	-	entregue	100	2026-08	-
+$ID_L	64	vcrun2022	-	confirmado	60	2026-08	-
+L
+equal "a person's word outweighs nearly twice as many proven deliveries" \
+      "vcrun2022" "$(t_lista_consulta "$PROG_L")"
+
+# ...and the halving is not a veto: enough of them still win.
+lista_com <<L
+$ID_L	64	vcrun2010	-	entregue	200	2026-08	-
+$ID_L	64	vcrun2022	-	confirmado	60	2026-08	-
+L
+equal "enough proven deliveries do outweigh a smaller set of confirmations" \
+      "vcrun2010" "$(t_lista_consulta "$PROG_L")"
+
+# A rejection is a person saying it does NOT work, and it weighs a full report.
+# So an equal number of proven deliveries loses - which is the right way round:
+# the file arriving proves nothing about the program.
+lista_com <<L
+$ID_L	64	vcrun2022	-	entregue	50	2026-08	-
+$ID_L	64	vcrun2022	-	reprovado	50	2026-08	-
+L
+equal "as many rejections as proven deliveries silences the row" \
+      "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+
+# The record actually written by the send path has to be one the intake and the
+# rebuild both accept - the three have drifted apart before.
+lista_com <<L
+$ID_L	64	vcrun2022	-	so-abriu	9	2026-08	-
+L
+equal "a bare so-abriu still contributes nothing" \
+      "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+
 # Another file's rows are not this file's evidence.
 lista_com <<L
 outro	64	mfc42	-	confirmado	900	2026-08	-
@@ -4252,6 +4302,57 @@ t_memoria_esquece "$PROG_S" 2>/dev/null
 ( unset DISPLAY WAYLAND_DISPLAY; t_confirma_funcionou "$PROG_S" 30 ) >/dev/null 2>&1
 equal "without a window, it does not invent a confirmation" \
       "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
+t_memoria_esquece "$PROG_S" 2>/dev/null
+
+# ------------------------------------------------------------------
+# The delivery proof reaching the LESSON (4.11).
+#
+# Before this, the proof computed three distinct outcomes and recorded none of
+# them: "I verified the missing file arrived and he never clicked" and "there
+# was nothing to verify and he never clicked" both came out "so-abriu", and
+# both travelled to somebody else's machine, in a recipe and in a list record,
+# as the same word.
+
+# Which outcome speaks for a whole run. The order is the entire content of the
+# function, so every pair that could be got backwards is pinned here.
+equal "one file proven to arrive, nothing wrong: the run is entregue" \
+      "entregue" "$(t_prova_do_run "entregue entregue")"
+equal "nothing checkable is not the same as nothing wrong" \
+      "sem-alvo" "$(t_prova_do_run "")"
+equal "a proven arrival outranks a verb there was nothing to check for" \
+      "entregue" "$(t_prova_do_run "entregue")"
+equal "one file provably missing sinks the whole run" \
+      "nao-chegou" "$(t_prova_do_run "entregue nao-chegou entregue")"
+equal "the wrong width sinks a run that was otherwise proven" \
+      "bitola-errada" "$(t_prova_do_run "entregue bitola-errada")"
+# The ordering defect this function was extracted to make visible: inline and
+# as a plain assignment, the LAST outcome spoke for the run, so a wrong-width
+# after a missing file reported the milder of the two.
+equal "a later wrong width does not overwrite an earlier missing file" \
+      "nao-chegou" "$(t_prova_do_run "nao-chegou bitola-errada")"
+equal "and the same holds in the other order" \
+      "nao-chegou" "$(t_prova_do_run "bitola-errada nao-chegou")"
+
+t_memoria_esquece "$PROG_S" 2>/dev/null
+t_memoria_grava "$PROG_S" PROVA entregue
+equal "a proven delivery with no answer is worth more than a shrug" \
+      "entregue" "$(t_confianca_da_licao "$PROG_S")"
+# The whole point of the four levels: only ONE of them lifts the lesson.
+for nivel in sem-alvo nao-chegou bitola-errada; do
+    t_memoria_grava "$PROG_S" PROVA "$nivel"
+    equal "PROVA=$nivel does not lift the lesson above so-abriu" \
+          "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
+done
+# The owner's word outranks any file check, in both directions. Getting this
+# backwards would let a file check overrule a person who looked at the screen
+# and said the program does not work.
+t_memoria_grava "$PROG_S" PROVA entregue
+t_memoria_grava "$PROG_S" CONFIRMADO nao
+equal "the owner saying no outranks a proven delivery" \
+      "reprovado" "$(t_confianca_da_licao "$PROG_S")"
+t_memoria_grava "$PROG_S" CONFIRMADO sim
+equal "the owner saying yes outranks a proven delivery too" \
+      "confirmado" "$(t_confianca_da_licao "$PROG_S")"
 t_memoria_esquece "$PROG_S" 2>/dev/null
 
 section "bitness: arriving is not arriving where this program looks"

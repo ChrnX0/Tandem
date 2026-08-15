@@ -1949,6 +1949,16 @@ t_lista_linha() {
                 conf[$3] += m * peso(w, $7)
                 bruto[$3] += m
                 if ($7 > visto[$3]) visto[$3] = $7
+            } else if ($5 == "entregue") {
+                # Half a report. Tandem verified the missing file arrived, in
+                # the right bitness, and the owner never said whether the
+                # PROGRAM works - so it is real evidence about the file and only
+                # a hint about the question the list answers. Before 4.11 a run
+                # like this contributed NOTHING: it was recorded as "so-abriu"
+                # and the resolver ignores those entirely.
+                conf[$3] += m * peso(w, $7) * 0.5
+                bruto[$3] += m
+                if ($7 > visto[$3]) visto[$3] = $7
             } else if ($5 == "reprovado") {
                 rep[$3] += m * peso(w, $7)
             }
@@ -2111,8 +2121,22 @@ t_confirma_funcionou() {
         t_aviso "$(t_msg abriu_e_fechou_sozinho "$durou")"
     fi
 
-    t_tem_gui || return 0
-    command -v zenity >/dev/null 2>&1 || return 0
+    # Nobody to ask - no window, or no zenity to draw one. That used to be the
+    # end of the lesson: with no answer there was no confidence, and with no
+    # confidence there was nothing worth passing on. Since 4.11 there is a level
+    # underneath his word: Tandem checked, on this machine, that what was
+    # missing actually arrived. A lesson carrying that is worth offering even
+    # though nobody clicked - and it goes out labelled "entregue", which says
+    # exactly that nobody confirmed it, and the resolver weighs it at half a
+    # report on the other side.
+    #
+    # It is offered HERE and not before the branch below, because the "yes"
+    # branch offers too and calling both would queue the same lesson twice.
+    if ! t_tem_gui || ! command -v zenity >/dev/null 2>&1; then
+        [ "$(t_confianca_da_licao "$prog")" = entregue ] &&
+            t_envio_oferece "$prog" >/dev/null 2>&1
+        return 0
+    fi
     if t_pergunta "$(t_msg funcionou_como_esperava)" \
            "$(t_msg botao_sim_funcionou)" "$(t_msg botao_nao_deu_errado)"; then
         t_memoria_grava "$prog" CONFIRMADO sim
@@ -2132,12 +2156,67 @@ t_confirma_funcionou() {
 
 # The confidence level of a lesson, in a single word. It is what separates "a
 # person looked and said it works" from "the process finished without error".
+# How much this lesson is worth, and WHY - which are two different questions
+# that were one answer until 4.11.
+#
+# The owner's word still outranks everything: he looked at the screen and said
+# it works, or said it does not. Nothing a file check can do beats that.
+#
+# What was missing sat underneath. The delivery proof computes three distinct
+# outcomes - the file arrived in the right bitness, it arrived in the wrong one,
+# it is provably still missing - and NONE of them reached the lesson. So a run
+# where Tandem verified the missing file had arrived, and the owner simply closed
+# the window without answering, produced the same "so-abriu" as a run where
+# there was nothing to verify at all. Those two travel to somebody else's
+# machine, in a recipe and in a list record, as the same word.
+#
+# "entregue" is that middle level: not a human's word, but not a shrug either.
+# The list weighs it at half a report, which is the honest arithmetic - it is
+# evidence about the FILE, and the question the list answers is about the
+# PROGRAM.
 t_confianca_da_licao() {
     case "$(t_memoria_le "$1" CONFIRMADO 2>/dev/null)" in
         sim) printf 'confirmado' ;;
         nao) printf 'reprovado' ;;
-        *)   printf 'so-abriu' ;;
+        *)
+            case "$(t_memoria_le "$1" PROVA 2>/dev/null)" in
+                entregue) printf 'entregue' ;;
+                *)        printf 'so-abriu' ;;
+            esac ;;
     esac
+}
+
+# The verdict a whole install run gives on ITS OWN delivery, out of the outcome
+# of every DLL it checked. $1 is that list of outcomes, space-separated, in
+# whatever order the loop produced them.
+#
+# Four levels, and their ORDER is the entire content of this function:
+#
+#   nao-chegou     something is provably still missing. It outranks everything
+#                  else because one absent file is enough for the program to go
+#                  on failing, however well the other verbs behaved.
+#   bitola-errada  everything arrived and at least one arrived in a width this
+#                  program cannot use - the dead end with a receipt on top.
+#   entregue       at least one file was proven to arrive in the right width,
+#                  and nothing was found wrong.
+#   sem-alvo       nothing could be checked at all: half the winetricks verbs
+#                  have no same-named DLL in the table. This is NOT the same as
+#                  "nothing was wrong", and conflating those two is the whole
+#                  defect this field exists to fix.
+#
+# It is a function, and not four lines inline in the install loop, for the
+# reason t_causa_do_winetricks was extracted: inline, the only way to reach it
+# is to make a real winetricks fail, so an ordering mistake here is invisible
+# until it has reached somebody else's machine as a lesson. And an ordering
+# mistake here is not hypothetical - the first version of this WAS inline, as a
+# plain assignment, which let the LAST DLL of the LAST verb speak for the whole
+# run. That is the same shape as the MARCA_WT defect 4.8 fixed one screen up.
+t_prova_do_run() {
+    local vistas=" ${1:-} " nivel
+    for nivel in nao-chegou bitola-errada entregue; do
+        case "$vistas" in *" $nivel "*) printf '%s' "$nivel"; return 0 ;; esac
+    done
+    printf 'sem-alvo'
 }
 
 # =============================================================== DATA

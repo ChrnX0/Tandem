@@ -33,7 +33,44 @@ tandem (4.11) unstable; urgency=medium
   * Proven by injecting the defect it exists for, with an assert on the
     injection - because the first attempt at that proof silently replaced
     nothing and "passed".
- -- Tandem <rockx0@gmail.com>  Fri, 14 Aug 2026 14:22:40 +0000
+
+  * The delivery proof finally reaches the lesson. Since 3.3 Tandem has checked
+    that the DLL a program asked for really arrived, and since 3.4 that it
+    arrived in a width the program can load - three distinct outcomes, computed
+    on every install and then thrown away. The memory recorded only whether the
+    OWNER answered. So "I verified the missing file arrived and he closed the
+    window without clicking" and "there was nothing I could check and he closed
+    the window without clicking" both came out "so-abriu", and both travelled to
+    somebody else's machine, in a recipe and in a list record, as the same word.
+  * The memory files gain PROVA=, with four levels: nao-chegou (provably still
+    missing), bitola-errada (arrived in a width this program cannot load),
+    entregue (proven to arrive, correctly) and sem-alvo (there was no file to
+    check for - half the winetricks verbs have no same-named DLL). That last
+    one is the distinction the whole field exists for: "I could not check" is
+    not "nothing was wrong".
+  * Only "entregue" becomes a confidence level, and the community list weighs it
+    at HALF a report. It is real evidence about the FILE and the question the
+    list answers is about the PROGRAM - a DLL landing in system32 does not mean
+    a shop's accounting package opens. Sixty people who looked at a screen
+    outweigh a hundred proven deliveries; two hundred proven deliveries outweigh
+    sixty people. Both directions are pinned by tests so the constant cannot be
+    quietly rounded up to one.
+  * A lesson with a proven delivery and nobody to ask is now offered to the
+    list, where before it died on the machine: with no answer there was no
+    confidence, and with no confidence there was nothing worth passing on. It
+    goes out labelled "entregue", which states plainly that nobody confirmed it.
+  * The ordering rule became a function in the library rather than four lines
+    inside the install loop, and the reason is that the first version of it was
+    a plain assignment - which let the LAST DLL of the LAST verb speak for the
+    whole run, so a wrong-width found after a missing file reported the milder
+    of the two. That is the same shape as the MARCA_WT defect 4.8 fixed one
+    screen higher up. Inline, the only way to reach it is to make a real
+    winetricks fail; extracted, every pair that could be got backwards is a
+    test.
+  * The counter caught the three on-disk tokens this added to tandem-exe, which
+    is what it is for - they went on the exceptions list with the reason, beside
+    "confirmado" and "abriu", rather than into the catalogues.
+ -- Tandem <rockx0@gmail.com>  Fri, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium
 

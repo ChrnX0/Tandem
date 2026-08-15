@@ -1668,6 +1668,10 @@ The recipe goes out marked that way. Think twice before sending it to somebody.
 This recipe is worth what it is worth: the program opened with no error, but
 nobody confirmed it actually worked. It goes out marked "so-abriu".
 
+@rec_entregue
+I checked that what was missing really did arrive, but nobody confirmed the
+program itself works. It goes out marked "entregue".
+
 @rec_nada_aprendido
 I have not learnt anything about this program yet.
 
@@ -1954,6 +1958,9 @@ I could not produce the report.
 
 @mem_campo_resultado
 result:     
+
+@mem_campo_prova
+I checked:  
 
 @mem_campo_arquitetura
 architecture:
@@ -2786,6 +2793,15 @@ Install? [y/N]
 
 @resposta_sim
 y
+
+@res_entregue
+The file it was missing did arrive, in the width this program can use.
+
+@res_nao_chegou
+What was installed did not put the missing file where the program looks.
+
+@res_sem_alvo
+There was no file I could check for, so I cannot say either way.
 
 @res_abriu
 It opened.

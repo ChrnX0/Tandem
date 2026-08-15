@@ -2192,6 +2192,12 @@ msgid ""
 "nobody confirmed it actually worked. It goes out marked \"so-abriu\"."
 msgstr ""
 
+msgctxt "rec_entregue"
+msgid ""
+"I checked that what was missing really did arrive, but nobody confirmed the\n"
+"program itself works. It goes out marked \"entregue\"."
+msgstr ""
+
 msgctxt "rec_nada_aprendido"
 msgid ""
 "I have not learnt anything about this program yet.\n"
@@ -2570,6 +2576,10 @@ msgstr ""
 
 msgctxt "mem_campo_resultado"
 msgid "result:     "
+msgstr ""
+
+msgctxt "mem_campo_prova"
+msgid "I checked:  "
 msgstr ""
 
 msgctxt "mem_campo_arquitetura"
@@ -3652,6 +3662,18 @@ msgstr ""
 
 msgctxt "resposta_sim"
 msgid "y"
+msgstr ""
+
+msgctxt "res_entregue"
+msgid "The file it was missing did arrive, in the width this program can use."
+msgstr ""
+
+msgctxt "res_nao_chegou"
+msgid "What was installed did not put the missing file where the program looks."
+msgstr ""
+
+msgctxt "res_sem_alvo"
+msgid "There was no file I could check for, so I cannot say either way."
 msgstr ""
 
 msgctxt "res_abriu"

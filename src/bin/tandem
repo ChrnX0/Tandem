@@ -874,6 +874,8 @@ acao_receita() {
     case "$(t_confianca_da_licao "$prog")" in
         reprovado)
             t_aviso "$(t_msg rec_marcada_reprovado)" ;;
+        entregue)
+            t_aviso "$(t_msg rec_entregue)" ;;
         so-abriu)
             t_aviso "$(t_msg rec_so_abriu)" ;;
     esac
@@ -911,6 +913,14 @@ acao_memoria() {
         # text goes into the tandem socorro report he sends to whoever helps.
         res="$(sed -n 's/^RESULTADO=//p' "$arq" | tail -1)"
         [ -n "$res" ] && saida="$saida  $(t_msg mem_campo_resultado)$(t_resultado_amigavel "$res")"$'\n'
+        # PROVA is what TANDEM checked, as opposed to what the owner said, and
+        # it is on this screen for the reason at the top of this function: a
+        # memory he cannot see is a memory he cannot correct. It is also the
+        # field that explains an otherwise baffling pair - two runs of the same
+        # program, both unanswered, one of which contributes to the list and one
+        # of which does not.
+        res="$(sed -n 's/^PROVA=//p' "$arq" | tail -1)"
+        [ -n "$res" ] && saida="$saida  $(t_msg mem_campo_prova)$(t_resultado_amigavel "$res")"$'\n'
         saida="$saida$(sed -n "
             s/^ARQUITETURA=/  $(t_msg mem_campo_arquitetura)/p
             s/^RESOLVERAM=/  $(t_msg mem_campo_resolveram)/p

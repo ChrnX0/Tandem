@@ -1657,6 +1657,10 @@ A receita vai sair marcada assim. Pense duas vezes antes de mandar para alguém.
 Esta receita vale o que vale: o programa abriu sem erro, mas ninguém
 confirmou que funcionou de verdade. Ela sai marcada como "so-abriu".
 
+@rec_entregue
+Eu conferi que o que faltava chegou mesmo, mas ninguem confirmou que o
+programa funciona. Ela sai marcada como "entregue".
+
 @rec_nada_aprendido
 Ainda não aprendi nada sobre este programa.
 
@@ -1944,6 +1948,9 @@ Não consegui gerar o relatório.
 
 @mem_campo_resultado
 resultado:  
+
+@mem_campo_prova
+conferi:    
 
 @mem_campo_arquitetura
 arquitetura: 
@@ -2820,6 +2827,15 @@ Instalar? [s/N]
 
 @resposta_sim
 s
+
+@res_entregue
+O arquivo que faltava chegou mesmo, na bitola que este programa usa.
+
+@res_nao_chegou
+O que foi instalado nao colocou o arquivo que falta onde o programa procura.
+
+@res_sem_alvo
+Nao havia arquivo nenhum para eu conferir, entao nao posso dizer nem que sim nem que nao.
 
 @res_abriu
 Abriu.

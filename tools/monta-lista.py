@@ -52,7 +52,7 @@ EXCLUIDAS = {
 # the format is append-only, so an old row is short, not malformed.
 FORMA = re.compile(
     r"^[0-9a-f]{32}\t(32|64|arm64|-)\t\S+\t\S+\t"
-    r"(confirmado|so-abriu|reprovado)\t\d+\t\d{4}-\d{2}\t\S+"
+    r"(confirmado|entregue|so-abriu|reprovado)\t\d+\t\d{4}-\d{2}\t\S+"
     r"(\t[A-Za-z0-9._-]{1,24}\t[A-Za-z0-9._-]{1,24}\t(-|[0-9a-f]{16}))?$"
 )
 

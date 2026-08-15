@@ -1589,6 +1589,10 @@ Tandem 现在知道这个程序在发来的人那台机器上要过什么了。
 这个配方的分量就这么多：程序打开时没报错，但没人确认它真的能用。
 它会带着 "so-abriu" 的标记发出去。
 
+@rec_entregue
+我核对过：缺的东西确实到位了，但没有人确认这个程序能用。
+它会带着 "entregue" 的标记发出去。
+
 @rec_nada_aprendido
 关于这个程序我还什么都没学到。
 
@@ -1867,6 +1871,9 @@ Tandem - 机器身份
 
 @mem_campo_resultado
 结果：      
+
+@mem_campo_prova
+我核对了：  
 
 @mem_campo_arquitetura
 架构：       
@@ -2721,6 +2728,15 @@ DirectX 着色器编译器
 
 @resposta_sim
 y
+
+@res_entregue
+缺少的文件确实到位了，而且是这个程序能用的位数。
+
+@res_nao_chegou
+装上去的东西并没有把缺少的文件放到程序会去找的地方。
+
+@res_sem_alvo
+没有可供我核对的文件，所以我说不上是好是坏。
 
 @res_abriu
 已打开。

@@ -1697,6 +1697,10 @@ Cette recette vaut ce qu'elle vaut : le programme s'est ouvert sans erreur,
 mais personne n'a confirmé qu'il fonctionnait vraiment. Elle sort marquée
 « so-abriu ».
 
+@rec_entregue
+J'ai verifie que ce qui manquait est bien arrive, mais personne n'a confirme
+que le programme fonctionne. Elle sort marquee « entregue ».
+
 @rec_nada_aprendido
 Je n'ai encore rien appris sur ce programme.
 
@@ -1993,6 +1997,9 @@ Je n'ai pas pu générer le rapport.
 
 @mem_campo_resultado
 résultat :  
+
+@mem_campo_prova
+verifie :   
 
 @mem_campo_arquitetura
 architecture:
@@ -2877,6 +2884,15 @@ Installer ? [o/N]
 
 @resposta_sim
 o
+
+@res_entregue
+Le fichier qui manquait est bien arrive, dans la largeur que ce programme utilise.
+
+@res_nao_chegou
+Ce qui a ete installe n'a pas mis le fichier manquant la ou le programme le cherche.
+
+@res_sem_alvo
+Il n'y avait aucun fichier a verifier, je ne peux donc dire ni oui ni non.
 
 @res_abriu
 Il s'est ouvert.

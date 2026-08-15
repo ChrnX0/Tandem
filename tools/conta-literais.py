@@ -91,6 +91,17 @@ EXCECOES = {
     "CodeMeter CodeMeterLin",
     # The port label with its device path, one field of a report line.
     "COM$n|$p",
+    # The four PROVA levels, accumulated one per checked DLL and then resolved
+    # by t_prova_do_run. On-disk values of exactly the kind the rule above
+    # covers - they go into the memory file, into the recipe and into the list
+    # record, and t_resultado_amigavel is what turns them into a sentence when
+    # the owner is shown one. Translating one here would break every recipe
+    # already written on somebody's machine, and would make the record
+    # unreadable to api/lista.js and tools/monta-lista.py, which match the
+    # literal word.
+    "$PROVA_VISTAS entregue",
+    "$PROVA_VISTAS bitola-errada",
+    "$PROVA_VISTAS nao-chegou",
     # Two values of the FORMATO field the Android reader produces, compared
     # against and never shown - the handler answers each with a message of its
     # own. They read like Portuguese because the reader's output protocol was

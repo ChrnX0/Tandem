@@ -62,7 +62,7 @@ identity  arch  verbs           failed       confidence  machines  seen        n
 | `arch` | `32`, `64` or `arm64`, read from the PE header | `64` |
 | `verbs` | winetricks verbs that fixed it, comma-separated | `vcrun2022,dotnet48` |
 | `failed` | verbs that were installed and did **not** fix it | `vcrun6` |
-| `confidence` | `confirmado`, `so-abriu` or `reprovado` | `confirmado` |
+| `confidence` | `confirmado`, `entregue`, `so-abriu` or `reprovado` | `confirmado` |
 | `machines` | how many REPORTS carried the same lesson — see below, it is not machines | `340` |
 | `seen` | date of the most recent report, `YYYY-MM` | `2026-08` |
 | `note` | one sentence, or empty | `needs the 32-bit build` |
@@ -78,6 +78,44 @@ The `confidence` values stay in Portuguese because they are the same tokens the
 program writes into its own memory files and recipes; translating them at the
 boundary would mean two vocabularies for one concept, and a mismatch there fails
 silently.
+
+### The four confidence levels, and what each one is evidence OF
+
+| Value | What happened | Weight in the resolver |
+|---|---|---|
+| `confirmado` | a person used the program and said it works | 1 report |
+| `entregue` | Tandem checked that the missing file arrived, in a width this program can use; nobody answered | ½ report |
+| `so-abriu` | the process finished without error and nothing else is known | ignored |
+| `reprovado` | a person used the program and said it does **not** work | 1 report, against |
+
+`entregue` arrived in 4.11 and it exists because of a measured conflation. The
+delivery proof computes three distinct outcomes — the file arrived in the right
+width, it arrived in the wrong one, it is provably still missing — and until
+4.11 **none of them reached the lesson.** A run where Tandem verified the file
+had arrived and the owner simply closed the window produced the same `so-abriu`
+as a run where there was nothing to verify at all, and both travelled to
+somebody else's machine, in a recipe and in a list record, as the same word.
+
+**Why half and not one.** It is real evidence, and it is evidence about the
+*file*, whereas the question this list answers is about the *program*. A DLL
+landing in `system32` does not mean the shop's accounting package opens. Half is
+the arithmetic that says "worth something, worth less than a person" without
+inventing a scale: sixty people who looked at a screen outweigh a hundred proven
+deliveries, and two hundred proven deliveries outweigh sixty people. Both of
+those are pinned by tests, in that order, so the constant cannot be quietly
+rounded to 1.
+
+A `reprovado` weighs a full report against, so an equal number of `entregue`
+rows is silenced by it. That is the right way round for the same reason: the
+file arriving proves nothing about the program running.
+
+**The three levels that are not `entregue`** live in the memory file's `PROVA=`
+field and never reach the list, because they say nothing another machine can
+use: `bitola-errada` (arrived in a width this program cannot load),
+`nao-chegou` (provably still missing) and `sem-alvo` (there was no file to
+check for — half the winetricks verbs have no same-named DLL). `sem-alvo` is
+deliberately distinct from "nothing was wrong": conflating those two is the
+defect the whole field exists to fix, one level down.
 
 ### What `machines` actually counts, which is less than the name says
 

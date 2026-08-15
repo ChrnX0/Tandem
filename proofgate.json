@@ -26,6 +26,7 @@
     {
       "a": "src/lib/winedeps.sh",
       "b": "tests/run.sh",
+      "direction": "a-implies-b",
       "reason": "the DLL->verb table has already had six errors that installed the wrong thing; changing it without a test is walking without the auditor"
     }
   ],

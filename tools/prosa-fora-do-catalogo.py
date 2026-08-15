@@ -89,6 +89,10 @@ VERBATIM = [
     "Spanish", "French", "Hindi", "Arabic", "English",
     # On-disk values. Format, not prose - CLAUDE.md lists these.
     "abriu", "confirmado", "so-abriu", "reprovado", "RESOLVERAM",
+    # 4.11: the confidence level under the owner's word, and the three PROVA
+    # levels beside it. On disk and in the record, never on the screen - the
+    # screen gets them through t_resultado_amigavel.
+    "entregue", "sem-alvo", "nao-chegou", "bitola-errada", "PROVA",
     "NAO_RESOLVERAM", "CONFIANCA", "alta", "baixa", "override", "titulo",
     "ambos", "nativo", "parecido", "IDENTIDADE", "PROGRAMA", "TANDEM_RECEITA",
     "ARQUITETURA", "RESULTADO", "VISTO_EM", "SEGUNDOS", "LIMITE", "PACOTE",
