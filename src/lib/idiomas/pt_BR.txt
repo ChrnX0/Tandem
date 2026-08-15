@@ -1949,6 +1949,15 @@ Não consegui gerar o relatório.
 @mem_campo_resultado
 resultado:  
 
+@mem_campo_confirmado
+voce disse: 
+
+@mem_dono_disse_sim
+funcionou do jeito que voce esperava.
+
+@mem_dono_disse_nao
+NAO funcionou direito. A sua resposta vale mais que tudo abaixo.
+
 @mem_campo_prova
 conferi:    
 

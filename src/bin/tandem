@@ -911,6 +911,25 @@ acao_memoria() {
         # "nao confirmou", "pasta sem permissao", "bitola errada". This is the
         # screen a shop owner opens to find out what happened, and the same
         # text goes into the tandem socorro report he sends to whoever helps.
+        # THE OWNER'S ANSWER COMES FIRST, because it outranks everything below
+        # it. Until now this screen did not show it AT ALL - `grep CONFIRMADO
+        # src/bin/tandem` returned nothing - while faithfully printing
+        # RESULTADO=abriu, which the exit code sets and the "no" branch of
+        # t_confirma_funcionou deliberately leaves alone. So the one program he
+        # had told Tandem was broken was reported back to him as "Result: it
+        # opened", and `tandem socorro` embeds this screen verbatim - meaning
+        # the report he sends to whoever is helping him ASSERTS the program
+        # works.
+        #
+        # RESULTADO stays on the screen underneath rather than being
+        # overwritten: "it launched and he says it does not work" is a more
+        # useful pair of facts than either one alone, and it is the shape of
+        # the case somebody helping him needs to see.
+        res="$(sed -n 's/^CONFIRMADO=//p' "$arq" | tail -1)"
+        case "$res" in
+            sim) saida="$saida  $(t_msg mem_campo_confirmado)$(t_msg mem_dono_disse_sim)"$'\n' ;;
+            nao) saida="$saida  $(t_msg mem_campo_confirmado)$(t_msg mem_dono_disse_nao)"$'\n' ;;
+        esac
         res="$(sed -n 's/^RESULTADO=//p' "$arq" | tail -1)"
         [ -n "$res" ] && saida="$saida  $(t_msg mem_campo_resultado)$(t_resultado_amigavel "$res")"$'\n'
         # PROVA is what TANDEM checked, as opposed to what the owner said, and

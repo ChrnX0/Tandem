@@ -107,7 +107,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
 equal "the expected values are the ones this suite was written with" \
       "3544938649 3786" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "2376315265 2030" "$soma_padroes"
+      "3404445200 2128" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -4354,6 +4354,63 @@ t_memoria_grava "$PROG_S" CONFIRMADO sim
 equal "the owner saying yes outranks a proven delivery too" \
       "confirmado" "$(t_confianca_da_licao "$PROG_S")"
 t_memoria_esquece "$PROG_S" 2>/dev/null
+
+# ------------------------------------------------------------------
+# The owner's answer on the screen built to show him what Tandem learned.
+#
+# It was collected and never displayed: `grep CONFIRMADO src/bin/tandem`
+# returned NOTHING, while the screen faithfully printed RESULTADO=abriu, which
+# the exit code sets and the "no" branch deliberately leaves alone. So the one
+# program he had told Tandem was broken came back to him as "result: it
+# opened" - and `tandem socorro` embeds this screen verbatim, so the report he
+# sends to whoever is helping asserted that the program works.
+#
+# Run against the real command, not the library: this whole class of defect
+# lives in the gap between what a function stores and what a screen prints, and
+# only running the command can see it.
+MEMC="$TMPROOT/mem-confirmado"; mkdir -p "$MEMC"
+{
+    printf 'PROGRAMA=quebrado.exe\n'
+    printf 'RESULTADO=abriu\n'
+    printf 'CONFIRMADO=nao\n'
+} > "$MEMC/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt"
+TELA="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en TANDEM_MEMORIA="$MEMC" \
+        bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+case "$TELA" in
+    *"did NOT work"*) pass "the screen says the owner rejected the program" ;;
+    *) fail "the screen says the owner rejected the program" \
+            "a line about his answer" "$TELA" ;;
+esac
+# And it comes FIRST, because it outranks the exit code's verdict printed below
+# it. A screen that leads with "it opened" and mentions the rejection further
+# down is read as "it worked" by somebody skimming.
+LINHA_DONO="$(printf '%s\n' "$TELA" | grep -n "did NOT work" | cut -d: -f1)"
+LINHA_RES="$(printf '%s\n' "$TELA" | grep -n "result:" | cut -d: -f1)"
+if [ -n "$LINHA_DONO" ] && [ -n "$LINHA_RES" ] && [ "$LINHA_DONO" -lt "$LINHA_RES" ]; then
+    pass "the owner's answer is printed above the exit code's verdict"
+else
+    fail "the owner's answer is printed above the exit code's verdict" \
+         "his answer on an earlier line than result:" \
+         "answer=$LINHA_DONO result=$LINHA_RES"
+fi
+# The other answer, so the case statement cannot be one-sided.
+sed -i 's/^CONFIRMADO=nao/CONFIRMADO=sim/' "$MEMC/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt"
+TELA="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en TANDEM_MEMORIA="$MEMC" \
+        bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+case "$TELA" in
+    *"worked the way you expected"*) pass "and it says so when he confirmed it" ;;
+    *) fail "and it says so when he confirmed it" "a line about his answer" "$TELA" ;;
+esac
+# A memory with no answer must not invent one. The case statement matches only
+# sim and nao, and an absent field has to fall through both.
+sed -i '/^CONFIRMADO=/d' "$MEMC/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt"
+TELA="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en TANDEM_MEMORIA="$MEMC" \
+        bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+case "$TELA" in
+    *"you said"*) fail "with no answer it does not invent one" "no 'you said' line" "$TELA" ;;
+    *) pass "with no answer it does not invent one" ;;
+esac
+rm -rf "$MEMC"
 
 section "bitness: arriving is not arriving where this program looks"
 

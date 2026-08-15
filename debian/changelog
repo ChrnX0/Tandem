@@ -70,6 +70,24 @@ tandem (4.11) unstable; urgency=medium
   * The counter caught the three on-disk tokens this added to tandem-exe, which
     is what it is for - they went on the exceptions list with the reason, beside
     "confirmado" and "abriu", rather than into the catalogues.
+
+  * "tandem memoria" shows the owner's own answer, which it had never once
+    displayed: `grep CONFIRMADO src/bin/tandem` returned nothing, while the
+    screen faithfully printed RESULTADO=abriu - a value the exit code sets and
+    the "no" branch deliberately leaves alone. So the one program he had told
+    Tandem was broken came back to him as "result: it opened", and "tandem
+    socorro" embeds this screen verbatim, meaning the report he sends to
+    whoever is helping him ASSERTED that the program works.
+  * His answer is printed FIRST, above the exit code's verdict, and there is a
+    test for the order: a screen that leads with "it opened" and mentions the
+    rejection further down is read as "it worked" by anybody skimming. The
+    RESULTADO line stays underneath rather than being overwritten - "it
+    launched and he says it does not work" is a more useful pair of facts than
+    either one alone, and it is the shape of the case somebody helping him
+    needs to see.
+  * Pinned by running the command rather than the library. This whole class of
+    defect lives in the gap between what a function stores and what a screen
+    prints, and no test of t_confirma_funcionou could ever have seen it.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium

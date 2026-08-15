@@ -1906,6 +1906,15 @@ Tandem - هوية الجهاز
 @mem_campo_resultado
 النتيجة:    
 
+@mem_campo_confirmado
+قلت:        
+
+@mem_dono_disse_sim
+عمل بالطريقة التي توقعتها.
+
+@mem_dono_disse_nao
+لم يعمل بشكل صحيح. إجابتك تعلو على كل ما يلي.
+
 @mem_campo_prova
 تحققت:      
 

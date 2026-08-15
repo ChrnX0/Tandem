@@ -1872,6 +1872,15 @@ Tandem - 机器身份
 @mem_campo_resultado
 结果：      
 
+@mem_campo_confirmado
+您说：      
+
+@mem_dono_disse_sim
+它按您预期的那样正常工作了。
+
+@mem_dono_disse_nao
+它没有正常工作。您的回答比下面所有内容都更有分量。
+
 @mem_campo_prova
 我核对了：  
 

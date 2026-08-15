@@ -3323,6 +3323,18 @@ msgctxt "mem_campo_resultado"
 msgid "result:     "
 msgstr "结果：      "
 
+msgctxt "mem_campo_confirmado"
+msgid "you said:   "
+msgstr "您说：      "
+
+msgctxt "mem_dono_disse_sim"
+msgid "it worked the way you expected."
+msgstr "它按您预期的那样正常工作了。"
+
+msgctxt "mem_dono_disse_nao"
+msgid "it did NOT work properly. Your answer outranks everything below."
+msgstr "它没有正常工作。您的回答比下面所有内容都更有分量。"
+
 msgctxt "mem_campo_prova"
 msgid "I checked:  "
 msgstr "我核对了：  "

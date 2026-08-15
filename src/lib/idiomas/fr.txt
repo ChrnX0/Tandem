@@ -1998,6 +1998,15 @@ Je n'ai pas pu générer le rapport.
 @mem_campo_resultado
 résultat :  
 
+@mem_campo_confirmado
+vous :      
+
+@mem_dono_disse_sim
+il a marche comme vous l'attendiez.
+
+@mem_dono_disse_nao
+il n'a PAS bien marche. Votre reponse prime sur tout ce qui suit.
+
 @mem_campo_prova
 verifie :   
 

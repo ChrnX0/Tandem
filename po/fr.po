@@ -3472,6 +3472,18 @@ msgctxt "mem_campo_resultado"
 msgid "result:     "
 msgstr "résultat :  "
 
+msgctxt "mem_campo_confirmado"
+msgid "you said:   "
+msgstr "vous :      "
+
+msgctxt "mem_dono_disse_sim"
+msgid "it worked the way you expected."
+msgstr "il a marche comme vous l'attendiez."
+
+msgctxt "mem_dono_disse_nao"
+msgid "it did NOT work properly. Your answer outranks everything below."
+msgstr "il n'a PAS bien marche. Votre reponse prime sur tout ce qui suit."
+
 msgctxt "mem_campo_prova"
 msgid "I checked:  "
 msgstr "verifie :   "

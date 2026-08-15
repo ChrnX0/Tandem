@@ -1959,6 +1959,15 @@ I could not produce the report.
 @mem_campo_resultado
 result:     
 
+@mem_campo_confirmado
+you said:   
+
+@mem_dono_disse_sim
+it worked the way you expected.
+
+@mem_dono_disse_nao
+it did NOT work properly. Your answer outranks everything below.
+
 @mem_campo_prova
 I checked:  
 

@@ -2578,6 +2578,18 @@ msgctxt "mem_campo_resultado"
 msgid "result:     "
 msgstr ""
 
+msgctxt "mem_campo_confirmado"
+msgid "you said:   "
+msgstr ""
+
+msgctxt "mem_dono_disse_sim"
+msgid "it worked the way you expected."
+msgstr ""
+
+msgctxt "mem_dono_disse_nao"
+msgid "it did NOT work properly. Your answer outranks everything below."
+msgstr ""
+
 msgctxt "mem_campo_prova"
 msgid "I checked:  "
 msgstr ""

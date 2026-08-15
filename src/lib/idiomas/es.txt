@@ -1956,6 +1956,15 @@ No pude generar el informe.
 @mem_campo_resultado
 resultado:  
 
+@mem_campo_confirmado
+usted dijo: 
+
+@mem_dono_disse_sim
+funciono como usted esperaba.
+
+@mem_dono_disse_nao
+NO funciono bien. Su respuesta vale mas que todo lo de abajo.
+
 @mem_campo_prova
 comprobe:   
 

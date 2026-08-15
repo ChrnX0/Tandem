@@ -1936,6 +1936,15 @@ Tandem - मशीन की पहचान
 @mem_campo_resultado
 नतीजा:      
 
+@mem_campo_confirmado
+आपने कहा:   
+
+@mem_dono_disse_sim
+यह वैसे ही चला जैसी आपने उम्मीद की थी।
+
+@mem_dono_disse_nao
+यह ठीक से नहीं चला। आपका उत्तर नीचे की हर बात से ऊपर है।
+
 @mem_campo_prova
 मैंने जांचा: 
 
