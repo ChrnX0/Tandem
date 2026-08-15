@@ -1905,6 +1905,12 @@ Sauvegarde de l'environnement Windows. Cela peut prendre du temps.
 Sauvegarde enregistrée dans :
 {1}
 
+Pour le remettre, NE double-cliquez PAS dessus : c'est une archive, le
+systeme ne ferait que la decompresser en un tas de fichiers. Utilisez ceci,
+qui trouve la plus recente tout seul :
+
+    tandem restore
+
 Ceci est l'environnement ENTIER. Vos propres fichiers représentent {2} de ce
 total - pour n'emporter que ceux-là, ce qui est rapide et tient dans un
 courriel :

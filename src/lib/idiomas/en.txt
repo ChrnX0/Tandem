@@ -1870,6 +1870,12 @@ Saving the Windows environment. This may take a while.
 Backup saved to:
 {1}
 
+To put it back, do NOT double-click it: it is an archive, so the system would
+only unpack it into a pile of files. Use this, which finds the newest one on
+its own:
+
+    tandem restore
+
 This is the WHOLE environment. Your own files are {2} of that total - to take
 just those, which is quick and fits in an e-mail:
 tandem dados salvar

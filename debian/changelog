@@ -52,6 +52,17 @@ tandem (4.12) unstable; urgency=medium
     the distinction that matters on a shop machine: backup saves the
     ENVIRONMENT, which Tandem can rebuild anyway, while "tandem dados" saves
     HIS files, which nothing can.
+
+  * ...and "tandem backup" says how to put it back. It told the owner about
+    "tandem dados salvar" and never once named "tandem restore", so the only
+    affordance left to him was to double-click the .tar.gz - which unpacks a
+    Wine prefix into a pile of files in his Downloads folder and restores
+    nothing. The mirror of the defect above, on the other side of the same
+    pair, found the same way: by him using it.
+  * Tandem does NOT claim .tar.gz, and will not. Claiming application/gzip
+    would take every archive on the machine away from the archive manager,
+    which is the exact harm the association work exists to avoid - so the fix
+    is a sentence telling him not to click it, not an association.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 13:10:00 +0000
 
 tandem (4.11) unstable; urgency=medium

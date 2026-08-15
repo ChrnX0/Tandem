@@ -1860,6 +1860,12 @@ Salvando o ambiente Windows. Pode demorar.
 Backup salvo em:
 {1}
 
+Para repor, NAO clique duas vezes nele: e um arquivo compactado, entao o
+sistema so ia desempacotar num monte de arquivos. Use isto, que acha o mais
+recente sozinho:
+
+    tandem restore
+
 Isto é o ambiente INTEIRO. Os seus arquivos são {2}
 desse total - para levar só eles, que é rápido e cabe num e-mail:
 tandem dados salvar

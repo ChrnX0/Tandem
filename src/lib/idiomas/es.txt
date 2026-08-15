@@ -1867,6 +1867,12 @@ Guardando el entorno de Windows. Puede tardar.
 Copia guardada en:
 {1}
 
+Para restaurarlo, NO haga doble clic: es un archivo comprimido, asi que el
+sistema solo lo desempaquetaria en un monton de archivos. Use esto, que
+encuentra el mas reciente solo:
+
+    tandem restore
+
 Esto es el entorno COMPLETO. Tus archivos son {2} de ese total: para llevar
 solo esos, que es rápido y cabe en un correo:
 tandem dados salvar
