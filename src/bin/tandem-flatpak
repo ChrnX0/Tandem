@@ -122,6 +122,12 @@ if [ -n "$REPO_RUNTIME" ]; then
         t_como_root "flatpak remote-add --if-not-exists flathub '$REPO_RUNTIME'" >>"$LOG" 2>&1
 fi
 
+# Taken BEFORE the install, so the announcement below can name what appeared.
+# This handler never called it at all until 4.11 - `tandem programas` exists
+# because GNOME under Wayland does not re-read the menu, and a program the owner
+# cannot find again is a program he has not installed. flatpak exports its
+# shortcuts to a directory of its own, which is the other half of the same fix.
+ANTES_ATALHOS="$(t_atalhos_do_sistema)"
 MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
 t_progresso_abre "$(t_msg flatpak_instalando "$AMIGAVEL")"
 # Installed for this user, without a password. That is not a shortcut: a program
@@ -169,7 +175,11 @@ fi
 
 if [ "$INSTALOU" = 1 ]; then
     t_memoria_grava "$ARQ" RESULTADO instalado 2>/dev/null
-    t_ok "$(t_msg flatpak_instalado "$AMIGAVEL")"
+    ONDE="$(t_anuncia_atalhos_do_sistema "$ANTES_ATALHOS")"
+    t_ok "$(t_msg flatpak_instalado "$AMIGAVEL")${ONDE:+
+
+$(t_msg procure_no_menu_por)
+$(printf '%s\n' "$ONDE" | sed 's/^/  /')}"
     exit 0
 fi
 

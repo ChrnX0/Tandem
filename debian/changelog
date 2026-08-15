@@ -88,6 +88,24 @@ tandem (4.11) unstable; urgency=medium
   * Pinned by running the command rather than the library. This whole class of
     defect lives in the gap between what a function stores and what a screen
     prints, and no test of t_confirma_funcionou could ever have seen it.
+
+  * A snap and a flatpak are found in the menu. t_atalhos_do_sistema looked in
+    /usr/share/applications and /usr/local/share/applications and nowhere else,
+    while snapd exports to /var/lib/snapd/desktop/applications and flatpak to
+    its own directories under /var/lib/flatpak and ~/.local/share/flatpak. So
+    "tandem programas"' whole promise - GNOME under Wayland does not re-read the
+    menu, and a program the owner cannot find again is a program he has not
+    installed - was quietly unkept for three of the four package managers since
+    3.8, and tandem-snap's "look in the menu for" line had never once appeared
+    on anybody's screen. tandem-flatpak did not call it at all.
+  * XDG_DATA_DIRS and XDG_DATA_HOME are asked first, because they are the right
+    answer and they pick up whatever else a distribution invents - and then the
+    three directories are named explicitly anyway, because the variables are not
+    enough. That is measured, not assumed: in this project's own container BOTH
+    variables are EMPTY while all three export directories exist and hold files,
+    which is exactly the shape of a program started from a file manager rather
+    than from a login shell. The list is deduplicated, since on a real desktop
+    those paths overlap and a doubled entry would announce every program twice.
  -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 09:40:00 +0000
 
 tandem (4.10) unstable; urgency=medium

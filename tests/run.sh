@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3544938649 3786" "$soma_esperados"
+      "1694816217 3805" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "3404445200 2128" "$soma_padroes"
+      "4011700690 2310" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -6000,6 +6000,87 @@ naocontem "but a genuinely truncated file is not called a web page" \
           "web page saved under" \
           "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
              bash "$ROOT/src/bin/tandem-rpm" "$TMPROOT/curto.rpm" </dev/null 2>&1 | head -2)"
+
+section "a snap and a flatpak land where nothing was looking"
+
+# t_atalhos_do_sistema looked in /usr/share/applications and
+# /usr/local/share/applications and nowhere else, so `tandem programas`' whole
+# promise - GNOME under Wayland does not re-read the menu, and a program the
+# owner cannot find is a program he does not have - was quietly unkept for three
+# of the four package managers since 3.8. tandem-snap's "look in the menu for"
+# line had never once appeared, and tandem-flatpak did not call it at all.
+ATAJ="$TMPROOT/atalhos"
+mkdir -p "$ATAJ/xdg/applications" \
+         "$ATAJ/casa/.local/share/applications" \
+         "$ATAJ/casa/.local/share/flatpak/exports/share/applications"
+printf '[Desktop Entry]\nName=Do XDG_DATA_DIRS\n' > "$ATAJ/xdg/applications/a.desktop"
+printf '[Desktop Entry]\nName=Do XDG_DATA_HOME\n' > "$ATAJ/casa/.local/share/applications/b.desktop"
+printf '[Desktop Entry]\nName=Do flatpak do usuario\n' > "$ATAJ/casa/.local/share/flatpak/exports/share/applications/c.desktop"
+
+atalhos_com() {
+    env HOME="$ATAJ/casa" XDG_DATA_DIRS="$1" XDG_DATA_HOME="$2" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_atalhos_do_sistema' 2>/dev/null
+}
+
+LISTA_A="$(atalhos_com "$ATAJ/xdg" "")"
+case "$LISTA_A" in
+    *"/xdg/applications/a.desktop"*) pass "XDG_DATA_DIRS is read" ;;
+    *) fail "XDG_DATA_DIRS is read" "a.desktop in the list" "$LISTA_A" ;;
+esac
+case "$LISTA_A" in
+    *"/casa/.local/share/flatpak/exports/share/applications/c.desktop"*)
+        pass "a per-user flatpak export is found with no variable set for it" ;;
+    *) fail "a per-user flatpak export is found with no variable set for it" \
+            "c.desktop in the list" "$LISTA_A" ;;
+esac
+# The default for XDG_DATA_HOME is ~/.local/share, and a machine that leaves the
+# variable unset is the normal case rather than a corner - this container has
+# both variables EMPTY while all three export directories exist and hold files,
+# which is exactly the shape of a program started from a file manager.
+case "$LISTA_A" in
+    *"/casa/.local/share/applications/b.desktop"*)
+        pass "XDG_DATA_HOME falls back to ~/.local/share" ;;
+    *) fail "XDG_DATA_HOME falls back to ~/.local/share" "b.desktop in the list" "$LISTA_A" ;;
+esac
+
+# The same directory reachable two ways must not be walked twice: on a normal
+# desktop XDG_DATA_DIRS already contains /usr/share, and a doubled entry would
+# announce every newly installed program twice.
+# Anchored on the whole path on purpose: this function looks at the REAL system
+# directories too, by design, and the first version of this line counted
+# `a\.desktop` anywhere - which matched /usr/share/applications/openjdk-21-java
+# .desktop on the machine running the suite and reported a dedup failure that
+# was not there. A pattern loose enough to hit a real file is a test that
+# accuses the code of somebody else's filename.
+DOBRADO="$(atalhos_com "$ATAJ/xdg:$ATAJ/xdg" "" | grep -c "^$ATAJ/xdg/applications/a\.desktop\$" || true)"
+equal "a directory reachable twice is walked once" "1" "$DOBRADO"
+
+# The three export directories have to be named EXPLICITLY, because reading the
+# variables is not enough - measured, not assumed. This is the check that
+# catches somebody tidying the list back down to two entries.
+faltando=""
+for d in /var/lib/snapd/desktop /var/lib/flatpak/exports/share flatpak/exports/share; do
+    grep -q -- "$d" "$ROOT/src/lib/common.sh" || faltando="$faltando $d"
+done
+equal "snapd's and flatpak's export directories are named explicitly" "" "$faltando"
+
+# And the announcement reports only what is NEW, which is the whole point of
+# taking the list before the install.
+ANTES_T="$(atalhos_com "$ATAJ/xdg" "")"
+printf '[Desktop Entry]\nName=Recem instalado\n' > "$ATAJ/xdg/applications/novo.desktop"
+NOVOS="$(env HOME="$ATAJ/casa" XDG_DATA_DIRS="$ATAJ/xdg" XDG_DATA_HOME="" \
+    bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_anuncia_atalhos_do_sistema "$1"' _ "$ANTES_T" 2>/dev/null)"
+equal "only the newly appeared shortcut is announced" "Recem instalado" "$NOVOS"
+
+# tandem-flatpak is the handler that never asked at all.
+for b in tandem-snap tandem-deb tandem-flatpak; do
+    if grep -q 't_anuncia_atalhos_do_sistema' "$ROOT/src/bin/$b"; then
+        pass "$b tells the owner where the program went"
+    else
+        fail "$b tells the owner where the program went" \
+             "a call to t_anuncia_atalhos_do_sistema" "no call"
+    fi
+done
 
 section "the badge on the front page does not lie"
 

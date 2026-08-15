@@ -3800,9 +3800,40 @@ t_causa_apt() {
 # provides for Windows software, and for the same reason: on Wayland the menu
 # does not refresh, so a program the owner cannot find is a program he does not
 # have.
+#
+# It looked in TWO directories until 4.11, and a snap and a flatpak land in
+# neither - so the promise above has been quietly unkept for three of the four
+# package managers since 3.8, and `tandem-snap`'s "look in the menu for" line
+# had never once appeared on anybody's screen. snapd exports to
+# /var/lib/snapd/desktop/applications; flatpak to
+# /var/lib/flatpak/exports/share/applications for the system and to
+# ~/.local/share/flatpak/exports/share/applications for the user.
+#
+# XDG_DATA_DIRS is asked first, because it is the right answer and it picks up
+# whatever else a distribution invents. It is NOT enough on its own, and that
+# is measured rather than assumed: in this session's own container both
+# XDG_DATA_DIRS and XDG_DATA_HOME are EMPTY while all three directories above
+# exist and hold files - which is exactly the shape of a program started from a
+# file manager rather than a login shell. So the three are named explicitly as
+# well, and the list is deduplicated because on a normal desktop they overlap.
 t_atalhos_do_sistema() {
-    find /usr/share/applications /usr/local/share/applications \
-         -maxdepth 1 -name '*.desktop' -type f 2>/dev/null | sort
+    local dirs="" d visto=""
+    for d in ${XDG_DATA_DIRS:+${XDG_DATA_DIRS//:/ }} \
+             "${XDG_DATA_HOME:-$HOME/.local/share}" \
+             /usr/share /usr/local/share \
+             /var/lib/snapd/desktop \
+             /var/lib/flatpak/exports/share \
+             "$HOME/.local/share/flatpak/exports/share"; do
+        [ -n "$d" ] || continue
+        d="${d%/}/applications"
+        case " $visto " in *" $d "*) continue ;; esac
+        visto="$visto $d"
+        [ -d "$d" ] || continue
+        dirs="$dirs $d"
+    done
+    [ -n "$dirs" ] || return 0
+    # shellcheck disable=SC2086
+    find $dirs -maxdepth 1 -name '*.desktop' -type f 2>/dev/null | sort
 }
 
 t_anuncia_atalhos_do_sistema() {
