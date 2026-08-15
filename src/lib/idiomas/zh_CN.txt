@@ -1778,7 +1778,13 @@ tandem dados restaurar /备份/所在/路径.tar.gz
 我没能把文件放回去。
 
 @bkp_sem_ambiente
-还没有可以备份的 Windows 环境。
+Tandem 还没有在这台机器上建立过 Windows 环境，所以这里没有东西可保存。
+
+您第一次用它打开 Windows 程序时，它会自己建立一个——双击一个 .exe
+并让它跑完即可。之后这个命令就有东西可以保存了。
+
+如果这台机器上本来就有您自己的 Wine 配置，那些是“您的”：Tandem 从不
+写入其中，出于同样的理由也不会备份它们。那些请用您自己的工具。
 
 @bkp_salvando
 正在备份 Windows 环境，可能要一会儿。
@@ -1786,6 +1792,11 @@ tandem dados restaurar /备份/所在/路径.tar.gz
 @bkp_salvo
 备份已保存到：
 {1}
+
+要还原，请不要双击它：那是一个压缩包，系统只会把它解开成一堆文件。
+请用这个，它会自己找到最新的一份：
+
+    tandem restore
 
 这是整个环境。其中您自己的文件只有 {2} —— 如果只想带走这些，
 又快又能塞进一封邮件：
@@ -1796,6 +1807,14 @@ tandem dados salvar
 
 @rst_nenhum_backup
 在您的主目录里没有找到备份。
+
+没有什么可下载的：备份是 Tandem 自己做的。先运行这个，
+它会把整个 Windows 环境保存到您的主目录：
+
+    tandem backup
+
+那保存的是“环境”，而环境 Tandem 本来就会重建。要保存“您自己的”文件
+（文档、表格、程序的数据库），请用：tandem dados
 
 @rst_pergunta
 从这里恢复 Windows 环境：

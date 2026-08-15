@@ -1896,7 +1896,16 @@ Vos fichiers ont été remis en place.
 Je n'ai pas pu remettre les fichiers.
 
 @bkp_sem_ambiente
-Il n'y a pas encore d'environnement Windows à sauvegarder.
+Tandem n'a pas encore cree d'environnement Windows sur cette machine, il n'y
+a donc rien ici a enregistrer.
+
+Il en cree un tout seul la premiere fois que vous ouvrez un programme Windows
+avec lui : double-cliquez sur un .exe et laissez-le finir. Apres cela, cette
+commande aura quelque chose a enregistrer.
+
+Si vous aviez deja vos propres profils Wine sur cette machine, ils sont a
+VOUS : Tandem n'ecrit jamais dedans, et pour la meme raison il ne les
+sauvegarde pas non plus. Pour ceux-la, utilisez votre propre outil.
 
 @bkp_salvando
 Sauvegarde de l'environnement Windows. Cela peut prendre du temps.
@@ -1904,6 +1913,12 @@ Sauvegarde de l'environnement Windows. Cela peut prendre du temps.
 @bkp_salvo
 Sauvegarde enregistrée dans :
 {1}
+
+Pour le remettre, NE double-cliquez PAS dessus : c'est une archive, le
+systeme ne ferait que la decompresser en un tas de fichiers. Utilisez ceci,
+qui trouve la plus recente tout seul :
+
+    tandem restore
 
 Ceci est l'environnement ENTIER. Vos propres fichiers représentent {2} de ce
 total - pour n'emporter que ceux-là, ce qui est rapide et tient dans un
@@ -1914,7 +1929,16 @@ tandem dados salvar
 Je n'ai pas pu enregistrer la sauvegarde.
 
 @rst_nenhum_backup
-Aucune sauvegarde trouvée dans votre dossier personnel.
+Aucune sauvegarde trouvee dans votre dossier personnel.
+
+Il n'y a rien a telecharger : c'est Tandem qui la cree. Lancez ceci d'abord,
+et il enregistre tout l'environnement Windows dans votre dossier personnel :
+
+    tandem backup
+
+Cela enregistre l'ENVIRONNEMENT, que Tandem sait refaire de toute facon. Pour
+enregistrer VOS fichiers - documents, tableurs, la base du programme - :
+    tandem dados
 
 @rst_pergunta
 Restaurer l'environnement Windows à partir de :

@@ -198,7 +198,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 1134 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1147 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -850,7 +850,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 1134 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 1147 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **The list's read path was measured against the OLD code before being fixed**,
   which is why the four defects are stated as numbers rather than as risks: on a
   two-row list the old query answered `vcrun2010` with 3 machines where 400

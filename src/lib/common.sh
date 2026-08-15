@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.11"
+TANDEM_VERSAO="4.12"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -362,9 +362,35 @@ t_idioma_grava() {
 
 t_idioma_carrega
 
+# Is somebody looking at a terminal right now?
+#
+# THE DEFECT THIS EXISTS FOR, reported from the owner's own machine: he typed
+# `tandem backup` at a prompt and the terminal "simplesmente nao retornou
+# nada". The command had a perfectly good answer for him - there is no Windows
+# environment yet - and t_erro handed it to notify-send, because a graphical
+# session existed. The answer went into a bubble over his desktop while he sat
+# looking at a silent prompt.
+#
+# That is the cardinal rule of this whole project broken from the inside: no
+# path may end in silence, and this one ended in silence for every command
+# typed at a terminal on a machine that has a desktop - which is every shop
+# machine there is.
+#
+# t_texto has had the right rule since 3.4 and the other three never adopted
+# it. Stated plainly: a notification is what you use when there is NOBODY at a
+# terminal, which is the double-click case. When there is somebody, the
+# terminal gets the message, because that is where they are looking.
+#
+# Both descriptors, because a caller may redirect either one: `tandem doctor >
+# report.txt` still has a person at stderr, and `2>err.log` still has one at
+# stdout.
+t_tem_terminal() {
+    [ -t 1 ] || [ -t 2 ]
+}
+
 t_aviso() {
     t_diz "aviso: $1"
-    if t_tem_gui && command -v notify-send >/dev/null 2>&1 &&
+    if ! t_tem_terminal && t_tem_gui && command -v notify-send >/dev/null 2>&1 &&
        notify-send -i "${2:-dialog-information}" -a Tandem "Tandem" "$1" 2>/dev/null; then
         return 0
     fi
@@ -394,7 +420,7 @@ t_copia_para_area() {
 
 t_ok() {
     t_diz "ok: $1"
-    if t_tem_gui && command -v notify-send >/dev/null 2>&1 &&
+    if ! t_tem_terminal && t_tem_gui && command -v notify-send >/dev/null 2>&1 &&
        notify-send -i emblem-ok -t 10000 -a Tandem "Tandem" "$1" 2>/dev/null; then
         return 0
     fi
@@ -415,6 +441,16 @@ t_erro() {
     # neither a call, an assignment, a printf nor a bare argument, so
     # tools/conta-literais.py never saw it and read TOTAL 0 for two releases.
     [ -n "$LOG" ] && extra="$(printf '\n\n%s\n%s' "$(t_msg detalhes_tecnicos)" "$LOG")"
+    # A terminal beats the desktop, and it beats it OUTRIGHT rather than as
+    # well: opening a modal zenity dialog that blocks until somebody clicks it
+    # is the wrong answer to a command typed at a prompt, and a critical
+    # notification for it is the same alarm the self-test was told off for.
+    # See t_tem_terminal for the report that produced this.
+    if t_tem_terminal; then
+        printf 'Tandem: %s\n' "$1" >&2
+        command -v logger >/dev/null 2>&1 && logger -t tandem "ERRO: $1"
+        return 0
+    fi
     if t_tem_gui; then
         command -v notify-send >/dev/null 2>&1 &&
             notify-send -u critical -i dialog-error -a Tandem "Tandem" "$1" 2>/dev/null &&

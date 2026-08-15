@@ -1,3 +1,98 @@
+tandem (4.12) unstable; urgency=medium
+
+  * The panel shows which Tandem this is, and stops showing its own plumbing.
+    It is the only screen a shop owner who never opens a terminal ever sees,
+    and to find out what version he was running he had to open a terminal -
+    the exact thing this program exists to spare him. The version is in the
+    title now. The owner asked for this in one sentence and was right in two:
+    the second half of his question was why the program meant to simplify
+    things is itself awkward.
+  * The awkward half was the first COLUMN. Every row led with the internal
+    command name - "identidade", "restore", "autoteste" - words he has to
+    decode before he can read the sentence beside them, and decoding them buys
+    him nothing, because he is clicking a row and not typing a command. zenity
+    can return a column without displaying it (--hide-column with
+    --print-column), so the token still reaches `case "$esc" in` untouched and
+    the panel became one column of plain sentences. Verified with xdotool
+    driving a real zenity under Xvfb: with column 1 hidden it still answers
+    "instalar".
+
+  * The memory screen was printing on-disk format at the owner. Found in the
+    field, on his machine, on a real .deb built for arm64 - the LIMITE line
+    reached him as:
+      limite: arquitetura|Este pacote foi feito para... .\n\nEle e para arm64
+    Two leaks in one line. "arquitetura|" is the internal separator carrying
+    the CLASS of the limit, and the \n were literal backslash-n: t_memoria_grava
+    escapes newlines so a value stays on one line and t_memoria_le undoes it
+    with printf '%b' on read - which the sed field map in acao_memoria bypassed
+    entirely. LIMITE is the only field there that is neither a single word nor
+    a plain sentence, and it was the one that walked around the rule.
+
+  * The self-test stopped setting off a red alarm to prove alarms work. Its
+    first check calls t_erro for real, and t_erro on a graphical machine fires
+    a CRITICAL desktop notification - so running the self-test popped
+    "self-test: ignore this message" at the owner, and `tandem socorro`, which
+    embeds the self-test, popped it at somebody already in trouble and reading
+    carefully. Found in a log from his machine, not here.
+  * The shape of the mistake is worth more than the fix. It was written
+    `[ -n "$(t_erro ...)" ] || t_tem_gui`, and bash evaluates the left side
+    FIRST - so the alarm fired on exactly the machines where the `|| t_tem_gui`
+    then made the result independent of it. It frightened the owner to learn
+    nothing. Running the probe with the display unset exercises MORE than
+    before, not less: the message-building path is now checked on every machine
+    instead of being short-circuited away on the graphical ones.
+
+
+  * "tandem restore" tells you how to make the thing it is missing. It said
+    "No backup found in your home folder." and stopped there - naming the
+    problem and not the way out, which is the one thing this project treats as
+    a defect rather than a limitation. The owner hit it from the panel and
+    reasonably went looking for a .tar.gz to DOWNLOAD; there is none, because
+    Tandem is what makes it. The message now names "tandem backup", and draws
+    the distinction that matters on a shop machine: backup saves the
+    ENVIRONMENT, which Tandem can rebuild anyway, while "tandem dados" saves
+    HIS files, which nothing can.
+
+  * ...and "tandem backup" says how to put it back. It told the owner about
+    "tandem dados salvar" and never once named "tandem restore", so the only
+    affordance left to him was to double-click the .tar.gz - which unpacks a
+    Wine prefix into a pile of files in his Downloads folder and restores
+    nothing. The mirror of the defect above, on the other side of the same
+    pair, found the same way: by him using it.
+  * Tandem does NOT claim .tar.gz, and will not. Claiming application/gzip
+    would take every archive on the machine away from the archive manager,
+    which is the exact harm the association work exists to avoid - so the fix
+    is a sentence telling him not to click it, not an association.
+
+  * A COMMAND TYPED AT A PROMPT ANSWERS AT THAT PROMPT. The owner typed
+    "tandem backup" and the terminal returned nothing at all - "simplesmente
+    nao retornou nada". The command had a perfectly good answer for him, and
+    t_erro handed it to notify-send because a graphical session existed. It
+    went into a bubble over his desktop while he sat looking at a silent
+    prompt.
+  * This is the cardinal rule of the whole project broken from the inside, and
+    not in one command: t_erro, t_ok and t_aviso all preferred the desktop
+    whenever a desktop existed, so EVERY command typed at a terminal on a
+    machine that has one - which is every shop machine there is - could answer
+    into thin air. t_texto has had the right rule since 3.4 and the other three
+    never adopted it.
+  * The rule, now shared as t_tem_terminal: a notification is what you use when
+    there is NOBODY at a terminal, which is the double-click case. When
+    somebody is there, that is where they are looking. Both descriptors are
+    checked, because a caller may redirect either one and still have a person
+    at the other. For t_erro the terminal wins OUTRIGHT rather than as well - a
+    modal dialog that blocks until somebody clicks it is the wrong answer to a
+    typed command.
+  * Measured both ways under a real tty with a display present: the old code
+    produced ZERO BYTES, and the double-click path still notifies.
+  * "tandem backup" also explains which environment it means. It said "There is
+    no Windows environment to save yet." to somebody with TWO Wine prefixes on
+    the machine, which reads as a lie. It now says Tandem has not created one
+    YET, that opening a Windows program through it creates one, and that the
+    profiles he already had are his - never written into, and for the same
+    reason never backed up.
+ -- Tandem <rockx0@gmail.com>  Sat, 15 Aug 2026 13:10:00 +0000
+
 tandem (4.11) unstable; urgency=medium
 
   * "tandem repair" asks who owns a type with the tool the file manager

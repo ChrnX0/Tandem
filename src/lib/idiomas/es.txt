@@ -1858,7 +1858,16 @@ Tus archivos fueron devueltos.
 No pude devolver los archivos.
 
 @bkp_sem_ambiente
-Todavía no hay entorno de Windows que guardar.
+Tandem todavia no ha creado ningun entorno Windows en esta maquina, asi que
+no hay nada aqui que guardar.
+
+Lo crea el solo la primera vez que usted abre un programa de Windows con el:
+haga doble clic en un .exe y dejelo terminar. Despues de eso, este comando ya
+tiene algo que guardar.
+
+Si usted ya tenia perfiles de Wine propios en esta maquina, esos son SUYOS:
+Tandem nunca escribe dentro de ellos y por la misma razon tampoco los
+respalda. Para esos, use su propia herramienta.
 
 @bkp_salvando
 Guardando el entorno de Windows. Puede tardar.
@@ -1866,6 +1875,12 @@ Guardando el entorno de Windows. Puede tardar.
 @bkp_salvo
 Copia guardada en:
 {1}
+
+Para restaurarlo, NO haga doble clic: es un archivo comprimido, asi que el
+sistema solo lo desempaquetaria en un monton de archivos. Use esto, que
+encuentra el mas reciente solo:
+
+    tandem restore
 
 Esto es el entorno COMPLETO. Tus archivos son {2} de ese total: para llevar
 solo esos, que es rápido y cabe en un correo:
@@ -1875,7 +1890,16 @@ tandem dados salvar
 No pude guardar la copia.
 
 @rst_nenhum_backup
-No se encontró ninguna copia en tu carpeta personal.
+No se encontro ningun respaldo en su carpeta personal.
+
+No hay nada que descargar: quien lo crea es el propio Tandem. Ejecute esto
+primero y guardara todo el entorno Windows en su carpeta personal:
+
+    tandem backup
+
+Eso guarda el ENTORNO, que Tandem sabe rehacer igualmente. Para guardar SUS
+archivos - documentos, hojas de calculo, la base del programa - use:
+    tandem dados
 
 @rst_pergunta
 ¿Restaurar el entorno de Windows a partir de:
