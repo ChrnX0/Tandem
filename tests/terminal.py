@@ -38,8 +38,17 @@ import sys
 import time
 
 
-def executa(resposta, comando, limite=25.0):
+# 25s suits the suite, where every child is a shell one-liner. It is FATAL for
+# the shop harness: winetricks dotnet48 alone takes about half an hour, and the
+# first end-to-end run of tests/real-shop.sh killed Tandem at 25 seconds and
+# reported status 255. A caller with a slow child sets TANDEM_PTY_LIMITE.
+LIMITE_PADRAO = float(os.environ.get("TANDEM_PTY_LIMITE", "25"))
+
+
+def executa(resposta, comando, limite=None):
     """(output, exit status) with the command on a real terminal."""
+    if limite is None:
+        limite = LIMITE_PADRAO
     pid, fd = pty.fork()
     if pid == 0:
         # The child. No exception may escape here - it would return a SECOND
@@ -55,7 +64,7 @@ def executa(resposta, comando, limite=25.0):
     inicio = time.time()
     while True:
         if time.time() - inicio > limite:
-            saida.append("\n[pty.py: gave up after %gs]" % limite)
+            saida.append("\n[terminal.py: gave up after %gs]" % limite)
             break
         pronto, _, _ = select.select([fd], [], [], 0.2)
         if not respondeu and time.time() - inicio > 0.6:
