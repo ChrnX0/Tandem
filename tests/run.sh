@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2782271879 4097" "$soma_esperados"
+      "1506807321 4103" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -3941,6 +3941,72 @@ for caso in \
              "uma frase em português" "zero bytes"
     fi
 done
+
+section "the other side of that branch: a REAL terminal"
+
+# sem_ninguem above covers one half of `[ -t 0 ]` - nobody there at all. TEN
+# places in this tree branch on it (the confirmation prompt of five handlers,
+# t_texto's read of standard input, the sudo path), and until now the suite
+# could reach NONE of the terminal half: env -i with no tty is the other side
+# of every one of those ifs. The half that was unmeasured is the fallback that
+# exists so that no path ends in silence.
+#
+# tests/terminal.py is stdlib-only on purpose - expect and unbuffer are not on
+# a bare runner, and a test that skips itself on CI is a test that never runs.
+if python3 -c "import pty, select" 2>/dev/null; then
+    TTY_SH="$TMPROOT/instalador-tty.sh"
+    printf '#!/bin/sh\necho "RODOU-DE-VERDADE"\n' > "$TTY_SH"
+    chmod +x "$TTY_SH"
+    num_terminal() {
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_CONFIG="$TMPROOT/tty-cfg" \
+        TANDEM_DADOS="$TMPROOT/tty-dados" TANDEM_IDIOMA_FORCADO="$1" \
+            python3 "$ROOT/tests/terminal.py" "$2" \
+                bash "$ROOT/src/bin/tandem-script" "$TTY_SH" 2>&1
+    }
+    mkdir -p "$TMPROOT/tty-cfg" "$TMPROOT/tty-dados"
+
+    # The harness has to give a REAL terminal, or every assertion below passes
+    # while measuring the pipe it was written to replace.
+    equal "the harness really does hand the child a terminal on all three fds" \
+          "0 1 2" "$(python3 "$ROOT/tests/terminal.py" "" bash -c \
+                     'for n in 0 1 2; do [ -t $n ] && printf "%s " $n; done' |
+                     tr -s ' ' | sed 's/ $//')"
+
+    # A REFUSAL at a terminal must be a sentence. Three refusal paths in these
+    # handlers once exited 0 with zero bytes, and this is the side of the
+    # branch that was never walked.
+    recusa="$(num_terminal pt_BR n)"
+    naocontem "refusing at a terminal does not run the installer" \
+              "RODOU-DE-VERDADE" "$recusa"
+    if [ -n "$recusa" ]; then
+        pass "and it says so, rather than exiting quietly"
+    else
+        fail "and it says so, rather than exiting quietly" "uma frase" "zero bytes"
+    fi
+
+    # t_confirmou, at a real prompt, for the first time. The defect it was
+    # written for is documented: five handlers printed [y/N] from the
+    # catalogue and then matched only s|S|sim|SIM, so an English owner did
+    # exactly what the screen asked, typed y, and was told it was cancelled -
+    # on the two paths where the alternative is being told nothing happened.
+    for _par in "en y" "en s" "pt_BR s" "pt_BR y" "fr o" "fr y"; do
+        set -- $_par
+        if printf '%s' "$(num_terminal "$1" "$2")" | grep -q "RODOU-DE-VERDADE"; then
+            pass "in $1, answering '$2' at a real prompt means yes"
+        else
+            fail "in $1, answering '$2' at a real prompt means yes" \
+                 "o instalador roda" "foi recusado"
+        fi
+    done
+    # And the other way round, or "accepts everything" would pass all six above.
+    for _par in "en n" "pt_BR n" "fr n"; do
+        set -- $_par
+        naocontem "in $1, answering 'n' still refuses" \
+                  "RODOU-DE-VERDADE" "$(num_terminal "$1" "$2")"
+    done
+else
+    skip "the terminal half of [ -t 0 ]" "this python has no pty module"
+fi
 
 section "community list (modelled on filter lists)"
 
