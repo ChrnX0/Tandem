@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1668397178 4083" "$soma_esperados"
+      "3930110835 4087" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -1814,6 +1814,31 @@ FIM
           "2" "$(conta_isca "$ISCA_H")"
     equal "and the same bytes in a library file are not, which is the rule" \
           "0" "$(conta_isca "$TMPROOT/isca-lib.sh")"
+
+    # MISS SIXTEEN: the thirteenth's twin, left in the sibling. Only
+    # citadas_com_prosa got the `tudo` fix, so printfs_com_prosa kept walking
+    # function bodies and stayed blind in the very files the fix was written
+    # for. citadas subsumes the double-quoted half, so what survived was
+    # exactly this - a SINGLE-QUOTED printf format at the top level of a
+    # handler, which scored TOTAL 0 with a Portuguese sentence in it.
+    printf "printf 'Associacoes reaplicadas com sucesso\\\\n'\n" > "$ISCA_H"
+    equal "a single-quoted printf of prose, at a handler's top level, is counted" \
+          "1" "$(conta_isca "$ISCA_H")"
+
+    # And the half that keeps it usable. Widening the scope without the two
+    # gates citadas_com_prosa already applied made this tool INVENT twelve
+    # findings on the real tree - a mimeapps.list section header, eight
+    # .desktop filenames, a product name and a winetricks command line. A tool
+    # that invents findings is worse than one that misses them, because
+    # somebody has to spend an afternoon proving each one is nothing.
+    cat > "$ISCA_H" <<'FIMP'
+printf '[Default Applications]\n' > "$ALVO"
+printf 'tandem-exe.desktop\n' >> "$ALVO"
+printf 'winetricks -q %s\n' "$v"
+printf 'Isto aqui o dono le mesmo\n'
+FIMP
+    equal "a file format, a filename and a command line are not prose; the sentence is" \
+          "1" "$(conta_isca "$ISCA_H")"
 
     # The destination rules, which are what keeps the widened scope usable: an
     # on-disk value and an executed script are not prose, and they are excluded
