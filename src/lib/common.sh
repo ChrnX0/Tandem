@@ -2375,11 +2375,47 @@ t_lista_corroboracoes() {
 # It only answers when the lesson comes confirmed by people: that is the
 # difference between spreading knowledge and spreading error with the same
 # efficiency.
+# FOUR different silences, and until now they were one. "there is no list on
+# this machine", "the list is here and has never heard of this program" and
+# "it has heard of it and nobody confirmed the lesson" are three different
+# facts about a shop, and answering 1 to all of them means whoever is helping
+# cannot tell a machine that never downloaded the file from a program the
+# world genuinely knows nothing about.
+#
+#   0  the verbs are on stdout
+#   1  this file could not be fingerprinted at all
+#   2  no list has been downloaded here
+#   3  the list is here and does not know this program
+#   4  it knows it, and no lesson in it is worth passing on
+#
+# The caller writes one log line per case; nothing new reaches the owner's
+# screen, because on this path there is nothing for him to do about any of
+# them - the run carries on into the normal detector loop either way.
 t_lista_consulta() {
     local prog="$1" id linha
     id="$(t_memoria_id "$prog" 2>/dev/null)" || return 1
-    linha="$(t_lista_linha "$id")" || return 1
+    [ -n "$id" ] || return 1
+    [ -f "${TANDEM_LISTA:-}" ] || return 2
+    # Exact field match rather than grep: the identity is field 1, and a
+    # substring hit anywhere else in the row would answer "known" about the
+    # wrong program.
+    awk -F'\t' -v alvo="$id" '$1 == alvo { achou = 1 } END { exit !achou }' \
+        "$TANDEM_LISTA" 2>/dev/null || return 3
+    linha="$(t_lista_linha "$id")" || return 4
     printf '%s\n' "$linha" | cut -f1 | tr ',' ' '
+}
+
+# The same four, as a log line. Kept beside the codes so a new one cannot be
+# added without a sentence - the shape this project keeps finding is a rich
+# verdict whose caller keeps a boolean.
+t_lista_porque_calou() {
+    case "${1:-}" in
+        2) printf 'lista: nenhuma copia baixada nesta maquina' ;;
+        3) printf 'lista: baixada, e nao conhece este programa' ;;
+        4) printf 'lista: conhece este programa, mas nenhuma licao confirmada' ;;
+        1) printf 'lista: nao consegui identificar este arquivo' ;;
+        *) printf 'lista: sem resposta (%s)' "${1:-?}" ;;
+    esac
 }
 
 # How many machines agree with the lesson t_lista_consulta just gave - the

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3930110835 4087" "$soma_esperados"
+      "2782271879 4097" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -3968,6 +3968,54 @@ equal "the machine count comes along" "340" "$(t_lista_maquinas "$ID_L")"
   printf '%s\t64\tvcrun2022\t-\tso-abriu\t9\t2026-08\t-\n' "$ID_L"
 } > "$TANDEM_LISTA"
 equal "an unconfirmed lesson is not suggested" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+
+# FOUR silences, and until 4.16 they were one. Answering 1 to all of them
+# meant whoever is helping could not tell a machine that never downloaded the
+# file from a program the world genuinely knows nothing about - and the log
+# said nothing at all, so there was not even a trail to read.
+codigo_lista() { t_lista_consulta "$PROG_L" >/dev/null 2>&1; printf '%s' "$?"; }
+
+TANDEM_LISTA_ANTES="$TANDEM_LISTA"
+export TANDEM_LISTA="$TMPROOT/lista-que-nao-existe.tsv"
+rm -f "$TANDEM_LISTA"
+equal "no list downloaded here answers 2, not the same 1 as everything else" \
+      "2" "$(codigo_lista)"
+export TANDEM_LISTA="$TANDEM_LISTA_ANTES"
+
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf 'outro-id-qualquer\t64\tvcrun2022\t-\tconfirmado\t400\t2026-08\t-\n'
+} > "$TANDEM_LISTA"
+equal "a list that has never heard of this program answers 3" "3" "$(codigo_lista)"
+
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf '%s\t64\tvcrun2022\t-\tso-abriu\t9\t2026-08\t-\n' "$ID_L"
+} > "$TANDEM_LISTA"
+equal "known, but with no lesson worth passing on, answers 4" "4" "$(codigo_lista)"
+
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf '%s\t64\tvcrun2022\t-\tconfirmado\t400\t2026-08\t-\n' "$ID_L"
+} > "$TANDEM_LISTA"
+equal "and a usable lesson still answers 0, with the verbs" "0" "$(codigo_lista)"
+
+# The identity is matched as a FIELD. A substring hit anywhere else in the row
+# would answer "the list knows this program" about a different one entirely.
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf 'outro\t64\tvcrun2022\t%s\tconfirmado\t400\t2026-08\t-\n' "$ID_L"
+} > "$TANDEM_LISTA"
+equal "the fingerprint appearing in another column is not a match" \
+      "3" "$(codigo_lista)"
+
+# Every code has a sentence, and none of them is the code itself. A new code
+# added without one would print "sem resposta", which is the shape this
+# project keeps finding: a rich verdict whose caller kept a boolean.
+for _c in 1 2 3 4; do
+    naocontem "code $_c has a sentence of its own, not a number" \
+              "sem resposta" "$(t_lista_porque_calou "$_c")"
+done
 
 # ------------------------------------------------------------------
 # Several rows about the SAME file. This is the normal shape of a merged list,

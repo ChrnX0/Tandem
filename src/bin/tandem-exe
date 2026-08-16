@@ -212,7 +212,13 @@ if [ -z "$SABIDOS" ]; then
     # owner had typed `tandem lista atualizar`, so for everybody else this
     # consultation asked a file that was never going to be there.
     t_lista_talvez_atualiza 2>/dev/null
-    DA_LISTA="$(t_lista_consulta "$PROG" 2>/dev/null)"
+    DA_LISTA="$(t_lista_consulta "$PROG" 2>/dev/null)"; RC_LISTA=$?
+    if [ -z "$DA_LISTA" ]; then
+        # It said nothing, and WHY it said nothing is the useful half. Without
+        # this line a machine that never downloaded the list and a program the
+        # world has never seen look identical in the log.
+        t_diz "$(t_lista_porque_calou "$RC_LISTA")"
+    fi
     if [ -n "$DA_LISTA" ]; then
         SABIDOS="$DA_LISTA"
         # The machine count is the one thing the list knows and no forum
