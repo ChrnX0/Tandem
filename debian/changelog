@@ -134,6 +134,29 @@ tandem (4.19) unstable; urgency=medium
   * The first attempt at that clamp would not parse. The whole resolver is one
     awk program inside single quotes, and an apostrophe in a COMMENT closes
     that string just as well as one in code.
+  * RULE 1 WAS BREAKABLE THROUGH A SYMLINK, and rule 1 is the one this project
+    calls inviolable. The protected-prefix list was compared as TEXT, so with
+    ~/.local/share/tandem/wine pointing at ~/.wine-pdv every comparison said
+    "different path" while every one of them was about the same directory.
+    Measured end to end on the installed package: Tandem registered the
+    production prefix as protected, wrote "protegido: .../.wine-pdv" into its
+    own log, and then ran a winetricks verb INTO IT and left its receipt and
+    its .tandem-assoc there. Pointing a new tool at the Wine setup you already
+    have is the first thing a person tries; this is not an exotic setup.
+  * The comparison is between places now, both sides resolved, in both
+    directions - a symlink naming a listed prefix and a listed symlink naming
+    a real one have to reach the same decision, or the protection depends on
+    which spelling somebody happened to type. Under it sits a second layer for
+    a prefix the first-run sweep never found: our own default NAME leading to
+    a working prefix with no mark of ours is somebody else's. That layer is
+    deliberately narrow, so a mark that failed to be written - a full disk,
+    which is this release's own subject - does not turn Tandem out of its own
+    prefix.
+  * Two of the four assertions for this passed on the OLD code at first, by a
+    different route: against an unmarked prefix the fall-through answered
+    "protected" anyway. They target a prefix carrying Tandem's own mark now,
+    which is a real request (`tandem protect` on a prefix Tandem built) and the
+    case the old code actually waved through.
   * Found by cutting the disk to 3 MB under a real install, which is one of
     four scenarios run for this release. Upgrade across versions, a corrupted
     prefix and a machine with no network at all held with nothing to fix. Two

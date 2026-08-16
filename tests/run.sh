@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1765768266 4219" "$soma_esperados"
+      "2267523461 4227" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "1297370014 2525" "$soma_padroes"
 
@@ -611,6 +611,57 @@ printf '%s\n' "$PREF_NOSSO" > "$TANDEM_PROTEGIDOS"
 t_prefixo_protegido "$PREF_NOSSO"
 equal "tandem protect also applies to the default prefix" "0" "$?"
 : > "$TANDEM_PROTEGIDOS"
+
+# RULE 1, THROUGH A SYMLINK - which is how it was actually broken. The list was
+# compared as TEXT, so with the default prefix path pointing at somebody else's
+# working prefix every comparison said "different path" while every one of them
+# was about the same directory.
+#
+# Measured end to end on the installed package before the fix: Tandem
+# registered the production prefix as protected, wrote "protegido:
+# .../.wine-pdv" into its own log, and then ran a winetricks verb INTO IT and
+# left its receipt and its .tandem-assoc there. Rule 1 is the one rule this
+# project calls inviolable, and pointing a new tool at the Wine setup you
+# already have is the first thing a person tries.
+#
+# The target of these first two is PREF_MARCADO, which carries Tandem's own
+# mark, and that is deliberate. Against an UNMARKED prefix the old code
+# answered "protected" anyway, through its "unknown = protected"
+# fall-through - so the assertion would have passed on the defect and proved
+# nothing. `tandem protect` on a prefix Tandem itself built is a real request,
+# and the comment on this function says that decision has to outweigh the
+# ownership mark; reached through a symlink, the old code read the mark, saw
+# its own, and waved it through.
+LIGA="$HOME/.local/share/tandem/wine-liga"
+rm -rf "$LIGA"; ln -s "$PREF_MARCADO" "$LIGA"
+printf '%s
+' "$PREF_MARCADO" > "$TANDEM_PROTEGIDOS"
+t_prefixo_protegido "$LIGA"
+equal "a symlink to a listed prefix is the listed prefix" "0" "$?"
+# The other direction: the LIST entry is the symlink and the caller names the
+# real path. Both spellings have to resolve to the same decision, or the
+# protection depends on which name somebody happened to type.
+printf '%s
+' "$LIGA" > "$TANDEM_PROTEGIDOS"
+t_prefixo_protegido "$PREF_MARCADO"
+equal "and a listed symlink protects the place it points at" "0" "$?"
+: > "$TANDEM_PROTEGIDOS"
+# The second layer, for a prefix the first-run sweep never found: our own
+# default NAME leading to a working prefix that carries no mark of ours.
+DEF_ANTIGO="$TANDEM_PREFIXO_PADRAO"
+rm -rf "$LIGA"; ln -s "$PREF_ALHEIO" "$LIGA"
+TANDEM_PREFIXO_PADRAO="$LIGA"
+t_prefixo_protegido "$LIGA"
+equal "the default prefix name is not a licence when it leads elsewhere" "0" "$?"
+# ...and that layer must stay narrow. A real directory at the default path with
+# no mark - a marker that failed to be written on a full disk, which is this
+# release's own subject - must NOT turn Tandem out of its own prefix.
+TANDEM_PREFIXO_PADRAO="$PREF_NOSSO"
+rm -f "$PREF_NOSSO/.tandem-prefixo"
+t_prefixo_protegido "$PREF_NOSSO"
+equal "but a real default prefix with no mark is still ours" "1" "$?"
+TANDEM_PREFIXO_PADRAO="$DEF_ANTIGO"
+rm -rf "$LIGA"
 
 # Walks up the tree until it finds the prefix root.
 mkdir -p "$PREF_ALHEIO/drive_c/Programas/Sistema"

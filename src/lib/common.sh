@@ -875,12 +875,43 @@ t_prefixo_do_arquivo() {
 # The user's list is consulted FIRST, on purpose: whoever runs
 # "tandem protect" on the default prefix itself is asking that not even Tandem
 # touch it, and that decision has to outweigh the ownership mark.
+# THE LIST IS A LIST OF PLACES, NOT OF SPELLINGS - and until 4.19 it was
+# compared as text, which broke rule 1 for real. Measured end to end: with
+# ~/.local/share/tandem/wine a SYMLINK to ~/.wine-pdv, Tandem registered the
+# production prefix as protected, wrote "protegido: .../.wine-pdv" in its own
+# log, and then installed a winetricks verb INTO IT, planted its receipt and
+# its .tandem-assoc there. Every string comparison said "different path"; every
+# one of them was about the same directory.
+#
+# That is not an exotic setup. Pointing the new tool at the Wine setup you
+# already have is the first thing a person tries.
 t_prefixo_protegido() {
-    local p="$1"
-    if [ -f "$TANDEM_PROTEGIDOS" ] && grep -qxF -- "$p" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
-        return 0
+    local p="$1" real alvo
+    real="$(readlink -f -- "$p" 2>/dev/null)"
+    [ -n "$real" ] || real="$p"
+    if [ -f "$TANDEM_PROTEGIDOS" ]; then
+        while IFS= read -r alvo; do
+            [ -n "$alvo" ] || continue
+            [ "$alvo" = "$p" ] && return 0
+            [ "$(readlink -f -- "$alvo" 2>/dev/null)" = "$real" ] && return 0
+        done < "$TANDEM_PROTEGIDOS"
     fi
-    [ "$p" = "$TANDEM_PREFIXO_PADRAO" ] && return 1
+    if [ "$p" = "$TANDEM_PREFIXO_PADRAO" ]; then
+        # Our own default prefix by name. If that name leads somewhere else and
+        # a working prefix is already sitting there, it is somebody else's -
+        # the mark is what says whose it is, and this is the second layer under
+        # the list, for a prefix the sweep never found.
+        #
+        # Narrowed to the case where the name really does lead elsewhere, so a
+        # marker that failed to be written - a full disk, which is this
+        # release's own subject - does not turn Tandem out of its own prefix.
+        if [ "$real" != "$p" ] && [ -f "$real/system.reg" ] &&
+           [ ! -f "$real/.tandem-prefixo" ]; then
+            t_diz "prefixo padrao aponta para $real, que nao e nosso: tratando como protegido"
+            return 0
+        fi
+        return 1
+    fi
     [ -f "$p/.tandem-prefixo" ] && return 1
     return 0   # unknown = treat it as protected
 }
