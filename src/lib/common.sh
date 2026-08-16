@@ -2246,6 +2246,23 @@ t_lista_linha() {
             split(a, pa, "-"); split(b, pb, "-")
             return (pb[1] - pa[1]) * 12 + (pb[2] - pa[2])
         }
+        # A DATE IN THE FUTURE IS NOT FRESHNESS. The tie-break below is "the
+        # most recently seen wins", so a row dated 2099-12 wins every tie for
+        # ever - measured: ten reports this month lost to ten reports dated
+        # 2099. It does not take an attacker, only a shop with a wrong clock,
+        # and this project already detects wrong clocks from the certificate
+        # errors Wine itself prints, because they happen.
+        #
+        # No apostrophe in this block: the whole awk program is inside single
+        # quotes, and one in a COMMENT closes the string just as well as one in
+        # code. It did, on the first attempt.
+        #
+        # api/lista.js REFUSES such a record on the way in, with a comment
+        # saying exactly this. That guard covers half the problem: this file is
+        # DOWNLOADED, and a reader that trusts it because the writer checked is
+        # a reader with no check. Clamped to now, so a future row is worth
+        # exactly as much as a row from this month and no more.
+        function visto_ok(d) { return (d > mes_agora) ? mes_agora : d }
         # How much one report is worth: its stack against ours, and its age.
         function peso(w, visto,   p, m, pw) {
             p = 1
@@ -2286,9 +2303,9 @@ t_lista_linha() {
             # own number.
             if (NF >= 12 && $12 == "aplicado") next
             if ($5 == "confirmado") {
-                conf[$3] += m * peso(w, $7)
+                conf[$3] += m * peso(w, visto_ok($7))
                 bruto[$3] += m
-                if ($7 > visto[$3]) visto[$3] = $7
+                if (visto_ok($7) > visto[$3]) visto[$3] = visto_ok($7)
             } else if ($5 == "entregue") {
                 # Half a report. Tandem verified the missing file arrived, in
                 # the right bitness, and the owner never said whether the
@@ -2296,11 +2313,11 @@ t_lista_linha() {
                 # a hint about the question the list answers. Before 4.11 a run
                 # like this contributed NOTHING: it was recorded as "so-abriu"
                 # and the resolver ignores those entirely.
-                conf[$3] += m * peso(w, $7) * 0.5
+                conf[$3] += m * peso(w, visto_ok($7)) * 0.5
                 bruto[$3] += m
-                if ($7 > visto[$3]) visto[$3] = $7
+                if (visto_ok($7) > visto[$3]) visto[$3] = visto_ok($7)
             } else if ($5 == "reprovado") {
-                rep[$3] += m * peso(w, $7)
+                rep[$3] += m * peso(w, visto_ok($7))
             }
         }
         END {
@@ -2348,6 +2365,23 @@ t_lista_inuteis() {
             split(a, pa, "-"); split(b, pb, "-")
             return (pb[1] - pa[1]) * 12 + (pb[2] - pa[2])
         }
+        # A DATE IN THE FUTURE IS NOT FRESHNESS. The tie-break below is "the
+        # most recently seen wins", so a row dated 2099-12 wins every tie for
+        # ever - measured: ten reports this month lost to ten reports dated
+        # 2099. It does not take an attacker, only a shop with a wrong clock,
+        # and this project already detects wrong clocks from the certificate
+        # errors Wine itself prints, because they happen.
+        #
+        # No apostrophe in this block: the whole awk program is inside single
+        # quotes, and one in a COMMENT closes the string just as well as one in
+        # code. It did, on the first attempt.
+        #
+        # api/lista.js REFUSES such a record on the way in, with a comment
+        # saying exactly this. That guard covers half the problem: this file is
+        # DOWNLOADED, and a reader that trusts it because the writer checked is
+        # a reader with no check. Clamped to now, so a future row is worth
+        # exactly as much as a row from this month and no more.
+        function visto_ok(d) { return (d > mes_agora) ? mes_agora : d }
         function peso(w, visto,   p, m, pw) {
             p = 1
             if (wine_agora == "" || w == "" || w == "-") { p = 0.75 }
@@ -2370,7 +2404,7 @@ t_lista_inuteis() {
                 # t_lista_linha - telling somebody "3.7 shops" is a number he
                 # cannot check against the file he can download and read.
                 bruto[vs[i]] += m
-                peso_de[vs[i]] += m * peso(w, $7)
+                peso_de[vs[i]] += m * peso(w, visto_ok($7))
             }
         }
         END {

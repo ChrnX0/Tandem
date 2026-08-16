@@ -116,6 +116,24 @@ tandem (4.19) unstable; urgency=medium
     interrupted double click, for ever. Every working file a handler opens
     under the runtime directory is registered now, and the net declines to
     take an EXIT trap another handler already owns.
+  * A COMMUNITY-LIST ROW DATED IN THE FUTURE won every tie-break for ever.
+    The tie-break is "the most recently seen wins", so ten reports from this
+    month lost to ten reports dated 2099 - measured, on a fixture built so the
+    date and the alphabetical fall-through cannot be confused for one another.
+    It takes no attacker, only a shop with a wrong clock, and this project
+    already detects wrong clocks from the certificate errors Wine itself
+    prints.
+  * api/lista.js REFUSES such a record on the way in and its comment states
+    exactly that harm - so somebody thought about this and covered half of it.
+    The file is DOWNLOADED, and a reader that trusts it because the writer
+    checked is a reader with no check. The date is clamped to now on the read
+    side, in both resolvers, so a future row is worth what a row from this
+    month is worth and no more. A second assertion holds the other end: a
+    genuinely newer row must still win, or the clamp would have thrown away
+    the thing the date is for.
+  * The first attempt at that clamp would not parse. The whole resolver is one
+    awk program inside single quotes, and an apostrophe in a COMMENT closes
+    that string just as well as one in code.
   * Found by cutting the disk to 3 MB under a real install, which is one of
     four scenarios run for this release. Upgrade across versions, a corrupted
     prefix and a machine with no network at all held with nothing to fix. Two

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "4207215344 4193" "$soma_esperados"
+      "1765768266 4219" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "1297370014 2525" "$soma_padroes"
 
@@ -6236,6 +6236,53 @@ equal "a row written before the stack existed still answers" \
 # number nobody can check against the file he can download and read.
 naocontem "and the number shown is reports, not the internal weight" \
           "." "$(resolve cccc3333cccc3333cccc3333cccc3333 | cut -f2)"
+
+# A DATE IN THE FUTURE IS NOT FRESHNESS. The tie-break is "the most recently
+# seen wins", so a row dated 2099-12 won every tie for ever - measured on the
+# old code: ten reports this month lost to ten reports dated 2099. It takes no
+# attacker, only a shop with a wrong clock, and this project already detects
+# wrong clocks from the certificate errors Wine itself prints.
+#
+# api/lista.js REFUSES such a record on the way in, with a comment stating
+# exactly this harm. That covers half the problem: this file is DOWNLOADED, and
+# a reader that trusts it because the writer checked is a reader with no check.
+#
+# The fixture is built so the two explanations cannot be confused. The future
+# row carries the alphabetically LATER verb, and the final tie-break is
+# alphabetical - so if the date still decided, zzz_verb wins; if it is clamped,
+# the fall-through picks aaa_verb. On the old code this returned zzz_verb.
+FUT="$TMPROOT/lista-futuro.tsv"
+cat > "$FUT" <<'FIMFUT'
+# TANDEM-LISTA 1
+dddd4444dddd4444dddd4444dddd4444	64	aaa_verb	-	confirmado	10	2026-08	-	9.0	-	-	-
+dddd4444dddd4444dddd4444dddd4444	64	zzz_verb	-	confirmado	10	2099-12	-	9.0	-	-	-
+FIMFUT
+resolve_fut() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_LISTA="$FUT" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_stack_wine() { printf "9.0"; }
+        t_lista_linha "$1"' _ "$1" 2>/dev/null
+}
+equal "a row dated in the future does not win the tie-break" \
+      "aaa_verb	10" "$(resolve_fut dddd4444dddd4444dddd4444dddd4444)"
+# ...and the clamp must not flatten recency altogether, which would pass the
+# assertion above while throwing away the thing the date is FOR.
+REC="$TMPROOT/lista-recencia.tsv"
+cat > "$REC" <<'FIMREC'
+# TANDEM-LISTA 1
+eeee5555eeee5555eeee5555eeee5555	64	aaa_verb	-	confirmado	10	2024-01	-	9.0	-	-	-
+eeee5555eeee5555eeee5555eeee5555	64	zzz_verb	-	confirmado	10	2026-08	-	9.0	-	-	-
+FIMREC
+equal "while a genuinely newer row still wins on the same evidence" \
+      "zzz_verb	10" "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_LISTA="$REC" bash -c '
+          . "'"$ROOT"'/src/lib/common.sh"
+          t_stack_wine() { printf "9.0"; }
+          t_lista_linha eeee5555eeee5555eeee5555eeee5555' 2>/dev/null)"
+# No apostrophe may enter the awk program, comments included: the whole thing
+# is inside single quotes and one in a COMMENT closes the string exactly as
+# well as one in code. It did, on the first attempt at the clamp above.
+equal "the list resolver still parses as shell at all" "0" \
+      "$(bash -n "$ROOT/src/lib/common.sh" 2>/dev/null; echo $?)"
 
 # ---- the record carries the stack, and the sieve does not eat it
 REGV2="$TMPROOT/regv2"; mkdir -p "$REGV2"
