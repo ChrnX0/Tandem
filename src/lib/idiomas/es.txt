@@ -475,6 +475,10 @@ Falta un servicio del sistema (D-Bus). Reiniciar el ordenador suele resolverlo.
 @porque_disco_cheio
 El disco está lleno.
 
+@sem_anotacoes
+No pude escribir mis notas en {1}, así que no pude averiguar qué necesita este programa.
+Esa carpeta suele estar llena o ser de solo lectura. Liberar espacio y volver a intentarlo normalmente basta.
+
 @porque_relogio
 La fecha del ordenador parece incorrecta, y eso tumba las descargas.
 Hoy el ordenador cree que es {1}.

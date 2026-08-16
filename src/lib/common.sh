@@ -16,7 +16,18 @@ TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # broken in the repository and every test still pass.
 TANDEM_BIN="${TANDEM_BIN:-/usr/bin}"
 TANDEM_ESTADO="${XDG_STATE_HOME:-$HOME/.local/state}/tandem"
-mkdir -p "$TANDEM_ESTADO" 2>/dev/null || TANDEM_ESTADO=""
+# Where it WOULD have gone, kept even when it cannot be made: the line below
+# empties TANDEM_ESTADO, and "free some space" is not an instruction until it
+# says where.
+TANDEM_ESTADO_QUERIDO="$TANDEM_ESTADO"
+# THE SECOND DOOR to a silent /dev/null log, and it was found only after
+# closing the first. t_log_init's own fallback records that the log was lost;
+# this one emptied TANDEM_ESTADO and said nothing, so t_log_init took its
+# `[ -z "$LOG" ]` shortcut and never reached the part that remembers. A full
+# disk, a read-only home or a state path that is a file all arrive here, and
+# what is lost is not only the log - the memory, the community list and the
+# locks live in this folder too.
+mkdir -p "$TANDEM_ESTADO" 2>/dev/null || { TANDEM_ESTADO=""; TANDEM_SEM_LOG=1; }
 
 # Locks and progress pipes go to the user's runtime directory when it exists:
 # it is local disk (on a home folder mounted over the network flock may simply
@@ -45,8 +56,45 @@ t_log_init() {
     if [ -f "$LOG" ] && [ "$(stat -c%s "$LOG" 2>/dev/null || echo 0)" -gt 1048576 ]; then
         mv -f "$LOG" "$LOG.old" 2>/dev/null || true
     fi
-    : >> "$LOG" 2>/dev/null || { LOG=/dev/null; return; }
-    printf '\n===== %s | %s =====\n' "$(date '+%F %T')" "${*:2}" >> "$LOG"
+    # A REAL BYTE. The probe here used to open the file for append and write
+    # nothing, and on a FULL filesystem that SUCCEEDS - the open allocates no
+    # blocks, so ENOSPC never fires. It answered "writable" while the very next
+    # line, this same header, failed and leaked
+    #
+    #   common.sh: line 49: printf: write error: No space left on device
+    #
+    # as the FIRST thing the owner read, with a path and a line number in it.
+    # Measured on a full 16k tmpfs: the empty append succeeds, one byte fails.
+    # A check that prints the same thing whether the premise is right or wrong
+    # has measured nothing - the rule this project wrote down after deleting
+    # twenty-four tracked files on the strength of an empty `git status`.
+    #
+    # And the whole thing is inside a GROUP. Written as `printf ... >> "$LOG"
+    # 2>/dev/null`, the 2>/dev/null silences printf - but the failure here is
+    # the REDIRECTION, which bash reports itself, before that redirection is in
+    # place. The message came out anyway. Redirecting the group means stderr is
+    # already gone when the append is attempted.
+    if ! { printf '\n===== %s | %s =====\n' "$(date '+%F %T')" "${*:2}" \
+           >> "$LOG"; } 2>/dev/null; then
+        LOG=/dev/null
+        # And REMEMBER it, because every diagnosis in every handler is read
+        # back out of this file: which DLL Wine asked for, whether the .exe is
+        # a Windows program at all, whether the prefix is the wrong width, why
+        # winetricks gave up. With the log gone they all come back empty and
+        # the owner reads "the program closed with an error (code 53)" - the
+        # entire point of the project, lost, with nothing on screen saying so.
+        # Reached by the commonest failure there is, a full disk.
+        TANDEM_SEM_LOG=1
+    fi
+}
+
+# The sentence that has to accompany any verdict reached WITHOUT the log, and
+# nothing at all when the log is fine - so a caller can append it without
+# asking first. $1 is the folder, because "free some space" is not an
+# instruction until it says where.
+t_aviso_sem_log() {
+    [ -n "${TANDEM_SEM_LOG:-}" ] || return 1
+    t_msg sem_anotacoes "${TANDEM_ESTADO:-${TANDEM_ESTADO_QUERIDO:-?}}"
 }
 
 t_diz() { printf '%s\n' "$*" >> "${LOG:-/dev/null}" 2>/dev/null; }

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1448571905 4163" "$soma_esperados"
+      "3738029535 4186" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -5662,6 +5662,19 @@ FIMWTD
     # green; it was found by reading the installed package's own output.
     equal "and names each component once, not once per retry" \
           "1" "$(printf '%s\n' "$JAN_D" | grep -c '^- Visual C++ 2003$')"
+
+    # --- Case 6: the whole run with nowhere to write the log. Every check in
+    # tandem-exe reads the log back, so this is not "one feature degraded" - it
+    # is the diagnosis gone, and the owner must be told the answer got worse
+    # rather than being handed a bare exit code as though nothing was missing.
+    E="$E2E/semlog"; mkdir -p "$E/.local/state"
+    : > "$E/.local/state/tandem"          # where a DIRECTORY is expected
+    roda_exe "$E" "" semgui
+    ERR_E="$(cat "$E/stderr.txt" 2>/dev/null)"
+    contem "with no log, the owner is told the notes could not be written" \
+           "could not write my notes" "$ERR_E"
+    naocontem "and bash's own write error never reaches him" \
+              "write error" "$ERR_E"
 fi
 
 section ".deb package"
@@ -6874,6 +6887,54 @@ equal "an absent marker returns nothing rather than guessing" "1" \
       "$(TANDEM_LIB="$ROOT/src/lib" bash -c '
          . "'"$ROOT"'/src/lib/common.sh"; LOG="'"$LOGM"'"
          t_log_desde "" >/dev/null; echo $?' 2>/dev/null)"
+
+# A LOG THAT CANNOT BE WRITTEN IS NOT A DETAIL, it is every diagnosis at once.
+# Which DLL Wine asked for, whether the file is a Windows program, whether the
+# prefix is the wrong width, why winetricks gave up - all of it is read back
+# out of this one file. When it cannot be written they all come back empty and
+# the owner reads "the program closed with an error (code 53)" with nothing
+# saying the answer got worse. Reached by the commonest failure there is.
+#
+# The probe used to be `: >> "$LOG"`, and on a FULL filesystem that SUCCEEDS:
+# opening for append writes no bytes, so ENOSPC never fires. Measured on a full
+# 16k tmpfs - `:` succeeds, one byte fails - so the check answered the same
+# thing whether the premise was right or wrong, which is the rule this project
+# wrote down after deleting twenty-four tracked files on an empty git status.
+# A state directory that is a FILE reaches the same branch without needing a
+# mount, which is why the test is written that way.
+SEMLOG="$TMPROOT/semlog"; rm -rf "$SEMLOG"; mkdir -p "$SEMLOG"
+: > "$SEMLOG/tandem"          # where a DIRECTORY is expected
+semlog() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        TANDEM_ESTADO="'"$SEMLOG"'/tandem"
+        t_log_init exe teste
+        printf "LOG=%s SEM=%s\n" "$LOG" "${TANDEM_SEM_LOG:-nao}"
+        t_aviso_sem_log'
+}
+equal "an unwritable log falls back to /dev/null AND records that it did" \
+      "LOG=/dev/null SEM=1" "$(semlog 2>/dev/null | head -1)"
+contem "and the sentence names the folder, because 'free some space' needs a where" \
+       "$SEMLOG/tandem" "$(semlog 2>/dev/null)"
+# The header printf had no 2>/dev/null of its own, so bash printed
+# "common.sh: line 49: printf: write error: No space left on device" - a path
+# and a line number - as the FIRST thing the owner read.
+equal "and nothing of bash's own leaks onto the screen" \
+      "" "$(semlog 2>&1 >/dev/null)"
+# When the log IS writable the helper says nothing, so a caller can append it
+# without asking first - and a version that always spoke would pass the test
+# above while ruining every ordinary error.
+equal "with a healthy log the helper is silent and fails" "1" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+         . "'"$ROOT"'/src/lib/common.sh"
+         TANDEM_ESTADO="'"$TMPROOT"'"; t_log_init exe teste
+         t_aviso_sem_log; echo $?' 2>/dev/null | tail -1)"
+# Comments stripped FIRST. The comment that explains this defect necessarily
+# quotes it, so a check reading the whole file finds its own explanation and can
+# never go green - the same self-reference the expected-values checksum hit when
+# it started matching its own two lines.
+naocontem "the probe is a real byte, not an open-and-close that a full disk passes" \
+          ': >> "$LOG"' "$(sed 's/#.*//' "$ROOT/src/lib/common.sh")"
 
 section "the list knows what did NOT work, and finally says so"
 

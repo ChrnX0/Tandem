@@ -47,9 +47,40 @@ tandem (4.19) unstable; urgency=medium
     comment claiming there was only one - a copy that drifts is a rule that
     fires on one path and not the other, which is the whole defect this
     release is about.
+  * A LOG THAT CANNOT BE WRITTEN was losing every diagnosis at once, silently.
+    Which DLL Wine asked for, whether the file is a Windows program, whether
+    the prefix is the wrong width, why winetricks gave up - all of it is read
+    back out of that one file, so with the log gone they all come back empty
+    and the owner reads a bare exit code as though nothing were missing. Now
+    he is told the notes could not be written, and where.
+  * The probe that was supposed to catch this could not. It opened the log for
+    append and wrote no bytes, and on a FULL filesystem that SUCCEEDS - the
+    open allocates nothing, so ENOSPC never fires. Measured on a full 16k
+    tmpfs: the empty append succeeds, one byte fails. It is the rule this
+    project already wrote down after deleting twenty-four tracked files on the
+    strength of an empty git status - a check that prints the same thing
+    whether the premise is right or wrong has measured nothing.
+  * And the line that failed straight after it printed
+    "common.sh: line 49: printf: write error: No space left on device" - a path
+    and a line number - as the FIRST thing the owner read. Its 2>/dev/null
+    silenced printf, but the failure is the REDIRECTION, which bash reports
+    itself before that redirection is in place. It needs a group around it.
+  * There were TWO doors to a silent /dev/null log and closing the first did
+    not close the second: when the state folder cannot be created at all, the
+    path is simply emptied and the log initialiser takes a shortcut that never
+    reaches the part that remembers. A full disk, a read-only home and a state
+    path that is a file all arrive there. Both doors are now covered, and the
+    tests prove it separately - reopening only the second one fails exactly one
+    assertion.
   * Found by cutting the disk to 3 MB under a real install, which is one of
     four scenarios run for this release. Upgrade across versions, a corrupted
-    prefix and a machine with no network at all held with nothing to fix.
+    prefix and a machine with no network at all held with nothing to fix. Two
+    later sweeps also held with nothing to fix and are worth recording as
+    negative results: all nine handlers against eighteen hostile file names -
+    command substitution, backticks, semicolons, pipes, globs, leading dashes,
+    embedded newlines, five scripts - executed nothing and were silent nowhere;
+    and two double clicks racing on the same file produced one install, one
+    window and a sentence for the second.
 
  -- Tandem <rockx0@gmail.com>  Sun, 16 Aug 2026 13:40:00 +0000
 

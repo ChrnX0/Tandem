@@ -701,7 +701,19 @@ $MAQUINA}"
 
 $(t_causa_por_token "$AMBIENTE_FALHOU")"
             else
-                t_erro "$(t_msg fechou_com_erro "$CODIGO")"
+                # THE BARE EXIT CODE, which is the one outcome this project
+                # exists to abolish. Reaching it can mean Tandem looked and
+                # found nothing - or that it could not look at all, because
+                # every check above reads the log and the log could not be
+                # written. Those are different sentences and the owner was
+                # getting the same one: a full disk turned "Visual C++ 2003 is
+                # missing, install it with winetricks -q vcrun2003" into
+                # "the program closed with an error (code 53)" and said
+                # nothing about why the answer got worse.
+                SEM_ANOTA="$(t_aviso_sem_log)" || SEM_ANOTA=""
+                t_erro "$(t_msg fechou_com_erro "$CODIGO")${SEM_ANOTA:+
+
+$SEM_ANOTA}"
             fi
         fi
         exit "$CODIGO"

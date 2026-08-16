@@ -621,6 +621,12 @@ msgctxt "porque_disco_cheio"
 msgid "The disk is full."
 msgstr ""
 
+msgctxt "sem_anotacoes"
+msgid ""
+"I could not write my notes in {1}, so I could not find out what this program needs.\n"
+"That folder is usually full or read-only. Freeing some space and trying again is normally enough."
+msgstr ""
+
 msgctxt "porque_relogio"
 msgid ""
 "The computer's date looks wrong, and that breaks downloads.\n"
