@@ -491,6 +491,7 @@ while :; do
 
     # Looks only at the stretch of the log generated in this attempt.
     PARCIAL="$TANDEM_TRAVAS/parcial.$$"
+    t_apaga_ao_sair "$PARCIAL"
     t_log_desde "$MARCA" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
 
     VERBOS="$(t_verbos_do_log "$PARCIAL")"
@@ -826,6 +827,7 @@ $(t_causa_por_token "$AMBIENTE_FALHOU")"
     # router. Every existing test installs a single verb, so nothing could see
     # it.
     RESTO="$TANDEM_TRAVAS/wt.$$"
+    t_apaga_ao_sair "$RESTO"
     : > "$RESTO"
     for v in $VERBOS; do
         t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"

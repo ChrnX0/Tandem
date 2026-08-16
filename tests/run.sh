@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3738029535 4186" "$soma_esperados"
+      "4207215344 4193" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "1297370014 2525" "$soma_padroes"
 
@@ -7008,6 +7008,33 @@ contem "while a healthy machine gets the log itself" \
 naocontem "and the empty-state case never globs the root of the filesystem" \
           'ls -1t "$TANDEM_ESTADO"/*.log' \
           "$(sed -n '/^acao_logs()/,/^}/p' "$ROOT/src/bin/tandem" | sed -n '1,/TANDEM_SEM_LOG/p')"
+
+# NOTHING LEFT BEHIND WHEN THE OWNER CLOSES THE WINDOW. Measured by killing
+# tandem-exe eight seconds into a winetricks: the receipt was correctly NOT
+# written and no memory was poisoned - rule 4 held, which is the thing that
+# would have mattered most - but the working file stayed, one per interrupted
+# double click, for ever. Every working file a handler opens under the runtime
+# directory is registered, so the net catches the exits that have no `rm` of
+# their own.
+for f in parcial.\$\$ wt.\$\$; do
+    # -F, because "$$" in a REGEX is two end-of-line anchors and matches
+    # nothing. The assertion failed on correct code until that was noticed.
+    ANTES="$(grep -nF "TANDEM_TRAVAS/$f" "$ROOT/src/bin/tandem-exe" | head -1 | cut -d: -f1)"
+    if [ -n "$ANTES" ] &&
+       sed -n "$((ANTES+1))p" "$ROOT/src/bin/tandem-exe" | grep -q 't_apaga_ao_sair'; then
+        pass "the working file $f is registered for cleanup"
+    else
+        fail "the working file $f is registered for cleanup" \
+             "a t_apaga_ao_sair on the next line" "${ANTES:-not found}"
+    fi
+done
+# And the net must not steal an EXIT trap somebody else owns: tandem-apk unmounts
+# an image in its own, and losing that is worse than a stray file.
+equal "the cleanup net declines an EXIT trap that is already taken" "ja-era" \
+      "$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+         . "'"$ROOT"'/src/lib/common.sh"
+         trap "echo ja-era" EXIT
+         t_apaga_ao_sair /tmp/nao-existe-tandem-teste' 2>/dev/null)"
 
 naocontem "the probe is a real byte, not an open-and-close that a full disk passes" \
           ': >> "$LOG"' "$(sed 's/#.*//' "$ROOT/src/lib/common.sh")"

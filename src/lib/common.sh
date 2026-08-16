@@ -4282,15 +4282,25 @@ t_atalhos_appimage() {
 T_SAIDAS=""
 t_saida_limpa() { [ -n "$T_SAIDAS" ] && rm -f $T_SAIDAS 2>/dev/null; return 0; }
 
+# Register a working file so it goes even when this run does not reach its own
+# `rm`. Measured by killing tandem-exe eight seconds into a winetricks: the
+# receipt was correctly NOT written and no memory was poisoned - rule 4 held -
+# but the working file stayed behind, one per interrupted double click, for
+# ever. A shopkeeper who closes the window is not a corner case.
+t_apaga_ao_sair() {
+    [ -n "${1:-}" ] || return 1
+    T_SAIDAS="$T_SAIDAS $1"
+    # Only if nobody else owns EXIT. tandem-apk sets its own trap and undoing
+    # it would leave a mounted image behind, which is worse than a stray file.
+    case "$(trap -p EXIT)" in "") trap t_saida_limpa EXIT ;; esac
+}
+
 t_saida_abre() {
     local f
     f="$(mktemp -t tandem-saida-XXXXXX 2>/dev/null)" ||
         f="${TANDEM_TRAVAS:-/tmp}/saida-$$-$1"
     : > "$f" 2>/dev/null
-    T_SAIDAS="$T_SAIDAS $f"
-    # Only if nobody else owns EXIT. tandem-apk sets its own trap and undoing
-    # it would leave a mounted image behind, which is worse than a stray file.
-    case "$(trap -p EXIT)" in "") trap t_saida_limpa EXIT ;; esac
+    t_apaga_ao_sair "$f"
     printf '%s' "$f"
 }
 

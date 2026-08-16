@@ -109,6 +109,13 @@ tandem (4.19) unstable; urgency=medium
     there is no program. Reworded to be true in all three places rather than
     split into a second key, because a second key is six more unreviewed
     translations and that count is this project's oldest open item.
+  * Nothing is left behind when the owner closes the window. Killing
+    tandem-exe eight seconds into a winetricks leaves the receipt correctly
+    UNWRITTEN and no memory poisoned - rule 4 held, which is the part that
+    would have mattered most - but the working file stayed, one per
+    interrupted double click, for ever. Every working file a handler opens
+    under the runtime directory is registered now, and the net declines to
+    take an EXIT trap another handler already owns.
   * Found by cutting the disk to 3 MB under a real install, which is one of
     four scenarios run for this release. Upgrade across versions, a corrupted
     prefix and a machine with no network at all held with nothing to fix. Two
