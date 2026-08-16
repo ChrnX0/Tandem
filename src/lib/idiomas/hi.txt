@@ -1949,6 +1949,16 @@ tandem dados salvar
 @bkp_nao_salvou
 मैं बैकअप सहेज नहीं सका।
 
+@dados_confirma_terminal
+वापस रखें? [y/N] 
+
+@dados_sem_janela
+आपकी फ़ाइलें वापस रखने से विंडोज़ माहौल के अंदर की चीज़ें बदलती हैं, और मेरे पास पूछने के लिए कोई खिड़की नहीं है।
+
+कुछ भी नहीं बदला गया। यह टर्मिनल में चलाइए, वहाँ मैं पूछ सकता हूँ:
+
+  tandem dados restaurar {1}
+
 @rst_confirma_terminal
 बहाल करें? [y/N] 
 

@@ -1972,6 +1972,16 @@ tandem dados salvar
 @bkp_nao_salvou
 I could not save the backup.
 
+@dados_confirma_terminal
+Put them back? [y/N] 
+
+@dados_sem_janela
+Putting your files back changes what is inside the Windows environment, and I have no window to ask you in.
+
+Nothing was changed. Run this in the Terminal, where I can ask:
+
+  tandem dados restaurar {1}
+
 @rst_confirma_terminal
 Restore? [y/N] 
 

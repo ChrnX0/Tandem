@@ -1961,6 +1961,16 @@ tandem dados salvar
 @bkp_nao_salvou
 Não consegui salvar o backup.
 
+@dados_confirma_terminal
+Devolver? [s/N] 
+
+@dados_sem_janela
+Devolver os seus arquivos muda o que tem dentro do ambiente Windows, e não tenho janela para perguntar.
+
+Nada foi mexido. Rode isto no Terminal, onde eu consigo perguntar:
+
+  tandem dados restaurar {1}
+
 @rst_confirma_terminal
 Restaurar? [s/N] 
 

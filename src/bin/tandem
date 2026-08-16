@@ -306,8 +306,18 @@ acao_dados_restaurar() {
     # Giving data back DELETES nothing: a file that already exists stays as it
     # is. A restore that overwrites today's work with last week's copy is
     # exactly the damage this command exists to prevent.
-    t_pergunta "$(t_msg dados_devolver_pergunta "$(basename -- "$arq")")" \
-        "$(t_msg botao_devolver)" "$(t_msg botao_cancelar)" || return 1
+    # THE SECOND ONE THE CLI AUDIT FOUND, and the same shape as `tandem
+    # restore`: t_pergunta answers 1 for "he said no" and for "there was
+    # nobody to ask", and this command writes the owner's files back into the
+    # environment. Measured before the fix: zero bytes and exit 1, with a
+    # terminal and without.
+    t_pergunta_ou_terminal "$(t_msg dados_devolver_pergunta "$(basename -- "$arq")")" \
+        "$(t_msg botao_devolver)" "$(t_msg botao_cancelar)" \
+        "$(t_msg dados_confirma_terminal)"
+    case $? in
+        1) return 1 ;;
+        2) t_erro "$(t_msg dados_sem_janela "$arq")"; return 1 ;;
+    esac
     t_progresso_abre "$(t_msg dados_devolvendo)"
     tar -C "$p/drive_c" -xzf "$arq" --skip-old-files 2>>"$LOG"; local c=$?
     t_progresso_fecha

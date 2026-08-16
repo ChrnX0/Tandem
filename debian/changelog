@@ -16,6 +16,20 @@ tandem (4.20) unstable; urgency=medium
     the file. Both take a path now - which `tandem dados salvar` and `tandem
     dados restaurar` already did, and the second of those even prints "If you
     have the file, say where it is". The odd ones out were backup and restore.
+  * The audit that found it was then run on EVERY confirmation in the CLI,
+    with the preconditions each one needs - on a bare machine four of the six
+    exit earlier for reasons of their own and look guarded when they are not.
+    A second one was silent by the same mechanism: `tandem dados restaurar`,
+    which writes the owner's files back into the environment. `preparar`,
+    `desinstalar` and `contribuir` were correct already, and that is worth
+    recording as much as the two that were not.
+  * The first test written for that second one was a FALSE GREEN. Its fixture
+    put the file in a folder t_dados_lista does not count, so the copy came out
+    empty and the command answered "I found no copy of your files" - which
+    happens to contain the words "tandem dados restaurar", so both assertions
+    passed on the wrong message and the whole thing stayed green with the
+    defect put back. The fixture asserts it produced a copy at all now, and the
+    assertion names words only the right message has.
   * Allowing an arbitrary path made a pre-existing hazard reachable, so it is
     closed in the same change: restore did `rm -rf` on the prefix BEFORE
     reading the archive. A truncated backup - a pen drive pulled mid-copy - is

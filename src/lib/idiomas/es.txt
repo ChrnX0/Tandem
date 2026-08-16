@@ -1968,6 +1968,16 @@ tandem dados salvar
 @bkp_nao_salvou
 No pude guardar la copia.
 
+@dados_confirma_terminal
+¿Devolverlos? [s/N] 
+
+@dados_sem_janela
+Devolver tus archivos cambia lo que hay dentro del entorno Windows, y no tengo ventana para preguntarte.
+
+No se cambió nada. Ejecuta esto en la Terminal, donde sí puedo preguntar:
+
+  tandem dados restaurar {1}
+
 @rst_confirma_terminal
 ¿Restaurar? [s/N] 
 

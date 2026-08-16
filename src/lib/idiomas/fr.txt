@@ -2008,6 +2008,16 @@ tandem dados salvar
 @bkp_nao_salvou
 Je n'ai pas pu enregistrer la sauvegarde.
 
+@dados_confirma_terminal
+Les remettre ? [o/N] 
+
+@dados_sem_janela
+Remettre vos fichiers modifie le contenu de l'environnement Windows, et je n'ai pas de fenêtre pour vous le demander.
+
+Rien n'a été modifié. Lancez ceci dans le Terminal, où je peux poser la question :
+
+  tandem dados restaurar {1}
+
 @rst_confirma_terminal
 Restaurer ? [o/N] 
 

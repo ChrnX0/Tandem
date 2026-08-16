@@ -603,6 +603,38 @@ contem "and it names the file, so the owner can repeat the command" \
 contem "a named file that is missing is reported as missing" \
        "not found" "$(bkp_em restore "$E2EB/pendrive/nao-existe.tar.gz")"
 
+# THE SECOND ONE THE AUDIT FOUND. Every t_pergunta in the CLI was reached on
+# purpose - with the preconditions each one needs, because on a bare machine
+# four of the six exit earlier for reasons of their own and look guarded when
+# they are not. Two of the six were silent, and both were commands that change
+# what is inside the Windows environment: `tandem restore` and this one.
+# `preparar`, `desinstalar` and `contribuir` were correct already.
+# Documents, not any folder: t_dados_lista counts only the five the owner
+# actually keeps things in. The first version of this fixture put the file in
+# users/x/ and the copy came out EMPTY, so the command answered "I found no
+# copy of your files" - which happens to contain the words "tandem dados
+# restaurar", so both assertions below passed on the WRONG message and the
+# whole test stayed green with the defect put back. A green instrument that
+# agrees with itself.
+mkdir -p "$E2EB/.local/share/tandem/wine/drive_c/users/loja/Documents"
+printf 'vendas\n' > "$E2EB/.local/share/tandem/wine/drive_c/users/loja/Documents/v.txt"
+bkp_em dados salvar "$E2EB/copia.tar.gz" >/dev/null 2>&1
+if [ -s "$E2EB/copia.tar.gz" ]; then
+    pass "the fixture really produced a copy, or the rest proves nothing"
+else
+    fail "the fixture really produced a copy, or the rest proves nothing" \
+         "a non-empty tar.gz" "nothing was written"
+fi
+SEM_DADOS="$(bkp_em dados restaurar "$E2EB/copia.tar.gz")"
+if [ -n "$SEM_DADOS" ]; then
+    pass "giving files back with nobody to ask is not silent either"
+else
+    fail "giving files back with nobody to ask is not silent either" \
+         "a sentence" "zero bytes"
+fi
+contem "and it says what the refusal was about, not that no copy was found" \
+       "no window to ask you in" "$SEM_DADOS"
+
 section "pre-flight: reading the .exe without running it"
 
 pecampo() { python3 src/lib/peinfo.py "$1" 2>/dev/null | grep "^$2=" | cut -d= -f2-; }

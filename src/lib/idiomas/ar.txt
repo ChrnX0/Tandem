@@ -2014,6 +2014,16 @@ tandem dados salvar
 @bkp_nao_salvou
 لم أتمكّن من حفظ النسخة الاحتياطية.
 
+@dados_confirma_terminal
+أُعيدها؟ [y/N] 
+
+@dados_sem_janela
+إعادة ملفاتك تغيّر ما بداخل بيئة ويندوز، وليست لديّ نافذة أسألك فيها.
+
+لم يُغيَّر أي شيء. شغّل هذا في الطرفية، حيث أستطيع أن أسأل:
+
+  tandem dados restaurar {1}
+
 @rst_confirma_terminal
 أستعيد؟ [y/N] 
 

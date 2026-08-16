@@ -1852,6 +1852,16 @@ tandem dados salvar
 @bkp_nao_salvou
 我没能保存备份。
 
+@dados_confirma_terminal
+要放回去吗？[y/N] 
+
+@dados_sem_janela
+把您的文件放回去会改动 Windows 环境里的内容，而我这边没有窗口可以问您。
+
+什么都没有改动。请在终端里运行下面这条，那样我就能问了：
+
+  tandem dados restaurar {1}
+
 @rst_confirma_terminal
 要恢复吗？[y/N] 
 
