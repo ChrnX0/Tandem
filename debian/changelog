@@ -72,6 +72,30 @@ tandem (4.19) unstable; urgency=medium
     path that is a file all arrive there. Both doors are now covered, and the
     tests prove it separately - reopening only the second one fails exactly one
     assertion.
+  * "THIS IS WHAT IT SAID" COULD BE ANOTHER PROGRAM'S WORDS, and the harm is
+    the worst shape this project has. Measured with two shell installers
+    double-clicked a second apart: the one that printed NOTHING AT ALL was
+    reported to its owner as "this is what it said:" followed by the other
+    program's progress lines - and the silent-success guard, the whole point
+    of 4.5, was defeated in the same stroke, because a slice with somebody
+    else's lines in it is never empty. The owner of an installer that did
+    nothing was congratulated, with another program's words as the evidence.
+  * The log is one file per handler with no PID in its name, so two .sh files
+    share script.log, and a marker only fixes where a slice STARTS. The fix is
+    therefore not a better slice: the child's words now go to a file of this
+    run's own and the log gets a copy, so the log stays complete and the
+    sentence the owner reads comes from a file nobody else can write. Six
+    handlers converted - .sh, .jar, .deb, .snap, .flatpakref and .AppImage.
+  * On the way there, the same six were found still slicing the log by
+    COUNTING ITS LINES - the technique tandem-exe was moved off when it was
+    measured in CI, two runs of one commit, one green and one red. A test was
+    written then forbidding it, and that test read tandem-exe and nothing
+    else. A guard scoped to the file where a defect was found cannot see the
+    file where it also lives. It reads all eleven handlers now.
+  * The per-run file is created before the program runs, so every success path
+    became a leak - one stray file per double click, for ever. There is a net
+    under the exits that had no cleanup of their own, and it declines to take
+    an EXIT trap that another handler already owns.
   * Found by cutting the disk to 3 MB under a real install, which is one of
     four scenarios run for this release. Upgrade across versions, a corrupted
     prefix and a machine with no network at all held with nothing to fix. Two

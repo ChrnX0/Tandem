@@ -4256,6 +4256,53 @@ t_atalhos_appimage() {
 # it is the only place where the log's own bookkeeping becomes visible. The
 # first version of it opened "this is what the program said" with a sentence
 # Tandem itself had written one line earlier.
+# ------------------------------------- the words of THIS run, and only this run
+#
+# A marker fixes where a slice STARTS. It cannot keep another process's lines
+# out of the MIDDLE of one, and the log is shared: one file per handler, no PID
+# in the name, so two .sh files double-clicked a second apart both write
+# script.log.
+#
+# Measured, not feared, and the harm is the worst shape this project has: the
+# installer that printed NOTHING AT ALL was reported to its owner as
+# "this is what it said:" followed by the other program's progress lines. The
+# silent-success guard - the entire point of 4.5 - was defeated at the same
+# time, because a slice with somebody else's lines in it is never empty. So the
+# owner of a shell installer that did nothing was congratulated, with another
+# program's words as the evidence.
+#
+# The fix is not a better slice. The child's words go to a file of this run's
+# own, and the log gets a copy afterwards, so the log stays complete and the
+# sentence the owner reads comes from a file nobody else can write.
+# Removed on the way out, whatever way out it is. The file this replaced was
+# created only on the FAILURE path and deleted three lines later; this one is
+# created before the program runs, so every success path became a leak - one
+# stray file per double click, for ever. The handlers keep their own `rm` where
+# they had one; this is the net under the exits that have none.
+T_SAIDAS=""
+t_saida_limpa() { [ -n "$T_SAIDAS" ] && rm -f $T_SAIDAS 2>/dev/null; return 0; }
+
+t_saida_abre() {
+    local f
+    f="$(mktemp -t tandem-saida-XXXXXX 2>/dev/null)" ||
+        f="${TANDEM_TRAVAS:-/tmp}/saida-$$-$1"
+    : > "$f" 2>/dev/null
+    T_SAIDAS="$T_SAIDAS $f"
+    # Only if nobody else owns EXIT. tandem-apk sets its own trap and undoing
+    # it would leave a mounted image behind, which is worse than a stray file.
+    case "$(trap -p EXIT)" in "") trap t_saida_limpa EXIT ;; esac
+    printf '%s' "$f"
+}
+
+# Copy into the log and forget the file. Called even when the run failed: the
+# log is where the technical detail lives, and losing it would trade one silence
+# for another.
+t_saida_fecha() {
+    [ -f "${1:-}" ] || return 1
+    cat "$1" >> "${LOG:-/dev/null}" 2>/dev/null
+    return 0
+}
+
 t_palavras_do_programa() {
     grep -v -e '^$' -e '^aviso: ' -e '^ok: ' -e '^ERRO: ' -e '^>>> ' -e '^===== ' \
          "$1" 2>/dev/null | tail -"${2:-4}"

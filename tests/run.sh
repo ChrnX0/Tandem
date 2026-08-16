@@ -107,7 +107,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
 equal "the expected values are the ones this suite was written with" \
       "3738029535 4186" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "406821495 2443" "$soma_padroes"
+      "1297370014 2525" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -3858,6 +3858,41 @@ if command -v script >/dev/null 2>&1; then
                  "only the script's output" "Tandem's log lines were shown" ;;
         *) pass "the script's words are its own, not Tandem's log" ;;
     esac
+    # ...AND NOT ANOTHER PROCESS'S EITHER, which the slice could never
+    # guarantee. The log is one file per handler with no PID in its name, so
+    # two .sh files double-clicked a second apart both write script.log, and a
+    # marker only fixes where the slice STARTS. Measured that way first, with a
+    # real race; written here as a script that appends to the log itself, which
+    # is the same thing happening at a time the test can pin down.
+    #
+    # The harm is the worst shape this project has: this installer prints
+    # NOTHING, and it was reported as "this is what it said:" followed by the
+    # other program's progress lines - so the silent-success guard was defeated
+    # at the same moment, a slice with somebody else's lines in it never being
+    # empty. The owner of an installer that did nothing was congratulated.
+    cat > "$TMPROOT/intruso.sh" <<'FIMI'
+#!/bin/sh
+# says nothing of its own; writes into the shared log the way a second Tandem
+# running at the same moment does
+for i in 1 2 3 4 5; do
+    printf 'Installing component %s of 5...\n' "$i" \
+        >> "$HOME/.local/state/tandem/script.log" 2>/dev/null
+done
+exit 0
+FIMI
+    chmod +x "$TMPROOT/intruso.sh"
+    saida_intruso="$(roda_script "$TMPROOT/intruso.sh" intruso)"
+    case "$saida_intruso" in
+        *"Installing component"*)
+            fail "another process's lines are never shown as this program's words" \
+                 "nothing of the other program" "its progress lines were shown" ;;
+        *) pass "another process's lines are never shown as this program's words" ;;
+    esac
+    case "$saida_intruso" in
+        *"said nothing"*) pass "and the silent-success guard still fires through the noise" ;;
+        *) fail "and the silent-success guard still fires through the noise" \
+                "the warning about saying nothing" "$saida_intruso" ;;
+    esac
 else
     skip "the shell-installer verdict" "no script(1) to make a terminal with"
 fi
@@ -6467,8 +6502,16 @@ contem "and it is appended from the failure branch" \
 # ...and by a MARKER, never by a line count. A line count is only correct
 # while this process is the only writer, and Tandem now spawns background
 # work - the list fetch, the version check - into the same log.
-naocontem "and never by counting lines, which a background writer shifts" \
-          "wc -l < \"\$LOG\"" "$(cat "$ROOT/src/bin/tandem-exe")"
+# ALL of them, not tandem-exe. This assertion read one file for three
+# versions while six other handlers still sliced their log by counting its
+# lines - the technique the marker exists to replace, and the one CLAUDE.md
+# records as measured rather than feared. A guard scoped to the file where the
+# defect was FOUND cannot see the file where it also lives; that is the same
+# miss the literal counter made thirteen times.
+naocontem "and never by counting lines, which a second writer shifts - in ANY handler" \
+          "wc -l < \"\$LOG\"" "$(cat "$ROOT"/src/bin/tandem-*)"
+naocontem "nor by slicing with a line offset, which is the other half of it" \
+          'tail -n +"$((MARCA' "$(cat "$ROOT"/src/bin/tandem-*)"
 
 # A Brazilian date order inside a sentence that IS translated. The wrong-clock
 # message reaches en, zh_CN, hi and ar readers with dd/mm/yyyy in the middle of

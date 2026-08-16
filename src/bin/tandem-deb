@@ -192,14 +192,21 @@ if ! t_pergunta "$PERGUNTA" "$(t_msg botao_instalar)" "$(t_msg botao_cancelar)";
 fi
 
 ANTES_ATALHOS="$(t_atalhos_do_sistema)"
-MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+# THE WORDS OF THIS RUN, in a file only this run writes to. A marker fixes
+# where a slice STARTS and cannot keep another Tandem's lines out of the
+# middle - and the log is shared, one file per handler with no PID in the name.
+# Measured with two double clicks a second apart: the program that printed
+# nothing was reported as having said the OTHER program's words, and the
+# silent-success guard was defeated at the same time. See t_saida_abre.
+SAIDA="$(t_saida_abre deb)"
 t_progresso_abre "$(t_msg deb_instalando "$NOME")"
 # apt and not "dpkg -i", on purpose: apt pulls the missing dependencies from the
 # repositories, and dpkg does not. With dpkg the commonest outcome is a package
 # left half-installed, which is a worse state than not installed at all.
 t_como_root "export DEBIAN_FRONTEND=noninteractive
-apt-get install -y ${VOLTANDO:+--allow-downgrades }-- '$PACOTE_ARQ'" >>"$LOG" 2>&1
+apt-get install -y ${VOLTANDO:+--allow-downgrades }-- '$PACOTE_ARQ'" >>"$SAIDA" 2>&1
 CODIGO=$?
+t_saida_fecha "$SAIDA"
 t_progresso_fecha
 
 if [ "$CODIGO" -eq 127 ]; then
@@ -224,8 +231,7 @@ $(t_msg se_nao_aparecer_saia_entre)}"
     exit 0
 fi
 
-PARCIAL="$TANDEM_TRAVAS/parcial-deb.$$"
-tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+PARCIAL="$SAIDA"
 PORQUE="$(t_causa_apt "$PARCIAL")"
 ULTIMAS="$(t_palavras_do_programa "$PARCIAL" 3)"
 rm -f "$PARCIAL"

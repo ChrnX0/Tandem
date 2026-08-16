@@ -127,12 +127,19 @@ fi
 
 INICIO=$SECONDS
 t_aviso "$(t_msg abrindo "$(basename -- "$PROG")")"
-MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+# THE WORDS OF THIS RUN, in a file only this run writes to. A marker fixes
+# where a slice STARTS and cannot keep another Tandem's lines out of the
+# middle - and the log is shared, one file per handler with no PID in the name.
+# Measured with two double clicks a second apart: the program that printed
+# nothing was reported as having said the OTHER program's words, and the
+# silent-success guard was defeated at the same time. See t_saida_abre.
+SAIDA="$(t_saida_abre jar)"
 (
     cd -- "$(dirname -- "$PROG")" || exit 1
-    java -jar "$PROG" >>"$LOG" 2>&1
+    java -jar "$PROG" >>"$SAIDA" 2>&1
 )
 CODIGO=$?
+t_saida_fecha "$SAIDA"
 
 if [ "$CODIGO" -eq 0 ]; then
     DUROU=$((SECONDS-INICIO))
@@ -143,8 +150,7 @@ if [ "$CODIGO" -eq 0 ]; then
     exit 0
 fi
 
-PARCIAL="$TANDEM_TRAVAS/parcial-jar.$$"
-tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+PARCIAL="$SAIDA"
 
 # ------------------------------------------------- 4. What Java complained of
 if grep -q 'UnsupportedClassVersionError' "$PARCIAL" 2>/dev/null; then

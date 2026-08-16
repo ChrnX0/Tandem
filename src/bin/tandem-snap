@@ -66,10 +66,17 @@ $(t_msg snap_aviso_sem_assinatura)" "$(t_msg botao_instalar_assim_mesmo)" "$(t_m
 fi
 
 ANTES_ATALHOS="$(t_atalhos_do_sistema)"
-MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+# THE WORDS OF THIS RUN, in a file only this run writes to. A marker fixes
+# where a slice STARTS and cannot keep another Tandem's lines out of the
+# middle - and the log is shared, one file per handler with no PID in the name.
+# Measured with two double clicks a second apart: the program that printed
+# nothing was reported as having said the OTHER program's words, and the
+# silent-success guard was defeated at the same time. See t_saida_abre.
+SAIDA="$(t_saida_abre snap)"
 t_progresso_abre "$(t_msg snap_instalando "$NOME")"
-t_como_root "snap install --dangerous -- '$ARQ'" >>"$LOG" 2>&1
+t_como_root "snap install --dangerous -- '$ARQ'" >>"$SAIDA" 2>&1
 CODIGO=$?
+t_saida_fecha "$SAIDA"
 t_progresso_fecha
 
 if [ "$CODIGO" -eq 127 ]; then
@@ -87,8 +94,7 @@ $(printf '%s\n' "$ONDE" | sed 's/^/  /')}"
     exit 0
 fi
 
-PARCIAL="$TANDEM_TRAVAS/parcial-snap.$$"
-tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+PARCIAL="$SAIDA"
 PORQUE=""
 if grep -qi 'classic confinement' "$PARCIAL" 2>/dev/null; then
     PORQUE="$(t_msg snap_porque_classic)"
