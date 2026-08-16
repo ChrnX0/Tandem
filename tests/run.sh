@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1506807321 4103" "$soma_esperados"
+      "2799268485 4105" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -5501,6 +5501,50 @@ else
     # 2>/dev/null diverted stderr for all the rest of the program. No test
     # caught it because they all ran with DISPLAY set, where the message comes
     # out through the window.
+    # THE SHORTCUT PATH, which its own comment said no test reaches - and it
+    # did not, which is how it kept a boolean where t_dll_no_prefixo gives
+    # three answers. A lesson already in memory is applied BEFORE the detector
+    # loop, and until 4.17 "delivered in a width this program cannot load" was
+    # reported as "did not deliver" AND filed in traducao-suspeita.tsv.
+    #
+    # Wrong width is not a wrong table row: vcrun2003 really does provide
+    # mfc71.dll, the verb just ships a 32-bit payload - half of them do. Filing
+    # that poisons the one work list that has already found six genuinely wrong
+    # mappings.
+    ATALHO="$E2E/atalho"; mkdir -p "$ATALHO"
+    PREF_A="$ATALHO/.local/share/tandem/wine"
+    mkdir -p "$PREF_A/drive_c/windows/system32" "$PREF_A/drive_c/windows/syswow64"
+    : > "$PREF_A/system.reg"; : > "$PREF_A/.tandem-prefixo"
+    TANDEM_MEMORIA="$ATALHO/.local/share/tandem/memoria" \
+        t_memoria_grava "$ARTIFACTS/prog64.exe" RESOLVERAM "vcrun2003" 2>/dev/null
+    # winetricks that delivers the RIGHT file into the WRONG folder: syswow64
+    # is where the 32-bit copies live, and this program is 64-bit.
+    cat > "$E2E/bin/winetricks" <<'FIMWT'
+#!/bin/sh
+printf '%s\n' "$*" >> "$E2E_DIARIO"
+if [ -n "$E2E_ENTREGA" ]; then
+    mkdir -p "$WINEPREFIX/drive_c/windows/syswow64"
+    : > "$WINEPREFIX/drive_c/windows/syswow64/$E2E_ENTREGA"
+fi
+exit 0
+FIMWT
+    chmod +x "$E2E/bin/winetricks"
+    roda_exe "$ATALHO" mfc71.dll
+    LOG_A="$(cat "$ATALHO/.local/state/tandem/exe.log" 2>/dev/null)"
+    contem "the shortcut path is reached at all" \
+           "da memoria" "$LOG_A"
+    contem "wrong width from a remembered lesson says WRONG WIDTH" \
+           "bitola errada" "$LOG_A"
+    naocontem "and does not report it as a file that never arrived" \
+              "nao entregou mfc71.dll" "$LOG_A"
+    # awk, not `grep -c ... || printf 0`: grep -c prints 0 AND exits 1 when the
+    # file has no match, so the fallback fires too and the answer is "00". That
+    # trap is written down in CLAUDE.md, having once reached the owner as a
+    # queue length of "0\n0" - and this assertion walked straight into it.
+    equal "and a correct table row is NOT filed as a suspicious translation" \
+          "0" "$(awk '/mfc71/ { n++ } END { print n + 0 }' \
+                 "$ATALHO/.local/state/tandem/traducao-suspeita.tsv" 2>/dev/null || printf 0)"
+
     C="$E2E/semjanela"; mkdir -p "$C"; roda_exe "$C" "" semgui
     if [ -s "$C/stderr.txt" ]; then pass "no window: the message comes out on the terminal"
     else fail "no window: the message comes out on the terminal" \

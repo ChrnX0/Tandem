@@ -1,3 +1,26 @@
+tandem (4.17) unstable; urgency=medium
+
+  * The shortcut that applies a lesson already known - from this machine's
+    memory, from a recipe, or from the community list - kept a boolean where
+    the delivery proof gives three answers. t_dll_no_prefixo says 0 delivered,
+    2 delivered in a width this program cannot load, and 1 absent; an `if`
+    makes the last two the same thing.
+  * Two harms, and the second is the one that compounds. The dead end retrying
+    cannot fix - the file arrived, in the wrong width - was reported as an
+    ordinary miss. And the CORRECT table row was filed in
+    traducao-suspeita.tsv: vcrun2003 really does provide mfc71.dll, the verb
+    simply ships a 32-bit payload, which half of them do and which winetricks
+    says in English in the middle of its own log. That work list has already
+    found six genuinely wrong mappings, and poisoning it with entries that are
+    not mistranslations is how a list people trust stops being read.
+  * Found by driving the path its own comment says no test reaches, which is
+    why it survived. There is a test now: a lesson seeded into memory, a
+    winetricks that delivers the right file into syswow64, and a 64-bit
+    program - it asserts the sentence names the width, does not claim the file
+    never arrived, and files nothing.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 16 Aug 2026 04:30:00 +0000
+
 tandem (4.16) unstable; urgency=medium
 
   * The community list had FOUR silences and answered 1 to all of them.

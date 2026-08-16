@@ -322,7 +322,28 @@ FIMAVISO
                     # nothing to prove: absence of proof does not condemn,
                     # the usual rule.
                     ALVO="$(t_dll_do_verbo "$v")"
-                    if [ -z "$ALVO" ] || t_dll_no_prefixo "$ALVO" "$ARCH"; then
+                    # THREE outcomes, and this branch used to keep a boolean -
+                    # the shape CLAUDE.md says to hunt for, found here by
+                    # driving the path its own comment says no test reaches.
+                    # t_dll_no_prefixo answers 0 delivered, 2 delivered in a
+                    # width this program cannot load, 1 absent; an `if` makes
+                    # the last two the same, and both were reported as "did not
+                    # deliver" AND filed as a suspicious table row.
+                    #
+                    # Wrong width is not a wrong table row. vcrun2003 really
+                    # does provide mfc71.dll - the verb simply ships a 32-bit
+                    # payload, which half of them do, and it says so in English
+                    # in the middle of the log. Filing that in
+                    # traducao-suspeita.tsv poisons the one work list that has
+                    # already found six genuinely wrong mappings, and it is the
+                    # dead end retrying cannot fix, so it is also the thing
+                    # most worth saying out loud.
+                    if [ -n "$ALVO" ]; then
+                        t_dll_no_prefixo "$ALVO" "$ARCH"; C_ENTREGA=$?
+                    else
+                        C_ENTREGA=0        # nothing to check: absence of proof does not condemn
+                    fi
+                    if [ "$C_ENTREGA" = 0 ]; then
                         printf '%s\n' "$v" >> "$WINEPREFIX/.tandem-verbos"
                         # RECORDED. Until now this branch installed the verb and
                         # told nobody: INSTALADOS_AGORA was only ever appended to
@@ -340,6 +361,13 @@ FIMAVISO
                         # corroboration. Summing them would let the list
                         # manufacture confidence out of its own output.
                         APLICOU_LICAO=1
+                    elif [ "$C_ENTREGA" = 2 ]; then
+                        # Delivered, in the wrong width. The table is RIGHT, so
+                        # this must not reach traducao-suspeita.tsv - and the
+                        # loop below reaches the same conclusion from the same
+                        # function, which is where the owner's sentence about
+                        # it comes from.
+                        t_diz "!!! $v (da memoria) entregou $ALVO na bitola errada para um programa de $ARCH bits"
                     else
                         t_diz "!!! $v (da memoria) saiu 0 e nao entregou $ALVO"
                         t_anota_suspeita "$ALVO" "$v"
