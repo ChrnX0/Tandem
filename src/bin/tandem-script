@@ -86,7 +86,13 @@ if [ ! -x "$SCRIPT" ]; then
 fi
 
 INICIO=$SECONDS
-MARCA=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+# THE WORDS OF THIS RUN, in a file only this run writes to. The marker that
+# used to bound this slice fixes where it STARTS and cannot keep another
+# Tandem's lines out of the middle - and the log is shared, one file per
+# handler with no PID in the name. Measured with two double clicks a second
+# apart: the program that printed nothing was reported as having said the
+# OTHER program's words. See t_saida_abre in common.sh.
+SAIDA="$(t_saida_abre script)"
 t_aviso "$(t_msg script_executando "$(basename -- "$SCRIPT")")"
 (
     cd -- "$(dirname -- "$SCRIPT")" || exit 1
@@ -94,14 +100,15 @@ t_aviso "$(t_msg script_executando "$(basename -- "$SCRIPT")")"
     # its own explanation; handing it root because it happens to be a script
     # would be granting more than the owner agreed to.
     if [ -x "$SCRIPT" ]; then
-        "$SCRIPT" >>"$LOG" 2>&1
+        "$SCRIPT" >>"$SAIDA" 2>&1
     else
         # A folder mounted noexec, a read-only stick: the interpreter can still
         # read the file even when the kernel refuses to execute it.
-        sh -- "$SCRIPT" >>"$LOG" 2>&1
+        sh -- "$SCRIPT" >>"$SAIDA" 2>&1
     fi
 )
 CODIGO=$?
+t_saida_fecha "$SAIDA"
 
 if [ "$CODIGO" -eq 0 ]; then
     DUROU=$((SECONDS-INICIO))
@@ -116,10 +123,8 @@ if [ "$CODIGO" -eq 0 ]; then
     # path a few lines down had always sliced it correctly; the success path
     # never did. Found by running a script that does nothing and reading the
     # output, which is the only method that has ever caught this class of thing.
-    SOBRA="$TANDEM_TRAVAS/saida-script.$$"
-    tail -n +"$((MARCA+1))" "$LOG" > "$SOBRA" 2>/dev/null || : > "$SOBRA"
-    SAIU="$(t_palavras_do_programa "$SOBRA" 6)"
-    rm -f "$SOBRA"
+    SAIU="$(t_palavras_do_programa "$SAIDA" 6)"
+    rm -f "$SAIDA"
     # "exit 0 stopped meaning it worked" is a rule this project applies
     # everywhere else, and a shell installer was the one place it did not: there
     # is no database to ask afterwards, so the exit code was the whole story.
@@ -142,8 +147,7 @@ $SAIU}"
     exit 0
 fi
 
-PARCIAL="$TANDEM_TRAVAS/parcial-script.$$"
-tail -n +"$((MARCA+1))" "$LOG" > "$PARCIAL" 2>/dev/null || : > "$PARCIAL"
+PARCIAL="$SAIDA"
 PORQUE=""
 if grep -qiE 'Permission denied' "$PARCIAL" 2>/dev/null; then
     PORQUE="$(t_msg script_porque_permissao)"

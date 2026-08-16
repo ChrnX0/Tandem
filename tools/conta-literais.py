@@ -135,6 +135,16 @@ EXCECOES = {
     # and is not any more: the readers emit tokens and the shell translates
     # them, so nothing there is prose to begin with.
     "desconhecido", "apk",
+    # The cause TOKENS that t_causa_token answers with. Same decision as
+    # "desconhecido" directly above, which was already exempt for it - these
+    # are the other seven values of the same field. None is ever shown:
+    # t_causa_por_token turns the token into a sentence and t_causa_e_do_ambiente
+    # matches it with `case`, which is the arrangement t_erro_do_leitor already
+    # uses for the readers' tokens. Translating one here would make the `case`
+    # stop matching in six languages out of seven, so the install loop would
+    # blame the DLL table for a full disk on every machine that is not English.
+    "dbus", "disco_cheio", "relogio", "sem_rede", "corrompido",
+    "cabextract", "internet",
 }
 
 CHAMADA = re.compile(

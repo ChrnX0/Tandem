@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.18"
+TANDEM_VERSAO="4.19"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -16,7 +16,18 @@ TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # broken in the repository and every test still pass.
 TANDEM_BIN="${TANDEM_BIN:-/usr/bin}"
 TANDEM_ESTADO="${XDG_STATE_HOME:-$HOME/.local/state}/tandem"
-mkdir -p "$TANDEM_ESTADO" 2>/dev/null || TANDEM_ESTADO=""
+# Where it WOULD have gone, kept even when it cannot be made: the line below
+# empties TANDEM_ESTADO, and "free some space" is not an instruction until it
+# says where.
+TANDEM_ESTADO_QUERIDO="$TANDEM_ESTADO"
+# THE SECOND DOOR to a silent /dev/null log, and it was found only after
+# closing the first. t_log_init's own fallback records that the log was lost;
+# this one emptied TANDEM_ESTADO and said nothing, so t_log_init took its
+# `[ -z "$LOG" ]` shortcut and never reached the part that remembers. A full
+# disk, a read-only home or a state path that is a file all arrive here, and
+# what is lost is not only the log - the memory, the community list and the
+# locks live in this folder too.
+mkdir -p "$TANDEM_ESTADO" 2>/dev/null || { TANDEM_ESTADO=""; TANDEM_SEM_LOG=1; }
 
 # Locks and progress pipes go to the user's runtime directory when it exists:
 # it is local disk (on a home folder mounted over the network flock may simply
@@ -45,8 +56,45 @@ t_log_init() {
     if [ -f "$LOG" ] && [ "$(stat -c%s "$LOG" 2>/dev/null || echo 0)" -gt 1048576 ]; then
         mv -f "$LOG" "$LOG.old" 2>/dev/null || true
     fi
-    : >> "$LOG" 2>/dev/null || { LOG=/dev/null; return; }
-    printf '\n===== %s | %s =====\n' "$(date '+%F %T')" "${*:2}" >> "$LOG"
+    # A REAL BYTE. The probe here used to open the file for append and write
+    # nothing, and on a FULL filesystem that SUCCEEDS - the open allocates no
+    # blocks, so ENOSPC never fires. It answered "writable" while the very next
+    # line, this same header, failed and leaked
+    #
+    #   common.sh: line 49: printf: write error: No space left on device
+    #
+    # as the FIRST thing the owner read, with a path and a line number in it.
+    # Measured on a full 16k tmpfs: the empty append succeeds, one byte fails.
+    # A check that prints the same thing whether the premise is right or wrong
+    # has measured nothing - the rule this project wrote down after deleting
+    # twenty-four tracked files on the strength of an empty `git status`.
+    #
+    # And the whole thing is inside a GROUP. Written as `printf ... >> "$LOG"
+    # 2>/dev/null`, the 2>/dev/null silences printf - but the failure here is
+    # the REDIRECTION, which bash reports itself, before that redirection is in
+    # place. The message came out anyway. Redirecting the group means stderr is
+    # already gone when the append is attempted.
+    if ! { printf '\n===== %s | %s =====\n' "$(date '+%F %T')" "${*:2}" \
+           >> "$LOG"; } 2>/dev/null; then
+        LOG=/dev/null
+        # And REMEMBER it, because every diagnosis in every handler is read
+        # back out of this file: which DLL Wine asked for, whether the .exe is
+        # a Windows program at all, whether the prefix is the wrong width, why
+        # winetricks gave up. With the log gone they all come back empty and
+        # the owner reads "the program closed with an error (code 53)" - the
+        # entire point of the project, lost, with nothing on screen saying so.
+        # Reached by the commonest failure there is, a full disk.
+        TANDEM_SEM_LOG=1
+    fi
+}
+
+# The sentence that has to accompany any verdict reached WITHOUT the log, and
+# nothing at all when the log is fine - so a caller can append it without
+# asking first. $1 is the folder, because "free some space" is not an
+# instruction until it says where.
+t_aviso_sem_log() {
+    [ -n "${TANDEM_SEM_LOG:-}" ] || return 1
+    t_msg sem_anotacoes "${TANDEM_ESTADO:-${TANDEM_ESTADO_QUERIDO:-?}}"
 }
 
 t_diz() { printf '%s\n' "$*" >> "${LOG:-/dev/null}" 2>/dev/null; }
@@ -827,12 +875,43 @@ t_prefixo_do_arquivo() {
 # The user's list is consulted FIRST, on purpose: whoever runs
 # "tandem protect" on the default prefix itself is asking that not even Tandem
 # touch it, and that decision has to outweigh the ownership mark.
+# THE LIST IS A LIST OF PLACES, NOT OF SPELLINGS - and until 4.19 it was
+# compared as text, which broke rule 1 for real. Measured end to end: with
+# ~/.local/share/tandem/wine a SYMLINK to ~/.wine-pdv, Tandem registered the
+# production prefix as protected, wrote "protegido: .../.wine-pdv" in its own
+# log, and then installed a winetricks verb INTO IT, planted its receipt and
+# its .tandem-assoc there. Every string comparison said "different path"; every
+# one of them was about the same directory.
+#
+# That is not an exotic setup. Pointing the new tool at the Wine setup you
+# already have is the first thing a person tries.
 t_prefixo_protegido() {
-    local p="$1"
-    if [ -f "$TANDEM_PROTEGIDOS" ] && grep -qxF -- "$p" "$TANDEM_PROTEGIDOS" 2>/dev/null; then
-        return 0
+    local p="$1" real alvo
+    real="$(readlink -f -- "$p" 2>/dev/null)"
+    [ -n "$real" ] || real="$p"
+    if [ -f "$TANDEM_PROTEGIDOS" ]; then
+        while IFS= read -r alvo; do
+            [ -n "$alvo" ] || continue
+            [ "$alvo" = "$p" ] && return 0
+            [ "$(readlink -f -- "$alvo" 2>/dev/null)" = "$real" ] && return 0
+        done < "$TANDEM_PROTEGIDOS"
     fi
-    [ "$p" = "$TANDEM_PREFIXO_PADRAO" ] && return 1
+    if [ "$p" = "$TANDEM_PREFIXO_PADRAO" ]; then
+        # Our own default prefix by name. If that name leads somewhere else and
+        # a working prefix is already sitting there, it is somebody else's -
+        # the mark is what says whose it is, and this is the second layer under
+        # the list, for a prefix the sweep never found.
+        #
+        # Narrowed to the case where the name really does lead elsewhere, so a
+        # marker that failed to be written - a full disk, which is this
+        # release's own subject - does not turn Tandem out of its own prefix.
+        if [ "$real" != "$p" ] && [ -f "$real/system.reg" ] &&
+           [ ! -f "$real/.tandem-prefixo" ]; then
+            t_diz "prefixo padrao aponta para $real, que nao e nosso: tratando como protegido"
+            return 0
+        fi
+        return 1
+    fi
     [ -f "$p/.tandem-prefixo" ] && return 1
     return 0   # unknown = treat it as protected
 }
@@ -2198,6 +2277,23 @@ t_lista_linha() {
             split(a, pa, "-"); split(b, pb, "-")
             return (pb[1] - pa[1]) * 12 + (pb[2] - pa[2])
         }
+        # A DATE IN THE FUTURE IS NOT FRESHNESS. The tie-break below is "the
+        # most recently seen wins", so a row dated 2099-12 wins every tie for
+        # ever - measured: ten reports this month lost to ten reports dated
+        # 2099. It does not take an attacker, only a shop with a wrong clock,
+        # and this project already detects wrong clocks from the certificate
+        # errors Wine itself prints, because they happen.
+        #
+        # No apostrophe in this block: the whole awk program is inside single
+        # quotes, and one in a COMMENT closes the string just as well as one in
+        # code. It did, on the first attempt.
+        #
+        # api/lista.js REFUSES such a record on the way in, with a comment
+        # saying exactly this. That guard covers half the problem: this file is
+        # DOWNLOADED, and a reader that trusts it because the writer checked is
+        # a reader with no check. Clamped to now, so a future row is worth
+        # exactly as much as a row from this month and no more.
+        function visto_ok(d) { return (d > mes_agora) ? mes_agora : d }
         # How much one report is worth: its stack against ours, and its age.
         function peso(w, visto,   p, m, pw) {
             p = 1
@@ -2238,9 +2334,9 @@ t_lista_linha() {
             # own number.
             if (NF >= 12 && $12 == "aplicado") next
             if ($5 == "confirmado") {
-                conf[$3] += m * peso(w, $7)
+                conf[$3] += m * peso(w, visto_ok($7))
                 bruto[$3] += m
-                if ($7 > visto[$3]) visto[$3] = $7
+                if (visto_ok($7) > visto[$3]) visto[$3] = visto_ok($7)
             } else if ($5 == "entregue") {
                 # Half a report. Tandem verified the missing file arrived, in
                 # the right bitness, and the owner never said whether the
@@ -2248,11 +2344,11 @@ t_lista_linha() {
                 # a hint about the question the list answers. Before 4.11 a run
                 # like this contributed NOTHING: it was recorded as "so-abriu"
                 # and the resolver ignores those entirely.
-                conf[$3] += m * peso(w, $7) * 0.5
+                conf[$3] += m * peso(w, visto_ok($7)) * 0.5
                 bruto[$3] += m
-                if ($7 > visto[$3]) visto[$3] = $7
+                if (visto_ok($7) > visto[$3]) visto[$3] = visto_ok($7)
             } else if ($5 == "reprovado") {
-                rep[$3] += m * peso(w, $7)
+                rep[$3] += m * peso(w, visto_ok($7))
             }
         }
         END {
@@ -2300,6 +2396,23 @@ t_lista_inuteis() {
             split(a, pa, "-"); split(b, pb, "-")
             return (pb[1] - pa[1]) * 12 + (pb[2] - pa[2])
         }
+        # A DATE IN THE FUTURE IS NOT FRESHNESS. The tie-break below is "the
+        # most recently seen wins", so a row dated 2099-12 wins every tie for
+        # ever - measured: ten reports this month lost to ten reports dated
+        # 2099. It does not take an attacker, only a shop with a wrong clock,
+        # and this project already detects wrong clocks from the certificate
+        # errors Wine itself prints, because they happen.
+        #
+        # No apostrophe in this block: the whole awk program is inside single
+        # quotes, and one in a COMMENT closes the string just as well as one in
+        # code. It did, on the first attempt.
+        #
+        # api/lista.js REFUSES such a record on the way in, with a comment
+        # saying exactly this. That guard covers half the problem: this file is
+        # DOWNLOADED, and a reader that trusts it because the writer checked is
+        # a reader with no check. Clamped to now, so a future row is worth
+        # exactly as much as a row from this month and no more.
+        function visto_ok(d) { return (d > mes_agora) ? mes_agora : d }
         function peso(w, visto,   p, m, pw) {
             p = 1
             if (wine_agora == "" || w == "" || w == "-") { p = 0.75 }
@@ -2322,7 +2435,7 @@ t_lista_inuteis() {
                 # t_lista_linha - telling somebody "3.7 shops" is a number he
                 # cannot check against the file he can download and read.
                 bruto[vs[i]] += m
-                peso_de[vs[i]] += m * peso(w, $7)
+                peso_de[vs[i]] += m * peso(w, visto_ok($7))
             }
         }
         END {
@@ -3950,36 +4063,74 @@ t_resultado_amigavel() {
 # later component downloaded normally.
 #
 # $1 is a file holding ONLY the output of the verbs that failed.
-t_causa_do_winetricks() {
-    local resto="$1" log="${2:-}"
-    [ -f "$resto" ] || { t_msg porque_desconhecido "$log"; return 0; }
+#
+# It reads the log ONCE and answers a TOKEN, because two callers need two
+# different things out of the same reading. The failure path wants a sentence
+# for the owner; the install loop wants only to know whether the MACHINE failed
+# (disk, network, clock) or the translation table is wrong - and blaming the
+# table for a full disk poisons the one work list that has already found six
+# genuinely wrong mappings. Written as one table with two readers on top rather
+# than as two grep chains: a copy drifts, and a drifted copy is a rule that
+# fires on one path and not the other.
+t_causa_token() {
+    local resto="$1"
+    [ -f "$resto" ] || { printf 'desconhecido'; return 0; }
     # The specific causes first: each one is a thing winetricks said outright,
     # and any of them outranks the guess below.
     if grep -qi 'Failed to connect to bus' "$resto" 2>/dev/null; then
-        t_msg porque_dbus
+        printf 'dbus'
     elif grep -qi 'No space left on device' "$resto" 2>/dev/null; then
-        t_msg porque_disco_cheio
+        printf 'disco_cheio'
     elif grep -qi 'certificate\|SSL\|not yet valid\|has expired' "$resto" 2>/dev/null; then
-        # %x, not a hard-coded dd/mm/yyyy. The sentence around this date is
-        # translated into seven languages and the date order was Brazilian in
-        # all of them.
-        t_msg porque_relogio "$(date +%x)"
+        printf 'relogio'
     elif grep -qi 'Could not resolve host\|Network is unreachable\|Connection timed out' "$resto" 2>/dev/null; then
-        t_msg porque_sem_rede
+        printf 'sem_rede'
     elif grep -qi 'sha256sum mismatch\|checksum' "$resto" 2>/dev/null; then
-        t_msg porque_corrompido
+        printf 'corrompido'
     elif grep -qi 'cabextract' "$resto" 2>/dev/null; then
-        t_msg porque_cabextract
+        printf 'cabextract'
     # The most common cause is the internet, but claiming it without evidence
     # sends the owner looking for the defect in the wrong place - which is what
     # happened when systemd-inhibit brought the install down before it even
     # started. With no sign of a download having been ATTEMPTED, the honest
     # answer is not knowing.
     elif grep -qiE 'saved \[|wget|Downloading|HTTP request sent' "$resto" 2>/dev/null; then
-        t_msg porque_internet
+        printf 'internet'
     else
-        t_msg porque_desconhecido "$log"
+        printf 'desconhecido'
     fi
+}
+
+# Is this a cause that belongs to the MACHINE rather than to our table? Only
+# these hold back a suspicious-translation entry: "the internet was used" and
+# "no idea" say nothing about whose fault it is.
+t_causa_e_do_ambiente() {
+    case "${1:-}" in disco_cheio|sem_rede|relogio|corrompido|dbus|cabextract) return 0 ;; esac
+    return 1
+}
+
+# token -> sentence, so the token the install loop already computed can reach
+# the owner without reading the log a second time. $2 is the log path and only
+# the "no idea" sentence uses it: when Tandem cannot say why, it says where to
+# look.
+t_causa_por_token() {
+    case "${1:-}" in
+        dbus)        t_msg porque_dbus ;;
+        disco_cheio) t_msg porque_disco_cheio ;;
+        # %x, not a hard-coded dd/mm/yyyy. The sentence around this date is
+        # translated into seven languages and the date order was Brazilian in
+        # all of them.
+        relogio)     t_msg porque_relogio "$(date +%x)" ;;
+        sem_rede)    t_msg porque_sem_rede ;;
+        corrompido)  t_msg porque_corrompido ;;
+        cabextract)  t_msg porque_cabextract ;;
+        internet)    t_msg porque_internet ;;
+        *)           t_msg porque_desconhecido "${2:-${LOG:-}}" ;;
+    esac
+}
+
+t_causa_do_winetricks() {
+    t_causa_por_token "$(t_causa_token "$1")" "${2:-}"
 }
 
 t_appimage_info() {
@@ -4170,6 +4321,63 @@ t_atalhos_appimage() {
 # it is the only place where the log's own bookkeeping becomes visible. The
 # first version of it opened "this is what the program said" with a sentence
 # Tandem itself had written one line earlier.
+# ------------------------------------- the words of THIS run, and only this run
+#
+# A marker fixes where a slice STARTS. It cannot keep another process's lines
+# out of the MIDDLE of one, and the log is shared: one file per handler, no PID
+# in the name, so two .sh files double-clicked a second apart both write
+# script.log.
+#
+# Measured, not feared, and the harm is the worst shape this project has: the
+# installer that printed NOTHING AT ALL was reported to its owner as
+# "this is what it said:" followed by the other program's progress lines. The
+# silent-success guard - the entire point of 4.5 - was defeated at the same
+# time, because a slice with somebody else's lines in it is never empty. So the
+# owner of a shell installer that did nothing was congratulated, with another
+# program's words as the evidence.
+#
+# The fix is not a better slice. The child's words go to a file of this run's
+# own, and the log gets a copy afterwards, so the log stays complete and the
+# sentence the owner reads comes from a file nobody else can write.
+# Removed on the way out, whatever way out it is. The file this replaced was
+# created only on the FAILURE path and deleted three lines later; this one is
+# created before the program runs, so every success path became a leak - one
+# stray file per double click, for ever. The handlers keep their own `rm` where
+# they had one; this is the net under the exits that have none.
+T_SAIDAS=""
+t_saida_limpa() { [ -n "$T_SAIDAS" ] && rm -f $T_SAIDAS 2>/dev/null; return 0; }
+
+# Register a working file so it goes even when this run does not reach its own
+# `rm`. Measured by killing tandem-exe eight seconds into a winetricks: the
+# receipt was correctly NOT written and no memory was poisoned - rule 4 held -
+# but the working file stayed behind, one per interrupted double click, for
+# ever. A shopkeeper who closes the window is not a corner case.
+t_apaga_ao_sair() {
+    [ -n "${1:-}" ] || return 1
+    T_SAIDAS="$T_SAIDAS $1"
+    # Only if nobody else owns EXIT. tandem-apk sets its own trap and undoing
+    # it would leave a mounted image behind, which is worse than a stray file.
+    case "$(trap -p EXIT)" in "") trap t_saida_limpa EXIT ;; esac
+}
+
+t_saida_abre() {
+    local f
+    f="$(mktemp -t tandem-saida-XXXXXX 2>/dev/null)" ||
+        f="${TANDEM_TRAVAS:-/tmp}/saida-$$-$1"
+    : > "$f" 2>/dev/null
+    t_apaga_ao_sair "$f"
+    printf '%s' "$f"
+}
+
+# Copy into the log and forget the file. Called even when the run failed: the
+# log is where the technical detail lives, and losing it would trade one silence
+# for another.
+t_saida_fecha() {
+    [ -f "${1:-}" ] || return 1
+    cat "$1" >> "${LOG:-/dev/null}" 2>/dev/null
+    return 0
+}
+
 t_palavras_do_programa() {
     grep -v -e '^$' -e '^aviso: ' -e '^ok: ' -e '^ERRO: ' -e '^>>> ' -e '^===== ' \
          "$1" 2>/dev/null | tail -"${2:-4}"

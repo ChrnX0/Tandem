@@ -198,7 +198,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 1292 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1359 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -808,6 +808,49 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
 - **Waydroid is not in the Ubuntu/Zorin repositories.** `apt-cache policy
   waydroid` answers `Candidate: (none)`. It comes from `repo.waydro.id`, with a
   signing key.
+- **`: >> file` SUCCEEDS ON A FULL FILESYSTEM.** Opening for append allocates
+  no blocks, so ENOSPC never fires — measured on a full 16k tmpfs: the empty
+  append succeeds and one byte fails. `t_log_init` used that as its "can I
+  write the log?" probe, so it answered "writable" and the very next line
+  failed. Any writability check has to write a byte.
+- **A REDIRECTION that fails is reported by BASH, before the redirection is in
+  place.** `printf ... >> "$LOG" 2>/dev/null` silences *printf*; it does not
+  silence `bash: line 49: ...: No space left on device`, because stderr is not
+  yet /dev/null when the `>>` is attempted. Wrap the whole thing:
+  `{ printf ... >> "$LOG"; } 2>/dev/null`. Same family as the `exec` trap two
+  bullets up, and it reached the owner as the first line on his screen.
+- **THE LOG IS SHARED, so a slice is not a capture.** One log file per handler,
+  no PID in the name, so two `.sh` files double-clicked a second apart both
+  write `script.log`. A marker fixes where a slice STARTS and cannot keep
+  another process's lines out of the middle. Measured: the installer that
+  printed *nothing at all* was reported to its owner as "this is what it said:"
+  followed by the other program's progress lines, and the silent-success guard
+  was defeated at the same moment, a slice with somebody else's lines in it
+  never being empty. **The child's output must go to a file of that run's own**
+  (`t_saida_abre`/`t_saida_fecha`), with the log getting a copy afterwards.
+- **RULE №1 WAS BREAKABLE THROUGH A SYMLINK until 4.19**, and this is the only
+  time the inviolable rule has actually been broken. `t_prefixo_protegido`
+  compared paths as TEXT, so with `~/.local/share/tandem/wine` a symlink to
+  `~/.wine-pdv` Tandem registered the production prefix as protected, wrote
+  `protegido: .../.wine-pdv` in its own log, and then ran a winetricks verb
+  **into it**, leaving its receipt and `.tandem-assoc` behind. Compare PLACES,
+  both sides resolved, in both directions. Pointing a new tool at the Wine
+  setup you already have is the first thing a person tries. The file-side paths
+  were always safe, because `tandem-exe` does `readlink -f` on its argument
+  before walking up the tree.
+- **A COMMUNITY-LIST ROW DATED IN THE FUTURE won every tie-break, for ever** —
+  the tie-break is "most recently seen wins", and ten reports from this month
+  lost to ten dated 2099. It needs no attacker, only a shop with a wrong clock,
+  which this project already detects from Wine's certificate errors.
+  `api/lista.js` refuses such a record on the way IN and its comment states
+  exactly this harm — **so the guard existed on the write side only**, and the
+  file is downloaded. A reader that trusts the file because the writer checked
+  is a reader with no check.
+- **A GUARD SCOPED TO THE FILE WHERE THE DEFECT WAS FOUND cannot see the file
+  where it also lives.** The test forbidding line-count log slicing read
+  `tandem-exe` and nothing else, while six other handlers still used the
+  technique it exists to forbid. Same shape as the literal counter's thirteen
+  misses. When a guard names a file, ask why it is not a glob.
 
 ## State
 
@@ -850,7 +893,25 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 1292 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 1359 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- **Seven defects were found in 4.19 by RUNNING the program in conditions it
+  had never been run in**, and none of them by reading code: a full disk, an
+  interrupted double click, two double clicks at once, a symlinked prefix, a
+  broken state folder. Each fix is proven by putting the defect back and
+  watching the assertion speak — including the two occasions where the
+  assertion had to be rewritten because it passed on the defect (an unmarked
+  prefix reaches "protected" through the fall-through anyway; `$$` in a regex
+  is two end-of-line anchors and matches nothing).
+- **Five sweeps held with nothing to fix, and they are worth as much as the
+  seven** because they cost the same time and stop the next session repeating
+  them: all nine handlers against eighteen hostile file names (command
+  substitution, backticks, semicolons, pipes, globs, leading dashes, embedded
+  newlines, five scripts) executed nothing and were silent nowhere; every CLI
+  command with and without a usable state folder; rule №1 reached from the
+  FILE side; two double clicks racing on one file; and a recipe filename
+  cannot forge a key in the memory file — though **that last defence existed
+  by accident**, written for a formatting reason, and is asserted as a security
+  property now.
 - **The list's read path was measured against the OLD code before being fixed**,
   which is why the four defects are stated as numbers rather than as risks: on a
   two-row list the old query answered `vcrun2010` with 3 machines where 400
@@ -1639,8 +1700,14 @@ and two distinct Arabic forms at 1 and 2; `tandem memoria` shows `seconds:` /
 seven installed catalogues**; and `tandem autoteste` answers 17 passed,
 0 failed.
 
-**The next version is 4.16 and its changelog entry has to be OPENED before
-anything is added** — `debian/control`, `debian/changelog` and `TANDEM_VERSAO`
+**4.19 is open and unreleased as of this writing.** It carries seven defects
+found by running the program in conditions it had never been run in — read the
+State section for the list and the Ecosystem facts for the five that generalise.
+The one that matters most is the rule №1 symlink bypass: that is the only time
+the inviolable rule has actually been broken, and it was reachable by a person
+doing something entirely reasonable.
+
+**Whatever version comes after it has to be OPENED before anything is added** — `debian/control`, `debian/changelog` and `TANDEM_VERSAO`
 all still say 4.15, and 4.15's entry is now history the public has. A doc-only
 commit after a release is fine and the guard allows it; a bullet appended to
 4.15's entry is not.

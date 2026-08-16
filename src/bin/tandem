@@ -227,6 +227,17 @@ acao_doctor() {
         out+="  $(t_msg doc_perfis_nenhum)\n"
     fi
 
+    # THE DIAGNOSTIC WAS SILENT ABOUT THE THING THAT DISABLES DIAGNOSIS.
+    # Every verdict Tandem reaches about a program is read back out of its log,
+    # so a notes folder that cannot be written turns "Visual C++ 2003 is
+    # missing" into a bare exit code - and this report, which exists to say
+    # what is wrong with the environment, said nothing at all. Byte-for-byte
+    # the same report on a machine where it worked and one where it did not.
+    # Last, because it is about Tandem rather than about the machine, and
+    # unconditional in the sense that matters: it appears exactly when there is
+    # something to say.
+    SEM_ANOTA="$(t_aviso_sem_log)" && out+="\n$SEM_ANOTA\n"
+
     # %b (and not raw "$out") because the text has \n to expand but may
     # contain % coming from paths and versions, which would break the format.
     printf '%b' "$out" | t_texto "$(t_msg doctor_titulo)"
@@ -1134,7 +1145,21 @@ acao_idioma() {
 }
 
 acao_logs() {
-    local l; l="$(ls -1t "$TANDEM_ESTADO"/*.log 2>/dev/null | head -1)"
+    local l
+    # FIRST, before the glob. "There are no logs yet" and "I cannot write logs
+    # at all" are different answers and this gave the first to both: the first
+    # says nothing is wrong, while the second is the condition that disables
+    # every diagnosis Tandem makes - and the owner reading it here is the owner
+    # who came looking for one.
+    #
+    # The order matters for a second reason. With no state folder TANDEM_ESTADO
+    # is the empty string, so the pattern below is "/*.log" and the glob walks
+    # the ROOT of the filesystem: any stray log there would have been shown as
+    # if it were Tandem's.
+    if [ -n "${TANDEM_SEM_LOG:-}" ] || [ -z "${TANDEM_ESTADO:-}" ]; then
+        t_erro "$(t_aviso_sem_log)"; return 1
+    fi
+    l="$(ls -1t "$TANDEM_ESTADO"/*.log 2>/dev/null | head -1)"
     [ -n "$l" ] || { t_erro "$(t_msg logs_nenhum)"; return 1; }
     tail -n 400 "$l" | t_texto "$(t_msg janela_titulo_arquivo "$(basename "$l")")"
 }

@@ -478,6 +478,10 @@ Un service système (D-Bus) manque. Redémarrer l'ordinateur suffit en général
 @porque_disco_cheio
 Le disque est plein.
 
+@sem_anotacoes
+Je n'ai pas pu écrire mes notes dans {1}, donc je ne peux pas dire grand-chose sur ce qui n'a pas marché.
+Ce dossier est en général plein ou en lecture seule. Libérer de l'espace et réessayer suffit normalement.
+
 @porque_relogio
 La date de l'ordinateur semble fausse, et cela fait échouer les téléchargements.
 Aujourd'hui l'ordinateur croit être le {1}.
