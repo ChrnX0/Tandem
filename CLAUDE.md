@@ -1700,14 +1700,24 @@ and two distinct Arabic forms at 1 and 2; `tandem memoria` shows `seconds:` /
 seven installed catalogues**; and `tandem autoteste` answers 17 passed,
 0 failed.
 
-**4.19 is open and unreleased as of this writing.** It carries seven defects
-found by running the program in conditions it had never been run in — read the
-State section for the list and the Ecosystem facts for the five that generalise.
-The one that matters most is the rule №1 symlink bypass: that is the only time
-the inviolable rule has actually been broken, and it was reachable by a person
-doing something entirely reasonable.
+**v4.19 IS PUBLISHED** — 2026-08-16, tag `v4.19` at `b6c3b34`, `.deb`
+(456078 bytes) and `.sha256` attached, and the published artifact verified
+byte-for-byte three ways: sha256 `45e28e1e…` from the release's own checksum
+file, from the downloaded bytes, and from a local build at that same commit.
+Exercised from the INSTALLED package on both headline fixes: a `.exe` reached
+through a symlinked prefix leaves the production profile with **zero** Tandem
+files in it and says why, and a broken notes folder produces "Não consegui
+escrever minhas anotações em …" instead of a bare exit code. `tandem autoteste`
+answers 17 passed, 0 failed.
 
-**Whatever version comes after it has to be OPENED before anything is added** — `debian/control`, `debian/changelog` and `TANDEM_VERSAO`
+It carries seven defects found by running the program in conditions it had
+never been run in — read the State section for the list and the Ecosystem facts
+for the five that generalise. The one that matters most is the rule №1 symlink
+bypass: **that is the only time the inviolable rule has actually been broken**,
+and it was reachable by a person doing something entirely reasonable.
+
+**The next version is 4.20 and its changelog entry has to be OPENED before
+anything is added** — `debian/control`, `debian/changelog` and `TANDEM_VERSAO`
 all still say 4.15, and 4.15's entry is now history the public has. A doc-only
 commit after a release is fine and the guard allows it; a bullet appended to
 4.15's entry is not.
