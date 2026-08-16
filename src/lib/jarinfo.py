@@ -168,6 +168,29 @@ def inspecionar(caminho):
     return principal, maior, fx, agente, multi, deps
 
 
+# The KEY=VALUE contract, defended HERE rather than assumed.
+#
+# The shell reads this output a line at a time. Everything printed below is
+# either a number this reader computed or a STRING THAT CAME OUT OF THE FILE -
+# and the file arrived from the internet, on a machine belonging to somebody
+# who is not a programmer.
+#
+# Whether a value can contain a newline is a property of the source format, not
+# of this reader: a .deb control file is line-based and cannot carry one, while
+# a PE import name, an RPM header string and an Android manifest string are all
+# length- or NUL-delimited and carry one perfectly well. Relying on the input
+# format to protect the output format is an accident waiting for the one format
+# that does not.
+#
+# So every value is cleaned on the way out. The asymmetry that made this
+# visible: the raw-exception path already did `.replace("\n", " ")` while the
+# data path, three lines below it, did not.
+def limpo(valor):
+    """A value that cannot forge a line, whatever the file said."""
+    texto = "%s" % valor
+    return "".join(" " if c in "\r\n" or ord(c) < 32 else c for c in texto)
+
+
 def main():
     if len(sys.argv) < 2:
         print("ERRO=uso")
@@ -179,21 +202,21 @@ def main():
     try:
         principal, maior, fx, agente, multi, deps = inspecionar(caminho)
     except JarRuim as e:
-        print("ERRO=%s" % e)
+        print("ERRO=%s" % limpo(e))
         return 1
     except Exception as e:
         print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
-    print("PRINCIPAL=%s" % principal)
+    print("PRINCIPAL=%s" % limpo(principal))
     # Major 45 is Java 1.1 and the offset has held for every release since;
     # below that the number is not a version, it is a damaged file.
-    print("JAVA=%s" % (maior - 44 if maior >= 45 else ""))
+    print("JAVA=%s" % limpo((maior - 44 if maior >= 45 else "")))
     print("MAIOR=%d" % maior)
     print("JAVAFX=%d" % fx)
     print("AGENTE=%d" % agente)
     print("MULTI=%d" % multi)
-    print("DEPENDENCIAS=%s" % ",".join(deps))
+    print("DEPENDENCIAS=%s" % limpo(",".join(deps)))
     return 0
 
 

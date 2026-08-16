@@ -1,3 +1,37 @@
+tandem (4.18) unstable; urgency=medium
+
+  * The six readers now defend their own KEY=VALUE contract instead of relying
+    on the input format to defend it for them. Everything they print is either
+    a number they computed or a STRING THAT CAME OUT OF THE FILE, and the file
+    arrived from the internet on a machine belonging to somebody who is not a
+    programmer. Whether such a string can carry a newline is a property of the
+    SOURCE format: a .deb control file is line-based and cannot, while a PE
+    import name, an RPM header string and an Android manifest string are
+    length- or NUL-delimited and carry one perfectly well. Thirty-five print
+    sites, all of them cleaned on the way out.
+  * The asymmetry that made it visible, and the argument that it was an
+    oversight rather than a decision: peinfo's raw-exception path already did
+    .replace("\n", " ") while the data path three lines below it did not.
+    Somebody thought about the problem and covered half of it.
+  * This is defence in depth, not a live failure - no real .exe has a newline
+    in a DLL name. It is asserted anyway, in both directions: the six cannot be
+    made to forge a line, AND an ordinary value comes through untouched. The
+    second assertion is not decoration; without it a cleaner that erased
+    everything would pass the first.
+  * Found by tests/fuzz-leitores.py, new here: it corrupts VALID files and
+    insists the readers answer rather than crash, hang, eat the machine or
+    print half a line. Random bytes are the easy case - every reader already
+    dies on the magic number and says so. What breaks a parser is a file that
+    gets past the magic and then lies.
+  * The fuzzer had two defects of its own, both fixed and both written into its
+    header. It ran THREE mutations while reporting "every one answered",
+    because a bare-number argument swallowed the seed's value; and it INVENTED
+    a finding using Python's splitlines(), which breaks on form feed where the
+    shell does not. A tool that invents findings is worse than one that misses
+    them.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 16 Aug 2026 05:40:00 +0000
+
 tandem (4.17) unstable; urgency=medium
 
   * The shortcut that applies a lesson already known - from this machine's

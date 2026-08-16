@@ -258,6 +258,29 @@ def uma_linha(s):
     return " ".join((s or "").split())
 
 
+# The KEY=VALUE contract, defended HERE rather than assumed.
+#
+# The shell reads this output a line at a time. Everything printed below is
+# either a number this reader computed or a STRING THAT CAME OUT OF THE FILE -
+# and the file arrived from the internet, on a machine belonging to somebody
+# who is not a programmer.
+#
+# Whether a value can contain a newline is a property of the source format, not
+# of this reader: a .deb control file is line-based and cannot carry one, while
+# a PE import name, an RPM header string and an Android manifest string are all
+# length- or NUL-delimited and carry one perfectly well. Relying on the input
+# format to protect the output format is an accident waiting for the one format
+# that does not.
+#
+# So every value is cleaned on the way out. The asymmetry that made this
+# visible: the raw-exception path already did `.replace("\n", " ")` while the
+# data path, three lines below it, did not.
+def limpo(valor):
+    """A value that cannot forge a line, whatever the file said."""
+    texto = "%s" % valor
+    return "".join(" " if c in "\r\n" or ord(c) < 32 else c for c in texto)
+
+
 def main():
     if len(sys.argv) < 2:
         print("ERRO=uso")
@@ -271,21 +294,21 @@ def main():
             dados = f.read()
         c = campos(texto_do_controle(dados))
     except DebRuim as e:
-        print("ERRO=%s" % e)
+        print("ERRO=%s" % limpo(e))
         return 1
     except Exception as e:
         print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
-    print("PACOTE=%s" % uma_linha(c.get("Package", "")))
-    print("VERSAO=%s" % uma_linha(c.get("Version", "")))
-    print("ARQUITETURA=%s" % uma_linha(c.get("Architecture", "")))
-    print("DEPENDE=%s" % normaliza_dependencias(c.get("Depends", "")))
-    print("PRE_DEPENDE=%s" % normaliza_dependencias(c.get("Pre-Depends", "")))
-    print("CONFLITA=%s" % normaliza_dependencias(c.get("Conflicts", "")))
-    print("TAMANHO=%s" % uma_linha(c.get("Installed-Size", "")))
-    print("DESCRICAO=%s" % uma_linha(c.get("Description-curta", ""))[:200])
-    print("MANTENEDOR=%s" % uma_linha(c.get("Maintainer", "")))
+    print("PACOTE=%s" % limpo(uma_linha(c.get("Package", ""))))
+    print("VERSAO=%s" % limpo(uma_linha(c.get("Version", ""))))
+    print("ARQUITETURA=%s" % limpo(uma_linha(c.get("Architecture", ""))))
+    print("DEPENDE=%s" % limpo(normaliza_dependencias(c.get("Depends", ""))))
+    print("PRE_DEPENDE=%s" % limpo(normaliza_dependencias(c.get("Pre-Depends", ""))))
+    print("CONFLITA=%s" % limpo(normaliza_dependencias(c.get("Conflicts", ""))))
+    print("TAMANHO=%s" % limpo(uma_linha(c.get("Installed-Size", ""))))
+    print("DESCRICAO=%s" % limpo(uma_linha(c.get("Description-curta", ""))[:200]))
+    print("MANTENEDOR=%s" % limpo(uma_linha(c.get("Maintainer", ""))))
     print("ESSENCIAL=%d" % (1 if c.get("Essential", "no").lower() == "yes" else 0))
     return 0
 

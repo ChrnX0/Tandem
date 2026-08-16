@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2799268485 4105" "$soma_esperados"
+      "743890857 4112" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -4007,6 +4007,46 @@ if python3 -c "import pty, select" 2>/dev/null; then
 else
     skip "the terminal half of [ -t 0 ]" "this python has no pty module"
 fi
+
+section "the readers defend their own KEY=VALUE contract"
+
+# Every value the six readers print is either a number they computed or a
+# STRING THAT CAME OUT OF THE FILE - and the file arrived from the internet.
+# Whether such a string can contain a newline is a property of the SOURCE
+# FORMAT, not of the reader: a .deb control file is line-based and cannot
+# carry one, while a PE import name, an RPM header string and an Android
+# manifest string are length- or NUL-delimited and carry one perfectly well.
+#
+# Relying on the input format to protect the output format is an accident
+# waiting for the one format that does not. The asymmetry that made it visible:
+# peinfo's raw-exception path already did .replace("\n", " ") while the data
+# path three lines below it did not.
+#
+# This is defence in depth, not a live failure - no real .exe has a newline in
+# a DLL name. It is asserted because an untested guard is not a guard.
+for _r in peinfo debinfo rpminfo jarinfo appimageinfo apkinfo; do
+    sujo="$(cd "$ROOT" && python3 - "$_r" <<'FIMLIMPO'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("r", "src/lib/%s.py" % sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+casos = ["kerne\nERRO=forjado", "a\rb", "x\x0cy", "tab\there"]
+ruins = [c for c in casos if any(ch in m.limpo(c) for ch in "\r\n\x0c\t")]
+print(len(ruins))
+FIMLIMPO
+)"
+    equal "$_r.py cannot be made to forge a line" "0" "$sujo"
+done
+
+# And a value with nothing wrong with it must come through untouched, or the
+# cleaning would be quietly corrupting every package name it ever reads.
+intacto="$(cd "$ROOT" && python3 - <<'FIMINTACTO'
+import importlib.util
+spec = importlib.util.spec_from_file_location("r", "src/lib/peinfo.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(m.limpo("kernel32.dll,msvcp140.dll") == "kernel32.dll,msvcp140.dll")
+FIMINTACTO
+)"
+equal "and an ordinary value is not touched" "True" "$intacto"
 
 section "community list (modelled on filter lists)"
 
