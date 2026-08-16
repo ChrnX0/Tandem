@@ -157,6 +157,15 @@ tandem (4.19) unstable; urgency=medium
     "protected" anyway. They target a prefix carrying Tandem's own mark now,
     which is a real request (`tandem protect` on a prefix Tandem built) and the
     case the old code actually waved through.
+  * A value can never forge a key in the memory file, and that is asserted as
+    a security property now instead of being left as a side effect. The
+    newline escaping in t_memoria_grava was written for a formatting reason -
+    a multi-line value left orphan continuation lines nothing ever cleaned up
+    - and it happens to close an injection as well. A defence that exists by
+    accident is one somebody removes while tidying. The path it closes:
+    t_receita_importa validates every value in a recipe and then writes
+    ORIGEM_DA_RECEITA from the FILE NAME, which the sender chooses, and the
+    header of a recipe is what tells the owner to accept one from strangers.
   * Found by cutting the disk to 3 MB under a real install, which is one of
     four scenarios run for this release. Upgrade across versions, a corrupted
     prefix and a machine with no network at all held with nothing to fix. Two

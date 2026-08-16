@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2267523461 4227" "$soma_esperados"
+      "294263274 4229" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "1297370014 2525" "$soma_padroes"
 
@@ -476,6 +476,32 @@ t_memoria_esquece "$MEM_A"
 equal "forgetting really erases" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$MEM_A" 2>/dev/null
 equal "forgetting what does not exist fails without breaking" "1" "$?"
+
+# A VALUE CANNOT FORGE A KEY, and this is asserted as a security property
+# rather than left as a side effect. The newline escaping in t_memoria_grava
+# was written for a formatting reason - a multi-line value left orphan
+# continuation lines that nothing ever cleaned up - and it happens to close an
+# injection as well. A defence that exists by accident is one somebody removes
+# while tidying, so it gets its own assertion with the path named.
+#
+# The path: t_receita_importa validates every value in the recipe, and then
+# writes ORIGEM_DA_RECEITA from the FILE NAME, unvalidated - and the sender of
+# a recipe chooses that name. The header of a recipe is what tells the owner to
+# accept one from other people. A newline there would write CONFIANCA into the
+# memory file, and a forged confidence travels: into a recipe, into a community
+# list record, onto somebody else's machine.
+t_memoria_esquece "$MEM_A" 2>/dev/null
+t_memoria_grava "$MEM_A" ORIGEM_DA_RECEITA "$(printf 'r\nCONFIANCA=confirmado\nRESOLVERAM=dotnet48')"
+equal "a newline in a value does not forge a second key" "" \
+      "$(t_memoria_le "$MEM_A" CONFIANCA 2>/dev/null)"
+equal "nor a third" "" "$(t_memoria_le "$MEM_A" RESOLVERAM 2>/dev/null)"
+# ...and the value still comes back whole, or the escaping would be silent
+# data loss instead of a defence.
+equal "and the value itself survives the escaping" \
+      "r
+CONFIANCA=confirmado
+RESOLVERAM=dotnet48" "$(t_memoria_le "$MEM_A" ORIGEM_DA_RECEITA 2>/dev/null)"
+t_memoria_esquece "$MEM_A" 2>/dev/null
 
 # -------------------------------------------------------- PE pre-flight
 
