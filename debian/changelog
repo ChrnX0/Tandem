@@ -96,6 +96,19 @@ tandem (4.19) unstable; urgency=medium
     became a leak - one stray file per double click, for ever. There is a net
     under the exits that had no cleanup of their own, and it declines to take
     an EXIT trap that another handler already owns.
+  * The report that exists to say what is wrong with the environment was
+    silent about the one condition that disables every other verdict, and came
+    out byte-for-byte identical on a machine where the notes folder worked and
+    one where it did not. `tandem doctor` names it now. `tandem logs` was worse
+    than silent: it answered "there are no logs yet", which tells the owner
+    nothing is wrong - and with no state folder its pattern was "/*.log", so
+    the glob walked the ROOT of the filesystem and any stray log there would
+    have been shown as if it were Tandem's.
+  * The sentence itself was written for the handler path and said "so I could
+    not find out what this program needs" - untrue in a diagnostic, where
+    there is no program. Reworded to be true in all three places rather than
+    split into a second key, because a second key is six more unreviewed
+    translations and that count is this project's oldest open item.
   * Found by cutting the disk to 3 MB under a real install, which is one of
     four scenarios run for this release. Upgrade across versions, a corrupted
     prefix and a machine with no network at all held with nothing to fix. Two

@@ -775,10 +775,10 @@ msgstr "磁盘满了。"
 
 msgctxt "sem_anotacoes"
 msgid ""
-"I could not write my notes in {1}, so I could not find out what this program needs.\n"
+"I could not write my notes in {1}, so I cannot say much about what went wrong.\n"
 "That folder is usually full or read-only. Freeing some space and trying again is normally enough."
 msgstr ""
-"我无法把记录写进 {1}，所以查不出这个程序需要什么。\n"
+"我无法把记录写进 {1}，所以说不出太多出了什么问题。\n"
 "那个文件夹通常是满了，或者是只读的。腾出一些空间再试一次，一般就够了。"
 
 msgctxt "porque_relogio"

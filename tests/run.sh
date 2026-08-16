@@ -6976,6 +6976,39 @@ equal "with a healthy log the helper is silent and fails" "1" \
 # quotes it, so a check reading the whole file finds its own explanation and can
 # never go green - the same self-reference the expected-values checksum hit when
 # it started matching its own two lines.
+# THE DIAGNOSTIC WAS SILENT ABOUT THE THING THAT DISABLES DIAGNOSIS - and
+# byte-for-byte identical on a machine where the notes folder worked and one
+# where it did not, which is how it went unnoticed. `tandem logs` was worse
+# than silent: it answered "there are no logs yet", which tells the owner
+# nothing is wrong.
+doctor_em() {
+    env -i HOME="$1" PATH="/usr/bin:/bin" TANDEM_IDIOMA_FORCADO=en \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+        bash "$ROOT/src/bin/tandem" "$2" 2>&1
+}
+DOC_OK="$TMPROOT/doc-ok"; rm -rf "$DOC_OK"; mkdir -p "$DOC_OK/.local/state"
+DOC_MAU="$TMPROOT/doc-mau"; rm -rf "$DOC_MAU"; mkdir -p "$DOC_MAU/.local/state"
+: > "$DOC_MAU/.local/state/tandem"
+contem "doctor says so when its own notes folder cannot be written" \
+       "could not write my notes" "$(doctor_em "$DOC_MAU" doctor)"
+naocontem "and says nothing of the sort when the folder is fine" \
+          "could not write my notes" "$(doctor_em "$DOC_OK" doctor)"
+contem "logs distinguishes 'cannot write' from 'none yet'" \
+       "could not write my notes" "$(doctor_em "$DOC_MAU" logs)"
+naocontem "and 'none yet' is not offered as the reason" \
+          "no logs yet" "$(doctor_em "$DOC_MAU" logs)"
+contem "while a healthy machine gets the log itself" \
+       "=====" "$(doctor_em "$DOC_OK" logs)"
+# With no state folder TANDEM_ESTADO is the empty string, so the pattern was
+# "/*.log" and the glob walked the ROOT of the filesystem - any stray log there
+# would have been shown to the owner as if it were Tandem's. Found while
+# writing the assertion above, whose premise was wrong: `tandem logs` creates
+# tandem.log on its way in, so "there are no logs yet" was already unreachable
+# on a healthy machine and only the broken one ever reached that branch.
+naocontem "and the empty-state case never globs the root of the filesystem" \
+          'ls -1t "$TANDEM_ESTADO"/*.log' \
+          "$(sed -n '/^acao_logs()/,/^}/p' "$ROOT/src/bin/tandem" | sed -n '1,/TANDEM_SEM_LOG/p')"
+
 naocontem "the probe is a real byte, not an open-and-close that a full disk passes" \
           ': >> "$LOG"' "$(sed 's/#.*//' "$ROOT/src/lib/common.sh")"
 

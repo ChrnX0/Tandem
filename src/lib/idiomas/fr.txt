@@ -479,7 +479,7 @@ Un service système (D-Bus) manque. Redémarrer l'ordinateur suffit en général
 Le disque est plein.
 
 @sem_anotacoes
-Je n'ai pas pu écrire mes notes dans {1}, donc je n'ai pas pu savoir ce dont ce programme a besoin.
+Je n'ai pas pu écrire mes notes dans {1}, donc je ne peux pas dire grand-chose sur ce qui n'a pas marché.
 Ce dossier est en général plein ou en lecture seule. Libérer de l'espace et réessayer suffit normalement.
 
 @porque_relogio

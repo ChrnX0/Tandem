@@ -477,7 +477,7 @@ A system service (D-Bus) is missing. Restarting the computer usually fixes it.
 The disk is full.
 
 @sem_anotacoes
-I could not write my notes in {1}, so I could not find out what this program needs.
+I could not write my notes in {1}, so I cannot say much about what went wrong.
 That folder is usually full or read-only. Freeing some space and trying again is normally enough.
 
 @porque_relogio

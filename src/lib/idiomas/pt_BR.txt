@@ -476,7 +476,7 @@ Falta um serviço do sistema (D-Bus). Reiniciar o computador costuma resolver.
 O disco está cheio.
 
 @sem_anotacoes
-Não consegui escrever minhas anotações em {1}, então não descobri o que este programa precisa.
+Não consegui escrever minhas anotações em {1}, então não tenho como dizer muito sobre o que deu errado.
 Essa pasta costuma estar cheia ou somente para leitura. Liberar espaço e tentar de novo normalmente resolve.
 
 @porque_relogio

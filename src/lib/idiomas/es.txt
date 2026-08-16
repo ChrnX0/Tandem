@@ -476,7 +476,7 @@ Falta un servicio del sistema (D-Bus). Reiniciar el ordenador suele resolverlo.
 El disco está lleno.
 
 @sem_anotacoes
-No pude escribir mis notas en {1}, así que no pude averiguar qué necesita este programa.
+No pude escribir mis notas en {1}, así que no puedo decir mucho sobre qué salió mal.
 Esa carpeta suele estar llena o ser de solo lectura. Liberar espacio y volver a intentarlo normalmente basta.
 
 @porque_relogio
