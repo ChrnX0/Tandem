@@ -5628,6 +5628,38 @@ else
     esac
 fi
 
+# THE SAME DEFECT FROM THE OTHER SIDE, and the guard above cannot see it: it
+# asks whether the published entry was EDITED, so a commit that changes shipped
+# code and leaves the changelog alone passes it cleanly. Its own comment says a
+# doc-only commit after a release passes - and it has no way to tell doc-only
+# from code.
+#
+# That is how this was found, by the owner asking "so your work is done?" while
+# three commits of new behaviour (four exit codes, a new function, a new log
+# line) sat in src/ under a version number the public already had, with no
+# entry describing any of it. Nothing in the tree objected.
+#
+# So: if this version is published AND anything that goes inside the .deb has
+# moved since that tag, the version has to be opened. Same skips as above,
+# for the same reason - a guard that stops a good release for lack of
+# information is worse than the drift it was written for.
+NOME_COD="shipped code has not moved since this version was published"
+if ! git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 ||
+   [ -z "$(git -C "$ROOT" tag 2>/dev/null | head -1)" ]; then
+    skip "$NOME_COD" "no tags here, so what is published cannot be known"
+elif ! git -C "$ROOT" rev-parse -q --verify "refs/tags/v$VERSAO_DEB" >/dev/null 2>&1; then
+    pass "$NOME_COD"
+else
+    git -C "$ROOT" diff --quiet "refs/tags/v$VERSAO_DEB" -- src man debian/postinst debian/postrm 2>/dev/null
+    case $? in
+        0) pass "$NOME_COD" ;;
+        1) fail "$NOME_COD" \
+                "open the next version before changing what ships" \
+                "v$VERSAO_DEB is published and src/ has moved since: $(git -C "$ROOT" diff --name-only "refs/tags/v$VERSAO_DEB" -- src man debian/postinst debian/postrm 2>/dev/null | tr '\n' ' ')" ;;
+        *) skip "$NOME_COD" "the tag v$VERSAO_DEB is here but its objects are not" ;;
+    esac
+fi
+
 if [ -f "$PACOTE_DEB" ]; then
     pass "the .deb was generated"
     if command -v dpkg-deb >/dev/null 2>&1; then
