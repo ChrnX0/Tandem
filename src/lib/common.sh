@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.18"
+TANDEM_VERSAO="4.19"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -3950,36 +3950,74 @@ t_resultado_amigavel() {
 # later component downloaded normally.
 #
 # $1 is a file holding ONLY the output of the verbs that failed.
-t_causa_do_winetricks() {
-    local resto="$1" log="${2:-}"
-    [ -f "$resto" ] || { t_msg porque_desconhecido "$log"; return 0; }
+#
+# It reads the log ONCE and answers a TOKEN, because two callers need two
+# different things out of the same reading. The failure path wants a sentence
+# for the owner; the install loop wants only to know whether the MACHINE failed
+# (disk, network, clock) or the translation table is wrong - and blaming the
+# table for a full disk poisons the one work list that has already found six
+# genuinely wrong mappings. Written as one table with two readers on top rather
+# than as two grep chains: a copy drifts, and a drifted copy is a rule that
+# fires on one path and not the other.
+t_causa_token() {
+    local resto="$1"
+    [ -f "$resto" ] || { printf 'desconhecido'; return 0; }
     # The specific causes first: each one is a thing winetricks said outright,
     # and any of them outranks the guess below.
     if grep -qi 'Failed to connect to bus' "$resto" 2>/dev/null; then
-        t_msg porque_dbus
+        printf 'dbus'
     elif grep -qi 'No space left on device' "$resto" 2>/dev/null; then
-        t_msg porque_disco_cheio
+        printf 'disco_cheio'
     elif grep -qi 'certificate\|SSL\|not yet valid\|has expired' "$resto" 2>/dev/null; then
-        # %x, not a hard-coded dd/mm/yyyy. The sentence around this date is
-        # translated into seven languages and the date order was Brazilian in
-        # all of them.
-        t_msg porque_relogio "$(date +%x)"
+        printf 'relogio'
     elif grep -qi 'Could not resolve host\|Network is unreachable\|Connection timed out' "$resto" 2>/dev/null; then
-        t_msg porque_sem_rede
+        printf 'sem_rede'
     elif grep -qi 'sha256sum mismatch\|checksum' "$resto" 2>/dev/null; then
-        t_msg porque_corrompido
+        printf 'corrompido'
     elif grep -qi 'cabextract' "$resto" 2>/dev/null; then
-        t_msg porque_cabextract
+        printf 'cabextract'
     # The most common cause is the internet, but claiming it without evidence
     # sends the owner looking for the defect in the wrong place - which is what
     # happened when systemd-inhibit brought the install down before it even
     # started. With no sign of a download having been ATTEMPTED, the honest
     # answer is not knowing.
     elif grep -qiE 'saved \[|wget|Downloading|HTTP request sent' "$resto" 2>/dev/null; then
-        t_msg porque_internet
+        printf 'internet'
     else
-        t_msg porque_desconhecido "$log"
+        printf 'desconhecido'
     fi
+}
+
+# Is this a cause that belongs to the MACHINE rather than to our table? Only
+# these hold back a suspicious-translation entry: "the internet was used" and
+# "no idea" say nothing about whose fault it is.
+t_causa_e_do_ambiente() {
+    case "${1:-}" in disco_cheio|sem_rede|relogio|corrompido|dbus|cabextract) return 0 ;; esac
+    return 1
+}
+
+# token -> sentence, so the token the install loop already computed can reach
+# the owner without reading the log a second time. $2 is the log path and only
+# the "no idea" sentence uses it: when Tandem cannot say why, it says where to
+# look.
+t_causa_por_token() {
+    case "${1:-}" in
+        dbus)        t_msg porque_dbus ;;
+        disco_cheio) t_msg porque_disco_cheio ;;
+        # %x, not a hard-coded dd/mm/yyyy. The sentence around this date is
+        # translated into seven languages and the date order was Brazilian in
+        # all of them.
+        relogio)     t_msg porque_relogio "$(date +%x)" ;;
+        sem_rede)    t_msg porque_sem_rede ;;
+        corrompido)  t_msg porque_corrompido ;;
+        cabextract)  t_msg porque_cabextract ;;
+        internet)    t_msg porque_internet ;;
+        *)           t_msg porque_desconhecido "${2:-${LOG:-}}" ;;
+    esac
+}
+
+t_causa_do_winetricks() {
+    t_causa_por_token "$(t_causa_token "$1")" "${2:-}"
 }
 
 t_appimage_info() {

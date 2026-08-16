@@ -146,8 +146,17 @@ if [ "$PROTEGIDO" = 0 ] && [ ! -f "$WINEPREFIX/.tandem-assoc" ]; then
     # Cleans up whatever Wine may have already spread before this guard.
     rm -f "$HOME/.local/share/applications/wine-extension-"*.desktop 2>/dev/null
     rm -f "$HOME/.local/share/mime/packages/x-wine"* 2>/dev/null
-    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
-    update-mime-database "$HOME/.local/share/mime" 2>/dev/null
+    # BOTH streams, and the reason is measured rather than defensive:
+    # update-mime-database writes "Directory '...' does not exist!" to STDOUT,
+    # not stderr, so `2>/dev/null` silenced the wrong one and that sentence was
+    # the FIRST LINE the owner read on any machine where
+    # ~/.local/share/mime/packages is absent - a fresh account, a minimal
+    # desktop. English jargon from somebody else's tool, at the top of the
+    # screen, in a program whose whole rule is that nothing the owner reads is
+    # jargon. It showed up in five of five scenarios while testing something
+    # else entirely.
+    update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1
+    update-mime-database "$HOME/.local/share/mime" >/dev/null 2>&1
 fi
 
 # ------------------------------------------------------- 3. 32-bit check
@@ -243,6 +252,16 @@ t_memoria_grava "$PROG" ARQUITETURA "${ARCH:-?}" 2>/dev/null
 # this very change introduced on its first attempt, caught by reading the order
 # rather than by any test - the shortcut path has no test that reaches it.
 INSTALADOS_AGORA=""
+# Declared HERE, above the retry loop, for the reason written beside
+# INSTALADOS_AGORA: it is FILLED during the install round and READ on a
+# later round, when the receipt says everything is installed and the
+# program still fails. Initialised inside the loop - which is where it
+# was first written - each round wiped the cause the round before had
+# found, and the owner got "it closed with an error" for a full disk.
+AMBIENTE_FALHOU=""
+# Which components the machine stopped, so the final message can NAME them
+# instead of claiming they were installed. Same scope, same reason.
+AMBIENTE_VERBOS=""
 APLICOU_LICAO=0
 if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null 2>&1; then
     PENDENTES=""
@@ -677,6 +696,10 @@ $MAQUINA}"
                 t_memoria_grava "$PROG" RESULTADO "falta no wine" 2>/dev/null
                 t_erro "$(t_msg falta_no_wine "$SEM_WINE" \
                           "$(wine --version 2>/dev/null || printf 'Wine')")"
+            elif [ -n "${AMBIENTE_FALHOU:-}" ]; then
+                t_erro "$(t_msg fechou_com_erro "$CODIGO")
+
+$(t_causa_por_token "$AMBIENTE_FALHOU")"
             else
                 t_erro "$(t_msg fechou_com_erro "$CODIGO")"
             fi
@@ -690,7 +713,29 @@ $MAQUINA}"
     fi
 
     if [ "$tentativa" -gt "$MAX" ]; then
-        t_erro "$(t_msg instalei_e_nao_abre)"
+        # "I installed the dependencies and it still does not open" is a LIE
+        # when the machine is what failed, and it sends the owner looking at
+        # the program. winetricks exiting 0 with a full disk reaches exactly
+        # here: measured on a 3 MB filesystem, "No space left on device" was
+        # in the log and its sentence was in the catalogue, and the two never
+        # met - the cause table was only reachable when winetricks itself
+        # exited non-zero, and a full disk does not make it exit non-zero.
+        #
+        # Appending the cause under the old sentence was the first attempt and
+        # it was half a fix: "I installed the dependencies... The disk is full"
+        # still opens by claiming the install happened. The message that says
+        # the true thing already exists and is already translated seven times -
+        # it is the one used when winetricks fails outright, which is what a
+        # full disk amounts to. Reuse beats a new key: a new key is six
+        # unreviewed translations, and the count of those is the project's
+        # oldest open item.
+        if [ -n "${AMBIENTE_FALHOU:-}" ]; then
+            t_erro "$(t_msg nao_consegui_instalar "$(for v in $AMBIENTE_VERBOS; do printf -- '- %s\n' "$(t_verbo_amigavel "$v")"; done)")
+
+$(t_causa_por_token "$AMBIENTE_FALHOU")"
+        else
+            t_erro "$(t_msg instalei_e_nao_abre)"
+        fi
         exit "$CODIGO"
     fi
 
@@ -816,12 +861,44 @@ $MAQUINA}"
                 esac
             done
             if [ -n "$FALTOU" ]; then
-                t_diz "!!! $v saiu 0 mas nao entregou:$FALTOU"
-                for dll in $FALTOU; do
-                    SUSPEITAS="${SUSPEITAS:+$SUSPEITAS
+                # WHY it did not deliver, before deciding whose fault it is.
+                # winetricks exiting 0 with a full disk is not a wrong table
+                # row - and this branch used to file one anyway, because the
+                # cause table was only ever consulted when winetricks FAILED
+                # (line 850 deletes $RESTO when nothing failed). Measured on a
+                # 3 MB filesystem: "No space left on device" sat in the log
+                # while the owner read "the program closed with an error
+                # (code 53)" and a perfectly good mapping was filed as
+                # suspicious - the same downstream harm 4.17 fixed, arriving
+                # by a different road.
+                FATIA_V="$(mktemp -t tandem-fatia-XXXXXX 2>/dev/null)"
+                t_log_desde "$MARCA_WT" > "$FATIA_V" 2>/dev/null || :
+                CAUSA_V="$(t_causa_token "$FATIA_V")"
+                rm -f "$FATIA_V"
+                if t_causa_e_do_ambiente "$CAUSA_V"; then
+                    t_diz "!!! $v saiu 0 e nao entregou:$FALTOU - causa: $CAUSA_V (nao e a tabela)"
+                    AMBIENTE_FALHOU="$CAUSA_V"
+                    # Once per verb, not once per ROUND. The retry loop runs
+                    # three times and this list survives all three by design,
+                    # so appending unconditionally printed "- Visual C++ 2003"
+                    # three times in the final message. Found by reading the
+                    # output of the installed package, which is the only method
+                    # that has ever caught anything here - the suite was green.
+                    # The list is space-separated, which is what makes this
+                    # pattern safe; on a newline-separated one it matches
+                    # nothing, and that trap is written down in CLAUDE.md.
+                    case " $AMBIENTE_VERBOS " in
+                        *" $v "*) : ;;
+                        *) AMBIENTE_VERBOS="$AMBIENTE_VERBOS $v" ;;
+                    esac
+                else
+                    t_diz "!!! $v saiu 0 mas nao entregou:$FALTOU"
+                    for dll in $FALTOU; do
+                        SUSPEITAS="${SUSPEITAS:+$SUSPEITAS
 }$dll$(printf '\t')$v"
-                    t_anota_suspeita "$dll" "$v"
-                done
+                        t_anota_suspeita "$dll" "$v"
+                    done
+                fi
             else
                 printf '%s\n' "$v" >> "$RECIBO"
             fi

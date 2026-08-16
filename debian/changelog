@@ -1,3 +1,58 @@
+tandem (4.19) unstable; urgency=medium
+
+  * A full disk was reported to the owner as "the program closed with an
+    error (code 53)" and to the project as a wrong row in the DLL table. Two
+    separate harms out of one gap, and the gap is that the cause table was
+    only ever consulted when winetricks itself exited NON-ZERO. A full disk
+    does not make winetricks exit non-zero: it exits 0 having downloaded and
+    installed nothing, the delivery proof correctly says the DLL did not
+    arrive, and everything downstream then reasons about a table that was
+    right all along.
+  * So the exit-0-but-nothing-arrived branch now reads WHY before deciding
+    whose fault it is. A cause that belongs to the machine - full disk, no
+    network, wrong clock, corrupted download, no D-Bus, no cabextract - files
+    nothing in traducao-suspeita.tsv and travels to the owner as a sentence
+    under the error. That work list has already found six genuinely wrong
+    mappings, and 4.17 fixed the other road by which non-mistranslations were
+    reaching it.
+  * "I installed what it was asking for and it still does not open" is a lie
+    when the machine is what failed, and it sends the owner looking at the
+    program. Appending the cause under it was the first attempt and it was
+    half a fix - the sentence read first still claimed the install happened.
+    The message that says the true thing already existed and was already
+    translated seven times, being the one used when winetricks fails outright,
+    which is what a full disk amounts to. So the owner now reads "I could not
+    install: - Visual C++ 2003" followed by "The disk is full", and no new
+    catalogue key was created: a new key is six unreviewed translations, and
+    the count of those is this project's oldest open item.
+  * That reuse listed the same component three times, once per retry round,
+    because the list survives all three rounds by design. The suite was green
+    for it; it was caught by installing the package and reading the window.
+  * The variable holding that cause is declared ABOVE the retry loop, not
+    inside it. Inside, each round wiped what the round before had found -
+    which is the identical shape of the INSTALADOS_AGORA defect whose comment
+    sits four lines higher, rediscovered while adding a second variable beside
+    it.
+  * update-mime-database complains on STDOUT, not stderr, so the 2>/dev/null
+    beside it silenced the wrong stream. "Directory '...' does not exist!" was
+    the FIRST LINE the owner read on any machine without
+    ~/.local/share/mime/packages - a fresh account, a minimal desktop -
+    English jargon from somebody else's tool, at the top of the screen, in a
+    program whose whole rule is that nothing the owner reads is jargon. It
+    appeared in five of five scenarios while something else entirely was being
+    tested.
+  * t_causa_do_winetricks is now one table with two readers on top of it: a
+    token for the code that has to decide, a sentence for the owner. The first
+    attempt left the original grep chain in place beside the new one, under a
+    comment claiming there was only one - a copy that drifts is a rule that
+    fires on one path and not the other, which is the whole defect this
+    release is about.
+  * Found by cutting the disk to 3 MB under a real install, which is one of
+    four scenarios run for this release. Upgrade across versions, a corrupted
+    prefix and a machine with no network at all held with nothing to fix.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 16 Aug 2026 13:40:00 +0000
+
 tandem (4.18) unstable; urgency=medium
 
   * The six readers now defend their own KEY=VALUE contract instead of relying

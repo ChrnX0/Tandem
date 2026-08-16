@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "743890857 4112" "$soma_esperados"
+      "1448571905 4163" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -5486,6 +5486,16 @@ else
           "1" "$([ -f "$A/.local/state/tandem/traducao-suspeita.tsv" ]; echo $?)"
     equal "delivered: winetricks was called exactly once" \
           "1" "$(grep -c vcrun2003 "$A/diario.txt" 2>/dev/null)"
+    # SOMEBODY ELSE'S JARGON, at the top of the owner's screen.
+    # update-mime-database complains on STDOUT, not stderr, so the 2>/dev/null
+    # beside it silenced the wrong stream and "Directory '...' does not exist!"
+    # was the first line read on any machine without
+    # ~/.local/share/mime/packages - a fresh account, a minimal desktop, and
+    # every one of these fake HOMEs. It appeared in five of five scenarios
+    # while something else entirely was being tested, and nothing in the tree
+    # could see it because no test had ever read this file for prose.
+    naocontem "no other tool's complaint reaches the owner's output" \
+              "does not exist" "$(cat "$A/stdout.txt" "$A/stderr.txt" 2>/dev/null)"
 
     # --- Case 2: winetricks exits 0 and the file never arrives.
     B="$E2E/enganou"; mkdir -p "$B"; roda_exe "$B" ""
@@ -5594,6 +5604,64 @@ FIMWT
         *) fail "no window: states the exact command to fix it" \
                   "winetricks -q vcrun2003" "$(head -c 200 "$C/stderr.txt" 2>/dev/null)" ;;
     esac
+
+    # --- Case 5: the machine is what failed, and winetricks still exits 0.
+    #
+    # A full disk is the case, measured on a 3 MB filesystem: winetricks
+    # downloads nothing, installs nothing, prints "No space left on device"
+    # and EXITS 0. The delivery proof then correctly reports the DLL did not
+    # arrive - and everything downstream blamed the translation table, because
+    # the cause table was only reachable from the branch where winetricks
+    # itself failed. Two harms out of one gap: a correct mapping filed in
+    # traducao-suspeita.tsv, and an owner told "the program closed with an
+    # error (code 53)" about a disk.
+    #
+    # The pair that makes this an assertion rather than a hope is Case 2 above:
+    # same code path, same exit 0, same missing file, and it DOES file the
+    # suspicion. So the guard here is discriminating, not unconditional.
+    cat > "$E2E/bin/winetricks" <<'FIMWTD'
+#!/bin/sh
+printf '%s\n' "$*" >> "$E2E_DIARIO"
+printf 'Executing load_vcrun2003\n'
+printf 'cp: error writing /tmp/x/vcrun2003: No space left on device\n'
+exit 0
+FIMWTD
+    chmod +x "$E2E/bin/winetricks"
+    D="$E2E/discocheio"; mkdir -p "$D"; roda_exe "$D" ""
+    LOG_D="$(cat "$D/.local/state/tandem/exe.log" 2>/dev/null)"
+    contem "exit 0 with a full disk names the disk as the cause" \
+           "causa: disco_cheio" "$LOG_D"
+    naocontem "and does not report it as a mapping that failed to deliver" \
+              "saiu 0 mas nao entregou" "$LOG_D"
+    # cat piped into awk, not awk reading the file: when the file is ABSENT -
+    # which is the outcome this asserts - awk cannot open it, prints nothing
+    # and exits non-zero, so the assertion compared "0" against an empty
+    # string and failed while the code was right. Emptiness through a pipe is
+    # a line count of zero.
+    equal "and files nothing in the suspicious-translation work list" \
+          "0" "$(cat "$D/.local/state/tandem/traducao-suspeita.tsv" 2>/dev/null |
+                 awk 'END { print NR + 0 }')"
+    # And the owner is TOLD. Until 4.19 the cause was computed and went
+    # nowhere: the sentence existed in seven languages, in the catalogue, and
+    # the only branch that could reach it was one a full disk never takes.
+    JAN_D="$(cat "$D/janelas.txt" 2>/dev/null)"
+    contem "the owner is told the disk is full, not just the exit code" \
+           "disk is full" "$JAN_D"
+    # And it does not say the opposite in the line above. Appending the cause
+    # under "I installed the dependencies but the program still does not open"
+    # was the first attempt, and it was half a fix: the sentence the owner
+    # reads first still claimed the install happened. The one that says the
+    # true thing already existed, already translated seven times.
+    naocontem "and is not told the components were installed, because they were not" \
+              "I installed the dependencies" "$JAN_D"
+    contem "it says it could not install them, and which ones" \
+           "Visual C++ 2003" "$JAN_D"
+    # ONCE, not once per retry. The list survives all three rounds by design -
+    # that is the whole point of declaring it above the loop - so appending
+    # unconditionally listed the same component three times. The suite was
+    # green; it was found by reading the installed package's own output.
+    equal "and names each component once, not once per retry" \
+          "1" "$(printf '%s\n' "$JAN_D" | grep -c '^- Visual C++ 2003$')"
 fi
 
 section ".deb package"
@@ -6394,6 +6462,75 @@ naocontem "and never by counting lines, which a background writer shifts" \
 # it; %x is the locale's own order.
 naocontem "the wrong-clock message does not hard-code a Brazilian date order" \
           "+%d/%m/%Y" "$(cat "$ROOT/src/lib/common.sh" "$ROOT/src/bin/tandem-exe")"
+
+# ONE TABLE, TWO READERS. The install loop needs to know whose fault it is -
+# the machine's or our DLL table's - and the failure path needs a sentence.
+# Both come from the same reading of the log now: t_causa_token answers a
+# token, t_causa_por_token turns it into prose, and t_causa_do_winetricks is
+# the two of them composed.
+#
+# The first attempt at this left the original grep chain in place BESIDE the
+# new one, under a comment claiming there was only one - which is the exact
+# drift the comment warned about, written the same hour. So the assertion is
+# structural as well as behavioural: the phrase may appear once.
+token() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; t_causa_token "$1"' _ "$1" 2>/dev/null
+}
+do_ambiente() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; t_causa_e_do_ambiente "$1" && echo sim || echo nao' \
+        _ "$1" 2>/dev/null
+}
+printf 'Executing load_vcrun2003\ncp: No space left on device\n' > "$TMPROOT/wt-cheio.log"
+equal "a full disk is read out of winetricks' own words" \
+      "disco_cheio" "$(token "$TMPROOT/wt-cheio.log")"
+equal "the same file still produces the same sentence it always did" \
+      "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c \
+         '. "'"$ROOT"'/src/lib/common.sh"; t_msg porque_disco_cheio')" \
+      "$(causa "$TMPROOT/wt-cheio.log")"
+equal "a log that does not exist is not a cause, it is 'no idea'" \
+      "desconhecido" "$(token "$TMPROOT/nao-existe.log")"
+# Stated as "the sentence reader does no reading of its own", NOT as "this
+# phrase appears once in the file": t_causa_apt has its own table and a full
+# disk looks the same to apt as it does to winetricks, so counting the phrase
+# forbids a legitimate second table. That version of this assertion was
+# written first and failed on t_causa_apt, which is the right answer to the
+# wrong question.
+CORPO_CAUSA="$(awk '/^t_causa_do_winetricks\(\) \{/ { d = 1 } d { print } /^\}/ && d { exit }' \
+                "$ROOT/src/lib/common.sh")"
+naocontem "the sentence reader greps nothing: it asks t_causa_token" \
+          "grep" "$CORPO_CAUSA"
+contem "and it is the token reader it asks" "t_causa_token" "$CORPO_CAUSA"
+# WHICH causes hold back a suspicious-translation entry. A full disk says
+# nothing about our mapping; "something was downloaded" and "no idea" say
+# nothing about whose fault it is either, so they must NOT protect a verb -
+# otherwise the work list that has found six wrong mappings stops filling.
+for t in disco_cheio sem_rede relogio corrompido dbus cabextract; do
+    equal "$t is the machine's fault, not the table's" "sim" "$(do_ambiente "$t")"
+done
+for t in internet desconhecido ""; do
+    equal "'${t:-empty}' does not excuse the table" "nao" "$(do_ambiente "$t")"
+done
+
+# A VARIABLE FILLED IN ONE ROUND AND READ IN A LATER ONE cannot be initialised
+# inside the loop. Both of these are that shape: INSTALADOS_AGORA collects what
+# was installed so a later round can ask the owner about it, and AMBIENTE_FALHOU
+# carries why the machine failed to the round that gives up. Declared inside,
+# each round wiped what the round before had found - and the second one was
+# written that way on its first attempt, four lines under the comment that
+# explains the first. The retry loop starts at "while :", so both have to come
+# before it.
+INICIO_LACO="$(grep -n '^while :; do' "$ROOT/src/bin/tandem-exe" | head -1 | cut -d: -f1)"
+for var in INSTALADOS_AGORA AMBIENTE_FALHOU; do
+    ONDE="$(grep -n "^$var=\"\"" "$ROOT/src/bin/tandem-exe" | head -1 | cut -d: -f1)"
+    if [ -n "$ONDE" ] && [ -n "$INICIO_LACO" ] && [ "$ONDE" -lt "$INICIO_LACO" ]; then
+        pass "$var is declared before the retry loop, not inside it"
+    else
+        fail "$var is declared before the retry loop, not inside it" \
+             "a line before $INICIO_LACO" "${ONDE:-not found at top level}"
+    fi
+done
 
 section "the .exe is asked whether the download finished"
 
