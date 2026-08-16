@@ -243,13 +243,18 @@ Puts the files back from a copy. Nothing that already exists is overwritten;
 only the missing files go in. With no argument, it uses the most recent copy.
 .RE
 .TP
-.B tandem backup
-Saves Tandem's Windows environment into a file in the home folder. It includes
-your files, but it is heavy; to take only the data, use
+.BI "tandem backup " [where]
+Saves Tandem's Windows environment into a file. With no argument it goes to the
+home folder; give a folder or a file name and it goes there instead, which is
+how you put it on a pen drive. It includes your files, but it is heavy; to take
+only the data, use
 .BR "tandem dados salvar" .
 .TP
-.B tandem restore
-Restores the Windows environment from the most recent backup.
+.BI "tandem restore " [file]
+Restores the Windows environment. With no argument it uses the most recent
+backup in the home folder; name a file and it uses that one. The archive is
+read before anything is replaced, so a backup that did not arrive whole is
+refused with your environment untouched.
 .TP
 .BI "tandem protect " path
 Marks a Wine profile as untouchable. Tandem never installs or changes anything

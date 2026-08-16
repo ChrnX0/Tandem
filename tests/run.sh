@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "294263274 4229" "$soma_esperados"
+      "2173541164 4329" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "1297370014 2525" "$soma_padroes"
 
@@ -504,6 +504,136 @@ RESOLVERAM=dotnet48" "$(t_memoria_le "$MEM_A" ORIGEM_DA_RECEITA 2>/dev/null)"
 t_memoria_esquece "$MEM_A" 2>/dev/null
 
 # -------------------------------------------------------- PE pre-flight
+
+section "backup and restore: where the owner said, and nothing silent"
+
+# `tandem backup /media/pendrive/loja.tar.gz` DISCARDED the destination and
+# wrote to $HOME. Getting the copy off this machine is the whole point of a
+# backup, and the owner can unplug the drive believing it is on there. Its two
+# siblings already took a path - `tandem dados restaurar` even prints "If you
+# have the file, say where it is" - so backup and restore were the odd ones out
+# in their own file.
+DEST="$TMPROOT/destino"; rm -rf "$DEST"; mkdir -p "$DEST/existe"
+equal "no destination means the home folder" \
+      "$HOME/x.tar.gz" "$(t_destino_arquivo "" x.tar.gz)"
+equal "an existing folder gets a name of ours inside it" \
+      "$DEST/existe/x.tar.gz" "$(t_destino_arquivo "$DEST/existe" x.tar.gz)"
+equal "a trailing slash does not double up" \
+      "$DEST/existe/x.tar.gz" "$(t_destino_arquivo "$DEST/existe/" x.tar.gz)"
+equal "a file name is taken as given" \
+      "$DEST/existe/loja.tar.gz" "$(t_destino_arquivo "$DEST/existe/loja.tar.gz" x.tar.gz)"
+t_destino_arquivo "$DEST/nao-existe/loja.tar.gz" x.tar.gz >/dev/null
+equal "a folder that is not there fails instead of writing elsewhere" "1" "$?"
+
+# THE ARCHIVE IS READ BEFORE THE PREFIX IS DELETED. restore did `rm -rf` first
+# and unpacked afterwards, so a truncated backup - a pen drive pulled while it
+# was still being written, which is how a backup on a pen drive most often ends
+# up truncated - left the environment destroyed and half rebuilt. tar exits 2
+# on one, so the damage was detectable the whole time. Allowing an arbitrary
+# path made the second half matter too: an archive named by mistake must not be
+# unpacked over the environment.
+FALSO="$TMPROOT/prefixo-falso"; rm -rf "$FALSO"
+mkdir -p "$FALSO/wine/drive_c/windows" "$FALSO/outro/etc"
+: > "$FALSO/wine/system.reg"; : > "$FALSO/wine/drive_c/windows/x.dll"
+printf 'x\n' > "$FALSO/outro/etc/qualquer.conf"
+tar -C "$FALSO" -czf "$TMPROOT/bom.tar.gz" wine 2>/dev/null
+tar -C "$FALSO" -czf "$TMPROOT/alheio.tar.gz" outro 2>/dev/null
+python3 - "$TMPROOT/bom.tar.gz" "$TMPROOT/cortado.tar.gz" <<'FIMCUT'
+import io, sys
+d = io.open(sys.argv[1], "rb").read()
+io.open(sys.argv[2], "wb").write(d[:max(1, len(d) // 2)])
+FIMCUT
+PADRAO_ANTIGO="$TANDEM_PREFIXO_PADRAO"
+TANDEM_PREFIXO_PADRAO="$FALSO/wine"
+t_backup_valido "$TMPROOT/bom.tar.gz";     equal "a real backup is accepted" "0" "$?"
+t_backup_valido "$TMPROOT/alheio.tar.gz";  equal "a tar.gz that is not ours is told apart" "2" "$?"
+t_backup_valido "$TMPROOT/cortado.tar.gz"; equal "a truncated backup is refused" "1" "$?"
+t_backup_valido "$TMPROOT/nao-existe.tar.gz"
+equal "a file that is not there is refused" "1" "$?"
+TANDEM_PREFIXO_PADRAO="$PADRAO_ANTIGO"
+
+# YES, SAID NO, AND NOBODY TO ASK - three answers, because t_pergunta gives
+# two. Its first line is `t_tem_gui || return 1`, so it answers 1 both for "he
+# clicked cancel" and for "there was no window", and that is the distinction
+# this project records as the one that may never be silent. `tandem restore`
+# produced ZERO BYTES and exit 1 on a machine with no graphical session - the
+# command that deletes the Windows environment - and the handlers were all
+# audited for exactly this shape while the CLI commands were not.
+resp_sem_ninguem() {
+    env -i PATH="/usr/bin:/bin" HOME="$TMPROOT" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_IDIOMA_FORCADO=en bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_pergunta_ou_terminal "q" "a" "b" "p" </dev/null >/dev/null 2>&1
+        echo $?'
+}
+equal "with no window and no terminal, the answer is 'nobody asked'" "2" "$(resp_sem_ninguem)"
+
+# END TO END, because the silence was in the COMMAND and not in the library.
+# Measured through the project's own pty harness before the fix: 13 bytes for
+# `versao`, 1193 for `doctor`, 504 for `backup`, and 0 for `restore`.
+E2EB="$TMPROOT/casa-bkp"; rm -rf "$E2EB"; mkdir -p "$E2EB/.local/share/tandem/wine/drive_c"
+: > "$E2EB/.local/share/tandem/wine/system.reg"
+: > "$E2EB/.local/share/tandem/wine/.tandem-prefixo"
+mkdir -p "$E2EB/pendrive"
+bkp_em() {
+    env -i HOME="$E2EB" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_BIN="$ROOT/src/bin" TANDEM_IDIOMA_FORCADO=en \
+        bash "$ROOT/src/bin/tandem" "$@" 2>&1
+}
+bkp_em backup "$E2EB/pendrive" >/dev/null 2>&1
+equal "backup writes where the owner said, not into the home folder" \
+      "1" "$(ls -1 "$E2EB/pendrive"/tandem-backup-*.tar.gz 2>/dev/null | wc -l)"
+equal "and nothing was left in the home folder instead" \
+      "0" "$(ls -1 "$E2EB"/tandem-backup-*.tar.gz 2>/dev/null | wc -l)"
+contem "a destination whose folder is missing says so, and says why" \
+       "pen drive" "$(bkp_em backup /nao/existe/loja.tar.gz)"
+# The silence itself. Restore with no window and no terminal must produce a
+# sentence: this is the command that deletes the Windows environment.
+SEM_NINGUEM="$(bkp_em restore "$(ls -1 "$E2EB/pendrive"/*.tar.gz | head -1)")"
+if [ -n "$SEM_NINGUEM" ]; then
+    pass "restore with nobody to ask is not silent"
+else
+    fail "restore with nobody to ask is not silent" "a sentence" "zero bytes"
+fi
+contem "and it names the file, so the owner can repeat the command" \
+       "tandem restore" "$SEM_NINGUEM"
+# And the path is used at all: naming a file that is not there must say THAT,
+# not "no backup found in your home folder" - which is what it said while the
+# owner was holding the file and pointing at it.
+contem "a named file that is missing is reported as missing" \
+       "not found" "$(bkp_em restore "$E2EB/pendrive/nao-existe.tar.gz")"
+
+# THE SECOND ONE THE AUDIT FOUND. Every t_pergunta in the CLI was reached on
+# purpose - with the preconditions each one needs, because on a bare machine
+# four of the six exit earlier for reasons of their own and look guarded when
+# they are not. Two of the six were silent, and both were commands that change
+# what is inside the Windows environment: `tandem restore` and this one.
+# `preparar`, `desinstalar` and `contribuir` were correct already.
+# Documents, not any folder: t_dados_lista counts only the five the owner
+# actually keeps things in. The first version of this fixture put the file in
+# users/x/ and the copy came out EMPTY, so the command answered "I found no
+# copy of your files" - which happens to contain the words "tandem dados
+# restaurar", so both assertions below passed on the WRONG message and the
+# whole test stayed green with the defect put back. A green instrument that
+# agrees with itself.
+mkdir -p "$E2EB/.local/share/tandem/wine/drive_c/users/loja/Documents"
+printf 'vendas\n' > "$E2EB/.local/share/tandem/wine/drive_c/users/loja/Documents/v.txt"
+bkp_em dados salvar "$E2EB/copia.tar.gz" >/dev/null 2>&1
+if [ -s "$E2EB/copia.tar.gz" ]; then
+    pass "the fixture really produced a copy, or the rest proves nothing"
+else
+    fail "the fixture really produced a copy, or the rest proves nothing" \
+         "a non-empty tar.gz" "nothing was written"
+fi
+SEM_DADOS="$(bkp_em dados restaurar "$E2EB/copia.tar.gz")"
+if [ -n "$SEM_DADOS" ]; then
+    pass "giving files back with nobody to ask is not silent either"
+else
+    fail "giving files back with nobody to ask is not silent either" \
+         "a sentence" "zero bytes"
+fi
+contem "and it says what the refusal was about, not that no copy was found" \
+       "no window to ask you in" "$SEM_DADOS"
 
 section "pre-flight: reading the .exe without running it"
 

@@ -245,13 +245,18 @@ Devolve os arquivos de uma cópia. Nada que já existe é sobrescrito; só
 entram os arquivos que faltam. Sem argumento, usa a cópia mais recente.
 .RE
 .TP
-.B tandem backup
-Salva o ambiente Windows do Tandem em um arquivo na pasta pessoal.
-Inclui os seus arquivos, mas é pesado; para levar só os dados, use
+.BI "tandem backup " [onde]
+Salva o ambiente Windows do Tandem em um arquivo. Sem argumento vai para a
+pasta pessoal; passando uma pasta ou um nome de arquivo, vai para lá — é assim
+que se põe no pendrive. Inclui os seus arquivos, mas é pesado; para levar só os
+dados, use
 .BR "tandem dados salvar" .
 .TP
-.B tandem restore
-Restaura o ambiente Windows a partir do backup mais recente.
+.BI "tandem restore " [arquivo]
+Restaura o ambiente Windows. Sem argumento usa o backup mais recente da pasta
+pessoal; passando um arquivo, usa aquele. O arquivo é lido antes de qualquer
+coisa ser trocada, então um backup que não chegou inteiro é recusado com o seu
+ambiente intacto.
 .TP
 .BI "tandem protect " caminho
 Marca um perfil Wine como intocável. O Tandem nunca instala nem altera

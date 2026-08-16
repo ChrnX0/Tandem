@@ -1972,6 +1972,38 @@ tandem dados salvar
 @bkp_nao_salvou
 I could not save the backup.
 
+@dados_confirma_terminal
+Put them back? [y/N] 
+
+@dados_sem_janela
+Putting your files back changes what is inside the Windows environment, and I have no window to ask you in.
+
+Nothing was changed. Run this in the Terminal, where I can ask:
+
+  tandem dados restaurar {1}
+
+@rst_confirma_terminal
+Restore? [y/N] 
+
+@sem_essa_pasta
+There is no folder {1}.
+If that is a pen drive, check that it is plugged in and that the name is right.
+
+@rst_nao_e_backup
+{1} is not a Tandem backup.
+It opened fine, but what is inside is not a Windows environment of mine, so putting it in place would replace yours with something else. Nothing was changed.
+
+@rst_backup_danificado
+{1} did not arrive whole.
+That is what a copy interrupted halfway looks like - a pen drive pulled out while it was still being written, most often. Nothing was changed here: your environment is as it was.
+
+@rst_sem_janela
+Restoring replaces the whole Windows environment, and I have no window to ask you in.
+
+Nothing was changed. Run this in the Terminal, where I can ask:
+
+  tandem restore {1}
+
 @rst_nenhum_backup
 No backup found in your home folder.
 
@@ -2302,8 +2334,8 @@ Tandem - runs Windows programs, Android apps and Linux packages.
   tandem dados                shows your own files inside Windows
   tandem dados salvar         copies ONLY your files (quick and small)
   tandem dados restaurar [c]  puts your files back from a copy
-  tandem backup               saves the Windows environment
-  tandem restore              restores the Windows environment
+  tandem backup [where]       saves the Windows environment (a pen drive, say)
+  tandem restore [file]       restores the Windows environment
   tandem protect <path>       protects a Wine profile from being changed
   tandem identidade           what a program sees of your machine (licences)
   tandem portas               pinpad, scale, printer: which COM they landed on

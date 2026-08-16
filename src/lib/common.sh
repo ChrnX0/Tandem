@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.19"
+TANDEM_VERSAO="4.20"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4376,6 +4376,75 @@ t_saida_fecha() {
     [ -f "${1:-}" ] || return 1
     cat "$1" >> "${LOG:-/dev/null}" 2>/dev/null
     return 0
+}
+
+# ---------------------------------------------- where the owner said to put it
+#
+# `tandem backup /media/pendrive/loja.tar.gz` DISCARDED the path in silence and
+# wrote to $HOME. Getting the copy off this machine is the whole point of a
+# backup, and the owner can unplug the drive believing it is on there. Its two
+# siblings - `tandem dados salvar` and `tandem dados restaurar` - already took
+# a path, and the second even prints "If you have the file, say where it is",
+# so backup and restore were the odd ones out in their own file.
+#
+# An existing DIRECTORY gets a name of ours inside it, because `tandem backup
+# /media/pendrive` is what a person types and tar cannot write over a folder.
+# Fails (1) when the folder it would go in does not exist: "I could not save
+# it" without saying why leaves a shopkeeper with an unplugged drive and
+# nothing to do about it.
+# Yes (0), said no (1), NOBODY TO ASK (2).
+#
+# t_pergunta is GUI-only by design - its first line is `t_tem_gui || return 1`
+# - so it answers 1 both for "he clicked cancel" and for "there was no window",
+# and CLAUDE.md records that distinction as the one that may never be silent.
+# Every handler re-derives the terminal half inline; this is that half written
+# once, with the third state handed back so each caller can say the right thing
+# about its OWN command rather than share a vague sentence.
+#
+# The handlers are deliberately not converted here. Their fallbacks end in
+# messages of their own - a shell installer that cannot be confirmed is refused,
+# a .deb is not - and that is content, not duplication.
+t_pergunta_ou_terminal() {
+    local texto="$1" sim="$2" nao="$3" prompt="$4" r
+    t_pergunta "$texto" "$sim" "$nao" && return 0
+    t_tem_gui && return 1
+    [ -t 0 ] || return 2
+    printf '%s\n\n%s' "$texto" "$prompt"
+    read -r r
+    t_confirmou "$r" && return 0
+    return 1
+}
+
+t_destino_arquivo() {
+    local dest="${1:-}" nome="$2"
+    [ -n "$dest" ] || { printf '%s/%s' "$HOME" "$nome"; return 0; }
+    [ -d "$dest" ] && dest="${dest%/}/$nome"
+    [ -d "$(dirname -- "$dest")" ] || return 1
+    printf '%s' "$dest"
+    return 0
+}
+
+# Is this really a Tandem backup, and is it whole?
+#
+#   0 = yes    2 = readable but not one of ours    1 = damaged or unreadable
+#
+# Asked BEFORE anything is deleted. `tandem restore` did `rm -rf` on the prefix
+# and only then unpacked, so a truncated archive - a pen drive pulled mid-copy,
+# which is how a backup on a pen drive most often ends up truncated - left the
+# environment destroyed and half rebuilt. `tar -tzf` exits 2 on one, measured,
+# so the damage was detectable the whole time. Allowing an arbitrary path made
+# the second half matter too: an archive the owner named by mistake must not be
+# unpacked over the environment.
+t_backup_valido() {
+    local arq="$1" primeiro
+    [ -f "$arq" ] || return 1
+    primeiro="$(tar -tzf "$arq" 2>/dev/null | head -1)" || return 1
+    tar -tzf "$arq" >/dev/null 2>&1 || return 1
+    [ -n "$primeiro" ] || return 1
+    case "${primeiro%%/*}" in
+        "$(basename -- "$TANDEM_PREFIXO_PADRAO")") return 0 ;;
+    esac
+    return 2
 }
 
 t_palavras_do_programa() {
