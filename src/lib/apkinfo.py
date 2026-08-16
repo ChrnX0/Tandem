@@ -143,6 +143,29 @@ def internos_cifrados(nomes):
     return [n for n in nomes if n.lower().endswith(".apk")]
 
 
+# The KEY=VALUE contract, defended HERE rather than assumed.
+#
+# The shell reads this output a line at a time. Everything printed below is
+# either a number this reader computed or a STRING THAT CAME OUT OF THE FILE -
+# and the file arrived from the internet, on a machine belonging to somebody
+# who is not a programmer.
+#
+# Whether a value can contain a newline is a property of the source format, not
+# of this reader: a .deb control file is line-based and cannot carry one, while
+# a PE import name, an RPM header string and an Android manifest string are all
+# length- or NUL-delimited and carry one perfectly well. Relying on the input
+# format to protect the output format is an accident waiting for the one format
+# that does not.
+#
+# So every value is cleaned on the way out. The asymmetry that made this
+# visible: the raw-exception path already did `.replace("\n", " ")` while the
+# data path, three lines below it, did not.
+def limpo(valor):
+    """A value that cannot forge a line, whatever the file said."""
+    texto = "%s" % valor
+    return "".join(" " if c in "\r\n" or ord(c) < 32 else c for c in texto)
+
+
 def main():
     if len(sys.argv) < 2:
         print("ERRO=uso")
@@ -171,7 +194,7 @@ def main():
                 # known from the name and the encryption is the whole verdict.
                 formato = {".xapk": "xapk", ".apks": "apks",
                            ".apkm": "apkm"}.get(ext, "apk")
-                print("FORMATO=%s" % formato)
+                print("FORMATO=%s" % limpo(formato))
                 print("PACOTE=")
                 print("MINSDK=")
                 print("ABIS=")
@@ -216,10 +239,10 @@ def main():
         print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
-    print("FORMATO=%s" % formato)
-    print("PACOTE=%s" % pacote)
-    print("MINSDK=%s" % (minsdk if minsdk is not None else ""))
-    print("ABIS=%s" % ",".join(abis))
+    print("FORMATO=%s" % limpo(formato))
+    print("PACOTE=%s" % limpo(pacote))
+    print("MINSDK=%s" % limpo((minsdk if minsdk is not None else "")))
+    print("ABIS=%s" % limpo(",".join(abis)))
     print("SPLITS=%d" % splits)
     print("OBB=%d" % obb)
     print("CIFRADO=%d" % cifrado)
