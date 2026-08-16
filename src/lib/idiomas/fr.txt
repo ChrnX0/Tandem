@@ -2008,6 +2008,28 @@ tandem dados salvar
 @bkp_nao_salvou
 Je n'ai pas pu enregistrer la sauvegarde.
 
+@rst_confirma_terminal
+Restaurer ? [o/N] 
+
+@sem_essa_pasta
+Le dossier {1} n'existe pas.
+Si c'est une clé USB, vérifiez qu'elle est branchée et que le nom est correct.
+
+@rst_nao_e_backup
+{1} n'est pas une sauvegarde Tandem.
+Le fichier s'ouvre bien, mais ce qu'il contient n'est pas un environnement Windows à moi : le mettre en place remplacerait le vôtre par autre chose. Rien n'a été modifié.
+
+@rst_backup_danificado
+{1} n'est pas arrivé en entier.
+C'est à cela que ressemble une copie interrompue en cours de route — le plus souvent une clé USB retirée pendant l'écriture. Ici rien n'a été modifié : votre environnement est tel qu'il était.
+
+@rst_sem_janela
+Restaurer remplace tout l'environnement Windows, et je n'ai pas de fenêtre pour vous le demander.
+
+Rien n'a été modifié. Lancez ceci dans le Terminal, où je peux poser la question :
+
+  tandem restore {1}
+
 @rst_nenhum_backup
 Aucune sauvegarde trouvee dans votre dossier personnel.
 
@@ -2346,8 +2368,8 @@ Tandem - lance des programmes Windows, des applis Android et des paquets Linux.
   tandem dados                montre vos fichiers dans Windows
   tandem dados salvar         copie SEULEMENT vos fichiers (rapide et petit)
   tandem dados restaurar [c]  remet vos fichiers depuis une copie
-  tandem backup               sauvegarde l'environnement Windows
-  tandem restore              restaure l'environnement Windows
+  tandem backup [ou]          sauvegarde l'environnement Windows (cle USB)
+  tandem restore [fichier]    restaure l'environnement Windows
   tandem protect <chemin>     protege un profil Wine contre les modifications
   tandem identidade           ce qu'un programme voit de votre machine (licences)
   tandem portas               TPE, balance, imprimante : sur quel COM ils sont

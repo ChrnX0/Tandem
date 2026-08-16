@@ -1968,6 +1968,28 @@ tandem dados salvar
 @bkp_nao_salvou
 No pude guardar la copia.
 
+@rst_confirma_terminal
+¿Restaurar? [s/N] 
+
+@sem_essa_pasta
+No existe la carpeta {1}.
+Si eso es un pendrive, comprueba que esté conectado y que el nombre sea correcto.
+
+@rst_nao_e_backup
+{1} no es una copia de seguridad de Tandem.
+Se abrió sin problemas, pero lo que hay dentro no es un entorno Windows mío, así que ponerlo en su lugar reemplazaría el tuyo por otra cosa. No se cambió nada.
+
+@rst_backup_danificado
+{1} no llegó entero.
+Así se ve una copia interrumpida a medias: casi siempre, un pendrive retirado mientras se estaba grabando. Aquí no se cambió nada: tu entorno está como estaba.
+
+@rst_sem_janela
+Restaurar reemplaza todo el entorno Windows, y no tengo ventana para preguntarte.
+
+No se cambió nada. Ejecuta esto en la Terminal, donde sí puedo preguntar:
+
+  tandem restore {1}
+
 @rst_nenhum_backup
 No se encontro ningun respaldo en su carpeta personal.
 
@@ -2300,8 +2322,8 @@ Tandem - ejecuta programas de Windows, apps de Android y paquetes de Linux.
   tandem dados                muestra tus archivos dentro de Windows
   tandem dados salvar         copia SOLO tus archivos (rapido y pequeno)
   tandem dados restaurar [c]  devuelve tus archivos desde una copia
-  tandem backup               guarda el entorno de Windows
-  tandem restore              restaura el entorno de Windows
+  tandem backup [donde]       guarda el entorno de Windows (en un pendrive)
+  tandem restore [archivo]    restaura el entorno de Windows
   tandem protect <ruta>       protege un perfil de Wine contra cambios
   tandem identidade           lo que un programa ve de tu maquina (licencias)
   tandem portas               pinpad, balanza, impresora: en que COM quedaron

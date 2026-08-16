@@ -1852,6 +1852,28 @@ tandem dados salvar
 @bkp_nao_salvou
 我没能保存备份。
 
+@rst_confirma_terminal
+要恢复吗？[y/N] 
+
+@sem_essa_pasta
+没有 {1} 这个文件夹。
+如果那是 U 盘，请检查它有没有插好，名字有没有写对。
+
+@rst_nao_e_backup
+{1} 不是 Tandem 的备份。
+文件本身能打开，但里面装的不是我的 Windows 环境。放上去会把您现在的换成别的东西。什么都没有改动。
+
+@rst_backup_danificado
+{1} 没有传完整。
+这就是复制到一半被打断的样子——多半是 U 盘还在写的时候被拔掉了。这边什么都没有改动：您的环境还是原样。
+
+@rst_sem_janela
+恢复会把整个 Windows 环境换掉，而我这边没有窗口可以问您。
+
+什么都没有改动。请在终端里运行下面这条，那样我就能问了：
+
+  tandem restore {1}
+
 @rst_nenhum_backup
 在您的主目录里没有找到备份。
 
@@ -2170,8 +2192,8 @@ Tandem - 运行 Windows 程序、Android 应用和 Linux 软件包。
   tandem dados                显示 Windows 里面属于您的文件
   tandem dados salvar         只备份您的文件（又快又小）
   tandem dados restaurar [c]  从备份里把您的文件放回去
-  tandem backup               备份整个 Windows 环境
-  tandem restore              恢复 Windows 环境
+  tandem backup [位置]        备份整个 Windows 环境（可存到 U 盘）
+  tandem restore [文件]       恢复 Windows 环境
   tandem protect <路径>       保护某个 Wine 环境不被改动
   tandem identidade           程序从您机器上看到什么（授权相关）
   tandem portas               刷卡机、电子秤、打印机：各自落在哪个 COM

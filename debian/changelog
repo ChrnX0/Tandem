@@ -1,3 +1,30 @@
+tandem (4.20) unstable; urgency=medium
+
+  * `tandem restore` produced ZERO BYTES and exit 1 on a machine with no
+    graphical session - the command that deletes the Windows environment,
+    saying nothing at all. t_pergunta is GUI-only by design (`t_tem_gui ||
+    return 1`) and never falls back to a terminal; the handlers all guard
+    their refusals with `t_tem_gui ||` for exactly this reason, and that audit
+    covered the handlers and not the CLI commands. Measured through the
+    project's own pty harness, which answered 13 bytes for `versao`, 1193 for
+    `doctor`, 504 for `backup` and 0 for `restore`.
+  * `tandem backup /media/pendrive/loja.tar.gz` DISCARDED the destination in
+    silence and wrote to $HOME. The whole point of a backup is getting it off
+    this machine, and the owner can unplug the drive believing the copy is on
+    it. `tandem restore /media/pendrive/loja.tar.gz` discarded the path too and
+    answered "No backup found in your home folder" while the owner was holding
+    the file. Both take a path now - which `tandem dados salvar` and `tandem
+    dados restaurar` already did, and the second of those even prints "If you
+    have the file, say where it is". The odd ones out were backup and restore.
+  * Allowing an arbitrary path made a pre-existing hazard reachable, so it is
+    closed in the same change: restore did `rm -rf` on the prefix BEFORE
+    reading the archive. A truncated backup - a pen drive pulled mid-copy - is
+    detectable first (`tar -tzf` exits 2 on one, measured), and the archive is
+    now checked, and checked for being a Tandem backup, before anything is
+    deleted.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 16 Aug 2026 19:00:00 +0000
+
 tandem (4.19) unstable; urgency=medium
 
   * A full disk was reported to the owner as "the program closed with an

@@ -316,10 +316,14 @@ acao_dados_restaurar() {
 }
 
 acao_backup() {
-    local p="$TANDEM_PREFIXO_PADRAO"
+    local p="$TANDEM_PREFIXO_PADRAO" pedido="${1:-}"
     [ -f "$p/system.reg" ] || { t_erro "$(t_msg bkp_sem_ambiente)"; return 1; }
     local dest
-    dest="$HOME/tandem-backup-$(date +%F-%H%M).tar.gz"
+    # WHERE THE OWNER SAID. This used to discard the argument in silence and
+    # write to $HOME, so somebody typing a pen-drive path got a file on the
+    # machine he was trying to copy off. See t_destino_arquivo.
+    dest="$(t_destino_arquivo "$pedido" "tandem-backup-$(date +%F-%H%M).tar.gz")" ||
+        { t_erro "$(t_msg sem_essa_pasta "$(dirname -- "$pedido")")"; return 1; }
     t_progresso_abre "$(t_msg bkp_salvando)"
     tar -C "$(dirname -- "$p")" -czf "$dest" "$(basename -- "$p")" 2>>"$LOG"
     local c=$?
@@ -330,11 +334,37 @@ acao_backup() {
 }
 
 acao_restore() {
-    local arq
-    arq="$(ls -1t "$HOME"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
-    [ -n "$arq" ] || { t_erro "$(t_msg rst_nenhum_backup)"; return 1; }
-    t_pergunta "$(t_msg rst_pergunta "$(basename -- "$arq")")" \
-        "$(t_msg botao_restaurar)" "$(t_msg botao_cancelar)" || return 1
+    local arq="${1:-}"
+    # A PATH, when the owner gives one. Without this the argument was thrown
+    # away and the answer was "no backup found in your home folder" while he
+    # was holding the file and pointing at it.
+    if [ -n "$arq" ]; then
+        [ -f "$arq" ] || { t_erro "$(t_msg arquivo_sumiu "$arq")"; return 1; }
+    else
+        arq="$(ls -1t "$HOME"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
+        [ -n "$arq" ] || { t_erro "$(t_msg rst_nenhum_backup)"; return 1; }
+    fi
+    # BEFORE the rm -rf below, not after it. A truncated archive used to leave
+    # the environment deleted and half rebuilt, and tar can say so first.
+    t_backup_valido "$arq"
+    case $? in
+        2) t_erro "$(t_msg rst_nao_e_backup "$(basename -- "$arq")")"; return 1 ;;
+        1) t_erro "$(t_msg rst_backup_danificado "$(basename -- "$arq")")"; return 1 ;;
+    esac
+    # A refusal with a window means the owner said no, and silence is right.
+    # A refusal with NO window means nobody was asked - and this command
+    # produced ZERO BYTES and exit 1 on a machine without a graphical session,
+    # which is the shape every handler was audited for. The CLI commands were
+    # not in that audit. Asking in the terminal is the first half of the fix:
+    # answering "run this in the Terminal" TO somebody who is already in one
+    # was the second attempt, and it was no better than the silence.
+    t_pergunta_ou_terminal "$(t_msg rst_pergunta "$(basename -- "$arq")")" \
+        "$(t_msg botao_restaurar)" "$(t_msg botao_cancelar)" \
+        "$(t_msg rst_confirma_terminal)"
+    case $? in
+        1) return 1 ;;
+        2) t_erro "$(t_msg rst_sem_janela "$arq")"; return 1 ;;
+    esac
     # Before swapping the whole environment, save what cannot be remade.
     # Without this the command gave back last week's environment and took the
     # month's sales along with it - silently, and with no chance to undo.
@@ -1566,8 +1596,8 @@ case "${1:-}" in
     autoteste|autotest)   acao_autoteste ;;
     repair|consertar)     exec "$TANDEM_BIN"/tandem-repair ;;
     dados|meus-dados)     shift; acao_dados "$@" ;;
-    backup)               acao_backup ;;
-    restore|restaurar)    acao_restore ;;
+    backup)               shift; acao_backup "${1:-}" ;;
+    restore|restaurar)    shift; acao_restore "${1:-}" ;;
     protect|proteger)     shift; acao_protect "$@" ;;
     identidade|fingerprint) acao_identidade ;;
     portas|ports)         shift; acao_portas "$@" ;;

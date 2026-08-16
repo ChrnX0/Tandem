@@ -1961,6 +1961,28 @@ tandem dados salvar
 @bkp_nao_salvou
 Não consegui salvar o backup.
 
+@rst_confirma_terminal
+Restaurar? [s/N] 
+
+@sem_essa_pasta
+Não existe a pasta {1}.
+Se isso é um pendrive, veja se ele está espetado e se o nome está certo.
+
+@rst_nao_e_backup
+{1} não é um backup do Tandem.
+Ele abriu direitinho, mas o que tem dentro não é um ambiente Windows meu — colocar isso no lugar trocaria o seu por outra coisa. Nada foi mexido.
+
+@rst_backup_danificado
+{1} não chegou inteiro.
+É a cara de uma cópia interrompida no meio — pendrive tirado antes de terminar de gravar, na maioria das vezes. Aqui nada foi mexido: seu ambiente está como estava.
+
+@rst_sem_janela
+Restaurar troca o ambiente Windows inteiro, e não tenho janela para perguntar.
+
+Nada foi mexido. Rode isto no Terminal, onde eu consigo perguntar:
+
+  tandem restore {1}
+
 @rst_nenhum_backup
 Nenhum backup encontrado na sua pasta pessoal.
 
@@ -2294,8 +2316,8 @@ Tandem - roda programas Windows, apps Android e pacotes do Linux.
   tandem dados                mostra os seus arquivos dentro do Windows
   tandem dados salvar         copia SO os seus arquivos (rapido e pequeno)
   tandem dados restaurar [c]  devolve os seus arquivos de uma copia
-  tandem backup               salva o ambiente Windows
-  tandem restore              restaura o ambiente Windows
+  tandem backup [onde]        salva o ambiente Windows (num pendrive, p.ex.)
+  tandem restore [arquivo]    restaura o ambiente Windows
   tandem protect <caminho>    protege um perfil Wine contra alteracoes
   tandem identidade           o que o programa ve da sua maquina (licenca)
   tandem portas               pinpad, balanca, impressora: em que COM ficaram
