@@ -343,6 +343,7 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem dados` | show **your** files inside Windows |
 | `tandem backup` · `tandem restore` | save and restore the whole environment |
 | `tandem protect <path>` | mark a Wine prefix untouchable |
+| `tandem tema [which]` | appearance of Tandem's own windows — `sistema` (default) or `escuro` |
 | `tandem idioma [code]` | which language Tandem speaks — `pt_BR` `en` `es` `fr` `zh_CN` `hi` `ar` |
 | `tandem identidade` | what a program reads about this machine when it locks a licence to it |
 | `tandem portas` | which COM the pinpad, scale or printer landed on — and how to move it |

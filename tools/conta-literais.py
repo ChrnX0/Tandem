@@ -64,6 +64,41 @@ EXCECOES = {
     "CodeMeter",
     # systemd unit and service names, matched against the running system.
     "waydroid-container",
+    # freedesktop ICON NAMES, looked up against the machine's icon theme. They
+    # are identifiers in somebody else's namespace - translating one finds no
+    # icon at all - and nobody ever reads them: t_icone_caminho turns each into
+    # a path, and a name that resolves to nothing makes the whole image column
+    # go away rather than draw a broken square.
+    "document-open",
+    "applications-system",
+    "phone",
+    "system-software-install",
+    "edit-delete",
+    "folder-documents",
+    "drive-removable-media",
+    "document-revert",
+    "dialog-information",
+    "view-more-horizontal",
+    "emblem-system",
+    "network-transmit-receive",
+    "dialog-password",
+    "preferences-system",
+    "document-open-recent",
+    "mail-send",
+    "help-browser",
+    "text-x-generic",
+    "go-previous",
+    # The two navigation tokens of the panel. Same category as the sixteen
+    # command tokens beside them - the value the hidden column RETURNS and the
+    # code switches on, never a word anybody reads. Listed one by one rather
+    # than exempting t_painel_lista wholesale, because two of that function's
+    # three arguments per row ARE prose and must stay catchable.
+    "mais",
+    "voltar",
+    # The theme's own name, matched by GTK against the folder this package
+    # ships. Not prose: a translated one loads nothing and the windows quietly
+    # keep the system look.
+    "TandemEscuro",
     # An on-disk value, not prose. Rule: translating one of these breaks
     # compatibility with memory files already written on somebody's machine.
     "sim",
@@ -569,12 +604,16 @@ def sem_linhas_de_log(corpo):
 #   t_como_root / t_script_instalacao  the argument is a shell script that gets
 #       EXECUTED. "apt-get install -y" is not a sentence.
 #   grep / sed / awk  the argument is a program for another tool.
+#   t_tema_amigavel  the argument is the on-disk value of a setting, and this
+#       function exists precisely to turn it into a word before it is shown -
+#       the same split t_resultado_amigavel makes for the memory file. Passing
+#       it a translated value would look up nothing.
 #
 # The commands are blanked with spaces rather than deleted, so every offset in
 # the file stays where it was and the comment and log rules keep working.
 DESTINO_NAO_HUMANO = re.compile(
     r"(?:^|[\s;(){}&|])(t_memoria_grava|t_config_grava|t_como_root"
-    r"|t_script_instalacao|grep|sed|awk)\s")
+    r"|t_script_instalacao|t_tema_amigavel|grep|sed|awk)\s")
 
 
 def sem_destinos_nao_humanos(corpo):

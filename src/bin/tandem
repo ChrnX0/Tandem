@@ -1492,30 +1492,43 @@ acao_painel() {
         # The VERSION goes in the title, and the reason is the owner's: to find
         # out which Tandem he is running he had to open a terminal - the exact
         # thing this program exists to spare him.
-        esc="$(zenity --list --title="Tandem $VERSAO" --width=560 --height=430 \
-            --text="$(t_msg pan_pergunta)" \
-            --column="$(t_msg pan_col_acao)" \
-            --column="$(t_msg pan_col_descricao)" --hide-header \
-            --hide-column=1 --print-column=1 \
-            "instalar"   "$(t_msg pan_instalar)" \
-            "preparar"   "$(t_msg pan_preparar)" \
-            "programas"  "$(t_msg pan_programas)" \
-            "remover"    "$(t_msg pan_remover)" \
-            "android"    "$(t_msg pan_android)" \
-            "doctor"     "$(t_msg pan_doctor)" \
-            "autoteste"  "$(t_msg pan_autoteste)" \
-            "dados"      "$(t_msg pan_dados)" \
-            "portas"     "$(t_msg pan_portas)" \
-            "identidade" "$(t_msg pan_identidade)" \
-            "backup"     "$(t_msg pan_backup)" \
-            "restore"    "$(t_msg pan_restore)" \
-            "repair"     "$(t_msg pan_repair)" \
-            "memoria"    "$(t_msg pan_memoria)" \
-            "lista"      "$(t_msg pan_lista)" \
-            "enviar"     "$(t_msg pan_enviar)" \
-            "socorro"    "$(t_msg pan_socorro)" \
-            "logs"       "$(t_msg pan_logs)" \
-            2>/dev/null)" || return 0
+        # TWO SCREENS, AND THE SAME EIGHTEEN COMMANDS. Eighteen rows of equally
+        # weighted prose is a wall, and only eight of them fitted the window -
+        # with nothing saying the other ten existed. But shortening the list by
+        # DROPPING commands would take function away from the one person who
+        # cannot get it back from a terminal, which is the whole audience of
+        # this screen. So: the things a shop does, then one row that opens the
+        # rest. Both screens get the same care; the second is not a basement.
+        if [ "${PAINEL_NIVEL:-1}" = 2 ]; then
+            esc="$(t_painel_lista "$(t_msg pan_pergunta_mais)" \
+                "autoteste"  "$(t_msg pan_autoteste)"  "emblem-system" \
+                "portas"     "$(t_msg pan_portas)"     "network-transmit-receive" \
+                "identidade" "$(t_msg pan_identidade)" "dialog-password" \
+                "repair"     "$(t_msg pan_repair)"     "preferences-system" \
+                "memoria"    "$(t_msg pan_memoria)"    "document-open-recent" \
+                "lista"      "$(t_msg pan_lista)"      "network-transmit-receive" \
+                "enviar"     "$(t_msg pan_enviar)"     "mail-send" \
+                "socorro"    "$(t_msg pan_socorro)"    "help-browser" \
+                "logs"       "$(t_msg pan_logs)"       "text-x-generic" \
+                "voltar"     "$(t_msg pan_voltar)"     "go-previous")" || {
+                PAINEL_NIVEL=1; continue; }
+        else
+            esc="$(t_painel_lista "$(t_msg pan_pergunta)" \
+                "instalar"   "$(t_msg pan_instalar)"   "document-open" \
+                "programas"  "$(t_msg pan_programas)"  "applications-system" \
+                "android"    "$(t_msg pan_android)"    "phone" \
+                "preparar"   "$(t_msg pan_preparar)"   "system-software-install" \
+                "remover"    "$(t_msg pan_remover)"    "edit-delete" \
+                "dados"      "$(t_msg pan_dados)"      "folder-documents" \
+                "backup"     "$(t_msg pan_backup)"     "drive-removable-media" \
+                "restore"    "$(t_msg pan_restore)"    "document-revert" \
+                "doctor"     "$(t_msg pan_doctor)"     "dialog-information" \
+                "mais"       "$(t_msg pan_mais)"       "view-more-horizontal")" || return 0
+        fi
+        case "$esc" in
+            mais)   PAINEL_NIVEL=2; continue ;;
+            voltar) PAINEL_NIVEL=1; continue ;;
+        esac
         case "$esc" in
             instalar)
                 local f
@@ -1549,6 +1562,31 @@ acao_painel() {
             *)        return 0 ;;
         esac
     done
+}
+
+# ------------------------------------------------------------------- tema
+#
+# The look is the owner's choice, with the system as the default. A shop
+# machine set up in the light, running a Tandem that forces itself dark, is
+# worse than plain - it looks broken. Same shape as `tandem idioma`: it is
+# asked for, never assumed.
+acao_tema() {
+    local q="${1:-}"
+    case "$q" in
+        "")  t_texto "$(t_msg tema_agora "$(t_tema_amigavel "$(t_tema_escolhido)")")" <<< \
+                 "$(t_msg tema_agora "$(t_tema_amigavel "$(t_tema_escolhido)")")
+
+$(t_msg tema_uso)"
+             return 0 ;;
+        sistema|system|padrao|default)
+             t_config_grava TEMA sistema
+             t_ok "$(t_msg tema_trocado "$(t_tema_amigavel sistema)")" ;;
+        escuro|dark)
+             t_config_grava TEMA escuro
+             t_ok "$(t_msg tema_trocado "$(t_tema_amigavel escuro)")" ;;
+        *)   t_erro "$(t_msg tema_uso)"; return 1 ;;
+    esac
+    return 0
 }
 
 # ------------------------------------------------------------------ main
@@ -1606,6 +1644,7 @@ case "${1:-}" in
     autoteste|autotest)   acao_autoteste ;;
     repair|consertar)     exec "$TANDEM_BIN"/tandem-repair ;;
     dados|meus-dados)     shift; acao_dados "$@" ;;
+    tema|aparencia|theme) shift; acao_tema "${1:-}" ;;
     backup)               shift; acao_backup "${1:-}" ;;
     restore|restaurar)    shift; acao_restore "${1:-}" ;;
     protect|proteger)     shift; acao_protect "$@" ;;

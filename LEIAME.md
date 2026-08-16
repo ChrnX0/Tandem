@@ -321,6 +321,7 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem dados` | mostra os **seus** arquivos dentro do Windows |
 | `tandem backup` · `tandem restore` | salva e restaura o ambiente inteiro |
 | `tandem protect <caminho>` | marca um perfil Wine como intocável |
+| `tandem tema [qual]` | aparência das janelas do Tandem — `sistema` (padrão) ou `escuro` |
 | `tandem idioma [código]` | em que idioma o Tandem fala — `pt_BR` `en` `es` `fr` `zh_CN` `hi` `ar` |
 | `tandem identidade` | o que um programa lê desta máquina quando amarra a licença a ela |
 | `tandem portas` | em que COM o pinpad, a balança ou a impressora caíram — e como mudar |

@@ -2445,6 +2445,35 @@ Désactivé. Rien ne quitte cette machine.
 
   Verifiez l'environnement avec :  tandem doctor
 
+@pan_mais
+Autres choses (ports, journaux, aide…)
+
+@pan_voltar
+Retour
+
+@pan_pergunta_mais
+Autres choses que Tandem sait faire :
+
+@tema_uso
+Apparence. Dites laquelle :
+
+  tandem tema sistema   suit l'ordinateur (c'est le réglage d'origine)
+  tandem tema escuro    le sombre propre à Tandem
+
+Cela ne change que les fenêtres de Tandem. Rien d'autre sur cet ordinateur.
+
+@tema_nome_sistema
+celle de l'ordinateur
+
+@tema_nome_escuro
+Sombre de Tandem
+
+@tema_agora
+Apparence actuelle : {1}
+
+@tema_trocado
+Apparence changée en : {1}
+
 @pan_pergunta
 Que voulez-vous faire ?
 

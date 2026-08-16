@@ -2266,6 +2266,35 @@ Tandem 会把它学到的东西发到社区清单。
 
   用这个检查环境：  tandem doctor
 
+@pan_mais
+其他（端口、记录、求助…）
+
+@pan_voltar
+返回
+
+@pan_pergunta_mais
+Tandem 还能做这些：
+
+@tema_uso
+外观。请说要哪一种：
+
+  tandem tema sistema   跟随电脑（出厂就是这样）
+  tandem tema escuro    Tandem 自己的深色
+
+只改 Tandem 的窗口。这台电脑上别的都不变。
+
+@tema_nome_sistema
+电脑自己的
+
+@tema_nome_escuro
+Tandem 深色
+
+@tema_agora
+当前外观：{1}
+
+@tema_trocado
+外观已改为：{1}
+
 @pan_pergunta
 您想做什么？
 
