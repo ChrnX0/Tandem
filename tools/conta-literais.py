@@ -94,6 +94,23 @@ EXCECOES = {
     "BIOS", "LPT$n", "COM$n",
     # A charmap name, compared against `locale charmap` output.
     "UTF-8",
+    # The four the SIXTEENTH miss uncovered when printfs_com_prosa was finally
+    # let into the handler executables. None is a sentence, and each is a
+    # decision rather than a shape:
+    #
+    # The freedesktop section header of mimeapps.list. This is ON-DISK FORMAT,
+    # written into the user's own file and grepped back out two lines later -
+    # translating it would produce a file no desktop reads, which is the same
+    # rule the memory-file values live under.
+    "[Default Applications]\\n",
+    "\\n[Default Applications]\\n",
+    # A product name, and the fallback printed when `wine --version` says
+    # nothing. A translated product name is a name that finds nothing.
+    "Wine",
+    # The command the owner COPIES. It is shown to him, but as something to
+    # type rather than something to read, and winetricks does not accept a
+    # translated verb or a translated flag.
+    "winetricks -q %s\\n",
     # A systemd unit pair, queried with systemctl.
     "CodeMeter CodeMeterLin",
     # The port label with its device path, one field of a report line.
@@ -282,19 +299,60 @@ def corpos_de_mensagem(texto):
                     break
 
 
-def printfs_com_prosa(texto):
+def printfs_com_prosa(texto, tudo=False):
+    """SIXTEENTH miss, and it is the thirteenth's twin left in the sibling.
+
+    The thirteenth was that the prose-body rule keys off function names while
+    the eleven handler executables define none, so both this rule and
+    citadas_com_prosa were dead code inside them. Only citadas_com_prosa got
+    the `tudo` fix; this one kept walking corpos_de_mensagem and stayed blind
+    in exactly the files the fix was written for.
+
+    What that left uncovered is narrow and real: citadas_com_prosa subsumes the
+    double-quoted half, so the gap is a SINGLE-QUOTED printf format at the top
+    level of a handler. Proven by injection rather than by reading - a
+    `printf 'Associacoes reaplicadas com sucesso\\n'` put at the top of
+    tandem-repair scored TOTAL 0.
+    """
     achados = []
-    for _nome, corpo in corpos_de_mensagem(texto):
+    corpos = ([("(arquivo)", texto)] if tudo
+              else list(corpos_de_mensagem(texto)))
+    for _nome, corpo in corpos:
+        # The cleaning is what makes `tudo` safe, and leaving it out is how the
+        # first version of this widening INVENTED twelve findings: a
+        # mimeapps.list section header, eight .desktop filenames, a product
+        # name and a winetricks command line. Scoped to a t_texto_*/acao_* body
+        # every printf is prose by construction and no filter was needed; over
+        # a whole handler it is not, because the same file also writes files
+        # and runs commands. A tool that invents findings is worse than one
+        # that misses them - somebody has to prove each one is nothing.
+        if tudo:
+            corpo = sem_destinos_nao_humanos(sem_linhas_de_log(corpo))
         for padrao in (PRINTF, PRINTF_ARG):
             for m in padrao.finditer(corpo):
-                if BINARIO.search(m.group(1)):
+                bruto = m.group(1)
+                if tudo:
+                    # Over a whole handler the crude test below is not enough:
+                    # it reported a mimeapps.list section header, eight
+                    # .desktop filenames, a product name and a winetricks
+                    # command line. These are the SAME two gates
+                    # citadas_com_prosa applies, and they have to be applied
+                    # here for the same reason - the widened scope sees the
+                    # file writes and the command lines too.
+                    if bruto in EXCECOES or bruto.strip() in EXCECOES:
+                        continue
+                    if not _e_prosa(bruto):
+                        continue
+                    achados.append(bruto)
                     continue
-                resto = FORMATO.sub("", m.group(1))
+                if BINARIO.search(bruto):
+                    continue
+                resto = FORMATO.sub("", bruto)
                 resto = sem_expansoes(resto).strip()
                 # Three letters in a row is a word. One or two are a unit, an
                 # initial, or the tail of an escape.
                 if re.search(r"[^\W\d_]{3,}", resto, re.UNICODE):
-                    achados.append(m.group(1))
+                    achados.append(bruto)
     return achados
 
 
@@ -630,7 +688,8 @@ def literais(caminho):
     # has no functions: the file IS the body. That is a rule about which files,
     # not about which syntax - and syntax is what failed twelve times.
     tudo = caminho.name.startswith("tandem-")
-    todos = (achados + printfs_com_prosa(texto) + heredocs_com_prosa(texto)
+    todos = (achados + printfs_com_prosa(texto, tudo=tudo)
+             + heredocs_com_prosa(texto)
              + citadas_com_prosa(texto, tudo=tudo)
              + chamadas_com_prosa(texto))
     vistos = set()

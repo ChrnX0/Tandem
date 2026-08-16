@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1668397178 4083" "$soma_esperados"
+      "1506807321 4103" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "406821495 2443" "$soma_padroes"
 
@@ -1814,6 +1814,31 @@ FIM
           "2" "$(conta_isca "$ISCA_H")"
     equal "and the same bytes in a library file are not, which is the rule" \
           "0" "$(conta_isca "$TMPROOT/isca-lib.sh")"
+
+    # MISS SIXTEEN: the thirteenth's twin, left in the sibling. Only
+    # citadas_com_prosa got the `tudo` fix, so printfs_com_prosa kept walking
+    # function bodies and stayed blind in the very files the fix was written
+    # for. citadas subsumes the double-quoted half, so what survived was
+    # exactly this - a SINGLE-QUOTED printf format at the top level of a
+    # handler, which scored TOTAL 0 with a Portuguese sentence in it.
+    printf "printf 'Associacoes reaplicadas com sucesso\\\\n'\n" > "$ISCA_H"
+    equal "a single-quoted printf of prose, at a handler's top level, is counted" \
+          "1" "$(conta_isca "$ISCA_H")"
+
+    # And the half that keeps it usable. Widening the scope without the two
+    # gates citadas_com_prosa already applied made this tool INVENT twelve
+    # findings on the real tree - a mimeapps.list section header, eight
+    # .desktop filenames, a product name and a winetricks command line. A tool
+    # that invents findings is worse than one that misses them, because
+    # somebody has to spend an afternoon proving each one is nothing.
+    cat > "$ISCA_H" <<'FIMP'
+printf '[Default Applications]\n' > "$ALVO"
+printf 'tandem-exe.desktop\n' >> "$ALVO"
+printf 'winetricks -q %s\n' "$v"
+printf 'Isto aqui o dono le mesmo\n'
+FIMP
+    equal "a file format, a filename and a command line are not prose; the sentence is" \
+          "1" "$(conta_isca "$ISCA_H")"
 
     # The destination rules, which are what keeps the widened scope usable: an
     # on-disk value and an executed script are not prose, and they are excluded
@@ -3917,6 +3942,72 @@ for caso in \
     fi
 done
 
+section "the other side of that branch: a REAL terminal"
+
+# sem_ninguem above covers one half of `[ -t 0 ]` - nobody there at all. TEN
+# places in this tree branch on it (the confirmation prompt of five handlers,
+# t_texto's read of standard input, the sudo path), and until now the suite
+# could reach NONE of the terminal half: env -i with no tty is the other side
+# of every one of those ifs. The half that was unmeasured is the fallback that
+# exists so that no path ends in silence.
+#
+# tests/terminal.py is stdlib-only on purpose - expect and unbuffer are not on
+# a bare runner, and a test that skips itself on CI is a test that never runs.
+if python3 -c "import pty, select" 2>/dev/null; then
+    TTY_SH="$TMPROOT/instalador-tty.sh"
+    printf '#!/bin/sh\necho "RODOU-DE-VERDADE"\n' > "$TTY_SH"
+    chmod +x "$TTY_SH"
+    num_terminal() {
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_CONFIG="$TMPROOT/tty-cfg" \
+        TANDEM_DADOS="$TMPROOT/tty-dados" TANDEM_IDIOMA_FORCADO="$1" \
+            python3 "$ROOT/tests/terminal.py" "$2" \
+                bash "$ROOT/src/bin/tandem-script" "$TTY_SH" 2>&1
+    }
+    mkdir -p "$TMPROOT/tty-cfg" "$TMPROOT/tty-dados"
+
+    # The harness has to give a REAL terminal, or every assertion below passes
+    # while measuring the pipe it was written to replace.
+    equal "the harness really does hand the child a terminal on all three fds" \
+          "0 1 2" "$(python3 "$ROOT/tests/terminal.py" "" bash -c \
+                     'for n in 0 1 2; do [ -t $n ] && printf "%s " $n; done' |
+                     tr -s ' ' | sed 's/ $//')"
+
+    # A REFUSAL at a terminal must be a sentence. Three refusal paths in these
+    # handlers once exited 0 with zero bytes, and this is the side of the
+    # branch that was never walked.
+    recusa="$(num_terminal pt_BR n)"
+    naocontem "refusing at a terminal does not run the installer" \
+              "RODOU-DE-VERDADE" "$recusa"
+    if [ -n "$recusa" ]; then
+        pass "and it says so, rather than exiting quietly"
+    else
+        fail "and it says so, rather than exiting quietly" "uma frase" "zero bytes"
+    fi
+
+    # t_confirmou, at a real prompt, for the first time. The defect it was
+    # written for is documented: five handlers printed [y/N] from the
+    # catalogue and then matched only s|S|sim|SIM, so an English owner did
+    # exactly what the screen asked, typed y, and was told it was cancelled -
+    # on the two paths where the alternative is being told nothing happened.
+    for _par in "en y" "en s" "pt_BR s" "pt_BR y" "fr o" "fr y"; do
+        set -- $_par
+        if printf '%s' "$(num_terminal "$1" "$2")" | grep -q "RODOU-DE-VERDADE"; then
+            pass "in $1, answering '$2' at a real prompt means yes"
+        else
+            fail "in $1, answering '$2' at a real prompt means yes" \
+                 "o instalador roda" "foi recusado"
+        fi
+    done
+    # And the other way round, or "accepts everything" would pass all six above.
+    for _par in "en n" "pt_BR n" "fr n"; do
+        set -- $_par
+        naocontem "in $1, answering 'n' still refuses" \
+                  "RODOU-DE-VERDADE" "$(num_terminal "$1" "$2")"
+    done
+else
+    skip "the terminal half of [ -t 0 ]" "this python has no pty module"
+fi
+
 section "community list (modelled on filter lists)"
 
 PROG_L="$ARTIFACTS/prog64.exe"
@@ -3943,6 +4034,54 @@ equal "the machine count comes along" "340" "$(t_lista_maquinas "$ID_L")"
   printf '%s\t64\tvcrun2022\t-\tso-abriu\t9\t2026-08\t-\n' "$ID_L"
 } > "$TANDEM_LISTA"
 equal "an unconfirmed lesson is not suggested" "" "$(t_lista_consulta "$PROG_L" 2>/dev/null)"
+
+# FOUR silences, and until 4.16 they were one. Answering 1 to all of them
+# meant whoever is helping could not tell a machine that never downloaded the
+# file from a program the world genuinely knows nothing about - and the log
+# said nothing at all, so there was not even a trail to read.
+codigo_lista() { t_lista_consulta "$PROG_L" >/dev/null 2>&1; printf '%s' "$?"; }
+
+TANDEM_LISTA_ANTES="$TANDEM_LISTA"
+export TANDEM_LISTA="$TMPROOT/lista-que-nao-existe.tsv"
+rm -f "$TANDEM_LISTA"
+equal "no list downloaded here answers 2, not the same 1 as everything else" \
+      "2" "$(codigo_lista)"
+export TANDEM_LISTA="$TANDEM_LISTA_ANTES"
+
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf 'outro-id-qualquer\t64\tvcrun2022\t-\tconfirmado\t400\t2026-08\t-\n'
+} > "$TANDEM_LISTA"
+equal "a list that has never heard of this program answers 3" "3" "$(codigo_lista)"
+
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf '%s\t64\tvcrun2022\t-\tso-abriu\t9\t2026-08\t-\n' "$ID_L"
+} > "$TANDEM_LISTA"
+equal "known, but with no lesson worth passing on, answers 4" "4" "$(codigo_lista)"
+
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf '%s\t64\tvcrun2022\t-\tconfirmado\t400\t2026-08\t-\n' "$ID_L"
+} > "$TANDEM_LISTA"
+equal "and a usable lesson still answers 0, with the verbs" "0" "$(codigo_lista)"
+
+# The identity is matched as a FIELD. A substring hit anywhere else in the row
+# would answer "the list knows this program" about a different one entirely.
+{
+  printf '# TANDEM-LISTA 1\n'
+  printf 'outro\t64\tvcrun2022\t%s\tconfirmado\t400\t2026-08\t-\n' "$ID_L"
+} > "$TANDEM_LISTA"
+equal "the fingerprint appearing in another column is not a match" \
+      "3" "$(codigo_lista)"
+
+# Every code has a sentence, and none of them is the code itself. A new code
+# added without one would print "sem resposta", which is the shape this
+# project keeps finding: a rich verdict whose caller kept a boolean.
+for _c in 1 2 3 4; do
+    naocontem "code $_c has a sentence of its own, not a number" \
+              "sem resposta" "$(t_lista_porque_calou "$_c")"
+done
 
 # ------------------------------------------------------------------
 # Several rows about the SAME file. This is the normal shape of a merged list,
@@ -5486,6 +5625,38 @@ else
                 "a new entry for a version that is not out yet" \
                 "v$VERSAO_DEB is published and its changelog entry has been edited since" ;;
         *) skip "$NOME_PUB" "the tag v$VERSAO_DEB is here but its objects are not" ;;
+    esac
+fi
+
+# THE SAME DEFECT FROM THE OTHER SIDE, and the guard above cannot see it: it
+# asks whether the published entry was EDITED, so a commit that changes shipped
+# code and leaves the changelog alone passes it cleanly. Its own comment says a
+# doc-only commit after a release passes - and it has no way to tell doc-only
+# from code.
+#
+# That is how this was found, by the owner asking "so your work is done?" while
+# three commits of new behaviour (four exit codes, a new function, a new log
+# line) sat in src/ under a version number the public already had, with no
+# entry describing any of it. Nothing in the tree objected.
+#
+# So: if this version is published AND anything that goes inside the .deb has
+# moved since that tag, the version has to be opened. Same skips as above,
+# for the same reason - a guard that stops a good release for lack of
+# information is worse than the drift it was written for.
+NOME_COD="shipped code has not moved since this version was published"
+if ! git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 ||
+   [ -z "$(git -C "$ROOT" tag 2>/dev/null | head -1)" ]; then
+    skip "$NOME_COD" "no tags here, so what is published cannot be known"
+elif ! git -C "$ROOT" rev-parse -q --verify "refs/tags/v$VERSAO_DEB" >/dev/null 2>&1; then
+    pass "$NOME_COD"
+else
+    git -C "$ROOT" diff --quiet "refs/tags/v$VERSAO_DEB" -- src man debian/postinst debian/postrm 2>/dev/null
+    case $? in
+        0) pass "$NOME_COD" ;;
+        1) fail "$NOME_COD" \
+                "open the next version before changing what ships" \
+                "v$VERSAO_DEB is published and src/ has moved since: $(git -C "$ROOT" diff --name-only "refs/tags/v$VERSAO_DEB" -- src man debian/postinst debian/postrm 2>/dev/null | tr '\n' ' ')" ;;
+        *) skip "$NOME_COD" "the tag v$VERSAO_DEB is here but its objects are not" ;;
     esac
 fi
 

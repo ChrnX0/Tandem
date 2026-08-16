@@ -1,3 +1,24 @@
+tandem (4.16) unstable; urgency=medium
+
+  * The community list had FOUR silences and answered 1 to all of them.
+    t_lista_consulta returned the same failure for "this file could not be
+    fingerprinted", "no list has been downloaded on this machine", "the list is
+    here and has never heard of this program" and "it knows the program and no
+    lesson in it is worth passing on". Those are four different facts about a
+    shop, and the caller only tested whether TEXT came back - so all four left
+    nothing in the log either. A path that helps nobody and says nothing about
+    why is the failure this project exists to remove, arriving on the inside.
+  * Splitting them turned up a real defect. Deciding "does the list know this
+    program" needed a lookup that did not exist, and the obvious grep would have
+    matched the fingerprint in ANY column - so the same sha256 sitting in the
+    failed-verbs field would answer about a different program entirely. It is an
+    exact field-1 match, with a test that puts the fingerprint in column 4.
+  * Nothing new reaches the owner's screen: the run carries on into the normal
+    detector loop whatever the list says, so there is nothing for him to do
+    about any of the four. The log is the audience.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 16 Aug 2026 02:20:00 +0000
+
 tandem (4.15) unstable; urgency=medium
 
   * "1 minuto(s)" is what a program says when it cannot count, and nine
