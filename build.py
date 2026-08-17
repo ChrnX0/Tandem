@@ -37,6 +37,16 @@ LAYOUT = [
     ("usr/bin/tandem-flatpak",   "bin/tandem-flatpak",   0o755),
     ("usr/bin/tandem-snap",      "bin/tandem-snap",      0o755),
     ("usr/bin/tandem-script",    "bin/tandem-script",    0o755),
+    # The look, and ONLY for Tandem's own windows. It goes under our own tree
+    # rather than /usr/share/themes because a theme installed there shows up in
+    # the owner's theme picker as something he did not ask for - measured: a
+    # theme in a private directory loads fine through XDG_DATA_DIRS + GTK_THEME.
+    # Both GTK versions ship: zenity is GTK4 here (4.0.1) and GTK3 on older
+    # machines, and the wrong one is ignored in silence.
+    ("usr/share/tandem/temas/themes/TandemEscuro/gtk-4.0/gtk.css",
+     "temas/themes/TandemEscuro/gtk-4.0/gtk.css", 0o644),
+    ("usr/share/tandem/temas/themes/TandemEscuro/gtk-3.0/gtk.css",
+     "temas/themes/TandemEscuro/gtk-3.0/gtk.css", 0o644),
     ("usr/lib/tandem/common.sh",   "lib/common.sh",   0o644),
     ("usr/lib/tandem/winedeps.sh", "lib/winedeps.sh", 0o644),
     # The public half of the list signing key. Public by definition - it is in

@@ -2841,7 +2841,8 @@ contem "the report still names the product without translating it" \
 # person reads has to come from the catalogue in every language, while the action
 # column - which "case $esc in" matches - has to stay Portuguese on every
 # machine, or a command copied off a forum stops working.
-PAINEL_CORPO="$(sed -n '/^acao_painel()/,/^}/p' "$ROOT/src/bin/tandem")"
+PAINEL_CORPO="$(sed -n '/^acao_painel()/,/^}/p' "$ROOT/src/bin/tandem"
+                 sed -n '/^t_painel_lista()/,/^}/p' "$ROOT/src/lib/common.sh")"
 for chave in pan_pergunta pan_instalar pan_doctor pan_portas pan_logs \
              pan_escolha_arquivo pan_filtro_programas pan_filtro_todos; do
     contem "the panel reads '$chave' from the catalogue" \
@@ -7511,10 +7512,14 @@ rm -rf "$ALARME"
 #    sees. It showed the internal command name as its first, leftmost column -
 #    "identidade", "restore", "autoteste" - and showed no version at all, so
 #    finding out which Tandem he had meant opening a terminal.
-PAINEL="$(sed -n '/^acao_painel()/,/^}/p' "$ROOT/src/bin/tandem")"
-contem "the panel names its own version" '--title="Tandem $VERSAO"' "$PAINEL"
+PAINEL="$(sed -n '/^acao_painel()/,/^}/p' "$ROOT/src/bin/tandem"
+            sed -n '/^t_painel_lista()/,/^}/p' "$ROOT/src/lib/common.sh")"
+# TANDEM_VERSAO and not VERSAO: the window is built in common.sh now, where
+# the short name does not exist. The point of the assertion is unchanged - the
+# owner must be able to read which Tandem he is running without a terminal.
+contem "the panel names its own version" '--title="Tandem $TANDEM_VERSAO"' "$PAINEL"
 contem "the command tokens are returned but not displayed" \
-       "--hide-column=1 --print-column=1" "$PAINEL"
+       "--hide-column=3 --print-column=3" "$PAINEL"
 # The tokens must still be there: they are what `case "$esc" in` matches, and
 # hiding a column must never turn into deleting it.
 contem "and the token is still the value the case matches" '"instalar"' "$PAINEL"

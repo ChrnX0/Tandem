@@ -1,0 +1,80 @@
+/* Tandem - dark neumorphism.
+ *
+ * Applied ONLY to Tandem's own windows, through GTK_THEME plus an
+ * XDG_DATA_DIRS entry pointing at the folder this file ships in - measured:
+ * a theme in a private directory loads that way, so nothing has to be
+ * installed into /usr/share/themes, where it would show up in the owner's
+ * theme picker as a thing he did not ask for.
+ *
+ * Restrained on purpose: small offsets, wide blur, and a highlight close to
+ * the background. The relief should be felt rather than looked at - a heavy
+ * one reads as plastic, and this screen belongs to somebody working.
+ *
+ * Mid blue-grey, NOT black: in neumorphism the depth comes from the two
+ * shadows - a lighter one up-left, a darker one down-right - and a very dark
+ * background leaves no room for the lighter one.
+ *
+ * What this can and cannot reach, measured rather than assumed: the window,
+ * the sunken tray, the buttons, the entry, the scrollbar and the progress bar
+ * are CSS boxes and take all of it. The rows INSIDE zenity's list draw their
+ * selected state on a node no selector here reached - GTK_DEBUG=tree stays
+ * silent, so it is not a GtkTreeView, and higher specificity did not win
+ * either. The rows keep the stock selection, which is not ugly, only flat.
+ */
+@define-color fundo   #2f343f;
+@define-color luz     #363c48;
+@define-color sombra  #272b35;
+@define-color texto   #e4e8f0;
+@define-color suave   #9aa3b5;
+@define-color marca   #7aa7f0;
+
+window, dialog, .background, box, grid { background-color: @fundo; color: @texto; }
+label { color: @texto; }
+headerbar, .titlebar { background-color: @fundo; box-shadow: none; border: none; min-height: 46px; }
+headerbar label, .title { font-weight: 700; color: @texto; }
+
+/* the list sits in a tray pressed INTO the surface */
+scrolledwindow {
+  background-color: @fundo; border: none; border-radius: 16px; margin: 16px 20px;
+  box-shadow: inset 2px 2px 10px @sombra, inset -1px -1px 8px @luz;
+}
+listview, columnview, treeview, columnview > listview { background-color: transparent; color: @texto; }
+listview > row, columnview > listview > row, treeview > row {
+  background-color: transparent; padding: 12px 16px; margin: 3px 10px;
+  border: none; border-radius: 10px; color: @texto;
+}
+listview > row:hover, columnview > listview > row:hover {
+  background-color: shade(@fundo, 1.04);
+}
+columnview header, columnview header button, treeview header {
+  background-color: @fundo; color: @suave; border: none; box-shadow: none;
+  min-height: 0px; padding: 0px;
+}
+
+/* buttons: raised at rest, pressed IN while clicked */
+button {
+  background-image: none; background-color: @fundo; color: @texto;
+  border: none; border-radius: 12px; padding: 12px 30px; margin: 12px; font-weight: 500;
+  box-shadow: -1px -1px 6px @luz, 2px 3px 9px @sombra;
+}
+button:hover  { box-shadow: -1px -1px 5px @luz, 1px 2px 7px @sombra; color: @marca; }
+button:active { box-shadow: inset 2px 2px 6px @sombra, inset -1px -1px 5px @luz; }
+
+scrollbar { background-color: transparent; border: none; }
+scrollbar slider { background-color: @luz; border-radius: 10px; min-width: 9px; }
+
+entry, textview, .view {
+  background-color: @fundo; color: @texto; border: none; border-radius: 10px; padding: 11px 14px;
+  box-shadow: inset 2px 2px 8px @sombra, inset -1px -1px 6px @luz;
+}
+
+/* The screen the owner stares at for half an hour during a dotnet48: a groove
+   pressed into the surface, with the bar raised out of it. */
+progressbar trough {
+  background-color: @fundo; border: none; border-radius: 8px; min-height: 12px;
+  box-shadow: inset 2px 2px 7px @sombra, inset -1px -1px 5px @luz;
+}
+progressbar progress {
+  background-image: none; background-color: @marca; border-radius: 8px; min-height: 12px;
+}
+progressbar text { color: @texto; }

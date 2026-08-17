@@ -2392,6 +2392,35 @@ Desligado. Nada sai desta máquina.
 
   Verifique o ambiente com:  tandem doctor
 
+@pan_mais
+Outras coisas (portas, registros, ajuda…)
+
+@pan_voltar
+Voltar
+
+@pan_pergunta_mais
+Outras coisas que o Tandem faz:
+
+@tema_uso
+Aparência. Diga qual:
+
+  tandem tema sistema   acompanha o computador (é assim de fábrica)
+  tandem tema escuro    o escuro do próprio Tandem
+
+Muda só as janelas do Tandem. Nada mais neste computador muda.
+
+@tema_nome_sistema
+o do próprio computador
+
+@tema_nome_escuro
+Escuro do Tandem
+
+@tema_agora
+Aparência agora: {1}
+
+@tema_trocado
+Aparência trocada para: {1}
+
 @pan_pergunta
 O que você quer fazer?
 

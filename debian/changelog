@@ -1,3 +1,39 @@
+tandem (4.21) unstable; urgency=medium
+
+  * The panel a shop owner who never opens a terminal sees was eighteen rows of
+    equally weighted grey prose, of which eight fitted the window, with nothing
+    saying the other ten existed. It is two screens now - the things a shop
+    does, then one row that opens the rest - and it still carries ALL EIGHTEEN
+    commands. Shortening it by dropping commands would take function away from
+    the one person who cannot get it back from a terminal.
+  * Every row has an icon. zenity --imagelist takes a PATH and draws a broken
+    placeholder for an icon NAME - measured side by side in one window - so the
+    name is resolved to a path at runtime, and a machine where nothing resolves
+    gets the plain list it has today rather than a row of broken squares.
+  * An optional dark look, off by default. `tandem tema escuro` turns it on and
+    `tandem tema sistema` puts it back; with no choice made nothing changes at
+    all. A shop machine set up in the light running a Tandem that forces itself
+    dark is worse than plain - it looks broken - so this is asked for, never
+    assumed, the same way the language is.
+  * It applies to Tandem's own windows and nothing else on the machine, through
+    GTK_THEME, which is per process. Three attempts failed in silence first and
+    each looked like "it cannot be done": zenity here is 4.0.1 and links GTK4,
+    so a gtk-3.0/ theme is ignored without a word. `GTK_THEME=Adwaita:dark` is
+    the one-command test that separated "cannot" from "wrong folder". Both GTK
+    versions ship.
+  * The theme lives under /usr/share/tandem rather than /usr/share/themes:
+    measured, a theme in a private directory loads through XDG_DATA_DIRS, and
+    one installed system-wide would appear in the owner's theme picker as
+    something he never asked for.
+  * Stated because a limit hidden is a limit that surprises somebody later: the
+    window, the sunken tray, the buttons, the entry, the scrollbar and the
+    progress bar are CSS boxes and take the whole treatment. The rows inside
+    zenity's list draw their selected state on a node no selector reached -
+    GTK_DEBUG=tree stays silent, so it is not a GtkTreeView, and higher
+    specificity did not win either. Those rows keep the stock selection.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 16 Aug 2026 21:30:00 +0000
+
 tandem (4.20) unstable; urgency=medium
 
   * `tandem restore` produced ZERO BYTES and exit 1 on a machine with no

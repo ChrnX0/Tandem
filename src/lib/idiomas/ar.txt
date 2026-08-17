@@ -2464,6 +2464,35 @@ Tandem - يشغّل برامج Windows وتطبيقات Android وحزم لين�
 
   تحقّق من البيئة عبر:  tandem doctor
 
+@pan_mais
+أشياء أخرى (المنافذ، السجلات، المساعدة…)
+
+@pan_voltar
+رجوع
+
+@pan_pergunta_mais
+أشياء أخرى يفعلها تانديم:
+
+@tema_uso
+المظهر. قل أيّهما:
+
+  tandem tema sistema   يتبع الحاسوب (هذا الوضع الأصلي)
+  tandem tema escuro    المظهر الداكن الخاص بتانديم
+
+يغيّر نوافذ تانديم فقط. لا شيء آخر في هذا الحاسوب يتغيّر.
+
+@tema_nome_sistema
+مظهر الحاسوب نفسه
+
+@tema_nome_escuro
+داكن تانديم
+
+@tema_agora
+المظهر الآن: {1}
+
+@tema_trocado
+غُيّر المظهر إلى: {1}
+
 @pan_pergunta
 ماذا تريد أن تفعل؟
 

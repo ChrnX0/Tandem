@@ -2397,6 +2397,35 @@ Desactivado. Nada sale de esta máquina.
 
   Comprueba el entorno con:  tandem doctor
 
+@pan_mais
+Otras cosas (puertos, registros, ayuda…)
+
+@pan_voltar
+Volver
+
+@pan_pergunta_mais
+Otras cosas que hace Tandem:
+
+@tema_uso
+Apariencia. Di cuál:
+
+  tandem tema sistema   sigue al ordenador (es lo normal)
+  tandem tema escuro    el oscuro propio de Tandem
+
+Cambia solo las ventanas de Tandem. Nada más en este ordenador cambia.
+
+@tema_nome_sistema
+la del propio ordenador
+
+@tema_nome_escuro
+Oscuro de Tandem
+
+@tema_agora
+Apariencia ahora: {1}
+
+@tema_trocado
+Apariencia cambiada a: {1}
+
 @pan_pergunta
 ¿Qué quiere hacer?
 

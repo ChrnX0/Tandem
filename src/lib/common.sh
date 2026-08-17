@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.20"
+TANDEM_VERSAO="4.21"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -149,8 +149,124 @@ t_log_desde() {
 # terminal, SSH, TTY). Without this check they fail silently and the user is
 # left with "nothing happened", which this project treats as a defect.
 
+# ------------------------------------------------------------------- the look
+#
+# Tandem's own windows, and nobody else's. GTK_THEME applies to THIS PROCESS
+# only, so no other program on the machine changes appearance - which is the
+# whole reason this is an environment variable and not a setting written into
+# the owner's GTK configuration.
+#
+# Measured, because the first three attempts failed in silence and each looked
+# like "it cannot be done":
+#   - zenity here is 4.0.1, linked against GTK4, so the file has to be in
+#     gtk-4.0/. A gtk-3.0/ theme is ignored without a word. Both ship.
+#   - GTK_THEME really is honoured (GTK_THEME=Adwaita:dark proves it in one
+#     command, which is the test that separated "cannot" from "wrong folder").
+#   - a theme in a private directory loads through XDG_DATA_DIRS, so nothing
+#     has to be installed into /usr/share/themes, where it would appear in the
+#     owner's theme picker as a thing he never asked for.
+#
+# DEFAULT IS THE SYSTEM'S. A shop machine set up in the light, running a
+# Tandem that forces itself dark, is worse than plain: it looks broken. The
+# owner opts in, the same way he opts into a language.
+TANDEM_TEMAS="${TANDEM_TEMAS:-/usr/share/tandem/temas}"
+
+# An icon by NAME, resolved to a PATH. zenity --imagelist takes a path and
+# draws a broken placeholder for a name - measured, side by side in one window.
+# Nothing found means nothing shown, which is the whole fallback: on a machine
+# with no icon theme the panel is exactly the list it is today.
+t_icone_caminho() {
+    local nome="$1" dir achado
+    [ -n "$nome" ] || return 1
+    for dir in "${XDG_DATA_HOME:-$HOME/.local/share}/icons" \
+               /usr/share/icons /usr/local/share/icons /usr/share/pixmaps; do
+        [ -d "$dir" ] || continue
+        achado="$(find "$dir" -name "$nome.svg" -o -name "$nome.png" 2>/dev/null | head -1)"
+        [ -n "$achado" ] && { printf '%s' "$achado"; return 0; }
+    done
+    return 1
+}
+
+# One panel screen. Takes triples of token, sentence and icon name, and hands
+# back the token the owner chose.
+#
+# The token column is LAST and hidden: it is what the code switches on, and a
+# shop owner clicking a row should never have to decode "identidade" to read
+# the sentence beside it. It is last rather than first because a hidden column
+# in the middle still reserves its width and pushes the text away from its icon.
+#
+# With no icons on the machine the whole image column is dropped rather than
+# filled with placeholders, so the screen degrades to plain text instead of to
+# a row of broken squares.
+t_painel_lista() {
+    local pergunta="$1"; shift
+    local -a linhas=() ; local tem_icone=0 caminho
+    while [ $# -ge 3 ]; do
+        caminho="$(t_icone_caminho "$3" 2>/dev/null)" && tem_icone=1 || caminho=""
+        linhas+=("$caminho" "$2" "$1")
+        shift 3
+    done
+    if [ "$tem_icone" = 1 ]; then
+        zenity --list --imagelist --title="Tandem $TANDEM_VERSAO" \
+               --width=680 --height=640 --text="$pergunta" \
+               --column="" --column="$(t_msg pan_col_descricao)" \
+               --column="$(t_msg pan_col_acao)" \
+               --hide-column=3 --print-column=3 --hide-header \
+               "${linhas[@]}" 2>/dev/null
+    else
+        local -a sem=() i=0
+        for ((i = 1; i < ${#linhas[@]}; i += 3)); do
+            sem+=("${linhas[i]}" "${linhas[i+1]}")
+        done
+        zenity --list --title="Tandem $TANDEM_VERSAO" \
+               --width=560 --height=470 --text="$pergunta" \
+               --column="$(t_msg pan_col_descricao)" \
+               --column="$(t_msg pan_col_acao)" \
+               --hide-column=2 --print-column=2 --hide-header \
+               "${sem[@]}" 2>/dev/null
+    fi
+}
+
+# The value stays on disk exactly as written; this turns it into a word when
+# it is SHOWN. Same arrangement t_resultado_amigavel uses for the memory file,
+# and for the same reason: translating an on-disk value breaks compatibility
+# with settings already written on somebody's machine, while showing the raw
+# value puts a keyword on a shopkeeper's screen.
+t_tema_amigavel() {
+    case "$1" in
+        escuro) t_msg tema_nome_escuro ;;
+        *)      t_msg tema_nome_sistema ;;
+    esac
+}
+
+t_tema_escolhido() {
+    local t="${TANDEM_TEMA_FORCADO:-}"
+    [ -n "$t" ] || t="$(t_config_le TEMA 2>/dev/null)"
+    printf '%s' "${t:-sistema}"
+}
+
+# Exports what zenity needs, or nothing at all. Called before every window;
+# with no choice made, or with the theme missing from disk, it is a no-op and
+# the dialogs look exactly as they do today.
+t_tema_aplica() {
+    local escolha; escolha="$(t_tema_escolhido)"
+    case "$escolha" in
+        escuro) : ;;
+        *) return 0 ;;
+    esac
+    [ -d "$TANDEM_TEMAS/themes/TandemEscuro" ] || return 0
+    export XDG_DATA_DIRS="$TANDEM_TEMAS:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    export GTK_THEME=TandemEscuro
+    return 0
+}
+
 t_tem_gui() {
-    [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
+    [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ] || return 1
+    # One chokepoint: every path that opens a window asks this first, so the
+    # look is applied here instead of at twenty call sites where the twenty-first
+    # would be forgotten. Idempotent - it only exports.
+    t_tema_aplica 2>/dev/null
+    return 0
 }
 
 # ---------------------------------------------------------------- locale
