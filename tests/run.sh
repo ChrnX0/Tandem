@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2173541164 4329" "$soma_esperados"
+      "43859841 4335" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "1297370014 2525" "$soma_padroes"
 
@@ -476,6 +476,55 @@ t_memoria_esquece "$MEM_A"
 equal "forgetting really erases" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$MEM_A" 2>/dev/null
 equal "forgetting what does not exist fails without breaking" "1" "$?"
+
+# ONE CONFIG FILE, MORE THAN ONE WRITER. The temp file this write goes through
+# was named "$TANDEM_CONFIG.novo" - FIXED, not per process - so two writers at
+# once truncated the same name and interleaved into it. Measured with four
+# concurrent writers of sixty keys each: CHAVE_A and CHAVE_C came out present
+# TWICE, holding different values, and t_config_le takes `tail -1`, so the
+# reader then picked whichever duplicate landed last.
+#
+# Not a corner: t_lista_talvez_atualiza stamps LISTA_DIA from a DETACHED
+# background process tandem-exe spawns on its way to opening a program.
+#
+# And what lives in this file makes it worse than untidy - RECEBER and ENVIAR
+# are the owner's own on/off choice for the community list, so a duplicate read
+# from the wrong line can turn back on something he turned off.
+CFGR="$TMPROOT/config-corrida"; rm -rf "$CFGR"; mkdir -p "$CFGR"
+for w in A B C D; do
+    ( TANDEM_LIB="$ROOT/src/lib" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        export TANDEM_CONFIG="'"$CFGR"'/configuracao.txt" TANDEM_TRAVAS="'"$CFGR"'"
+        # Sixty and not twenty: at twenty the race did not reproduce, so the
+        # assertion below passed WITH the defect in place - a test that passes
+        # on the defect proves nothing. It is still timing-dependent, which is
+        # why the structural assertion further down is the real guard: a fixed
+        # temp name is the defect itself and that can be checked with no race
+        # at all.
+        for i in $(seq 1 60); do
+            t_config_grava "CHAVE_'"$w"'" "valor-'"$w"'-$i"
+        done' 2>/dev/null ) &
+done
+wait
+CFG_DUP=0
+for w in A B C D; do
+    n="$(grep -c "^CHAVE_$w=" "$CFGR/configuracao.txt" 2>/dev/null || echo 0)"
+    [ "$n" = 1 ] || CFG_DUP=$((CFG_DUP + 1))
+done
+equal "four writers at once leave one line per key, not duplicates" "0" "$CFG_DUP"
+# ...and each key must still be THERE. A write that serialised by losing keys
+# would pass the assertion above while being worse than the duplicates.
+CFG_FALTA=0
+for w in A B C D; do
+    grep -q "^CHAVE_$w=" "$CFGR/configuracao.txt" 2>/dev/null || CFG_FALTA=$((CFG_FALTA + 1))
+done
+equal "and every key survived the race" "0" "$CFG_FALTA"
+SOBRAS=0
+for f in "$CFGR"/*novo*; do [ -e "$f" ] && SOBRAS=$((SOBRAS + 1)); done
+equal "no temp file is left behind" "0" "$SOBRAS"
+# The temp name must carry the PID: a fixed one is the whole defect.
+naocontem "the config temp file is not a name two processes share" \
+          'tmp="$TANDEM_CONFIG.novo"' "$(sed 's/#.*//' "$ROOT/src/lib/common.sh")"
 
 # A VALUE CANNOT FORGE A KEY, and this is asserted as a security property
 # rather than left as a side effect. The newline escaping in t_memoria_grava
