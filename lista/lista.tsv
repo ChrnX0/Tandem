@@ -9,3 +9,5 @@
 # The machines column counts REPORTS, not machines. The intake keeps nothing
 # that could tell two senders apart, on purpose, so a shop that sends the
 # same lesson twice is counted twice. See docs/LIST-FORMAT.md.
+126ec20a39ba617e20a9e995d439b59b	-	vcrun2022	-	confirmado	360	2026-08	-	exe--version	20240105	-	proprio
+126ec20a39ba617e20a9e995d439b59b	-	vcrun2022	-	confirmado	89	2026-08	-	-	-	-	proprio
