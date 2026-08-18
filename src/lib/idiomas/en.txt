@@ -213,6 +213,30 @@ Installing {1}...
 @abrindo
 Opening {1}...
 
+@procedencia_confirmado
+You have run this here before, and it worked.
+
+@procedencia_reprovado
+Heads up: last time, you told me this one did not work here.
+
+@procedencia_aberto
+You have opened this here before (last time: {1}).
+
+@procedencia_ninguem#0
+The community has tried this one without success ({1} report).
+
+@procedencia_ninguem#1
+The community has tried this one without success ({1} reports).
+
+@procedencia_comunidade#0
+The community knows this program ({1} report).
+
+@procedencia_comunidade#1
+The community knows this program ({1} reports).
+
+@procedencia_novo
+This one is new here — that is normal; Tandem is seeing it for the first time.
+
 @ja_instalei_e_nao_abre
 I already installed what this program was asking for:{1}
 

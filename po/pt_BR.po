@@ -369,6 +369,34 @@ msgctxt "abrindo"
 msgid "Opening {1}..."
 msgstr "Abrindo {1}..."
 
+msgctxt "procedencia_confirmado"
+msgid "You have run this here before, and it worked."
+msgstr "Você já rodou este aqui antes, e funcionou."
+
+msgctxt "procedencia_reprovado"
+msgid "Heads up: last time, you told me this one did not work here."
+msgstr "Atenção: da última vez, você me disse que este não funcionou aqui."
+
+msgctxt "procedencia_aberto"
+msgid "You have opened this here before (last time: {1})."
+msgstr "Você já abriu este aqui antes (última vez: {1})."
+
+msgctxt "procedencia_ninguem"
+msgid "The community has tried this one without success ({1} report)."
+msgid_plural "The community has tried this one without success ({1} reports)."
+msgstr[0] "A comunidade já tentou este sem sucesso ({1} relato)."
+msgstr[1] "A comunidade já tentou este sem sucesso ({1} relatos)."
+
+msgctxt "procedencia_comunidade"
+msgid "The community knows this program ({1} report)."
+msgid_plural "The community knows this program ({1} reports)."
+msgstr[0] "A comunidade conhece este programa ({1} relato)."
+msgstr[1] "A comunidade conhece este programa ({1} relatos)."
+
+msgctxt "procedencia_novo"
+msgid "This one is new here — that is normal; Tandem is seeing it for the first time."
+msgstr "Este é novo por aqui — é normal; o Tandem está vendo ele pela primeira vez."
+
 msgctxt "ja_instalei_e_nao_abre"
 msgid ""
 "I already installed what this program was asking for:{1}\n"

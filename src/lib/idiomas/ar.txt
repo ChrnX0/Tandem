@@ -234,6 +234,54 @@ sudo apt install wine32
 @abrindo
 جارٍ فتح {1}…
 
+@procedencia_confirmado
+لقد شغّلت هذا هنا من قبل، وقد نجح.
+
+@procedencia_reprovado
+تنبيه: في المرة الماضية أخبرتني أن هذا لا يعمل هنا.
+
+@procedencia_aberto
+لقد فتحت هذا هنا من قبل (آخر مرة: {1}).
+
+@procedencia_ninguem#0
+جرّب المجتمع هذا دون نجاح ({1} بلاغ).
+
+@procedencia_ninguem#1
+جرّب المجتمع هذا دون نجاح ({1} بلاغ).
+
+@procedencia_ninguem#2
+جرّب المجتمع هذا دون نجاح ({1} بلاغ).
+
+@procedencia_ninguem#3
+جرّب المجتمع هذا دون نجاح ({1} بلاغ).
+
+@procedencia_ninguem#4
+جرّب المجتمع هذا دون نجاح ({1} بلاغ).
+
+@procedencia_ninguem#5
+جرّب المجتمع هذا دون نجاح ({1} بلاغ).
+
+@procedencia_comunidade#0
+المجتمع يعرف هذا البرنامج ({1} بلاغ).
+
+@procedencia_comunidade#1
+المجتمع يعرف هذا البرنامج ({1} بلاغ).
+
+@procedencia_comunidade#2
+المجتمع يعرف هذا البرنامج ({1} بلاغ).
+
+@procedencia_comunidade#3
+المجتمع يعرف هذا البرنامج ({1} بلاغ).
+
+@procedencia_comunidade#4
+المجتمع يعرف هذا البرنامج ({1} بلاغ).
+
+@procedencia_comunidade#5
+المجتمع يعرف هذا البرنامج ({1} بلاغ).
+
+@procedencia_novo
+هذا جديد هنا — وهذا طبيعي؛ يراه Tandem لأول مرة.
+
 @ja_instalei_e_nao_abre
 ثبّتُّ بالفعل ما كان هذا البرنامج يطلبه:{1}
 

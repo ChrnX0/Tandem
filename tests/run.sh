@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "340568866 4683" "$soma_esperados"
+      "3153491641 5045" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -2148,6 +2148,117 @@ saida_mem="$(env -i HOME="$WINEMEM_H" PATH="/usr/bin:/bin" \
     bash "$ROOT/src/bin/tandem" memoria 2>&1)"
 contem "tandem memoria shows which Wine a program last opened under" \
        "9.0" "$saida_mem"
+
+
+section "provenance: is this program known here, said calmly and once"
+
+# The recognition signal shown before a run. It is not an antivirus and not a
+# gate: it explains what Tandem already knows about THIS file and then opens it
+# either way. The DECISION is a pure function - t_procedencia - tested here for
+# both its verdicts and its ORDER, because the whole point is that local
+# knowledge (this owner, this counter) outranks a distant shop's report.
+
+# Local knowledge wins, in its own order: the owner's word first.
+equal "the owner's own 'it works here' is the strongest signal" \
+      "confirmado-aqui" "$(t_procedencia sim '' '' '')"
+# reprovado outranks a community that says it works AND a prior clean open:
+# his 'it does not work here' is about this exact machine.
+equal "the owner's 'it did not work here' outranks any community report" \
+      "reprovado-aqui" "$(t_procedencia nao 2026-01-01 9 '')"
+equal "a clean open here before outranks the community" \
+      "aberto-aqui" "$(t_procedencia '' 2026-01-01 9 '')"
+# Community only speaks when the machine itself knows nothing.
+equal "the community's honest negative is surfaced when nothing local is known" \
+      "ninguem-conseguiu" "$(t_procedencia '' '' '' 4)"
+equal "the community's positive count is surfaced when nothing local is known" \
+      "comunidade-conhece" "$(t_procedencia '' '' 7 '')"
+# The COMMON answer today: the list is empty for essentially everyone.
+equal "an entirely unknown file is 'new here', not an alarm" \
+      "novo" "$(t_procedencia '' '' '' '')"
+# A non-numeric count never becomes a false 'known' - it is treated as absent.
+equal "a count that is not a number does not fake a community signal" \
+      "novo" "$(t_procedencia '' '' abc '')"
+equal "and a zero count is not a signal either" \
+      "novo" "$(t_procedencia '' '' 0 0)"
+
+# The sentence each token becomes, in the SHIPPED catalogues. Rendered in a
+# fresh process per language (the catalogue is loaded once at source time, so a
+# command-prefix on the function would not switch it), exactly as the plural
+# tests above do. The two community tokens carry a number and go through the
+# plural machinery; an unknown token says NOTHING (rc 1) rather than printing a
+# key name - the t_erro_do_leitor posture.
+equal "'new here' renders as reassurance" \
+      "This one is new here — that is normal; Tandem is seeing it for the first time." \
+      "$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_procedencia_frase novo")"
+contem "the 'opened before' line carries the date through {1}" "2026-08-18" \
+       "$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_procedencia_frase aberto-aqui 2026-08-18")"
+equal "one community report is singular" \
+      "The community knows this program (1 report)." \
+      "$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_procedencia_frase comunidade-conhece 1")"
+equal "several community reports are plural" \
+      "The community knows this program (5 reports)." \
+      "$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_procedencia_frase comunidade-conhece 5")"
+frase_bogus="$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'
+               t_idioma_carrega; t_procedencia_frase nao-existe-este-token 2>/dev/null")"
+if [ -z "$frase_bogus" ]; then
+    pass "an unknown recognition token stays silent"
+else
+    fail "an unknown recognition token stays silent" "empty" "$frase_bogus"
+fi
+
+# The plural agrees in a language whose forms differ from English (pt_BR: relato
+# / relatos), proving the count reaches t_msg_n and is not a printf %s.
+equal "pt_BR agrees the report count (singular)" \
+      "A comunidade conhece este programa (1 relato)." \
+      "$(TANDEM_IDIOMA_FORCADO=pt_BR bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_procedencia_frase comunidade-conhece 1")"
+equal "pt_BR agrees the report count (plural)" \
+      "A comunidade conhece este programa (3 relatos)." \
+      "$(TANDEM_IDIOMA_FORCADO=pt_BR bash -c ". '$ROOT/src/lib/common.sh'
+          t_idioma_carrega; t_procedencia_frase comunidade-conhece 3")"
+
+# The wiring in tandem-exe. The recognition note is emitted before the run, it
+# calls the decision function, it is guarded so it speaks only when the status
+# CHANGES (no nagging on a POS opened dozens of times a day), and - the
+# load-bearing detail - the community counts are read OUTSIDE the "local memory
+# empty" gate, so a locally-known program still gets the community's negative.
+EXE="$ROOT/src/bin/tandem-exe"
+if grep -q 'PROC_TOKEN="$(t_procedencia ' "$EXE" &&
+   grep -q 't_procedencia_frase "$PROC_TOKEN"' "$EXE"; then
+    pass "tandem-exe computes a recognition token and turns it into a sentence"
+else
+    fail "tandem-exe computes a recognition token and turns it into a sentence" \
+         "the t_procedencia wiring" "missing"
+fi
+if grep -q 'if \[ "$PROC_TOKEN" != "$PROC_ANTES" \]; then' "$EXE"; then
+    pass "the note fires only when the recognition status changes"
+else
+    fail "the note fires only when the recognition status changes" \
+         "the change guard" "missing"
+fi
+# The community reads must sit ABOVE the memory shortcut block, not inside the
+# 'SABIDOS empty' gate - checked by line order, the same way the identity-line
+# ordering is asserted elsewhere.
+n_proc="$(grep -n 'PROC_NINGUEM="$(t_lista_ninguem_conseguiu' "$EXE" | head -1 | cut -d: -f1)"
+n_gate_fim="$(awk '/^if \[ -z "\$SABIDOS" \]; then/{s=NR} s && /^fi$/ && NR>s {print NR; exit}' "$EXE")"
+if [ -n "$n_proc" ] && [ -n "$n_gate_fim" ] && [ "$n_proc" -gt "$n_gate_fim" ]; then
+    pass "the community counts are read outside the 'local memory empty' gate"
+else
+    fail "the community counts are read outside the 'local memory empty' gate" \
+         "PROC read after the gate closes (gate ends line ${n_gate_fim:-?})" \
+         "PROC read at line ${n_proc:-?}"
+fi
+# The marker is a purely-local throttle and must not travel in a recipe.
+if grep -q "grep -v '\^PROCEDENCIA='" "$ROOT/src/lib/common.sh"; then
+    pass "the recognition throttle marker is stripped from an exported recipe"
+else
+    fail "the recognition throttle marker is stripped from an exported recipe" \
+         "PROCEDENCIA excluded from t_receita_exporta" "not excluded"
+fi
 
 
 section "install: name the right cause, or say nothing at all"

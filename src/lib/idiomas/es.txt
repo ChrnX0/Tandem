@@ -212,6 +212,30 @@ Instalando {1}...
 @abrindo
 Abriendo {1}...
 
+@procedencia_confirmado
+Ya lo has ejecutado aquí antes, y funcionó.
+
+@procedencia_reprovado
+Atención: la última vez me dijiste que este no funcionó aquí.
+
+@procedencia_aberto
+Ya lo has abierto aquí antes (última vez: {1}).
+
+@procedencia_ninguem#0
+La comunidad ya lo ha intentado sin éxito ({1} informe).
+
+@procedencia_ninguem#1
+La comunidad ya lo ha intentado sin éxito ({1} informes).
+
+@procedencia_comunidade#0
+La comunidad conoce este programa ({1} informe).
+
+@procedencia_comunidade#1
+La comunidad conoce este programa ({1} informes).
+
+@procedencia_novo
+Este es nuevo por aquí — es normal; Tandem lo ve por primera vez.
+
 @ja_instalei_e_nao_abre
 Ya instalé lo que este programa pedía:{1}
 

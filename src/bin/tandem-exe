@@ -260,6 +260,48 @@ INICIO=$SECONDS
 t_memoria_grava "$PROG" ARQUITETURA "${ARCH:-?}" 2>/dev/null
 [ -n "$LIMITE" ] && t_memoria_grava "$PROG" LIMITE "$LIMITE" 2>/dev/null
 
+# ------------------------------------------------ recognition: the calm signal
+# One line, at most, before the run: what Tandem already knows about THIS file.
+# It is not an antivirus and not a gate - it decides nothing, refuses nothing,
+# and the open proceeds exactly as it would in silence. It answers "is this
+# program known here?" from the two things Tandem already keeps: the owner's own
+# memory of this file, and the community list. See t_procedencia for the order.
+#
+# The community counts are read OUTSIDE the "local memory empty" gate above - a
+# program known locally still deserves the community's honest negative if the
+# world reports nobody got it working. Nothing new is downloaded here: the copy
+# is whatever the gate (or a past run) already fetched, and t_lista_maquinas /
+# t_lista_ninguem_conseguiu are cheap awk reads that return 1 on a missing list.
+PROC_CONFIRMADO="$(t_memoria_le "$PROG" CONFIRMADO 2>/dev/null)"
+PROC_VISTO="$(t_memoria_le "$PROG" VISTO_EM 2>/dev/null)"
+PROC_ID="$(t_memoria_id "$PROG" 2>/dev/null)"
+PROC_QUANTAS="${DE_QUANTAS:-}"
+[ -z "$PROC_QUANTAS" ] && [ -n "$PROC_ID" ] &&
+    PROC_QUANTAS="$(t_lista_maquinas "$PROC_ID" 2>/dev/null)"
+PROC_NINGUEM=""
+[ -n "$PROC_ID" ] && PROC_NINGUEM="$(t_lista_ninguem_conseguiu "$PROC_ID" 2>/dev/null)"
+PROC_TOKEN="$(t_procedencia "$PROC_CONFIRMADO" "$PROC_VISTO" "$PROC_QUANTAS" "$PROC_NINGUEM")"
+# Speak only when the recognition status CHANGES. A shop opens its POS program
+# dozens of times a day; repeating "you have used this before" every time is the
+# nagging this project treats as a defect. The last token shown is kept in the
+# memory file (on-disk vocabulary, never translated, and not on the tandem
+# memoria screen nor in an exported recipe), so the note marks a real transition
+# - new -> opened here -> confirmed - and stays silent on every routine re-open.
+PROC_ANTES="$(t_memoria_le "$PROG" PROCEDENCIA 2>/dev/null)"
+if [ "$PROC_TOKEN" != "$PROC_ANTES" ]; then
+    # The extra slot the sentence needs: a count for the two community tokens,
+    # the last-seen date for "opened here before", nothing for the rest.
+    PROC_EXTRA=""
+    case "$PROC_TOKEN" in
+        comunidade-conhece) PROC_EXTRA="$PROC_QUANTAS" ;;
+        ninguem-conseguiu)  PROC_EXTRA="$PROC_NINGUEM" ;;
+        aberto-aqui)        PROC_EXTRA="$PROC_VISTO" ;;
+    esac
+    PROC_FRASE="$(t_procedencia_frase "$PROC_TOKEN" "$PROC_EXTRA" 2>/dev/null)"
+    [ -n "$PROC_FRASE" ] && t_aviso "$PROC_FRASE"
+    t_memoria_grava "$PROG" PROCEDENCIA "$PROC_TOKEN" 2>/dev/null
+fi
+
 # The memory SUGGESTS, it never decides. Installing on its own based on a past
 # lesson would be repeating a mistake forever - and in a shop owner's prefix
 # that costs dearly. So it only shortens the path if he says so.

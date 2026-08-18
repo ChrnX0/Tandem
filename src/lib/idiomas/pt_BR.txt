@@ -211,6 +211,30 @@ Instalando {1}...
 @abrindo
 Abrindo {1}...
 
+@procedencia_confirmado
+Você já rodou este aqui antes, e funcionou.
+
+@procedencia_reprovado
+Atenção: da última vez, você me disse que este não funcionou aqui.
+
+@procedencia_aberto
+Você já abriu este aqui antes (última vez: {1}).
+
+@procedencia_ninguem#0
+A comunidade já tentou este sem sucesso ({1} relato).
+
+@procedencia_ninguem#1
+A comunidade já tentou este sem sucesso ({1} relatos).
+
+@procedencia_comunidade#0
+A comunidade conhece este programa ({1} relato).
+
+@procedencia_comunidade#1
+A comunidade conhece este programa ({1} relatos).
+
+@procedencia_novo
+Este é novo por aqui — é normal; o Tandem está vendo ele pela primeira vez.
+
 @ja_instalei_e_nao_abre
 Já instalei o que este programa pedia:{1}
 
