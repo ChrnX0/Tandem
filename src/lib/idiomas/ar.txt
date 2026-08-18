@@ -2406,6 +2406,7 @@ Tandem - يشغّل برامج Windows وتطبيقات Android وحزم لين�
   tandem identidade           ما يراه البرنامج من جهازك (التراخيص)
   tandem portas               جهاز الدفع والميزان والطابعة: على أي COM حلّوا
   tandem portas fixar <p> <d> يثبّت جهازًا على منفذ (مثل COM2)
+  tandem servico <مجلد>       يشغّل خدمة ويب ويُبقيها تعمل
   tandem idioma [رمز]         بأي لغة يتحدّث Tandem (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <اسم>   يبحث عن برنامج لينكس يؤدّي العمل نفسه
   tandem receita <ملف>        يُصدّر ما تعلّمه، لإرساله إلى أحد
@@ -3294,3 +3295,124 @@ y
 يحدث ذلك حين ينقص شيء قبلها في السلسلة نفسها - نزع المحوّل وإعادة وصله يسبّب هذا بالضبط. لن يجد البرنامج الجهاز ما لم يحصل على رقم:
 
   tandem portas fixar COM2 {2}
+
+@servico_diga_pasta
+أخبرني بالمجلد الذي يحتوي على الخدمة. مثال: tandem servico instalar /opt/loja --porta 8080
+
+@servico_pasta_nao_existe
+لم أعثر على المجلد {1}.
+
+@servico_sem_systemd
+لا يمكن لهذا الجهاز إبقاء برنامج يعمل في الخلفية من أجلك: لا توجد جلسة لمدير خدمات المستخدم (systemd) هنا.
+
+على سطح مكتب عادي يعمل هذا مباشرة. على خادم بلا جلسة دخول، اطلب ممن أعدّه تفعيل جلسة مستخدم (loginctl enable-linger).
+
+@servico_nome_ruim
+لا أستطيع استخدام "{1}" اسمًا للخدمة. استخدم الأحرف والأرقام و- و_ فقط؛ ثم مرّره عبر --nome.
+
+@servico_precisa_porta
+أحتاج إلى معرفة المنفذ الذي ستستجيب عليه هذه الخدمة. أضِف --porta ورقمًا، مثل --porta 8080.
+
+@servico_node_sem_entrada
+يبدو هذا برنامج Node، لكنني لم أجد الملف الذي يشغّله.
+
+أعطِ الأمر بنفسك، مثال:
+  tandem servico instalar {1} --comando "node server.js" --porta 3000
+
+@servico_nao_reconheci
+لم أستطع تحديد نوع البرنامج في هذا المجلد.
+
+أخبرني كيف أشغّله، مثال:
+  tandem servico instalar {1} --comando "./meu-programa" --porta 8080
+
+@servico_prefixo_de_terceiro
+سيؤدي هذا إلى تشغيل برنامج Windows داخل بيئة لم ينشئها Tandem، لذلك لا يمسّها Tandem.
+
+@servico_nao_escrevi
+لم أتمكن من كتابة ملف الخدمة في {1}. انظر: tandem logs
+
+@servico_nao_subiu
+لم تبدأ {1}. اطّلع على ما قالته عبر: tandem servico registros {1}
+
+@servico_porta_ocupada
+المنفذ {1} مستخدَم بالفعل من قِبل {2}. اختر منفذًا آخر، أو أوقف ذلك البرنامج أولًا.
+
+@servico_instalado
+{1} مُهيّأة وتعمل.
+
+@servico_instalado_em
+{1} مُهيّأة وتعمل.
+
+افتحها على {2}
+
+@servico_reboot_manual
+إنها تعمل الآن، ولكن كي تعود من تلقاء نفسها بعد إعادة تشغيل الحاسوب، شغّل هذا مرة واحدة:
+
+  sudo loginctl enable-linger {1}
+
+@servico_titulo
+Tandem - خدماتك
+
+@servico_nenhum
+لم تُهيّئ أي خدمة بعد.
+
+لبدء واحدة: tandem servico instalar <مجلد> --porta <رقم>
+
+@servico_v_ok
+{1}: تعمل. افتحها على {2}
+
+@servico_v_subindo
+{1}: قيد التشغيل، لكن لا شيء يستجيب بعد على منفذها. قد تكون في طور الإقلاع - تحقّق مرة أخرى بعد قليل.
+
+@servico_v_escuta_mudo
+{1}: تعمل وتشغل المنفذ {2}، لكنها لا تستجيب كصفحة ويب.
+
+@servico_v_rodando
+{1}: قيد التشغيل.
+
+@servico_v_parado
+{1}: متوقفة. ابدأها عبر: tandem servico iniciar {1}
+
+@servico_v_falhou
+{1}: حاولت البدء وفشلت. اعرف السبب عبر: tandem servico registros {1}
+
+@servico_nao_existe
+لا أعرف خدمة اسمها "{1}". اطّلع على ما لديك عبر: tandem servico
+
+@servico_diga_qual
+حدّد أي خدمة. اطّلع على ما لديك عبر: tandem servico
+
+@servico_iniciado
+{1} تعمل.
+
+@servico_parado_ok
+{1} متوقفة.
+
+@servico_reiniciado
+أُعيد تشغيل {1}.
+
+@servico_removido
+أُزيلت {1}. لن تبدأ من تلقاء نفسها بعد الآن.
+
+@servico_nao_consegui
+لم أتمكن من فعل ذلك بـ {1}. انظر: tandem servico registros {1}
+
+@servico_abrindo
+جارٍ فتح {1}...
+
+@servico_sem_endereco
+لا أعرف عنوان {1}، لذلك لا أستطيع فتحها. لا يوجد منفذ مسجَّل لها.
+
+@servico_abra_em
+افتح {1} في متصفحك: {2}
+
+@servico_registros_titulo
+Tandem - سجلات {1}
+
+@servico_sem_registros
+لا توجد سجلات لـ {1} بعد.
+
+@servico_nao_conheco
+لا أعرف "tandem servico {1}".
+
+ما أستطيع فعله: instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.

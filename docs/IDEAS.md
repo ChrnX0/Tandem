@@ -322,52 +322,51 @@ them the same produced a handler that exited 0 with zero bytes. Every new
 question needs `t_tem_gui ||` on its refusal path, and the test that catches it
 is running every handler with no window and no terminal and demanding a sentence.
 
-### The tenth is not a file: a web service (REQUESTED 2026-08-18)
+### The owner's own PDV, and the framing that was wrong first (REQUESTED 2026-08-18)
 
-The owner asked for this directly, and the reason is the strongest a feature can
-have: it is HIS OWN case. His point-of-sale system is not an installer you double
-click — it is two folders copied to the root of the disk and configured there to
-run as a web service, reached through the browser. It already runs under Tandem
-via Wine (he confirmed it, correcting an earlier claim of mine that this was the
-one case Tandem could not cover). What is left is that the connection is
-intermittent and the printer is not installed yet.
+The owner asked for help with his point-of-sale system directly, and the reason
+is the strongest a feature can have: it is HIS OWN case. **The first framing of
+this entry called it "a web service, the tenth format" and that was wrong** —
+recorded here because a corrected measurement is worth more than a tidy one, and
+this file is full of them. What was actually measured, from the folders he sent
+and the config file he pasted:
 
-So the tenth "format" is the first that is NOT A FILE. The nine are things you
-double click; a web service is a PROCEDURE — place files, configure, start a
-long-running process, keep it alive, and reach it at localhost:PORT. That makes
-it closer to "Tandem serves an app" than to "Tandem opens a file", and the
-engineering is different in kind, not degree.
+- It is a **native Windows desktop application** — a Delphi/ACBr point-of-sale —
+  that he opens by double-clicking a Desktop icon. It already runs under Tandem
+  via Wine. It is NOT a service to host, there is no localhost:PORT, and there is
+  no long-running process for Tandem to supervise. The "web service" picture came
+  from a misreading; the folders corrected it.
+- Its data is a local **SQLite** file (portable, nothing Windows-specific about
+  it), and its fiscal and printer layer is **ACBr** (ACBrLib / ACBrLibPosPrinter),
+  which has Linux `.so` builds — so almost nothing here is a genuine Wine
+  dependency; it runs under Wine because that is how the vendor ships the binary.
+- **Configuration lives in the vendor's cloud ERP**, reached in a browser. The
+  digital certificate is loaded there, and — the part that matters for Tandem —
+  the **printer is configured there too**. That is the standing open question
+  below.
 
-**This must not be built before the folders are seen. The folders are the
-specification.** A handler guessed at would be the exact "chase the shape
-instead of measuring" mistake this file is full of. What the folders decide,
-each one changing the design:
+So there is no new format and no `tandem servico`. What is genuinely left is one
+thing Tandem already owns and one thing it must first find out:
 
-1. **The runtime.** Is the service a Windows `.exe` under Wine (his case, since
-   Tandem+Wine ran it), a `.jar` in a servlet container, `.NET`, PHP, Node? If
-   it turns out to be Java or Node with no Windows dependency, the honest answer
-   is to run it NATIVE and Wine only gets in the way — the same "ask whether the
-   Linux path is better" this project applies to `.exe` already.
-2. **How it starts.** A Windows service (`sc create`), a Startup shortcut, a
-   `.bat`, or somebody double-clicking a file every morning? A Windows service
-   under Wine is the hard case — Wine has no real service manager, so keeping it
-   alive is a supervisor Tandem would own (a user systemd unit, or a keep-alive
-   loop), and that supervisor is most of the work.
-3. **The port, and the intermittent connection.** The drop is most likely the
-   Wine process dying or the port failing to bind/stay bound. The diagnosis is
-   runtime-agnostic and worth building first, because it is his live pain: is
-   the process alive (`pgrep`), and is something listening on the port
-   (`ss -ltnp`)? That is `tandem portas` territory extended from serial to TCP.
-4. **Auto-start across reboot.** A counter machine is turned off nightly, so
-   "it ran once" is not "it runs every morning" — the supervisor has to survive
-   a boot, which is a decision about a user service the owner has to consent to.
-5. **The printer.** Almost certainly a fiscal or thermal printer on serial/USB,
-   which is exactly what `tandem portas fixar COMx /dev/ttyUSBy` exists for and
-   what has never been exercised on a real counter.
+1. **The printer.** It is a thermal/fiscal printer, the live pain, and mapping a
+   Windows `COMx` onto the Linux device node is exactly what `tandem portas
+   fixar COMx /dev/ttyUSBy` is for. **That command was broken until 4.25** — it
+   wrote only the registry key and not the `dosdevices/comN` symlink, so the port
+   it "fixed" still could not be opened; see the 4.25 changelog. Fixed now, and
+   it is the concrete deliverable for his counter.
+2. **The open question that decides whether Tandem can help at all here.** ACBr's
+   PosPrinter reads its port from `[PosPrinter] Porta=` in the local
+   `ACBrLib.ini`. In the file he pasted that field is empty. If configuring the
+   printer on the vendor's cloud page writes a `COMx` into that local `.ini`, then
+   `tandem portas fixar` closes the loop end to end. If the cloud page keeps the
+   setting server-side and never touches the local file, Tandem cannot reach it
+   and the honest answer is "configure it on the vendor's page" — the same answer
+   `limites.tsv` already gives for supplier-owned middleware. **Not guessed at:
+   it needs the owner to configure the printer once and report whether the local
+   `.ini` changed.**
 
-The shape of the eventual command is likely `tandem servico` (install, start,
-stop, status, open) rather than a MIME handler, because there is no file to
-associate — but even that is a guess until the folders arrive.
+**Nothing from his PDV — folders, config values, credentials, the vendor's
+address — goes into this repository.** This entry is the design note only.
 
 ## The other family: a real Windows in a virtual machine
 

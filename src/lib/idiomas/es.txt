@@ -2338,6 +2338,7 @@ Tandem - ejecuta programas de Windows, apps de Android y paquetes de Linux.
   tandem identidade           lo que un programa ve de tu maquina (licencias)
   tandem portas               pinpad, balanza, impresora: en que COM quedaron
   tandem portas fixar <p> <d> fija un aparato en un puerto (ej.: COM2)
+  tandem servico <carpeta>   ejecuta un servicio web y lo mantiene activo
   tandem idioma [codigo]      en que idioma habla Tandem (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <nom>   busca un programa de Linux que haga lo mismo
   tandem receita <archivo>    exporta lo que aprendio, para mandarlo a alguien
@@ -3224,3 +3225,124 @@ Estos están conectados y Linux los ve, pero Wine no les dio número de COM:
 Eso pasa cuando falta algo antes, en la misma serie - desconectar y volver a conectar un adaptador causa exactamente esto. El programa no encontrará el aparato hasta que tenga un número:
 
   tandem portas fixar COM2 {2}
+
+@servico_diga_pasta
+Dime qué carpeta tiene el servicio. Ejemplo: tandem servico instalar /opt/loja --porta 8080
+
+@servico_pasta_nao_existe
+No pude encontrar la carpeta {1}.
+
+@servico_sem_systemd
+Esta máquina no puede mantener un programa en segundo plano para ti: no hay una sesión del gestor de servicios del usuario (systemd) aquí.
+
+En un escritorio normal esto funciona sin más. En un servidor sin sesión de inicio, pide a quien lo configuró que habilite una sesión de usuario (loginctl enable-linger).
+
+@servico_nome_ruim
+No puedo usar "{1}" como nombre de servicio. Usa solo letras, números, - y _; luego pásalo con --nome.
+
+@servico_precisa_porta
+Necesito saber en qué puerto responderá este servicio. Añade --porta y un número, por ejemplo --porta 8080.
+
+@servico_node_sem_entrada
+Esto parece un programa Node, pero no encontré el archivo que lo inicia.
+
+Dime el comando tú mismo, por ejemplo:
+  tandem servico instalar {1} --comando "node server.js" --porta 3000
+
+@servico_nao_reconheci
+No pude saber qué tipo de programa es esta carpeta.
+
+Dime cómo iniciarlo, por ejemplo:
+  tandem servico instalar {1} --comando "./meu-programa" --porta 8080
+
+@servico_prefixo_de_terceiro
+Esto ejecutaría un programa Windows dentro de un entorno que Tandem no creó, así que Tandem no lo toca.
+
+@servico_nao_escrevi
+No pude escribir el archivo del servicio en {1}. Mira: tandem logs
+
+@servico_nao_subiu
+{1} no inició. Mira lo que dijo con: tandem servico registros {1}
+
+@servico_porta_ocupada
+El puerto {1} ya lo está usando {2}. Elige otro puerto, o detén ese programa primero.
+
+@servico_instalado
+{1} está configurado y en ejecución.
+
+@servico_instalado_em
+{1} está configurado y en ejecución.
+
+Ábrelo en {2}
+
+@servico_reboot_manual
+Está en ejecución ahora, pero para que vuelva solo después de reiniciar el equipo, ejecuta esto una vez:
+
+  sudo loginctl enable-linger {1}
+
+@servico_titulo
+Tandem - tus servicios
+
+@servico_nenhum
+Aún no has configurado ningún servicio.
+
+Para empezar uno: tandem servico instalar <carpeta> --porta <número>
+
+@servico_v_ok
+{1}: funcionando. Ábrelo en {2}
+
+@servico_v_subindo
+{1}: en ejecución, pero aún nada responde en su puerto. Puede estar arrancando - vuelve a comprobar en un momento.
+
+@servico_v_escuta_mudo
+{1}: en ejecución y ocupando el puerto {2}, pero no responde como página web.
+
+@servico_v_rodando
+{1}: en ejecución.
+
+@servico_v_parado
+{1}: detenido. Inícialo con: tandem servico iniciar {1}
+
+@servico_v_falhou
+{1}: intentó iniciar y falló. Mira por qué con: tandem servico registros {1}
+
+@servico_nao_existe
+No conozco un servicio llamado "{1}". Mira lo que tienes con: tandem servico
+
+@servico_diga_qual
+Dime cuál servicio. Mira lo que tienes con: tandem servico
+
+@servico_iniciado
+{1} está en ejecución.
+
+@servico_parado_ok
+{1} está detenido.
+
+@servico_reiniciado
+{1} fue reiniciado.
+
+@servico_removido
+{1} fue eliminado. Ya no se iniciará solo.
+
+@servico_nao_consegui
+No pude hacer eso con {1}. Mira: tandem servico registros {1}
+
+@servico_abrindo
+Abriendo {1}...
+
+@servico_sem_endereco
+No sé la dirección de {1}, así que no puedo abrirlo. No tiene puerto registrado.
+
+@servico_abra_em
+Abre {1} en tu navegador: {2}
+
+@servico_registros_titulo
+Tandem - registros de {1}
+
+@servico_sem_registros
+Aún no hay registros de {1}.
+
+@servico_nao_conheco
+No conozco "tandem servico {1}".
+
+Lo que sé hacer: instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.

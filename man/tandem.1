@@ -305,10 +305,45 @@ up to COM33.
 .TP
 .BI "tandem portas fixar " "port path"
 Pins a device to a port of your choosing, for example
-.BR "tandem portas fixar COM2 /dev/ttyACM0" .
-It only works in an environment created by Tandem.
+.BR "tandem portas fixar COM2 /dev/ttyACM0" ,
+so that a Windows program can both see the port in its settings and actually
+open it \(em a printer or pinpad on the wrong port is the usual reason nothing
+prints. It only works in an environment created by Tandem.
 .BR "tandem portas soltar " port
-undoes it.
+undoes it, handing the port back to Wine.
+.TP
+.BI "tandem servico instalar " "folder"
+Sets up a web service \(em a program that runs and must stay running \(em from a
+folder, and keeps it alive. Tandem looks at the folder to work out what it is
+(Node, Python, PHP, a Java
+.IR .jar ,
+a plain program, a shell script, or a Windows server
+.I .exe
+under Wine), writes a per-user
+.B systemd
+service for it, starts it, tries to make it survive a reboot, and tells you the
+address to open. No administrator rights and nothing under
+.IR /etc .
+Add
+.BI "--porta " N
+to say which port it answers on, and
+.BI "--comando " \(dq...\(dq
+to give the start command yourself when the folder does not make it obvious.
+.IP
+.B tandem servico
+on its own says, for each service, whether it is running, whether anything is
+listening on its port, and whether it actually answers \(em in plain words.
+.BR "tandem servico iniciar" ,
+.BR parar ,
+.BR reiniciar ,
+.B remover
+and
+.B abrir
+are the rest;
+.B "tandem servico registros " name
+shows what a service printed. A Windows
+.I .exe
+service is only ever run in an environment Tandem created (rule 1).
 .TP
 .B tandem lista
 Shows the community list: what has already worked on other people's machines,

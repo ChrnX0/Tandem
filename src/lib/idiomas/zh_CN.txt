@@ -2208,6 +2208,7 @@ Tandem - 运行 Windows 程序、Android 应用和 Linux 软件包。
   tandem identidade           程序从您机器上看到什么（授权相关）
   tandem portas               刷卡机、电子秤、打印机：各自落在哪个 COM
   tandem portas fixar <p> <d> 把设备固定到某个口（例如 COM2）
+  tandem servico <文件夹>      运行网络服务并保持其运行
   tandem idioma [代码]        Tandem 用哪种语言（pt_BR en es fr zh_CN hi ar）
   tandem alternativas <名字>  找一个干同样活的 Linux 程序
   tandem receita <文件>       导出学到的东西，好发给别人
@@ -3074,3 +3075,124 @@ y
 这是因为同一系列里前面缺了一个——把转接头拔下再插上就会造成这种情况。在它拿到编号之前，程序找不到这个设备：
 
   tandem portas fixar COM2 {2}
+
+@servico_diga_pasta
+请告诉我服务在哪个文件夹。例如：tandem servico instalar /opt/loja --porta 8080
+
+@servico_pasta_nao_existe
+找不到文件夹 {1}。
+
+@servico_sem_systemd
+这台机器无法为你在后台保持程序运行：这里没有用户服务管理器（systemd）会话。
+
+在普通桌面上这是开箱即用的。在没有登录会话的服务器上，请让配置它的人启用用户会话（loginctl enable-linger）。
+
+@servico_nome_ruim
+无法把 "{1}" 用作服务名称。只能用字母、数字、- 和 _；然后用 --nome 传入。
+
+@servico_precisa_porta
+我需要知道这个服务在哪个端口响应。请加上 --porta 和一个数字，例如 --porta 8080。
+
+@servico_node_sem_entrada
+这看起来像一个 Node 程序，但我找不到启动它的文件。
+
+请自己给出命令，例如：
+  tandem servico instalar {1} --comando "node server.js" --porta 3000
+
+@servico_nao_reconheci
+我无法判断这个文件夹是哪种程序。
+
+请告诉我如何启动它，例如：
+  tandem servico instalar {1} --comando "./meu-programa" --porta 8080
+
+@servico_prefixo_de_terceiro
+这会在一个并非 Tandem 创建的环境中运行 Windows 程序，所以 Tandem 不会动它。
+
+@servico_nao_escrevi
+无法在 {1} 写入服务文件。请查看：tandem logs
+
+@servico_nao_subiu
+{1} 未能启动。用以下命令查看它的输出：tandem servico registros {1}
+
+@servico_porta_ocupada
+端口 {1} 已被 {2} 占用。请换一个端口，或先停止那个程序。
+
+@servico_instalado
+{1} 已配置并正在运行。
+
+@servico_instalado_em
+{1} 已配置并正在运行。
+
+在 {2} 打开
+
+@servico_reboot_manual
+它现在正在运行，但要让它在你重启电脑后自动回来，请运行一次：
+
+  sudo loginctl enable-linger {1}
+
+@servico_titulo
+Tandem - 你的服务
+
+@servico_nenhum
+你还没有配置任何服务。
+
+要开始一个：tandem servico instalar <文件夹> --porta <数字>
+
+@servico_v_ok
+{1}：正常。在 {2} 打开
+
+@servico_v_subindo
+{1}：正在运行，但端口上还没有响应。可能仍在启动——过一会儿再看看。
+
+@servico_v_escuta_mudo
+{1}：正在运行并占用端口 {2}，但不作为网页响应。
+
+@servico_v_rodando
+{1}：正在运行。
+
+@servico_v_parado
+{1}：已停止。用以下命令启动：tandem servico iniciar {1}
+
+@servico_v_falhou
+{1}：尝试启动但失败了。用以下命令查看原因：tandem servico registros {1}
+
+@servico_nao_existe
+我不认识名为 "{1}" 的服务。用以下命令查看你有哪些：tandem servico
+
+@servico_diga_qual
+请说明是哪个服务。用以下命令查看你有哪些：tandem servico
+
+@servico_iniciado
+{1} 正在运行。
+
+@servico_parado_ok
+{1} 已停止。
+
+@servico_reiniciado
+{1} 已重启。
+
+@servico_removido
+{1} 已移除。它将不再自动启动。
+
+@servico_nao_consegui
+我无法对 {1} 执行该操作。请查看：tandem servico registros {1}
+
+@servico_abrindo
+正在打开 {1}...
+
+@servico_sem_endereco
+我不知道 {1} 的地址，所以无法打开它。它没有记录端口。
+
+@servico_abra_em
+在浏览器中打开 {1}：{2}
+
+@servico_registros_titulo
+Tandem - {1} 的日志
+
+@servico_sem_registros
+{1} 还没有日志。
+
+@servico_nao_conheco
+我不认识 "tandem servico {1}"。
+
+我能做的：instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover。
