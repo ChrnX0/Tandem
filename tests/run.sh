@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3626666402 4662" "$soma_esperados"
+      "340568866 4683" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -2091,6 +2091,63 @@ doc_com_td="$(env -i HOME="$RELH" PATH="$RELBIN:/usr/bin:/bin" \
     bash "$ROOT/src/bin/tandem" doctor 2>&1)"
 contem "tandem doctor carries a clock line when it can read the clock" \
        "clock:" "$doc_com_td"
+
+section "post-install breakage: worked yesterday, broke after a Wine upgrade"
+
+# The silent failure one step later in time than the clock: a program that opened
+# cleanly under one Wine fails after a distro upgrade swaps Wine underneath it.
+# The memory already keys by file, so it records the Wine a program last opened
+# under; on a later failure under a DIFFERENT Wine, Tandem names the change
+# instead of a bare exit code. The full run->fail loop needs real Wine (covered
+# by the real-programs harness); the DECISION is a pure function tested here, and
+# it never blames an update on a guess.
+
+equal "a Wine that changed since last success is worth naming" \
+      "muda" "$(t_wine_mudou_desde 9.0 10.0 && echo muda || echo nao)"
+equal "an unchanged Wine says nothing" \
+      "nao"  "$(t_wine_mudou_desde 10.0 10.0 && echo muda || echo nao)"
+equal "a first run, with nothing recorded, says nothing" \
+      "nao"  "$(t_wine_mudou_desde '' 10.0 && echo muda || echo nao)"
+equal "a machine with no Wine now is not compared against" \
+      "nao"  "$(t_wine_mudou_desde 9.0 - && echo muda || echo nao)"
+equal "and neither is one where the current version could not be read" \
+      "nao"  "$(t_wine_mudou_desde 9.0 '' && echo muda || echo nao)"
+
+# The sentence carries BOTH versions, by number, through {1}/{2} (never %s -
+# versions have dots).
+saida_wm="$(t_msg wine_mudou 9.0 10.0)"
+contem "the breakage sentence names the version it worked under" "Wine 9.0" "$saida_wm"
+contem "and the version the system has now"                      "Wine 10.0" "$saida_wm"
+
+# The wiring in tandem-exe: written on the success path, read and emitted on the
+# bare-exit fallback. Structural, because reaching either needs real Wine - the
+# same reason the bitness and suspicious-DLL checks are asserted structurally.
+EXE="$ROOT/src/bin/tandem-exe"
+if grep -q 't_memoria_grava "$PROG" VERSAO_WINE' "$EXE"; then
+    pass "tandem-exe records the Wine version on a clean open"
+else
+    fail "tandem-exe records the Wine version on a clean open" "a VERSAO_WINE write" "none"
+fi
+if grep -q 't_wine_mudou_desde "$WINE_ANTES" "$WINE_AGORA"' "$EXE" &&
+   grep -q 't_msg wine_mudou' "$EXE"; then
+    pass "and names the change on a later failure under a different Wine"
+else
+    fail "and names the change on a later failure under a different Wine" \
+         "the guarded wine_mudou emit" "missing"
+fi
+
+# End to end where it CAN be exercised without Wine: the recorded version shows
+# up on the memory screen, so the owner (and tandem socorro) can see it.
+WINEMEM_H="$TMPROOT/wine-mem-home"
+mkdir -p "$WINEMEM_H/.config/tandem" "$WINEMEM_H/.local/share/tandem/memoria"
+printf '4.28\n' > "$WINEMEM_H/.config/tandem/.primeira-vez"
+printf '# mem\nPROGRAMA=Balcao.exe\nRESULTADO=abriu\nVERSAO_WINE=9.0\n' \
+    > "$WINEMEM_H/.local/share/tandem/memoria/deadbeef01.txt"
+saida_mem="$(env -i HOME="$WINEMEM_H" PATH="/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+contem "tandem memoria shows which Wine a program last opened under" \
+       "9.0" "$saida_mem"
 
 
 section "install: name the right cause, or say nothing at all"

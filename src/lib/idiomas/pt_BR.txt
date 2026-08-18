@@ -3381,3 +3381,11 @@ relógio: {1}
 
 @doctor_relogio_errado
 relógio: {1} - ERRADO, rode: tandem relogio
+
+@wine_mudou
+Este programa já abriu direito antes, com o Wine {1}. O sistema agora tem o Wine {2}, e essa mudança é o motivo mais provável de ele ter parado de funcionar - o chão se moveu debaixo dele, não o programa em si.
+
+O Tandem não mexe no Wine por conta própria; é isto que você deve mencionar se pedir ajuda a alguém.
+
+@mem_campo_versao_wine
+Wine com que abriu: 

@@ -2269,6 +2269,19 @@ t_stack_winetricks() {
     t_versao_limpa "$v"
 }
 
+# Post-install breakage: did the Wine under a program change since it last opened
+# cleanly? True ONLY when there is a recorded version, the current one is real
+# (not the "-" t_stack_wine returns with no Wine), and the two differ - so it
+# never fires on a first run, an unchanged system, or a machine with no Wine,
+# and it never blames an update on a guess. Pure, so the decision has a test.
+t_wine_mudou_desde() {
+    local antes="${1:-}" agora="${2:-}"
+    [ -n "$antes" ] || return 1
+    [ -n "$agora" ] && [ "$agora" != "-" ] || return 1
+    [ "$antes" != "$agora" ] || return 1
+    return 0
+}
+
 # ------------------------------------------------- counting without keeping
 #
 # The list counts REPORTS, not machines, because counting machines honestly is

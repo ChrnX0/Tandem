@@ -223,6 +223,12 @@ LIMITE="$(t_limite_do_programa "$PROG" 2>/dev/null)"
 # ------------------------------------------------- memory of this program
 # What Tandem has already learned about THIS file, here or on another machine.
 SABIDOS="$(t_memoria_le "$PROG" RESOLVERAM 2>/dev/null)"
+# Post-install breakage: the Wine version this program last opened cleanly under,
+# and the one the system carries now. Read once here; written on success below.
+# If a later run fails while these differ, a Wine update having moved the ground
+# under a working program is the likely cause - and saying so beats a bare code.
+WINE_ANTES="$(t_memoria_le "$PROG" VERSAO_WINE 2>/dev/null)"
+WINE_AGORA="$(t_stack_wine 2>/dev/null)"
 # If this machine still knows nothing about this program, the community list
 # may know. It decides nothing: it becomes exactly the same kind of suggestion
 # as the local memory, and goes through the same question.
@@ -476,6 +482,10 @@ while :; do
         t_memoria_grava "$PROG" RESULTADO abriu
         t_memoria_grava "$PROG" SEGUNDOS "$DUROU"
         t_memoria_grava "$PROG" VISTO_EM "$(date +%F)"
+        # The Wine it opened cleanly under, so a later failure under a different
+        # Wine can name the change instead of a bare exit code. On-disk data
+        # (a version string), like SEGUNDOS - never translated.
+        t_memoria_grava "$PROG" VERSAO_WINE "$(t_stack_wine)"
         # If it was an installer, shortcuts showed up: say where the program
         # ended up. If it was just a program running, nothing shows up and
         # nothing is said.
@@ -723,7 +733,17 @@ $(t_causa_por_token "$AMBIENTE_FALHOU")"
                 # "the program closed with an error (code 53)" and said
                 # nothing about why the answer got worse.
                 SEM_ANOTA="$(t_aviso_sem_log)" || SEM_ANOTA=""
-                t_erro "$(t_msg fechou_com_erro "$CODIGO")${SEM_ANOTA:+
+                # Worked yesterday, broke today: if it opened cleanly before
+                # under a different Wine than the system now has, a distro
+                # upgrade moving the ground under it is the likeliest cause, and
+                # naming that beats the bare code. Only when it truly changed.
+                MUDOU_WINE=""
+                if t_wine_mudou_desde "$WINE_ANTES" "$WINE_AGORA"; then
+                    MUDOU_WINE="$(t_msg wine_mudou "$WINE_ANTES" "$WINE_AGORA")"
+                fi
+                t_erro "$(t_msg fechou_com_erro "$CODIGO")${MUDOU_WINE:+
+
+$MUDOU_WINE}${SEM_ANOTA:+
 
 $SEM_ANOTA}"
             fi
