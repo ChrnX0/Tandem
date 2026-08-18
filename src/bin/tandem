@@ -1126,8 +1126,25 @@ acao_portas() {
                 t_erro "$(t_msg portas_ambiente_de_terceiro)"
                 return 1
             fi
-            if WINEPREFIX="$p" WINEDEBUG=-all wine reg add 'HKLM\Software\Wine\Ports' \
-                 /v "$porta" /t REG_SZ /d "$caminho" /f >>"$LOG" 2>&1; then
+            # THE SYMLINK is what actually makes the port openable, and it was
+            # missing. Measured with real Wine and a real char device: a program
+            # that opens "COM2" (which is exactly what ACBr's PosPrinter does via
+            # CreateFile) resolves it through dosdevices/com2 - the symlink Wine
+            # creates for auto-detected ports. Writing ONLY HKLM\Software\Wine\
+            # Ports, as this did, left CreateFile("COM2") returning "File not
+            # found", identical to a port that was never set - so the command
+            # reported "fixed" and the printer still could not print. The
+            # registry key is kept because it is the OTHER half: it populates
+            # SERIALCOMM, which is what a program reads to LIST the ports in a
+            # dropdown. The symlink makes it OPEN; the registry makes it APPEAR.
+            local porta_min; porta_min="$(printf '%s' "$porta" | tr 'A-Z' 'a-z')"
+            mkdir -p "$p/dosdevices" 2>/dev/null
+            if ln -sfn "$caminho" "$p/dosdevices/$porta_min" 2>>"$LOG"; then
+                # Best-effort: enumeration is a nicety, opening is the point, so a
+                # failed registry write does not fail the command.
+                WINEPREFIX="$p" WINEDEBUG=-all wine reg add 'HKLM\Software\Wine\Ports' \
+                    /v "$porta" /t REG_SZ /d "$caminho" /f >>"$LOG" 2>&1 ||
+                    t_diz "porta: symlink feito, registro de enumeracao falhou (nao critico)"
                 t_ok "$(t_msg portas_fixada "$caminho" "$porta")"
             else
                 t_erro "$(t_msg portas_nao_fixou)"
@@ -1136,6 +1153,16 @@ acao_portas() {
         soltar|liberar)
             local porta="${2:-}"
             [ -n "$porta" ] || { t_erro "$(t_msg portas_diga_qual_soltar)"; return 1; }
+            # Both halves the fixar path creates: the symlink that opens it and
+            # the registry key that lists it. Restricted to a valid port name
+            # first, because this deletes a path under the prefix by that name.
+            case "$porta" in
+                COM[0-9]|COM[0-9][0-9]|LPT[0-9]) ;;
+                *) t_erro "$(t_msg portas_diga_qual_soltar)"; return 1 ;;
+            esac
+            local porta_min; porta_min="$(printf '%s' "$porta" | tr 'A-Z' 'a-z')"
+            # Only a symlink, never a real device someone mounted there by hand.
+            [ -L "$p/dosdevices/$porta_min" ] && rm -f "$p/dosdevices/$porta_min"
             WINEPREFIX="$p" WINEDEBUG=-all wine reg delete 'HKLM\Software\Wine\Ports' \
                 /v "$porta" /f >>"$LOG" 2>&1
             t_ok "$(t_msg portas_soltada "$porta")" ;;

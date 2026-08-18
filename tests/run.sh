@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3245518083 4356" "$soma_esperados"
+      "438386080 4365" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -1754,6 +1754,78 @@ contem "a real serial port is still listed one by one" "/dev/ttyS40" "$saida_rea
 naocontem "and is not folded into the phantom range" "always creates" "$saida_real"
 naocontem "a machine with a real port is not told it has none" \
           "Nenhuma porta serial de verdade" "$saida_real"
+
+section "serial ports: fixar creates the symlink that actually opens the port"
+
+# "tandem portas fixar COM3 /dev/ttyUSB0" wrote ONLY the registry key
+# HKLM\Software\Wine\Ports and reported "fixed". Measured with real Wine and a
+# real char device: a program that opens "COM3" (which is exactly what ACBr's
+# PosPrinter does through CreateFile) resolves it via dosdevices/com3 - the
+# symlink Wine mints for a port it auto-detected. With ONLY the registry key,
+# CreateFile("COM3") returns "File not found", byte for byte identical to a port
+# that was never set - so the one command CLAUDE.md documents as the printer and
+# pinpad remedy said "done" while the device stayed unreachable.
+#
+# The symlink is the half that makes the port OPEN. The registry key is kept
+# because it is the OTHER half: it populates SERIALCOMM, which a program reads to
+# LIST the ports in a dropdown. The symlink makes it open; the registry makes it
+# appear. This section pins both halves, and soltar undoing exactly what fixar
+# made.
+#
+# No Wine: fixar runs "wine reg add" best-effort AFTER the symlink, so a wine
+# stub that exits 0 keeps the suite Wine-free while exercising the whole path -
+# the symlink, which is where the defect lived, needs no Wine at all.
+
+PORTAS_H="$TMPROOT/portas-fix"
+PFX="$PORTAS_H/.local/share/tandem/wine"
+mkdir -p "$PFX/dosdevices" "$PORTAS_H/.config/tandem"
+: > "$PFX/system.reg"
+: > "$PFX/.tandem-prefixo"
+PVER_FIX="$(sed -n 's/^TANDEM_VERSAO="\([^"]*\)".*/\1/p' "$ROOT/src/lib/common.sh" | head -1)"
+printf '%s\n' "$PVER_FIX" > "$PORTAS_H/.config/tandem/.primeira-vez"
+PORTAS_BIN="$TMPROOT/portas-bin"
+mkdir -p "$PORTAS_BIN"
+printf '#!/bin/sh\nexit 0\n' > "$PORTAS_BIN/wine"
+chmod +x "$PORTAS_BIN/wine"
+DEV_FIX="$TMPROOT/fake-ttyUSB0"
+: > "$DEV_FIX"
+
+portas_cmd() {
+    env -i HOME="$PORTAS_H" PATH="$PORTAS_BIN:/usr/bin:/bin" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+        bash "$ROOT/src/bin/tandem" portas "$@" 2>&1
+}
+
+portas_cmd fixar COM3 "$DEV_FIX" >/dev/null 2>&1
+if [ -L "$PFX/dosdevices/com3" ]; then
+    pass "fixar creates the dosdevices/comN symlink that opens the port"
+else
+    fail "fixar creates the dosdevices/comN symlink that opens the port" \
+         "a symlink at dosdevices/com3" "no symlink was made"
+fi
+equal "and the symlink points at the device the owner named" \
+      "$DEV_FIX" "$(readlink "$PFX/dosdevices/com3" 2>/dev/null)"
+
+# soltar has to undo exactly what fixar made, or an owner who fixed the wrong
+# device can never move it off that port.
+portas_cmd soltar COM3 >/dev/null 2>&1
+if [ -L "$PFX/dosdevices/com3" ]; then
+    fail "soltar removes the symlink again" "no symlink" "the symlink is still there"
+else
+    pass "soltar removes the symlink again"
+fi
+
+# soltar only ever removes a symlink IT could have made - never a real device a
+# person mounted at that path by hand. rm -f on whatever name is passed would be
+# a foot-gun the moment somebody bind-mounts a device at dosdevices/comN.
+: > "$PFX/dosdevices/com4"          # a plain file, not one of our symlinks
+portas_cmd soltar COM4 >/dev/null 2>&1
+if [ -e "$PFX/dosdevices/com4" ] && [ ! -L "$PFX/dosdevices/com4" ]; then
+    pass "soltar leaves a real file at that path untouched"
+else
+    fail "soltar leaves a real file at that path untouched" \
+         "the plain file survives" "it was removed"
+fi
 
 section "install: name the right cause, or say nothing at all"
 

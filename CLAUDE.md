@@ -223,7 +223,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 1417 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1424 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -824,6 +824,19 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
   number rather than renumbering to COM1 - verified against real Wine, whose
   `wineboot` created `com1 -> /dev/ttyS0` on a machine whose one `ttyS` is
   genuine. What moves the device is `tandem portas fixar COM2 /dev/ttyUSB0`.
+- **`CreateFile("COMx")` in Wine resolves through `dosdevices/comN`, NOT through
+  `HKLM\Software\Wine\Ports`** - and until 4.25 `tandem portas fixar` wrote only
+  the registry key. Measured with real Wine and a real char device through a
+  PTY: with only the `Ports` value set, opening `COM3` returned "File not
+  found", byte for byte a port that was never mapped; adding the symlink
+  `dosdevices/com3 -> /dev/ttyUSBx` made the same open succeed. The registry key
+  is the OTHER half and worth keeping - it populates `SERIALCOMM`, which is what
+  a program reads to LIST the ports in a dropdown. **The symlink makes it OPEN;
+  the registry makes it APPEAR.** So the one command this file documents as the
+  printer/pinpad remedy reported success and opened nothing - the silent failure
+  the project exists to abolish, hidden in the fix for the previous one. This is
+  the mechanism `wineboot` uses for auto-detected ports (`com1 -> /dev/ttyS0`
+  above), so `fixar` now does by hand exactly what Wine does on its own.
 - **`E: Unsupported file X given on commandline` from apt means the file is
   NOT THERE**, not that the package is broken. Measured against a real apt:
   a valid `.deb` installs, a truncated one and an HTML error page both give
@@ -918,7 +931,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 1417 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 1424 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **Seven defects were found in 4.19 by RUNNING the program in conditions it
   had never been run in**, and none of them by reading code: a full disk, an
   interrupted double click, two double clicks at once, a symlinked prefix, a
@@ -1741,11 +1754,13 @@ for the five that generalise. The one that matters most is the rule №1 symlink
 bypass: **that is the only time the inviolable rule has actually been broken**,
 and it was reachable by a person doing something entirely reasonable.
 
-**The next version is 4.20 and its changelog entry has to be OPENED before
-anything is added** — `debian/control`, `debian/changelog` and `TANDEM_VERSAO`
-all still say 4.15, and 4.15's entry is now history the public has. A doc-only
-commit after a release is fine and the guard allows it; a bullet appended to
-4.15's entry is not.
+**Whenever a version has shipped, the next one's changelog entry has to be
+OPENED before anything is added** — bump `debian/control`, `debian/changelog`
+and `TANDEM_VERSAO` together, because a released version's entry is history the
+public already has. A doc-only commit after a release is fine and the guard
+allows it; a bullet appended to a published entry is not. (At the time of
+writing, 4.25 is the in-flight version: its entry is fresh and unreleased, and
+the three files agree on 4.25.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

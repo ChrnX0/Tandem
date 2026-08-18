@@ -297,10 +297,12 @@ sem o qual o aparelho aparece na lista e não abre.
 .TP
 .BI "tandem portas fixar " "porta caminho"
 Prende um aparelho numa porta escolhida por você, por exemplo
-.BR "tandem portas fixar COM2 /dev/ttyACM0" .
-Só funciona em ambiente criado pelo Tandem.
+.BR "tandem portas fixar COM2 /dev/ttyACM0" ,
+de modo que um programa Windows consiga tanto ver a porta nas configurações
+quanto de fato abri\-la \(em uma impressora ou pinpad na porta errada é o motivo
+mais comum de nada imprimir. Só funciona em ambiente criado pelo Tandem.
 .BR "tandem portas soltar " porta
-desfaz.
+desfaz, devolvendo a porta ao Wine.
 .TP
 .B tandem lista
 Mostra a lista da comunidade: o que já deu certo na máquina de outras

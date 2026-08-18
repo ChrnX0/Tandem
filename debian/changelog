@@ -1,3 +1,28 @@
+tandem (4.25) unstable; urgency=medium
+
+  * `tandem portas fixar COM3 /dev/ttyUSB0` REPORTED SUCCESS AND OPENED
+    NOTHING. It wrote only the registry key HKLM\Software\Wine\Ports and
+    stopped, but what makes a port openable is the dosdevices/comN symlink Wine
+    mints for a port it auto-detected. Measured with real Wine and a real char
+    device: with only the registry key, a program calling CreateFile("COM3") -
+    which is exactly what ACBr's PosPrinter does - gets "File not found", byte
+    for byte identical to a port that was never set. So the one command
+    CLAUDE.md documents as the printer and pinpad remedy said "done" while the
+    device stayed unreachable - the silent failure this project exists to end.
+  * fixar now creates the symlink first and writes the registry key second,
+    best-effort. The symlink is the half that OPENS the port; the registry key
+    is the OTHER half, populating SERIALCOMM so the port APPEARS in a program's
+    dropdown. A failed registry write no longer fails the command, because
+    opening is the point and enumeration is only the nicety.
+  * soltar now removes both halves, and only ever removes a symlink IT could
+    have made - a plain file someone mounted at dosdevices/comN by hand is left
+    untouched, and the port name is validated before any path is deleted.
+  * Proven by injection: with the symlink line removed the command still says
+    "done" and no dosdevices/comN appears, so the new test fails exactly where
+    the old code was silent.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 18 Aug 2026 15:58:00 +0000
+
 tandem (4.24) unstable; urgency=medium
 
   * Four defects, all surfaced by a parallel class-based defect hunt and each

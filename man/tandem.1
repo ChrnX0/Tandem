@@ -305,10 +305,12 @@ up to COM33.
 .TP
 .BI "tandem portas fixar " "port path"
 Pins a device to a port of your choosing, for example
-.BR "tandem portas fixar COM2 /dev/ttyACM0" .
-It only works in an environment created by Tandem.
+.BR "tandem portas fixar COM2 /dev/ttyACM0" ,
+so that a Windows program can both see the port in its settings and actually
+open it \(em a printer or pinpad on the wrong port is the usual reason nothing
+prints. It only works in an environment created by Tandem.
 .BR "tandem portas soltar " port
-undoes it.
+undoes it, handing the port back to Wine.
 .TP
 .B tandem lista
 Shows the community list: what has already worked on other people's machines,
