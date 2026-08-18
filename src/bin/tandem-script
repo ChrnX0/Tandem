@@ -28,6 +28,15 @@ BRUTO="${1:-}"
 SCRIPT="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ] || { t_erro "$(t_msg arquivo_sumiu "$BRUTO")"; exit 1; }
 
+# A saved web page named .sh, before anything else. A broken install URL hands
+# back a 404/login page, and this handler's whole job is to not run what it
+# should not - so "this is a web page, not a script" is exactly the answer it
+# owes. A real script starts with #! or shell; only an actual HTML file carries
+# these markers in its first 512 bytes, so a legitimate installer is not caught.
+if t_parece_pagina_web "$SCRIPT"; then
+    t_erro "$(t_msg baixou_pagina_web "$(basename -- "$SCRIPT")")"; exit 1
+fi
+
 TAM="$(stat -c%s -- "$SCRIPT" 2>/dev/null || echo 0)"
 t_diz "script: $SCRIPT ($TAM bytes)"
 

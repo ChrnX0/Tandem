@@ -4195,6 +4195,26 @@ msgstr ""
 "\n"
 "يغيّر نوافذ تانديم فقط. لا شيء آخر في هذا الحاسوب يتغيّر."
 
+msgctxt "mem_limite_arquitetura"
+msgid "made for phone processors (ARM), which this computer is not"
+msgstr "مصنوع لمعالجات الهواتف (ARM)، وهذا الحاسوب ليس كذلك"
+
+msgctxt "mem_limite_agente"
+msgid "a Java add-on, not a program that opens on its own"
+msgstr "إضافة جافا، وليس برنامجًا يُفتح وحده"
+
+msgctxt "mem_limite_biblioteca"
+msgid "a Java library, not a program that opens on its own"
+msgstr "مكتبة جافا، وليست برنامجًا يُفتح وحده"
+
+msgctxt "mem_limite_outra_familia"
+msgid "an .rpm, which this kind of Linux does not install directly"
+msgstr "ملف ‎.rpm، وهذا النوع من لينكس لا يثبّته مباشرة"
+
+msgctxt "mem_limite_versao"
+msgid "needs Android {1}, and this one is {2}"
+msgstr "يحتاج أندرويد {1}، وهذا هو {2}"
+
 msgctxt "tema_nome_sistema"
 msgid "the computer's own"
 msgstr "مظهر الحاسوب نفسه"

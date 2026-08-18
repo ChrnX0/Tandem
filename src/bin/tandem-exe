@@ -13,6 +13,17 @@ BRUTO="${1:-}"
 PROG="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 [ -n "$PROG" ] && [ -f "$PROG" ] || { t_erro "$(t_msg arquivo_sumiu "$BRUTO")"; exit 1; }
 
+# A saved web page named .exe, BEFORE building a Wine prefix and running HTML
+# through Wine. The other eight handlers ask this; tandem-exe did not, so a
+# 404/login page downloaded under a program's name fell all the way through to
+# the bare "closed with an error (code 1)" - the outcome this project exists to
+# abolish - and the owner went back to the same broken link forever. The
+# .desktop runs "tandem-exe %f" directly, so the CLI content sniff never sees
+# it; the check has to live here.
+if t_parece_pagina_web "$PROG"; then
+    t_erro "$(t_msg baixou_pagina_web "$(basename -- "$PROG")")"; exit 1
+fi
+
 # Without Wine, the click cannot die on a warning: we offer to install it now.
 if ! command -v wine >/dev/null 2>&1; then
     if t_pergunta "$(t_msg wine_faltando_pergunta)" "$(t_msg botao_instalar)" "$(t_msg botao_agora_nao)"; then

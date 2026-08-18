@@ -2283,6 +2283,21 @@ Tandem 还能做这些：
 
 只改 Tandem 的窗口。这台电脑上别的都不变。
 
+@mem_limite_arquitetura
+是为手机处理器（ARM）做的，而这台电脑不是
+
+@mem_limite_agente
+是一个 Java 附加组件，不是能自己打开的程序
+
+@mem_limite_biblioteca
+是一个 Java 库，不是能自己打开的程序
+
+@mem_limite_outra_familia
+是 .rpm，这种 Linux 不能直接安装
+
+@mem_limite_versao
+需要 Android {1}，而这台是 {2}
+
 @tema_nome_sistema
 电脑自己的
 

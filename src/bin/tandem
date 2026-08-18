@@ -1057,7 +1057,9 @@ acao_memoria() {
         lim="$(sed -n 's/^LIMITE=//p' "$arq" | tail -1)"
         if [ -n "$lim" ]; then
             lim="$(printf '%b' "${lim//%/%%}")"
-            lim="${lim#*|}"
+            # t_limite_amigavel, not "${lim#*|}": stripping the class printed
+            # the rest verbatim, which is raw Portuguese for four handlers.
+            lim="$(t_limite_amigavel "$lim")"
             saida="$saida  $(t_msg mem_campo_limite)$(printf '%s' "$lim" |
                    sed "2,\${/./s/^/              /}")"$'\n'
         fi

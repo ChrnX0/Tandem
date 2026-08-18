@@ -4185,6 +4185,26 @@ msgstr ""
 "\n"
 "Cambia solo las ventanas de Tandem. Nada más en este ordenador cambia."
 
+msgctxt "mem_limite_arquitetura"
+msgid "made for phone processors (ARM), which this computer is not"
+msgstr "hecho para procesadores de móvil (ARM), que este ordenador no es"
+
+msgctxt "mem_limite_agente"
+msgid "a Java add-on, not a program that opens on its own"
+msgstr "un complemento de Java, no un programa que se abra solo"
+
+msgctxt "mem_limite_biblioteca"
+msgid "a Java library, not a program that opens on its own"
+msgstr "una biblioteca de Java, no un programa que se abra solo"
+
+msgctxt "mem_limite_outra_familia"
+msgid "an .rpm, which this kind of Linux does not install directly"
+msgstr "un .rpm, que este tipo de Linux no instala directamente"
+
+msgctxt "mem_limite_versao"
+msgid "needs Android {1}, and this one is {2}"
+msgstr "necesita Android {1}, y este es el {2}"
+
 msgctxt "tema_nome_sistema"
 msgid "the computer's own"
 msgstr "la del propio ordenador"

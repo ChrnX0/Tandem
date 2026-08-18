@@ -1,3 +1,34 @@
+tandem (4.24) unstable; urgency=medium
+
+  * Four defects, all surfaced by a parallel class-based defect hunt and each
+    reproduced before being fixed.
+  * THE MEMORY WRITER HAD THE SAME RACE t_config_grava was fixed for in 4.22,
+    left behind in the file next door - a read-modify-write through a FIXED
+    "$arq.novo" temp name with no lock. Measured: four concurrent writers of
+    thirty keys each lost two of the four keys entirely, and Tandem writes
+    several keys per run while a detached background process can touch the same
+    file. Per-process temp name and a best-effort lock, exactly as config got.
+  * A SAVED WEB PAGE NAMED setup.exe built a whole Wine prefix and ended at
+    "the program closed with an error (code 1)" - the outcome the project
+    exists to abolish. t_parece_pagina_web is asked by eight handlers, but not
+    by tandem-exe or tandem-script, and the guard that claimed to check "every
+    handler" iterated a subset. Both handlers ask now, before anything costly,
+    and the guard iterates all of them.
+  * `tandem restore` COULD GIVE UP IN SILENCE on a graphical session whose
+    display is set but dead: zenity then exits 1 with no stderr, byte for byte
+    a "No" click, and t_pergunta_ou_terminal trusted DISPLAY-is-set as proof a
+    window appeared. It now checks the display is actually REACHABLE (the X
+    socket, no extra tool needed) before treating a non-yes as a real no; a
+    dead display with no terminal reports "nobody to ask" instead of vanishing.
+  * FOUR HANDLERS LEAKED PORTUGUESE to a non-Portuguese owner through the LIMITE
+    memory field: arquitetura, agente, biblioteca and outra-familia stored a
+    hard-coded Portuguese sentence that `tandem memoria` and `tandem socorro`
+    printed verbatim. t_limite_amigavel translates by the on-disk CLASS token at
+    display time - the t_resultado_amigavel doctrine - which also repairs memory
+    files already written with the Portuguese rest.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 18 Aug 2026 12:50:16 +0000
+
 tandem (4.23) unstable; urgency=medium
 
   * `tandem autoteste` ASKED THE WRONG TOOL the one question it calls

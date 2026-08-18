@@ -2414,6 +2414,21 @@ Apariencia. Di cuál:
 
 Cambia solo las ventanas de Tandem. Nada más en este ordenador cambia.
 
+@mem_limite_arquitetura
+hecho para procesadores de móvil (ARM), que este ordenador no es
+
+@mem_limite_agente
+un complemento de Java, no un programa que se abra solo
+
+@mem_limite_biblioteca
+una biblioteca de Java, no un programa que se abra solo
+
+@mem_limite_outra_familia
+un .rpm, que este tipo de Linux no instala directamente
+
+@mem_limite_versao
+necesita Android {1}, y este es el {2}
+
 @tema_nome_sistema
 la del propio ordenador
 

@@ -4159,6 +4159,26 @@ msgstr ""
 "\n"
 "सिर्फ़ टैंडेम की खिड़कियाँ बदलती हैं। इस कंप्यूटर में और कुछ नहीं बदलता।"
 
+msgctxt "mem_limite_arquitetura"
+msgid "made for phone processors (ARM), which this computer is not"
+msgstr "फ़ोन के प्रोसेसर (ARM) के लिए बना है, जो यह कंप्यूटर नहीं है"
+
+msgctxt "mem_limite_agente"
+msgid "a Java add-on, not a program that opens on its own"
+msgstr "एक Java ऐड-ऑन है, अपने आप खुलने वाला प्रोग्राम नहीं"
+
+msgctxt "mem_limite_biblioteca"
+msgid "a Java library, not a program that opens on its own"
+msgstr "एक Java लाइब्रेरी है, अपने आप खुलने वाला प्रोग्राम नहीं"
+
+msgctxt "mem_limite_outra_familia"
+msgid "an .rpm, which this kind of Linux does not install directly"
+msgstr "एक .rpm है, जिसे इस तरह का Linux सीधे इंस्टॉल नहीं करता"
+
+msgctxt "mem_limite_versao"
+msgid "needs Android {1}, and this one is {2}"
+msgstr "Android {1} चाहिए, और यह {2} है"
+
 msgctxt "tema_nome_sistema"
 msgid "the computer's own"
 msgstr "कंप्यूटर की अपनी"

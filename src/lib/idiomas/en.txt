@@ -2415,6 +2415,21 @@ Appearance. Say which one:
 
 It changes Tandem's windows only. Nothing else on this computer changes.
 
+@mem_limite_arquitetura
+made for phone processors (ARM), which this computer is not
+
+@mem_limite_agente
+a Java add-on, not a program that opens on its own
+
+@mem_limite_biblioteca
+a Java library, not a program that opens on its own
+
+@mem_limite_outra_familia
+an .rpm, which this kind of Linux does not install directly
+
+@mem_limite_versao
+needs Android {1}, and this one is {2}
+
 @tema_nome_sistema
 the computer's own
 
