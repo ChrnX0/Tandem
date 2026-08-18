@@ -2340,6 +2340,7 @@ Tandem - runs Windows programs, Android apps and Linux packages.
   tandem identidade           what a program sees of your machine (licences)
   tandem portas               pinpad, scale, printer: which COM they landed on
   tandem portas fixar <p> <d> pins a device to a port (e.g. COM2)
+  tandem servico <folder>     runs a web service and keeps it alive
   tandem idioma [code]        which language Tandem speaks (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <name>  looks for a Linux program that does the same job
   tandem receita <file>       exports what it learnt, to send to somebody
@@ -3186,3 +3187,124 @@ These are plugged in and Linux can see them, but Wine gave them no COM number:
 That happens when something earlier in the same series is missing - unplug and replug an adapter and you get exactly this. The program will not find the device until you give it a number:
 
   tandem portas fixar COM2 {2}
+
+@servico_diga_pasta
+Tell me which folder holds the service. Example: tandem servico instalar /opt/loja --porta 8080
+
+@servico_pasta_nao_existe
+I could not find the folder {1}.
+
+@servico_sem_systemd
+This machine cannot keep a program running in the background for you: there is no user service manager (systemd) session here.
+
+On a normal desktop this works out of the box. On a server without a login session, ask whoever set it up to enable a user session (loginctl enable-linger).
+
+@servico_nome_ruim
+I cannot use "{1}" as a service name. Use only letters, numbers, - and _; then pass it with --nome.
+
+@servico_precisa_porta
+I need to know which port this service should answer on. Add --porta and a number, for example --porta 8080.
+
+@servico_node_sem_entrada
+This looks like a Node program, but I could not find the file that starts it.
+
+Tell me the command yourself, for example:
+  tandem servico instalar {1} --comando "node server.js" --porta 3000
+
+@servico_nao_reconheci
+I could not tell what kind of program this folder is.
+
+Tell me how to start it, for example:
+  tandem servico instalar {1} --comando "./meu-programa" --porta 8080
+
+@servico_prefixo_de_terceiro
+This would run a Windows program inside an environment Tandem did not create, so Tandem does not touch it.
+
+@servico_nao_escrevi
+I could not write the service file at {1}. See: tandem logs
+
+@servico_nao_subiu
+{1} did not start. See what it said with: tandem servico registros {1}
+
+@servico_porta_ocupada
+Port {1} is already being used by {2}. Pick another port, or stop that program first.
+
+@servico_instalado
+{1} is set up and running.
+
+@servico_instalado_em
+{1} is set up and running.
+
+Open it at {2}
+
+@servico_reboot_manual
+It is running now, but to make it come back on its own after you restart the computer, run this once:
+
+  sudo loginctl enable-linger {1}
+
+@servico_titulo
+Tandem - your services
+
+@servico_nenhum
+You have not set up any services yet.
+
+To start one: tandem servico instalar <folder> --porta <number>
+
+@servico_v_ok
+{1}: working. Open it at {2}
+
+@servico_v_subindo
+{1}: running, but nothing is answering on its port yet. It may still be starting - check again in a moment.
+
+@servico_v_escuta_mudo
+{1}: running and holding port {2}, but it is not answering as a web page.
+
+@servico_v_rodando
+{1}: running.
+
+@servico_v_parado
+{1}: stopped. Start it with: tandem servico iniciar {1}
+
+@servico_v_falhou
+{1}: it tried to start and failed. See why with: tandem servico registros {1}
+
+@servico_nao_existe
+I do not know a service called "{1}". See what you have with: tandem servico
+
+@servico_diga_qual
+Tell me which service. See what you have with: tandem servico
+
+@servico_iniciado
+{1} is running.
+
+@servico_parado_ok
+{1} is stopped.
+
+@servico_reiniciado
+{1} was restarted.
+
+@servico_removido
+{1} was removed. It will no longer start on its own.
+
+@servico_nao_consegui
+I could not do that to {1}. See: tandem servico registros {1}
+
+@servico_abrindo
+Opening {1}...
+
+@servico_sem_endereco
+I do not know the address of {1}, so I cannot open it. It has no port on record.
+
+@servico_abra_em
+Open {1} in your browser: {2}
+
+@servico_registros_titulo
+Tandem - logs for {1}
+
+@servico_sem_registros
+There are no logs for {1} yet.
+
+@servico_nao_conheco
+I do not know "tandem servico {1}".
+
+What I can do: instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.

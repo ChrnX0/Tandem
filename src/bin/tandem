@@ -1174,6 +1174,217 @@ acao_portas() {
     esac
 }
 
+# ---------------------------------------------------------------- servico
+#
+# The tenth thing Tandem carries: a web service. Not a file you double click - a
+# folder that runs and must STAY running - so it is a command, not a MIME
+# handler. The heavy lifting (detect the runtime, write the unit, judge the
+# state, turn it into a sentence) lives in common.sh and has tests; this
+# orchestrates it, and owns the one thing only the handler can: the rule-number-1
+# check when the service is a Windows .exe under Wine.
+acao_servico() {
+    case "${1:-}" in
+        instalar|install|adicionar) shift; acao_servico_instalar "$@" ;;
+        iniciar|start)     _servico_ciclo start   "${2:-}" servico_iniciado ;;
+        parar|stop)        _servico_ciclo stop    "${2:-}" servico_parado_ok ;;
+        reiniciar|restart) _servico_ciclo restart "${2:-}" servico_reiniciado ;;
+        remover|remove|apagar) acao_servico_remover "${2:-}" ;;
+        abrir|open)        acao_servico_abrir "${2:-}" ;;
+        registros|logs)    acao_servico_registros "${2:-}" ;;
+        ""|ver|listar|status) acao_servico_ver ;;
+        *) t_erro "$(t_msg servico_nao_conheco "$1")"; return 1 ;;
+    esac
+}
+
+acao_servico_instalar() {
+    local pasta="" porta="" comando="" nome="" info pdet
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --porta|--port)  porta="${2:-}";   shift 2 ;;
+            --comando|--command|--cmd) comando="${2:-}"; shift 2 ;;
+            --nome|--name)   nome="${2:-}";     shift 2 ;;
+            --*)             shift ;;
+            *) [ -z "$pasta" ] && pasta="$1"; shift ;;
+        esac
+    done
+    [ -n "$pasta" ] || { t_erro "$(t_msg servico_diga_pasta)"; return 1; }
+    [ -d "$pasta" ] || { t_erro "$(t_msg servico_pasta_nao_existe "$pasta")"; return 1; }
+    pasta="$(cd -- "$pasta" 2>/dev/null && pwd)" ||
+        { t_erro "$(t_msg servico_pasta_nao_existe "$pasta")"; return 1; }
+
+    t_servico_tem_systemd || { t_erro "$(t_msg servico_sem_systemd)"; return 1; }
+
+    [ -n "$nome" ] || nome="$(t_servico_nome_de_pasta "$pasta")"
+    t_servico_nome_valido "$nome" || { t_erro "$(t_msg servico_nome_ruim "$nome")"; return 1; }
+
+    if [ -z "$comando" ]; then
+        info="$(t_servico_detecta "$pasta" "$porta")"
+        case "$info" in
+            *ERRO=precisa_porta*)    t_erro "$(t_msg servico_precisa_porta)"; return 1 ;;
+            *ERRO=node_sem_entrada*) t_erro "$(t_msg servico_node_sem_entrada "$pasta")"; return 1 ;;
+            *ERRO=*)                 t_erro "$(t_msg servico_nao_reconheci "$pasta")"; return 1 ;;
+        esac
+        comando="$(printf '%s\n' "$info" | sed -n 's/^COMANDO=//p')"
+        pdet="$(printf '%s\n' "$info" | sed -n 's/^PORTA=//p')"
+        [ -n "$pdet" ] && porta="$pdet"
+    fi
+    [ -n "$comando" ] || { t_erro "$(t_msg servico_nao_reconheci "$pasta")"; return 1; }
+
+    # Rule number 1: a Windows server runs in the default prefix, and Tandem may
+    # not touch one it did not create. Decided from the command itself, so it
+    # holds whether the runtime was detected or the owner passed --comando.
+    case "$(basename -- "${comando%% *}")" in
+        wine|wine64)
+            if t_prefixo_protegido "$TANDEM_PREFIXO_PADRAO"; then
+                t_erro "$(t_msg servico_prefixo_de_terceiro)"; return 1
+            fi ;;
+    esac
+
+    comando="$(t_servico_absolutiza "$comando")"
+
+    mkdir -p "$TANDEM_UNIDADES" 2>/dev/null
+    local unit="$TANDEM_UNIDADES/tandem-$nome.service"
+    if ! t_servico_unit "$nome" "$pasta" "$comando" > "$unit" 2>>"${LOG:-/dev/null}"; then
+        t_erro "$(t_msg servico_nao_escrevi "$unit")"; return 1
+    fi
+    t_servico_grava "$nome" "$pasta" "$porta" "$comando"
+
+    systemctl --user daemon-reload >>"${LOG:-/dev/null}" 2>&1
+    if ! systemctl --user enable --now "tandem-$nome.service" >>"${LOG:-/dev/null}" 2>&1; then
+        if [ -n "$porta" ]; then
+            local dono; dono="$(t_servico_dono_porta "$porta")"
+            if [ -n "$dono" ]; then
+                t_erro "$(t_msg servico_porta_ocupada "$porta" "$dono")"; return 1
+            fi
+        fi
+        t_erro "$(t_msg servico_nao_subiu "$nome")"; return 1
+    fi
+
+    # Reboot survival - the one privileged step. Best effort; if it needs a
+    # password, name the exact command rather than letting the service die on the
+    # next boot in silence.
+    if ! loginctl show-user "$(id -un)" 2>/dev/null | grep -q '^Linger=yes'; then
+        if ! loginctl enable-linger "$(id -un)" >>"${LOG:-/dev/null}" 2>&1; then
+            t_diz "servico: linger nao ativado automaticamente"
+            t_aviso "$(t_msg servico_reboot_manual "$(id -un)")"
+        fi
+    fi
+
+    sleep 1
+    local pg; pg="$(t_servico_le "$nome" PORTA)"
+    if [ -n "$pg" ]; then
+        t_ok "$(t_msg servico_instalado_em "$nome" "http://localhost:$pg")"
+    else
+        t_ok "$(t_msg servico_instalado "$nome")"
+    fi
+}
+
+# start | stop | restart, with the same guards and one ok-message key each.
+_servico_ciclo() {
+    local verbo="$1" nome="$2" okkey="$3"
+    [ -n "$nome" ] || { t_erro "$(t_msg servico_diga_qual)"; return 1; }
+    t_servico_nome_valido "$nome" || { t_erro "$(t_msg servico_nao_existe "$nome")"; return 1; }
+    t_servico_tem_systemd || { t_erro "$(t_msg servico_sem_systemd)"; return 1; }
+    [ "$(t_servico_estado_unidade "$nome")" = nao-instalado ] &&
+        { t_erro "$(t_msg servico_nao_existe "$nome")"; return 1; }
+    if systemctl --user "$verbo" "tandem-$nome.service" >>"${LOG:-/dev/null}" 2>&1; then
+        t_ok "$(t_msg "$okkey" "$nome")"
+    else
+        t_erro "$(t_msg servico_nao_consegui "$nome")"; return 1
+    fi
+}
+
+acao_servico_remover() {
+    local nome="$1"
+    [ -n "$nome" ] || { t_erro "$(t_msg servico_diga_qual)"; return 1; }
+    t_servico_nome_valido "$nome" || { t_erro "$(t_msg servico_nao_existe "$nome")"; return 1; }
+    [ -f "$TANDEM_SERVICOS/$nome/info" ] || { t_erro "$(t_msg servico_nao_existe "$nome")"; return 1; }
+    if t_servico_tem_systemd; then
+        systemctl --user disable --now "tandem-$nome.service" >>"${LOG:-/dev/null}" 2>&1
+    fi
+    rm -f "$TANDEM_UNIDADES/tandem-$nome.service" 2>/dev/null
+    t_servico_tem_systemd && systemctl --user daemon-reload >>"${LOG:-/dev/null}" 2>&1
+    t_servico_apaga "$nome"
+    t_ok "$(t_msg servico_removido "$nome")"
+}
+
+acao_servico_abrir() {
+    local nome="$1" porta url
+    [ -n "$nome" ] || { t_erro "$(t_msg servico_diga_qual)"; return 1; }
+    [ -f "$TANDEM_SERVICOS/$nome/info" ] || { t_erro "$(t_msg servico_nao_existe "$nome")"; return 1; }
+    porta="$(t_servico_le "$nome" PORTA)"
+    [ -n "$porta" ] || { t_erro "$(t_msg servico_sem_endereco "$nome")"; return 1; }
+    url="http://localhost:$porta"
+    if t_tem_gui && command -v xdg-open >/dev/null 2>&1; then
+        xdg-open "$url" >>"${LOG:-/dev/null}" 2>&1 &
+        t_ok "$(t_msg servico_abrindo "$url")"
+    else
+        t_ok "$(t_msg servico_abra_em "$nome" "$url")"
+    fi
+}
+
+acao_servico_registros() {
+    local nome="$1" saida
+    [ -n "$nome" ] || { t_erro "$(t_msg servico_diga_qual)"; return 1; }
+    t_servico_nome_valido "$nome" || { t_erro "$(t_msg servico_nao_existe "$nome")"; return 1; }
+    [ -f "$TANDEM_SERVICOS/$nome/info" ] || { t_erro "$(t_msg servico_nao_existe "$nome")"; return 1; }
+    t_servico_tem_systemd || { t_erro "$(t_msg servico_sem_systemd)"; return 1; }
+    saida="$(journalctl --user -u "tandem-$nome.service" -n 40 --no-pager 2>/dev/null)"
+    [ -n "$saida" ] ||
+        saida="$(systemctl --user status "tandem-$nome.service" --no-pager 2>/dev/null)"
+    if [ -n "$saida" ]; then
+        printf '%s\n' "$saida" | t_texto "$(t_msg servico_registros_titulo "$nome")"
+    else
+        t_ok "$(t_msg servico_sem_registros "$nome")"
+    fi
+}
+
+acao_servico_ver() {
+    local nomes saida="" nome
+    nomes="$(t_servico_lista_nomes)"
+    if [ -z "$nomes" ]; then
+        printf '%s\n' "$(t_msg servico_nenhum)" | t_texto "$(t_msg servico_titulo)"
+        return 0
+    fi
+    if ! t_servico_tem_systemd; then
+        printf '%s\n' "$(t_msg servico_sem_systemd)" | t_texto "$(t_msg servico_titulo)"
+        return 0
+    fi
+    while IFS= read -r nome; do
+        [ -n "$nome" ] || continue
+        saida="$saida$(_servico_relata "$nome")
+"
+    done <<< "$nomes"
+    printf '%s\n' "$saida" | t_texto "$(t_msg servico_titulo)"
+}
+
+# One service -> one plain sentence. The verdict token is decided by the pure
+# function in common.sh; here we only attach the address, the port, or nothing.
+_servico_relata() {
+    local nome="$1" porta estado escuta responde tok
+    porta="$(t_servico_le "$nome" PORTA)"
+    estado="$(t_servico_estado_unidade "$nome")"
+    escuta="nao"; responde=""
+    if [ "$estado" = ativo ] && [ -n "$porta" ]; then
+        t_servico_escuta "$porta" && escuta="sim"
+        if [ "$escuta" = sim ]; then
+            if t_servico_responde "$porta"; then responde="sim"; else responde="nao"; fi
+        fi
+    elif [ "$estado" = ativo ] && [ -z "$porta" ]; then
+        escuta="sim"
+    fi
+    tok="$(t_servico_veredito "$estado" "$escuta" "$responde")"
+    case "$tok" in
+        ok)          t_msg servico_v_ok "$nome" "http://localhost:$porta" ;;
+        subindo)     t_msg servico_v_subindo "$nome" ;;
+        escuta-mudo) t_msg servico_v_escuta_mudo "$nome" "$porta" ;;
+        rodando)     t_msg servico_v_rodando "$nome" ;;
+        parado)      t_msg servico_v_parado "$nome" ;;
+        falhou)      t_msg servico_v_falhou "$nome" ;;
+        *)           t_msg servico_v_rodando "$nome" ;;
+    esac
+}
+
 # ----------------------------------------------------------------- idioma
 #
 # The question is asked on FIRST RUN and not during the package install, and
@@ -1684,6 +1895,7 @@ case "${1:-}" in
     protect|proteger)     shift; acao_protect "$@" ;;
     identidade|fingerprint) acao_identidade ;;
     portas|ports)         shift; acao_portas "$@" ;;
+    servico|service|serviço)  shift; acao_servico "$@" ;;
     idioma|language|lang) shift; acao_idioma "$@" ;;
     alternativas|alternativa) shift; acao_alternativas "$@" ;;
     receita|receitas)     shift; acao_receita "$@" ;;

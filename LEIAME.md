@@ -7,7 +7,7 @@
 **Nove formatos. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![testes](https://img.shields.io/badge/testes-1424-brightgreen)](tests/run.sh)
+[![testes](https://img.shields.io/badge/testes-1471-brightgreen)](tests/run.sh)
 [![programas reais](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
 [![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
@@ -325,6 +325,7 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem idioma [código]` | em que idioma o Tandem fala — `pt_BR` `en` `es` `fr` `zh_CN` `hi` `ar` |
 | `tandem identidade` | o que um programa lê desta máquina quando amarra a licença a ela |
 | `tandem portas` | em que COM o pinpad, a balança ou a impressora caíram — e como mudar |
+| `tandem servico <pasta>` | coloca um web service no ar (Node, Python, PHP, Java, um binário ou um `.exe` sob o Wine) e o mantém de pé |
 | `tandem alternativas <nome>` | procura um programa de Linux que faça o mesmo |
 | `tandem receita <arquivo>` | exporta o que aprendeu, para mandar a alguém |
 | `tandem memoria` · `tandem esquecer <nome>` | vê e apaga o que ele aprendeu |
@@ -464,7 +465,7 @@ As cinco regras que não se quebram, e a régua de evidência que "pronto" preci
 
 ```bash
 python3 build.py --check   # empacota; sem Debian, sem dpkg-deb
-bash tests/run.sh          # 1424 testes; sem Wine, sem Waydroid, sem instalar
+bash tests/run.sh          # 1471 testes; sem Wine, sem Waydroid, sem instalar
 ```
 
 A suíte carrega as bibliotecas direto de `src/lib` e gera pacotes Android sintéticos com `AndroidManifest.xml` binário de verdade, então o leitor de manifesto roda no mesmo caminho de código de um APK real. Ferramenta opcional (`shellcheck`, `dpkg-deb`, `desktop-file-validate`) é usada quando existe e pulada quando não existe, então a suíte passa numa máquina pelada.

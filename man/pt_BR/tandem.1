@@ -304,6 +304,39 @@ mais comum de nada imprimir. Só funciona em ambiente criado pelo Tandem.
 .BR "tandem portas soltar " porta
 desfaz, devolvendo a porta ao Wine.
 .TP
+.BI "tandem servico instalar " "pasta"
+Coloca no ar um web service \(em um programa que roda e precisa continuar
+rodando \(em a partir de uma pasta, e o mantém de pé. O Tandem olha a pasta para
+descobrir o que ela é (Node, Python, PHP, um
+.I .jar
+de Java, um programa comum, um script de shell, ou um
+.I .exe
+de servidor Windows sob o Wine), escreve um serviço
+.B systemd
+do seu usuário, inicia, tenta fazer sobreviver a um reboot e diz o endereço para
+abrir. Sem direitos de administrador e sem nada em
+.IR /etc .
+Use
+.BI "--porta " N
+para dizer em que porta ele responde e
+.BI "--comando " \(dq...\(dq
+para dar você mesmo o comando de início quando a pasta não deixa claro.
+.IP
+.B tandem servico
+sozinho diz, para cada serviço, se está rodando, se algo escuta na porta dele e
+se ele de fato responde \(em em palavras simples.
+.BR "tandem servico iniciar" ,
+.BR parar ,
+.BR reiniciar ,
+.B remover
+e
+.B abrir
+são o resto;
+.B "tandem servico registros " nome
+mostra o que um serviço imprimiu. Um serviço que é um
+.I .exe
+Windows só roda em ambiente criado pelo Tandem (regra 1).
+.TP
 .B tandem lista
 Mostra a lista da comunidade: o que já deu certo na máquina de outras
 pessoas, por programa.

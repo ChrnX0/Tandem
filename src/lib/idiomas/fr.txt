@@ -2384,6 +2384,7 @@ Tandem - lance des programmes Windows, des applis Android et des paquets Linux.
   tandem identidade           ce qu'un programme voit de votre machine (licences)
   tandem portas               TPE, balance, imprimante : sur quel COM ils sont
   tandem portas fixar <p> <d> fixe un appareil sur un port (ex. : COM2)
+  tandem servico <dossier>   lance un service web et le garde actif
   tandem idioma [code]        dans quelle langue Tandem parle (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <nom>   cherche un programme Linux qui fait la meme chose
   tandem receita <fichier>    exporte ce qu'il a appris, pour l'envoyer
@@ -3279,3 +3280,124 @@ Ceux-ci sont branchés et Linux les voit, mais Wine ne leur a donné aucun numé
 Cela arrive quand il manque quelque chose avant, dans la même série - débrancher et rebrancher un adaptateur suffit. Le programme ne trouvera pas l'appareil tant qu'il n'aura pas de numéro :
 
   tandem portas fixar COM2 {2}
+
+@servico_diga_pasta
+Dites-moi quel dossier contient le service. Exemple : tandem servico instalar /opt/loja --porta 8080
+
+@servico_pasta_nao_existe
+Je n'ai pas trouvé le dossier {1}.
+
+@servico_sem_systemd
+Cette machine ne peut pas garder un programme en tâche de fond pour vous : il n'y a pas de session du gestionnaire de services utilisateur (systemd) ici.
+
+Sur un bureau normal cela fonctionne d'emblée. Sur un serveur sans session de connexion, demandez à la personne qui l'a configuré d'activer une session utilisateur (loginctl enable-linger).
+
+@servico_nome_ruim
+Je ne peux pas utiliser "{1}" comme nom de service. Utilisez seulement des lettres, des chiffres, - et _ ; puis passez-le avec --nome.
+
+@servico_precisa_porta
+J'ai besoin de savoir sur quel port ce service répondra. Ajoutez --porta et un nombre, par exemple --porta 8080.
+
+@servico_node_sem_entrada
+Cela ressemble à un programme Node, mais je n'ai pas trouvé le fichier qui le démarre.
+
+Donnez la commande vous-même, par exemple :
+  tandem servico instalar {1} --comando "node server.js" --porta 3000
+
+@servico_nao_reconheci
+Je n'ai pas pu déterminer quel type de programme est ce dossier.
+
+Dites comment le démarrer, par exemple :
+  tandem servico instalar {1} --comando "./meu-programa" --porta 8080
+
+@servico_prefixo_de_terceiro
+Cela lancerait un programme Windows dans un environnement que Tandem n'a pas créé, donc Tandem n'y touche pas.
+
+@servico_nao_escrevi
+Je n'ai pas pu écrire le fichier du service dans {1}. Voir : tandem logs
+
+@servico_nao_subiu
+{1} n'a pas démarré. Voyez ce qu'il a dit avec : tandem servico registros {1}
+
+@servico_porta_ocupada
+Le port {1} est déjà utilisé par {2}. Choisissez un autre port, ou arrêtez ce programme d'abord.
+
+@servico_instalado
+{1} est configuré et en cours d'exécution.
+
+@servico_instalado_em
+{1} est configuré et en cours d'exécution.
+
+Ouvrez-le sur {2}
+
+@servico_reboot_manual
+Il tourne maintenant, mais pour qu'il revienne tout seul après le redémarrage de l'ordinateur, lancez ceci une fois :
+
+  sudo loginctl enable-linger {1}
+
+@servico_titulo
+Tandem - vos services
+
+@servico_nenhum
+Vous n'avez encore configuré aucun service.
+
+Pour en démarrer un : tandem servico instalar <dossier> --porta <nombre>
+
+@servico_v_ok
+{1} : fonctionne. Ouvrez-le sur {2}
+
+@servico_v_subindo
+{1} : en cours, mais rien ne répond encore sur son port. Il démarre peut-être - revérifiez dans un instant.
+
+@servico_v_escuta_mudo
+{1} : en cours et occupe le port {2}, mais ne répond pas comme une page web.
+
+@servico_v_rodando
+{1} : en cours d'exécution.
+
+@servico_v_parado
+{1} : arrêté. Démarrez-le avec : tandem servico iniciar {1}
+
+@servico_v_falhou
+{1} : a tenté de démarrer et a échoué. Voyez pourquoi avec : tandem servico registros {1}
+
+@servico_nao_existe
+Je ne connais pas de service appelé "{1}". Voyez ce que vous avez avec : tandem servico
+
+@servico_diga_qual
+Dites quel service. Voyez ce que vous avez avec : tandem servico
+
+@servico_iniciado
+{1} est en cours d'exécution.
+
+@servico_parado_ok
+{1} est arrêté.
+
+@servico_reiniciado
+{1} a été redémarré.
+
+@servico_removido
+{1} a été supprimé. Il ne démarrera plus tout seul.
+
+@servico_nao_consegui
+Je n'ai pas pu faire cela avec {1}. Voir : tandem servico registros {1}
+
+@servico_abrindo
+Ouverture de {1}...
+
+@servico_sem_endereco
+Je ne connais pas l'adresse de {1}, donc je ne peux pas l'ouvrir. Aucun port n'est enregistré.
+
+@servico_abra_em
+Ouvrez {1} dans votre navigateur : {2}
+
+@servico_registros_titulo
+Tandem - journaux de {1}
+
+@servico_sem_registros
+Il n'y a pas encore de journaux pour {1}.
+
+@servico_nao_conheco
+Je ne connais pas "tandem servico {1}".
+
+Ce que je sais faire : instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.

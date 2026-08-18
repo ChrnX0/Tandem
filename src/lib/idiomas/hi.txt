@@ -2316,6 +2316,7 @@ Tandem - Windows के प्रोग्राम, Android के ऐप औ�
   tandem identidade           प्रोग्राम आपकी मशीन का क्या देखता है (लाइसेंस)
   tandem portas               पिनपैड, तराज़ू, प्रिंटर: कौन किस COM पर है
   tandem portas fixar <p> <d> उपकरण को किसी पोर्ट पर बाँधता है (जैसे COM2)
+  tandem servico <फ़ोल्डर>   एक वेब सेवा चलाकर उसे चालू रखता है
   tandem idioma [कोड]         Tandem किस भाषा में बोले (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <नाम>   वही काम करने वाला Linux प्रोग्राम खोजता है
   tandem receita <फ़ाइल>       सीखा हुआ बाहर लिखता है, किसी को भेजने के लिए
@@ -3198,3 +3199,124 @@ y
 ऐसा तब होता है जब उसी शृंखला में पहले कुछ गायब हो - अडैप्टर निकालकर दोबारा लगाने से ठीक यही होता है। जब तक इसे नंबर नहीं मिलता, प्रोग्राम इस उपकरण को नहीं ढूँढ़ पाएगा:
 
   tandem portas fixar COM2 {2}
+
+@servico_diga_pasta
+बताइए सेवा किस फ़ोल्डर में है। उदाहरण: tandem servico instalar /opt/loja --porta 8080
+
+@servico_pasta_nao_existe
+मुझे फ़ोल्डर {1} नहीं मिला।
+
+@servico_sem_systemd
+यह मशीन आपके लिए किसी प्रोग्राम को पृष्ठभूमि में चालू नहीं रख सकती: यहाँ कोई उपयोगकर्ता सेवा प्रबंधक (systemd) सत्र नहीं है।
+
+सामान्य डेस्कटॉप पर यह अपने आप काम करता है। बिना लॉगिन सत्र वाले सर्वर पर, जिसने इसे सेट किया उससे उपयोगकर्ता सत्र सक्षम करने को कहें (loginctl enable-linger)।
+
+@servico_nome_ruim
+मैं "{1}" को सेवा नाम के रूप में उपयोग नहीं कर सकता। केवल अक्षर, अंक, - और _ का उपयोग करें; फिर उसे --nome से दें।
+
+@servico_precisa_porta
+मुझे जानना है कि यह सेवा किस पोर्ट पर जवाब देगी। --porta और एक संख्या जोड़ें, उदाहरण के लिए --porta 8080।
+
+@servico_node_sem_entrada
+यह एक Node प्रोग्राम जैसा लगता है, पर उसे शुरू करने वाली फ़ाइल नहीं मिली।
+
+आप स्वयं कमांड बताएँ, उदाहरण के लिए:
+  tandem servico instalar {1} --comando "node server.js" --porta 3000
+
+@servico_nao_reconheci
+मैं नहीं बता सका कि यह फ़ोल्डर किस तरह का प्रोग्राम है।
+
+बताइए इसे कैसे शुरू करें, उदाहरण के लिए:
+  tandem servico instalar {1} --comando "./meu-programa" --porta 8080
+
+@servico_prefixo_de_terceiro
+इससे एक Windows प्रोग्राम ऐसे परिवेश में चलेगा जिसे Tandem ने नहीं बनाया, इसलिए Tandem उसे नहीं छूता।
+
+@servico_nao_escrevi
+मैं {1} पर सेवा फ़ाइल नहीं लिख सका। देखें: tandem logs
+
+@servico_nao_subiu
+{1} शुरू नहीं हुआ। इसने क्या कहा देखें: tandem servico registros {1}
+
+@servico_porta_ocupada
+पोर्ट {1} पहले से {2} द्वारा उपयोग में है। दूसरा पोर्ट चुनें, या पहले उस प्रोग्राम को रोकें।
+
+@servico_instalado
+{1} सेट हो गया है और चल रहा है।
+
+@servico_instalado_em
+{1} सेट हो गया है और चल रहा है।
+
+इसे {2} पर खोलें
+
+@servico_reboot_manual
+यह अभी चल रहा है, पर कंप्यूटर पुनः चालू करने के बाद यह अपने आप लौटे इसके लिए एक बार यह चलाएँ:
+
+  sudo loginctl enable-linger {1}
+
+@servico_titulo
+Tandem - आपकी सेवाएँ
+
+@servico_nenhum
+आपने अभी तक कोई सेवा सेट नहीं की है।
+
+एक शुरू करने के लिए: tandem servico instalar <फ़ोल्डर> --porta <संख्या>
+
+@servico_v_ok
+{1}: काम कर रहा है। इसे {2} पर खोलें
+
+@servico_v_subindo
+{1}: चल रहा है, पर इसके पोर्ट पर अभी कुछ जवाब नहीं दे रहा। शायद अभी शुरू हो रहा हो - थोड़ी देर बाद फिर देखें।
+
+@servico_v_escuta_mudo
+{1}: चल रहा है और पोर्ट {2} पर है, पर वेब पेज के रूप में जवाब नहीं दे रहा।
+
+@servico_v_rodando
+{1}: चल रहा है।
+
+@servico_v_parado
+{1}: रुका हुआ। इससे शुरू करें: tandem servico iniciar {1}
+
+@servico_v_falhou
+{1}: शुरू होने की कोशिश की और विफल रहा। कारण देखें: tandem servico registros {1}
+
+@servico_nao_existe
+"{1}" नाम की कोई सेवा मुझे नहीं पता। आपके पास क्या है देखें: tandem servico
+
+@servico_diga_qual
+बताइए कौन सी सेवा। आपके पास क्या है देखें: tandem servico
+
+@servico_iniciado
+{1} चल रहा है।
+
+@servico_parado_ok
+{1} रुक गया।
+
+@servico_reiniciado
+{1} पुनः चालू किया गया।
+
+@servico_removido
+{1} हटा दिया गया। यह अब अपने आप शुरू नहीं होगा।
+
+@servico_nao_consegui
+मैं {1} के साथ यह नहीं कर सका। देखें: tandem servico registros {1}
+
+@servico_abrindo
+{1} खोल रहा है...
+
+@servico_sem_endereco
+मुझे {1} का पता नहीं पता, इसलिए मैं इसे नहीं खोल सकता। इसका कोई पोर्ट दर्ज नहीं है।
+
+@servico_abra_em
+{1} को अपने ब्राउज़र में खोलें: {2}
+
+@servico_registros_titulo
+Tandem - {1} के लॉग
+
+@servico_sem_registros
+{1} के लिए अभी कोई लॉग नहीं है।
+
+@servico_nao_conheco
+मुझे "tandem servico {1}" नहीं पता।
+
+मैं ये कर सकता हूँ: instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover।

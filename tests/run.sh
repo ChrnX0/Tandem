@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "438386080 4365" "$soma_esperados"
+      "798851351 4481" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -1826,6 +1826,161 @@ else
     fail "soltar leaves a real file at that path untouched" \
          "the plain file survives" "it was removed"
 fi
+
+section "web services: the parts that need no systemd (detect, unit, verdict)"
+
+# The tenth thing Tandem carries, and the first that is not a file. A web service
+# is systemd + a port, and neither is reachable in CI - so, exactly as with the
+# Wine loop, the LOGIC is what has tests here: what a folder is, the unit text,
+# which port a line of ss reports, and which sentence a state deserves. The whole
+# install flow is exercised further down with systemd stubbed.
+
+# --- a service name becomes a file name and a systemctl argument ---
+for good in loja loja_pdv my-svc a1; do
+    if t_servico_nome_valido "$good"; then pass "service name accepted: $good"
+    else fail "service name accepted: $good" accepted rejected; fi
+done
+for bad in "a.b" "a/b" "-x" "a b" "" 'a;b'; do
+    if t_servico_nome_valido "$bad"; then
+        fail "service name rejected: <$bad>" rejected accepted
+    else pass "service name rejected: <$bad>"; fi
+done
+equal "a messy folder name becomes a safe service name" \
+      "Minha-Loja-PDV" "$(t_servico_nome_de_pasta '/x/Minha Loja!! PDV')"
+equal "a folder that is all punctuation still yields a usable name" \
+      "servico" "$(t_servico_nome_de_pasta '/x/...')"
+
+# --- runtime detection: look, never execute ---
+SVCFIX="$TMPROOT/svc-detect"; mkdir -p "$SVCFIX"
+mkdir -p "$SVCFIX/node-start"; echo '{"scripts":{"start":"node ."}}' > "$SVCFIX/node-start/package.json"
+contem "node with a start script uses npm start" \
+       "COMANDO=npm start" "$(t_servico_detecta "$SVCFIX/node-start")"
+mkdir -p "$SVCFIX/node-main"; echo '{"main":"srv.js"}' > "$SVCFIX/node-main/package.json"
+contem "node without a start script uses its main" \
+       "COMANDO=node srv.js" "$(t_servico_detecta "$SVCFIX/node-main")"
+mkdir -p "$SVCFIX/node-bare"; echo '{}' > "$SVCFIX/node-bare/package.json"
+contem "a node folder with no entry asks for the command" \
+       "ERRO=node_sem_entrada" "$(t_servico_detecta "$SVCFIX/node-bare")"
+mkdir -p "$SVCFIX/dj"; : > "$SVCFIX/dj/manage.py"
+contem "django with no port is refused, plainly" \
+       "ERRO=precisa_porta" "$(t_servico_detecta "$SVCFIX/dj")"
+contem "django with a port binds it into the command" \
+       "0.0.0.0:8000" "$(t_servico_detecta "$SVCFIX/dj" 8000)"
+mkdir -p "$SVCFIX/php"; : > "$SVCFIX/php/index.php"
+contem "php uses the built-in server on the port we are given" \
+       "php -S 0.0.0.0:8080" "$(t_servico_detecta "$SVCFIX/php" 8080)"
+mkdir -p "$SVCFIX/jv"; : > "$SVCFIX/jv/app.jar"
+contem "a single jar runs with java -jar" \
+       "COMANDO=java -jar app.jar" "$(t_servico_detecta "$SVCFIX/jv")"
+mkdir -p "$SVCFIX/win"; : > "$SVCFIX/win/server.exe"
+contem "a Windows server .exe runs under Wine" \
+       "COMANDO=wine server.exe" "$(t_servico_detecta "$SVCFIX/win")"
+mkdir -p "$SVCFIX/nope"; : > "$SVCFIX/nope/readme.txt"
+contem "a folder Tandem cannot read asks for the command instead of guessing" \
+       "ERRO=nao_reconheci" "$(t_servico_detecta "$SVCFIX/nope")"
+
+# --- the unit text ---
+UNIT="$(t_servico_unit loja /opt/loja 'node server.js')"
+contem "the unit runs the command given"        "ExecStart=node server.js" "$UNIT"
+contem "the unit starts in the service's folder" "WorkingDirectory=/opt/loja" "$UNIT"
+contem "the unit restarts a service that dies"   "Restart=always" "$UNIT"
+contem "the unit starts with the user session"   "WantedBy=default.target" "$UNIT"
+
+# --- the port parser (t_porta_escutando), fed ss -ltnH-style lines ---
+if printf 'LISTEN 0 511 0.0.0.0:8080 0.0.0.0:*\n' | t_porta_escutando 8080; then
+    pass "a port that is listening is seen"; else
+    fail "a port that is listening is seen" seen missed; fi
+if printf 'LISTEN 0 511 0.0.0.0:8080 0.0.0.0:*\n' | t_porta_escutando 9999; then
+    fail "a port that is not listening is not claimed" "not seen" seen; else
+    pass "a port that is not listening is not claimed"; fi
+# The guard that matters: :8080 must not match inside :18080.
+if printf 'LISTEN 0 511 0.0.0.0:18080 0.0.0.0:*\n' | t_porta_escutando 8080; then
+    fail "port 8080 is not matched inside 18080" "no match" "false match"; else
+    pass "port 8080 is not matched inside 18080"; fi
+if printf 'LISTEN 0 128 [::]:3000 [::]:*\n' | t_porta_escutando 3000; then
+    pass "an IPv6 listening socket is seen too"; else
+    fail "an IPv6 listening socket is seen too" seen missed; fi
+equal "the process holding a port is read out of the ss users field" \
+      "nginx" "$(printf 'LISTEN 0 511 *:80 *:* users:(("nginx",pid=1,fd=6))\n' | t_nome_no_ss)"
+
+# --- the verdict, the whole plain-language truth table ---
+equal "no user systemd is its own answer"      "sem-systemd"   "$(t_servico_veredito sem-systemd nao '')"
+equal "an unknown service is named as unknown" "nao-instalado" "$(t_servico_veredito nao-instalado nao '')"
+equal "a service that failed to start says so" "falhou"        "$(t_servico_veredito falhou nao '')"
+equal "a stopped service says stopped"         "parado"        "$(t_servico_veredito parado nao '')"
+equal "active but nothing on the port yet = still coming up" "subindo" "$(t_servico_veredito ativo nao '')"
+equal "active, listening and answering = working"           "ok"      "$(t_servico_veredito ativo sim sim)"
+equal "active and listening but not answering as a page"    "escuta-mudo" "$(t_servico_veredito ativo sim nao)"
+equal "active and listening, port not checked = running"    "rodando" "$(t_servico_veredito ativo sim '')"
+
+# --- Tandem's own record of a service ---
+SVCREC="$TMPROOT/svc-rec"
+( TANDEM_SERVICOS="$SVCREC"
+  t_servico_grava loja /opt/loja 8080 "node server.js"
+  t_servico_grava caixa /opt/caixa "" "wine caixa.exe" )
+equal "a service records the port it answers on" \
+      "8080" "$(TANDEM_SERVICOS="$SVCREC" bash -c '. "'"$ROOT"'/src/lib/common.sh"; TANDEM_SERVICOS="'"$SVCREC"'" t_servico_le loja PORTA')"
+equal "the two services are both listed, sorted" \
+      "caixa loja" "$(TANDEM_SERVICOS="$SVCREC" bash -c '. "'"$ROOT"'/src/lib/common.sh"; TANDEM_SERVICOS="'"$SVCREC"'" t_servico_lista_nomes' | tr '\n' ' ' | sed 's/ $//')"
+
+section "web services: the whole install flow, with systemd stubbed"
+
+# systemd, loginctl, ss and curl are not reachable in CI, so they are stubbed -
+# the same move the port test makes for Wine. What is proven here is everything
+# BUT those four: argument parsing, runtime detection, the unit that gets
+# written, the record, and the plain verdict on the way back.
+
+SVCBIN="$TMPROOT/svc-bin"; mkdir -p "$SVCBIN"
+printf '#!/bin/sh\ncase "$*" in *show-environment*) exit 0;; *list-unit-files*) echo "tandem-loja.service enabled"; exit 0;; *is-active*) echo active; exit 0;; *) exit 0;; esac\n' > "$SVCBIN/systemctl"
+printf '#!/bin/sh\ncase "$*" in *show-user*) echo "Linger=yes";; esac\nexit 0\n' > "$SVCBIN/loginctl"
+printf '#!/bin/sh\necho "LISTEN 0 511 0.0.0.0:3000 0.0.0.0:*"\n' > "$SVCBIN/ss"
+printf '#!/bin/sh\nprintf 200\n' > "$SVCBIN/curl"
+chmod +x "$SVCBIN"/*
+
+SVCH="$TMPROOT/svc-home"; mkdir -p "$SVCH/.config/tandem"
+printf '4.26\n' > "$SVCH/.config/tandem/.primeira-vez"
+mkdir -p "$SVCH/loja"; echo '{"scripts":{"start":"node ."}}' > "$SVCH/loja/package.json"; : > "$SVCH/loja/server.js"
+
+svc_cmd() {
+    env -i HOME="$SVCH" PATH="$SVCBIN:/opt/node22/bin:/usr/bin:/bin" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+        bash "$ROOT/src/bin/tandem" servico "$@" 2>&1
+}
+
+svc_cmd instalar "$SVCH/loja" --porta 3000 >/dev/null 2>&1
+UNITFILE="$SVCH/.config/systemd/user/tandem-loja.service"
+if [ -f "$UNITFILE" ]; then pass "instalar writes the systemd --user unit"
+else fail "instalar writes the systemd --user unit" "a unit file" "none"; fi
+# THE INSIGHT, guarded: systemd's ExecStart does not honour the caller's PATH, so
+# a bare "npm"/"node" fails to start on exactly the machines where the runtime
+# was installed by hand. The command must be absolutised. Revert t_servico_
+# absolutiza to a passthrough and this line goes red - the service would report
+# "set up" and never come up.
+if grep -q '^ExecStart=/' "$UNITFILE" 2>/dev/null; then
+    pass "the unit's ExecStart is an absolute path, so systemd can find it"
+else
+    fail "the unit's ExecStart is an absolute path, so systemd can find it" \
+         "ExecStart=/..." "$(grep '^ExecStart=' "$UNITFILE" 2>/dev/null)"
+fi
+if [ -f "$SVCH/.config/tandem/servicos/loja/info" ]; then
+    pass "instalar keeps its own record of the service"
+else
+    fail "instalar keeps its own record of the service" "an info file" "none"
+fi
+contem "instalar reports the address to open" "http://localhost:3000" \
+       "$(svc_cmd instalar "$SVCH/loja" --porta 3000 2>&1)"
+contem "ver says the service is working, with its address" \
+       "working" "$(svc_cmd ver)"
+contem "remover takes the service away" "removed" "$(svc_cmd remover loja)"
+
+# error paths: none may end in silence
+contem "instalar with no folder says which folder" \
+       "which folder" "$(svc_cmd instalar 2>&1)"
+contem "instalar with a folder that is not there names it" \
+       "could not find" "$(svc_cmd instalar "$TMPROOT/nope-nope" 2>&1)"
+contem "an unknown subcommand lists what it can do" \
+       "instalar, ver" "$(svc_cmd bogus 2>&1)"
+
 
 section "install: name the right cause, or say nothing at all"
 

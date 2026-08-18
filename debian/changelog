@@ -1,3 +1,35 @@
+tandem (4.26) unstable; urgency=medium
+
+  * A TENTH thing Tandem carries, and the first that is not a file you double
+    click: a web service. `tandem servico` takes a folder that is meant to run
+    and stay running - a Node, Python, PHP, Java, a plain binary, a shell
+    script, or a Windows server .exe under Wine - and does the part a shopkeeper
+    should never have to learn: it detects what the folder is, writes a
+    systemd --user unit for it, starts it, tries to make it survive a reboot,
+    and tells you the address to open. No root, no /etc, no jargon.
+  * `tandem servico` on its own answers the only question that matters, per
+    service, in plain language: is it running, is something listening on its
+    port, and does it actually answer. `abrir` opens it in the browser;
+    `iniciar`, `parar`, `reiniciar` and `remover` are the rest; `registros`
+    shows what it printed, without a journalctl incantation.
+  * The diagnosis is the whole point, and every failure path says why instead
+    of nothing: a service that crashed on start shows its last lines; a port
+    already taken names who is holding it (ss, then lsof); a service that is up
+    but not answering yet is told apart from one that is truly broken; and a
+    machine with no user systemd session is told so plainly rather than failing
+    mute.
+  * Reboot survival needs `loginctl enable-linger`, which is the one privileged
+    step - so it is best-effort and, when it needs a password, the exact one
+    command to run is printed rather than the service silently dying at the next
+    boot.
+  * Carries the 4.25 fix, which never shipped on its own: `tandem portas fixar`
+    wrote only the registry key and not the dosdevices/comN symlink, so the port
+    it "fixed" still could not be opened - the printer/pinpad remedy this file
+    documents, reporting success and opening nothing. Both halves are written
+    now, and soltar removes both.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 18 Aug 2026 17:38:00 +0000
+
 tandem (4.25) unstable; urgency=medium
 
   * `tandem portas fixar COM3 /dev/ttyUSB0` REPORTED SUCCESS AND OPENED

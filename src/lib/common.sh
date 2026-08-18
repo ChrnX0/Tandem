@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.25"
+TANDEM_VERSAO="4.26"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -3664,6 +3664,350 @@ $(printf '%s' "$fixadas" | sed 's/^/    /')"
     fi
 
     printf '%s\n' "$saida"
+}
+
+
+# ------------------------------------------------------------- web services
+#
+# The tenth thing Tandem carries, and the first that is NOT a file you double
+# click. A web service is a program that runs and STAYS running, answering on a
+# port. On Linux that is a systemd unit; for a program that belongs to one
+# person - which is every case on a counter - it is a systemd --user unit, so
+# nothing here needs root and nothing here touches /etc. The three hard parts
+# for a shopkeeper are the ones this layer owns: knowing WHAT the folder is,
+# keeping it alive across a reboot, and saying in plain words WHY it is not
+# answering.
+#
+# Everything below that TALKS to systemd or a live port is machine-only, exactly
+# as the Wine loop is - this container has no user session bus. The logic that
+# has tests is the part that decides: what runtime a folder is, the unit text,
+# which port a line of `ss` reports, and which sentence a state deserves. None
+# of that needs systemd to run.
+
+TANDEM_SERVICOS="${TANDEM_SERVICOS:-${XDG_CONFIG_HOME:-$HOME/.config}/tandem/servicos}"
+TANDEM_UNIDADES="${TANDEM_UNIDADES:-${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user}"
+
+# A service name becomes a file name (tandem-<name>.service) and a systemctl
+# argument, so it is held to the same narrow set the winetricks verb is: letters,
+# digits, dash and underscore. A dot splits the unit name, a slash escapes the
+# directory, a leading dash is an option to systemctl. Refusing costs nothing -
+# the name comes from a folder and can always be sanitised first.
+t_servico_nome_valido() {
+    case "$1" in
+        ""|-*|*.*|*/*) return 1 ;;
+        *[!A-Za-z0-9_-]*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+# A folder's basename turned into a safe service name: anything outside the set
+# becomes a dash, runs of dashes collapse, the ends are trimmed. A folder whose
+# name is all punctuation yields "servico" rather than an empty unit name.
+t_servico_nome_de_pasta() {
+    local nome
+    nome="$(basename -- "$1" 2>/dev/null | tr -c 'A-Za-z0-9_-' '-' | tr -s '-' |
+            sed 's/^-*//;s/-*$//')"
+    [ -n "$nome" ] || nome="servico"
+    printf '%s' "$nome"
+}
+
+# The first token of a command resolved to an absolute path. systemd's ExecStart
+# does not honour the caller's PATH - it searches a fixed short list that does
+# NOT include /opt or /usr/local, where node and python often live - so a unit
+# saying "node server.js" fails to start on exactly the machines where node was
+# installed by hand. Resolving the binary here is what makes the unit actually
+# run. A token that is already absolute, or cannot be found, is left as it is
+# (the caller's diagnosis then reports the real failure rather than hiding it).
+t_servico_absolutiza() {
+    local comando="$1" prog resto abs
+    prog="${comando%% *}"
+    case "$comando" in *" "*) resto=" ${comando#* }" ;; *) resto="" ;; esac
+    case "$prog" in
+        /*) printf '%s' "$comando"; return 0 ;;
+    esac
+    abs="$(command -v -- "$prog" 2>/dev/null)"
+    [ -n "$abs" ] || abs="$prog"
+    printf '%s%s' "$abs" "$resto"
+}
+
+# What a folder that is meant to run actually IS, and the command that runs it.
+# Answered by LOOKING, never by executing - the discipline peinfo.py holds for a
+# .exe. Echoes RUNTIME= and COMANDO=, and PORTA= only where we get to choose the
+# port; or ERRO=<token> when the folder does not say enough and the owner must
+# give the command by hand. Order is specific-before-generic: a Node project is
+# also a folder full of files, and a .jar is also a plain file.
+#
+# The port is woven into the command ONLY for the two runtimes where the owner
+# cannot choose it any other way - PHP's built-in server and Django. For Node, a
+# binary or a bare script the program picks its own port and we must be TOLD it
+# (for the address and the reachability check), never guess it into the command.
+t_servico_detecta() {
+    local pasta="$1" porta="${2:-}" main c j
+    [ -d "$pasta" ] || { printf 'ERRO=pasta_nao_existe\n'; return 1; }
+
+    # Node - package.json is the declaration.
+    if [ -f "$pasta/package.json" ]; then
+        printf 'RUNTIME=node\n'
+        if grep -q '"start"[[:space:]]*:' "$pasta/package.json" 2>/dev/null; then
+            printf 'COMANDO=npm start\n'; return 0
+        fi
+        main="$(sed -n 's/.*"main"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+                "$pasta/package.json" 2>/dev/null | head -1)"
+        if [ -z "$main" ]; then
+            for c in server.js app.js index.js; do
+                [ -f "$pasta/$c" ] && { main="$c"; break; }
+            done
+        fi
+        [ -n "$main" ] || { printf 'ERRO=node_sem_entrada\n'; return 1; }
+        printf 'COMANDO=node %s\n' "$main"; return 0
+    fi
+
+    # Django - manage.py is unmistakable, and it is the one Python case where we
+    # both know the command and must set the port ourselves.
+    if [ -f "$pasta/manage.py" ]; then
+        printf 'RUNTIME=python\n'
+        if [ -n "$porta" ]; then
+            printf 'PORTA=%s\n' "$porta"
+            printf 'COMANDO=python3 manage.py runserver 0.0.0.0:%s\n' "$porta"
+        else
+            printf 'ERRO=precisa_porta\n'; return 1
+        fi
+        return 0
+    fi
+
+    # A launcher script the author already wrote is more trustworthy than any
+    # guess of ours about the runtime behind it.
+    for c in start.sh run.sh server.sh; do
+        if [ -f "$pasta/$c" ]; then
+            printf 'RUNTIME=script\nCOMANDO=bash %s\n' "$c"; return 0
+        fi
+    done
+
+    # A single .jar - a servlet container or a Spring Boot fat jar.
+    j="$(ls -1 "$pasta"/*.jar 2>/dev/null | head -2)"
+    if [ -n "$j" ] && [ "$(printf '%s\n' "$j" | wc -l)" = 1 ]; then
+        printf 'RUNTIME=java\nCOMANDO=java -jar %s\n' "$(basename -- "$j")"
+        return 0
+    fi
+
+    # Generic Python entry points.
+    for c in app.py wsgi.py main.py server.py; do
+        if [ -f "$pasta/$c" ]; then
+            printf 'RUNTIME=python\nCOMANDO=python3 %s\n' "$c"; return 0
+        fi
+    done
+
+    # PHP - the built-in server, and we choose the port because nothing else can.
+    if ls -1 "$pasta"/*.php >/dev/null 2>&1 || [ -f "$pasta/index.php" ]; then
+        printf 'RUNTIME=php\n'
+        if [ -n "$porta" ]; then
+            printf 'PORTA=%s\n' "$porta"
+            printf 'COMANDO=php -S 0.0.0.0:%s -t .\n' "$porta"
+        else
+            printf 'ERRO=precisa_porta\n'; return 1
+        fi
+        return 0
+    fi
+
+    # A Windows server .exe under Wine - the tie to Tandem's own core. A caller
+    # must still check rule number 1 on the prefix; this only names the command.
+    j="$(ls -1 "$pasta"/*.exe "$pasta"/*.EXE 2>/dev/null | head -2)"
+    if [ -n "$j" ] && [ "$(printf '%s\n' "$j" | wc -l)" = 1 ]; then
+        printf 'RUNTIME=wine\nCOMANDO=wine %s\n' "$(basename -- "$j")"
+        return 0
+    fi
+
+    # A single executable ELF sitting in the folder - a Go or Rust server.
+    j=""
+    for c in "$pasta"/*; do
+        [ -f "$c" ] && [ -x "$c" ] || continue
+        if head -c4 -- "$c" 2>/dev/null | grep -q "$(printf '\177ELF')"; then
+            j="$j $c"
+        fi
+    done
+    set -- $j
+    if [ "$#" = 1 ]; then
+        printf 'RUNTIME=binario\nCOMANDO=./%s\n' "$(basename -- "$1")"; return 0
+    fi
+
+    printf 'ERRO=nao_reconheci\n'; return 1
+}
+
+# The systemd --user unit text. WantedBy=default.target is the user-session
+# equivalent of multi-user.target; Restart=always is why a service that dies
+# comes back without anybody watching. Kept as its own function so a test can
+# read the text without a systemd anywhere.
+t_servico_unit() {
+    local nome="$1" pasta="$2" comando="$3"
+    printf '[Unit]\n'
+    printf 'Description=%s (Tandem)\n' "$nome"
+    printf 'After=network.target\n\n'
+    printf '[Service]\n'
+    printf 'Type=simple\n'
+    printf 'WorkingDirectory=%s\n' "$pasta"
+    printf 'ExecStart=%s\n' "$comando"
+    printf 'Restart=always\n'
+    printf 'RestartSec=3\n\n'
+    printf '[Install]\n'
+    printf 'WantedBy=default.target\n'
+}
+
+# Is something listening on <porta>? Reads `ss -ltnH` style lines on stdin so
+# the parsing has a test with no open socket anywhere. The local address column
+# ends in ":<porta>"; a LISTEN socket's peer column is "0.0.0.0:*" or "*:*", so
+# a bare numeric ":<porta>" only ever appears on the local side.
+t_porta_escutando() {
+    local porta="$1" linha campo
+    while IFS= read -r linha; do
+        for campo in $linha; do
+            case "$campo" in
+                *":$porta") return 0 ;;
+            esac
+        done
+    done
+    return 1
+}
+
+# The process name holding a port, out of one `ss -ltnpH` line's users:(...)
+# field: users:(("nginx",pid=42,fd=6)) -> nginx. Empty when the field is absent.
+t_nome_no_ss() {
+    sed -n 's/.*users:(("\([^"]*\)".*/\1/p' | head -1
+}
+
+# The plain-language verdict for a service, from three facts and nothing else:
+# is the unit ACTIVE, is something LISTENING on its port, does it ANSWER. Pure,
+# so the whole truth table is a test. The caller turns the token into a sentence
+# and attaches the address, the log tail or the port's owner.
+#   estado:   sem-systemd | nao-instalado | falhou | parado | ativo
+#   escuta:   sim | nao
+#   responde: sim | nao | ""(not checked / port unknown)
+t_servico_veredito() {
+    local estado="$1" escuta="$2" responde="$3"
+    case "$estado" in
+        sem-systemd)   printf 'sem-systemd\n'; return ;;
+        nao-instalado) printf 'nao-instalado\n'; return ;;
+        falhou)        printf 'falhou\n'; return ;;
+        parado|inativo) printf 'parado\n'; return ;;
+    esac
+    # From here the unit is active (or still activating).
+    case "$escuta" in
+        sim)
+            case "$responde" in
+                sim) printf 'ok\n' ;;
+                nao) printf 'escuta-mudo\n' ;;
+                *)   printf 'rodando\n' ;;
+            esac ;;
+        *) printf 'subindo\n' ;;
+    esac
+}
+
+
+# ---- the parts that need a live systemd/user session; machine-only ----
+#
+# None of the four below has a test that runs them, for the same reason the Wine
+# loop does not: there is no user session bus in CI. What IS tested is the pure
+# logic they feed - the port parser, the verdict table - so a wrong answer here
+# shows up as a wrong SENTENCE there, where a test can see it.
+
+# Is there a user systemd to talk to at all? On a headless box, a cron job or a
+# container there is no session bus and every systemctl --user call answers
+# "Failed to connect to bus". Being unable to reach it is not a thing to hide -
+# it is the whole reason a service cannot be managed, and the owner is told.
+t_servico_tem_systemd() {
+    command -v systemctl >/dev/null 2>&1 || return 1
+    systemctl --user show-environment >/dev/null 2>&1
+}
+
+# The unit's state, mapped to the words t_servico_veredito expects. "activating"
+# counts as active - it is coming up, and the port check tells the rest.
+t_servico_estado_unidade() {
+    local nome="$1" est
+    systemctl --user list-unit-files "tandem-$nome.service" >/dev/null 2>&1 || {
+        printf 'nao-instalado\n'; return; }
+    systemctl --user list-unit-files "tandem-$nome.service" 2>/dev/null |
+        grep -q "^tandem-$nome.service" || { printf 'nao-instalado\n'; return; }
+    est="$(systemctl --user is-active "tandem-$nome.service" 2>/dev/null)"
+    case "$est" in
+        active|activating) printf 'ativo\n' ;;
+        failed)            printf 'falhou\n' ;;
+        *)                 printf 'parado\n' ;;
+    esac
+}
+
+# Is something listening on <porta>? The parser (t_porta_escutando) has the test;
+# this only feeds it the live socket table.
+t_servico_escuta() {
+    local porta="$1"
+    [ -n "$porta" ] || return 1
+    ss -ltnH 2>/dev/null | t_porta_escutando "$porta"
+}
+
+# The process holding a port - ss first, lsof as the fallback. Used to name the
+# culprit when a service could not bind because something else already has the
+# port.
+t_servico_dono_porta() {
+    local porta="$1" nome=""
+    [ -n "$porta" ] || return 1
+    nome="$(ss -ltnpH "sport = :$porta" 2>/dev/null | t_nome_no_ss)"
+    if [ -z "$nome" ] && command -v lsof >/dev/null 2>&1; then
+        nome="$(lsof -iTCP:"$porta" -sTCP:LISTEN -Fc 2>/dev/null |
+                sed -n 's/^c//p' | head -1)"
+    fi
+    printf '%s' "$nome"
+}
+
+# Does anything answer HTTP on <porta>? Any status code is an answer - a 500 is a
+# working web server having a bad day, which is a different thing from silence.
+# Returns 2 when we cannot even check (no port, no curl), so the caller can say
+# "running" rather than claim it is or is not reachable.
+t_servico_responde() {
+    local porta="$1" code
+    [ -n "$porta" ] || return 2
+    command -v curl >/dev/null 2>&1 || return 2
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 \
+            "http://localhost:$porta/" 2>/dev/null)"
+    case "$code" in
+        ""|000) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+# ---- Tandem's own record of a service; the unit is systemd's, this is ours ----
+
+# Kept so Tandem can report the address and check the port later, and so a name
+# is held to the same narrow set before it becomes a directory.
+t_servico_grava() {
+    local nome="$1" pasta="$2" porta="$3" comando="$4" dir
+    t_servico_nome_valido "$nome" || return 1
+    dir="$TANDEM_SERVICOS/$nome"
+    mkdir -p "$dir" 2>/dev/null || return 1
+    { printf 'PASTA=%s\n' "$pasta"
+      printf 'PORTA=%s\n' "$porta"
+      printf 'COMANDO=%s\n' "$comando"
+    } > "$dir/info" 2>/dev/null
+}
+
+t_servico_le() {   # <nome> <chave>
+    local dir="$TANDEM_SERVICOS/$1"
+    [ -f "$dir/info" ] || return 1
+    sed -n "s/^$2=//p" "$dir/info" | head -1
+}
+
+t_servico_apaga() {
+    local nome="$1"
+    t_servico_nome_valido "$nome" || return 1
+    rm -rf "${TANDEM_SERVICOS:?}/$nome" 2>/dev/null
+}
+
+# The names of every service Tandem manages, one per line, sorted.
+t_servico_lista_nomes() {
+    [ -d "$TANDEM_SERVICOS" ] || return 0
+    local d n
+    for d in "$TANDEM_SERVICOS"/*/; do
+        [ -d "$d" ] || continue
+        n="$(basename -- "$d")"
+        [ -f "$TANDEM_SERVICOS/$n/info" ] && printf '%s\n' "$n"
+    done | sort
 }
 
 # Every "name = value" of one registry key, straight out of system.reg.
