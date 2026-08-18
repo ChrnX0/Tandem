@@ -1796,14 +1796,32 @@ halves are written now. **All 784 messages are translated in all seven
 languages, 0 untranslated, 0 fuzzy** — the 35 new `servico` messages included.
 Suite 1473 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.27 IS PUBLISHED** — 2026-08-18, tag `v4.27` at `13913e8`, `.deb`
+(499680 bytes) and `.sha256` attached, and the published artifact verified
+byte-for-byte three ways: sha256 `1f980252…` from the release's own checksum
+file, from the downloaded bytes, and from a local build at that same commit. It
+is the first feature of the extrapolation round: `tandem relogio` (alias
+`clock`), a PROACTIVE clock check, plus a one-line clock status in `tandem
+doctor`. A wrong clock breaks TLS, licensing and Brazilian fiscal software
+(NF-e/NFC-e) in silence, and a dead CMOS battery is the usual cause; Tandem
+already inferred this reactively from a certificate error after a failure, and
+now checks it before. The verdict never cries wolf on a correct clock — the one
+firm signal is that the clock cannot predate the software running on it (the
+release date read from the shipped changelog, so no new constant drifts); an
+absurd future is flagged too, and a plausible date with automatic time off only
+advises. Reading the clock needs no privilege; setting it does, so Tandem prints
+`sudo timedatectl set-ntp true` rather than running sudo. Pure verdict function,
+proof-by-injection test, live `timedatectl` read machine-only like Wine; 792
+messages translated in all seven languages, 0 untranslated, 0 fuzzy. Suite 1489
+passed / 0 / 1 skipped; both literal counters read 0.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
 allows it; a bullet appended to a published entry is not. (At the time of
-writing, 4.26 is published and the three files agree on 4.26; the next version
-is 4.27, whose entry must be opened before anything is added to it. This note
-itself is a doc-only commit after the 4.26 release, which the guard allows.)
+writing, 4.27 is published; 4.28 is the in-flight version, its changelog entry
+fresh and unreleased, and the three files agree on 4.28.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
