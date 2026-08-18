@@ -107,7 +107,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
 equal "the expected values are the ones this suite was written with" \
       "43859841 4335" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "1297370014 2525" "$soma_padroes"
+      "446507627 2591" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -476,6 +476,33 @@ t_memoria_esquece "$MEM_A"
 equal "forgetting really erases" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$MEM_A" 2>/dev/null
 equal "forgetting what does not exist fails without breaking" "1" "$?"
+
+# WHO OWNS A MIME TYPE IS ASKED OF GIO, EVERYWHERE - not just where the lesson
+# was learned. xdg-mime does not resolve the MIME subclass chain and GIO does,
+# and GIO is what Nautilus uses; measured on a type Tandem never touches,
+# `gio mime text/sgml` answers vim.desktop while `xdg-mime query default
+# text/sgml` answers nothing.
+#
+# t_dono_do_tipo was written for tandem-repair when that was found, and
+# `tandem autoteste` went on asking xdg-mime alone - in check 7, the one whose
+# own comment says that without it the rest does not matter. This assertion is
+# deliberately a GLOB over every shipped executable rather than a check on the
+# file where the defect happened to be, because that narrow shape is exactly
+# what let it survive.
+for _f in "$ROOT"/src/bin/tandem "$ROOT"/src/bin/tandem-*; do
+    _corpo="$(sed 's/#.*//' "$_f")"
+    case "$_corpo" in
+        *"xdg-mime query default"*)
+            case "$(basename "$_f")" in
+                # tandem-repair SETS associations with both tools on purpose;
+                # reading is what must go through t_dono_do_tipo.
+                tandem-repair) pass "$(basename "$_f") does not read ownership from xdg-mime alone" ;;
+                *) fail "$(basename "$_f") does not read ownership from xdg-mime alone" \
+                        "t_dono_do_tipo, which asks GIO first" "a bare xdg-mime query" ;;
+            esac ;;
+        *) pass "$(basename "$_f") does not read ownership from xdg-mime alone" ;;
+    esac
+done
 
 # ONE CONFIG FILE, MORE THAN ONE WRITER. The temp file this write goes through
 # was named "$TANDEM_CONFIG.novo" - FIXED, not per process - so two writers at
