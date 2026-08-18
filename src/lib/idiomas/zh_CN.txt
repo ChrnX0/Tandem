@@ -3235,3 +3235,11 @@ Tandem - 时钟
 
 @doctor_relogio_errado
 时钟：{1} - 错误，请运行：tandem relogio
+
+@wine_mudou
+这个程序以前能正常打开，用的是 Wine {1}。系统现在是 Wine {2}，这个变化是它停止工作的最可能原因——是脚下的地面动了，而不是程序本身。
+
+Tandem 不会自行改动 Wine；如果你向别人求助，这就是要提到的事。
+
+@mem_campo_versao_wine
+打开时的 Wine：

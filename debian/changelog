@@ -1,3 +1,24 @@
+tandem (4.28) unstable; urgency=medium
+
+  * Second of the extrapolation round, and the silent failure one step later in
+    time than the clock: a Windows program that WORKED yesterday and broke today
+    because the system's Wine changed under it - a distro upgrade is the usual
+    cause. The owner sees a crash and no reason; the reason is that the ground
+    moved.
+  * Tandem's memory already keys what it learns to the FILE (a hash of the size
+    and the first and last MiB), so it now records the Wine version under which
+    a program last opened cleanly. On a later run that FAILS while the system
+    now carries a different Wine, Tandem says so plainly - "this opened before
+    under Wine X; the system now has Wine Y, the update may be why" - instead
+    of a bare error code.
+  * It never blames the update on a guess: the sentence appears only when there
+    IS a recorded success under a DIFFERENT version AND this run truly failed.
+    A first run, an unchanged Wine, or a run that worked say nothing new. The
+    comparison is a pure function with a proof-by-injection test; the recorded
+    version is on-disk state, language-neutral like the rest of the memory file.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 18 Aug 2026 21:20:00 +0000
+
 tandem (4.27) unstable; urgency=medium
 
   * The first of an extrapolation round: Tandem now catches the silent failures

@@ -3385,3 +3385,11 @@ reloj: {1}
 
 @doctor_relogio_errado
 reloj: {1} - MAL, ejecuta: tandem relogio
+
+@wine_mudou
+Este programa ya abría bien antes, con Wine {1}. El sistema ahora tiene Wine {2}, y ese cambio es el motivo más probable de que dejara de funcionar - el suelo se movió bajo él, no el programa en sí.
+
+Tandem no toca Wine por su cuenta; esto es lo que debes mencionar si le pides ayuda a alguien.
+
+@mem_campo_versao_wine
+Wine con que abrió: 

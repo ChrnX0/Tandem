@@ -3440,3 +3440,11 @@ horloge : {1}
 
 @doctor_relogio_errado
 horloge : {1} - FAUSSE, lancez : tandem relogio
+
+@wine_mudou
+Ce programme s'ouvrait bien avant, avec Wine {1}. Le système a maintenant Wine {2}, et ce changement est la cause la plus probable de son arrêt - le sol a bougé sous lui, pas le programme lui-même.
+
+Tandem ne modifie pas Wine de lui-même ; c'est ce qu'il faut mentionner si vous demandez de l'aide.
+
+@mem_campo_versao_wine
+Wine avec lequel il s'est ouvert : 

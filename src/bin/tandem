@@ -1040,7 +1040,8 @@ acao_memoria() {
             s/^RESOLVERAM=/  $(t_msg mem_campo_resolveram)/p
             s/^NAO_RESOLVERAM=/  $(t_msg mem_campo_nao_resolveram)/p
             s/^SEGUNDOS=/  $(t_msg mem_campo_segundos)/p
-            s/^VISTO_EM=/  $(t_msg mem_campo_visto_em)/p" "$arq")"$'\n'
+            s/^VISTO_EM=/  $(t_msg mem_campo_visto_em)/p
+            s/^VERSAO_WINE=/  $(t_msg mem_campo_versao_wine)/p" "$arq")"$'\n'
         # LIMITE is the ONLY field here that is neither a single word nor a
         # plain sentence, and it was printed by the sed map above like all the
         # rest. Found in the field, on a real .deb built for arm64, and it
