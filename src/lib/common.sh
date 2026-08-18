@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.23"
+TANDEM_VERSAO="4.24"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1689,7 +1689,22 @@ t_memoria_grava() {
             printf 'PROGRAMA=%s\n' "$(basename -- "$prog")"
         } > "$arq" 2>/dev/null || return 1
     fi
-    tmp="$arq.novo"
+    # A PER-PROCESS temp name AND a lock, the same fix t_config_grava got in
+    # 4.22 - and the reason it belongs here too is the reason 4.22 existed:
+    # this is a read-modify-write, "$arq.novo" was a FIXED name, and Tandem
+    # writes several keys per run (RESOLVERAM, CONFIRMADO, SEGUNDOS, VISTO_EM,
+    # PROVA...) while a detached background process may touch the same file.
+    # Measured on this exact code before the fix: four concurrent writers of
+    # thirty keys each lost two of the four keys entirely. The lock is
+    # best-effort by the rule the prefix lock follows - a lock that cannot be
+    # CREATED (full disk, read-only home) must not be taken for one that is
+    # held, so the write proceeds unserialised rather than refusing to record
+    # a lesson.
+    tmp="$arq.novo.$$"
+    local trava="${TANDEM_TRAVAS:-$TANDEM_MEMORIA}/memoria.lock"
+    if { exec 7> "$trava"; } 2>/dev/null; then
+        flock -w 10 7 2>/dev/null || :
+    fi
     # The file format is one KEY=VALUE per line, so the value must be one line.
     # A multi-line value used to be written raw, and the rewrite filter
     # (grep -v "^KEY=") only removes the FIRST physical line - the continuation
@@ -1706,6 +1721,10 @@ t_memoria_grava() {
         grep -E '^(#|[A-Z_]+=)' "$arq" 2>/dev/null | grep -v "^$chave="
         printf '%s=%s\n' "$chave" "$valor"
     } > "$tmp" 2>/dev/null && mv -f "$tmp" "$arq" 2>/dev/null
+    local c=$?
+    rm -f "$tmp" 2>/dev/null
+    { exec 7>&-; } 2>/dev/null
+    return $c
 }
 
 # Appends an item to a space-separated list, without repeating it.
@@ -4155,6 +4174,30 @@ t_trava_prefixo_solta() {
     return 0
 }
 
+# The LIMITE memory field, turned into a sentence at DISPLAY time. It is stored
+# as "class|rest": the class is language-neutral on-disk format, and the rest is
+# already a translated sentence for the paths that build one from t_msg (the
+# bitness dead end) or from the per-language limites.tsv. Four handlers instead
+# wrote hard-coded Portuguese into the rest - arquitetura, agente, biblioteca,
+# outra-familia - and acao_memoria printed it verbatim, so a non-Portuguese
+# owner met raw Portuguese on `tandem memoria` and inside `tandem socorro`.
+# Same doctrine as t_resultado_amigavel: keep the token on disk, translate on
+# the way to the screen. Translating by CLASS also fixes it for memory files
+# ALREADY written with the Portuguese rest, and the fall-through prints the rest
+# untouched for the paths that already store a translated sentence.
+t_limite_amigavel() {
+    local v="${1:-}" classe resto
+    classe="${v%%|*}"; resto="${v#*|}"
+    case "$classe" in
+        arquitetura)   t_msg mem_limite_arquitetura ;;
+        agente)        t_msg mem_limite_agente ;;
+        biblioteca)    t_msg mem_limite_biblioteca ;;
+        outra-familia) t_msg mem_limite_outra_familia ;;
+        versao)        t_msg mem_limite_versao "${resto%%>*}" "${resto#*>}" ;;
+        *)             printf '%s' "$resto" ;;
+    esac
+}
+
 t_resultado_amigavel() {
     local valor="${1:-}" chave
     [ -n "$valor" ] || return 1
@@ -4520,10 +4563,44 @@ t_saida_fecha() {
 # The handlers are deliberately not converted here. Their fallbacks end in
 # messages of their own - a shell installer that cannot be confirmed is refused,
 # a .deb is not - and that is content, not duplication.
+# Is the GUI not merely CONFIGURED but REACHABLE? t_tem_gui only asks whether
+# DISPLAY/WAYLAND_DISPLAY is set, and a set-but-dead display is exactly how a
+# window fails to appear: zenity then exits 1 with no stderr - byte for byte
+# what a "No" click looks like - and treating that as "the owner said no" made
+# tandem restore give up in silence on a destructive path. The X socket is a
+# dependency-free discriminator: a live ":N" display has /tmp/.X11-unix/XN, a
+# dead one does not. A "host:N" (remote/TCP) display cannot be probed this way,
+# so it is assumed reachable rather than refused - being unable to check means
+# going ahead, the same rule the prefix-architecture verdict follows.
+t_gui_alcancavel() {
+    local n
+    if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+        case "$WAYLAND_DISPLAY" in
+            /*) [ -S "$WAYLAND_DISPLAY" ] && return 0 ;;
+            *)  [ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u 2>/dev/null)}/$WAYLAND_DISPLAY" ] && return 0 ;;
+        esac
+    fi
+    if [ -n "${DISPLAY:-}" ]; then
+        case "$DISPLAY" in
+            :*) n="${DISPLAY#:}"; n="${n%%.*}"
+                [ -S "/tmp/.X11-unix/X$n" ] && return 0 ;;
+            *)  return 0 ;;
+        esac
+    fi
+    return 1
+}
+
 t_pergunta_ou_terminal() {
     local texto="$1" sim="$2" nao="$3" prompt="$4" r
-    t_pergunta "$texto" "$sim" "$nao" && return 0
-    t_tem_gui && return 1
+    # Decide UPFRONT whether there is a window to ask in, instead of asking and
+    # then guessing what a failure meant. Only a GUI that is present, reachable
+    # AND has zenity can carry a question - and only then is a non-yes a real
+    # "no" that may be respected silently. Anything else is "nobody was asked",
+    # which must fall to the terminal or be reported, never swallowed.
+    if t_tem_gui && t_gui_alcancavel && command -v zenity >/dev/null 2>&1; then
+        t_pergunta "$texto" "$sim" "$nao" && return 0
+        return 1
+    fi
     [ -t 0 ] || return 2
     printf '%s\n\n%s' "$texto" "$prompt"
     read -r r

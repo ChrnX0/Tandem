@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2528138077 4346" "$soma_esperados"
+      "3245518083 4356" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -583,6 +583,83 @@ equal "no temp file is left behind" "0" "$SOBRAS"
 naocontem "the config temp file is not a name two processes share" \
           'tmp="$TANDEM_CONFIG.novo"' "$(sed 's/#.*//' "$ROOT/src/lib/common.sh")"
 
+# THE SAME RACE, IN THE MEMORY WRITER. t_config_grava got a per-process temp
+# name and a lock in 4.22; t_memoria_grava was the identical read-modify-write
+# with a FIXED "$arq.novo" and no lock, left behind - the exact
+# guard-scoped-to-where-the-defect-was-noticed shape. Tandem writes several
+# keys per run (RESOLVERAM, CONFIRMADO, SEGUNDOS, VISTO_EM, PROVA) and a
+# detached background process can touch the same file. Measured on the old
+# code: four writers of thirty keys each lost two of the four keys entirely.
+MEMR="$TMPROOT/memoria-corrida"; rm -rf "$MEMR"; mkdir -p "$MEMR/mem"
+head -c 4000 /dev/urandom > "$MEMR/prog.exe"
+for w in A B C D; do
+    ( TANDEM_LIB="$ROOT/src/lib" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        export TANDEM_MEMORIA="'"$MEMR"'/mem" TANDEM_TRAVAS="'"$MEMR"'"
+        for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+            t_memoria_grava "'"$MEMR"'/prog.exe" "K_'"$w"'" "v-$i"
+        done' 2>/dev/null ) &
+done
+wait
+MEM_ARQ="$(ls "$MEMR"/mem/*.txt 2>/dev/null | head -1)"
+MEM_DUP=0
+for w in A B C D; do
+    n="$(grep -c "^K_$w=" "$MEM_ARQ" 2>/dev/null || echo 0)"
+    [ "$n" = 1 ] || MEM_DUP=$((MEM_DUP + 1))
+done
+equal "four writers on one memory file leave one line per key" "0" "$MEM_DUP"
+naocontem "the memory temp file is not a name two processes share" \
+          'tmp="$arq.novo"' "$(sed 's/#.*//' "$ROOT/src/lib/common.sh")"
+
+# THE LIMITE MEMORY FIELD IS TRANSLATED ON THE WAY TO THE SCREEN, not printed
+# verbatim. It is stored "class|rest"; four handlers wrote hard-coded Portuguese
+# into the rest (arquitetura, agente, biblioteca, outra-familia), and acao_memoria
+# stripped the class and printed the rest, so a non-Portuguese owner met raw
+# Portuguese on `tandem memoria` and inside `tandem socorro`. t_limite_amigavel
+# translates by CLASS, which also repairs memory files already written with the
+# Portuguese rest.
+limamig() {
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_limite_amigavel "$1"' _ "$1" 2>/dev/null
+}
+contem "the ARM limit reads as English, not Portuguese" \
+       "phone processors" "$(limamig 'arquitetura|arm sem tradutor')"
+naocontem "and the stored Portuguese does not leak through" \
+          "sem tradutor" "$(limamig 'arquitetura|arm sem tradutor')"
+contem "the Java-agent limit reads as English" \
+       "add-on" "$(limamig 'agente|nao abre sozinho')"
+contem "the library limit reads as English" \
+       "library" "$(limamig 'biblioteca|nao abre sozinho')"
+contem "the rpm limit reads as English" \
+       "does not install directly" "$(limamig 'outra-familia|rpm nao instala aqui')"
+contem "the version limit carries its numbers into the sentence" \
+       "needs Android 24, and this one is 21" "$(limamig 'versao|24>21')"
+# The paths that already store a translated sentence must pass through untouched.
+contem "an already-translated limit sentence is printed as stored" \
+       "keeps talking here" "$(limamig 'bitola|keeps talking here')"
+# No handler may write a raw-Portuguese LIMITE rest again - assert by the shape,
+# across every handler, not just the four where it was found.
+naocontem "no handler stores 'nao abre sozinho' as a LIMITE sentence to be shown raw" \
+          'LIMITE "agente|nao abre sozinho' "$(grep -h 't_limite_amigavel' "$ROOT"/src/bin/tandem)"
+# END TO END through acao_memoria, not just the helper - because a helper that
+# is correct but never CALLED leaks all the same. A memory file carrying the
+# Portuguese rest, shown in English, must read as English with no Portuguese
+# left. This is the assertion that fails if the display stops calling
+# t_limite_amigavel and goes back to "${lim#*|}".
+MEMPT="$TMPROOT/mem-limite-pt"; rm -rf "$MEMPT"; mkdir -p "$MEMPT"
+{
+    printf 'PROGRAMA=app.apk
+'
+    printf 'LIMITE=arquitetura|arm sem tradutor
+'
+} > "$MEMPT/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.txt"
+TELA_PT="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
+           TANDEM_MEMORIA="$MEMPT" bash "$ROOT/src/bin/tandem" memoria 2>&1)"
+contem "tandem memoria shows the ARM limit in English, through acao_memoria" \
+       "phone processors" "$TELA_PT"
+naocontem "and the stored Portuguese never reaches the screen through acao_memoria" \
+          "sem tradutor" "$TELA_PT"
+
 # A VALUE CANNOT FORGE A KEY, and this is asserted as a security property
 # rather than left as a side effect. The newline escaping in t_memoria_grava
 # was written for a formatting reason - a multi-line value left orphan
@@ -673,6 +750,31 @@ resp_sem_ninguem() {
         echo $?'
 }
 equal "with no window and no terminal, the answer is 'nobody asked'" "2" "$(resp_sem_ninguem)"
+
+# A DISPLAY THAT IS SET BUT DEAD is not a window. t_tem_gui only checks that
+# DISPLAY/WAYLAND_DISPLAY is set, and a set-but-unreachable display makes zenity
+# exit 1 with no stderr - byte for byte a "No" click - so t_pergunta_ou_terminal
+# used to return 1 (said no) and its callers gave up in SILENCE on tandem
+# restore, a destructive path. t_gui_alcancavel tells them apart by the X
+# socket, which needs no extra tool. Simulated with a DISPLAY whose socket
+# cannot exist.
+gui_morto() {
+    env -i PATH="/usr/bin:/bin" HOME="$TMPROOT" TANDEM_LIB="$ROOT/src/lib" \
+        DISPLAY=":99123" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_gui_alcancavel && echo alcancavel || echo morto'
+}
+equal "a set-but-dead display is not reachable" "morto" "$(gui_morto)"
+# With that dead display and no terminal, the destructive question must report
+# 'nobody asked' (2), never a silent 'no' (1).
+resp_display_morto() {
+    env -i PATH="/usr/bin:/bin" HOME="$TMPROOT" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_IDIOMA_FORCADO=en DISPLAY=":99123" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_pergunta_ou_terminal "q" "a" "b" "p" </dev/null >/dev/null 2>&1
+        echo $?'
+}
+equal "a dead display with no terminal is 'nobody asked', not a silent no" "2" "$(resp_display_morto)"
 
 # END TO END, because the silence was in the COMMAND and not in the library.
 # Measured through the project's own pty harness before the fix: 13 bytes for
@@ -7040,8 +7142,15 @@ cat > "$PAGINA.html" <<'FIMHTML'
 <html><head><title>404 Not Found</title></head>
 <body><h1>Not Found</h1><p>The requested URL was not found on this server.</p></body></html>
 FIMHTML
+# EVERY file handler, exe and script included. The list used to omit them, and
+# that omission is why tandem-exe went eight versions building a whole Wine
+# prefix for a 404 page and ending at "closed with an error (code 1)": the
+# guard that was supposed to hold "by every handler" iterated a subset. A guard
+# named for all and scoped to some is the exact shape this session keeps
+# finding. exe and script check before any prefix/confirmation, so neither
+# needs Wine nor a terminal here.
 for par in "apk:apk" "AppImage:appimage" "jar:jar" "rpm:rpm" "snap:snap" \
-           "flatpakref:flatpak" "deb:deb"; do
+           "flatpakref:flatpak" "deb:deb" "exe:exe" "sh:script"; do
     ext="${par%%:*}"; h="${par##*:}"
     cp "$PAGINA.html" "$PAGINA.$ext"
     saida="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
@@ -7566,18 +7675,24 @@ MEMLIM="$TMPROOT/mem-limite"; mkdir -p "$MEMLIM"
 {
     printf 'PROGRAMA=anydesk_8.0.4-1_arm64.deb\n'
     printf 'ARQUITETURA=arm64\n'
-    printf 'LIMITE=arquitetura|Feito para outro processador.\\n\\nEle e para arm64.\n'
+    # A FALL-THROUGH class (bitola), whose stored sentence IS what the owner
+    # should read - because since 4.24 the four hard-coded-Portuguese classes
+    # (arquitetura, agente, biblioteca, outra-familia) are translated by CLASS
+    # via t_limite_amigavel and their stored rest is deliberately discarded,
+    # tested just above. This case still exercises the display plumbing: strip
+    # the class separator, turn escaped newlines into breaks, indent.
+    printf 'LIMITE=bitola|Made for another processor.\\n\\nIt is arm64.\n'
 } > "$MEMLIM/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt"
 TELA_LIM="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en \
             TANDEM_MEMORIA="$MEMLIM" bash "$ROOT/src/bin/tandem" memoria 2>&1)"
-naocontem "the class token never reaches the screen" "arquitetura|" "$TELA_LIM"
+naocontem "the class token never reaches the screen" "bitola|" "$TELA_LIM"
 case "$TELA_LIM" in
     *'\n'*) fail "an escaped newline is shown as a line break, not as letters" \
                  "no literal backslash-n" "$TELA_LIM" ;;
     *) pass "an escaped newline is shown as a line break, not as letters" ;;
 esac
 contem "and the sentence itself survives intact" \
-       "Feito para outro processador." "$TELA_LIM"
+       "Made for another processor." "$TELA_LIM"
 # A blank continuation line must not be padded out with spaces.
 if printf '%s\n' "$TELA_LIM" | grep -q '^ \+$'; then
     fail "blank lines in a limit are not padded with spaces" "no space-only line" "found one"

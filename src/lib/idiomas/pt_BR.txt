@@ -2409,6 +2409,21 @@ Aparência. Diga qual:
 
 Muda só as janelas do Tandem. Nada mais neste computador muda.
 
+@mem_limite_arquitetura
+feito para processadores de celular (ARM), que este computador não é
+
+@mem_limite_agente
+um complemento Java, não um programa que abre sozinho
+
+@mem_limite_biblioteca
+uma biblioteca Java, não um programa que abre sozinho
+
+@mem_limite_outra_familia
+um .rpm, que este tipo de Linux não instala direto
+
+@mem_limite_versao
+precisa do Android {1}, e este é o {2}
+
 @tema_nome_sistema
 o do próprio computador
 
