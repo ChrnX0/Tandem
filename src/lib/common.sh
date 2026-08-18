@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.21"
+TANDEM_VERSAO="4.22"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4979,16 +4979,54 @@ t_config_le() {
     printf '%s' "$v"
 }
 
+# ONE FILE, AND MORE THAN ONE WRITER. This is a read-modify-write on a file
+# every command touches, and the temp file it went through was named
+# "$TANDEM_CONFIG.novo" - FIXED, not per process. Two writers at once both
+# truncate that same name and both move it over the config, so their output
+# interleaves.
+#
+# Measured, four concurrent writers of sixty keys each: the file came out with
+# CHAVE_A and CHAVE_C present TWICE, each holding a different value. And
+# t_config_le takes `tail -1`, so the reader then picks whichever duplicate
+# landed last - which in that run was the OLDER value.
+#
+# It is not a corner: t_lista_talvez_atualiza stamps LISTA_DIA from a DETACHED
+# background process that tandem-exe spawns on the way to opening a program,
+# while the foreground is free to write something else. Two double clicks make
+# it likelier, not possible.
+#
+# What is in this file makes it worse than untidy. ENVIO_HOJE and
+# ENVIO_ESPERA_ATE are the caps that stop a machine with no route retrying
+# every queued line all day - the defect the changelog for 4.x calls "a cap on
+# successes is not a cap". And RECEBER and ENVIAR are the owner's own on/off
+# choice for the community list: a duplicate read from the wrong line can turn
+# back on something he turned off, which is consent, not a setting.
+#
+# Per-process temp name AND a lock, because the temp name alone only stops the
+# interleaving - two complete writes would still race on the move and one key
+# would vanish. The lock is best-effort by the same rule the prefix lock
+# follows: a lock that cannot be CREATED (full disk, read-only home) must not
+# be mistaken for a lock that is taken. Without it the write goes ahead
+# unserialised, which is what happens today and is better than refusing to
+# save a setting.
 t_config_grava() {
-    local chave="$1" valor="$2" tmp
+    local chave="$1" valor="$2" tmp trava
     mkdir -p "$(dirname -- "$TANDEM_CONFIG")" 2>/dev/null || return 1
     [ -f "$TANDEM_CONFIG" ] || {
         printf '# %s\n' "$(t_msg arq_config_cab)" > "$TANDEM_CONFIG"; }
-    tmp="$TANDEM_CONFIG.novo"
+    tmp="$TANDEM_CONFIG.novo.$$"
+    trava="${TANDEM_TRAVAS:-$(dirname -- "$TANDEM_CONFIG")}/config.lock"
+    if { exec 6> "$trava"; } 2>/dev/null; then
+        flock -w 10 6 2>/dev/null || :
+    fi
     {
         grep -E '^(#|[A-Z_]+=)' "$TANDEM_CONFIG" 2>/dev/null | grep -v "^$chave="
         printf '%s=%s\n' "$chave" "$valor"
     } > "$tmp" 2>/dev/null && mv -f "$tmp" "$TANDEM_CONFIG"
+    local c=$?
+    rm -f "$tmp" 2>/dev/null
+    { exec 6>&-; } 2>/dev/null
+    return $c
 }
 
 # Has the owner decided? "sim", "nao", or failure when he was never asked.

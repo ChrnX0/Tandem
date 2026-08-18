@@ -1,3 +1,38 @@
+tandem (4.22) unstable; urgency=medium
+
+  * THE SETTINGS FILE COULD END UP WITH THE SAME KEY TWICE, holding two
+    different values. It is a read-modify-write on one file every command
+    touches, and the temp file it went through was named
+    "$TANDEM_CONFIG.novo" - FIXED, not per process - so two writers at once
+    truncated the same name and interleaved into it. Measured with four
+    concurrent writers of sixty keys each: CHAVE_A and CHAVE_C both came out
+    present twice. t_config_le takes `tail -1`, so the reader then picks
+    whichever duplicate landed last, which in that run was the OLDER value.
+  * Not a corner. t_lista_talvez_atualiza stamps LISTA_DIA from a DETACHED
+    background process that tandem-exe spawns on its way to opening a program,
+    so an ordinary double click already has two writers.
+  * What lives in that file is why this is worse than untidy. ENVIO_HOJE and
+    ENVIO_ESPERA_ATE are the caps that stop a machine with no route to the
+    address retrying every queued line all day. And RECEBER and ENVIAR are the
+    owner's own on/off choice for the community list - a duplicate read from
+    the wrong line can turn back on something he turned off, which is consent
+    rather than a setting.
+  * Fixed with a per-process temp name AND a lock: the name alone stops the
+    interleaving, but two complete writes would still race on the move and one
+    key would simply vanish. The lock is best-effort by the rule the prefix
+    lock already follows - a lock that cannot be CREATED, on a full disk or a
+    read-only home, must never be mistaken for a lock that is taken.
+  * Two sweeps held with nothing to fix and are recorded because they cost the
+    same time: the community list's signature path answers correctly on all
+    five branches, exercised with real Ed25519 keys - a file signed by ANOTHER
+    key is refused, an unreadable signature is refused, and an absent one is
+    accepted, which is the documented transition policy. And the file
+    disappearing from under all nine handlers the instant they start - a pen
+    drive unplugged - produces a sentence naming the path in every one of
+    them, with no silence, no bash error and no traceback.
+
+ -- Tandem <rockx0@gmail.com>  Mon, 17 Aug 2026 01:30:00 +0000
+
 tandem (4.21) unstable; urgency=medium
 
   * The panel a shop owner who never opens a terminal sees was eighteen rows of
