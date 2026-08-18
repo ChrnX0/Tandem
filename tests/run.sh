@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "114340328 4535" "$soma_esperados"
+      "3626666402 4662" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -2004,6 +2004,93 @@ contem "instalar with a folder that is not there names it" \
        "could not find" "$(svc_cmd instalar "$TMPROOT/nope-nope" 2>&1)"
 contem "an unknown subcommand lists what it can do" \
        "instalar, ver" "$(svc_cmd bogus 2>&1)"
+
+section "the clock: the silent failure one step before the software fails"
+
+# A wrong clock breaks TLS, licences and fiscal software without a word, and a
+# dead CMOS battery is the usual cause. Tandem already RECOGNISES it after the
+# fact (t_causa_token -> relogio); this checks it BEFORE. The live timedatectl
+# read is machine-only (like Wine); the judgement is a pure function with a test
+# that never cries wolf on a correct clock.
+
+REL_EPOCH="$(date -u -d '2026-08-18' +%s)"
+# --- the verdict truth table (pure) ---
+equal "a date before this software's release is certainly wrong" \
+      "atrasado"  "$(t_relogio_veredito "$(date -u -d 2020-01-01 +%s)" "$REL_EPOCH" yes)"
+equal "an absurd far-future date is certainly wrong" \
+      "adiantado" "$(t_relogio_veredito "$(date -u -d 2099-01-01 +%s)" "$REL_EPOCH" yes)"
+equal "a plausible date with automatic time on is fine" \
+      "ok"        "$(t_relogio_veredito "$(date -u -d 2026-09-01 +%s)" "$REL_EPOCH" yes)"
+equal "a plausible date with automatic time off is only an advisory" \
+      "sem_hora_automatica" "$(t_relogio_veredito "$(date -u -d 2026-09-01 +%s)" "$REL_EPOCH" no)"
+# The guard that matters: a machine legitimately running old software years later
+# must NOT be told its clock is wrong.
+equal "five years after release, with time on, is not flagged" \
+      "ok"        "$(t_relogio_veredito "$(date -u -d 2031-09-01 +%s)" "$REL_EPOCH" yes)"
+# With no known release date, only NTP may speak - never a firm condemnation.
+equal "with no epoch, an old date and time-on is not condemned" \
+      "ok"        "$(t_relogio_veredito "$(date -u -d 1990-01-01 +%s)" "" yes)"
+equal "with no epoch, time-off is still just an advisory" \
+      "sem_hora_automatica" "$(t_relogio_veredito "$(date -u -d 2026-09-01 +%s)" "" no)"
+
+# --- the NTP flag parser, fed timedatectl-show text ---
+equal "NTP on is read from timedatectl show" \
+      "yes" "$(printf 'Timezone=America/Sao_Paulo\nNTP=yes\nNTPSynchronized=yes\n' | t_relogio_ntp)"
+equal "NTP off is read too, not confused with NTPSynchronized" \
+      "no"  "$(printf 'NTP=no\nNTPSynchronized=yes\n' | t_relogio_ntp)"
+
+# --- the release epoch, read from the shipped changelog ---
+REL_CH="$TMPROOT/relogio-changelog"
+printf ' -- Tandem <x@y>  Tue, 18 Aug 2026 20:15:00 +0000\n' > "$REL_CH"
+equal "the release epoch comes out of the changelog trailer" \
+      "$(date -u -d 'Tue, 18 Aug 2026 20:15:00 +0000' +%s)" \
+      "$(TANDEM_CHANGELOG="$REL_CH" bash -c '. "'"$ROOT"'/src/lib/common.sh"; TANDEM_CHANGELOG="'"$REL_CH"'" t_relogio_epoch_conhecido')"
+
+# --- the handler, with timedatectl stubbed (it needs systemd, absent in CI) ---
+RELBIN="$TMPROOT/relogio-bin"; mkdir -p "$RELBIN"
+# a timedatectl that "works" and reports automatic time OFF
+printf '#!/bin/sh\ncase "$1" in show) echo "NTP=no"; echo "NTPSynchronized=no"; exit 0;; esac\nexit 0\n' > "$RELBIN/timedatectl"
+chmod +x "$RELBIN/timedatectl"
+RELH="$TMPROOT/relogio-home"; mkdir -p "$RELH/.config/tandem"; printf '4.27\n' > "$RELH/.config/tandem/.primeira-vez"
+rel_cmd() {  # $1 = TANDEM_CHANGELOG value (may be empty)
+    env -i HOME="$RELH" PATH="$RELBIN:/usr/bin:/bin" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+        TANDEM_CHANGELOG="$1" \
+        bash "$ROOT/src/bin/tandem" relogio 2>&1
+}
+# release epoch in the FUTURE -> "now" is before it -> firmly wrong (atrasado),
+# which is exactly a battery reset, driven end to end through the handler.
+CH_FUT="$TMPROOT/relogio-ch-future"
+printf ' -- Tandem <x@y>  Wed, 01 Jan 2099 00:00:00 +0000\n' > "$CH_FUT"
+contem "a clock before the release date is called wrong, with the fix command" \
+       "sudo timedatectl set-ntp true" "$(rel_cmd "$CH_FUT")"
+contem "and it says the clock is wrong, not merely off" \
+       "wrong" "$(rel_cmd "$CH_FUT")"
+# a plausible date (real changelog date in the past) but NTP off -> advisory only
+CH_PAST="$TMPROOT/relogio-ch-past"
+printf ' -- Tandem <x@y>  Tue, 18 Aug 2026 20:15:00 +0000\n' > "$CH_PAST"
+naocontem "a plausible date is not called wrong" \
+          "is wrong" "$(rel_cmd "$CH_PAST")"
+contem "but automatic-time-off is still surfaced with the fix" \
+       "set-ntp true" "$(rel_cmd "$CH_PAST")"
+
+# no timedatectl at all -> a plain sentence, never silence
+RELBIN2="$TMPROOT/relogio-bin-empty"; mkdir -p "$RELBIN2"
+saida_sem_td="$(env -i HOME="$RELH" PATH="$RELBIN2:/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    bash "$ROOT/src/bin/tandem" relogio 2>&1)"
+if [ -n "$saida_sem_td" ]; then
+    pass "with no time service, tandem relogio still says something"
+else
+    fail "with no time service, tandem relogio still says something" "a sentence" "silence"
+fi
+
+# doctor shows a clock line when timedatectl works, and skips it when it does not
+doc_com_td="$(env -i HOME="$RELH" PATH="$RELBIN:/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" TANDEM_CHANGELOG="$CH_PAST" \
+    bash "$ROOT/src/bin/tandem" doctor 2>&1)"
+contem "tandem doctor carries a clock line when it can read the clock" \
+       "clock:" "$doc_com_td"
 
 
 section "install: name the right cause, or say nothing at all"

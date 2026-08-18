@@ -2385,6 +2385,7 @@ Tandem - lance des programmes Windows, des applis Android et des paquets Linux.
   tandem portas               TPE, balance, imprimante : sur quel COM ils sont
   tandem portas fixar <p> <d> fixe un appareil sur un port (ex. : COM2)
   tandem servico <dossier>   lance un service web et le garde actif
+  tandem relogio              vérifie l'horloge (fausse: casse fiscal, TLS)
   tandem idioma [code]        dans quelle langue Tandem parle (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <nom>   cherche un programme Linux qui fait la meme chose
   tandem receita <fichier>    exporte ce qu'il a appris, pour l'envoyer
@@ -3401,3 +3402,41 @@ Il n'y a pas encore de journaux pour {1}.
 Je ne connais pas "tandem servico {1}".
 
 Ce que je sais faire : instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.
+
+@relogio_titulo
+Tandem - l'horloge
+
+@relogio_sem_timedatectl
+Je ne peux pas vérifier l'horloge sur ce système - il n'a pas le service d'heure de systemd.
+
+Pour l'instant elle indique : {1}
+
+@relogio_atrasado
+Votre horloge est fausse. Elle indique {1} - une date antérieure à la sortie même de ce logiciel, ce que provoque une pile morte sur la carte mère : elle remet la date à zéro à chaque démarrage.
+
+Tant que l'horloge est fausse, les sites sécurisés, les licences de logiciels et les programmes fiscaux (NF-e/NFC-e) échouent sans dire pourquoi. Réactivez l'heure automatique :
+
+  sudo timedatectl set-ntp true
+
+Si cet ordinateur n'a pas internet, réglez-la à la main avec la date et l'heure réelles :
+
+  sudo timedatectl set-time "2026-08-18 15:30:00"
+
+@relogio_adiantado
+Votre horloge est fausse. Elle indique {1} - une date très loin dans le futur, ce qui casse les sites sécurisés, les licences et les programmes fiscaux (NF-e/NFC-e). Réactivez l'heure automatique :
+
+  sudo timedatectl set-ntp true
+
+@relogio_sem_hora_automatica
+L'horloge indique {1}, ce qui semble correct - mais l'heure automatique est désactivée, elle va donc dériver, et si la pile de la carte mère meurt elle se remettra à zéro sans prévenir. Activez-la pour qu'elle reste juste :
+
+  sudo timedatectl set-ntp true
+
+@relogio_ok
+L'horloge indique {1} et l'heure automatique est activée. Rien à faire.
+
+@doctor_relogio_ok
+horloge : {1}
+
+@doctor_relogio_errado
+horloge : {1} - FAUSSE, lancez : tandem relogio

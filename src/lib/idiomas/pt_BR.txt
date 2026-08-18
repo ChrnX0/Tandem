@@ -2333,6 +2333,7 @@ Tandem - roda programas Windows, apps Android e pacotes do Linux.
   tandem portas               pinpad, balanca, impressora: em que COM ficaram
   tandem portas fixar <p> <d> prende um aparelho numa porta (ex.: COM2)
   tandem servico <pasta>     roda um servico web e o mantem no ar
+  tandem relogio              confere o relógio (errado quebra fiscal, TLS)
   tandem idioma [codigo]      em que idioma o Tandem fala (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <nome>  procura um programa de Linux que faca o mesmo
   tandem receita <arquivo>    exporta o que aprendeu, para mandar a alguem
@@ -3342,3 +3343,41 @@ Ainda não há registros de {1}.
 Não conheço "tandem servico {1}".
 
 O que eu sei fazer: instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.
+
+@relogio_titulo
+Tandem - o relógio
+
+@relogio_sem_timedatectl
+Não consigo conferir o relógio neste sistema - ele não tem o serviço de horário do systemd.
+
+Agora ele marca: {1}
+
+@relogio_atrasado
+O seu relógio está errado. Ele marca {1} - uma data anterior ao próprio lançamento deste programa, que é o que uma bateria morta na placa-mãe faz: zera a data toda vez que o computador é ligado.
+
+Enquanto o relógio está errado, sites seguros, licenças de programas e programas fiscais (NF-e/NFC-e) falham sem dizer por quê. Volte a ligar o horário automático:
+
+  sudo timedatectl set-ntp true
+
+Se este computador não tem internet, acerte na mão com a data e a hora reais:
+
+  sudo timedatectl set-time "2026-08-18 15:30:00"
+
+@relogio_adiantado
+O seu relógio está errado. Ele marca {1} - uma data muito no futuro, o que quebra sites seguros, licenças de programas e programas fiscais (NF-e/NFC-e). Volte a ligar o horário automático:
+
+  sudo timedatectl set-ntp true
+
+@relogio_sem_hora_automatica
+O relógio marca {1}, o que parece certo - mas o horário automático está desligado, então ele vai se atrasando, e se a bateria da placa-mãe morrer ele zera sem avisar. Ligue para ele se manter certo:
+
+  sudo timedatectl set-ntp true
+
+@relogio_ok
+O relógio marca {1} e o horário automático está ligado. Nada a fazer.
+
+@doctor_relogio_ok
+relógio: {1}
+
+@doctor_relogio_errado
+relógio: {1} - ERRADO, rode: tandem relogio

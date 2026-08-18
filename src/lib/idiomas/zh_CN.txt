@@ -2209,6 +2209,7 @@ Tandem - 运行 Windows 程序、Android 应用和 Linux 软件包。
   tandem portas               刷卡机、电子秤、打印机：各自落在哪个 COM
   tandem portas fixar <p> <d> 把设备固定到某个口（例如 COM2）
   tandem servico <文件夹>      运行网络服务并保持其运行
+  tandem relogio              检查时钟（错误会破坏税务、TLS、授权）
   tandem idioma [代码]        Tandem 用哪种语言（pt_BR en es fr zh_CN hi ar）
   tandem alternativas <名字>  找一个干同样活的 Linux 程序
   tandem receita <文件>       导出学到的东西，好发给别人
@@ -3196,3 +3197,41 @@ Tandem - {1} 的日志
 我不认识 "tandem servico {1}"。
 
 我能做的：instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover。
+
+@relogio_titulo
+Tandem - 时钟
+
+@relogio_sem_timedatectl
+我无法在此系统上检查时钟——它没有 systemd 的时间服务。
+
+它现在显示：{1}
+
+@relogio_atrasado
+你的时钟是错的。它显示 {1}——一个早于本软件发布的日期，这正是主板电池没电时会发生的：每次开机都把日期清零。
+
+时钟错误时，安全网站、软件授权和税务程序（NF-e/NFC-e）都会莫名其妙地失败。请重新打开自动时间：
+
+  sudo timedatectl set-ntp true
+
+如果这台电脑没有网络，请用真实的日期和时间手动设置：
+
+  sudo timedatectl set-time "2026-08-18 15:30:00"
+
+@relogio_adiantado
+你的时钟是错的。它显示 {1}——一个非常靠后的未来日期，这会破坏安全网站、软件授权和税务程序（NF-e/NFC-e）。请重新打开自动时间：
+
+  sudo timedatectl set-ntp true
+
+@relogio_sem_hora_automatica
+时钟显示 {1}，看起来是对的——但自动时间已关闭，所以它会逐渐走偏，若主板电池没电还会不声不响地清零。请打开它以保持准确：
+
+  sudo timedatectl set-ntp true
+
+@relogio_ok
+时钟显示 {1}，自动时间已开启。无需处理。
+
+@doctor_relogio_ok
+时钟：{1}
+
+@doctor_relogio_errado
+时钟：{1} - 错误，请运行：tandem relogio
