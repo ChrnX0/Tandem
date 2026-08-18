@@ -337,6 +337,19 @@ mostra o que um serviço imprimiu. Um serviço que é um
 .I .exe
 Windows só roda em ambiente criado pelo Tandem (regra 1).
 .TP
+.B tandem relogio
+Confere o relógio da máquina antes que um programa falhe por causa dele. Um
+relógio errado quebra em silêncio conexões seguras (TLS), licenças de programas
+e software fiscal (NF-e/NFC-e); a causa comum é uma bateria morta na placa-mãe
+que zera a data a cada vez que o computador liga. O Tandem só julga o relógio
+quando tem certeza \(em sobretudo, uma data anterior ao lançamento deste
+programa não pode estar certa \(em e nunca alarma um relógio correto. Ler o
+relógio não exige privilégio; acertá\-lo exige, então o Tandem imprime o comando
+exato
+.RB ( "sudo timedatectl set-ntp true" )
+em vez de executá\-lo. Uma linha com o estado do relógio também aparece em
+.BR "tandem doctor" .
+.TP
 .B tandem lista
 Mostra a lista da comunidade: o que já deu certo na máquina de outras
 pessoas, por programa.

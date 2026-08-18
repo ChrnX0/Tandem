@@ -36,6 +36,25 @@ an action that destroys something. Everything else — which defect to fix first
 how to shape a message, whether to open a version, whether to release one — is
 the agent's call, made and reported rather than asked about.
 
+**Standing directive, 2026-08-18 — the extrapolation drive.** After the
+web-service work shipped (4.26), the owner asked for an autonomous *round of
+extrapolation*: "pense o q pode tornar o tandem impressionante e excepcional e
+implemente" — the agent's own picks for what makes Tandem exceptional, built and
+shipped, not proposed. And then a SECOND, deeper round after it: "depois dessa
+rodada eu quero mais outra rodada mais profunda ainda e aí vc implementa tudo de
+agora e a seguinte." So the mandate is two rounds, both implemented, one
+well-tested shipped version at a time, until told to stop. **Round one** (started
+4.27) is the "explain, don't execute" white space — the silent failures that
+happen AROUND the software, not inside it: 4.27 is the clock (`tandem relogio`);
+next in line are proactive post-install breakage detection, a provenance / "is
+this .exe known to the community" note, and passive self-update awareness. **Round
+two** is deeper and more architectural — real recovery (verifiable backups,
+restore to a replacement PC after a disk dies), local Wine version pinning /
+rollback so a distro upgrade cannot break a working POS, second-counter
+replication, and a single machine-"health" model. Round two is designed once
+round one closes. Read `docs/IDEAS.md` before each pick — half the obvious ideas
+are already decided there, with reasons.
+
 **Use the insights ACTIVELY, and the proof gate ACTIVELY.** Both are standing
 instructions from the owner, in his words: *"identifique e aplique melhorias q
 vc venha a identificar ser bom"* and *"coloca nas diretrizes q é para usar os
@@ -223,7 +242,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 1474 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1490 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -931,7 +950,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 1474 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 1490 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **Seven defects were found in 4.19 by RUNNING the program in conditions it
   had never been run in**, and none of them by reading code: a full disk, an
   interrupted double click, two double clicks at once, a symlinked prefix, a

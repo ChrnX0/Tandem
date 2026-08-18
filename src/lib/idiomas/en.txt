@@ -2341,6 +2341,7 @@ Tandem - runs Windows programs, Android apps and Linux packages.
   tandem portas               pinpad, scale, printer: which COM they landed on
   tandem portas fixar <p> <d> pins a device to a port (e.g. COM2)
   tandem servico <folder>     runs a web service and keeps it alive
+  tandem relogio              checks the clock (breaks fiscal, TLS, licences)
   tandem idioma [code]        which language Tandem speaks (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <name>  looks for a Linux program that does the same job
   tandem receita <file>       exports what it learnt, to send to somebody
@@ -3308,3 +3309,41 @@ There are no logs for {1} yet.
 I do not know "tandem servico {1}".
 
 What I can do: instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.
+
+@relogio_titulo
+Tandem - the clock
+
+@relogio_sem_timedatectl
+I cannot check the clock on this system - it has no systemd time service.
+
+Right now it reads: {1}
+
+@relogio_atrasado
+Your clock is wrong. It reads {1} - a date from before this software was even released, which is what a dead battery on the motherboard does: it resets the date every time the computer is turned on.
+
+While the clock is wrong, secure sites, software licences and fiscal programs (NF-e/NFC-e) fail without saying why. Turn automatic time back on:
+
+  sudo timedatectl set-ntp true
+
+If this computer has no internet, set it by hand with the real date and time:
+
+  sudo timedatectl set-time "2026-08-18 15:30:00"
+
+@relogio_adiantado
+Your clock is wrong. It reads {1} - a date far in the future, which breaks secure sites, software licences and fiscal programs (NF-e/NFC-e). Turn automatic time back on:
+
+  sudo timedatectl set-ntp true
+
+@relogio_sem_hora_automatica
+The clock reads {1}, which looks right - but automatic time is switched off, so it will drift, and if the motherboard battery dies it will reset without warning. Turn it on so it stays correct:
+
+  sudo timedatectl set-ntp true
+
+@relogio_ok
+The clock reads {1} and automatic time is on. Nothing to do.
+
+@doctor_relogio_ok
+clock: {1}
+
+@doctor_relogio_errado
+clock: {1} - WRONG, run: tandem relogio

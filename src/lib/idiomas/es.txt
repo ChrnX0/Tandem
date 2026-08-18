@@ -2339,6 +2339,7 @@ Tandem - ejecuta programas de Windows, apps de Android y paquetes de Linux.
   tandem portas               pinpad, balanza, impresora: en que COM quedaron
   tandem portas fixar <p> <d> fija un aparato en un puerto (ej.: COM2)
   tandem servico <carpeta>   ejecuta un servicio web y lo mantiene activo
+  tandem relogio              comprueba el reloj (si está mal rompe fiscal, TLS)
   tandem idioma [codigo]      en que idioma habla Tandem (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <nom>   busca un programa de Linux que haga lo mismo
   tandem receita <archivo>    exporta lo que aprendio, para mandarlo a alguien
@@ -3346,3 +3347,41 @@ Aún no hay registros de {1}.
 No conozco "tandem servico {1}".
 
 Lo que sé hacer: instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.
+
+@relogio_titulo
+Tandem - el reloj
+
+@relogio_sem_timedatectl
+No puedo comprobar el reloj en este sistema - no tiene el servicio de hora de systemd.
+
+Ahora marca: {1}
+
+@relogio_atrasado
+Tu reloj está mal. Marca {1} - una fecha anterior al propio lanzamiento de este programa, que es lo que hace una pila muerta en la placa base: pone la fecha a cero cada vez que se enciende el equipo.
+
+Mientras el reloj esté mal, los sitios seguros, las licencias de programas y los programas fiscales (NF-e/NFC-e) fallan sin decir por qué. Vuelve a activar la hora automática:
+
+  sudo timedatectl set-ntp true
+
+Si este equipo no tiene internet, ponla a mano con la fecha y hora reales:
+
+  sudo timedatectl set-time "2026-08-18 15:30:00"
+
+@relogio_adiantado
+Tu reloj está mal. Marca {1} - una fecha muy en el futuro, lo que rompe sitios seguros, licencias de programas y programas fiscales (NF-e/NFC-e). Vuelve a activar la hora automática:
+
+  sudo timedatectl set-ntp true
+
+@relogio_sem_hora_automatica
+El reloj marca {1}, que parece correcto - pero la hora automática está apagada, así que se irá desajustando, y si la pila de la placa base muere se pondrá a cero sin avisar. Actívala para que se mantenga correcta:
+
+  sudo timedatectl set-ntp true
+
+@relogio_ok
+El reloj marca {1} y la hora automática está activada. Nada que hacer.
+
+@doctor_relogio_ok
+reloj: {1}
+
+@doctor_relogio_errado
+reloj: {1} - MAL, ejecuta: tandem relogio

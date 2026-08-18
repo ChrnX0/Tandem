@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.26"
+TANDEM_VERSAO="4.27"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4634,6 +4634,95 @@ t_causa_por_token() {
 
 t_causa_do_winetricks() {
     t_causa_por_token "$(t_causa_token "$1")" "${2:-}"
+}
+
+
+# ------------------------------------------------------------- the clock
+#
+# A wrong system clock is the silent failure one step BEFORE the causes above
+# name: it breaks TLS, software licensing and Brazilian fiscal software
+# (NF-e/NFC-e) without a word, and the usual cause is a dead CMOS battery that
+# resets the date on every boot. t_causa_token already RECOGNISES it after the
+# fact, from the certificate error a program throws once it has already failed;
+# this checks it BEFORE anything fails.
+#
+# The live read needs systemd/timedatectl (absent in CI, like Wine); the verdict
+# is a pure function with its own test, and it never cries wolf on a correct
+# clock - see t_relogio_veredito.
+
+# The most recent date Tandem KNOWS about: its own release, read from the
+# changelog it ships. "now" cannot honestly be earlier than this - you cannot be
+# running a package that was not released yet - and that is the one clock signal
+# that never fires on a correct clock. Echoes a Unix timestamp; empty (return 1)
+# when no changelog can be read, and then the caller leans on NTP alone.
+t_relogio_epoch_conhecido() {
+    local linha data
+    if [ -n "${TANDEM_CHANGELOG:-}" ] && [ -f "$TANDEM_CHANGELOG" ]; then
+        linha="$(grep -m1 '^ -- ' "$TANDEM_CHANGELOG" 2>/dev/null)"
+    elif [ -f /usr/share/doc/tandem/changelog.gz ]; then
+        linha="$(zcat -- /usr/share/doc/tandem/changelog.gz 2>/dev/null | grep -m1 '^ -- ')"
+    fi
+    [ -n "$linha" ] || return 1
+    # " -- Name <email>  Tue, 18 Aug 2026 20:15:00 +0000" -> the date after ">  "
+    data="${linha##*>  }"
+    [ -n "$data" ] && [ "$data" != "$linha" ] || return 1
+    date -d "$data" +%s 2>/dev/null
+}
+
+# Whether network time (NTP) is switched ON, read from `timedatectl show` text on
+# stdin. The key is NTP= (the service being enabled), not NTPSynchronized= (which
+# is whether it has synced yet). Echoes yes/no or empty when the line is absent.
+t_relogio_ntp() {
+    sed -n 's/^NTP=//p' | head -1
+}
+
+# The whole judgement, pure so the truth table is a test: given "now", the
+# release epoch and the NTP flag, name what is wrong - or that nothing is.
+#   atrasado            : now is BEFORE this software's release  -> certainly wrong
+#   adiantado           : now is absurdly far after it (>30y)    -> certainly wrong
+#   sem_hora_automatica : date is plausible but NTP is off       -> advisory only
+#   ok                  : plausible date and NTP on
+# The two firm verdicts require the epoch; with no epoch only NTP can speak, and
+# it can only ever ADVISE, never condemn - refusing to trust a clock on a guess
+# would be worse than the defect, the same rule t_prefixo_arquitetura follows.
+t_relogio_veredito() {
+    local agora="${1:-}" epoch="${2:-}" ntp="${3:-}"
+    local trinta_anos=$((30 * 365 * 24 * 3600))
+    if [ -n "$agora" ] && [ -n "$epoch" ] &&
+       [ "$agora" -eq "$agora" ] 2>/dev/null && [ "$epoch" -eq "$epoch" ] 2>/dev/null; then
+        if [ "$agora" -lt "$epoch" ]; then printf 'atrasado\n'; return; fi
+        if [ "$agora" -gt "$((epoch + trinta_anos))" ]; then printf 'adiantado\n'; return; fi
+    fi
+    case "$ntp" in
+        no|nao|false|0|off) printf 'sem_hora_automatica\n'; return ;;
+    esac
+    printf 'ok\n'
+}
+
+# The live verdict token on this machine, or "sem_timedatectl" when there is no
+# systemd time service to ask. Machine-only (timedatectl), like the Wine reads.
+t_relogio_agora_veredito() {
+    command -v timedatectl >/dev/null 2>&1 || { printf 'sem_timedatectl\n'; return; }
+    timedatectl show >/dev/null 2>&1 || { printf 'sem_timedatectl\n'; return; }
+    local agora epoch ntp
+    agora="$(date +%s 2>/dev/null)"
+    epoch="$(t_relogio_epoch_conhecido)"
+    ntp="$(timedatectl show 2>/dev/null | t_relogio_ntp)"
+    t_relogio_veredito "$agora" "$epoch" "$ntp"
+}
+
+# One line for tandem doctor: the clock, shown only when there is a time service
+# to ask. Empty (the caller drops the line) when there is none - a diagnosis
+# does not need a line saying it could not look. A firm-wrong verdict points at
+# tandem relogio, where the fix lives; anything else is a calm reading.
+t_doctor_relogio() {
+    local tok
+    tok="$(t_relogio_agora_veredito)"
+    [ "$tok" = sem_timedatectl ] && return 0
+    case "$tok" in
+        atrasado|adiantado) t_msg doctor_relogio_errado "$(date '+%c' 2>/dev/null)" ;;
+        *)                  t_msg doctor_relogio_ok "$(date '+%c' 2>/dev/null)" ;;
+    esac
 }
 
 t_appimage_info() {

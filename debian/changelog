@@ -1,3 +1,31 @@
+tandem (4.27) unstable; urgency=medium
+
+  * The first of an extrapolation round: Tandem now catches the silent failures
+    that happen AROUND the software, not only inside it. `tandem relogio` (alias
+    `clock`) checks the machine's clock BEFORE a program fails because of it.
+  * A wrong clock breaks TLS, software licensing and Brazilian fiscal software
+    (NF-e/NFC-e) in silence - and the usual cause is a dead CMOS battery that
+    resets the date on every boot. Tandem already inferred this REACTIVELY, from
+    the certificate error a program throws after it fails; this makes it a
+    first-class, proactive check that runs before the failure.
+  * The verdict never cries wolf on a correct clock. The one bulletproof signal
+    is that the clock cannot predate the software running on it: if "now" is
+    before this package's own release date (read from its changelog), the clock
+    is certainly behind - the exact shape a battery reset makes. An absurd far
+    future is flagged too; a plausible date with automatic time turned off is a
+    gentle "turn it on so it stays right", not an alarm.
+  * Reading the clock needs no privilege; SETTING it does - so, like the
+    printer-port remedy, Tandem PRINTS the exact command
+    (`sudo timedatectl set-ntp true`, or `set-time`) rather than running sudo in
+    silence. `tandem doctor` gained a one-line clock status for the same reason.
+  * The logic is pure and tested with proof by injection - a date before the
+    release, an absurd future, and a correct date each get their verdict, and
+    reverting the guard turns the test red. The live `timedatectl` read is
+    machine-only, exactly like the Wine and systemd checks. New messages are
+    translated in all seven languages.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 18 Aug 2026 20:15:00 +0000
+
 tandem (4.26) unstable; urgency=medium
 
   * A TENTH thing Tandem carries, and the first that is not a file you double

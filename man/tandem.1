@@ -345,6 +345,18 @@ shows what a service printed. A Windows
 .I .exe
 service is only ever run in an environment Tandem created (rule 1).
 .TP
+.B tandem relogio
+Checks the machine's clock before a program fails because of it. A wrong clock
+silently breaks secure connections (TLS), software licences and Brazilian
+fiscal software (NF-e/NFC-e); the usual cause is a dead motherboard battery that
+resets the date on every boot. Tandem judges the clock only when it can be
+certain \(em chiefly, a date from before this software was released cannot be
+right \(em and never cries wolf on a correct clock. Reading the clock needs no
+privilege; setting it does, so Tandem prints the exact command
+.RB ( "sudo timedatectl set-ntp true" )
+rather than running it. A one-line clock status also appears in
+.BR "tandem doctor" .
+.TP
 .B tandem lista
 Shows the community list: what has already worked on other people's machines,
 per program.

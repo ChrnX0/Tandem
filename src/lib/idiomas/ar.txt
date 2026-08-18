@@ -2407,6 +2407,7 @@ Tandem - يشغّل برامج Windows وتطبيقات Android وحزم لين�
   tandem portas               جهاز الدفع والميزان والطابعة: على أي COM حلّوا
   tandem portas fixar <p> <d> يثبّت جهازًا على منفذ (مثل COM2)
   tandem servico <مجلد>       يشغّل خدمة ويب ويُبقيها تعمل
+  tandem relogio              يفحص الساعة (خطؤها يُعطّل الضرائب وTLS)
   tandem idioma [رمز]         بأي لغة يتحدّث Tandem (pt_BR en es fr zh_CN hi ar)
   tandem alternativas <اسم>   يبحث عن برنامج لينكس يؤدّي العمل نفسه
   tandem receita <ملف>        يُصدّر ما تعلّمه، لإرساله إلى أحد
@@ -3416,3 +3417,41 @@ Tandem - سجلات {1}
 لا أعرف "tandem servico {1}".
 
 ما أستطيع فعله: instalar, ver, iniciar, parar, reiniciar, abrir, registros, remover.
+
+@relogio_titulo
+Tandem - الساعة
+
+@relogio_sem_timedatectl
+لا أستطيع فحص الساعة على هذا النظام - لا يوجد به خدمة الوقت الخاصة بـ systemd.
+
+تُظهر الآن: {1}
+
+@relogio_atrasado
+ساعتك خاطئة. تُظهر {1} - وهو تاريخ يسبق إصدار هذا البرنامج نفسه، وهذا ما تفعله بطارية اللوحة الأم الفارغة: تُصفّر التاريخ في كل مرة يُشغَّل فيها الحاسوب.
+
+ما دامت الساعة خاطئة، تفشل المواقع الآمنة وتراخيص البرامج والبرامج الضريبية (NF-e/NFC-e) دون أن تقول السبب. أعد تشغيل الوقت التلقائي:
+
+  sudo timedatectl set-ntp true
+
+إذا لم يكن لهذا الحاسوب إنترنت، اضبطها يدويًا بالتاريخ والوقت الحقيقيين:
+
+  sudo timedatectl set-time "2026-08-18 15:30:00"
+
+@relogio_adiantado
+ساعتك خاطئة. تُظهر {1} - تاريخًا بعيدًا في المستقبل، ما يُعطّل المواقع الآمنة والتراخيص والبرامج الضريبية (NF-e/NFC-e). أعد تشغيل الوقت التلقائي:
+
+  sudo timedatectl set-ntp true
+
+@relogio_sem_hora_automatica
+تُظهر الساعة {1}، وهو ما يبدو صحيحًا - لكن الوقت التلقائي مُطفأ، لذا ستنحرف، وإذا فرغت بطارية اللوحة الأم ستُصفَّر دون تحذير. شغّله لتبقى صحيحة:
+
+  sudo timedatectl set-ntp true
+
+@relogio_ok
+تُظهر الساعة {1} والوقت التلقائي مُفعَّل. لا شيء لفعله.
+
+@doctor_relogio_ok
+الساعة: {1}
+
+@doctor_relogio_errado
+الساعة: {1} - خاطئة، شغّل: tandem relogio

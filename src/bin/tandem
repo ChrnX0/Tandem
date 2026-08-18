@@ -99,7 +99,13 @@ acao_doctor() {
     out+="Tandem $VERSAO\n\n"
     out+="$(t_msg doc_sistema)\n"
     out+="  $( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-?}" )\n"
-    out+="  $(t_msg doc_kernel "$(uname -r)" "${XDG_SESSION_TYPE:-?}")\n\n"
+    out+="  $(t_msg doc_kernel "$(uname -r)" "${XDG_SESSION_TYPE:-?}")\n"
+    # The clock: a wrong one breaks TLS, licences and fiscal software in silence,
+    # so it belongs in the diagnosis. Only shown when there is a time service to
+    # ask; a firm-wrong reading points at tandem relogio.
+    local linha_relogio; linha_relogio="$(t_doctor_relogio)"
+    [ -n "$linha_relogio" ] && out+="  $linha_relogio\n"
+    out+="\n"
 
     out+="$(t_msg doc_prog_windows)\n"
     if command -v wine >/dev/null 2>&1; then
@@ -1385,6 +1391,32 @@ _servico_relata() {
     esac
 }
 
+# ---------------------------------------------------------------- relogio
+#
+# The clock, checked BEFORE a program fails because of it. A wrong clock breaks
+# TLS, software licences and Brazilian fiscal software (NF-e) in silence, and a
+# dead CMOS battery - which resets the date on every boot - is the usual cause.
+# Reading the clock needs no privilege; SETTING it does, so, like the printer
+# remedy, Tandem prints the exact command rather than running sudo in silence.
+acao_relogio() {
+    local agora tok
+    agora="$(date '+%c' 2>/dev/null)"
+    tok="$(t_relogio_agora_veredito)"
+    case "$tok" in
+        sem_timedatectl)
+            printf '%s\n' "$(t_msg relogio_sem_timedatectl "$agora")" ;;
+        atrasado)
+            printf '%s\n' "$(t_msg relogio_atrasado "$agora")" ;;
+        adiantado)
+            printf '%s\n' "$(t_msg relogio_adiantado "$agora")" ;;
+        sem_hora_automatica)
+            printf '%s\n' "$(t_msg relogio_sem_hora_automatica "$agora")" ;;
+        *)
+            printf '%s\n' "$(t_msg relogio_ok "$agora")" ;;
+    esac | t_texto "$(t_msg relogio_titulo)"
+}
+
+
 # ----------------------------------------------------------------- idioma
 #
 # The question is asked on FIRST RUN and not during the package install, and
@@ -1896,6 +1928,7 @@ case "${1:-}" in
     identidade|fingerprint) acao_identidade ;;
     portas|ports)         shift; acao_portas "$@" ;;
     servico|service|serviço)  shift; acao_servico "$@" ;;
+    relogio|clock|relógio)  acao_relogio ;;
     idioma|language|lang) shift; acao_idioma "$@" ;;
     alternativas|alternativa) shift; acao_alternativas "$@" ;;
     receita|receitas)     shift; acao_receita "$@" ;;
