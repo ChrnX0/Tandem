@@ -1754,13 +1754,37 @@ for the five that generalise. The one that matters most is the rule №1 symlink
 bypass: **that is the only time the inviolable rule has actually been broken**,
 and it was reachable by a person doing something entirely reasonable.
 
+**v4.26 IS PUBLISHED** — 2026-08-18, tag `v4.26` at `72d012e`, `.deb`
+(492502 bytes) and `.sha256` attached, and the published artifact verified
+byte-for-byte three ways: sha256 `6bd091cb…` from the release's own checksum
+file, from the downloaded bytes, and from a local build at that same commit.
+It is the release that adds the TENTH thing Tandem carries and the first that
+is not a file: a web service. `tandem servico` detects what a folder is (Node,
+Python, PHP, a Java `.jar`, a plain binary, a shell script, or a Windows server
+`.exe` under Wine), writes a `systemd --user` unit, starts it, tries to make it
+survive a reboot, and says in plain words — per service — whether it is running,
+listening on its port, and answering; every failure path names its cause (crash
+tail, who holds the port via `ss`/`lsof`, no-user-systemd) instead of going
+mute. The logic that decides (runtime detection, the unit text, the port
+parser, the verdict table) is pure and tested; the whole install flow is
+exercised with `systemd`/`ss`/`curl` stubbed, and the headline guard — the
+unit's `ExecStart` must be an absolute path, because `systemd` ignores the
+caller's PATH — is proven by injection. It also carries the 4.25 fix that never
+shipped on its own (a standalone v4.25 was impossible during a GitHub `apt`
+outage): `tandem portas fixar` wrote only the registry key and not the
+`dosdevices/comN` symlink, so the port it "fixed" still could not open; both
+halves are written now. **All 784 messages are translated in all seven
+languages, 0 untranslated, 0 fuzzy** — the 35 new `servico` messages included.
+Suite 1473 passed / 0 / 1 skipped; both literal counters read 0.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
 allows it; a bullet appended to a published entry is not. (At the time of
-writing, 4.25 is the in-flight version: its entry is fresh and unreleased, and
-the three files agree on 4.25.)
+writing, 4.26 is published and the three files agree on 4.26; the next version
+is 4.27, whose entry must be opened before anything is added to it. This note
+itself is a doc-only commit after the 4.26 release, which the guard allows.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
