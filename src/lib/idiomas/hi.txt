@@ -210,6 +210,30 @@ sudo apt install wine32
 @abrindo
 {1} खुल रहा है…
 
+@procedencia_confirmado
+यह आपने यहाँ पहले चलाया है, और यह चला था।
+
+@procedencia_reprovado
+ध्यान दें: पिछली बार आपने बताया था कि यह यहाँ नहीं चला।
+
+@procedencia_aberto
+यह आपने यहाँ पहले खोला है (पिछली बार: {1})।
+
+@procedencia_ninguem#0
+समुदाय ने यह आज़माया पर सफलता नहीं मिली ({1} रिपोर्ट)।
+
+@procedencia_ninguem#1
+समुदाय ने यह आज़माया पर सफलता नहीं मिली ({1} रिपोर्टें)।
+
+@procedencia_comunidade#0
+समुदाय इस प्रोग्राम को जानता है ({1} रिपोर्ट)।
+
+@procedencia_comunidade#1
+समुदाय इस प्रोग्राम को जानता है ({1} रिपोर्टें)।
+
+@procedencia_novo
+यह यहाँ नया है — यह सामान्य है; Tandem इसे पहली बार देख रहा है।
+
 @ja_instalei_e_nao_abre
 यह प्रोग्राम जो माँग रहा था वह मैंने इंस्टॉल कर दिया:{1}
 

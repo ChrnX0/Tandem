@@ -1,3 +1,23 @@
+tandem (4.29) unstable; urgency=medium
+
+  * Third of the extrapolation round: Tandem now says what it KNOWS about a
+    Windows program before it opens it - a calm recognition note, never an
+    antivirus and never a refusal to run.
+  * A counter PC runs .exe files that arrive off a pen drive or a chat message,
+    and until now Tandem said nothing about whether the thing had ever been seen
+    before. It does two honest things now: it remembers whether THIS exact file
+    (keyed by content, as the memory already is) has opened cleanly here before,
+    and it reports what the community list knows about it. "You have opened this
+    before and it worked", or "this is new here - Tandem has not seen it yet".
+  * The note never overclaims. The community list is still mostly empty, so the
+    common answer is an honest "not seen before" rather than a false reassurance
+    or a false warning; the machine count is only ever shown when the list
+    actually carries it. The decision is a pure function with a proof-by-
+    injection test, and the recognition is a sentence, not a verdict: it informs
+    the double click, it never blocks it.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 18 Aug 2026 22:20:00 +0000
+
 tandem (4.28) unstable; urgency=medium
 
   * Second of the extrapolation round, and the silent failure one step later in

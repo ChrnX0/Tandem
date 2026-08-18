@@ -1815,13 +1815,28 @@ proof-by-injection test, live `timedatectl` read machine-only like Wine; 792
 messages translated in all seven languages, 0 untranslated, 0 fuzzy. Suite 1489
 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.28 IS PUBLISHED** — 2026-08-18, tag `v4.28` at `0a00b29`, `.deb`
+(501538 bytes) and `.sha256` attached, verified byte-for-byte three ways: sha256
+`727f9a1a…` from the release's own checksum file, the downloaded bytes, and a
+local build at that commit. Second feature of the round: post-install breakage
+detection. A Windows program that opened cleanly yesterday can break today
+because a distro upgrade swapped Wine underneath it; the memory (already keyed
+by file) now records the Wine a program last opened cleanly under (`VERSAO_WINE`,
+on-disk data, never translated), and on a later failure under a DIFFERENT Wine
+Tandem names the change — "this opened before under Wine X; the system now has
+Wine Y" — instead of a bare exit code. It never blames the update on a guess:
+`t_wine_mudou_desde` is true only when there is a recorded version, the current
+one is real, and the two differ (proof-by-injection test). The recorded version
+also shows on `tandem memoria`. Suite 1499 passed / 0 / 1 skipped; 794 messages
+translated in all seven languages, 0 untranslated, 0 fuzzy; both literal
+counters read 0.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
-allows it; a bullet appended to a published entry is not. (At the time of
-writing, 4.27 is published; 4.28 is the in-flight version, its changelog entry
-fresh and unreleased, and the three files agree on 4.28.)
+allows it; a bullet appended to a published entry is not. (At the time of writing, 4.28 is published; 4.29 is the in-flight version,
+its changelog entry fresh and unreleased, and the three files agree on 4.29.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

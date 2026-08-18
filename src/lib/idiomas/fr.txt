@@ -213,6 +213,30 @@ Installation de {1}...
 @abrindo
 Ouverture de {1}...
 
+@procedencia_confirmado
+Vous l'avez déjà lancé ici, et ça a marché.
+
+@procedencia_reprovado
+Attention : la dernière fois, vous m'avez dit que celui-ci ne marchait pas ici.
+
+@procedencia_aberto
+Vous l'avez déjà ouvert ici (dernière fois : {1}).
+
+@procedencia_ninguem#0
+La communauté a déjà essayé celui-ci sans succès ({1} signalement).
+
+@procedencia_ninguem#1
+La communauté a déjà essayé celui-ci sans succès ({1} signalements).
+
+@procedencia_comunidade#0
+La communauté connaît ce programme ({1} signalement).
+
+@procedencia_comunidade#1
+La communauté connaît ce programme ({1} signalements).
+
+@procedencia_novo
+Celui-ci est nouveau ici — c'est normal ; Tandem le voit pour la première fois.
+
 @ja_instalei_e_nao_abre
 J'ai déjà installé ce que ce programme demandait :{1}
 

@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.28"
+TANDEM_VERSAO="4.29"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1832,7 +1832,13 @@ t_receita_exporta() {
     # process exited 0" and "a person looked at the screen and said it was
     # right" arrived on the other side with exactly the same weight.
     printf 'CONFIANCA=%s\n' "$(t_confianca_da_licao "$prog")"
-    grep -v '^#' "$arq"
+    # PROCEDENCIA is a purely-local display throttle - which recognition line was
+    # last shown on THIS machine, so a note fires only when the status changes.
+    # It says nothing about the lesson and must not travel: on another machine
+    # the recognition is computed fresh from that machine's own memory and list.
+    # The importer already whitelists keys and would drop it, but a recipe is
+    # read by a person, and a stray internal marker in it is noise.
+    grep -v '^#' "$arq" | grep -v '^PROCEDENCIA='
 }
 
 # Reads a recipe and turns it into memory. Refuses anything it does not
@@ -3021,6 +3027,68 @@ t_confianca_da_licao() {
                 entregue) printf 'entregue' ;;
                 *)        printf 'so-abriu' ;;
             esac ;;
+    esac
+}
+
+# What Tandem RECOGNISES about a file the moment it is opened, in one token.
+# This is the "is this program known?" signal - a calm line before the run, not
+# an antivirus and not a gate: it explains, it never refuses, and every path
+# below leads into the same normal open.
+#
+# It answers from the two things Tandem already keeps, in this order of trust:
+#
+#   $1 confirmado   the owner's own word on THIS machine (sim/nao/empty). His
+#                   "it works" or "it does not" outranks anything a stranger's
+#                   list can say, because it is about this exact counter.
+#   $2 visto        a date, if this file has opened cleanly here before. Weaker
+#                   than a confirmation - "it launched" is not "it works", the
+#                   silent-success thesis - but it is still local truth.
+#   $3 quantas      how many community reports confirm a way to run it. Second
+#                   to local knowledge, because it is about other people's
+#                   machines, but it is the one thing no forum has.
+#   $4 ninguem      how many community reports say nobody got it working. The
+#                   honest negative, and the reason the list keeps that field.
+#
+# Local always wins over community: a program that opens cleanly HERE is a
+# program that works here, whatever a distant shop reported. The tokens are the
+# on-disk vocabulary - never translated - and t_msg turns each into a sentence
+# at the moment it is shown, the t_resultado_amigavel arrangement.
+#
+#   confirmado-aqui    reprovado-aqui    aberto-aqui
+#   ninguem-conseguiu  comunidade-conhece    novo
+#
+# "novo" is the COMMON answer today, not the edge: the community list is empty
+# for essentially everyone, so most programs are genuinely new here. It is
+# worded as reassurance, not as an alarm.
+t_procedencia() {
+    local confirmado="${1:-}" visto="${2:-}" quantas="${3:-}" ninguem="${4:-}"
+    case "$confirmado" in
+        sim) printf 'confirmado-aqui'; return 0 ;;
+        nao) printf 'reprovado-aqui';  return 0 ;;
+    esac
+    [ -n "$visto" ] && { printf 'aberto-aqui'; return 0; }
+    [ -n "$ninguem" ] && [ "$ninguem" -gt 0 ] 2>/dev/null &&
+        { printf 'ninguem-conseguiu'; return 0; }
+    [ -n "$quantas" ] && [ "$quantas" -gt 0 ] 2>/dev/null &&
+        { printf 'comunidade-conhece'; return 0; }
+    printf 'novo'
+}
+
+# The recognition token turned into the sentence the owner reads. Two of them
+# carry a number ($2) and go through the plural machinery; the rest are plain.
+# An unknown token says nothing at all rather than printing a key name - the
+# same posture t_erro_do_leitor takes with a token it does not recognise, and
+# the reason this returns 1 in that case so the caller stays silent.
+t_procedencia_frase() {
+    local token="${1:-}" n="${2:-}"
+    case "$token" in
+        confirmado-aqui)   t_msg procedencia_confirmado ;;
+        reprovado-aqui)    t_msg procedencia_reprovado ;;
+        aberto-aqui)       t_msg procedencia_aberto "${2:-?}" ;;
+        ninguem-conseguiu) t_msg_n procedencia_ninguem "${n:-0}" "${n:-0}" ;;
+        comunidade-conhece) t_msg_n procedencia_comunidade "${n:-0}" "${n:-0}" ;;
+        novo)              t_msg procedencia_novo ;;
+        *) return 1 ;;
     esac
 }
 

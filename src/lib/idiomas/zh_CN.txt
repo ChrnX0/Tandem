@@ -195,6 +195,24 @@ sudo apt install wine32
 @abrindo
 正在打开 {1}……
 
+@procedencia_confirmado
+这个你之前在这里运行过，而且能用。
+
+@procedencia_reprovado
+提醒：上次你告诉我这个在这里用不了。
+
+@procedencia_aberto
+这个你之前在这里打开过（上次：{1}）。
+
+@procedencia_ninguem#0
+社区试过这个但没成功（{1} 条反馈）。
+
+@procedencia_comunidade#0
+社区认识这个程序（{1} 条反馈）。
+
+@procedencia_novo
+这个在这里是新的——这很正常；Tandem 是第一次见到它。
+
 @ja_instalei_e_nao_abre
 这个程序要的东西我已经装了：{1}
 

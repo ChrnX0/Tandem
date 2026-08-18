@@ -368,6 +368,34 @@ msgctxt "abrindo"
 msgid "Opening {1}..."
 msgstr "{1} खुल रहा है…"
 
+msgctxt "procedencia_confirmado"
+msgid "You have run this here before, and it worked."
+msgstr "यह आपने यहाँ पहले चलाया है, और यह चला था।"
+
+msgctxt "procedencia_reprovado"
+msgid "Heads up: last time, you told me this one did not work here."
+msgstr "ध्यान दें: पिछली बार आपने बताया था कि यह यहाँ नहीं चला।"
+
+msgctxt "procedencia_aberto"
+msgid "You have opened this here before (last time: {1})."
+msgstr "यह आपने यहाँ पहले खोला है (पिछली बार: {1})।"
+
+msgctxt "procedencia_ninguem"
+msgid "The community has tried this one without success ({1} report)."
+msgid_plural "The community has tried this one without success ({1} reports)."
+msgstr[0] "समुदाय ने यह आज़माया पर सफलता नहीं मिली ({1} रिपोर्ट)।"
+msgstr[1] "समुदाय ने यह आज़माया पर सफलता नहीं मिली ({1} रिपोर्टें)।"
+
+msgctxt "procedencia_comunidade"
+msgid "The community knows this program ({1} report)."
+msgid_plural "The community knows this program ({1} reports)."
+msgstr[0] "समुदाय इस प्रोग्राम को जानता है ({1} रिपोर्ट)।"
+msgstr[1] "समुदाय इस प्रोग्राम को जानता है ({1} रिपोर्टें)।"
+
+msgctxt "procedencia_novo"
+msgid "This one is new here — that is normal; Tandem is seeing it for the first time."
+msgstr "यह यहाँ नया है — यह सामान्य है; Tandem इसे पहली बार देख रहा है।"
+
 msgctxt "ja_instalei_e_nao_abre"
 msgid ""
 "I already installed what this program was asking for:{1}\n"

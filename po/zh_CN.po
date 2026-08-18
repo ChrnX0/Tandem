@@ -356,6 +356,32 @@ msgctxt "abrindo"
 msgid "Opening {1}..."
 msgstr "正在打开 {1}……"
 
+msgctxt "procedencia_confirmado"
+msgid "You have run this here before, and it worked."
+msgstr "这个你之前在这里运行过，而且能用。"
+
+msgctxt "procedencia_reprovado"
+msgid "Heads up: last time, you told me this one did not work here."
+msgstr "提醒：上次你告诉我这个在这里用不了。"
+
+msgctxt "procedencia_aberto"
+msgid "You have opened this here before (last time: {1})."
+msgstr "这个你之前在这里打开过（上次：{1}）。"
+
+msgctxt "procedencia_ninguem"
+msgid "The community has tried this one without success ({1} report)."
+msgid_plural "The community has tried this one without success ({1} reports)."
+msgstr[0] "社区试过这个但没成功（{1} 条反馈）。"
+
+msgctxt "procedencia_comunidade"
+msgid "The community knows this program ({1} report)."
+msgid_plural "The community knows this program ({1} reports)."
+msgstr[0] "社区认识这个程序（{1} 条反馈）。"
+
+msgctxt "procedencia_novo"
+msgid "This one is new here — that is normal; Tandem is seeing it for the first time."
+msgstr "这个在这里是新的——这很正常；Tandem 是第一次见到它。"
+
 msgctxt "ja_instalei_e_nao_abre"
 msgid ""
 "I already installed what this program was asking for:{1}\n"
