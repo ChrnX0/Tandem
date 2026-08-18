@@ -36,6 +36,31 @@ an action that destroys something. Everything else — which defect to fix first
 how to shape a message, whether to open a version, whether to release one — is
 the agent's call, made and reported rather than asked about.
 
+**Use the insights ACTIVELY, and the proof gate ACTIVELY.** Both are standing
+instructions from the owner, in his words: *"identifique e aplique melhorias q
+vc venha a identificar ser bom"* and *"coloca nas diretrizes q é para usar os
+insights ATIVAMENTE... assim como é para usar o proof gate ativamente"*.
+
+What that means in practice, because "be insightful" is not an instruction
+anybody can follow:
+
+- **When the same shape of defect appears twice, stop fixing instances and
+  build the instrument that finds the class.** This file records four guards
+  that were scoped to the file where their defect was noticed rather than to
+  every file where it lived - the log-slicing guard, the future-date guard, the
+  silent-refusal audit, the default-language flip. A fifth was then found *by
+  an instrument written for that shape*: an assertion naming ONE handler when
+  nine siblings exist. That is the move. Two of a kind is a pattern; three is
+  negligence.
+- **Say the insight even when it costs you.** "The returns on this line of work
+  are falling" and "the defect I just reported was in my own test, not in the
+  product" are the reports that let the owner steer. A session that only ever
+  reports finds is a session nobody can correct.
+- **Run the proof gate on the work, not after it.** `proofgate.json` carries
+  the stack and the coupled-file pairs precisely so the check is mechanical -
+  do not hand-wave it because the change "looks small". The version lives in
+  four places and lintian has caught this project three times on dates alone.
+
 The one thing that is never optional: **report what actually happened.** A guard
 that caught your own mistake, a test that was written after the code it guards,
 a check whose summary line was unconditional — those go in the message. This
@@ -198,7 +223,7 @@ Build and verify:
 
 ```bash
 python3 build.py --check
-bash tests/run.sh          # 1377 tests, no Wine, no Waydroid, no install
+bash tests/run.sh          # 1401 tests, no Wine, no Waydroid, no install
 bash tests/real-programs.sh --list   # what the weekly job downloads, and why
 ```
 
@@ -893,7 +918,7 @@ root), no longer only by reading:
   no .NET, `t_dll_do_verbo dotnet48` → `mscoree.dll`, both copies of which Wine
   had installed, and the delivery proof now answers "not delivered" for 64 and
   32 alike; swapping in a file without the marker flips it back to "delivered".
-- 1377 automated tests in `tests/run.sh`; CI on GitHub Actions.
+- 1401 automated tests in `tests/run.sh`; CI on GitHub Actions.
 - **Seven defects were found in 4.19 by RUNNING the program in conditions it
   had never been run in**, and none of them by reading code: a full disk, an
   interrupted double click, two double clicks at once, a symlinked prefix, a

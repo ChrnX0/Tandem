@@ -49,7 +49,17 @@ equal_simples() {
 # executable, a portable archive, and an installer. All four are freely
 # redistributable.
 PROGRAMS=(
-"putty|https://the.earth.li/~sgtatham/putty/latest/w32/putty.exe|d5a83cd1233f6da38fa82b14d970dbb2c2705769b5ebabb464918b9b57180bc4|putty.exe|PuTTY Configuration"
+# A VERSIONED url, not "latest". Pinning a checksum against a moving URL is
+# a check that goes red the day the vendor releases - and it did: the weekly
+# job failed on a PuTTY whose bytes matched the sha256 PuTTY itself
+# publishes, so the binary was fine and the pin was stale. A guard that
+# cries wolf is a guard that gets ignored, which is the one thing a
+# checksum on a downloaded executable cannot afford to become.
+#
+# When this needs bumping: read the redirect (curl -sSI .../latest/) for the
+# new version, then take the checksum from that release's own sha256sums
+# file rather than from whatever happened to arrive here.
+"putty|https://the.earth.li/~sgtatham/putty/0.85/w32/putty.exe|4c70267ca03a00ea761ec358498b990a7221decb36eace9b7dbe6a751be0fb3b|putty.exe|PuTTY Configuration"
 "notepadpp|https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.6.9/npp.8.6.9.portable.x64.zip|c1478faf2a2ec8c78c9d92b22445d53027c85d142165015cf9ed0aca80b13679|notepad++.exe|Notepad++"
 )
 
@@ -465,7 +475,20 @@ PYFIM
         # And Tandem catches it BEFORE running: the log must not contain the
         # JVM's own error, because the JVM was never asked.
         CASA_J="$TMP/casa-jar"; mkdir -p "$CASA_J"; : > "$CASA_J/.primeira-vez"
+        # THE LANGUAGE IS FORCED, and the assertion matches that language. This
+        # ran with no TANDEM_IDIOMA_FORCADO and matched a PORTUGUESE sentence,
+        # which was right until 4.2 made English the default: after that the
+        # harness saw "This program needs a newer version of Java", called it a
+        # failure, and Tandem had been correct all along. The main suite was
+        # carried across that flip; this second harness was not, which is the
+        # same scoping miss the log-slicing guard made - a rule applied where
+        # the change was noticed and not where it also lived.
+        #
+        # Matching a translated sentence against whatever locale the machine
+        # happens to have is fragile in both directions, so the language is
+        # pinned rather than the phrase merely updated.
         saida="$(env -i HOME="$CASA_J" PATH=/usr/bin:/bin TANDEM_LIB="$ROOT/src/lib" \
+                 TANDEM_IDIOMA_FORCADO=pt_BR \
                  timeout 120 bash "$ROOT/src/bin/tandem-jar" "$TMP/java/futuro.jar" 2>&1)"
         case "$saida" in
             *"precisa de uma versão mais nova do Java"*)

@@ -802,7 +802,7 @@ acao_autoteste() {
 
     # 7. Do the associations point at Tandem? That is what makes the double
     #    click arrive here; without it the rest does not matter.
-    if command -v xdg-mime >/dev/null 2>&1; then
+    if command -v gio >/dev/null 2>&1 || command -v xdg-mime >/dev/null 2>&1; then
         local dono par
         # One line per format, because they are disputed by different rivals:
         # Zorin's "Windows App Support" wants the .exe, Waydroid wants the .apk,
@@ -817,7 +817,12 @@ acao_autoteste() {
                    "application/x-rpm|.rpm|tandem-rpm.desktop" \
                    "application/vnd.flatpak.ref|.flatpakref|tandem-flatpak.desktop" \
                    "application/vnd.snap|.snap|tandem-snap.desktop"; do
-            dono="$(xdg-mime query default "${par%%|*}" 2>/dev/null)"
+            # t_dono_do_tipo, not xdg-mime: GIO resolves the MIME subclass
+            # chain and xdg-mime does not, and GIO is what Nautilus uses. This
+            # is the check that predicts what a double click does, so asking
+            # the tool that does not model the file manager made it able to
+            # disagree with reality in either direction.
+            dono="$(t_dono_do_tipo "${par%%|*}")"
             if [ "$dono" = "${par##*|}" ]; then
                 passa "$(t_msg at_clique_ok "$(printf '%s' "$par" | cut -d'|' -f2)")"
             else

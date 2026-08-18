@@ -322,6 +322,53 @@ them the same produced a handler that exited 0 with zero bytes. Every new
 question needs `t_tem_gui ||` on its refusal path, and the test that catches it
 is running every handler with no window and no terminal and demanding a sentence.
 
+### The tenth is not a file: a web service (REQUESTED 2026-08-18)
+
+The owner asked for this directly, and the reason is the strongest a feature can
+have: it is HIS OWN case. His point-of-sale system is not an installer you double
+click — it is two folders copied to the root of the disk and configured there to
+run as a web service, reached through the browser. It already runs under Tandem
+via Wine (he confirmed it, correcting an earlier claim of mine that this was the
+one case Tandem could not cover). What is left is that the connection is
+intermittent and the printer is not installed yet.
+
+So the tenth "format" is the first that is NOT A FILE. The nine are things you
+double click; a web service is a PROCEDURE — place files, configure, start a
+long-running process, keep it alive, and reach it at localhost:PORT. That makes
+it closer to "Tandem serves an app" than to "Tandem opens a file", and the
+engineering is different in kind, not degree.
+
+**This must not be built before the folders are seen. The folders are the
+specification.** A handler guessed at would be the exact "chase the shape
+instead of measuring" mistake this file is full of. What the folders decide,
+each one changing the design:
+
+1. **The runtime.** Is the service a Windows `.exe` under Wine (his case, since
+   Tandem+Wine ran it), a `.jar` in a servlet container, `.NET`, PHP, Node? If
+   it turns out to be Java or Node with no Windows dependency, the honest answer
+   is to run it NATIVE and Wine only gets in the way — the same "ask whether the
+   Linux path is better" this project applies to `.exe` already.
+2. **How it starts.** A Windows service (`sc create`), a Startup shortcut, a
+   `.bat`, or somebody double-clicking a file every morning? A Windows service
+   under Wine is the hard case — Wine has no real service manager, so keeping it
+   alive is a supervisor Tandem would own (a user systemd unit, or a keep-alive
+   loop), and that supervisor is most of the work.
+3. **The port, and the intermittent connection.** The drop is most likely the
+   Wine process dying or the port failing to bind/stay bound. The diagnosis is
+   runtime-agnostic and worth building first, because it is his live pain: is
+   the process alive (`pgrep`), and is something listening on the port
+   (`ss -ltnp`)? That is `tandem portas` territory extended from serial to TCP.
+4. **Auto-start across reboot.** A counter machine is turned off nightly, so
+   "it ran once" is not "it runs every morning" — the supervisor has to survive
+   a boot, which is a decision about a user service the owner has to consent to.
+5. **The printer.** Almost certainly a fiscal or thermal printer on serial/USB,
+   which is exactly what `tandem portas fixar COMx /dev/ttyUSBy` exists for and
+   what has never been exercised on a real counter.
+
+The shape of the eventual command is likely `tandem servico` (install, start,
+stop, status, open) rather than a MIME handler, because there is no file to
+associate — but even that is a guess until the folders arrive.
+
 ## The other family: a real Windows in a virtual machine
 
 Checked in August 2026, on the sources rather than on memory, because the

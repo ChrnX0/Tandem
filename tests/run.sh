@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "43859841 4335" "$soma_esperados"
+      "2528138077 4346" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "1297370014 2525" "$soma_padroes"
+      "446507627 2591" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -476,6 +476,63 @@ t_memoria_esquece "$MEM_A"
 equal "forgetting really erases" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$MEM_A" 2>/dev/null
 equal "forgetting what does not exist fails without breaking" "1" "$?"
+
+# THE MOST SPECIFIC ROW OF limites.tsv WINS, and that rests entirely on the
+# ORDER of the file: t_limite_do_programa walks the table in the outer loop and
+# stops at the first row that matches. Nothing asserted it.
+#
+# What it costs to lose: hasp4*.dll is Aladdin's older HASP4 and hasp*.dll is
+# the modern Sentinel line, two different products with two different sets of
+# instructions in column 4. Alphabetise this file, or add a broad pattern near
+# the top, and a HASP4 owner is handed the Sentinel recipe - the exact harm
+# this project already hit once, when the tool that translated these tables
+# walked them by line number and mismatched the rows.
+limite_classe() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_pe_dlls() { printf "%s\n" "'"$1"'"; }
+        t_limite_do_programa /qualquer 2>/dev/null | head -1' 2>/dev/null
+}
+for _par in "hasp4_windows.dll|dongle" \
+            "haspms32.dll|dongle" \
+            "hasp_windows_x64.dll|dongle-sentinel" \
+            "haspvlib_1.dll|dongle-sentinel" \
+            "codemeter64.dll|dongle-codemeter" \
+            "rockey4nd.dll|dongle-hid" \
+            "ndis.sys|driver" \
+            "qualquer.sys|driver" \
+            "clisitef32i.dll|tef"; do
+    _dll="${_par%%|*}"; _esperado="${_par##*|}"
+    _obtido="$(limite_classe "$_dll")"; _obtido="${_obtido%%|*}"
+    equal "limites.tsv puts $_dll in the most specific class" "$_esperado" "$_obtido"
+done
+
+# WHO OWNS A MIME TYPE IS ASKED OF GIO, EVERYWHERE - not just where the lesson
+# was learned. xdg-mime does not resolve the MIME subclass chain and GIO does,
+# and GIO is what Nautilus uses; measured on a type Tandem never touches,
+# `gio mime text/sgml` answers vim.desktop while `xdg-mime query default
+# text/sgml` answers nothing.
+#
+# t_dono_do_tipo was written for tandem-repair when that was found, and
+# `tandem autoteste` went on asking xdg-mime alone - in check 7, the one whose
+# own comment says that without it the rest does not matter. This assertion is
+# deliberately a GLOB over every shipped executable rather than a check on the
+# file where the defect happened to be, because that narrow shape is exactly
+# what let it survive.
+for _f in "$ROOT"/src/bin/tandem "$ROOT"/src/bin/tandem-*; do
+    _corpo="$(sed 's/#.*//' "$_f")"
+    case "$_corpo" in
+        *"xdg-mime query default"*)
+            case "$(basename "$_f")" in
+                # tandem-repair SETS associations with both tools on purpose;
+                # reading is what must go through t_dono_do_tipo.
+                tandem-repair) pass "$(basename "$_f") does not read ownership from xdg-mime alone" ;;
+                *) fail "$(basename "$_f") does not read ownership from xdg-mime alone" \
+                        "t_dono_do_tipo, which asks GIO first" "a bare xdg-mime query" ;;
+            esac ;;
+        *) pass "$(basename "$_f") does not read ownership from xdg-mime alone" ;;
+    esac
+done
 
 # ONE CONFIG FILE, MORE THAN ONE WRITER. The temp file this write goes through
 # was named "$TANDEM_CONFIG.novo" - FIXED, not per process - so two writers at

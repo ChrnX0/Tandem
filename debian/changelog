@@ -1,3 +1,27 @@
+tandem (4.23) unstable; urgency=medium
+
+  * `tandem autoteste` ASKED THE WRONG TOOL the one question it calls
+    load-bearing. Check 7 is "do the associations point at Tandem?", and its
+    own comment says that without it the rest does not matter - and it asked
+    `xdg-mime query default`, alone. Nautilus uses GIO, and GIO resolves the
+    MIME subclass chain while xdg-mime does not, which this repository already
+    measured on a type Tandem never touches: `gio mime text/sgml` answers
+    vim.desktop and `xdg-mime query default text/sgml` answers nothing. So the
+    check the owner runs to confirm the double click works could pass or fail
+    differently from what the double click actually does.
+  * The right resolver already existed - t_dono_do_tipo, gio first and
+    xdg-mime only as the fallback for a machine with no GIO. It was written
+    for tandem-repair when the lesson was learned, and never carried to the
+    self-test. Same shape as the four other guards this session found scoped
+    to the file where their defect was noticed rather than to every file where
+    it lived.
+  * Found by an instrument built for that shape rather than by luck: an
+    assertion that names ONE handler when nine siblings exist is now listed,
+    and the list is short enough to read - most of it is legitimately about
+    the Wine loop, which only tandem-exe has.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 18 Aug 2026 10:52:18 +0000
+
 tandem (4.22) unstable; urgency=medium
 
   * THE SETTINGS FILE COULD END UP WITH THE SAME KEY TWICE, holding two
