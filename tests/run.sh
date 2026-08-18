@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "43859841 4335" "$soma_esperados"
+      "2528138077 4346" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -476,6 +476,36 @@ t_memoria_esquece "$MEM_A"
 equal "forgetting really erases" "" "$(t_memoria_le "$MEM_A" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$MEM_A" 2>/dev/null
 equal "forgetting what does not exist fails without breaking" "1" "$?"
+
+# THE MOST SPECIFIC ROW OF limites.tsv WINS, and that rests entirely on the
+# ORDER of the file: t_limite_do_programa walks the table in the outer loop and
+# stops at the first row that matches. Nothing asserted it.
+#
+# What it costs to lose: hasp4*.dll is Aladdin's older HASP4 and hasp*.dll is
+# the modern Sentinel line, two different products with two different sets of
+# instructions in column 4. Alphabetise this file, or add a broad pattern near
+# the top, and a HASP4 owner is handed the Sentinel recipe - the exact harm
+# this project already hit once, when the tool that translated these tables
+# walked them by line number and mismatched the rows.
+limite_classe() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_pe_dlls() { printf "%s\n" "'"$1"'"; }
+        t_limite_do_programa /qualquer 2>/dev/null | head -1' 2>/dev/null
+}
+for _par in "hasp4_windows.dll|dongle" \
+            "haspms32.dll|dongle" \
+            "hasp_windows_x64.dll|dongle-sentinel" \
+            "haspvlib_1.dll|dongle-sentinel" \
+            "codemeter64.dll|dongle-codemeter" \
+            "rockey4nd.dll|dongle-hid" \
+            "ndis.sys|driver" \
+            "qualquer.sys|driver" \
+            "clisitef32i.dll|tef"; do
+    _dll="${_par%%|*}"; _esperado="${_par##*|}"
+    _obtido="$(limite_classe "$_dll")"; _obtido="${_obtido%%|*}"
+    equal "limites.tsv puts $_dll in the most specific class" "$_esperado" "$_obtido"
+done
 
 # WHO OWNS A MIME TYPE IS ASKED OF GIO, EVERYWHERE - not just where the lesson
 # was learned. xdg-mime does not resolve the MIME subclass chain and GIO does,
