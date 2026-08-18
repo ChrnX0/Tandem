@@ -475,7 +475,20 @@ PYFIM
         # And Tandem catches it BEFORE running: the log must not contain the
         # JVM's own error, because the JVM was never asked.
         CASA_J="$TMP/casa-jar"; mkdir -p "$CASA_J"; : > "$CASA_J/.primeira-vez"
+        # THE LANGUAGE IS FORCED, and the assertion matches that language. This
+        # ran with no TANDEM_IDIOMA_FORCADO and matched a PORTUGUESE sentence,
+        # which was right until 4.2 made English the default: after that the
+        # harness saw "This program needs a newer version of Java", called it a
+        # failure, and Tandem had been correct all along. The main suite was
+        # carried across that flip; this second harness was not, which is the
+        # same scoping miss the log-slicing guard made - a rule applied where
+        # the change was noticed and not where it also lived.
+        #
+        # Matching a translated sentence against whatever locale the machine
+        # happens to have is fragile in both directions, so the language is
+        # pinned rather than the phrase merely updated.
         saida="$(env -i HOME="$CASA_J" PATH=/usr/bin:/bin TANDEM_LIB="$ROOT/src/lib" \
+                 TANDEM_IDIOMA_FORCADO=pt_BR \
                  timeout 120 bash "$ROOT/src/bin/tandem-jar" "$TMP/java/futuro.jar" 2>&1)"
         case "$saida" in
             *"precisa de uma versão mais nova do Java"*)
