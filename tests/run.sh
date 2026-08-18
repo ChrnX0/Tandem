@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "798851351 4481" "$soma_esperados"
+      "114340328 4535" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -1886,6 +1886,25 @@ contem "the unit starts in the service's folder" "WorkingDirectory=/opt/loja" "$
 contem "the unit restarts a service that dies"   "Restart=always" "$UNIT"
 contem "the unit starts with the user session"   "WantedBy=default.target" "$UNIT"
 
+# --- absolutise: the insight that a unit's ExecStart must be a full path ---
+# systemd's ExecStart does not honour the caller's PATH - it searches a short
+# fixed list that excludes /opt and /usr/local, where node and python are often
+# installed by hand - so a bare "node server.js" fails to start on exactly those
+# machines. The command's first token has to be resolved. Tested against sh,
+# which every machine has; revert t_servico_absolutiza to a passthrough and the
+# first assertion goes red.
+ABS_OK="$(t_servico_absolutiza 'sh -c true')"
+if [ "${ABS_OK#/}" != "$ABS_OK" ]; then
+    pass "absolutise turns a bare command into an absolute path systemd can run"
+else
+    fail "absolutise turns a bare command into an absolute path systemd can run" \
+         "/...sh -c true" "$ABS_OK"
+fi
+equal "an already-absolute command is left exactly as it is" \
+      "/opt/app/run --flag x" "$(t_servico_absolutiza '/opt/app/run --flag x')"
+equal "a command that cannot be found is left untouched, so its error stays real" \
+      "definitivamente-nao-existe-9z x" "$(t_servico_absolutiza 'definitivamente-nao-existe-9z x')"
+
 # --- the port parser (t_porta_escutando), fed ss -ltnH-style lines ---
 if printf 'LISTEN 0 511 0.0.0.0:8080 0.0.0.0:*\n' | t_porta_escutando 8080; then
     pass "a port that is listening is seen"; else
@@ -1935,6 +1954,11 @@ printf '#!/bin/sh\ncase "$*" in *show-environment*) exit 0;; *list-unit-files*) 
 printf '#!/bin/sh\ncase "$*" in *show-user*) echo "Linger=yes";; esac\nexit 0\n' > "$SVCBIN/loginctl"
 printf '#!/bin/sh\necho "LISTEN 0 511 0.0.0.0:3000 0.0.0.0:*"\n' > "$SVCBIN/ss"
 printf '#!/bin/sh\nprintf 200\n' > "$SVCBIN/curl"
+# node and npm as stubs too, so `command -v npm` resolves to an absolute path in
+# CI, where the real runtime is not installed. Without this the absolutise step
+# below has nothing to resolve and the test depends on the machine, not the code.
+printf '#!/bin/sh\nexit 0\n' > "$SVCBIN/node"
+printf '#!/bin/sh\nexit 0\n' > "$SVCBIN/npm"
 chmod +x "$SVCBIN"/*
 
 SVCH="$TMPROOT/svc-home"; mkdir -p "$SVCH/.config/tandem"
