@@ -3736,6 +3736,19 @@ t_texto_portas() {
   $(t_msg portas_aviso_dialout "$(id -un)")"
     fi
 
+    # The printer's group is "lp", not "dialout" - a different device family, the
+    # same silent failure: a printer plugged in that simply does not print. The
+    # USB printer node (/dev/usb/lp*, found above and kept in $usblp) and a
+    # parallel /dev/lp* both belong to group lp, so if one is present and the
+    # owner is not in it, name the exact one-time fix, in the shape the dialout
+    # warning already uses. Documented as the gap this fills; the report warned
+    # about dialout for a serial pinpad and said nothing about lp for a printer.
+    if { [ -n "$usblp" ] || [ -n "$(t_portas_paralelas)" ]; } && ! t_no_grupo lp; then
+        saida="$saida
+
+  $(t_msg portas_aviso_lp "$(id -un)")"
+    fi
+
     if [ -d "$prefixo/drive_c" ]; then
         fixadas="$(t_reg_lista_valores "$prefixo" 'Software\\Wine\\Ports')"
         [ -n "$fixadas" ] && saida="$saida

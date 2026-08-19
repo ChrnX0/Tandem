@@ -1477,6 +1477,15 @@ ATTENTION : votre utilisateur n'est pas dans le groupe « dialout », et sans
 
   Ensuite il faut vous déconnecter et vous reconnecter.
 
+@portas_aviso_lp
+ATTENTION : votre utilisateur n'est pas dans le groupe « lp », et sans cela
+  l'imprimante est vue mais aucun programme ne peut y imprimer. Pour y
+  remédier, une seule fois :
+
+      sudo usermod -aG lp {1}
+
+  Ensuite il faut vous déconnecter et vous reconnecter.
+
 @portas_ja_presas
 Déjà fixés par vous dans cet environnement Windows :
 

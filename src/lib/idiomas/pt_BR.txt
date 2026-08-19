@@ -1444,6 +1444,14 @@ ATENÇÃO: o seu usuário não está no grupo "dialout", e sem isso o aparelho
 
   Depois é preciso sair e entrar de novo na sua conta.
 
+@portas_aviso_lp
+ATENÇÃO: o seu usuário não está no grupo "lp", e sem isso a impressora
+  aparece mas nenhum programa consegue imprimir nela. Para resolver, uma vez só:
+
+      sudo usermod -aG lp {1}
+
+  Depois é preciso sair e entrar de novo na sua conta.
+
 @portas_ja_presas
 Já presas por você neste ambiente Windows:
 
