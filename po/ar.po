@@ -5823,8 +5823,8 @@ msgid "Your newest backup is from {1}. A fresh one is worth making: tandem backu
 msgstr "أحدث نسخة احتياطية لديك من {1}. يُستحسن عمل نسخة جديدة: tandem backup"
 
 msgctxt "saude_backup_corrompido"
-msgid "Your newest backup fails its checksum and may not restore. Make a fresh one: tandem backup"
-msgstr "أحدث نسخة احتياطية لديك تفشل في بصمة التحقّق وقد لا تُستعاد. اصنع نسخة جديدة: tandem backup"
+msgid "Your newest backup is damaged and may not restore. Make a fresh one: tandem backup"
+msgstr "أحدث نسخة احتياطية لديك تالفة وقد لا تُستعاد. أنشئ واحدة جديدة: tandem backup"
 
 msgctxt "wine_mudou"
 msgid ""

@@ -5782,8 +5782,8 @@ msgid "Your newest backup is from {1}. A fresh one is worth making: tandem backu
 msgstr "आपका सबसे नया बैकअप {1} का है। एक नया बनाना बेहतर है: tandem backup"
 
 msgctxt "saude_backup_corrompido"
-msgid "Your newest backup fails its checksum and may not restore. Make a fresh one: tandem backup"
-msgstr "आपका सबसे नया बैकअप अपनी चेकसम में विफल है और शायद पुनर्स्थापित न हो। नया बनाएँ: tandem backup"
+msgid "Your newest backup is damaged and may not restore. Make a fresh one: tandem backup"
+msgstr "आपका सबसे नया बैकअप क्षतिग्रस्त है और शायद रिस्टोर न हो। एक नया बनाएँ: tandem backup"
 
 msgctxt "wine_mudou"
 msgid ""

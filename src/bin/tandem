@@ -1513,7 +1513,8 @@ acao_relogio() {
 # check that cannot run adds nothing (unknown is never a green light), and with
 # nothing to report it says so plainly instead of an empty window.
 acao_saude() {
-    local achados="" tab nl nova livre_kb linha epoch arq rc_v nome wine_agora antes_wine v
+    local achados="" tab nl nova livre_kb linha epoch arq nome wine_agora antes_wine v
+    local svc_porta svc_escuta svc_responde
     # The two severities, as the leading number of each finding: 1 = act now,
     # 2 = worth knowing. t_saude_ordena sorts on it so the urgent thing is first.
     local prob=1 aviso=2
@@ -1574,12 +1575,32 @@ acao_saude() {
     # Web services the owner set up that are no longer serving. No services
     # registered -> the loop body never runs; a probe with no systemd -> the
     # verdict is 'sem-systemd', which is not a "down" and is skipped.
+    #
+    # t_servico_escuta / t_servico_responde take the PORT and answer through their
+    # EXIT CODE, not stdout - the way acao_servico calls them. Passing the NAME
+    # and capturing (empty) stdout made every active service read as 'subindo',
+    # so 'escuta-mudo' was dead code and a service up-but-serving-nothing came out
+    # healthy. Read the port, turn the exit codes into sim/nao; a responder we
+    # cannot reach (no curl -> return 2) stays "" -> 'rodando', never a false alarm.
     while IFS= read -r nome; do
         [ -n "$nome" ] || continue
+        svc_porta="$(t_servico_le "$nome" PORTA 2>/dev/null)"
+        svc_escuta=""; svc_responde=""
+        if [ -n "$svc_porta" ]; then
+            if t_servico_escuta "$svc_porta" 2>/dev/null; then
+                svc_escuta=sim
+                if t_servico_responde "$svc_porta" 2>/dev/null; then
+                    svc_responde=sim
+                else
+                    [ $? -eq 1 ] && svc_responde=nao
+                fi
+            else
+                svc_escuta=nao
+            fi
+        fi
         case "$(t_servico_veredito \
                     "$(t_servico_estado_unidade "$nome" 2>/dev/null)" \
-                    "$(t_servico_escuta "$nome" 2>/dev/null)" \
-                    "$(t_servico_responde "$nome" 2>/dev/null)")" in
+                    "$svc_escuta" "$svc_responde")" in
             falhou|parado|escuta-mudo)
                 achados="$achados$prob$tab$(t_msg saude_servico "$nome")$nl" ;;
         esac
@@ -1591,8 +1612,11 @@ FIMSVC
     # now, is there a backup to come back from, recent, and does it verify?
     if linha="$(t_saude_backup_recente 2>/dev/null)" && [ -n "$linha" ]; then
         epoch="${linha%%"$tab"*}"; arq="${linha#*"$tab"}"
-        t_backup_verifica "$arq" >/dev/null 2>&1; rc_v=$?
-        case "$(t_saude_backup_veredito "$epoch" "$(date +%s)" "$rc_v")" in
+        # Ask t_restauravel, not t_backup_verifica: the checksum alone waves a
+        # 0-byte or truncated archive through (no sidecar -> "cannot check" ->
+        # ok), and a backup that will not open is not a recovery net. t_restauravel
+        # is the same pre-flight a real restore runs - structure THEN checksum.
+        case "$(t_saude_backup_veredito "$epoch" "$(date +%s)" "$(t_restauravel "$arq")")" in
             corrompido) achados="$achados$prob$tab$(t_msg saude_backup_corrompido)$nl" ;;
             velho)      achados="$achados$aviso$tab$(t_msg saude_backup_velho "$(date -d "@$epoch" +%F 2>/dev/null)")$nl" ;;
         esac

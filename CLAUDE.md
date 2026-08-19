@@ -2004,7 +2004,15 @@ as its argument, the one worth citing out or nothing) reusing the 4.28 guard
 now". Message `saude_wine_mudou` translated in all seven languages. Suite 1568
 passed / 0 / 1 skipped; both literal counters read 0.
 
-**v4.36 IS IN FLIGHT** — the doctor/socorro hang fix, and it is a good example of
+**v4.36 IS PUBLISHED** — 2026-08-19, tag `v4.36` at `cb7fc28`, `.deb`
+(527112 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`10399fd6…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. (The first release run stalled 57 min on a GitHub runner — pure infra,
+the identical code passed CI on main in 15 min — so it was cancelled and
+re-dispatched; the fresh run published in ~5 min. `cancel_workflow_run` +
+re-`run_workflow` is the remedy for a stalled release.) It is the doctor/socorro
+hang fix, and it is a good example of
 the extrapolation drive done right: idle-time was spent on an adversarial
 workflow (the owner asked "if there's more to do, why are you idle?"), 7 agents
 scoping features and hunting defects by RUNNING the program in conditions CI
@@ -2064,11 +2072,15 @@ OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
 allows it; a bullet appended to a published entry is not. (At the time of
-writing, 4.35 is published — verified byte-for-byte five ways — and **4.36 is in
-flight**: the doctor/socorro hang fix an adversarial workflow surfaced when the
-owner asked why idle time was going to CI-watching. The three version files
-agree on 4.36; 4.35 stays the released version until 4.36 ships. 4.36 adds no
-message keys, so there is no translation step.)
+writing, 4.36 is published — verified byte-for-byte five ways — and **4.37 is in
+flight**: the audit's #1 finding, the two `tandem saude` false-"healthy" silent
+misses (a 0-byte/broken backup passing as a valid recovery net; an
+up-but-not-serving service reading healthy because the loop passed the service
+NAME where a PORT belongs and captured empty stdout instead of the exit code, so
+`escuta-mudo` was dead code). The owner asked for a measured vision audit and to
+let it guide the work; this is its top buildable-now item. The three version
+files agree on 4.37; 4.36 stays the released version until 4.37 ships. 4.37 is
+pure-logic and adds no message keys, so there is no translation step.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

@@ -3507,7 +3507,7 @@ Não há backup. Se este disco falhar, você perde tudo - faça um: tandem backu
 Seu backup mais novo é de {1}. Vale fazer um novo: tandem backup
 
 @saude_backup_corrompido
-Seu backup mais novo falha na soma de verificação e pode não restaurar. Faça um novo: tandem backup
+Seu backup mais novo está danificado e pode não restaurar. Faça um novo: tandem backup
 
 @wine_mudou
 Este programa já abriu direito antes, com o Wine {1}. O sistema agora tem o Wine {2}, e essa mudança é o motivo mais provável de ele ter parado de funcionar - o chão se moveu debaixo dele, não o programa em si.

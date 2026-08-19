@@ -5638,8 +5638,8 @@ msgid "Your newest backup is from {1}. A fresh one is worth making: tandem backu
 msgstr "你最新的备份是 {1} 的。值得再做一个新的：tandem backup"
 
 msgctxt "saude_backup_corrompido"
-msgid "Your newest backup fails its checksum and may not restore. Make a fresh one: tandem backup"
-msgstr "你最新的备份校验和不通过，可能无法恢复。做一个新的：tandem backup"
+msgid "Your newest backup is damaged and may not restore. Make a fresh one: tandem backup"
+msgstr "您最新的备份已损坏，可能无法恢复。请重新做一个：tandem backup"
 
 msgctxt "wine_mudou"
 msgid ""

@@ -3341,7 +3341,7 @@ Tandem - 健康
 你最新的备份是 {1} 的。值得再做一个新的：tandem backup
 
 @saude_backup_corrompido
-你最新的备份校验和不通过，可能无法恢复。做一个新的：tandem backup
+您最新的备份已损坏，可能无法恢复。请重新做一个：tandem backup
 
 @wine_mudou
 这个程序以前能正常打开，用的是 Wine {1}。系统现在是 Wine {2}，这个变化是它停止工作的最可能原因——是脚下的地面动了，而不是程序本身。
