@@ -332,6 +332,11 @@ acao_dados_restaurar() {
 }
 
 acao_backup() {
+    # A backup is worth nothing if nobody can prove it is intact, so the command
+    # that MAKES one also learns to CHECK one: "tandem backup verificar <file>".
+    case "${1:-}" in
+        verificar|verify|conferir) shift; acao_backup_verifica "${1:-}"; return $? ;;
+    esac
     local p="$TANDEM_PREFIXO_PADRAO" pedido="${1:-}"
     [ -f "$p/system.reg" ] || { t_erro "$(t_msg bkp_sem_ambiente)"; return 1; }
     local dest
@@ -344,9 +349,53 @@ acao_backup() {
     tar -C "$(dirname -- "$p")" -czf "$dest" "$(basename -- "$p")" 2>>"$LOG"
     local c=$?
     t_progresso_fecha
-    local so_dados; so_dados="$(t_dados_total "$p")"
-    [ $c -eq 0 ] && t_ok "$(t_msg bkp_salvo "$dest" "$(t_tamanho_amigavel "${so_dados:-0}")")" || t_erro "$(t_msg bkp_nao_salvou)"
-    return $c
+    if [ $c -ne 0 ]; then t_erro "$(t_msg bkp_nao_salvou)"; return $c; fi
+    # The checksum, beside the archive, in sha256sum's own format - so a later
+    # run, or the owner with `sha256sum -c`, can prove the file intact on the
+    # replacement machine. The same sidecar this project ships beside every
+    # release. Its absence never stops the backup: an older sha256sum-less
+    # machine still gets a usable copy, just not a verifiable one.
+    local so_dados corpo soma
+    so_dados="$(t_dados_total "$p")"
+    corpo="$(t_msg bkp_salvo "$dest" "$(t_tamanho_amigavel "${so_dados:-0}")")"
+    soma="$(t_backup_soma "$dest")"
+    if [ -n "$soma" ] &&
+       printf '%s  %s\n' "$soma" "$(basename -- "$dest")" > "$dest.sha256" 2>>"$LOG"; then
+        corpo="$corpo
+
+$(t_msg bkp_com_soma "$(basename -- "$dest")")"
+    fi
+    t_ok "$corpo"
+    return 0
+}
+
+# Prove a backup is intact - the day it is made, not the day it is needed. With
+# a checksum beside it the answer is byte-exact; without one (an older backup,
+# a hand-copied file) it falls back to "does it open as a Tandem backup", and
+# says which of the two it could check. No file given: the newest in $HOME, the
+# same default as restore.
+acao_backup_verifica() {
+    local arq="${1:-}"
+    if [ -n "$arq" ]; then
+        [ -f "$arq" ] || { t_erro "$(t_msg arquivo_sumiu "$arq")"; return 1; }
+    else
+        arq="$(ls -1t "$HOME"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
+        [ -n "$arq" ] || { t_erro "$(t_msg rst_nenhum_backup)"; return 1; }
+    fi
+    t_backup_verifica "$arq"
+    case $? in
+        0) t_ok "$(t_msg bkp_verif_intacto "$(basename -- "$arq")")"; return 0 ;;
+        1) t_erro "$(t_msg bkp_verif_corrompido "$(basename -- "$arq")")"; return 1 ;;
+        3) t_erro "$(t_msg bkp_verif_sem_ferramenta)"; return 1 ;;
+        *)
+            # No checksum: the most that can honestly be claimed is structure.
+            t_backup_valido "$arq"
+            case $? in
+                0) t_aviso "$(t_msg bkp_verif_sem_soma "$(basename -- "$arq")")"; return 0 ;;
+                2) t_erro "$(t_msg rst_nao_e_backup "$(basename -- "$arq")")"; return 1 ;;
+                *) t_erro "$(t_msg rst_backup_danificado "$(basename -- "$arq")")"; return 1 ;;
+            esac ;;
+    esac
 }
 
 acao_restore() {
@@ -366,6 +415,18 @@ acao_restore() {
     case $? in
         2) t_erro "$(t_msg rst_nao_e_backup "$(basename -- "$arq")")"; return 1 ;;
         1) t_erro "$(t_msg rst_backup_danificado "$(basename -- "$arq")")"; return 1 ;;
+    esac
+    # Integrity, not just "does it open". Before wiping the working environment,
+    # prove the archive matches the checksum saved with it: restoring a corrupted
+    # backup would replace a good setup with a broken copy, and a dying disk -
+    # the exact thing this rescues from - is where corruption comes from. No
+    # checksum beside it (an older backup, a hand-copied file) is not a refusal:
+    # it falls back to the structural check above, with an honest note, the same
+    # rule t_prefixo_arquitetura follows - never condemn on a guess.
+    t_backup_verifica "$arq"
+    case $? in
+        1) t_erro "$(t_msg rst_corrompido "$(basename -- "$arq")")"; return 1 ;;
+        2) t_aviso "$(t_msg rst_sem_soma "$(basename -- "$arq")")" ;;
     esac
     # A refusal with a window means the owner said no, and silence is right.
     # A refusal with NO window means nobody was asked - and this command
@@ -1923,7 +1984,7 @@ case "${1:-}" in
     repair|consertar)     exec "$TANDEM_BIN"/tandem-repair ;;
     dados|meus-dados)     shift; acao_dados "$@" ;;
     tema|aparencia|theme) shift; acao_tema "${1:-}" ;;
-    backup)               shift; acao_backup "${1:-}" ;;
+    backup)               shift; acao_backup "$@" ;;
     restore|restaurar)    shift; acao_restore "${1:-}" ;;
     protect|proteger)     shift; acao_protect "$@" ;;
     identidade|fingerprint) acao_identidade ;;

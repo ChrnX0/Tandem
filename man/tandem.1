@@ -244,17 +244,25 @@ only the missing files go in. With no argument, it uses the most recent copy.
 .RE
 .TP
 .BI "tandem backup " [where]
-Saves Tandem's Windows environment into a file. With no argument it goes to the
-home folder; give a folder or a file name and it goes there instead, which is
-how you put it on a pen drive. It includes your files, but it is heavy; to take
-only the data, use
+Saves Tandem's Windows environment into a file, and writes a \fB.sha256\fR
+checksum beside it so the backup can be proven intact later. With no argument it
+goes to the home folder; give a folder or a file name and it goes there instead,
+which is how you put it on a pen drive. It includes your files, but it is heavy;
+to take only the data, use
 .BR "tandem dados salvar" .
+Run
+.B "tandem backup verificar"
+\fIfile\fR (alias \fBverify\fR) any time to check a backup against its checksum;
+it reports whether the backup is intact, corrupted, or has no checksum to check
+against.
 .TP
 .BI "tandem restore " [file]
 Restores the Windows environment. With no argument it uses the most recent
-backup in the home folder; name a file and it uses that one. The archive is
-read before anything is replaced, so a backup that did not arrive whole is
-refused with your environment untouched.
+backup in the home folder; name a file and it uses that one. The archive is read
+before anything is replaced, and \(em when a checksum sits beside it \(em
+verified against that checksum first, so a backup that did not arrive whole, or
+that no longer matches what was saved, is refused with your environment
+untouched.
 .TP
 .BI "tandem tema " [which]
 Appearance of Tandem's own windows: \fBsistema\fR follows the computer and is

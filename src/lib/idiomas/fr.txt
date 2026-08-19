@@ -2032,6 +2032,45 @@ tandem dados salvar
 @bkp_nao_salvou
 Je n'ai pas pu enregistrer la sauvegarde.
 
+@bkp_com_soma
+Une somme de contrôle a été enregistrée à côté, pour prouver que la sauvegarde
+est intacte - le jour où vous la faites, pas le jour où vous en avez besoin.
+À tout moment :
+
+    tandem backup verificar {1}
+
+@bkp_verif_intacto
+La sauvegarde est intacte - elle correspond à la somme de contrôle enregistrée avec elle : {1}
+
+@bkp_verif_corrompido
+Cette sauvegarde est CORROMPUE : {1}
+
+Son contenu ne correspond plus à la somme de contrôle enregistrée avec elle -
+elle a été endommagée ou tronquée quelque part. Ne vous y fiez pas ; faites une
+nouvelle sauvegarde depuis une machine qui fonctionne encore.
+
+@bkp_verif_sem_soma
+Il n'y a pas de somme de contrôle à côté de {1}, je peux donc seulement
+confirmer qu'il s'ouvre comme une sauvegarde Tandem - pas que chaque octet est
+intact. Les sauvegardes faites désormais en portent une.
+
+@bkp_verif_sem_ferramenta
+Je ne peux pas vérifier cette sauvegarde : cet ordinateur n'a pas sha256sum,
+l'outil qui prouve qu'un fichier est intact.
+
+@rst_corrompido
+Je n'ai rien restauré. Cette sauvegarde est CORROMPUE : {1}
+
+Son contenu ne correspond pas à la somme de contrôle enregistrée avec elle, et
+la restaurer remplacerait votre système qui marche par une copie cassée. Faites
+une nouvelle sauvegarde sur une machine qui fonctionne ; gardez celle-ci
+seulement pour regarder dedans.
+
+@rst_sem_soma
+Attention : il n'y a pas de somme de contrôle à côté de cette sauvegarde, je
+sais donc qu'elle s'ouvre, pas que chaque octet a survécu. Je la restaure quand
+même.
+
 @dados_confirma_terminal
 Les remettre ? [o/N] 
 

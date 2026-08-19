@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.29"
+TANDEM_VERSAO="4.30"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5152,6 +5152,47 @@ t_backup_valido() {
         "$(basename -- "$TANDEM_PREFIXO_PADRAO")") return 0 ;;
     esac
     return 2
+}
+
+# The sha256 of a file, one field, or empty (return 1) when it cannot be taken.
+# sha256sum is the one checksum tool this package can lean on - it is what the
+# release pipeline proves the .deb with, and what t_memoria_id already uses to
+# key the memory. A backup with a checksum beside it can be proven intact on a
+# replacement machine after a disk dies; without one, "it opens as an archive"
+# is the most that can honestly be said.
+t_backup_soma() {
+    local arq="$1"
+    [ -f "$arq" ] || return 1
+    command -v sha256sum >/dev/null 2>&1 || return 1
+    sha256sum -- "$arq" 2>/dev/null | cut -d' ' -f1
+}
+
+# Verify a backup archive against the checksum written beside it, at "<arq>.sha256".
+#
+#   0  intacto          the sidecar's hash matches the archive, byte for byte
+#   1  corrompido       a sidecar exists and the hash does NOT match - the file
+#                       was truncated, altered, or damaged in transit
+#   2  sem-soma         no sidecar to check against (a backup made before 4.30,
+#                       or a file hand-copied without its checksum). NOT a
+#                       failure: it is the honest "I can prove structure, not
+#                       integrity", the same rule t_prefixo_arquitetura follows -
+#                       a refusal must never rest on a guess.
+#   3  sem-ferramenta   this machine has no sha256sum, so nothing can be checked
+#
+# It compares HASHES, not the filename recorded in the sidecar, so a backup that
+# was moved to a pen drive or renamed still verifies - the guarantee is about
+# the bytes, and the bytes travel with the file, the name does not.
+t_backup_verifica() {
+    local arq="$1" lado esperado atual
+    [ -f "$arq" ] || return 2
+    lado="$arq.sha256"
+    [ -f "$lado" ] || return 2
+    command -v sha256sum >/dev/null 2>&1 || return 3
+    esperado="$(cut -d' ' -f1 < "$lado" 2>/dev/null | head -1)"
+    [ -n "$esperado" ] || return 2
+    atual="$(t_backup_soma "$arq")" || return 3
+    [ "$atual" = "$esperado" ] && return 0
+    return 1
 }
 
 t_palavras_do_programa() {

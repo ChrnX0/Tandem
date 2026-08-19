@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3153491641 5045" "$soma_esperados"
+      "260212579 5060" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -842,6 +842,71 @@ else
 fi
 contem "and it says what the refusal was about, not that no copy was found" \
        "no window to ask you in" "$SEM_DADOS"
+
+section "verifiable backups: prove it intact before you trust it"
+
+# A backup is worth nothing if nobody can prove it is intact, and the disk this
+# rescues from is exactly where corruption comes from. Since 4.30 the backup
+# carries a sha256 checksum beside it - the same .sha256 sidecar this project
+# proves its own releases with - so a restore, or `tandem backup verificar`, can
+# prove the file matches what was saved before anything relies on it. It catches
+# what a structural "does it open" check cannot: a swapped file, a tampered one,
+# or byte-rot, on an archive that still lists cleanly.
+VB="$TMPROOT/verif-bkp"; rm -rf "$VB"; mkdir -p "$VB/wine"
+: > "$VB/wine/system.reg"
+tar -C "$VB" -czf "$VB/b.tar.gz" wine 2>/dev/null
+( cd "$VB" && sha256sum b.tar.gz > b.tar.gz.sha256 )
+t_backup_verifica "$VB/b.tar.gz"
+equal "a backup that matches its checksum is intact" "0" "$?"
+# A sidecar recording a DIFFERENT hash: the archive still opens, so only the
+# integrity check can tell it is not the file that was saved - the whole point.
+printf '%s  b.tar.gz\n' "$(printf '0%.0s' {1..64})" > "$VB/b.tar.gz.sha256"
+t_backup_verifica "$VB/b.tar.gz"
+equal "a backup that does not match its checksum is corrupted" "1" "$?"
+# No sidecar (an older backup, or a hand-copied file): not a failure, an honest
+# "I can prove structure, not integrity" - never condemn on a guess.
+rm -f "$VB/b.tar.gz.sha256"
+t_backup_verifica "$VB/b.tar.gz"
+equal "a backup with no checksum beside it is 'cannot verify', not 'corrupted'" "2" "$?"
+equal "the checksum of a file is 64 hex characters" "64" \
+      "$(t_backup_soma "$VB/b.tar.gz" | tr -d '\n' | wc -c | tr -d ' ')"
+t_backup_soma "$VB/nao-existe.tar.gz" >/dev/null 2>&1
+equal "the checksum of a missing file is refused" "1" "$?"
+
+# End to end, from the installed command surface: backup writes the sidecar,
+# verificar reads it back, and a corrupted archive is named as such.
+VBH="$TMPROOT/verif-bkp-home"; rm -rf "$VBH"
+mkdir -p "$VBH/.local/share/tandem/wine/drive_c" "$VBH/pen" "$VBH/pen2"
+: > "$VBH/.local/share/tandem/wine/system.reg"
+: > "$VBH/.local/share/tandem/wine/.tandem-prefixo"
+vb_em() {
+    env -i HOME="$VBH" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_BIN="$ROOT/src/bin" TANDEM_IDIOMA_FORCADO=en \
+        bash "$ROOT/src/bin/tandem" "$@" 2>&1
+}
+vb_em backup "$VBH/pen" >/dev/null 2>&1
+VB_ARQ="$(ls -1 "$VBH/pen"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
+equal "the backup command writes a checksum beside the archive" \
+      "1" "$([ -f "$VB_ARQ.sha256" ] && echo 1 || echo 0)"
+contem "verificar says a fresh backup is intact" "intact" \
+       "$(vb_em backup verificar "$VB_ARQ")"
+printf 'tampered\n' >> "$VB_ARQ"
+contem "verificar names a corrupted backup as corrupted" "CORRUPTED" \
+       "$(vb_em backup verificar "$VB_ARQ")"
+
+# The load-bearing safety: restore must REFUSE a backup that fails its checksum
+# and NOT delete the working environment to lay a broken one in its place. Uses
+# a valid archive whose sidecar no longer matches, so the structural check the
+# restore already did passes and ONLY the new integrity guard can refuse - an
+# append would fail structurally first and never reach it. Reached with nobody
+# to ask, which is fine: the refusal happens before the question.
+vb_em backup "$VBH/pen2" >/dev/null 2>&1
+VB_ARQ2="$(ls -1 "$VBH/pen2"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
+printf '%s  %s\n' "$(printf '0%.0s' {1..64})" "$(basename -- "$VB_ARQ2")" > "$VB_ARQ2.sha256"
+VB_REST="$(vb_em restore "$VB_ARQ2")"
+contem "restore refuses a backup that fails its checksum" "CORRUPTED" "$VB_REST"
+equal "and the working environment is untouched - nothing was deleted" \
+      "1" "$([ -f "$VBH/.local/share/tandem/wine/system.reg" ] && echo 1 || echo 0)"
 
 section "pre-flight: reading the .exe without running it"
 

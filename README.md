@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-1519-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-1531-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -341,7 +341,8 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem autoteste` | exercise it here — what **works** |
 | `tandem repair` | re-apply file associations |
 | `tandem dados` | show **your** files inside Windows |
-| `tandem backup` · `tandem restore` | save and restore the whole environment |
+| `tandem backup` · `tandem restore` | save and restore the whole environment (a checksum is written beside the backup) |
+| `tandem backup verificar <file>` | prove a backup is intact against its checksum |
 | `tandem protect <path>` | mark a Wine prefix untouchable |
 | `tandem tema [which]` | appearance of Tandem's own windows — `sistema` (default) or `escuro` |
 | `tandem idioma [code]` | which language Tandem speaks — `pt_BR` `en` `es` `fr` `zh_CN` `hi` `ar` |

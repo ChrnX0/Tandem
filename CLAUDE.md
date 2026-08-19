@@ -43,11 +43,20 @@ implemente" — the agent's own picks for what makes Tandem exceptional, built a
 shipped, not proposed. And then a SECOND, deeper round after it: "depois dessa
 rodada eu quero mais outra rodada mais profunda ainda e aí vc implementa tudo de
 agora e a seguinte." So the mandate is two rounds, both implemented, one
-well-tested shipped version at a time, until told to stop. **Round one** (started
-4.27) is the "explain, don't execute" white space — the silent failures that
-happen AROUND the software, not inside it: 4.27 is the clock (`tandem relogio`);
-next in line are proactive post-install breakage detection, a provenance / "is
-this .exe known to the community" note, and passive self-update awareness. **Round
+well-tested shipped version at a time, until told to stop. **Round one is
+CLOSED** — and the way it closed is a lesson worth keeping. It is the "explain,
+don't execute" white space, the silent failures that happen AROUND the software:
+4.27 the clock (`tandem relogio`), 4.28 proactive post-install breakage
+detection (Wine changed under a working program), 4.29 the provenance / "is this
+.exe known to the community" note (`t_procedencia`). The fourth listed item,
+**passive self-update awareness, was already DONE — shipped in 4.13** (the
+`t_versao_*` family, `acao_versao` on/off, the daily throttled background check
+wired at `tandem:1906`, `versao_nova_aviso` in all seven catalogues). A session
+scoped it as 4.30, opened the version, and wrote a changelog entry for it before
+discovering — by reading the tree, not the ledger — that it existed. This is the
+exact stale-ledger trap this file documents: a directory that lists as "next"
+something three versions old sends the next session to rebuild it. Verify
+against the code before building, every time. **Round
 two** is deeper and more architectural — real recovery (verifiable backups,
 restore to a replacement PC after a disk dies), local Wine version pinning /
 rollback so a distro upgrade cannot break a working POS, second-counter
@@ -1831,12 +1840,38 @@ also shows on `tandem memoria`. Suite 1499 passed / 0 / 1 skipped; 794 messages
 translated in all seven languages, 0 untranslated, 0 fuzzy; both literal
 counters read 0.
 
+**v4.29 IS PUBLISHED** — 2026-08-18, tag `v4.29` at `656cd23`, `.deb`
+(505850 bytes) and `.sha256` attached, verified byte-for-byte more than three
+ways: sha256 `8396d1ca…` from the release body, the release's own checksum
+file, the `.deb` asset digest, the downloaded bytes, and a fresh local build at
+that commit. Third feature of the round, and the round-one white space that
+sits AROUND the double click: a `.exe` arrives off a pen drive or a chat
+message and, until now, Tandem opened it in silence with no word on whether the
+thing had ever been seen before. It says so now — a calm recognition note,
+never an antivirus and never a refusal — built from the two things it already
+keeps, keyed to the FILE by content: the owner's own memory of this exact file
+(opened cleanly here? confirmed working, or marked broken?) and what the
+community list knows (reports of a working lesson, or the honest negative
+"nobody got this one going"). Local knowledge outranks a distant shop's report.
+It never overclaims: the list is empty for essentially everyone, so the common
+answer is a reassuring "new here, that is normal", and a count is shown only
+when the list carries one — worded as "report(s)", never "machines". The note
+speaks only when the recognition status CHANGES (new → opened here → confirmed),
+so a POS opened dozens of times a day is not nagged; the throttle marker is
+on-disk, language-neutral, kept off the `tandem memoria` screen and stripped
+from an exported recipe — purely local, it must not travel. The decision is a
+pure function (`t_procedencia`) with its ORDER asserted so local-beats-community
+cannot regress; the sentence is a second pure function (`t_procedencia_frase`)
+that says nothing on an unknown token rather than printing a key name. Suite
+1518 passed / 0 / 1 skipped; 800 messages translated in all seven languages,
+0 untranslated, 0 fuzzy; both literal counters read 0.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
-allows it; a bullet appended to a published entry is not. (At the time of writing, 4.28 is published; 4.29 is the in-flight version,
-its changelog entry fresh and unreleased, and the three files agree on 4.29.)
+allows it; a bullet appended to a published entry is not. (At the time of writing, 4.29 is published; 4.30 is the in-flight version,
+its changelog entry fresh and unreleased, and the three files agree on 4.30.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
