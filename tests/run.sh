@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1257558455 5221" "$soma_esperados"
+      "118321928 5263" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -1014,15 +1014,32 @@ equal "plenty of disk says nothing"        "ok"           "$(t_saude_disco_vered
 equal "a disk it could not read is unknown, not healthy" \
       "desconhecido" "$(t_saude_disco_veredito '')"
 
-# Recovery readiness: the 4.30 tie-in.
+# Recovery readiness: the 4.30 tie-in. Since 4.37 the third argument is a
+# t_restauravel TOKEN (structure AND checksum), not a bare checksum result, so
+# that a 0-byte/truncated archive - which has no checksum to fail - is still
+# condemned. The audit found saude waved exactly that through as a healthy net.
 NOW_T="$(date +%s)"
-equal "no backup at all is a problem"       "sem-backup"  "$(t_saude_backup_veredito '' "$NOW_T" 2)"
+equal "no backup at all is a problem"       "sem-backup"  "$(t_saude_backup_veredito '' "$NOW_T" ok)"
 equal "a backup that fails its checksum is a problem" "corrompido" \
-      "$(t_saude_backup_veredito 1000 2000 1)"
+      "$(t_saude_backup_veredito 1000 2000 corrompido)"
+equal "a structurally broken backup is condemned even with no checksum" "corrompido" \
+      "$(t_saude_backup_veredito 1000 2000 danificado)"
+equal "a file that is not a Tandem backup at all is condemned" "corrompido" \
+      "$(t_saude_backup_veredito 1000 2000 nao-e-backup)"
 equal "a backup from over a month ago is worth knowing" "velho" \
-      "$(t_saude_backup_veredito 1000000000 2000000000 2)"
-equal "a recent backup with no sidecar is still fine (structure, not condemned)" \
-      "ok" "$(t_saude_backup_veredito "$NOW_T" "$NOW_T" 2)"
+      "$(t_saude_backup_veredito 1000000000 2000000000 ok)"
+equal "a recent, sound backup with no sidecar is still fine (not condemned)" \
+      "ok" "$(t_saude_backup_veredito "$NOW_T" "$NOW_T" ok)"
+
+# The web-service triage: an active service that is LISTENING but answers nothing
+# is 'escuta-mudo', which acao_saude flags. Before 4.37 the saude call passed the
+# service NAME where a PORT belongs and captured empty stdout, so this branch was
+# dead and an up-but-mute service came out healthy. A responder we cannot reach
+# (empty responde, e.g. no curl) is 'rodando' and must NOT be flagged.
+equal "an up-but-mute service is escuta-mudo, a problem saude names" \
+      "escuta-mudo" "$(t_servico_veredito ativo sim nao)"
+equal "a service whose responder cannot be reached is not a false alarm" \
+      "rodando" "$(t_servico_veredito ativo sim '')"
 
 # Proactive Wine-mismatch: 4.28 records the Wine each program last opened cleanly
 # under; saude reads them all and cites the one that no longer matches, BEFORE
@@ -1069,7 +1086,17 @@ contem "saude names the missing backup as the thing to act on" \
 contem "and it names the command that fixes it" "tandem backup" "$SAU_OUT"
 # With a fresh, verified backup and nothing else wrong, it says so plainly rather
 # than opening an empty window.
-tar -czf "$SAUH/tandem-backup-$(date +%F)-1200.tar.gz" -C /tmp -T /dev/null 2>/dev/null
+# A STRUCTURALLY valid Tandem backup: a tar whose top-level dir is the prefix's
+# basename (wine), the shape t_backup_valido / t_restauravel require. An empty
+# tar carries a checksum but is not a recovery net - and since 4.37 saude checks
+# structure, not just the checksum, so it rejects one. (These tests used an empty
+# tar before; that they now need a real one is the fix working.)
+sau_backup_valido() {   # $1 = destination .tar.gz
+    local d; d="$TMPROOT/sau-prefix"; rm -rf "$d"; mkdir -p "$d/wine"
+    printf 'WINE REGISTRY\n' > "$d/wine/system.reg"
+    tar -czf "$1" -C "$d" wine 2>/dev/null
+}
+sau_backup_valido "$SAUH/tandem-backup-$(date +%F)-1200.tar.gz"
 SAU_ARQ="$(ls -1t "$SAUH"/tandem-backup-*.tar.gz | head -1)"
 ( cd "$SAUH" && sha256sum "$(basename "$SAU_ARQ")" > "$(basename "$SAU_ARQ").sha256" )
 contem "with a recent verified backup and nothing wrong, saude says all is well" \
@@ -1107,6 +1134,44 @@ printf 'PROGRAMA=b\nVERSAO_WINE=10.0\n' > "$SAUH/.local/share/tandem/memoria/bbb
 contem "an unterminated record cannot glue a fabricated version and alarm" \
        "healthy" "$(sau_em)"
 rm -f "$SAUH/.local/share/tandem/memoria/bbbb2222.txt"
+
+# 4.37: the two false-'healthy' misses the audit found in this flagship command,
+# each fixed and pinned end to end.
+# (a) A broken (0-byte/truncated) newest backup is a problem, not a healthy
+#     recovery net. saude used to ask only the checksum (t_backup_verifica),
+#     which "cannot check" a file with no sidecar and waved it through; it asks
+#     t_restauravel now, so an archive tar cannot even open is condemned.
+rm -f "$SAUH/.local/share/tandem/memoria/"*.txt      # no wine finding to share the screen
+head -c 40 /dev/zero > "$SAU_ARQ"                     # 40 bytes: not a valid archive
+rm -f "$SAU_ARQ.sha256"                              # and no sidecar - the case that slipped through
+contem "a broken newest backup is flagged, not called a healthy recovery net" \
+       "damaged" "$(sau_em)"
+naocontem "so saude does not report the machine healthy" "healthy" "$(sau_em)"
+
+# (b) A web service that is UP but serving nothing is a problem. Register a
+#     service on a port; stub systemd 'active', ss 'listening', curl 'nothing'
+#     (000) -> up-but-mute -> escuta-mudo, which the fixed loop reaches by reading
+#     the PORT and the exit codes (before, it passed the NAME and captured empty
+#     stdout, so this never fired). A good backup is restored first so its
+#     finding does not mask the service one.
+sau_backup_valido "$SAU_ARQ"
+( cd "$SAUH" && sha256sum "$(basename "$SAU_ARQ")" > "$(basename "$SAU_ARQ").sha256" )
+mkdir -p "$SAUH/.config/tandem/servicos/loja"
+printf 'PORTA=3000\n' > "$SAUH/.config/tandem/servicos/loja/info"
+cat > "$SAUH/stub/systemctl" <<'SCSTUB'
+#!/bin/sh
+case "$*" in
+  *list-unit-files*) echo "tandem-loja.service enabled" ;;
+  *is-active*)       echo active ;;
+esac
+exit 0
+SCSTUB
+printf '#!/bin/sh\necho "LISTEN 0 511 0.0.0.0:3000 0.0.0.0:*"\n' > "$SAUH/stub/ss"
+printf '#!/bin/sh\necho 000\n' > "$SAUH/stub/curl"
+chmod +x "$SAUH/stub/systemctl" "$SAUH/stub/ss" "$SAUH/stub/curl"
+SAU_SVC="$(sau_em)"
+contem "an up-but-serving-nothing service is flagged as a problem" "loja" "$SAU_SVC"
+naocontem "so saude does not call that machine healthy either" "healthy" "$SAU_SVC"
 
 section "pre-flight: reading the .exe without running it"
 

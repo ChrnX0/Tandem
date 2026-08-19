@@ -5814,8 +5814,8 @@ msgid "Your newest backup is from {1}. A fresh one is worth making: tandem backu
 msgstr "Seu backup mais novo é de {1}. Vale fazer um novo: tandem backup"
 
 msgctxt "saude_backup_corrompido"
-msgid "Your newest backup fails its checksum and may not restore. Make a fresh one: tandem backup"
-msgstr "Seu backup mais novo falha na soma de verificação e pode não restaurar. Faça um novo: tandem backup"
+msgid "Your newest backup is damaged and may not restore. Make a fresh one: tandem backup"
+msgstr "Seu backup mais novo está danificado e pode não restaurar. Faça um novo: tandem backup"
 
 msgctxt "wine_mudou"
 msgid ""

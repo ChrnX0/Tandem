@@ -3512,7 +3512,7 @@ No hay copia de seguridad. Si este disco falla, lo pierdes todo - haz una: tande
 Tu copia más reciente es del {1}. Conviene hacer una nueva: tandem backup
 
 @saude_backup_corrompido
-Tu copia más reciente falla en la suma de verificación y puede no restaurar. Haz una nueva: tandem backup
+Tu copia de seguridad más nueva está dañada y puede no restaurar. Haz una nueva: tandem backup
 
 @wine_mudou
 Este programa ya abría bien antes, con Wine {1}. El sistema ahora tiene Wine {2}, y ese cambio es el motivo más probable de que dejara de funcionar - el suelo se movió bajo él, no el programa en sí.

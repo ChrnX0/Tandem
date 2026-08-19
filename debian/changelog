@@ -1,3 +1,32 @@
+tandem (4.37) unstable; urgency=medium
+
+  * Fix two false "everything looks healthy" answers in `tandem saude` - the
+    project's own cardinal sin (false reassurance instead of silence) committed
+    by the very command built to catch problems. Both were found by a measured
+    audit that RAN the command rather than reading it, and both reproduced.
+  * Recovery readiness now checks the backup's STRUCTURE, not just its checksum.
+    saude asked `t_backup_verifica`, which only compares the sidecar hash - so a
+    0-byte or truncated archive with no `.sha256` beside it (one `tar` cannot
+    even open) passed as a valid recovery net. It now asks `t_restauravel`, the
+    same pre-flight a real restore runs, so a structurally broken backup is
+    flagged "act now" instead of waved through. `t_saude_backup_veredito` takes
+    that verdict token now and condemns danificado / nao-e-backup / corrompido.
+  * A web service that is up but serving nothing now shows as a problem. The
+    service loop passed the service NAME where `t_servico_escuta` /
+    `t_servico_responde` expect a PORT, and captured their (empty) stdout - not
+    their exit code - so the verdict never became `escuta-mudo` and that branch
+    was dead code. It now reads the port with `t_servico_le NAME PORTA` and maps
+    the exit codes to sim / nao, so a service that listens but answers nothing
+    is caught; a check it cannot run (no curl) stays silent, not a false alarm.
+  * No new message keys; one existing one reworded to be accurate and less
+    jargon - the backup warning said "fails its checksum", which is wrong for a
+    0-byte archive that has no checksum, so it now says "is damaged" (re-read in
+    all seven languages). New proof-by-injection tests: the backup verdict on a
+    broken-structure archive, an up-but-mute service reaching `escuta-mudo`, and
+    both end to end through `tandem saude`.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 13:00:00 +0000
+
 tandem (4.36) unstable; urgency=medium
 
   * Fix a hang in `tandem doctor` and `tandem socorro` at an interactive

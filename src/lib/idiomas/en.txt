@@ -3472,7 +3472,7 @@ There is no backup. If this disk fails you lose everything - make one: tandem ba
 Your newest backup is from {1}. A fresh one is worth making: tandem backup
 
 @saude_backup_corrompido
-Your newest backup fails its checksum and may not restore. Make a fresh one: tandem backup
+Your newest backup is damaged and may not restore. Make a fresh one: tandem backup
 
 @wine_mudou
 This program opened cleanly before, under Wine {1}. The system now has Wine {2}, and that change is the most likely reason it stopped working - the ground moved under it, not the program itself.

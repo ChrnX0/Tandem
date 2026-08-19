@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.36"
+TANDEM_VERSAO="4.37"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5331,9 +5331,17 @@ t_saude_disco_veredito() {
 #   ok           a recent backup that verifies
 # Pure: newest-backup epoch (empty if none), "now", and t_backup_verifica's code.
 t_saude_backup_veredito() {
-    local novo="${1:-}" agora="${2:-}" rc_verif="${3:-}"
+    local novo="${1:-}" agora="${2:-}" estado="${3:-}"
     [ -n "$novo" ] || { printf 'sem-backup'; return; }
-    [ "$rc_verif" = 1 ] && { printf 'corrompido'; return; }
+    # $estado is a t_restauravel token, not a bare checksum result: it condemns a
+    # backup that would not actually come back - structurally broken (danificado /
+    # nao-e-backup) OR checksum-mismatched (corrompido) - so a 0-byte or truncated
+    # archive is caught even with no sidecar beside it. 'ok'/'sem-*' fall through:
+    # a structurally sound backup with no checksum is not condemned, only unproven.
+    case "$estado" in
+        corrompido|danificado|nao-e-backup|sem-arquivo)
+            printf 'corrompido'; return ;;
+    esac
     if [ -n "$agora" ] && [ "$novo" -eq "$novo" ] 2>/dev/null &&
        [ "$agora" -eq "$agora" ] 2>/dev/null &&
        [ "$((agora - novo))" -gt "$((30 * 24 * 3600))" ]; then
