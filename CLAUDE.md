@@ -1866,12 +1866,37 @@ that says nothing on an unknown token rather than printing a key name. Suite
 1518 passed / 0 / 1 skipped; 800 messages translated in all seven languages,
 0 untranslated, 0 fuzzy; both literal counters read 0.
 
+**v4.30 IS PUBLISHED** — 2026-08-19, tag `v4.30` at `46fab13`, `.deb`
+(511848 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`da95838c…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. It is the FIRST feature of round two, and it came with a lesson: the
+version it was SUPPOSED to be — "passive self-update awareness" — turned out to
+be three versions old, shipped in 4.13 (the `t_versao_*` family, `acao_versao`
+on/off, the daily throttled check, `versao_nova_aviso` in all seven catalogues);
+it was found by reading the tree before building, which is the whole point. So
+4.30 became round two's real first item: verifiable backups. `tandem backup`
+now writes a `.sha256` checksum beside the archive — the same sidecar this
+project proves its own releases with — and `tandem backup verificar <file>`
+(alias `verify`) reads it back and says intact / corrupted / no-checksum plainly,
+so a backup can be tested the day it is made, not the day the disk dies. `tandem
+restore` no longer trusts that the archive merely OPENS: before it wipes the
+working environment it verifies the archive against its checksum and refuses a
+mismatch, rather than laying a broken copy over a good setup; no checksum beside
+the file falls back honestly to the structural check. The integrity decision is
+a pure function (`t_backup_verifica`: intact / corrupted / no-checksum / no-tool)
+with its guarantee proven by injection — a valid archive with a wrong sidecar
+makes restore refuse while the environment stays on disk; the checksum read
+(`t_backup_soma`) is a second one. Suite 1528 passed / 0 / 1 skipped; 807
+messages translated in all seven languages, 0 untranslated, 0 fuzzy; both
+literal counters read 0.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
-allows it; a bullet appended to a published entry is not. (At the time of writing, 4.29 is published; 4.30 is the in-flight version,
-its changelog entry fresh and unreleased, and the three files agree on 4.30.)
+allows it; a bullet appended to a published entry is not. (At the time of writing, 4.30 is published; 4.31 is the in-flight version,
+its changelog entry fresh and unreleased, and the three files agree on 4.31.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
