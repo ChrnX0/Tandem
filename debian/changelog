@@ -1,3 +1,36 @@
+tandem (4.36) unstable; urgency=medium
+
+  * Fix a hang in `tandem doctor` and `tandem socorro` at an interactive
+    terminal - worse than the silence this project exists to abolish, and
+    invisible to CI. The 4.26 web-service feature added a SECOND function named
+    `t_porta_escutando` (a stdin parser fed by a pipe), and bash keeps the last
+    definition of a name. So the older `t_porta_escutando` - the one that runs
+    `ss` itself, which the dongle check `t_chave_estado` calls with no pipe -
+    was shadowed, and the call read the terminal's stdin and blocked forever.
+    `tandem doctor` calls it for the Sentinel and CodeMeter keys on every run,
+    and `tandem socorro` runs doctor, so both hung with zero output at a
+    terminal.
+    CI never saw it because the suite feeds a non-terminal stdin, where the
+    parser hits EOF and returns at once - which also silently broke the dongle
+    port check, since that EOF path always answered "not listening".
+  * The runner is renamed `t_porta_ouvindo_ss` (its one caller repointed); the
+    stdin parser keeps the name and its pipe callers. And because the real
+    defect was "two features silently share a name", the fix ships the
+    INSTRUMENT for the class, not just the instance: a test that fails if any
+    function in common.sh is defined twice, proven by putting the collision
+    back. A second test pins that `t_chave_estado` never reads stdin.
+  * Two adjacent guards found in the same adversarial sweep, each behind its own
+    test. The `tandem saude` Wine-changed check (4.35) trimmed: a memory file
+    carrying a CR or an unterminated last line could fire a false "Wine changed"
+    even when the versions match - the value is now normalised before the
+    compare, so it cannot cry wolf on a file edited or moved between machines.
+    And the "dialout" group warning in `tandem portas` is now gated on a serial
+    device actually existing, mirroring its "lp" sibling, so the report can no
+    longer say "no serial port on this computer" and warn about one in the same
+    breath.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 11:00:00 +0000
+
 tandem (4.35) unstable; urgency=medium
 
   * Round two, made proactive: `tandem saude` now says BEFORE a program fails

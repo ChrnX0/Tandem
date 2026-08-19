@@ -1989,6 +1989,39 @@ a self-test the suite runs. Suite 1561 passed / 0 / 1 skipped; 825 messages
 translated in all seven languages, 0 untranslated, 0 fuzzy; both literal
 counters read 0.
 
+**v4.35 IS PUBLISHED** — 2026-08-19, tag `v4.35` at `87bdeb7`, `.deb`
+(525846 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`fda874f9…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. Round two, made proactive: `tandem saude` now reads 4.28's per-program
+`VERSAO_WINE` and warns, BEFORE a program is next opened, that the Wine under it
+has changed — so a POS can be tested while the shop is closed rather than at 8am
+with a customer waiting. 4.28 recorded the working Wine and named the change only
+at the next failure; saude never read that record. The decision is a pure
+function (`t_saude_wine_citar`: recorded working Wines on stdin, the current Wine
+as its argument, the one worth citing out or nothing) reusing the 4.28 guard
+`t_wine_mudou_desde`, so it never cries wolf; ranked "worth knowing", not "act
+now". Message `saude_wine_mudou` translated in all seven languages. Suite 1568
+passed / 0 / 1 skipped; both literal counters read 0.
+
+**v4.36 IS IN FLIGHT** — the doctor/socorro hang fix, and it is a good example of
+the extrapolation drive done right: idle-time was spent on an adversarial
+workflow (the owner asked "if there's more to do, why are you idle?"), 7 agents
+scoping features and hunting defects by RUNNING the program in conditions CI
+never tests. It found a CONFIRMED high-severity regression from 4.26: the
+web-service feature defined a SECOND `t_porta_escutando` (a stdin parser), and
+bash keeps the last definition, so the ss-runner the dongle check
+`t_chave_estado` calls was shadowed — `tandem doctor` and `tandem socorro` HUNG
+with zero output at an interactive terminal (CI feeds non-terminal stdin, hits
+EOF, stays green), and the dongle port check was silently always "not listening".
+Reproduced end to end. 4.36 renames the runner `t_porta_ouvindo_ss`, and ships
+the INSTRUMENT for the class — a test that fails if any shell file defines a
+function name twice — plus a no-stdin regression on `t_chave_estado`. It rides
+two same-sweep guards: the 4.35 saude Wine check normalises `VERSAO_WINE` so a
+CR/unterminated memory file cannot cry wolf, and the `tandem portas` dialout
+warning is gated on a real serial device existing. Pure-logic, no new messages,
+no translation step.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
@@ -2031,13 +2064,11 @@ OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
 allows it; a bullet appended to a published entry is not. (At the time of
-writing, 4.34 is published and **4.35 is in flight** — the pause was lifted by
-the owner's own request to "review, leave nothing undone, then brainstorm", and
-4.35 is the one high-value code item that resume surfaced: `tandem saude`
-reading 4.28's per-program `VERSAO_WINE` to warn PROACTIVELY that the Wine under
-a working program has changed, before it fails rather than at 8am with a
-customer waiting. The three files agree on 4.35; 4.34 stays the released
-version until 4.35 ships.)
+writing, 4.35 is published — verified byte-for-byte five ways — and **4.36 is in
+flight**: the doctor/socorro hang fix an adversarial workflow surfaced when the
+owner asked why idle time was going to CI-watching. The three version files
+agree on 4.36; 4.35 stays the released version until 4.36 ships. 4.36 adds no
+message keys, so there is no translation step.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

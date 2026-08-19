@@ -1513,7 +1513,7 @@ acao_relogio() {
 # check that cannot run adds nothing (unknown is never a green light), and with
 # nothing to report it says so plainly instead of an empty window.
 acao_saude() {
-    local achados="" tab nl nova livre_kb linha epoch arq rc_v nome wine_agora antes_wine
+    local achados="" tab nl nova livre_kb linha epoch arq rc_v nome wine_agora antes_wine v
     # The two severities, as the leading number of each finding: 1 = act now,
     # 2 = worth knowing. t_saude_ordena sorts on it so the urgent thing is first.
     local prob=1 aviso=2
@@ -1557,7 +1557,14 @@ acao_saude() {
         antes_wine="$(
             for arq in "$TANDEM_MEMORIA"/*.txt; do
                 [ -f "$arq" ] || continue
-                sed -n 's/^VERSAO_WINE=//p' "$arq" | tail -1
+                # Normalise before comparing: a memory file edited or moved
+                # between machines can carry a CR, or leave its last line
+                # unterminated so the next file's value glues onto it. Strip all
+                # whitespace (a version has none inside it) and re-emit exactly
+                # one clean line, so the check cannot cry wolf on a mangled file.
+                v="$(sed -n 's/^VERSAO_WINE=//p' "$arq" | tail -1)"
+                v="$(printf '%s' "$v" | tr -d '[:space:]')"
+                [ -n "$v" ] && printf '%s\n' "$v"
             done | t_saude_wine_citar "$wine_agora"
         )"
         [ -n "$antes_wine" ] && \
