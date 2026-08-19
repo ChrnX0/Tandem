@@ -1946,12 +1946,31 @@ recorded the owner's permanent insight directive. Suite 1549 passed / 0 / 1
 skipped; 823 messages translated in all seven languages, 0 untranslated,
 0 fuzzy; both literal counters read 0.
 
+**v4.33 IS PUBLISHED** — 2026-08-19, tag `v4.33` at `1bcf76f`, `.deb`
+(522342 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`672f5848…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. A small, high-value round-one-flavoured gap the ledger had documented
+as not-done (`docs/IDEAS.md:586`): a USB or parallel printer plugged into the
+counter needs its user in the "lp" group, and without it the printer is seen and
+simply does not print — a thermal printer that stays silent is the shop's live
+pain. `tandem portas` warned about the "dialout" group for a serial pinpad or
+scale but said NOTHING about "lp" for a printer. It does now: when a printer node
+is present (`/dev/usb/lp*`, kept in `$usblp`, or a parallel `/dev/lp*`) and the
+owner is not in the lp group, `t_texto_portas` names the exact one-time fix —
+`sudo usermod -aG lp <user>`, then log out and back in — in the same shape as the
+dialout warning it already had. The decision reuses `t_no_grupo` (testable); it
+never runs `usermod` and never writes a udev rule (weighed and rejected at
+`IDEAS.md:649`) — it explains, the owner runs one command he can read. Suite
+1552 passed / 0 / 1 skipped; 824 messages translated in all seven languages,
+0 untranslated, 0 fuzzy; both literal counters read 0.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
-allows it; a bullet appended to a published entry is not. (At the time of writing, 4.32 is published; 4.33 is the in-flight version,
-its changelog entry fresh and unreleased, and the three files agree on 4.33.)
+allows it; a bullet appended to a published entry is not. (At the time of writing, 4.33 is published; 4.34 is the in-flight version,
+its changelog entry fresh and unreleased, and the three files agree on 4.34.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
