@@ -2071,6 +2071,38 @@ message keys (both sentences already existed), no translation step; proof by
 injection mirrors the existing soltar/fixar command-level tests. Suite 1587
 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.39 IS PUBLISHED** — 2026-08-19, tag `v4.39` at `4f65c13`, `.deb`
+(529184 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`5ea0db60…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. It closes the vision audit's last two buildable-now gaps, both test-only
+guard hardenings with no product-behaviour change. (i) A `.msi` is not a PE, so
+`wine file.msi` always fails; `executar()` routes `*.msi|*.msp` to `wine msiexec
+/i`, and nothing guarded that a refactor keeps it there — a "simplification" to
+`wine "$PROG"` would make every `.msi` fail and send the dependency loop hunting
+DLLs that are not the problem, the exact silent-wrong-diagnosis class this
+project exists to abolish (and the one format where it hides: `t_pe_arch` reads
+MZ+PE, a `.msi` OLE compound file answers nothing, so the bitness gate is skipped
+and the file reaches `executar` unrefused). A full-loop test runs a `.msi`
+through a fake wine and asserts the `msiexec /i` call and that the file is never
+handed straight to wine — proven both ways by injection. (ii) The 4.26
+no-function-defined-twice guard knew only the `name()` spelling; a duplicate
+written `name ()` or `function name` could walk around it. The extractor now
+folds all three spellings to the bare name, stays column-0 anchored so awk's own
+indented `function`s are excluded, and requires parens-or-keyword so an
+assignment is never mistaken for a definition — with a vacuity probe per spelling
+plus one asserting a same-named assignment is NOT flagged. Suite 1592 passed /
+0 / 1 skipped; both literal counters read 0. **The release itself is the lesson
+this time:** both CI and the release hit a GitHub-wide apt-mirror stall on the
+`Tools` step — three of four runners hung 11–37 min installing
+shellcheck/lintian/gettext/wine while healthy ones finished in ~90 s — infra,
+not code, proven by the identical tree passing on a fresh runner. The remedy is
+the one already recorded for a stalled release: a stuck apt does NOT self-recover
+quickly, so cancel the hung run and re-dispatch (release) or empty-commit-
+retrigger onto a fresh runner (CI) rather than waiting it out. The empty
+retrigger commit squashes away at merge, so the released tree is byte-identical
+to the reviewed one — which the five-way check confirms.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
@@ -2113,23 +2145,18 @@ OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
 allows it; a bullet appended to a published entry is not. (At the time of
-writing, 4.38 is published — verified byte-for-byte five ways — and **4.39 is in
-flight**: it closes the vision audit's last two buildable-now gaps, both guard
-hardenings with no product-behaviour change. (i) A `.msi` opens through `wine
-msiexec /i` — `wine file.msi` always fails — and nothing guarded that a refactor
-keeps `executar()` on that branch; a full-loop test now runs a `.msi` through a
-fake wine and asserts the `msiexec /i` invocation (and that the file is never
-handed straight to `wine`), proven both ways by injection. (ii) The
-no-function-defined-twice guard knew only the `name()` spelling, so a duplicate
-written `name ()` or `function name` could walk around it; the extractor now
-folds all three to the bare name, stays column-0 anchored so indented awk
-`function`s are excluded, and requires parens-or-keyword so an assignment is
-never mistaken for a definition. The owner asked for a measured vision audit and
-to let it guide the work; I am descending its buildable-now list one shipped
-version at a time. After 4.39 the audit's buildable-now list is empty and the
-honest read is unchanged: the highest-value work left is field evidence on the
-owner's counter, not code. The three version files agree on 4.39; 4.38 stays the
-released version until 4.39 ships.)
+writing, **4.39 is published** — verified byte-for-byte five ways — and **no
+version is in flight**. The vision audit's buildable-now list is now EMPTY:
+4.35 (proactive `saude`), 4.37 (`saude` false-healthy), 4.38 (portas-soltar
+Rule-1) and 4.39 (the `.msi` routing guard plus the widened function-collision
+detector) are the whole of it. The honest read, recorded because this file is
+where the next session looks: the CODE frontier the audit surfaced is exhausted,
+and the highest-value work left is NOT code — it is field evidence on the owner's
+actual counter (a real POS / fiscal installer through the `.exe` loop; real
+`.xapk`/`.AppImage`/`.jar` double-clicks under GNOME/Wayland;
+`preparar`/`desinstalar`/`dados`/`socorro` in the field), which no CI can
+produce. **Do not open 4.40 on reflex; wait for the owner's steer.** All three
+version files agree on 4.39, which is the released version.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
