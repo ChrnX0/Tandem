@@ -1,3 +1,24 @@
+tandem (4.39) unstable; urgency=medium
+
+  * Harden the two guards the vision audit surfaced last; both are test-only,
+    with no change to what the program does.
+  * A `.msi` is opened with `wine msiexec /i`, never `wine file.msi` (which
+    always fails because a `.msi` is not a PE). `executar()` has always routed
+    it there, but nothing guarded that a later refactor keeps doing so - a
+    "simplification" to `wine "$PROG"` would make every `.msi` fail and send the
+    dependency loop hunting for DLLs that are not the problem. A full-loop test
+    now runs a `.msi` through a fake wine and asserts the `msiexec /i`
+    invocation, and that the file is never handed straight to wine; proven both
+    ways by injection.
+  * The no-function-defined-twice guard knew only the `name()` spelling, so a
+    duplicate written `name ()` or `function name` could walk around it. The
+    extractor now folds all three spellings to the bare name, stays anchored at
+    column 0 so awk's own indented `function`s are left alone, and requires
+    parentheses or the keyword so an assignment is never mistaken for a
+    definition. Each spelling has its own vacuity probe.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 15:30:00 +0000
+
 tandem (4.38) unstable; urgency=medium
 
   * Close a Rule-1 asymmetry the vision audit found: `tandem portas soltar`
