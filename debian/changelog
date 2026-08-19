@@ -1,3 +1,26 @@
+tandem (4.30) unstable; urgency=medium
+
+  * Fourth of the extrapolation round, and the one that CLOSES round one:
+    passive self-update awareness. A counter runs the copy of Tandem it was
+    given for years; when a newer one fixes the very thing breaking today,
+    nothing tells the owner it exists. Tandem now says so - and it explains,
+    it never installs.
+  * It never cries wolf. The one firm "an update exists" signal comes only
+    from an OPT-IN, at-most-once-a-day background check that learns the latest
+    published version and compares it to the running one; it speaks only when
+    a newer version genuinely exists, never on equal or older or unreadable.
+    The check is off until the owner turns it on, has a named off-switch, and
+    - like the community-list fetch - stamps the day BEFORE it tries, so a
+    machine with no route makes one failed request a day, not one per run.
+  * The build's own age (from the release date it already ships in its
+    changelog, the same source the clock reads) is shown as neutral context
+    on `tandem versao` and `tandem doctor`, never as an alarm. The version
+    comparison is a pure function - numeric per component, so 4.30 outranks
+    4.9 - with a proof-by-injection test; nothing here sends a shop's data
+    anywhere, and Tandem never downloads or runs an update on its own.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 00:55:00 +0000
+
 tandem (4.29) unstable; urgency=medium
 
   * Third of the extrapolation round: Tandem now says what it KNOWS about a
