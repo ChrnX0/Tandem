@@ -2182,6 +2182,27 @@ else
          "the plain file survives" "it was removed"
 fi
 
+# 4.38: RULE No1 for soltar, the guard fixar already had. The 4.19 setup: the
+# default prefix is a SYMLINK to the shop's foreign production prefix. soltar
+# rm's dosdevices/comN and reg-deletes inside the prefix, so without the guard it
+# would delete inside a prefix Tandem did not create - the one inviolable rule.
+PSOLT_H="$TMPROOT/portas-soltar-home"; rm -rf "$PSOLT_H"
+mkdir -p "$PSOLT_H/.config/tandem" "$PSOLT_H/.local/share/tandem"
+printf '%s\n' "$PVER_FIX" > "$PSOLT_H/.config/tandem/.primeira-vez"
+PSOLT_ALHEIO="$TMPROOT/portas-soltar-alheio"; rm -rf "$PSOLT_ALHEIO"
+mkdir -p "$PSOLT_ALHEIO/dosdevices"; printf 'reg\n' > "$PSOLT_ALHEIO/system.reg"
+ln -sfn /dev/null "$PSOLT_ALHEIO/dosdevices/com3"      # a symlink soltar would rm
+ln -sfn "$PSOLT_ALHEIO" "$PSOLT_H/.local/share/tandem/wine"   # default prefix -> foreign
+env -i HOME="$PSOLT_H" PATH="$PORTAS_BIN:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+    TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" TANDEM_IDIOMA_FORCADO=en \
+    bash "$ROOT/src/bin/tandem" portas soltar COM3 >/dev/null 2>&1
+if [ -L "$PSOLT_ALHEIO/dosdevices/com3" ]; then
+    pass "soltar refuses a foreign prefix (rule 1) and leaves its symlink intact"
+else
+    fail "soltar refuses a foreign prefix (rule 1) and leaves its symlink intact" \
+         "the foreign symlink survives" "soltar deleted inside a prefix it did not create"
+fi
+
 section "web services: the parts that need no systemd (detect, unit, verdict)"
 
 # The tenth thing Tandem carries, and the first that is not a file. A web service

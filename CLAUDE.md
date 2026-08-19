@@ -2004,6 +2004,30 @@ as its argument, the one worth citing out or nothing) reusing the 4.28 guard
 now". Message `saude_wine_mudou` translated in all seven languages. Suite 1568
 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.37 IS PUBLISHED** — 2026-08-19, tag `v4.37` at `d87f1da`, `.deb`
+(528212 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`0ad3ae7a…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. It is the vision audit's #1 finding built: `tandem saude` — the flagship
+triage command — was committing the project's own cardinal sin, false
+reassurance instead of silence, TWICE, and the audit found it by RUNNING the
+command, not reading it. (a) Recovery readiness only checked the backup's
+checksum (`t_backup_verifica`), so a 0-byte/truncated archive with no sidecar —
+one `tar` cannot even open — passed as a healthy recovery net; it checks the
+STRUCTURE now via `t_restauravel` (structure then checksum) and
+`t_saude_backup_veredito` condemns danificado / nao-e-backup / corrompido.
+(b) A web service up but serving nothing read healthy: the loop passed the
+service NAME where `t_servico_escuta`/`t_servico_responde` expect a PORT and
+captured their empty stdout instead of the exit code, so `escuta-mudo` was dead
+code; it reads `t_servico_le NAME PORTA` now and maps exit codes to sim/nao (a
+check it cannot run stays silent — never a false alarm). The backup message was
+reworded "fails its checksum" → "is damaged" (re-read in all seven, the only
+translation change). A nice proof the fix is real: 4 existing saude e2e tests
+started failing because they used an EMPTY tar as a "backup" — exactly the
+not-really-a-backup the old saude waved through — so they now build a
+structurally valid one. Suite 1586 passed / 0 / 1 skipped; both literal counters
+read 0.
+
 **v4.36 IS PUBLISHED** — 2026-08-19, tag `v4.36` at `cb7fc28`, `.deb`
 (527112 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
 `10399fd6…` from the release body, the release's own checksum file, the `.deb`
@@ -2072,15 +2096,17 @@ OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
 allows it; a bullet appended to a published entry is not. (At the time of
-writing, 4.36 is published — verified byte-for-byte five ways — and **4.37 is in
-flight**: the audit's #1 finding, the two `tandem saude` false-"healthy" silent
-misses (a 0-byte/broken backup passing as a valid recovery net; an
-up-but-not-serving service reading healthy because the loop passed the service
-NAME where a PORT belongs and captured empty stdout instead of the exit code, so
-`escuta-mudo` was dead code). The owner asked for a measured vision audit and to
-let it guide the work; this is its top buildable-now item. The three version
-files agree on 4.37; 4.36 stays the released version until 4.37 ships. 4.37 is
-pure-logic and adds no message keys, so there is no translation step.)
+writing, 4.37 is published — verified byte-for-byte five ways — and **4.38 is in
+flight**: the audit's #3 finding, a Rule-1 asymmetry. `tandem portas soltar`
+rm's a `dosdevices/comN` symlink and `wine reg delete`s inside the prefix with
+NO guard, while its `fixar` sibling has both the `system.reg` environment check
+and the `t_prefixo_protegido` Rule-1 guard — so `soltar` could reach a
+production prefix through a symlinked default one (the 4.19 lesson, guard scoped
+to `fixar` only). 4.38 adds the same two guards to `soltar`; both messages
+already exist, so it is pure-logic with no translation step. The owner asked for
+a measured vision audit and to let it guide the work; I am descending its
+buildable-now list one shipped version at a time. The three version files agree
+on 4.38; 4.37 stays the released version until 4.38 ships.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

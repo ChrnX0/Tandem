@@ -1253,6 +1253,17 @@ acao_portas() {
                 COM[0-9]|COM[0-9][0-9]|LPT[0-9]) ;;
                 *) t_erro "$(t_msg portas_diga_qual_soltar)"; return 1 ;;
             esac
+            [ -f "$p/system.reg" ] || { t_erro "$(t_msg portas_sem_ambiente)"; return 1; }
+            # Rule number 1, the same guard fixar has: this DELETES a symlink and
+            # a registry value INSIDE a prefix, so it may only ever be one of
+            # ours. Without it, a default prefix that is a symlink to the shop's
+            # production POS prefix (the 4.19 lesson) would let soltar rm and
+            # reg-delete inside it - the one inviolable rule, broken by the
+            # release valve of the command that respects it on the way in.
+            if t_prefixo_protegido "$p"; then
+                t_erro "$(t_msg portas_ambiente_de_terceiro)"
+                return 1
+            fi
             local porta_min; porta_min="$(printf '%s' "$porta" | tr 'A-Z' 'a-z')"
             # Only a symlink, never a real device someone mounted there by hand.
             [ -L "$p/dosdevices/$porta_min" ] && rm -f "$p/dosdevices/$porta_min"
