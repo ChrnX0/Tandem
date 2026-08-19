@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3740697483 5267" "$soma_esperados"
+      "236893069 5283" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -6171,6 +6171,24 @@ t_memoria_esquece "$PROG_S" 2>/dev/null
 ( unset DISPLAY WAYLAND_DISPLAY; t_confirma_funcionou "$PROG_S" 30 ) >/dev/null 2>&1
 equal "without a window, it does not invent a confirmation" \
       "so-abriu" "$(t_confianca_da_licao "$PROG_S")"
+t_memoria_esquece "$PROG_S" 2>/dev/null
+
+# An installer lays its files down and exits in a second - that is success, not
+# a program flashing and vanishing. The field test caught a working WinDirStat
+# .msi install branded "opened and closed on its own, no time to use it", which
+# reads as failure. When the run was an installer (installador = 1), the fast
+# exit is exempt: it is not written to memory as "fechou sozinho" and no
+# vanished-warning is shown.
+t_memoria_esquece "$PROG_S" 2>/dev/null
+( unset DISPLAY WAYLAND_DISPLAY; t_confirma_funcionou "$PROG_S" 1 1 ) >/dev/null 2>&1
+equal "a fast installer is not branded 'closed by itself'" \
+      "" "$(t_memoria_le "$PROG_S" RESULTADO 2>/dev/null)"
+# The SAME one-second exit, but a real program (installador = 0), must still be
+# caught - the guard that exists for the flash-and-vanish failure stays intact.
+t_memoria_esquece "$PROG_S" 2>/dev/null
+( unset DISPLAY WAYLAND_DISPLAY; t_confirma_funcionou "$PROG_S" 1 0 ) >/dev/null 2>&1
+equal "a real program that flashes and vanishes is still caught" \
+      "fechou sozinho" "$(t_memoria_le "$PROG_S" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$PROG_S" 2>/dev/null
 
 # ------------------------------------------------------------------

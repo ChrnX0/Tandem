@@ -932,6 +932,31 @@ t_verbos_do_log /tmp/w.log     # expects: vcrun2022
 Verified **on real Linux** (Ubuntu 24.04 noble, the same base as Zorin 18, with
 root), no longer only by reading:
 
+- **FIELD TEST, 2026-08-19 — the installed `.deb` run against real Wine 9.0 and
+  a real CUPS printer, prompted by the owner (*"instala alguma impressora
+  virtual com driver genérico e testa"*).** What passed, on the INSTALLED
+  package: a real PuTTY `.msi` and a real WinDirStat `.msi` both installed
+  through Tandem via real `msiexec` (the 4.39 routing, confirmed by the programs
+  actually landing in `Program Files` — `wine file.msi` would have failed);
+  PuTTY's full Configuration window rendered on screen under Xvfb;
+  `peinfo.py` read the real WinDirStat binary's imports; `tandem portas`
+  detected a real `/dev/usb/lp0` node and fired BOTH the dialout and the lp-group
+  (4.33) warnings with the exact one-time fixes; `tandem portas fixar LPT1
+  /dev/usb/lp0` and `fixar COM2 …` each wrote BOTH halves (the `dosdevices`
+  symlink AND the registry value — the 4.25/4.38 fix); a generic CUPS virtual
+  printer printed a test job to PDF; and **Wine 9.0 enumerated the CUPS printers
+  into the prefix registry**, so a POS program under Wine would find the shop's
+  printer. `doctor`, `saude`, `relogio`, `versao`, `memoria`, `autoteste`
+  (17/0) all produced correct output. Three findings came out of it: (1) the
+  4.40 defect — a successful fast installer branded a flash-and-vanish failure;
+  (2) **Wine 9.0 ships `msvcp140`/`vcruntime140` as BUILTIN DLLs** (the offset-64
+  marker confirms it), so a VC++ program does NOT trigger the dependency loop on
+  modern Wine — the loop fires only for a DLL Wine genuinely lacks (MFC, older
+  runtimes); this is the "arriving is not arriving at all if Wine put it there"
+  insight, now measured on Wine 9.0 rather than inferred; (3) minor — `tandem
+  doctor` prints a blank `service:` value on a host with no systemd (the
+  `systemctl is-active waydroid-container` substitution comes back empty), which
+  does not occur on the owner's systemd counter but is a silent-blank gap.
 - The `.deb` written by hand by `build.py` is accepted by a real `dpkg`:
   `dpkg-deb --info/--contents`, `dpkg -i`, `dpkg --configure`. It installs,
   configures and uninstalls. Reproducible build (two builds, same cksum).
@@ -2145,18 +2170,24 @@ OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
 allows it; a bullet appended to a published entry is not. (At the time of
-writing, **4.39 is published** — verified byte-for-byte five ways — and **no
-version is in flight**. The vision audit's buildable-now list is now EMPTY:
-4.35 (proactive `saude`), 4.37 (`saude` false-healthy), 4.38 (portas-soltar
-Rule-1) and 4.39 (the `.msi` routing guard plus the widened function-collision
-detector) are the whole of it. The honest read, recorded because this file is
-where the next session looks: the CODE frontier the audit surfaced is exhausted,
-and the highest-value work left is NOT code — it is field evidence on the owner's
-actual counter (a real POS / fiscal installer through the `.exe` loop; real
-`.xapk`/`.AppImage`/`.jar` double-clicks under GNOME/Wayland;
-`preparar`/`desinstalar`/`dados`/`socorro` in the field), which no CI can
-produce. **Do not open 4.40 on reflex; wait for the owner's steer.** All three
-version files agree on 4.39, which is the released version.)
+writing, **4.40 is in flight** and 4.39 is the released version. The "wait for
+the owner's steer" that closed the 4.39 note was LIFTED the same day, and the
+way it was lifted is the lesson worth keeping: that note said the highest-value
+work left "needs the owner's counter", and he pushed back — *"e pq é q vc nao
+pode testar aí? instala alguma impressora virtual com driver genérico e testa"*.
+He was right. This container is Ubuntu 24.04 (the Zorin 18 base) with **Wine 9.0,
+winetricks, CUPS, Xvfb and xdotool already installed**, so most of what was filed
+under "needs his machine" is testable HERE — and doing so found a real defect.
+What genuinely still needs his counter is narrower than the 4.39 note claimed:
+his specific licensed POS / fiscal-printer HARDWARE and his Zorin GNOME/Wayland
+double-click routing — NOT "run a Windows installer" or "test a printer", both
+of which were done here (see the field-test entry in the State section). **4.40
+is that field defect:** a successful installer — a real WinDirStat `.msi` on real
+Wine — was branded "opened and closed on its own, no time to use it" because
+msiexec exits in a second, the silent-success guard firing on an installer doing
+its job. An installer (a `.msi`/`.msp`, or any run that registered a new Start
+Menu shortcut) is now exempt; the guard still fires for a real flash-and-vanish
+program. All three version files agree on 4.40.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
