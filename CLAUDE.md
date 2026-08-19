@@ -1965,12 +1965,60 @@ never runs `usermod` and never writes a udev rule (weighed and rejected at
 1552 passed / 0 / 1 skipped; 824 messages translated in all seven languages,
 0 untranslated, 0 fuzzy; both literal counters read 0.
 
+**v4.34 IS PUBLISHED** — 2026-08-19, tag `v4.34` at `2f95539`, `.deb`
+(524392 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`a620c638…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. Round two: pin the Wine that works. 4.28 named the cause when a program
+that opened cleanly yesterday breaks today because a distro upgrade changed Wine
+underneath it; 4.34 offers the way to stop it happening again. When a program
+opened before under one Wine, the system now carries a different one, and Wine
+is not already held, the 4.28 breakage message gains one honest line: you CAN
+pin Wine — `sudo apt-mark hold wine` — but that also holds back Wine's own
+security updates, so it is your call, and `sudo apt-mark unhold wine` undoes it.
+Tandem runs no `apt-mark`: it EXPLAINS, the rule that keeps it from installing a
+`.deb` it detected. It never nags without cause — only where there is a working
+Wine to protect, never as a blanket suggestion to hold a package. The decision
+is a pure function (`t_wine_pin_veredito`: pode-fixar / ja-fixado / sem-referencia
+/ sem-wine) with a proof-by-injection test; reading whether Wine is held is
+machine-only (`apt-mark showhold`). It also adds `tools/preenche-traducao.py`,
+the reusable multi-line catalogue-fill instrument — built because that fill was
+re-derived by hand five times in one session, wrong the same way each time (a
+string `re.sub` replacement processes `\n`; a callable one does not) — carrying
+a self-test the suite runs. Suite 1561 passed / 0 / 1 skipped; 825 messages
+translated in all seven languages, 0 untranslated, 0 fuzzy; both literal
+counters read 0.
+
+**ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
+2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
+verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
+pinning (round one closed earlier: 4.27 clock, 4.28 breakage, 4.29 provenance,
+self-update already 4.13). The one named round-two item not built —
+**second-counter replication** — was investigated against the code, not
+assumed: it is **already achievable** via `tandem backup` + the fresh-machine
+`tandem restore` (4.30 proves the backup intact, 4.32 verifies the restore
+lands). Its only real gap is machine IDENTITY — `t_identidade_fixa` stamps a
+per-machine `MachineGuid`/volume-serial into the prefix, so a restored backup
+carries the SOURCE till's identity, and whether a second till should share it or
+re-derive its own is a per-machine LICENSING decision. Automating that would
+break rule №1's spirit and the "no fiscal or legal advice" rule
+(`IDEAS.md:676`), so no marginal replication version was manufactured. **The
+honest read, recorded because this file is where the next session looks:** the
+mandated two rounds are delivered and verified; further *code* extrapolation is
+into falling returns; the largest remaining uncertainty is unchanged and is not
+code — a real POS / fiscal installer on the owner's actual counter (`preparar`,
+`desinstalar`, `dados`, `socorro`, a real `.xapk`/`.AppImage`/`.jar` double
+click). That is the field evidence the community list and the "one afternoon"
+gap have always needed. The next session should NOT open a version on reflex;
+read this, and wait for the owner's steer or bring field evidence.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
-allows it; a bullet appended to a published entry is not. (At the time of writing, 4.33 is published; 4.34 is the in-flight version,
-its changelog entry fresh and unreleased, and the three files agree on 4.34.)
+allows it; a bullet appended to a published entry is not. (At the time of writing, 4.34 is published; NO version is in flight —
+paused for the owner's steer, the mandated two rounds delivered; the three files
+agree on 4.34, the released version.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
