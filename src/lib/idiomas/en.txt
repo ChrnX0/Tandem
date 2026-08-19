@@ -2388,6 +2388,7 @@ Tandem - runs Windows programs, Android apps and Linux packages.
   tandem desinstalar [name]   removes an installed Windows program
   tandem android              opens the Android screen
   tandem doctor               diagnosis of the environment (what EXISTS)
+  tandem saude                one health check: what needs attention now
   tandem autoteste            exercises it for real (what WORKS)
   tandem repair               reapplies the file associations
   tandem dados                shows your own files inside Windows
@@ -3406,6 +3407,45 @@ clock: {1}
 
 @doctor_relogio_errado
 clock: {1} - WRONG, run: tandem relogio
+
+@saude_titulo
+Tandem - health
+
+@saude_tudo_bem
+Everything looks healthy. Nothing needs your attention right now.
+
+@saude_precisa
+Here is what to look at, the most important first:
+
+@saude_relogio
+The clock is wrong. It breaks fiscal software, licences and secure sites. Fix it: tandem relogio
+
+@saude_relogio_auto
+Automatic time is off, so the clock can drift. Turn it on: sudo timedatectl set-ntp true
+
+@saude_disco_cheio
+The disk is almost full ({1} free). Saving and installing can fail. Free some space.
+
+@saude_disco_apertado
+The disk is getting full ({1} free). Worth clearing space before it bites.
+
+@saude_versao
+A newer Tandem is out ({1}); this one is {2}. Update when you have a minute.
+
+@saude_wine
+Windows programs are set up here but Wine is gone (an update may have removed it). Run: tandem preparar
+
+@saude_servico
+The web service {1} is not serving. Check it: tandem servico
+
+@saude_sem_backup
+There is no backup. If this disk fails you lose everything - make one: tandem backup
+
+@saude_backup_velho
+Your newest backup is from {1}. A fresh one is worth making: tandem backup
+
+@saude_backup_corrompido
+Your newest backup fails its checksum and may not restore. Make a fresh one: tandem backup
 
 @wine_mudou
 This program opened cleanly before, under Wine {1}. The system now has Wine {2}, and that change is the most likely reason it stopped working - the ground moved under it, not the program itself.

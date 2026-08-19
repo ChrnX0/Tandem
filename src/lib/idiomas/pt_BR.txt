@@ -2381,6 +2381,7 @@ Tandem - roda programas Windows, apps Android e pacotes do Linux.
   tandem desinstalar [nome]   remove um programa Windows instalado
   tandem android              abre a tela do Android
   tandem doctor               diagnostico do ambiente (o que existe)
+  tandem saude                um exame de saude: o que precisa de atencao agora
   tandem autoteste            exercita de verdade (o que funciona)
   tandem repair               reaplica as associacoes de arquivo
   tandem dados                mostra os seus arquivos dentro do Windows
@@ -3441,6 +3442,45 @@ relógio: {1}
 
 @doctor_relogio_errado
 relógio: {1} - ERRADO, rode: tandem relogio
+
+@saude_titulo
+Tandem - saúde
+
+@saude_tudo_bem
+Está tudo bem. Nada precisa da sua atenção agora.
+
+@saude_precisa
+Veja o que olhar, o mais importante primeiro:
+
+@saude_relogio
+O relógio está errado. Ele quebra o fiscal, licenças e sites seguros. Ajuste: tandem relogio
+
+@saude_relogio_auto
+A hora automática está desligada, então o relógio pode desandar. Ligue: sudo timedatectl set-ntp true
+
+@saude_disco_cheio
+O disco está quase cheio ({1} livres). Salvar e instalar podem falhar. Libere espaço.
+
+@saude_disco_apertado
+O disco está ficando cheio ({1} livres). Vale liberar espaço antes que atrapalhe.
+
+@saude_versao
+Saiu um Tandem mais novo ({1}); este é o {2}. Atualize quando puder.
+
+@saude_wine
+Há programas Windows configurados aqui, mas o Wine sumiu (uma atualização pode tê-lo removido). Rode: tandem preparar
+
+@saude_servico
+O serviço web {1} não está atendendo. Verifique: tandem servico
+
+@saude_sem_backup
+Não há backup. Se este disco falhar, você perde tudo - faça um: tandem backup
+
+@saude_backup_velho
+Seu backup mais novo é de {1}. Vale fazer um novo: tandem backup
+
+@saude_backup_corrompido
+Seu backup mais novo falha na soma de verificação e pode não restaurar. Faça um novo: tandem backup
 
 @wine_mudou
 Este programa já abriu direito antes, com o Wine {1}. O sistema agora tem o Wine {2}, e essa mudança é o motivo mais provável de ele ter parado de funcionar - o chão se moveu debaixo dele, não o programa em si.

@@ -2436,6 +2436,7 @@ Tandem - lance des programmes Windows, des applis Android et des paquets Linux.
   tandem desinstalar [nom]    supprime un programme Windows installe
   tandem android              ouvre l'ecran Android
   tandem doctor               diagnostic de l'environnement (ce qui EXISTE)
+  tandem saude                un bilan de sante : ce qui demande attention maintenant
   tandem autoteste            l'exerce pour de vrai (ce qui FONCTIONNE)
   tandem repair               reapplique les associations de fichiers
   tandem dados                montre vos fichiers dans Windows
@@ -3503,6 +3504,45 @@ horloge : {1}
 
 @doctor_relogio_errado
 horloge : {1} - FAUSSE, lancez : tandem relogio
+
+@saude_titulo
+Tandem - santé
+
+@saude_tudo_bem
+Tout va bien. Rien ne demande votre attention pour le moment.
+
+@saude_precisa
+Voici ce qu'il faut regarder, le plus important d'abord :
+
+@saude_relogio
+L'horloge est fausse. Elle casse le fiscal, les licences et les sites sécurisés. Corrigez : tandem relogio
+
+@saude_relogio_auto
+L'heure automatique est désactivée, l'horloge peut donc dériver. Activez : sudo timedatectl set-ntp true
+
+@saude_disco_cheio
+Le disque est presque plein ({1} libres). Enregistrer et installer peuvent échouer. Libérez de l'espace.
+
+@saude_disco_apertado
+Le disque se remplit ({1} libres). Mieux vaut libérer de l'espace avant que ça gêne.
+
+@saude_versao
+Un Tandem plus récent est sorti ({1}) ; celui-ci est le {2}. Mettez à jour quand vous pourrez.
+
+@saude_wine
+Des programmes Windows sont configurés ici, mais Wine a disparu (une mise à jour a pu le retirer). Lancez : tandem preparar
+
+@saude_servico
+Le service web {1} ne répond pas. Vérifiez : tandem servico
+
+@saude_sem_backup
+Il n'y a pas de sauvegarde. Si ce disque tombe en panne, vous perdez tout - faites-en une : tandem backup
+
+@saude_backup_velho
+Votre sauvegarde la plus récente date du {1}. Mieux vaut en faire une nouvelle : tandem backup
+
+@saude_backup_corrompido
+Votre sauvegarde la plus récente échoue à sa somme de contrôle et pourrait ne pas se restaurer. Faites-en une nouvelle : tandem backup
 
 @wine_mudou
 Ce programme s'ouvrait bien avant, avec Wine {1}. Le système a maintenant Wine {2}, et ce changement est la cause la plus probable de son arrêt - le sol a bougé sous lui, pas le programme lui-même.

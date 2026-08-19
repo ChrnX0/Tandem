@@ -2364,6 +2364,7 @@ Tandem - Windows के प्रोग्राम, Android के ऐप औ�
   tandem desinstalar [नाम]    इंस्टॉल किया Windows प्रोग्राम हटाता है
   tandem android              Android की स्क्रीन खोलता है
   tandem doctor               वातावरण का निदान (क्या मौजूद है)
+  tandem saude                एक स्वास्थ्य जाँच: अभी किस पर ध्यान देना है
   tandem autoteste            सचमुच जाँचता है (क्या चलता है)
   tandem repair               फ़ाइल संबंध दोबारा लागू करता है
   tandem dados                Windows के अंदर आपकी फ़ाइलें दिखाता है
@@ -3418,6 +3419,45 @@ Tandem - घड़ी
 
 @doctor_relogio_errado
 घड़ी: {1} - गलत, चलाएँ: tandem relogio
+
+@saude_titulo
+Tandem - स्वास्थ्य
+
+@saude_tudo_bem
+सब कुछ ठीक है। अभी किसी चीज़ पर ध्यान देने की ज़रूरत नहीं।
+
+@saude_precisa
+यह देखने लायक बातें हैं, सबसे ज़रूरी पहले:
+
+@saude_relogio
+घड़ी गलत है। यह फिस्कल सॉफ़्टवेयर, लाइसेंस और सुरक्षित साइटों को तोड़ती है। ठीक करें: tandem relogio
+
+@saude_relogio_auto
+स्वचालित समय बंद है, इसलिए घड़ी भटक सकती है। चालू करें: sudo timedatectl set-ntp true
+
+@saude_disco_cheio
+डिस्क लगभग भर चुकी है ({1} खाली)। सहेजना और इंस्टॉल करना विफल हो सकते हैं। कुछ जगह खाली करें।
+
+@saude_disco_apertado
+डिस्क भरती जा रही है ({1} खाली)। दिक्कत होने से पहले जगह खाली करना बेहतर है।
+
+@saude_versao
+एक नया Tandem आया है ({1}); यह {2} है। समय मिलने पर अपडेट करें।
+
+@saude_wine
+यहाँ विंडोज़ प्रोग्राम सेट हैं पर Wine गायब है (किसी अपडेट ने हटा दिया होगा)। चलाएँ: tandem preparar
+
+@saude_servico
+वेब सेवा {1} काम नहीं कर रही। जाँचें: tandem servico
+
+@saude_sem_backup
+कोई बैकअप नहीं है। अगर यह डिस्क खराब हुई तो सब खो जाएगा - एक बनाएँ: tandem backup
+
+@saude_backup_velho
+आपका सबसे नया बैकअप {1} का है। एक नया बनाना बेहतर है: tandem backup
+
+@saude_backup_corrompido
+आपका सबसे नया बैकअप अपनी चेकसम में विफल है और शायद पुनर्स्थापित न हो। नया बनाएँ: tandem backup
 
 @wine_mudou
 यह प्रोग्राम पहले Wine {1} पर ठीक से खुलता था। अब सिस्टम में Wine {2} है, और यही बदलाव इसके काम करना बंद करने का सबसे संभावित कारण है - इसके नीचे की ज़मीन हिली, प्रोग्राम खुद नहीं।
