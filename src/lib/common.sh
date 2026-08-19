@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.31"
+TANDEM_VERSAO="4.32"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5198,6 +5198,33 @@ t_backup_verifica() {
 t_palavras_do_programa() {
     grep -v -e '^$' -e '^aviso: ' -e '^ok: ' -e '^ERRO: ' -e '^>>> ' -e '^===== ' \
          "$1" 2>/dev/null | tail -"${2:-4}"
+}
+
+# Would this backup actually restore, checked WITHOUT touching anything - the
+# recovery rehearsal. It runs the same pre-flight a real restore does before its
+# destructive step, so "it passed here" means the same thing the restore will
+# find: the file is there, it opens as a complete Tandem environment, and (since
+# 4.30) it matches the checksum saved beside it. This is how a shop proves, the
+# day it makes a backup, that the backup would come back on a replacement PC -
+# instead of finding out the day the disk dies.
+#   sem-arquivo   the file is not there
+#   nao-e-backup  it opens, but it is not a Tandem environment
+#   danificado    it does not open as an archive at all
+#   corrompido    it opens but fails its checksum - it would not restore whole
+#   ok            it would restore cleanly
+# Structure before integrity, the order the restore itself uses: a checksum
+# says nothing about a file that will not even open.
+t_restauravel() {
+    local arq="$1"
+    [ -f "$arq" ] || { printf 'sem-arquivo'; return; }
+    t_backup_valido "$arq"
+    case $? in
+        2) printf 'nao-e-backup'; return ;;
+        1) printf 'danificado';   return ;;
+    esac
+    t_backup_verifica "$arq"
+    [ $? -eq 1 ] && { printf 'corrompido'; return; }
+    printf 'ok'
 }
 
 # ================================================ machine health, at a glance

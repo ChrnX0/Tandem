@@ -69,6 +69,15 @@ instructions from the owner, in his words: *"identifique e aplique melhorias q
 vc venha a identificar ser bom"* and *"coloca nas diretrizes q é para usar os
 insights ATIVAMENTE... assim como é para usar o proof gate ativamente"*.
 
+**Reaffirmed as a PERMANENT directive, 2026-08-19**, in his words: *"uma coisa q
+quero q vire diretriz permanente é que vc use sempre q possível os teus insight
+(isso chega a ser skill)"*. So this is not advice, it is a rule with the same
+weight as the inviolable ones: on every task, before and during and after, bring
+the insight — the pattern behind the instance, the instrument for the class, the
+honest report that costs you, the move that turns a fix into a guard. Treat it
+as the skill it is; a session that merely completes the ticket without applying
+what it noticed has not done the job the owner asked for.
+
 What that means in practice, because "be insightful" is not an instruction
 anybody can follow:
 
@@ -1891,12 +1900,36 @@ makes restore refuse while the environment stays on disk; the checksum read
 messages translated in all seven languages, 0 untranslated, 0 fuzzy; both
 literal counters read 0.
 
+**v4.31 IS PUBLISHED** — 2026-08-19, tag `v4.31` at `ef1891a`, `.deb`
+(518780 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`2e75850e…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. Round two's second feature: a single machine-"health" reading. Tandem
+already computes a dozen verdicts about the counter — is the clock right, is a
+newer Tandem out, is the disk filling, is Wine there, is a web service serving,
+is there a backup to fall back on — but each lived in its own command, unseen by
+a shopkeeper who did not know to ask. `tandem saude` (alias `health`) gathers
+them into ONE plain reading, worst-first: what to act on now, then what is worth
+knowing, then the all-clear, each problem line naming the one command that fixes
+it. It is TRIAGE, not the doctor's dump — doctor says what EXISTS, saude says
+what to DO. It never invents a problem (every finding is a verdict already
+computed, including the 4.30 tie-in: is there a recent, VERIFIED backup to
+recover from) and a check it cannot run reports unknown, never healthy. The
+pure parts are truth tables with proof-by-injection: `t_saude_disco_veredito`,
+`t_saude_backup_veredito`, and `t_saude_ordena` (the ordering is a function so
+worst-first is a property a test pins, not an accident of probe order — the
+`t_prova_do_run` shape). **A real bug was found by RUNNING it**, not by reading:
+`nl="$(printf '\n')"` strips the trailing newline in a command substitution, so
+every finding ran into the next with the rank marker showing — fixed to `$'\n'`.
+Suite 1540 passed / 0 / 1 skipped; 820 messages translated in all seven
+languages, 0 untranslated, 0 fuzzy; both literal counters read 0.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
-allows it; a bullet appended to a published entry is not. (At the time of writing, 4.30 is published; 4.31 is the in-flight version,
-its changelog entry fresh and unreleased, and the three files agree on 4.31.)
+allows it; a bullet appended to a published entry is not. (At the time of writing, 4.31 is published; 4.32 is the in-flight version,
+its changelog entry fresh and unreleased, and the three files agree on 4.32.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

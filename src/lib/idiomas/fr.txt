@@ -2140,6 +2140,23 @@ Environnement restauré.
 @rst_nao_restaurou
 Je n'ai pas pu restaurer.
 
+@rst_testar_ok
+Bonne nouvelle : cette sauvegarde se restaurerait sans souci, même sur un PC de remplacement. {1}
+
+Rien n'a été changé - ce n'était qu'une répétition. Continuez à faire des
+sauvegardes, et testez-les ainsi de temps en temps.
+
+@rst_testar_corrompido
+Cette sauvegarde ne se restaurerait PAS : {1} ne correspond pas à la somme de
+contrôle enregistrée avec elle, elle est donc endommagée ou incomplète. Rien
+n'a été changé. Faites une nouvelle sauvegarde depuis une machine qui
+fonctionne encore : tandem backup
+
+@rst_restaurado_incompleto
+La restauration s'est terminée, mais l'environnement ne semble pas complet -
+la sauvegarde était peut-être partielle. Ne vous y fiez pas ; restaurez une
+autre sauvegarde, ou faites-en une nouvelle sur une machine qui fonctionne.
+
 @prot_caminho_invalido
 Chemin non valide.
 

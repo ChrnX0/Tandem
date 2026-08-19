@@ -2090,6 +2090,22 @@ Ambiente restaurado.
 @rst_nao_restaurou
 Não consegui restaurar.
 
+@rst_testar_ok
+Boa notícia: este backup restauraria sem problemas, até num PC de reposição. {1}
+
+Nada foi alterado - isto foi só um ensaio. Continue fazendo backups, e
+teste-os assim de vez em quando.
+
+@rst_testar_corrompido
+Este backup NÃO restauraria: {1} não confere com a soma de verificação salva
+com ele, então está danificado ou incompleto. Nada foi alterado. Faça um backup
+novo de uma máquina que ainda funcione: tandem backup
+
+@rst_restaurado_incompleto
+A restauração terminou, mas o ambiente não parece completo - o backup pode ter
+ficado parcial. Não confie nele; restaure outro backup, ou faça um novo numa
+máquina que ainda funcione.
+
 @prot_caminho_invalido
 Caminho inválido.
 

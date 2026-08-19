@@ -270,7 +270,15 @@ backup in the home folder; name a file and it uses that one. The archive is read
 before anything is replaced, and \(em when a checksum sits beside it \(em
 verified against that checksum first, so a backup that did not arrive whole, or
 that no longer matches what was saved, is refused with your environment
-untouched.
+untouched. After it unpacks, it confirms the environment actually landed rather
+than trusting that the archive merely opened.
+.br
+Add
+.B \-\-testar
+(alias \fB\-\-ensaiar\fR) to REHEARSE instead of restore: it runs the whole
+pre-flight \(em checksum, structure, complete environment \(em and touches
+nothing, so you can prove a backup would come back on a replacement PC the day
+you make it, not the day the disk dies.
 .TP
 .BI "tandem tema " [which]
 Appearance of Tandem's own windows: \fBsistema\fR follows the computer and is

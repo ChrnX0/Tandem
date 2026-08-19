@@ -1,3 +1,26 @@
+tandem (4.32) unstable; urgency=medium
+
+  * Round two, recovery deepened: rehearse the restore, and verify it landed.
+    4.30 made a backup provably intact; this closes the other half - proving it
+    would actually come back, and that it did.
+  * `tandem restore --testar <file>` (alias `--ensaiar`) runs the whole restore
+    pre-flight - integrity against the checksum, structure, and that it is a
+    complete Tandem environment - and touches NOTHING. A shopkeeper can prove,
+    the day he makes a backup, that it would restore on a replacement PC after a
+    disk dies, instead of finding out the day he needs it. It says plainly
+    whether the backup would restore cleanly, or names what is wrong.
+  * A real restore no longer trusts tar's exit code alone. After it unpacks, it
+    verifies the environment actually landed - the prefix is there and is a
+    Tandem environment - and says "restored and checked", or warns that the
+    result looks incomplete rather than reporting a half-restore as done. This
+    is the finishing-is-not-working rule applied to recovery.
+  * The rehearsal verdict is a pure function (`t_restauravel`), tested by
+    injection; the post-restore check is structural and machine-only, like the
+    rest of the restore path. Tandem still writes only where the owner points
+    and never into a Wine prefix it did not create.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 03:18:00 +0000
+
 tandem (4.31) unstable; urgency=medium
 
   * Round two continues: a single machine-health reading. Tandem already knows a

@@ -1964,6 +1964,17 @@ tandem dados salvar
 @rst_nao_restaurou
 我没能恢复。
 
+@rst_testar_ok
+好消息：这个备份可以顺利恢复，即使在替换的电脑上也行。{1}
+
+什么都没有改动——这只是一次演练。请继续做备份，并时不时这样测试它们。
+
+@rst_testar_corrompido
+这个备份无法恢复：{1} 与随它保存的校验和不一致，所以它已损坏或不完整。什么都没有改动。请在仍能工作的机器上重新做一个备份：tandem backup
+
+@rst_restaurado_incompleto
+恢复完成了，但环境看起来不完整——备份可能是不完整的。不要依赖它；恢复另一个备份，或在仍能工作的机器上做一个新的。
+
 @prot_caminho_invalido
 路径无效。
 
