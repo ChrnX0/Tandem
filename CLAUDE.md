@@ -2128,6 +2128,29 @@ retrigger onto a fresh runner (CI) rather than waiting it out. The empty
 retrigger commit squashes away at merge, so the released tree is byte-identical
 to the reviewed one — which the five-way check confirms.
 
+**v4.40 IS PUBLISHED** — 2026-08-19, tag `v4.40` at `01c3d93`, `.deb`
+(530004 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`30e4a095…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. It is the FIRST defect found by field-testing the installed package on
+this container's real Wine 9.0 — the owner having pushed back on "needs your
+counter" (*"e pq é q vc nao pode testar aí?"*). A real WinDirStat `.msi`
+installed correctly through Tandem, but because `msiexec` exits in a second the
+silent-success guard branded it "opened and closed on its own, with no time to
+use it" — a successful install reported as a flash-and-vanish failure. An
+installer is now exempt: a `.msi`/`.msp` (a `.msi` exiting 0 installed
+something), or any run that registered a new Start Menu shortcut, is not that
+failure. `t_anuncia_atalhos` reports whether it announced anything; `executar()`
+computes the installer flag and passes it to `t_confirma_funcionou`, which skips
+both the `fechou sozinho` memory and the warning — while the guard still fires
+for a real program (installer = 0), proven both directions by a regression test.
+Suite 1594 passed / 0 / 1 skipped; both literal counters read 0. See the
+field-test entry in the State section for everything else that session validated
+on real Wine + CUPS (real `.msi` installs, PuTTY's window on screen, `tandem
+portas` printer + lp detection on a real node, `portas fixar` both halves, a CUPS
+virtual printer, Wine enumerating the CUPS printers) and the two other findings
+(Wine 9.0 ships msvcp140 builtin; a blank `service:` line on a non-systemd host).
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
@@ -2170,7 +2193,10 @@ OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
 allows it; a bullet appended to a published entry is not. (At the time of
-writing, **4.40 is in flight** and 4.39 is the released version. The "wait for
+writing, **4.40 is published** — verified byte-for-byte five ways — and **no
+version is in flight**, but the field testing that produced it is ONGOING per
+the owner's directive *"isso, agora é momento de fazer testes extensivos"*, so
+the next version is whatever that testing turns up, not a pause. The "wait for
 the owner's steer" that closed the 4.39 note was LIFTED the same day, and the
 way it was lifted is the lesson worth keeping: that note said the highest-value
 work left "needs the owner's counter", and he pushed back — *"e pq é q vc nao
