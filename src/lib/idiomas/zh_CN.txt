@@ -3345,5 +3345,12 @@ Tandem - 健康
 
 Tandem 不会自行改动 Wine；如果你向别人求助，这就是要提到的事。
 
+@wine_pode_fixar
+为了不让下次更新再这样，等它能正常工作后，你可以把 Wine 固定在某个版本，让更新无法移动它：
+
+      sudo apt-mark hold wine
+
+这也会一并阻止 Wine 自身的安全更新，所以由你决定。以后要撤销：sudo apt-mark unhold wine
+
 @mem_campo_versao_wine
 打开时的 Wine：

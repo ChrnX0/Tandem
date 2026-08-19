@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3113706947 5166" "$soma_esperados"
+      "1430659457 5211" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -2337,6 +2337,42 @@ saida_mem="$(env -i HOME="$WINEMEM_H" PATH="/usr/bin:/bin" \
     bash "$ROOT/src/bin/tandem" memoria 2>&1)"
 contem "tandem memoria shows which Wine a program last opened under" \
        "9.0" "$saida_mem"
+
+# 4.34: pin the Wine that works, so an update cannot swap it under a working POS.
+# 4.28 named the cause; this offers the prevention - EXPLAINED, never run, and
+# only where there is a real reason. The decision is a truth table.
+equal "a recorded working Wine, a real current one, not held: offer the pin" \
+      "pode-fixar" "$(t_wine_pin_veredito 9.0 10.0 nao)"
+equal "already held: nothing to offer" \
+      "ja-fixado"  "$(t_wine_pin_veredito 9.0 10.0 sim)"
+equal "no Wine on the system now: nothing to pin" \
+      "sem-wine"   "$(t_wine_pin_veredito 9.0 - nao)"
+equal "no recorded working Wine: no cause to advise" \
+      "sem-referencia" "$(t_wine_pin_veredito '' 10.0 nao)"
+# The offer names the exact hold command AND its cost - it never hides that
+# pinning holds back Wine's own security updates.
+saida_pin="$(TANDEM_IDIOMA_FORCADO=en bash -c ". '$ROOT/src/lib/common.sh'
+             t_idioma_carrega; t_msg wine_pode_fixar")"
+contem "the offer names the exact command"        "apt-mark hold wine" "$saida_pin"
+contem "and the undo, so it is reversible"        "apt-mark unhold wine" "$saida_pin"
+contem "and it is honest about the cost"          "security updates" "$saida_pin"
+# The wiring: the pin offer rides on the 4.28 breakage message and only when the
+# verdict is pode-fixar. Structural, because reaching it needs real Wine.
+if grep -q 't_wine_pin_veredito "$WINE_ANTES" "$WINE_AGORA"' "$EXE" &&
+   grep -q 't_msg wine_pode_fixar' "$EXE"; then
+    pass "tandem-exe offers to pin Wine when a working program broke under a new one"
+else
+    fail "tandem-exe offers to pin Wine when a working program broke under a new one" \
+         "the guarded wine_pode_fixar emit" "missing"
+fi
+# The catalogue-fill instrument, built this version so the multi-line translation
+# step stops being re-derived by hand, carries its own proof: its self-test puts
+# the escape bug back and fails if it is not caught.
+if python3 "$ROOT/tools/preenche-traducao.py" --selftest >/dev/null 2>&1; then
+    pass "the translation-fill tool's self-test passes (the escape bug stays caught)"
+else
+    fail "the translation-fill tool's self-test passes" "selftest ok" "it failed"
+fi
 
 
 section "provenance: is this program known here, said calmly and once"

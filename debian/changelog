@@ -1,3 +1,29 @@
+tandem (4.34) unstable; urgency=medium
+
+  * Round two: pin the Wine that works, so an update cannot swap it out from
+    under a working POS. 4.28 named the cause when a program that opened cleanly
+    yesterday breaks today because a distro upgrade changed Wine underneath it;
+    4.34 offers the way to stop it happening again.
+  * When Tandem sees that a program opened before under one Wine and the system
+    now carries a different one, and Wine is not already pinned, it adds one
+    honest line to that message: you CAN pin Wine at a version so the next
+    update cannot move it - `sudo apt-mark hold wine` - but that also holds back
+    Wine security updates, so it is your call, and `sudo apt-mark unhold wine`
+    undoes it. It EXPLAINS and never executes: Tandem runs no apt-mark itself,
+    the same rule that keeps it from installing a .deb it detected.
+  * It never nags without cause. The offer appears only where there is a real
+    reason - a program that worked under a specific Wine - never as a blanket
+    suggestion to hold a package, because pinning has a real cost. The decision
+    is a pure function (`t_wine_pin_veredito`: pode-fixar / ja-fixado /
+    sem-referencia / sem-wine) with a proof-by-injection test; reading whether
+    Wine is held is machine-only (`apt-mark showhold`), like the Wine read.
+  * Tooling: adds `tools/preenche-traducao.py`, the reusable catalogue-fill
+    instrument, so the multi-line translation step stops being re-derived by
+    hand each version - built with a self-test and used for this version's
+    message.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 04:52:00 +0000
+
 tandem (4.33) unstable; urgency=medium
 
   * The printer's group, named at last. A USB or parallel printer plugged into

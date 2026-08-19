@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.33"
+TANDEM_VERSAO="4.34"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -2286,6 +2286,35 @@ t_wine_mudou_desde() {
     [ -n "$agora" ] && [ "$agora" != "-" ] || return 1
     [ "$antes" != "$agora" ] || return 1
     return 0
+}
+
+# Is Wine held at its current version by apt, so an ordinary update cannot move
+# it? Machine-only (apt-mark), like the Wine read itself; the decision that uses
+# this is the pure function below. Returns 0 when wine is on the hold list.
+t_wine_fixado() {
+    command -v apt-mark >/dev/null 2>&1 || return 1
+    apt-mark showhold 2>/dev/null | grep -qxF wine
+}
+
+# Should Tandem OFFER to pin Wine? Pinning protects a program that works under a
+# known Wine from a distro upgrade swapping it - the 4.28 failure - but it also
+# holds back Wine's own security updates, so it is never suggested without a
+# reason and NEVER done automatically. The reason is a recorded working Wine;
+# without one there is nothing to protect and no advice to give. Pure, so the
+# decision is a truth table, not an accident of when the probe ran.
+#   ja-fixado      Wine is already held           -> nothing to offer
+#   sem-wine       no Wine on the system now       -> nothing to pin
+#   sem-referencia no recorded working Wine        -> no cause to advise
+#   pode-fixar     a recorded working Wine, a real current one, not held
+#                  -> the command is worth offering, for the owner to run
+# $1 recorded working Wine (VERSAO_WINE), $2 current Wine (t_stack_wine; "-" when
+# none), $3 "sim" when Wine is held.
+t_wine_pin_veredito() {
+    local antes="${1:-}" agora="${2:-}" fixado="${3:-}"
+    [ "$fixado" = sim ] && { printf 'ja-fixado'; return; }
+    [ -n "$agora" ] && [ "$agora" != "-" ] || { printf 'sem-wine'; return; }
+    [ -n "$antes" ] || { printf 'sem-referencia'; return; }
+    printf 'pode-fixar'
 }
 
 # ------------------------------------------------- counting without keeping

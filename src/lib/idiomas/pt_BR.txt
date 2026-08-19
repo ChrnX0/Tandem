@@ -3511,5 +3511,14 @@ Este programa já abriu direito antes, com o Wine {1}. O sistema agora tem o Win
 
 O Tandem não mexe no Wine por conta própria; é isto que você deve mencionar se pedir ajuda a alguém.
 
+@wine_pode_fixar
+Para o próximo update não fazer isso de novo, quando estiver funcionando você
+pode fixar o Wine numa versão para que uma atualização não o mova:
+
+      sudo apt-mark hold wine
+
+Isso também segura as atualizações de segurança do próprio Wine, então a
+decisão é sua. Para desfazer depois:  sudo apt-mark unhold wine
+
 @mem_campo_versao_wine
 Wine com que abriu: 

@@ -3575,5 +3575,15 @@ Ce programme s'ouvrait bien avant, avec Wine {1}. Le système a maintenant Wine 
 
 Tandem ne modifie pas Wine de lui-même ; c'est ce qu'il faut mentionner si vous demandez de l'aide.
 
+@wine_pode_fixar
+Pour que la prochaine mise à jour ne recommence pas, une fois que ça marche
+vous pouvez épingler Wine à une version pour qu'une mise à jour ne le déplace
+pas :
+
+      sudo apt-mark hold wine
+
+Cela retient aussi les mises à jour de sécurité de Wine lui-même, c'est donc
+votre choix. Pour annuler plus tard :  sudo apt-mark unhold wine
+
 @mem_campo_versao_wine
 Wine avec lequel il s'est ouvert : 

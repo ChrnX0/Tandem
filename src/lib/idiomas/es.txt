@@ -3516,5 +3516,14 @@ Este programa ya abría bien antes, con Wine {1}. El sistema ahora tiene Wine {2
 
 Tandem no toca Wine por su cuenta; esto es lo que debes mencionar si le pides ayuda a alguien.
 
+@wine_pode_fixar
+Para que la próxima actualización no vuelva a hacer esto, cuando funcione
+puedes fijar Wine en una versión para que una actualización no lo cambie:
+
+      sudo apt-mark hold wine
+
+Eso también retiene las actualizaciones de seguridad del propio Wine, así que
+la decisión es tuya. Para deshacerlo luego:  sudo apt-mark unhold wine
+
 @mem_campo_versao_wine
 Wine con que abrió: 
