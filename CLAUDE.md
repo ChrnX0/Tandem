@@ -1924,12 +1924,34 @@ every finding ran into the next with the rank marker showing — fixed to `$'\n'
 Suite 1540 passed / 0 / 1 skipped; 820 messages translated in all seven
 languages, 0 untranslated, 0 fuzzy; both literal counters read 0.
 
+**v4.32 IS PUBLISHED** — 2026-08-19, tag `v4.32` at `2cd69c5`, `.deb`
+(521378 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`37a368a4…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. Round two, recovery deepened: it closes the half 4.30 left open. 4.30
+made a backup provably intact; 4.32 proves it would actually COME BACK, and that
+it did. `tandem restore --testar <file>` (alias `--ensaiar`) runs the whole
+restore pre-flight — integrity against the checksum, structure, and that it is a
+complete Tandem environment — and touches NOTHING, so a shop can prove the day
+it makes a backup that the backup would restore on a replacement PC, instead of
+finding out the day the disk dies. And a real restore no longer trusts tar's
+exit code alone: after it unpacks, it confirms the environment actually LANDED
+(the prefix is there and is a Tandem environment) via a post-untar `system.reg`
+check, and warns "looks incomplete" rather than reporting a half-restore as
+done — the finishing-is-not-working rule applied to recovery. The rehearsal
+verdict is a pure function (`t_restauravel`: ok / corrompido / nao-e-backup /
+danificado / sem-arquivo, structure before integrity, the order the restore
+itself uses) with proof-by-injection tests. This is also the version that
+recorded the owner's permanent insight directive. Suite 1549 passed / 0 / 1
+skipped; 823 messages translated in all seven languages, 0 untranslated,
+0 fuzzy; both literal counters read 0.
+
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
-allows it; a bullet appended to a published entry is not. (At the time of writing, 4.31 is published; 4.32 is the in-flight version,
-its changelog entry fresh and unreleased, and the three files agree on 4.32.)
+allows it; a bullet appended to a published entry is not. (At the time of writing, 4.32 is published; 4.33 is the in-flight version,
+its changelog entry fresh and unreleased, and the three files agree on 4.33.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of
