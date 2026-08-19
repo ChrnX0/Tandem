@@ -1513,7 +1513,7 @@ acao_relogio() {
 # check that cannot run adds nothing (unknown is never a green light), and with
 # nothing to report it says so plainly instead of an empty window.
 acao_saude() {
-    local achados="" tab nl nova livre_kb linha epoch arq rc_v nome
+    local achados="" tab nl nova livre_kb linha epoch arq rc_v nome wine_agora antes_wine
     # The two severities, as the leading number of each finding: 1 = act now,
     # 2 = worth knowing. t_saude_ordena sorts on it so the urgent thing is first.
     local prob=1 aviso=2
@@ -1544,6 +1544,24 @@ acao_saude() {
     # Wine taken out from under a set-up environment - a distro upgrade can do it.
     if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] && ! command -v wine >/dev/null 2>&1; then
         achados="$achados$prob$tab$(t_msg saude_wine)$nl"
+    fi
+
+    # Wine changed under a program that worked. 4.28 records the Wine each
+    # program last opened cleanly under and names the change at the next FAILURE;
+    # here we say it BEFORE, while the shop is closed. Only when Wine is present
+    # (the block above owns Wine gone entirely). t_saude_wine_citar reuses the
+    # 4.28 guard, so it is silent unless a remembered working Wine really differs
+    # from the one installed now.
+    if command -v wine >/dev/null 2>&1; then
+        wine_agora="$(t_stack_wine 2>/dev/null)"
+        antes_wine="$(
+            for arq in "$TANDEM_MEMORIA"/*.txt; do
+                [ -f "$arq" ] || continue
+                sed -n 's/^VERSAO_WINE=//p' "$arq" | tail -1
+            done | t_saude_wine_citar "$wine_agora"
+        )"
+        [ -n "$antes_wine" ] && \
+            achados="$achados$aviso$tab$(t_msg saude_wine_mudou "$antes_wine" "$wine_agora")$nl"
     fi
 
     # Web services the owner set up that are no longer serving. No services

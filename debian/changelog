@@ -1,3 +1,24 @@
+tandem (4.35) unstable; urgency=medium
+
+  * Round two, made proactive: `tandem saude` now says BEFORE a program fails
+    that the Wine underneath it has changed. 4.28 already records the Wine each
+    program last opened cleanly under, and names the change at the next failure
+    - which for a point-of-sale is 8am with a customer waiting. saude never read
+    that record. Now it does: if a program you have opened here last ran cleanly
+    under one Wine and the system now carries another, saude tells you to open
+    it once before you need it, while the shop is closed and nothing is at risk.
+  * It never invents a problem. The finding uses the SAME guard 4.28 uses
+    (`t_wine_mudou_desde`: a recorded working Wine, a real current one, and the
+    two genuinely differ), so a program still facing the Wine it worked under
+    says nothing, and a machine with no Wine says nothing. It is ranked "worth
+    knowing", not "act now": the program is not broken, only worth a test.
+  * The decision is a pure function (`t_saude_wine_citar`: the recorded working
+    Wines in, the current Wine as its argument, the one worth citing out or
+    nothing) with proof-by-injection tests; reading the memory is the only live
+    part, the same split every other saude verdict follows.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 06:10:00 +0000
+
 tandem (4.34) unstable; urgency=medium
 
   * Round two: pin the Wine that works, so an update cannot swap it out from

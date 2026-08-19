@@ -2009,16 +2009,35 @@ into falling returns; the largest remaining uncertainty is unchanged and is not
 code — a real POS / fiscal installer on the owner's actual counter (`preparar`,
 `desinstalar`, `dados`, `socorro`, a real `.xapk`/`.AppImage`/`.jar` double
 click). That is the field evidence the community list and the "one afternoon"
-gap have always needed. The next session should NOT open a version on reflex;
-read this, and wait for the owner's steer or bring field evidence.
+gap have always needed.
+
+**The pause was LIFTED the same day by the owner, and 4.35 is what the resume
+produced.** He asked to review everything, leave nothing undone, then
+brainstorm ("faça"). The review confirmed the two rounds and found the driver
+seam largely already landed (the "pinpad on a COM2 Wine never created" defect,
+for one, was fixed in 4.9 — checked in the code, not the ledger). The one code
+item worth building without his machine was the intersection of both rounds:
+4.28 records the Wine each program last opened cleanly under and warns only at
+the next FAILURE, and `tandem saude` never read that record. **4.35 makes it
+proactive** — saude now says, before a program is next opened, that the Wine
+under it has changed, so a POS can be tested while the shop is closed rather
+than at 8am. It reuses the 4.28 guard (`t_saude_wine_citar` → `t_wine_mudou_desde`),
+never cries wolf, and is ranked "worth knowing", not "act now". After 4.35 the
+honest read is unchanged: the highest-value work left is field evidence on the
+owner's counter, not code — so do not open 4.36 on reflex either.
 
 **Whenever a version has shipped, the next one's changelog entry has to be
 OPENED before anything is added** — bump `debian/control`, `debian/changelog`
 and `TANDEM_VERSAO` together, because a released version's entry is history the
 public already has. A doc-only commit after a release is fine and the guard
-allows it; a bullet appended to a published entry is not. (At the time of writing, 4.34 is published; NO version is in flight —
-paused for the owner's steer, the mandated two rounds delivered; the three files
-agree on 4.34, the released version.)
+allows it; a bullet appended to a published entry is not. (At the time of
+writing, 4.34 is published and **4.35 is in flight** — the pause was lifted by
+the owner's own request to "review, leave nothing undone, then brainstorm", and
+4.35 is the one high-value code item that resume surfaced: `tandem saude`
+reading 4.28's per-program `VERSAO_WINE` to warn PROACTIVELY that the Wine under
+a working program has changed, before it fails rather than at 8am with a
+customer waiting. The three files agree on 4.35; 4.34 stays the released
+version until 4.35 ships.)
 
 That entry had to be *split out* of 4.1's, and the lesson is the reason this
 paragraph exists: v4.1 was published on 2026-08-09 and three commits' worth of

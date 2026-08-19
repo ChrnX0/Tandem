@@ -3459,6 +3459,9 @@ A newer Tandem is out ({1}); this one is {2}. Update when you have a minute.
 @saude_wine
 Windows programs are set up here but Wine is gone (an update may have removed it). Run: tandem preparar
 
+@saude_wine_mudou
+A program you have opened here last ran cleanly under Wine {1}, and the system now has Wine {2}. Open it once before you need it, to be sure it still works.
+
 @saude_servico
 The web service {1} is not serving. Check it: tandem servico
 

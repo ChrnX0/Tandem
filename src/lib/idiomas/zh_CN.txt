@@ -3328,6 +3328,9 @@ Tandem - 健康
 @saude_wine
 这里配置了 Windows 程序，但 Wine 不见了（可能被某次更新移除）。运行：tandem preparar
 
+@saude_wine_mudou
+您在这里打开过的一个程序，上次是在 Wine {1} 下正常运行的，而系统现在装的是 Wine {2}。请在需要之前先打开它一次，确认它仍然正常。
+
 @saude_servico
 网络服务 {1} 没有在提供服务。检查：tandem servico
 
