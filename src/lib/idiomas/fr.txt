@@ -3558,6 +3558,9 @@ Un Tandem plus récent est sorti ({1}) ; celui-ci est le {2}. Mettez à jour qua
 @saude_wine
 Des programmes Windows sont configurés ici, mais Wine a disparu (une mise à jour a pu le retirer). Lancez : tandem preparar
 
+@saude_wine_mudou
+Un programme que vous avez ouvert ici a fonctionné correctement pour la dernière fois sous Wine {1}, et le système a maintenant Wine {2}. Ouvrez-le une fois avant d'en avoir besoin, pour être sûr qu'il fonctionne encore.
+
 @saude_servico
 Le service web {1} ne répond pas. Vérifiez : tandem servico
 

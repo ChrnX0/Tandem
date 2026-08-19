@@ -5621,6 +5621,10 @@ msgctxt "saude_wine"
 msgid "Windows programs are set up here but Wine is gone (an update may have removed it). Run: tandem preparar"
 msgstr "这里配置了 Windows 程序，但 Wine 不见了（可能被某次更新移除）。运行：tandem preparar"
 
+msgctxt "saude_wine_mudou"
+msgid "A program you have opened here last ran cleanly under Wine {1}, and the system now has Wine {2}. Open it once before you need it, to be sure it still works."
+msgstr "您在这里打开过的一个程序，上次是在 Wine {1} 下正常运行的，而系统现在装的是 Wine {2}。请在需要之前先打开它一次，确认它仍然正常。"
+
 msgctxt "saude_servico"
 msgid "The web service {1} is not serving. Check it: tandem servico"
 msgstr "网络服务 {1} 没有在提供服务。检查：tandem servico"

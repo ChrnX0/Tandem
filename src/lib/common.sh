@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.34"
+TANDEM_VERSAO="4.35"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5353,6 +5353,29 @@ t_saude_backup_recente() {
     [ -n "$epoch" ] || epoch="$(stat -c %Y -- "$arq" 2>/dev/null)"
     [ -n "$epoch" ] || return 1
     printf '%s\t%s\n' "$epoch" "$arq"
+}
+
+# Proactive breakage awareness: 4.28 records the Wine each program last opened
+# cleanly under (VERSAO_WINE in its memory file) and names the change at the next
+# FAILURE - which for a POS is a customer already waiting. This reads all those
+# recorded versions and, if the CURRENT Wine differs from what a remembered
+# program worked under, returns the one version worth naming, so saude can say it
+# BEFORE the program is opened. Pure: the recorded working Wines arrive on stdin,
+# one per line (blank lines and the "-" of no-Wine tolerated), the current Wine
+# is $1, and it prints the first that genuinely differs - by the SAME guard 4.28
+# uses (t_wine_mudou_desde), so "still the Wine it worked under" and "no Wine at
+# all" both say nothing - or prints nothing and returns 1. No file I/O, so the
+# decision is a truth table a test injects; the memory read stays in the caller,
+# the split every other saude verdict follows.
+t_saude_wine_citar() {
+    local agora="${1:-}" antes
+    while IFS= read -r antes; do
+        if t_wine_mudou_desde "$antes" "$agora"; then
+            printf '%s\n' "$antes"
+            return 0
+        fi
+    done
+    return 1
 }
 
 # --------------------------------------------------- messages, in Portuguese

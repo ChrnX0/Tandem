@@ -5797,6 +5797,10 @@ msgctxt "saude_wine"
 msgid "Windows programs are set up here but Wine is gone (an update may have removed it). Run: tandem preparar"
 msgstr "Há programas Windows configurados aqui, mas o Wine sumiu (uma atualização pode tê-lo removido). Rode: tandem preparar"
 
+msgctxt "saude_wine_mudou"
+msgid "A program you have opened here last ran cleanly under Wine {1}, and the system now has Wine {2}. Open it once before you need it, to be sure it still works."
+msgstr "Um programa que você abriu aqui rodou bem pela última vez no Wine {1}, e o sistema agora tem o Wine {2}. Abra ele uma vez antes de precisar, para ter certeza de que ainda funciona."
+
 msgctxt "saude_servico"
 msgid "The web service {1} is not serving. Check it: tandem servico"
 msgstr "O serviço web {1} não está atendendo. Verifique: tandem servico"

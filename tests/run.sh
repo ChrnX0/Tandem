@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1430659457 5211" "$soma_esperados"
+      "1257558455 5221" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -995,6 +995,20 @@ equal "a backup from over a month ago is worth knowing" "velho" \
 equal "a recent backup with no sidecar is still fine (structure, not condemned)" \
       "ok" "$(t_saude_backup_veredito "$NOW_T" "$NOW_T" 2)"
 
+# Proactive Wine-mismatch: 4.28 records the Wine each program last opened cleanly
+# under; saude reads them all and cites the one that no longer matches, BEFORE
+# the program is next opened. The decision reuses the 4.28 guard, so it is a
+# truth table here: recorded working Wines on stdin, the current Wine as the
+# argument, the one worth naming out (or nothing).
+equal "a program that worked under an older Wine than now is worth citing" \
+      "9.0" "$(printf '9.0\n' | t_saude_wine_citar 10.0)"
+equal "the Wine it worked under is still the current one: cite nothing" \
+      "" "$(printf '10.0\n' | t_saude_wine_citar 10.0)"
+equal "no Wine on the machine now (the - t_stack_wine returns): cite nothing" \
+      "" "$(printf '9.0\n' | t_saude_wine_citar -)"
+equal "blank records are skipped and a real mismatch is still cited" \
+      "9.0" "$(printf '\n\n9.0\n' | t_saude_wine_citar 10.0)"
+
 # The ordering is a function, not an accident of which probe ran first: a plain
 # numeric sort puts the problem (rank 1) above the advisory (rank 2), whatever
 # order they were gathered in. Same shape as t_prova_do_run.
@@ -1030,6 +1044,25 @@ tar -czf "$SAUH/tandem-backup-$(date +%F)-1200.tar.gz" -C /tmp -T /dev/null 2>/d
 SAU_ARQ="$(ls -1t "$SAUH"/tandem-backup-*.tar.gz | head -1)"
 ( cd "$SAUH" && sha256sum "$(basename "$SAU_ARQ")" > "$(basename "$SAU_ARQ").sha256" )
 contem "with a recent verified backup and nothing wrong, saude says all is well" \
+       "healthy" "$(sau_em)"
+
+# 4.35 end to end: a program remembered as working under an older Wine, with a
+# different Wine installed now, is surfaced BEFORE it is next opened. The wine
+# stub fixes the current version (t_stack_wine reads `wine --version`); the
+# memory file fixes what it last opened cleanly under (VERSAO_WINE, as 4.28
+# writes it). Nothing else is wrong here (the backup above is fresh and verified,
+# the clock and disk stubs are healthy), so the Wine line is the only finding.
+printf '#!/bin/sh\necho wine-10.0\n' > "$SAUH/stub/wine"; chmod +x "$SAUH/stub/wine"
+mkdir -p "$SAUH/.local/share/tandem/memoria"
+printf 'PROGRAMA=pos.exe\nVERSAO_WINE=9.0\n' > "$SAUH/.local/share/tandem/memoria/aaaa1111.txt"
+contem "saude warns before a program faces a Wine it did not open under" \
+       "under Wine 9.0" "$(sau_em)"
+contem "and it names the Wine the machine now carries" \
+       "Wine 10.0" "$(sau_em)"
+# The same Wine it worked under: nothing to say, so saude is all-clear again -
+# the 4.28 guard reused, proving it does not cry wolf on an unchanged stack.
+printf 'PROGRAMA=pos.exe\nVERSAO_WINE=10.0\n' > "$SAUH/.local/share/tandem/memoria/aaaa1111.txt"
+contem "a program still facing the Wine it worked under leaves saude all-clear" \
        "healthy" "$(sau_em)"
 
 section "pre-flight: reading the .exe without running it"
