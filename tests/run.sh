@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "118321928 5263" "$soma_esperados"
+      "3740697483 5267" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -134,10 +134,23 @@ fi
 # while CI (non-terminal stdin) stayed green. This is the INSTRUMENT for that
 # whole class, not a fix for the one instance: no shell file may define the same
 # function name twice.
+#
+# bash accepts THREE spellings of a definition - name(), name () and
+# `function name` - and a guard that knew only the first could be walked around
+# by a collision written in either of the other two. So the extractor reads all
+# three and folds them to the bare name before looking for a repeat. It stays
+# anchored at column 0: the only `function` lines this tree carries otherwise
+# are awk's own, always indented inside a quoted awk program, and those are not
+# shell functions. And it requires the parentheses or the keyword, so a variable
+# assignment that happens to share a name is never mistaken for a definition.
+nomes_de_funcao() {
+    grep -oE '^(function[[:space:]]+[a-zA-Z_][a-zA-Z0-9_]*|[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*\(\))' "$1" 2>/dev/null |
+        sed -E 's/^function[[:space:]]+//; s/[[:space:]]*\(\)$//'
+}
 dup_total=0
 for f in src/lib/*.sh src/bin/*; do
     [ -f "$f" ] || continue
-    dups="$(grep -oE '^[a-zA-Z_][a-zA-Z0-9_]*\(\)' "$f" 2>/dev/null | sort | uniq -d)"
+    dups="$(nomes_de_funcao "$f" | sort | uniq -d)"
     if [ -n "$dups" ]; then
         dup_total=$((dup_total + 1))
         fail "no function is defined twice in $(basename "$f")" "(each name once)" "$dups"
@@ -145,15 +158,28 @@ for f in src/lib/*.sh src/bin/*; do
 done
 [ "$dup_total" = 0 ] && pass "no shell file defines the same function name twice"
 
-# Prove the guard is not vacuous: put a collision back in a throwaway file and
-# watch the same detector speak. A green guard that has never caught anything is
-# a guard that agrees with itself.
-DUPF="$TMPROOT/dup-probe.sh"; printf 'foo() { :; }\nbar() { :; }\nfoo() { :; }\n' > "$DUPF"
-if grep -oE '^[a-zA-Z_][a-zA-Z0-9_]*\(\)' "$DUPF" | sort | uniq -d | grep -q '^foo()$'; then
-    pass "the duplicate-function guard catches a collision when one is present"
+# Prove the guard is not vacuous, and prove it for EACH spelling: a green guard
+# that has never caught anything is a guard that agrees with itself. Each probe
+# pairs one spelling against a plain name() and the collision must surface.
+DUPD="$TMPROOT/dup-probe"; mkdir -p "$DUPD"
+printf 'foo() { :; }\nbar() { :; }\nfoo() { :; }\n'         > "$DUPD/paren.sh"
+printf 'foo() { :; }\nbar() { :; }\nfoo ()  { :; }\n'       > "$DUPD/space.sh"
+printf 'foo() { :; }\nbar() { :; }\nfunction foo {\n:\n}\n' > "$DUPD/keyword.sh"
+for grafia in paren space keyword; do
+    if nomes_de_funcao "$DUPD/$grafia.sh" | sort | uniq -d | grep -q '^foo$'; then
+        pass "the duplicate-function guard catches a $grafia collision"
+    else
+        fail "the duplicate-function guard catches a $grafia collision" \
+             "foo flagged" "nothing"
+    fi
+done
+# And it must NOT read a variable assignment at column 0 as a definition - the
+# false positive that requiring parentheses-or-keyword exists to prevent.
+printf 'foo() { :; }\nfoo=1\n' > "$DUPD/assign.sh"
+if nomes_de_funcao "$DUPD/assign.sh" | sort | uniq -d | grep -q '^foo$'; then
+    fail "an assignment sharing a name is not a second definition" "foo once" "flagged"
 else
-    fail "the duplicate-function guard catches a collision when one is present" \
-         "foo() flagged" "nothing"
+    pass "an assignment sharing a name is not a second definition"
 fi
 
 # ------------------------------------------------------- DLL detection
@@ -6511,6 +6537,37 @@ equal "a 64-bit program in a 32-bit environment does not fail in silence" \
 contem "it names the width that is the problem" "32-bit" "$SAIDA_32"
 contem "and the folder that is the environment" "$PREF_ALHEIO" "$SAIDA_32"
 equal "and it refuses instead of pretending it ran" "1" "$C_32"
+
+section "a .msi opens through msiexec, never wine <file>.msi"
+
+# ".msi is not a PE: `wine file.msi` always fails, it has to be `wine msiexec
+# /i`." executar() routes *.msi|*.msp there - and nothing guarded that a later
+# refactor keeps doing so. A "simplification" to `wine "$PROG"` would make every
+# .msi fail, exit non-zero with a jargon line, and send the loop hunting for
+# missing DLLs that are not the problem: the exact silent-wrong-diagnosis class
+# this project exists to abolish, and the one format where it hides - t_pe_arch
+# reads MZ+PE and a .msi (an OLE compound file, D0CF11E0) answers nothing, so the
+# bitness gate is skipped and the file reaches executar unrefused, correct today
+# with no test to keep it correct. Reuses FINGE_W above (logs its argv, exits 0).
+CASA_MSI="$TMPROOT/casa-msi"; mkdir -p "$CASA_MSI"; : > "$CASA_MSI/.primeira-vez"
+PREF_MSI="$TMPROOT/prefixo-msi"; mkdir -p "$PREF_MSI/drive_c/Programa"
+printf 'WINE REGISTRY Version 2\n;; all keys relative\n\n#arch=win64\n' > "$PREF_MSI/system.reg"
+: > "$PREF_MSI/.tandem-prefixo"
+# A real .msi begins with the OLE compound-file magic, not MZ.
+printf '\320\317\021\340\241\261\032\341' > "$PREF_MSI/drive_c/Programa/foo.msi"
+head -c 512 /dev/zero >> "$PREF_MSI/drive_c/Programa/foo.msi"
+MSI_LOG="$TMPROOT/msi-argv.log"; : > "$MSI_LOG"
+env -i HOME="$CASA_MSI" PATH="$FINGE_W:/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" T_REG_LOG="$MSI_LOG" \
+    timeout 120 bash "$ROOT/src/bin/tandem-exe" \
+    "$PREF_MSI/drive_c/Programa/foo.msi" </dev/null >/dev/null 2>&1
+equal "a .msi is launched with msiexec /i" \
+      "1" "$(grep -qF 'msiexec /i' "$MSI_LOG" && echo 1 || echo 0)"
+# ...and is NEVER handed straight to `wine <file>.msi`, which always fails. That
+# invocation would be the whole argv - a single unspaced path ending in .msi;
+# the winepath translation line ends in .msi too but carries spaces, so anchor.
+equal "a .msi is never passed straight to wine" \
+      "0" "$(grep -cE '^[^ ]*foo\.msi$' "$MSI_LOG" | awk '{print ($1>0)?1:0}')"
 
 section "the identity that was never actually written"
 
