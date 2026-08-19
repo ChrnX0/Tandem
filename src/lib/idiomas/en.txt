@@ -1455,6 +1455,14 @@ NOTE: your user is not in the "dialout" group, and without that the device
 
   After that you have to log out of your account and back in.
 
+@portas_aviso_lp
+NOTE: your user is not in the "lp" group, and without that the printer is
+  seen but a program cannot print to it. To fix it, once:
+
+      sudo usermod -aG lp {1}
+
+  After that you have to log out of your account and back in.
+
 @portas_ja_presas
 Already pinned by you in this Windows environment:
 

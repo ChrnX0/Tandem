@@ -4264,6 +4264,39 @@ contem "and the USB device above COM4 gets a warning of its own" \
 contem "with the exact command that moves it" \
        "tandem portas fixar COM2 /dev/ttyACM0" "$ORDEM"
 
+# The printer's group is lp, not dialout, and until 4.33 nothing said so: a
+# printer plugged in that simply will not print is the silent failure this
+# project exists to abolish. When a printer node is present and the owner is not
+# in lp, the report names the exact one-time fix, the shape the dialout warning
+# already used.
+LP_FALTA="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=en bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_portas_seriais() { :; }
+    t_portas_paralelas() { printf "/dev/lp0\n"; }
+    t_no_grupo() { [ "$1" = lp ] && return 1; return 0; }
+    t_texto_portas /naoexiste' 2>/dev/null)"
+contem "a printer with the owner not in the lp group names the exact fix" \
+       "sudo usermod -aG lp" "$LP_FALTA"
+LP_TEM="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=en bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_portas_seriais() { :; }
+    t_portas_paralelas() { printf "/dev/lp0\n"; }
+    t_no_grupo() { return 0; }
+    t_texto_portas /naoexiste' 2>/dev/null)"
+naocontem "no lp warning when the owner is already in the group" \
+          "usermod -aG lp" "$LP_TEM"
+LP_SEM="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=en bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_portas_seriais() { :; }
+    t_portas_paralelas() { :; }
+    t_no_grupo() { [ "$1" = lp ] && return 1; return 0; }
+    t_texto_portas /naoexiste' 2>/dev/null)"
+naocontem "no lp warning when there is no printer to print to" \
+          "usermod -aG lp" "$LP_SEM"
+
 section "native packages: AppImage"
 
 # A header written here and now. The twenty bytes that decide everything are

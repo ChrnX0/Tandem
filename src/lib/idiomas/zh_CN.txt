@@ -1357,6 +1357,14 @@ sudo apt install {1}
 
   之后需要注销账号再登录一次。
 
+@portas_aviso_lp
+注意：您的用户不在 "lp" 组里，没有这个，打印机能被看到却无法打印。
+  只需做一次：
+
+      sudo usermod -aG lp {1}
+
+  之后需要注销账号再登录一次。
+
 @portas_ja_presas
 您已经在这个 Windows 环境里固定好的：
 

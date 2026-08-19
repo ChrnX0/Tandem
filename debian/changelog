@@ -1,3 +1,19 @@
+tandem (4.33) unstable; urgency=medium
+
+  * The printer's group, named at last. A USB or parallel printer plugged into
+    the counter needs its user to be in the "lp" group; without it the printer
+    is seen and simply does not print - a thermal printer that stays silent is
+    the shop's live pain. Tandem already warned about the "dialout" group for a
+    pinpad or scale on a serial port, but said NOTHING about "lp" for a printer.
+  * `tandem portas` now checks it: when a printer node is present
+    (/dev/usb/lp*, or a parallel /dev/lp*) and the owner is not in the lp group,
+    it names the exact one-time fix - sudo usermod -aG lp <user>, then log out
+    and back in - in the same shape as the dialout warning it already had. It
+    never runs usermod and never writes a udev rule (that was weighed and
+    rejected); it explains, and the owner runs one command he can read.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 04:07:00 +0000
+
 tandem (4.32) unstable; urgency=medium
 
   * Round two, recovery deepened: rehearse the restore, and verify it landed.

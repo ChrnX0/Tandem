@@ -320,7 +320,13 @@ mode. It warns about the two cases that break this silently: the device that
 landed on a port above COM4, which a lot of old shop software refuses, and the
 missing
 .B dialout
-group, without which the device shows up on the list and will not open.
+group, without which the device shows up on the list and will not open. For a
+printer it names the missing
+.B lp
+group the same way \(em the printer is seen but nothing can print to it \(em with
+the exact one-time
+.B usermod
+command to fix it.
 .IP
 A run of kernel serial lines with no UART behind them is collapsed into one
 line that says what they are. A modern PC registers thirty-two of them and has
