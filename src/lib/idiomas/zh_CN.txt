@@ -2242,6 +2242,7 @@ Tandem - 运行 Windows 程序、Android 应用和 Linux 软件包。
   tandem desinstalar [名字]   卸载一个已装的 Windows 程序
   tandem android              打开 Android 界面
   tandem doctor               环境诊断（有什么）
+  tandem saude                一次健康检查：现在需要注意什么
   tandem autoteste            真刀真枪地测（什么能用）
   tandem repair               重新应用文件关联
   tandem dados                显示 Windows 里面属于您的文件
@@ -3280,6 +3281,45 @@ Tandem - 时钟
 
 @doctor_relogio_errado
 时钟：{1} - 错误，请运行：tandem relogio
+
+@saude_titulo
+Tandem - 健康
+
+@saude_tudo_bem
+一切正常。现在没有需要你注意的地方。
+
+@saude_precisa
+以下是需要查看的事项，最重要的在前：
+
+@saude_relogio
+时钟不对。它会破坏税务软件、许可证和安全网站。修正：tandem relogio
+
+@saude_relogio_auto
+自动对时已关闭，时钟可能会走偏。开启：sudo timedatectl set-ntp true
+
+@saude_disco_cheio
+磁盘快满了（剩余 {1}）。保存和安装可能失败。请清理空间。
+
+@saude_disco_apertado
+磁盘快用满了（剩余 {1}）。最好在出问题前清理空间。
+
+@saude_versao
+有更新的 Tandem（{1}）；当前是 {2}。有空时更新。
+
+@saude_wine
+这里配置了 Windows 程序，但 Wine 不见了（可能被某次更新移除）。运行：tandem preparar
+
+@saude_servico
+网络服务 {1} 没有在提供服务。检查：tandem servico
+
+@saude_sem_backup
+没有备份。如果这块磁盘坏了，你会失去一切——做一个：tandem backup
+
+@saude_backup_velho
+你最新的备份是 {1} 的。值得再做一个新的：tandem backup
+
+@saude_backup_corrompido
+你最新的备份校验和不通过，可能无法恢复。做一个新的：tandem backup
 
 @wine_mudou
 这个程序以前能正常打开，用的是 Wine {1}。系统现在是 Wine {2}，这个变化是它停止工作的最可能原因——是脚下的地面动了，而不是程序本身。

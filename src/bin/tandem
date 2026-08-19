@@ -1478,6 +1478,91 @@ acao_relogio() {
     esac | t_texto "$(t_msg relogio_titulo)"
 }
 
+# ------------------------------------------------------------------ saude
+#
+# One reading of the whole machine, worst-first. It calls the SAME verdicts the
+# other commands do - the clock, the version check, disk, Wine, the web service,
+# a backup to fall back on - but keeps only what needs acting on and names the
+# fix. Triage, not the doctor's dump. Each finding is one line "rank<TAB>text";
+# t_saude_ordena sorts them so the urgent one is first however the probes ran, a
+# check that cannot run adds nothing (unknown is never a green light), and with
+# nothing to report it says so plainly instead of an empty window.
+acao_saude() {
+    local achados="" tab nl nova livre_kb linha epoch arq rc_v nome
+    # The two severities, as the leading number of each finding: 1 = act now,
+    # 2 = worth knowing. t_saude_ordena sorts on it so the urgent thing is first.
+    local prob=1 aviso=2
+    # ANSI-C quoting, NOT $(printf ...): a command substitution strips trailing
+    # newlines, so nl would come out empty and every finding would run into the
+    # next with the rank marker showing through. Found by running it.
+    tab=$'\t'; nl=$'\n'
+
+    # The clock: a wrong one breaks fiscal software, TLS and licences in silence.
+    case "$(t_relogio_agora_veredito 2>/dev/null)" in
+        atrasado|adiantado)   achados="$achados$prob$tab$(t_msg saude_relogio)$nl" ;;
+        sem_hora_automatica)  achados="$achados$aviso$tab$(t_msg saude_relogio_auto)$nl" ;;
+    esac
+
+    # Free disk: a full one cannot save a sale or finish an install, and an
+    # append even SUCCEEDS on it, so it fails where nobody is looking.
+    livre_kb="$(df -Pk "$HOME" 2>/dev/null | awk 'NR==2 { print $4 }')"
+    case "$(t_saude_disco_veredito "$livre_kb")" in
+        cheio)    achados="$achados$prob$tab$(t_msg saude_disco_cheio "$(t_tamanho_amigavel "$(( ${livre_kb:-0} * 1024 ))")")$nl" ;;
+        apertado) achados="$achados$aviso$tab$(t_msg saude_disco_apertado "$(t_tamanho_amigavel "$(( ${livre_kb:-0} * 1024 ))")")$nl" ;;
+    esac
+
+    # A newer Tandem, if the passive check already learnt of one (no network here).
+    if nova="$(t_versao_nova_conhecida 2>/dev/null)" && [ -n "$nova" ]; then
+        achados="$achados$aviso$tab$(t_msg saude_versao "$nova" "$TANDEM_VERSAO")$nl"
+    fi
+
+    # Wine taken out from under a set-up environment - a distro upgrade can do it.
+    if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] && ! command -v wine >/dev/null 2>&1; then
+        achados="$achados$prob$tab$(t_msg saude_wine)$nl"
+    fi
+
+    # Web services the owner set up that are no longer serving. No services
+    # registered -> the loop body never runs; a probe with no systemd -> the
+    # verdict is 'sem-systemd', which is not a "down" and is skipped.
+    while IFS= read -r nome; do
+        [ -n "$nome" ] || continue
+        case "$(t_servico_veredito \
+                    "$(t_servico_estado_unidade "$nome" 2>/dev/null)" \
+                    "$(t_servico_escuta "$nome" 2>/dev/null)" \
+                    "$(t_servico_responde "$nome" 2>/dev/null)")" in
+            falhou|parado|escuta-mudo)
+                achados="$achados$prob$tab$(t_msg saude_servico "$nome")$nl" ;;
+        esac
+    done <<FIMSVC
+$(t_servico_lista_nomes 2>/dev/null)
+FIMSVC
+
+    # Recovery readiness - the question 4.30 made answerable: if the disk died
+    # now, is there a backup to come back from, recent, and does it verify?
+    if linha="$(t_saude_backup_recente 2>/dev/null)" && [ -n "$linha" ]; then
+        epoch="${linha%%"$tab"*}"; arq="${linha#*"$tab"}"
+        t_backup_verifica "$arq" >/dev/null 2>&1; rc_v=$?
+        case "$(t_saude_backup_veredito "$epoch" "$(date +%s)" "$rc_v")" in
+            corrompido) achados="$achados$prob$tab$(t_msg saude_backup_corrompido)$nl" ;;
+            velho)      achados="$achados$aviso$tab$(t_msg saude_backup_velho "$(date -d "@$epoch" +%F 2>/dev/null)")$nl" ;;
+        esac
+    else
+        achados="$achados$prob$tab$(t_msg saude_sem_backup)$nl"
+    fi
+
+    if [ "$(printf '%s' "$achados" | grep -c .)" -eq 0 ]; then
+        printf '%s\n' "$(t_msg saude_tudo_bem)" | t_texto "$(t_msg saude_titulo)"
+        return 0
+    fi
+    {
+        printf '%s\n\n' "$(t_msg saude_precisa)"
+        printf '%s' "$achados" | grep . | t_saude_ordena | while IFS= read -r linha; do
+            printf '  - %s\n' "$linha"
+        done
+    } | t_texto "$(t_msg saude_titulo)"
+    return 0
+}
+
 
 # ----------------------------------------------------------------- idioma
 #
@@ -1980,6 +2065,7 @@ case "${1:-}" in
     desinstalar|uninstall|remover) shift; acao_uninstall "$@" ;;
     android)              exec "$TANDEM_BIN"/tandem-android ;;
     doctor|diagnostico)   acao_doctor ;;
+    saude|health|saúde)   acao_saude ;;
     autoteste|autotest)   acao_autoteste ;;
     repair|consertar)     exec "$TANDEM_BIN"/tandem-repair ;;
     dados|meus-dados)     shift; acao_dados "$@" ;;

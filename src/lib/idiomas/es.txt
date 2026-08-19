@@ -2388,6 +2388,7 @@ Tandem - ejecuta programas de Windows, apps de Android y paquetes de Linux.
   tandem desinstalar [nombre] quita un programa de Windows instalado
   tandem android              abre la pantalla de Android
   tandem doctor               diagnostico del entorno (lo que EXISTE)
+  tandem saude                un chequeo de salud: que necesita atencion ahora
   tandem autoteste            lo ejercita de verdad (lo que FUNCIONA)
   tandem repair               reaplica las asociaciones de archivo
   tandem dados                muestra tus archivos dentro de Windows
@@ -3446,6 +3447,45 @@ reloj: {1}
 
 @doctor_relogio_errado
 reloj: {1} - MAL, ejecuta: tandem relogio
+
+@saude_titulo
+Tandem - salud
+
+@saude_tudo_bem
+Todo está bien. Nada necesita tu atención ahora.
+
+@saude_precisa
+Esto es lo que conviene mirar, lo más importante primero:
+
+@saude_relogio
+El reloj está mal. Rompe el fiscal, las licencias y los sitios seguros. Corrige: tandem relogio
+
+@saude_relogio_auto
+La hora automática está apagada, así que el reloj puede desviarse. Actívala: sudo timedatectl set-ntp true
+
+@saude_disco_cheio
+El disco está casi lleno ({1} libres). Guardar e instalar pueden fallar. Libera espacio.
+
+@saude_disco_apertado
+El disco se está llenando ({1} libres). Conviene liberar espacio antes de que moleste.
+
+@saude_versao
+Salió un Tandem más nuevo ({1}); este es el {2}. Actualiza cuando puedas.
+
+@saude_wine
+Hay programas de Windows configurados aquí, pero Wine ya no está (una actualización pudo quitarlo). Ejecuta: tandem preparar
+
+@saude_servico
+El servicio web {1} no está atendiendo. Revísalo: tandem servico
+
+@saude_sem_backup
+No hay copia de seguridad. Si este disco falla, lo pierdes todo - haz una: tandem backup
+
+@saude_backup_velho
+Tu copia más reciente es del {1}. Conviene hacer una nueva: tandem backup
+
+@saude_backup_corrompido
+Tu copia más reciente falla en la suma de verificación y puede no restaurar. Haz una nueva: tandem backup
 
 @wine_mudou
 Este programa ya abría bien antes, con Wine {1}. El sistema ahora tiene Wine {2}, y ese cambio es el motivo más probable de que dejara de funcionar - el suelo se movió bajo él, no el programa en sí.

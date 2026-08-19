@@ -2476,6 +2476,7 @@ Tandem - يشغّل برامج Windows وتطبيقات Android وحزم لين�
   tandem desinstalar [اسم]    يُزيل برنامج Windows مثبَّتًا
   tandem android              يفتح شاشة Android
   tandem doctor               تشخيص البيئة (ما هو موجود)
+  tandem saude                فحص صحة: ما يحتاج انتباهًا الآن
   tandem autoteste            يختبرها فعليًا (ما يعمل)
   tandem repair               يعيد تطبيق ارتباطات الملفات
   tandem dados                يُظهر ملفاتك داخل Windows
@@ -3536,6 +3537,45 @@ Tandem - الساعة
 
 @doctor_relogio_errado
 الساعة: {1} - خاطئة، شغّل: tandem relogio
+
+@saude_titulo
+Tandem - الصحّة
+
+@saude_tudo_bem
+كل شيء على ما يرام. لا شيء يحتاج انتباهك الآن.
+
+@saude_precisa
+إليك ما ينبغي النظر فيه، الأهمّ أولًا:
+
+@saude_relogio
+الساعة خاطئة. تُعطِّل البرامج الضريبية والتراخيص والمواقع الآمنة. صحّحها: tandem relogio
+
+@saude_relogio_auto
+الوقت التلقائي مُطفأ، لذا قد تنحرف الساعة. فعّله: sudo timedatectl set-ntp true
+
+@saude_disco_cheio
+القرص شبه ممتلئ (متبقٍّ {1}). قد يفشل الحفظ والتثبيت. أفرِغ بعض المساحة.
+
+@saude_disco_apertado
+القرص يمتلئ ({1} متبقٍّ). يُستحسن إفراغ مساحة قبل أن يسبّب مشكلة.
+
+@saude_versao
+صدر Tandem أحدث ({1})؛ هذا هو {2}. حدِّث عندما تتاح لك دقيقة.
+
+@saude_wine
+توجد برامج ويندوز مُهيّأة هنا لكن Wine اختفى (ربما أزالَه تحديث). شغّل: tandem preparar
+
+@saude_servico
+خدمة الويب {1} لا تعمل. افحصها: tandem servico
+
+@saude_sem_backup
+لا توجد نسخة احتياطية. إن تعطّل هذا القرص تفقد كل شيء - اصنع واحدة: tandem backup
+
+@saude_backup_velho
+أحدث نسخة احتياطية لديك من {1}. يُستحسن عمل نسخة جديدة: tandem backup
+
+@saude_backup_corrompido
+أحدث نسخة احتياطية لديك تفشل في بصمة التحقّق وقد لا تُستعاد. اصنع نسخة جديدة: tandem backup
 
 @wine_mudou
 سبق أن فتح هذا البرنامج بشكل سليم مع Wine {1}. النظام الآن به Wine {2}، وهذا التغيير هو السبب الأرجح لتوقفه عن العمل - الأرض تحرّكت تحته، وليس البرنامج نفسه.

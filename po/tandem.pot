@@ -3128,6 +3128,7 @@ msgid ""
 "  tandem desinstalar [name]   removes an installed Windows program\n"
 "  tandem android              opens the Android screen\n"
 "  tandem doctor               diagnosis of the environment (what EXISTS)\n"
+"  tandem saude                one health check: what needs attention now\n"
 "  tandem autoteste            exercises it for real (what WORKS)\n"
 "  tandem repair               reapplies the file associations\n"
 "  tandem dados                shows your own files inside Windows\n"
@@ -4456,6 +4457,58 @@ msgstr ""
 
 msgctxt "doctor_relogio_errado"
 msgid "clock: {1} - WRONG, run: tandem relogio"
+msgstr ""
+
+msgctxt "saude_titulo"
+msgid "Tandem - health"
+msgstr ""
+
+msgctxt "saude_tudo_bem"
+msgid "Everything looks healthy. Nothing needs your attention right now."
+msgstr ""
+
+msgctxt "saude_precisa"
+msgid "Here is what to look at, the most important first:"
+msgstr ""
+
+msgctxt "saude_relogio"
+msgid "The clock is wrong. It breaks fiscal software, licences and secure sites. Fix it: tandem relogio"
+msgstr ""
+
+msgctxt "saude_relogio_auto"
+msgid "Automatic time is off, so the clock can drift. Turn it on: sudo timedatectl set-ntp true"
+msgstr ""
+
+msgctxt "saude_disco_cheio"
+msgid "The disk is almost full ({1} free). Saving and installing can fail. Free some space."
+msgstr ""
+
+msgctxt "saude_disco_apertado"
+msgid "The disk is getting full ({1} free). Worth clearing space before it bites."
+msgstr ""
+
+msgctxt "saude_versao"
+msgid "A newer Tandem is out ({1}); this one is {2}. Update when you have a minute."
+msgstr ""
+
+msgctxt "saude_wine"
+msgid "Windows programs are set up here but Wine is gone (an update may have removed it). Run: tandem preparar"
+msgstr ""
+
+msgctxt "saude_servico"
+msgid "The web service {1} is not serving. Check it: tandem servico"
+msgstr ""
+
+msgctxt "saude_sem_backup"
+msgid "There is no backup. If this disk fails you lose everything - make one: tandem backup"
+msgstr ""
+
+msgctxt "saude_backup_velho"
+msgid "Your newest backup is from {1}. A fresh one is worth making: tandem backup"
+msgstr ""
+
+msgctxt "saude_backup_corrompido"
+msgid "Your newest backup fails its checksum and may not restore. Make a fresh one: tandem backup"
 msgstr ""
 
 msgctxt "wine_mudou"

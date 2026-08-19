@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.30"
+TANDEM_VERSAO="4.31"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5198,6 +5198,92 @@ t_backup_verifica() {
 t_palavras_do_programa() {
     grep -v -e '^$' -e '^aviso: ' -e '^ok: ' -e '^ERRO: ' -e '^>>> ' -e '^===== ' \
          "$1" 2>/dev/null | tail -"${2:-4}"
+}
+
+# ================================================ machine health, at a glance
+#
+# Tandem already computes a dozen verdicts about the counter - the clock, a
+# newer version, disk space, Wine, a web service, a backup to fall back on - but
+# each lives in its own command, and a shopkeeper who does not know to ask never
+# sees any of them. `tandem saude` gathers them into one reading, worst-first.
+#
+# It is TRIAGE, not the doctor's dump: doctor prints what EXISTS, unconditionally;
+# saude keeps only what needs acting on, and names the fix. The pieces below are
+# the parts that can be pure (a verdict from a number), so the thresholds and the
+# ordering are truth tables and not accidents of which probe ran first - the same
+# discipline as t_relogio_veredito and t_prova_do_run. The live reads (df, the
+# service probe) sit in acao_saude, machine-only like the rest.
+
+# Two severities are all a shopkeeper can triage at a glance: something to DO
+# now, and something worth KNOWING. acao_saude tags each finding with one as a
+# leading number, so a plain numeric sort (t_saude_ordena) puts the urgent thing
+# at the top; a healthy check adds no finding at all. The numbers live where they
+# are used - in acao_saude - rather than as globals here that nothing in this
+# library reads.
+
+# Free disk, from the free-KB of $HOME. A counter that fills its disk cannot
+# save a sale or finish an install, and ": >> file" even SUCCEEDS on a full
+# disk (the log-probe lesson), so this is worth catching before it bites.
+#   cheio     < ~500 MB free  -> a problem now
+#   apertado  < ~2 GB free    -> worth knowing
+#   ok        otherwise
+# Pure: the number comes in, the verdict comes out.
+t_saude_disco_veredito() {
+    local kb="${1:-}"
+    [ -n "$kb" ] && [ "$kb" -eq "$kb" ] 2>/dev/null || { printf 'desconhecido'; return; }
+    [ "$kb" -lt 500000 ]  && { printf 'cheio';    return; }
+    [ "$kb" -lt 2000000 ] && { printf 'apertado'; return; }
+    printf 'ok'
+}
+
+# The recovery-readiness verdict, the one 4.30 made possible: is there a backup
+# to come back from, is it recent, and does it still verify?
+#   sem-backup   no backup has ever been made here    -> a problem (a dead disk
+#                loses everything, and there is nothing to restore)
+#   corrompido   the newest backup fails its checksum  -> a problem (it is there
+#                but it will not restore)
+#   velho        the newest backup is over ~30 days old -> worth knowing
+#   ok           a recent backup that verifies
+# Pure: newest-backup epoch (empty if none), "now", and t_backup_verifica's code.
+t_saude_backup_veredito() {
+    local novo="${1:-}" agora="${2:-}" rc_verif="${3:-}"
+    [ -n "$novo" ] || { printf 'sem-backup'; return; }
+    [ "$rc_verif" = 1 ] && { printf 'corrompido'; return; }
+    if [ -n "$agora" ] && [ "$novo" -eq "$novo" ] 2>/dev/null &&
+       [ "$agora" -eq "$agora" ] 2>/dev/null &&
+       [ "$((agora - novo))" -gt "$((30 * 24 * 3600))" ]; then
+        printf 'velho'; return
+    fi
+    printf 'ok'
+}
+
+# Order health findings worst-first, whatever order they were gathered in. Pure,
+# so worst-first is a property a test pins rather than an accident of probe
+# order - the same reason t_prova_do_run is a function and not four inline lines.
+# stdin is "<rank><TAB><sentence>" lines; stdout is the sentences, worst first,
+# rank stripped, stable within a rank.
+t_saude_ordena() {
+    sort -t "$(printf '\t')" -k1,1n -s | cut -f2-
+}
+
+# The newest Tandem backup in the home folder, as a Unix epoch, or empty
+# (return 1) when there is none. The date is in the name
+# (tandem-backup-YYYY-MM-DD-HHMM.tar.gz), which is what the owner reads and what
+# survives a copy that resets the file's mtime; the mtime is the fallback for a
+# renamed file. Machine-facing (it reads $HOME), so it lives beside the verdict
+# rather than in it.
+t_saude_backup_recente() {
+    local arq nome data epoch
+    arq="$(ls -1t "$HOME"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
+    [ -n "$arq" ] || return 1
+    nome="$(basename -- "$arq")"
+    data="$(printf '%s\n' "$nome" | sed -n 's/^tandem-backup-\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*/\1/p')"
+    if [ -n "$data" ]; then
+        epoch="$(date -d "$data" +%s 2>/dev/null)"
+    fi
+    [ -n "$epoch" ] || epoch="$(stat -c %Y -- "$arq" 2>/dev/null)"
+    [ -n "$epoch" ] || return 1
+    printf '%s\t%s\n' "$epoch" "$arq"
 }
 
 # --------------------------------------------------- messages, in Portuguese

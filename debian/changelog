@@ -1,3 +1,23 @@
+tandem (4.31) unstable; urgency=medium
+
+  * Round two continues: a single machine-health reading. Tandem already knows a
+    dozen things about the counter - is the clock right, is a newer Tandem out,
+    is the disk filling, is Wine there, is a web service answering, is there a
+    backup to fall back on - but each answer lives in its own command, and a
+    shopkeeper who does not know to ask never sees it.
+  * `tandem saude` (alias `health`) gathers those answers into one plain
+    reading, sorted worst-first: what needs attention now, then what is only
+    worth knowing, then the all-clear. Each line that names a problem also names
+    the one command that fixes it. It is triage, not the doctor's full dump -
+    doctor says what EXISTS, saude says what to DO.
+  * It never invents a problem: every line comes from a verdict Tandem already
+    computes (the clock, the version check, disk space, the Wine read, the
+    web-service probe, and - new here - whether a recent, verified backup exists
+    to recover from). The ordering is a pure function with a proof-by-injection
+    test, and a check it cannot run is reported as unknown, never as healthy.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 02:06:00 +0000
+
 tandem (4.30) unstable; urgency=medium
 
   * First of round two, the deeper round: verifiable backups. A counter's disk

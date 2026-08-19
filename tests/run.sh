@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "260212579 5060" "$soma_esperados"
+      "2116716978 5122" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -907,6 +907,67 @@ VB_REST="$(vb_em restore "$VB_ARQ2")"
 contem "restore refuses a backup that fails its checksum" "CORRUPTED" "$VB_REST"
 equal "and the working environment is untouched - nothing was deleted" \
       "1" "$([ -f "$VBH/.local/share/tandem/wine/system.reg" ] && echo 1 || echo 0)"
+
+section "machine health: one reading, worst-first"
+
+# tandem saude composes the verdicts Tandem already computes into one triage. The
+# pieces that can be pure - a verdict from a number, and the worst-first ordering
+# - are truth tables here; the live reads (df, the service probe) are exercised
+# end to end through the command.
+
+# Disk: the number in, the verdict out.
+equal "almost no disk is a problem"        "cheio"        "$(t_saude_disco_veredito 300000)"
+equal "a little disk is worth knowing"     "apertado"     "$(t_saude_disco_veredito 1500000)"
+equal "plenty of disk says nothing"        "ok"           "$(t_saude_disco_veredito 9000000)"
+equal "a disk it could not read is unknown, not healthy" \
+      "desconhecido" "$(t_saude_disco_veredito '')"
+
+# Recovery readiness: the 4.30 tie-in.
+NOW_T="$(date +%s)"
+equal "no backup at all is a problem"       "sem-backup"  "$(t_saude_backup_veredito '' "$NOW_T" 2)"
+equal "a backup that fails its checksum is a problem" "corrompido" \
+      "$(t_saude_backup_veredito 1000 2000 1)"
+equal "a backup from over a month ago is worth knowing" "velho" \
+      "$(t_saude_backup_veredito 1000000000 2000000000 2)"
+equal "a recent backup with no sidecar is still fine (structure, not condemned)" \
+      "ok" "$(t_saude_backup_veredito "$NOW_T" "$NOW_T" 2)"
+
+# The ordering is a function, not an accident of which probe ran first: a plain
+# numeric sort puts the problem (rank 1) above the advisory (rank 2), whatever
+# order they were gathered in. Same shape as t_prova_do_run.
+ORD="$(printf '2\taviso B\n1\tproblema A\n2\taviso C\n1\tproblema D\n' | t_saude_ordena)"
+equal "worst-first: the two problems come before the two advisories" \
+      "problema A
+problema D
+aviso B
+aviso C" "$ORD"
+
+# End to end from the installed command. The machine-facing reads (the clock via
+# timedatectl, free space via df) are STUBBED to a healthy machine, so the test
+# turns only on what the fixture controls and is not at the mercy of the runner's
+# real disk or whether it has systemd - the same reason the clock tests stub
+# timedatectl.
+SAUH="$TMPROOT/saude-home"; rm -rf "$SAUH"; mkdir -p "$SAUH/.config/tandem" "$SAUH/stub"
+printf '4.31\n' > "$SAUH/.config/tandem/.primeira-vez"
+printf '#!/bin/sh\ncase "$*" in show) echo NTP=yes;; esac\nexit 0\n' > "$SAUH/stub/timedatectl"
+printf '#!/bin/sh\necho "Filesystem 1024-blocks Used Available Capacity Mounted"\necho "/dev/x 100000000 1000000 90000000 2%% /"\n' > "$SAUH/stub/df"
+chmod +x "$SAUH/stub"/*
+sau_em() {
+    env -i HOME="$SAUH" PATH="$SAUH/stub:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_BIN="$ROOT/src/bin" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+        TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem" saude 2>&1
+}
+SAU_OUT="$(sau_em)"
+contem "saude names the missing backup as the thing to act on" \
+       "no backup" "$SAU_OUT"
+contem "and it names the command that fixes it" "tandem backup" "$SAU_OUT"
+# With a fresh, verified backup and nothing else wrong, it says so plainly rather
+# than opening an empty window.
+tar -czf "$SAUH/tandem-backup-$(date +%F)-1200.tar.gz" -C /tmp -T /dev/null 2>/dev/null
+SAU_ARQ="$(ls -1t "$SAUH"/tandem-backup-*.tar.gz | head -1)"
+( cd "$SAUH" && sha256sum "$(basename "$SAU_ARQ")" > "$(basename "$SAU_ARQ").sha256" )
+contem "with a recent verified backup and nothing wrong, saude says all is well" \
+       "healthy" "$(sau_em)"
 
 section "pre-flight: reading the .exe without running it"
 
