@@ -43,15 +43,20 @@ implemente" — the agent's own picks for what makes Tandem exceptional, built a
 shipped, not proposed. And then a SECOND, deeper round after it: "depois dessa
 rodada eu quero mais outra rodada mais profunda ainda e aí vc implementa tudo de
 agora e a seguinte." So the mandate is two rounds, both implemented, one
-well-tested shipped version at a time, until told to stop. **Round one** (started
-4.27) is the "explain, don't execute" white space — the silent failures that
-happen AROUND the software, not inside it: 4.27 is the clock (`tandem relogio`),
-4.28 is proactive post-install breakage detection (Wine changed under a working
-program), 4.29 is the provenance / "is this .exe known to the community" note
-(`t_procedencia`) — all three published. The one item left to CLOSE round one is
-**passive self-update awareness** (4.30, in flight): tell the owner, without
-phoning home by default and without ever auto-installing, when the Tandem they
-run has aged past its own release or a newer one exists. **Round
+well-tested shipped version at a time, until told to stop. **Round one is
+CLOSED** — and the way it closed is a lesson worth keeping. It is the "explain,
+don't execute" white space, the silent failures that happen AROUND the software:
+4.27 the clock (`tandem relogio`), 4.28 proactive post-install breakage
+detection (Wine changed under a working program), 4.29 the provenance / "is this
+.exe known to the community" note (`t_procedencia`). The fourth listed item,
+**passive self-update awareness, was already DONE — shipped in 4.13** (the
+`t_versao_*` family, `acao_versao` on/off, the daily throttled background check
+wired at `tandem:1906`, `versao_nova_aviso` in all seven catalogues). A session
+scoped it as 4.30, opened the version, and wrote a changelog entry for it before
+discovering — by reading the tree, not the ledger — that it existed. This is the
+exact stale-ledger trap this file documents: a directory that lists as "next"
+something three versions old sends the next session to rebuild it. Verify
+against the code before building, every time. **Round
 two** is deeper and more architectural — real recovery (verifiable backups,
 restore to a replacement PC after a disk dies), local Wine version pinning /
 rollback so a distro upgrade cannot break a working POS, second-counter

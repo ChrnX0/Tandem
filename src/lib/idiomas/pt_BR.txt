@@ -1985,6 +1985,42 @@ tandem dados salvar
 @bkp_nao_salvou
 Não consegui salvar o backup.
 
+@bkp_com_soma
+Uma soma de verificação foi salva ao lado dele, para você provar que o backup
+está intacto - no dia em que o faz, não no dia em que precisa. Quando quiser:
+
+    tandem backup verificar {1}
+
+@bkp_verif_intacto
+O backup está intacto - confere com a soma de verificação salva com ele: {1}
+
+@bkp_verif_corrompido
+Este backup está CORROMPIDO: {1}
+
+O conteúdo não confere mais com a soma de verificação salva com ele - foi
+danificado ou cortado em algum ponto. Não confie nele; faça um backup novo a
+partir de uma máquina que ainda funcione.
+
+@bkp_verif_sem_soma
+Não há soma de verificação ao lado de {1}, então só posso confirmar que ele
+abre como um backup do Tandem - não que cada byte está intacto. Os backups
+feitos daqui em diante já trazem uma.
+
+@bkp_verif_sem_ferramenta
+Não consigo verificar este backup: este computador não tem o sha256sum, a
+ferramenta que prova que um arquivo está intacto.
+
+@rst_corrompido
+Não restaurei nada. Este backup está CORROMPIDO: {1}
+
+O conteúdo não confere com a soma de verificação salva com ele, e restaurá-lo
+trocaria o seu sistema que funciona por uma cópia quebrada. Faça um backup
+novo em uma máquina que ainda funcione; guarde este só para olhar por dentro.
+
+@rst_sem_soma
+Atenção: não há soma de verificação ao lado deste backup, então sei que ele
+abre, não que cada byte sobreviveu. Vou restaurar mesmo assim.
+
 @dados_confirma_terminal
 Devolver? [s/N] 
 

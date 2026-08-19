@@ -7,7 +7,7 @@
 **Nove formatos. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![testes](https://img.shields.io/badge/testes-1519-brightgreen)](tests/run.sh)
+[![testes](https://img.shields.io/badge/testes-1531-brightgreen)](tests/run.sh)
 [![programas reais](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
 [![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
@@ -319,7 +319,8 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem autoteste` | exercita aqui — o que **funciona** |
 | `tandem repair` | reaplica as associações de arquivo |
 | `tandem dados` | mostra os **seus** arquivos dentro do Windows |
-| `tandem backup` · `tandem restore` | salva e restaura o ambiente inteiro |
+| `tandem backup` · `tandem restore` | salva e restaura o ambiente inteiro (uma soma de verificação é gravada ao lado do backup) |
+| `tandem backup verificar <arquivo>` | prova que um backup está intacto conferindo a soma de verificação |
 | `tandem protect <caminho>` | marca um perfil Wine como intocável |
 | `tandem tema [qual]` | aparência das janelas do Tandem — `sistema` (padrão) ou `escuro` |
 | `tandem idioma [código]` | em que idioma o Tandem fala — `pt_BR` `en` `es` `fr` `zh_CN` `hi` `ar` |

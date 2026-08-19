@@ -1992,6 +1992,43 @@ tandem dados salvar
 @bkp_nao_salvou
 No pude guardar la copia.
 
+@bkp_com_soma
+Se guardó una suma de verificación junto a él, para que puedas probar que la
+copia está intacta - el día que la haces, no el día que la necesitas. Cuando
+quieras:
+
+    tandem backup verificar {1}
+
+@bkp_verif_intacto
+La copia está intacta - coincide con la suma de verificación guardada con ella: {1}
+
+@bkp_verif_corrompido
+Esta copia está DAÑADA: {1}
+
+Su contenido ya no coincide con la suma de verificación guardada con ella - se
+dañó o se cortó en algún punto. No confíes en ella; haz una copia nueva desde
+una máquina que aún funcione.
+
+@bkp_verif_sem_soma
+No hay suma de verificación junto a {1}, así que solo puedo confirmar que
+abre como una copia de Tandem - no que cada byte esté intacto. Las copias
+hechas de ahora en adelante ya traen una.
+
+@bkp_verif_sem_ferramenta
+No puedo verificar esta copia: este equipo no tiene sha256sum, la
+herramienta que prueba que un archivo está intacto.
+
+@rst_corrompido
+No restauré nada. Esta copia está DAÑADA: {1}
+
+Su contenido no coincide con la suma de verificación guardada con ella, y
+restaurarla cambiaría tu sistema que funciona por una copia rota. Haz una copia
+nueva en una máquina que aún funcione; guarda esta solo para mirar dentro.
+
+@rst_sem_soma
+Atención: no hay suma de verificación junto a esta copia, así que sé que
+abre, no que cada byte sobrevivió. La restauraré de todos modos.
+
 @dados_confirma_terminal
 ¿Devolverlos? [s/N] 
 

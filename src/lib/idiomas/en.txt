@@ -1996,6 +1996,41 @@ tandem dados salvar
 @bkp_nao_salvou
 I could not save the backup.
 
+@bkp_com_soma
+A checksum was saved beside it, so you can prove the backup is intact - the
+day you make it, not the day you need it. Any time:
+
+    tandem backup verificar {1}
+
+@bkp_verif_intacto
+The backup is intact - it matches the checksum saved with it: {1}
+
+@bkp_verif_corrompido
+This backup is CORRUPTED: {1}
+
+Its contents no longer match the checksum saved with it - it was damaged or
+cut short somewhere. Do not rely on it; make a fresh backup from a machine
+that still works.
+
+@bkp_verif_sem_soma
+There is no checksum beside {1}, so I can only confirm it opens as a Tandem
+backup - not that every byte is intact. Backups made from now on carry one.
+
+@bkp_verif_sem_ferramenta
+I cannot check this backup: this computer has no sha256sum, the tool that
+proves a file is intact.
+
+@rst_corrompido
+I did not restore anything. This backup is CORRUPTED: {1}
+
+Its contents do not match the checksum saved with it, and restoring it would
+replace your working setup with a broken copy. Make a fresh backup on a
+machine that still works; keep this one only to look inside.
+
+@rst_sem_soma
+Heads up: there is no checksum beside this backup, so I can tell that it
+opens, not that every byte survived. Restoring it anyway.
+
 @dados_confirma_terminal
 Put them back? [y/N] 
 
