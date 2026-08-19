@@ -1,3 +1,21 @@
+tandem (4.38) unstable; urgency=medium
+
+  * Close a Rule-1 asymmetry the vision audit found: `tandem portas soltar`
+    could delete inside a prefix Tandem did not create. `fixar` guards its
+    writes with the `system.reg` environment check AND `t_prefixo_protegido`
+    (rule No1: only ever touch a prefix carrying our marker), but its `soltar`
+    sibling - which removes the `dosdevices/comN` symlink and runs `wine reg
+    delete` in the same prefix - had neither. So through a symlinked default
+    prefix pointing at the shop's production POS prefix (the exact 4.19 lesson),
+    `soltar` would rm and reg-delete inside it. `soltar` now carries the same
+    two guards as `fixar` and refuses a prefix that is not ours, leaving it
+    untouched. Pure-logic, no new message keys (both sentences already exist),
+    no translation step. Proof by injection: soltar on a symlinked default
+    prefix that resolves to a foreign one refuses, and the foreign symlink
+    survives.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 14:00:00 +0000
+
 tandem (4.37) unstable; urgency=medium
 
   * Fix two false "everything looks healthy" answers in `tandem saude` - the
