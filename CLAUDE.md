@@ -69,6 +69,15 @@ instructions from the owner, in his words: *"identifique e aplique melhorias q
 vc venha a identificar ser bom"* and *"coloca nas diretrizes q é para usar os
 insights ATIVAMENTE... assim como é para usar o proof gate ativamente"*.
 
+**Reaffirmed as a PERMANENT directive, 2026-08-19**, in his words: *"uma coisa q
+quero q vire diretriz permanente é que vc use sempre q possível os teus insight
+(isso chega a ser skill)"*. So this is not advice, it is a rule with the same
+weight as the inviolable ones: on every task, before and during and after, bring
+the insight — the pattern behind the instance, the instrument for the class, the
+honest report that costs you, the move that turns a fix into a guard. Treat it
+as the skill it is; a session that merely completes the ticket without applying
+what it noticed has not done the job the owner asked for.
+
 What that means in practice, because "be insightful" is not an instruction
 anybody can follow:
 

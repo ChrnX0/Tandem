@@ -399,6 +399,13 @@ acao_backup_verifica() {
 }
 
 acao_restore() {
+    # A rehearsal, not a restore: prove this backup WOULD come back, touching
+    # nothing. It is the disaster-recovery drill - run it the day you make a
+    # backup, not the day the disk dies.
+    local testar=0
+    case "${1:-}" in
+        --testar|--ensaiar|--dry-run) testar=1; shift ;;
+    esac
     local arq="${1:-}"
     # A PATH, when the owner gives one. Without this the argument was thrown
     # away and the answer was "no backup found in your home folder" while he
@@ -408,6 +415,14 @@ acao_restore() {
     else
         arq="$(ls -1t "$HOME"/tandem-backup-*.tar.gz 2>/dev/null | head -1)"
         [ -n "$arq" ] || { t_erro "$(t_msg rst_nenhum_backup)"; return 1; }
+    fi
+    if [ "$testar" = 1 ]; then
+        case "$(t_restauravel "$arq")" in
+            ok)           t_ok "$(t_msg rst_testar_ok "$(basename -- "$arq")")"; return 0 ;;
+            corrompido)   t_erro "$(t_msg rst_testar_corrompido "$(basename -- "$arq")")"; return 1 ;;
+            nao-e-backup) t_erro "$(t_msg rst_nao_e_backup "$(basename -- "$arq")")"; return 1 ;;
+            *)            t_erro "$(t_msg rst_backup_danificado "$(basename -- "$arq")")"; return 1 ;;
+        esac
     fi
     # BEFORE the rm -rf below, not after it. A truncated archive used to leave
     # the environment deleted and half rebuilt, and tar can say so first.
@@ -460,8 +475,18 @@ $(t_msg rst_mesmo_assim)" "$(t_msg botao_restaurar_assim_mesmo)" "$(t_msg botao_
     tar -C "$(dirname -- "$TANDEM_PREFIXO_PADRAO")" -xzf "$arq" 2>>"$LOG"
     local c=$?
     t_progresso_fecha
-    [ $c -eq 0 ] && t_ok "$(t_msg rst_restaurado)" || t_erro "$(t_msg rst_nao_restaurou)"
-    return $c
+    if [ $c -ne 0 ]; then t_erro "$(t_msg rst_nao_restaurou)"; return $c; fi
+    # Finishing is not the same as working, on the restore side too: tar exited
+    # 0, but did the environment actually LAND? A partial or wrong archive can
+    # unpack to a tree with no system.reg, and reporting that as restored sends
+    # the owner into a half-empty setup believing it whole. Confirm the prefix is
+    # there and is a Tandem environment before calling it done.
+    if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ]; then
+        t_ok "$(t_msg rst_restaurado)"
+        return 0
+    fi
+    t_erro "$(t_msg rst_restaurado_incompleto)"
+    return 1
 }
 
 acao_protect() {
@@ -2071,7 +2096,7 @@ case "${1:-}" in
     dados|meus-dados)     shift; acao_dados "$@" ;;
     tema|aparencia|theme) shift; acao_tema "${1:-}" ;;
     backup)               shift; acao_backup "$@" ;;
-    restore|restaurar)    shift; acao_restore "${1:-}" ;;
+    restore|restaurar)    shift; acao_restore "$@" ;;
     protect|proteger)     shift; acao_protect "$@" ;;
     identidade|fingerprint) acao_identidade ;;
     portas|ports)         shift; acao_portas "$@" ;;

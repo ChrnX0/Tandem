@@ -2098,6 +2098,22 @@ Entorno restaurado.
 @rst_nao_restaurou
 No pude restaurar.
 
+@rst_testar_ok
+Buena noticia: esta copia se restauraría sin problemas, incluso en un PC de reemplazo. {1}
+
+No se cambió nada - esto fue solo un ensayo. Sigue haciendo copias, y
+pruébalas así de vez en cuando.
+
+@rst_testar_corrompido
+Esta copia NO se restauraría: {1} no coincide con la suma de verificación
+guardada con ella, así que está dañada o incompleta. No se cambió nada. Haz una
+copia nueva desde una máquina que aún funcione: tandem backup
+
+@rst_restaurado_incompleto
+La restauración terminó, pero el entorno no parece completo - la copia pudo
+quedar parcial. No confíes en ella; restaura otra copia, o haz una nueva en una
+máquina que aún funcione.
+
 @prot_caminho_invalido
 Ruta no válida.
 

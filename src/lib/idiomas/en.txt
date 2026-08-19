@@ -2099,6 +2099,22 @@ Environment restored.
 @rst_nao_restaurou
 I could not restore it.
 
+@rst_testar_ok
+Good news: this backup would restore cleanly, even on a replacement PC. {1}
+
+Nothing was changed - this was only a rehearsal. Keep making backups, and
+test them this way now and then.
+
+@rst_testar_corrompido
+This backup would NOT restore: {1} does not match the checksum saved with it,
+so it is damaged or incomplete. Nothing was changed. Make a fresh backup from
+a machine that still works: tandem backup
+
+@rst_restaurado_incompleto
+The restore finished, but the environment does not look complete - the backup
+may have been partial. Do not rely on it; restore a different backup, or make
+a fresh one on a machine that still works.
+
 @prot_caminho_invalido
 Invalid path.
 

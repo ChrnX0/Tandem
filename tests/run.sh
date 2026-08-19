@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2116716978 5122" "$soma_esperados"
+      "3113706947 5166" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -907,6 +907,69 @@ VB_REST="$(vb_em restore "$VB_ARQ2")"
 contem "restore refuses a backup that fails its checksum" "CORRUPTED" "$VB_REST"
 equal "and the working environment is untouched - nothing was deleted" \
       "1" "$([ -f "$VBH/.local/share/tandem/wine/system.reg" ] && echo 1 || echo 0)"
+
+section "recovery rehearsal: prove a backup would come back"
+
+# 4.30 proved a backup intact; this proves it would RESTORE - the day it is made,
+# not the day the disk dies. t_restauravel runs the same pre-flight a real
+# restore does before its destructive step, and touches nothing.
+RV="$TMPROOT/rehearsal"; rm -rf "$RV"; mkdir -p "$RV/wine"
+: > "$RV/wine/system.reg"
+RV_PADRAO="$TANDEM_PREFIXO_PADRAO"; TANDEM_PREFIXO_PADRAO="$RV/wine"
+tar -C "$RV" -czf "$RV/b.tar.gz" wine 2>/dev/null
+( cd "$RV" && sha256sum b.tar.gz > b.tar.gz.sha256 )
+equal "a good backup with a matching checksum would restore cleanly" \
+      "ok" "$(t_restauravel "$RV/b.tar.gz")"
+printf '%s  b.tar.gz\n' "$(printf '0%.0s' {1..64})" > "$RV/b.tar.gz.sha256"
+equal "a backup that fails its checksum would NOT restore" \
+      "corrompido" "$(t_restauravel "$RV/b.tar.gz")"
+rm -f "$RV/b.tar.gz.sha256"
+equal "a backup with no checksum still passes on structure" \
+      "ok" "$(t_restauravel "$RV/b.tar.gz")"
+printf 'x\n' > "$RV/plain.txt"; tar -C "$RV" -czf "$RV/alien.tar.gz" plain.txt 2>/dev/null
+equal "a tar that is not a Tandem environment is told apart" \
+      "nao-e-backup" "$(t_restauravel "$RV/alien.tar.gz")"
+equal "a file that is not there is refused" \
+      "sem-arquivo" "$(t_restauravel "$RV/nao-existe.tar.gz")"
+TANDEM_PREFIXO_PADRAO="$RV_PADRAO"
+
+# End to end: the rehearsal proves it WOULD restore and changes nothing, and a
+# corrupted one is named without any destruction. Reached from the installed
+# command with --testar.
+RVH="$TMPROOT/rehearsal-home"; rm -rf "$RVH"
+mkdir -p "$RVH/.config/tandem" "$RVH/.local/share/tandem/wine/drive_c"
+printf '4.32\n' > "$RVH/.config/tandem/.primeira-vez"
+: > "$RVH/.local/share/tandem/wine/system.reg"
+: > "$RVH/.local/share/tandem/wine/.tandem-prefixo"
+rv_em() {
+    env -i HOME="$RVH" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_BIN="$ROOT/src/bin" TANDEM_IDIOMA_FORCADO=en \
+        TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+        bash "$ROOT/src/bin/tandem" "$@" 2>&1
+}
+rv_em backup "$RVH" >/dev/null 2>&1
+RV_ARQ="$(ls -1t "$RVH"/tandem-backup-*.tar.gz | head -1)"
+contem "restore --testar says a good backup would restore" \
+       "would restore cleanly" "$(rv_em restore --testar "$RV_ARQ")"
+equal "and the rehearsal changed nothing - the environment is still there" \
+      "1" "$([ -f "$RVH/.local/share/tandem/wine/system.reg" ] && echo 1 || echo 0)"
+printf '%s  %s\n' "$(printf '0%.0s' {1..64})" "$(basename -- "$RV_ARQ")" > "$RV_ARQ.sha256"
+contem "restore --testar names a backup that would NOT restore" \
+       "would NOT restore" "$(rv_em restore --testar "$RV_ARQ")"
+
+# A real restore no longer trusts tar's exit code: after unpacking it confirms
+# the environment landed (system.reg present) and warns if it did not. The untar
+# itself needs a confirmed question (a terminal), so the guard is asserted where
+# the destructive path cannot be reached headlessly - the same limit the restore
+# tests above hit with the "nobody to ask" case.
+RBIN="$ROOT/src/bin/tandem"
+if grep -q 'if \[ -f "$TANDEM_PREFIXO_PADRAO/system.reg" \]; then' "$RBIN" &&
+   grep -q 't_msg rst_restaurado_incompleto' "$RBIN"; then
+    pass "a real restore verifies the environment landed before calling it done"
+else
+    fail "a real restore verifies the environment landed before calling it done" \
+         "the post-restore system.reg check + rst_restaurado_incompleto" "missing"
+fi
 
 section "machine health: one reading, worst-first"
 
