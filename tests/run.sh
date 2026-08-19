@@ -127,6 +127,35 @@ else
     skip "shellcheck" "not installed"
 fi
 
+# A function defined TWICE: bash keeps the last definition and silently drops
+# the first, no warning anywhere. 4.26 did exactly this - the web-service
+# feature added a second t_porta_escutando (a stdin parser) that shadowed the
+# ss-runner the dongle check calls, and tandem doctor/socorro hung at a terminal
+# while CI (non-terminal stdin) stayed green. This is the INSTRUMENT for that
+# whole class, not a fix for the one instance: no shell file may define the same
+# function name twice.
+dup_total=0
+for f in src/lib/*.sh src/bin/*; do
+    [ -f "$f" ] || continue
+    dups="$(grep -oE '^[a-zA-Z_][a-zA-Z0-9_]*\(\)' "$f" 2>/dev/null | sort | uniq -d)"
+    if [ -n "$dups" ]; then
+        dup_total=$((dup_total + 1))
+        fail "no function is defined twice in $(basename "$f")" "(each name once)" "$dups"
+    fi
+done
+[ "$dup_total" = 0 ] && pass "no shell file defines the same function name twice"
+
+# Prove the guard is not vacuous: put a collision back in a throwaway file and
+# watch the same detector speak. A green guard that has never caught anything is
+# a guard that agrees with itself.
+DUPF="$TMPROOT/dup-probe.sh"; printf 'foo() { :; }\nbar() { :; }\nfoo() { :; }\n' > "$DUPF"
+if grep -oE '^[a-zA-Z_][a-zA-Z0-9_]*\(\)' "$DUPF" | sort | uniq -d | grep -q '^foo()$'; then
+    pass "the duplicate-function guard catches a collision when one is present"
+else
+    fail "the duplicate-function guard catches a collision when one is present" \
+         "foo() flagged" "nothing"
+fi
+
 # ------------------------------------------------------- DLL detection
 
 section "Wine dependency detection"
@@ -1065,6 +1094,20 @@ printf 'PROGRAMA=pos.exe\nVERSAO_WINE=10.0\n' > "$SAUH/.local/share/tandem/memor
 contem "a program still facing the Wine it worked under leaves saude all-clear" \
        "healthy" "$(sau_em)"
 
+# 4.36: it must not cry wolf on a MANGLED memory file. The file is meant to
+# travel between machines, so a value can pick up a CR (a Windows edit) or its
+# last line can lose its terminating newline (which would glue the next file's
+# value on, fabricating a version). Both used to fire a false "Wine changed"
+# against the matching current 10.0. After the normalise, both stay all-clear.
+printf 'PROGRAMA=pos.exe\r\nVERSAO_WINE=10.0\r\n' > "$SAUH/.local/share/tandem/memoria/aaaa1111.txt"
+contem "a CR-terminated record that matches the current Wine does not cry wolf" \
+       "healthy" "$(sau_em)"
+printf 'PROGRAMA=a\nVERSAO_WINE=10.0' > "$SAUH/.local/share/tandem/memoria/aaaa1111.txt"
+printf 'PROGRAMA=b\nVERSAO_WINE=10.0\n' > "$SAUH/.local/share/tandem/memoria/bbbb2222.txt"
+contem "an unterminated record cannot glue a fabricated version and alarm" \
+       "healthy" "$(sau_em)"
+rm -f "$SAUH/.local/share/tandem/memoria/bbbb2222.txt"
+
 section "pre-flight: reading the .exe without running it"
 
 pecampo() { python3 src/lib/peinfo.py "$1" 2>/dev/null | grep "^$2=" | cut -d= -f2-; }
@@ -1976,6 +2019,31 @@ contem "a real serial port is still listed one by one" "/dev/ttyS40" "$saida_rea
 naocontem "and is not folded into the phantom range" "always creates" "$saida_real"
 naocontem "a machine with a real port is not told it has none" \
           "Nenhuma porta serial de verdade" "$saida_real"
+
+# 4.36: the dialout-group warning is gated on a serial port the owner could
+# ACTUALLY open. On a machine whose only "serial ports" are kernel phantoms - or
+# that has none - warning about the dialout group contradicts the "no real
+# serial port" line printed right above it. This helper puts the owner OUTSIDE
+# every group so the warning WOULD fire, then checks the gate.
+portas_fora() {   # $1 = t_portas_seriais body, $2 = t_portas_invisiveis body
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_SYS="$SYSFAKE" \
+    TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"
+        t_portas_seriais() { '"$1"'; }
+        t_portas_invisiveis() { '"$2"'; }
+        t_portas_paralelas() { :; }
+        t_no_grupo() { return 1; }
+        t_texto_portas ""' 2>/dev/null
+}
+DIAL_PHANTOM="$(portas_fora 'for i in $(seq 0 31); do echo /dev/ttyS$i; done' ':')"
+naocontem "no dialout nag on a machine whose only serial ports are phantoms" \
+          "dialout" "$DIAL_PHANTOM"
+DIAL_REAL="$(portas_fora 'echo /dev/ttyS40; echo /dev/ttyUSB0' ':')"
+contem "the dialout warning fires when a real serial port is present" \
+       "dialout" "$DIAL_REAL"
+DIAL_INVIS="$(portas_fora 'for i in $(seq 0 31); do echo /dev/ttyS$i; done' 'echo /dev/ttyUSB1')"
+contem "an invisible real device (a hole Wine skipped) still earns the warning" \
+       "dialout" "$DIAL_INVIS"
 
 section "serial ports: fixar creates the symlink that actually opens the port"
 
@@ -4209,13 +4277,31 @@ contem "and the port" "PORTA=" "$CHAVE_S"
 equal "an unknown family is refused rather than guessed at" \
       "1" "$(t_chave_estado sozinho >/dev/null 2>&1; echo $?)"
 
+# It must NEVER read stdin. It calls the ss-runner (t_porta_ouvindo_ss), which
+# reads the kernel's socket table itself - not the pipe-fed parser. Before 4.36 a
+# name collision (a second t_porta_escutando from the 4.26 servico feature) made
+# it call the parser, which read whatever stdin it had; at an interactive
+# terminal that blocked forever, so tandem doctor and tandem socorro hung with
+# zero output. Proof by injection: give it a stdin that never delivers a line
+# (an open pipe) under a timeout, and require it to finish anyway. Before the
+# rename this returns 124 (killed); after, it returns promptly.
+CHAVE_TO="$(timeout 5 bash -c '. "'"$ROOT"'/src/lib/common.sh" 2>/dev/null; t_chave_estado sentinel' < <(sleep 20) 2>/dev/null)"
+CHAVE_RC=$?
+if [ "$CHAVE_RC" = 124 ]; then
+    fail "t_chave_estado does not hang on a terminal-like stdin" "returns promptly" "timed out (hung on stdin)"
+else
+    pass "t_chave_estado does not hang on a terminal-like stdin"
+fi
+contem "and it still prints the service line" "SERVICO=" "$CHAVE_TO"
+contem "and reaches the port line instead of blocking before it" "PORTA=" "$CHAVE_TO"
+
 # "I could not look" is a third answer and must never be flattened into "it is
 # not running". Answering confidently from a check that did not happen is the
 # failure mode this project treats as worse than saying nothing.
 NAO_SEI="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     . "'"$ROOT"'/src/lib/common.sh"
     t_servico_vivo() { return 1; }
-    t_porta_escutando() { return 2; }
+    t_porta_ouvindo_ss() { return 2; }
     t_texto_chave sentinel' 2>/dev/null)"
 # These expectations are ENGLISH now, and that is not a slip. The prose moved
 # from the code into po/, English is the default language, and the suite runs
@@ -4228,7 +4314,7 @@ contem "not being able to check says so, instead of condemning" \
 PARADO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     . "'"$ROOT"'/src/lib/common.sh"
     t_servico_vivo() { return 1; }
-    t_porta_escutando() { return 1; }
+    t_porta_ouvindo_ss() { return 1; }
     t_texto_chave sentinel' 2>/dev/null)"
 contem "a daemon that is really absent gets the probable cause" \
        "is NOT running" "$PARADO"
@@ -4237,7 +4323,7 @@ contem "and the exact thing to look for" "Run-time Environment" "$PARADO"
 RODANDO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     . "'"$ROOT"'/src/lib/common.sh"
     t_servico_vivo() { return 0; }
-    t_porta_escutando() { return 0; }
+    t_porta_ouvindo_ss() { return 0; }
     t_texto_chave sentinel' 2>/dev/null)"
 contem "a daemon that IS running rules itself out instead of being repeated" \
        "IS ALREADY running" "$RODANDO"
@@ -4249,7 +4335,7 @@ contem "and names the one thing the shop cannot fix itself" \
 CM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     . "'"$ROOT"'/src/lib/common.sh"
     t_servico_vivo() { return 1; }
-    t_porta_escutando() { return 1; }
+    t_porta_ouvindo_ss() { return 1; }
     t_texto_chave codemeter' 2>/dev/null)"
 contem "CodeMeter is sent to CodeMeter's runtime" "CodeMeter Runtime" "$CM"
 naocontem "and never to Sentinel's" "Sentinel LDK" "$CM"

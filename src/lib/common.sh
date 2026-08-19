@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.35"
+TANDEM_VERSAO="4.36"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -3475,12 +3475,19 @@ t_no_grupo() {
 # sends him to reinstall things. With it, the sentence is "the key's service
 # is not installed on this machine, and that is the one thing missing".
 
-# Is anything LISTENING on this port? Read out of the kernel's socket table -
-# no connection is opened, so nothing can hang and nothing is disturbed.
-# Returns 2 for "cannot tell", which the message has to respect: answering
-# "not running" when we could not look is the kind of confident wrongness this
-# project treats as worse than silence.
-t_porta_escutando() {
+# Is anything LISTENING on this port? Runs `ss` ITSELF and reads the kernel's
+# socket table - no connection is opened, so nothing can hang and nothing is
+# disturbed. Returns 2 for "cannot tell", which the message has to respect:
+# answering "not running" when we could not look is the kind of confident
+# wrongness this project treats as worse than silence.
+#
+# The name is t_porta_ouvindo_ss, NOT t_porta_escutando, and the distinction is
+# load-bearing: the 4.26 web-service feature later defined a SECOND, different
+# t_porta_escutando (a stdin parser fed from a pipe), and bash keeps the LAST
+# definition of a name. That shadowed this one, so the dongle check below read
+# the terminal's stdin and `tandem doctor`/`tandem socorro` hung with no output.
+# Two functions must never share a name; there is a test that fails if any do.
+t_porta_ouvindo_ss() {
     command -v ss >/dev/null 2>&1 || return 2
     ss -H -ltn 2>/dev/null |
         awk -v p=":$1" '$4 ~ p "$" { achou = 1 } END { exit !achou }'
@@ -3546,7 +3553,7 @@ t_chave_estado() {
     r=nao
     for s in $servicos; do t_servico_vivo "$s" && { r=sim; break; }; done
     printf 'SERVICO=%s\n' "$r"
-    t_porta_escutando "$porta"
+    t_porta_ouvindo_ss "$porta"
     case $? in
         0) printf 'PORTA=sim\n' ;;
         2) printf 'PORTA=?\n' ;;
@@ -3718,6 +3725,15 @@ t_texto_portas() {
 
   $(t_msg portas_nenhuma_real)"
 
+    # Is there a serial port the owner could ACTUALLY open - a non-phantom one?
+    # Captured now, because the parallel-port loop below reuses n and fantasmas.
+    # The dialout warning is gated on this (plus invisible real devices, found
+    # further down): warning about the dialout group on a machine whose only
+    # serial "ports" are kernel phantoms - or that has none at all - contradicts
+    # the "no serial port on this computer" line printed just above it.
+    local serial_real=""
+    { [ "$n" -gt 0 ] && [ "$fantasmas" != "$n" ]; } && serial_real=sim
+
     n=0
     while IFS= read -r p; do
         [ -n "$p" ] || continue
@@ -3759,7 +3775,7 @@ t_texto_portas() {
   $(t_msg portas_aviso_alto "${alto#*|}" "${alto%%|*}")"
     fi
 
-    if ! t_no_grupo dialout; then
+    if { [ -n "$serial_real" ] || [ -n "$invis" ]; } && ! t_no_grupo dialout; then
         saida="$saida
 
   $(t_msg portas_aviso_dialout "$(id -un)")"
