@@ -3476,5 +3476,14 @@ This program opened cleanly before, under Wine {1}. The system now has Wine {2},
 
 Tandem does not change Wine on its own; this is the thing to mention if you ask someone for help.
 
+@wine_pode_fixar
+To stop the next update from doing this again, once it is working you can pin
+Wine at a version so an update cannot move it:
+
+      sudo apt-mark hold wine
+
+That also holds back Wine's own security updates, so it is your call. To undo
+it later:  sudo apt-mark unhold wine
+
 @mem_campo_versao_wine
 Wine it opened under: 

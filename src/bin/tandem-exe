@@ -782,6 +782,17 @@ $(t_causa_por_token "$AMBIENTE_FALHOU")"
                 MUDOU_WINE=""
                 if t_wine_mudou_desde "$WINE_ANTES" "$WINE_AGORA"; then
                     MUDOU_WINE="$(t_msg wine_mudou "$WINE_ANTES" "$WINE_AGORA")"
+                    # It worked under one Wine and broke under another. Offer the
+                    # way to stop the NEXT update from doing it again - pinning
+                    # Wine - but only when it is not already pinned, and only as
+                    # a command the owner runs himself. Never here does Tandem
+                    # run apt-mark: it explains, the same rule as everywhere.
+                    if [ "$(t_wine_pin_veredito "$WINE_ANTES" "$WINE_AGORA" \
+                              "$(t_wine_fixado && echo sim || echo nao)")" = pode-fixar ]; then
+                        MUDOU_WINE="$MUDOU_WINE
+
+$(t_msg wine_pode_fixar)"
+                    fi
                 fi
                 t_erro "$(t_msg fechou_com_erro "$CODIGO")${MUDOU_WINE:+
 
