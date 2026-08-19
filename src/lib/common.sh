@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.39"
+TANDEM_VERSAO="4.40"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1405,7 +1405,11 @@ t_nome_do_atalho() {
 t_anuncia_atalhos() {
     local antes="$1" novos nomes
     novos="$(printf '%s\n' "$(t_atalhos_wine)" | grep -vxF -- "${antes:-__nada__}" 2>/dev/null)"
-    [ -n "$novos" ] || return 0
+    # Return 1 when nothing new appeared, 0 when it announced something. The
+    # caller in tandem-exe reads this to know the run WAS an installer (it laid
+    # shortcuts down), which the silent-success check needs so it does not brand
+    # a finished installer as a program that flashed and vanished.
+    [ -n "$novos" ] || return 1
     command -v update-desktop-database >/dev/null 2>&1 &&
         update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
     nomes="$(printf '%s\n' "$novos" | sed 's|.*/||; s|\.desktop$||' | sed 's/^/• /')"
@@ -2982,11 +2986,17 @@ t_saida_suspeita() {
 # memory. With no window it asks nothing: making up an answer would be worse
 # than not having one.
 t_confirma_funcionou() {
-    local prog="$1" durou="${2:-0}" ja
+    local prog="$1" durou="${2:-0}" instalador="${3:-0}" ja
     ja="$(t_memoria_le "$prog" CONFIRMADO 2>/dev/null)"
     [ -n "$ja" ] && return 0
 
-    if t_saida_suspeita "$durou"; then
+    # An installer is exempt from this check: it lays its files down and exits,
+    # so a one-second run is success, not a program flashing and vanishing.
+    # Branding a finished install "opened and closed on its own, no time to use
+    # it" reads as failure - the field test caught a working WinDirStat .msi
+    # getting exactly that. The guard still fires for a real program (installer
+    # = 0), which is the case it exists for.
+    if [ "$instalador" != 1 ] && t_saida_suspeita "$durou"; then
         # Here there is nothing even to celebrate: the program closed by
         # itself before anybody could use it. Saying "it opened!" would be a
         # lie.

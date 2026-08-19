@@ -530,8 +530,16 @@ while :; do
         t_memoria_grava "$PROG" VERSAO_WINE "$(t_stack_wine)"
         # If it was an installer, shortcuts showed up: say where the program
         # ended up. If it was just a program running, nothing shows up and
-        # nothing is said.
-        t_anuncia_atalhos "$ATALHOS_ANTES"
+        # nothing is said. The return also tells us it WAS an installer, which
+        # the silent-success check below needs: an installer that lays its files
+        # down and exits in a second is doing its job, not flashing and
+        # vanishing. A .msi is an installer by definition (a .msi exiting 0
+        # installed something), even when it registers no Start Menu shortcut -
+        # a real WinDirStat .msi did exactly that and got branded "opened and
+        # closed on its own", which reads as failure for a successful install.
+        INSTALADOR=0
+        case "${PROG,,}" in *.msi|*.msp) INSTALADOR=1 ;; esac
+        t_anuncia_atalhos "$ATALHOS_ANTES" && INSTALADOR=1
 
         # ------------------------------------------------ silent success
         #
@@ -548,7 +556,7 @@ while :; do
         # ONCE per program - repeating it on every launch would become a
         # nuisance, and a nuisance is something the user learns to close
         # without reading.
-        t_confirma_funcionou "$PROG" "$DUROU"
+        t_confirma_funcionou "$PROG" "$DUROU" "$INSTALADOR"
         exit 0
     fi
 

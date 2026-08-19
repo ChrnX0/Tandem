@@ -1,3 +1,22 @@
+tandem (4.40) unstable; urgency=medium
+
+  * Stop a successful installer from being branded a failure. Found by field-
+    testing a real WinDirStat `.msi` on real Wine: the install worked (it laid
+    down its files and a Start Menu entry), but because msiexec exited in a
+    second Tandem also said "the program opened and closed on its own, with no
+    time to use it" - the silent-success guard, which exists for a program that
+    flashes and vanishes, firing on an installer that was simply doing its job.
+  * An installer is now exempt from that guard: a `.msi`/`.msp` (which installs
+    something whenever it exits 0), or any run that registered a new Start Menu
+    shortcut, is not a flash-and-vanish failure. `t_anuncia_atalhos` now reports
+    whether it announced anything, and `executar()` passes that plus the `.msi`
+    check to `t_confirma_funcionou`. The guard still fires for a real program
+    (installer = 0), which is the case it was written for - a regression test
+    pins both directions.
+  * No new user-facing message; no translation step.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 19 Aug 2026 18:30:00 +0000
+
 tandem (4.39) unstable; urgency=medium
 
   * Harden the two guards the vision audit surfaced last; both are test-only,
