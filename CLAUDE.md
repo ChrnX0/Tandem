@@ -2222,6 +2222,24 @@ fixtures here. 4 new messages, translated in all seven languages (0
 untranslated, 0 fuzzy). Suite 1626 passed / 0 / 1 skipped; both literal counters
 read 0.
 
+**v4.44 IS PUBLISHED** — 2026-08-20, tag `v4.44` at `ba84989`, `.deb`
+(536394 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`0cb949b3…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. Two doctor lines that showed raw machine output instead of a plain
+sentence. (1) On a systemd host `tandem doctor` printed the Android service
+state straight from `systemctl is-active` — "service: active" — and that raw
+word reached the screen untranslated in Chinese, Arabic and the rest, jargon in
+the middle of the diagnosis (a rule-2 violation the field test caught on a real
+systemd host). It is mapped to a plain word now (`t_estado_servico_amigavel`:
+running / stopped / unknown), and an EMPTY answer — no systemd to ask — becomes
+"unknown", which also fixes the blank "service: " line a non-systemd host used
+to show. Three new words, translated in all seven languages. (2) `doc_java`'s
+second slot went blank when java printed no version line ("java: 21, "); it
+falls back to "?" now, like the first slot already did. Pure mapper with a
+truth-table test plus end-to-end stubbed-systemctl/stubbed-java runs. Suite 1635
+passed / 0 / 1 skipped; both literal counters read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

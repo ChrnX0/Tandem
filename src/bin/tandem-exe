@@ -24,6 +24,28 @@ if t_parece_pagina_web "$PROG"; then
     t_erro "$(t_msg baixou_pagina_web "$(basename -- "$PROG")")"; exit 1
 fi
 
+# The reader's own verdict, BEFORE building a prefix and handing the file to
+# Wine. peinfo already decides whether an .exe is a complete PE - a download cut
+# short (pe_incompleto; one-sided, so a legitimately longer NSIS/Inno installer
+# passes) or a file that is not a Windows program at all (nao_e_mz) - and until
+# now nobody read it: a 400 MB POS installer cut off over a shop connection
+# built a prefix for ~40-60 s, ran the half-file, and got "Bad EXE format",
+# sending the owner back to the same broken download. The .msi/.lnk/.bat/.cmd/
+# .url that also reach this handler are NOT PEs (an .msi is an OLE compound
+# file), so they are routed in executar() and must skip this check. Only the two
+# firm tokens refuse; a transient read failure (cru) falls through, so a refusal
+# rests on a proven contradiction, the rule the AppImage check already follows.
+case "${PROG,,}" in
+    *.msi|*.msp|*.lnk|*.url|*.bat|*.cmd) : ;;
+    *)
+        ERRO_PE="$(t_pe_erro "$PROG" 2>/dev/null)"
+        case "$ERRO_PE" in
+            nao_e_mz|pe_incompleto)
+                t_erro "$(t_msg nao_consegui_ler "$(t_erro_do_leitor "$ERRO_PE")")"
+                exit 1 ;;
+        esac ;;
+esac
+
 # Without Wine, the click cannot die on a warning: we offer to install it now.
 if ! command -v wine >/dev/null 2>&1; then
     if t_pergunta "$(t_msg wine_faltando_pergunta)" "$(t_msg botao_instalar)" "$(t_msg botao_agora_nao)"; then

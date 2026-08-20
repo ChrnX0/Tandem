@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.44"
+TANDEM_VERSAO="4.45"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -2040,6 +2040,20 @@ t_pe_dlls() {
     command -v python3 >/dev/null 2>&1 || return 1
     python3 "${TANDEM_LIB:-/usr/lib/tandem}/peinfo.py" "$1" 2>/dev/null |
         sed -n -e 's/^DLLS=//p' -e 's/^ATRASADAS=//p' | tr ',' '\n' | grep -v '^$'
+}
+
+# peinfo's own verdict token, or empty when it read the file fine as a PE. The
+# reader answers ERRO=<token> for a file that is not a Windows program at all
+# (nao_e_mz), a download cut short (pe_incompleto - one-sided, so a legitimately
+# longer NSIS/Inno installer never trips it), or a DOS stub (sem_assinatura_pe).
+# tandem-exe surfaces the FIRM ones as a plain sentence BEFORE building a prefix
+# - the verdict was computed and thrown away until now. Empty on a clean PE and
+# on a transient read failure (ERRO=cru), so a refusal only ever rests on a
+# proven contradiction, the same rule the AppImage truncation check follows.
+t_pe_erro() {
+    command -v python3 >/dev/null 2>&1 || return 1
+    python3 "${TANDEM_LIB:-/usr/lib/tandem}/peinfo.py" "$1" 2>/dev/null |
+        sed -n 's/^ERRO=//p' | head -1
 }
 
 # Classes with no way out. Everything NOT listed here has a fourth column in

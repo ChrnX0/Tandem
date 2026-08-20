@@ -239,6 +239,26 @@ def pe_com_imports(caminho, maquina=0x8664, dlls=("KERNEL32.dll",)):
     return caminho
 
 
+def pe_truncado(caminho, maquina=0x8664):
+    """A PE whose download was cut short: the header is intact and declares a
+    section of 0x200 raw bytes at offset 0x400, but the file ends before that
+    section does. peinfo's one-sided truncado() check fires (off+size > EOF) and
+    answers ERRO=pe_incompleto - the commonest broken thing that reaches the .exe
+    handler, a big installer cut off over a shop connection. Built by writing the
+    full PE and cutting it, so the header stays parseable up to the truncation.
+    """
+    completo = caminho + ".tmp"
+    pe_com_imports(completo, maquina, ("KERNEL32.dll",))
+    with open(completo, "rb") as f:
+        dados = f.read()
+    os.remove(completo)
+    # 0x400 header + 0x200 section = 0x600; cut to 0x500 so the section header
+    # still declares more than what follows it.
+    with open(caminho, "wb") as f:
+        f.write(dados[:0x500])
+    return caminho
+
+
 def main():
     destino = sys.argv[1] if len(sys.argv) > 1 else "."
     os.makedirs(destino, exist_ok=True)
@@ -264,6 +284,7 @@ def main():
     pe(j("progarm.exe"), 0xAA64)
     with open(j("naoexe.exe"), "wb") as f:
         f.write(b"this is not a PE\n")
+    pe_truncado(j("cortado.exe"), 0x8664)
 
     pe_com_imports(j("imports64.exe"), 0x8664,
                    ("KERNEL32.dll", "MSVCP140.dll", "VCRUNTIME140.dll"))
