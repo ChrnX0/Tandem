@@ -1,3 +1,26 @@
+tandem (4.45) unstable; urgency=medium
+
+  * A truncated or not-a-Windows-program `.exe` is now caught BEFORE Wine, not
+    after a minute of waiting. peinfo already reads whether an `.exe` is a
+    complete PE - a download cut short (`pe_incompleto`, one-sided so a
+    legitimately longer NSIS/Inno installer still passes) or a file that is not
+    a Windows program at all (`nao_e_mz`, e.g. random bytes saved under a
+    program's name) - but nothing in `tandem-exe` ever read that verdict. So a
+    400 MB point-of-sale installer cut off over a shop connection built a Wine
+    prefix (~40-60 s), handed the half-file to Wine, and produced "Bad EXE
+    format" - sending the owner back to the same broken download. This is the
+    ninth handler wired to a detector and a plain-language message that already
+    existed: `tandem-exe` now refuses early with "the download stopped part way,
+    downloading it again is the whole fix" (or "this is not a Windows program"),
+    the same shape as the `.AppImage`/`.deb`/`.jar` handlers. The `.msi`,
+    `.lnk`, `.bat`, `.cmd` and `.url` that also reach this handler are not PEs
+    and are skipped, so their routing in `executar()` is untouched. Found by
+    field-testing the installed package - a fake `.exe` hung the double click.
+  * No new user-facing message (the sentences were already translated in all
+    seven languages); no translation step.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 12:10:00 +0000
+
 tandem (4.44) unstable; urgency=medium
 
   * The doctor stops speaking systemctl's English in every language. On a

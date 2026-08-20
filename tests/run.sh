@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3223233250 5414" "$soma_esperados"
+      "547712279 5438" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "760217299 2622" "$soma_padroes"
 
@@ -1219,6 +1219,50 @@ equal "a missing file degrades with a message" \
       "sem_arquivo" "$(pecampo /nao/existe.exe ERRO)"
 python3 src/lib/peinfo.py >/dev/null 2>&1
 equal "no argument returns a usage error" "2" "$?"
+
+# The reader's firm verdict, surfaced to the .exe handler BEFORE any Wine work.
+# peinfo already answered "incomplete" or "not a PE"; until 4.45 tandem-exe read
+# neither, so a 400 MB installer cut off over a shop connection built a prefix
+# for a minute and produced "Bad EXE format". t_pe_erro is the token; the handler
+# refuses on the two firm ones.
+pe_erro() { TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_pe_erro "'"$1"'"'; }
+equal "a truncated .exe download is read as incomplete" \
+      "pe_incompleto" "$(pe_erro "$ARTIFACTS/cortado.exe")"
+equal "a file that is not a PE is read as not-a-Windows-program" \
+      "nao_e_mz" "$(pe_erro "$ARTIFACTS/naoexe.exe")"
+equal "a complete PE has no reader error, so it is never refused" \
+      "" "$(pe_erro "$ARTIFACTS/imports64.exe")"
+
+# End to end. The refusal comes BEFORE the Wine check, so no prefix is ever built
+# for a truncated file. A stub Wine (instant exit 1) stands in only so the .msi
+# case - which is NOT a PE and must skip the check - cannot hang on a real prefix
+# build when it falls through to Wine, proving the check let it pass.
+FAKEWINE="$TMPROOT/fakewine-pf"; mkdir -p "$FAKEWINE"
+printf '#!/bin/sh\nexit 1\n' > "$FAKEWINE/wine"; chmod +x "$FAKEWINE/wine"
+corre_exe_pf() {   # <file> <tag> -> what the owner sees, Wine stubbed so nothing hangs
+    local casa="$TMPROOT/exe-pf-$2"; rm -rf "$casa"; mkdir -p "$casa"
+    env -i HOME="$casa" PATH="$FAKEWINE:/usr/bin:/bin" \
+        TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+        TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem-exe" "$1" 2>&1
+}
+saida_cortado="$(corre_exe_pf "$ARTIFACTS/cortado.exe" cortado)"
+contem "a truncated .exe is refused with the download-cut message" \
+       "download stopped part way" "$saida_cortado"
+# The whole point: refused BEFORE the expensive prefix build, so the tandem
+# prefix's system.reg never appears.
+if [ -e "$TMPROOT/exe-pf-cortado/.local/share/tandem/wine/system.reg" ]; then
+    fail "a truncated .exe is refused before any Wine prefix is built" "no prefix" "a prefix appeared"
+else
+    pass "a truncated .exe is refused before any Wine prefix is built"
+fi
+saida_naoexe="$(corre_exe_pf "$ARTIFACTS/naoexe.exe" naoexe)"
+contem "a not-a-PE .exe is refused with the not-a-Windows-program message" \
+       "not a Windows program" "$saida_naoexe"
+# an .msi (OLE compound file, not MZ) must NOT be caught by the PE check
+printf '\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1 fake ole compound msi' > "$TMPROOT/fake-preflight.msi"
+saida_msi="$(corre_exe_pf "$TMPROOT/fake-preflight.msi" msi)"
+naocontem "an .msi is not refused by the PE check - it is not a PE" \
+          "not a Windows program" "$saida_msi"
 
 # What the pre-flight can prove on its own: recognizing, BEFORE running, what
 # the program depends on - and, since 4.0, whether that has a way out. Until
