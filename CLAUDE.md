@@ -2240,6 +2240,32 @@ falls back to "?" now, like the first slot already did. Pure mapper with a
 truth-table test plus end-to-end stubbed-systemctl/stubbed-java runs. Suite 1635
 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.45 IS PUBLISHED** — 2026-08-20, tag `v4.45` at `88758e7`, `.deb`
+(537702 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`8a7a83ce…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. Found by field-testing the installed v4.44 package: a fake `.exe` hung
+the double click. `peinfo` already reads whether an `.exe` is a complete PE — a
+download cut short (`pe_incompleto`; one-sided, so a legitimately longer
+NSIS/Inno installer still passes) or a file that is not a Windows program at all
+(`nao_e_mz`) — but nothing in `tandem-exe` ever read that verdict, so a 400 MB
+POS installer cut off over a shop connection built a Wine prefix for ~40-60 s,
+handed the half-file to Wine, and produced "Bad EXE format", sending the owner
+back to the same broken download. This is the NINTH handler wired to a detector
+and a plain-language message that already existed (the `.AppImage`/`.deb`/`.jar`
+handlers do the same): `tandem-exe` now refuses early with "the download stopped
+part way, downloading it again is the whole fix" or "this is not a Windows
+program". The `.msi`/`.msp`/`.lnk`/`.bat`/`.cmd`/`.url` that also reach this
+handler are NOT PEs (an `.msi` is an OLE compound file), so the check skips them
+and their routing in `executar()` is untouched. New helper `t_pe_erro`; only the
+two firm tokens refuse (a transient read failure `cru` falls through, so a
+refusal rests on a proven contradiction — the rule the AppImage check follows);
+a real truncated-PE fixture (`tests/mkapk.py` `pe_truncado` → `cortado.exe`)
+drives the handler end to end, proving the refusal comes before any prefix is
+built. No new message (already translated in all seven languages); no
+translation step. Confirmed in the INSTALLED package in English and Portuguese.
+Suite 1642 passed / 0 / 1 skipped; both literal counters read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
