@@ -95,6 +95,12 @@ jobs:
         run: |
           sha256sum "tandem_${VERSION}_all.deb" > "tandem_${VERSION}_all.deb.sha256"
           cat "tandem_${VERSION}_all.deb.sha256"
+          # The generic bundle rides along, for every Linux that is not Debian.
+          # build.py --check (the Package step above) already wrote and validated
+          # it; here it just gets its own checksum.
+          sha256sum "tandem_${VERSION}_generic.tar.gz" \
+              > "tandem_${VERSION}_generic.tar.gz.sha256"
+          cat "tandem_${VERSION}_generic.tar.gz.sha256"
 
       - name: Release notes from the changelog
         run: |
@@ -120,7 +126,16 @@ jobs:
             echo "tandem preparar"
             echo '```'
             echo
-            echo "SHA-256: \`$(cut -d' ' -f1 "tandem_${VERSION}_all.deb.sha256")\`"
+            echo "**Not on Debian or Ubuntu?** Fedora, Arch, openSUSE and the rest"
+            echo "have no apt to take a .deb. Use the generic bundle instead:"
+            echo
+            echo '```bash'
+            echo "tar xzf tandem_${VERSION}_generic.tar.gz && cd tandem-${VERSION}"
+            echo "sudo ./install.sh          # sudo ./uninstall.sh removes it"
+            echo '```'
+            echo
+            echo ".deb    SHA-256: \`$(cut -d' ' -f1 "tandem_${VERSION}_all.deb.sha256")\`"
+            echo "generic SHA-256: \`$(cut -d' ' -f1 "tandem_${VERSION}_generic.tar.gz.sha256")\`"
           } >> notes.md
           cat notes.md
 
@@ -137,3 +152,5 @@ jobs:
           files: |
             tandem_${{ env.VERSION }}_all.deb
             tandem_${{ env.VERSION }}_all.deb.sha256
+            tandem_${{ env.VERSION }}_generic.tar.gz
+            tandem_${{ env.VERSION }}_generic.tar.gz.sha256
