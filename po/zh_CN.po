@@ -5585,6 +5585,22 @@ msgctxt "doctor_relogio_errado"
 msgid "clock: {1} - WRONG, run: tandem relogio"
 msgstr "时钟：{1} - 错误，请运行：tandem relogio"
 
+msgctxt "sono_as_vezes"
+msgid "This computer sometimes will not go to sleep when told to."
+msgstr "这台电脑有时无法进入睡眠。"
+
+msgctxt "sono_as_vezes_dev"
+msgid "This computer sometimes will not go to sleep; last time, the device {1} blocked it."
+msgstr "这台电脑有时无法进入睡眠；上次是设备 {1} 阻止了它。"
+
+msgctxt "sono_nunca"
+msgid "This computer has never once managed to go to sleep."
+msgstr "这台电脑从未成功进入过睡眠。"
+
+msgctxt "sono_nunca_dev"
+msgid "This computer has never once managed to go to sleep; the device {1} is blocking it."
+msgstr "这台电脑从未成功进入过睡眠；设备 {1} 正在阻止它。"
+
 msgctxt "saude_titulo"
 msgid "Tandem - health"
 msgstr "Tandem - 健康"

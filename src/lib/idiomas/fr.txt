@@ -3531,6 +3531,18 @@ horloge : {1}
 @doctor_relogio_errado
 horloge : {1} - FAUSSE, lancez : tandem relogio
 
+@sono_as_vezes
+Cet ordinateur refuse parfois de se mettre en veille quand on le lui demande.
+
+@sono_as_vezes_dev
+Cet ordinateur refuse parfois de se mettre en veille ; la dernière fois, le périphérique {1} l'en a empêché.
+
+@sono_nunca
+Cet ordinateur n'a jamais réussi à se mettre en veille.
+
+@sono_nunca_dev
+Cet ordinateur n'a jamais réussi à se mettre en veille ; le périphérique {1} l'en empêche.
+
 @saude_titulo
 Tandem - santé
 

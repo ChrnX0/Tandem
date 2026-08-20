@@ -5764,6 +5764,22 @@ msgctxt "doctor_relogio_errado"
 msgid "clock: {1} - WRONG, run: tandem relogio"
 msgstr "reloj: {1} - MAL, ejecuta: tandem relogio"
 
+msgctxt "sono_as_vezes"
+msgid "This computer sometimes will not go to sleep when told to."
+msgstr "Este equipo a veces no entra en suspensión cuando se le indica."
+
+msgctxt "sono_as_vezes_dev"
+msgid "This computer sometimes will not go to sleep; last time, the device {1} blocked it."
+msgstr "Este equipo a veces no entra en suspensión; la última vez, el dispositivo {1} lo impidió."
+
+msgctxt "sono_nunca"
+msgid "This computer has never once managed to go to sleep."
+msgstr "Este equipo nunca ha logrado entrar en suspensión."
+
+msgctxt "sono_nunca_dev"
+msgid "This computer has never once managed to go to sleep; the device {1} is blocking it."
+msgstr "Este equipo nunca ha logrado entrar en suspensión; el dispositivo {1} lo está impidiendo."
+
 msgctxt "saude_titulo"
 msgid "Tandem - health"
 msgstr "Tandem - salud"

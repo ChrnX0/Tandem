@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3715655505 5302" "$soma_esperados"
+      "2352045408 5366" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "760217299 2622" "$soma_padroes"
 
@@ -2493,6 +2493,74 @@ doc_com_td="$(env -i HOME="$RELH" PATH="$RELBIN:/usr/bin:/bin" \
     bash "$ROOT/src/bin/tandem" doctor 2>&1)"
 contem "tandem doctor carries a clock line when it can read the clock" \
        "clock:" "$doc_com_td"
+
+section "can this machine sleep? the kernel already keeps the record"
+
+# A counter PC that will not STAY asleep runs hot, drains a UPS and wakes wrong -
+# and the kernel records it in /sys/power/suspend_stats (mode 444, no privilege),
+# naming the device that refused. Tandem reads it, exactly the shape of the clock
+# check above: read a fact, form a pure verdict, say one plain sentence. The live
+# read is machine-only; TANDEM_POWER points the reader at a fixture so the four
+# verdicts and the device-naming sentence are pinned here.
+
+# --- the verdict truth table (pure) ---
+equal "no failures means nothing to say" \
+      "ok"           "$(t_sono_veredito 5 0)"
+equal "failed but also succeeded is worth knowing" \
+      "as-vezes"     "$(t_sono_veredito 10 2)"
+equal "failed and never once succeeded is act-now" \
+      "nunca"        "$(t_sono_veredito 0 3)"
+equal "a reading that could not be taken is unknown, never healthy" \
+      "desconhecido" "$(t_sono_veredito '' '')"
+equal "a non-numeric counter is unknown, not mistaken for a number" \
+      "desconhecido" "$(t_sono_veredito 5 x)"
+
+# --- the raw read, from a fixture directory (no /sys needed) ---
+SS_DIR="$TMPROOT/suspend_stats"; mkdir -p "$SS_DIR"
+printf '0' > "$SS_DIR/success"; printf '4' > "$SS_DIR/fail"
+printf '0000:00:1f.3' > "$SS_DIR/last_failed_dev"
+bruto_sono="$(TANDEM_POWER="$SS_DIR" t_sono_bruto)"
+equal "the reader's success field" "0" "$(printf '%s' "$bruto_sono" | cut -f1)"
+equal "the reader's fail field"    "4" "$(printf '%s' "$bruto_sono" | cut -f2)"
+equal "the reader's blamed-device field" \
+      "0000:00:1f.3" "$(printf '%s' "$bruto_sono" | cut -f3)"
+# no directory at all -> nothing to read, and the caller must fall silent
+TANDEM_POWER="$TMPROOT/no-such-power" t_sono_bruto >/dev/null 2>&1 \
+    && fail "an absent suspend_stats reads as nothing" "return 1" "return 0" \
+    || pass "an absent suspend_stats reads as nothing"
+
+# --- the sentence names the device, and says nothing when there is nothing ---
+contem "the sentence names the device the kernel blamed" \
+       "0000:00:1f.3" "$(TANDEM_IDIOMA_FORCADO=en t_sono_frase nunca 0000:00:1f.3)"
+equal "a clean sleeper produces no sentence" \
+      "" "$(t_sono_frase ok '')"
+equal "an unknown verdict token produces no sentence, not a key name" \
+      "" "$(t_sono_frase lalala '')"
+
+# --- the doctor line: present on failure, absent on a clean sleeper ---
+contem "doctor names the sleep failure and its device" \
+       "0000:00:1f.3" "$(TANDEM_IDIOMA_FORCADO=en TANDEM_POWER="$SS_DIR" t_doctor_sono)"
+SS_OK_DIR="$TMPROOT/suspend_stats_ok"; mkdir -p "$SS_OK_DIR"
+printf '9' > "$SS_OK_DIR/success"; printf '0' > "$SS_OK_DIR/fail"
+equal "doctor stays silent about a machine that sleeps fine" \
+      "" "$(TANDEM_POWER="$SS_OK_DIR" t_doctor_sono)"
+
+# --- end to end, in Chinese so a jargon leak would show as Latin text ---
+doc_zh_sono="$(env -i HOME="$TMPROOT/sono-home" PATH="/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=zh_CN TANDEM_POWER="$SS_DIR" \
+    bash "$ROOT/src/bin/tandem" doctor 2>/dev/null)"
+contem "doctor's Chinese output still carries the device name, no jargon" \
+       "0000:00:1f.3" "$doc_zh_sono"
+naocontem "and the doctor sleep line is not raw English jargon in Chinese" \
+          "go to sleep" "$doc_zh_sono"
+# saude ranks never-slept as act-now, so it reaches the urgent list
+sau_sono="$(env -i HOME="$TMPROOT/sono-saude-home" PATH="/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=en TANDEM_POWER="$SS_DIR" \
+    bash "$ROOT/src/bin/tandem" saude 2>/dev/null)"
+contem "saude surfaces the machine that never sleeps" \
+       "0000:00:1f.3" "$sau_sono"
 
 section "post-install breakage: worked yesterday, broke after a Wine upgrade"
 

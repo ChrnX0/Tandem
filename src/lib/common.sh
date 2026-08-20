@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.42"
+TANDEM_VERSAO="4.43"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4898,6 +4898,92 @@ t_doctor_relogio() {
     case "$tok" in
         atrasado|adiantado) t_msg doctor_relogio_errado "$(date '+%c' 2>/dev/null)" ;;
         *)                  t_msg doctor_relogio_ok "$(date '+%c' 2>/dev/null)" ;;
+    esac
+}
+
+# --------------------------------------------------- can this machine sleep?
+#
+# A counter PC that will not STAY asleep is a real, silent pain: it runs hot
+# overnight, drains a UPS, wakes at the wrong time. The kernel already keeps the
+# record and nobody in a shop ever reads it - /sys/power/suspend_stats, mode 444
+# (no privilege), with a `success` and a `fail` counter and, best of all, the
+# NAME of the device that refused to suspend last (last_failed_dev). This reads
+# it, exactly the shape of the clock check above: read a fact, form a pure
+# verdict, say one plain sentence. Setting/fixing sleep is BIOS/driver/hardware,
+# not Tandem's job - it explains and names the device, like clock/lp/dialout.
+# TANDEM_POWER overrides the base directory so the verdicts are testable here.
+#
+# Echoes: success<TAB>fail<TAB>last_failed_dev (empty fields when a file is
+# absent). Returns 1 when there is no suspend_stats to read at all, so the
+# caller stays silent rather than inventing a reading.
+t_sono_bruto() {
+    local base="${TANDEM_POWER:-/sys/power/suspend_stats}"
+    [ -d "$base" ] || return 1
+    local s f dev
+    s="$(cat "$base/success" 2>/dev/null)"
+    f="$(cat "$base/fail" 2>/dev/null)"
+    dev="$(cat "$base/last_failed_dev" 2>/dev/null)"
+    # A base directory carrying neither counter is not a suspend_stats we can
+    # read - do not report on it.
+    [ -n "$s$f" ] || return 1
+    # A device name is data from the kernel; keep it on one line so it cannot
+    # forge a field, the same care the readers take on file-sourced strings.
+    dev="$(printf '%s' "$dev" | tr -d '\r\n\t')"
+    printf '%s\t%s\t%s\n' "$s" "$f" "$dev"
+}
+
+# The whole judgement, pure so the truth table is a test:
+#   nunca       : it has failed and never once succeeded  -> act now
+#   as-vezes    : it has failed but has also succeeded     -> worth knowing
+#   ok          : it has never failed                      -> nothing to say
+#   desconhecido: the counters could not be read           -> never "healthy" on
+#                                                             a reading not taken
+t_sono_veredito() {
+    local s="$1" f="$2"
+    case "$s" in ''|*[!0-9]*) printf 'desconhecido\n'; return ;; esac
+    case "$f" in ''|*[!0-9]*) printf 'desconhecido\n'; return ;; esac
+    if [ "$f" -eq 0 ]; then printf 'ok\n'; return; fi
+    if [ "$s" -eq 0 ]; then printf 'nunca\n'; return; fi
+    printf 'as-vezes\n'
+}
+
+# Live read + verdict on this machine. Echoes: veredito<TAB>last_failed_dev.
+# Returns 1 when there is nothing to read, so the caller stays silent.
+t_sono_le() {
+    local linha s f dev
+    linha="$(t_sono_bruto)" || return 1
+    IFS="$(printf '\t')" read -r s f dev <<EOF
+$linha
+EOF
+    printf '%s\t%s\n' "$(t_sono_veredito "$s" "$f")" "$dev"
+}
+
+# The sentence, in the owner's language, naming the device the kernel blamed when
+# there is one - a name is the whole value, the same as the port and dongle work.
+# Says nothing (empty) on ok/desconhecido or an unknown token, never a key name.
+t_sono_frase() {
+    local veredito="$1" dev="$2"
+    case "$veredito" in
+        as-vezes) if [ -n "$dev" ]; then t_msg sono_as_vezes_dev "$dev"
+                  else t_msg sono_as_vezes; fi ;;
+        nunca)    if [ -n "$dev" ]; then t_msg sono_nunca_dev "$dev"
+                  else t_msg sono_nunca; fi ;;
+        *) : ;;
+    esac
+}
+
+# One line for tandem doctor: only when the machine has actually FAILED to sleep
+# (a clean sleeper needs no line, the same as the clock never crying wolf).
+# Empty when there is no suspend_stats or no failure.
+t_doctor_sono() {
+    local linha veredito dev
+    linha="$(t_sono_le)" || return 0
+    IFS="$(printf '\t')" read -r veredito dev <<EOF
+$linha
+EOF
+    case "$veredito" in
+        as-vezes|nunca) t_sono_frase "$veredito" "$dev" ;;
+        *) : ;;
     esac
 }
 

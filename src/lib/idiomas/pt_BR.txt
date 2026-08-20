@@ -3467,6 +3467,18 @@ relógio: {1}
 @doctor_relogio_errado
 relógio: {1} - ERRADO, rode: tandem relogio
 
+@sono_as_vezes
+Este computador às vezes não entra em suspensão quando é mandado.
+
+@sono_as_vezes_dev
+Este computador às vezes não entra em suspensão; da última vez, o dispositivo {1} impediu.
+
+@sono_nunca
+Este computador nunca conseguiu entrar em suspensão.
+
+@sono_nunca_dev
+Este computador nunca conseguiu entrar em suspensão; o dispositivo {1} está impedindo.
+
 @saude_titulo
 Tandem - saúde
 

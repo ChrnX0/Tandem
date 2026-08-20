@@ -4491,6 +4491,22 @@ msgctxt "doctor_relogio_errado"
 msgid "clock: {1} - WRONG, run: tandem relogio"
 msgstr ""
 
+msgctxt "sono_as_vezes"
+msgid "This computer sometimes will not go to sleep when told to."
+msgstr ""
+
+msgctxt "sono_as_vezes_dev"
+msgid "This computer sometimes will not go to sleep; last time, the device {1} blocked it."
+msgstr ""
+
+msgctxt "sono_nunca"
+msgid "This computer has never once managed to go to sleep."
+msgstr ""
+
+msgctxt "sono_nunca_dev"
+msgid "This computer has never once managed to go to sleep; the device {1} is blocking it."
+msgstr ""
+
 msgctxt "saude_titulo"
 msgid "Tandem - health"
 msgstr ""
