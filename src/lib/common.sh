@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.45"
+TANDEM_VERSAO="4.46"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -267,6 +267,27 @@ t_tem_gui() {
     # would be forgotten. Idempotent - it only exports.
     t_tema_aplica 2>/dev/null
     return 0
+}
+
+# Can we draw the MODERN face - the GTK4/libadwaita windows in gui.py - instead
+# of the zenity boxes? True only when a gi-capable python3 is present, which is
+# what "gui.py --check" proves. Everything about the modern look is optional by
+# design: an old machine without libadwaita, or a python3 without gobject, falls
+# back to zenity and loses nothing but the shine - the first rule of the project
+# (no error in silence) rides on that fallback, so this is allowed to say no.
+#   - the answer is cached for the run: the python import is not free and every
+#     window would pay it otherwise;
+#   - TANDEM_GUI=zenity forces the old backend (a machine where the new one
+#     misbehaves, and the test suite, which has no display anyway);
+#   - it says nothing about the DISPLAY: the callers already asked t_tem_gui.
+t_gui_moderno() {
+    [ "${TANDEM_GUI:-}" = zenity ] && return 1
+    case "${TANDEM_GUI_MODERNO:-}" in 1) return 0 ;; 0) return 1 ;; esac
+    if command -v python3 >/dev/null 2>&1 &&
+       python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" --check >/dev/null 2>&1; then
+        TANDEM_GUI_MODERNO=1; return 0
+    fi
+    TANDEM_GUI_MODERNO=0; return 1
 }
 
 # ---------------------------------------------------------------- locale
@@ -735,7 +756,15 @@ t_erro() {
         command -v notify-send >/dev/null 2>&1 &&
             notify-send -u critical -i dialog-error -a Tandem "Tandem" "$1" 2>/dev/null &&
             mostrou=1
-        if command -v zenity >/dev/null 2>&1 &&
+        # The modern window first; zenity when it is not here. gui.py answers a
+        # non-zero code without drawing anything when it cannot (no libadwaita,
+        # a display it cannot reach), and then the zenity branch runs - so the
+        # error still reaches a window, never silence.
+        if t_gui_moderno &&
+           python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" error "$1$extra" \
+                   "$(t_msg botao_ok)" >/dev/null 2>&1; then
+            mostrou=1
+        elif command -v zenity >/dev/null 2>&1 &&
            zenity --error --no-wrap --title="Tandem" \
                   --text="$1$extra" 2>/dev/null; then
             mostrou=1
@@ -750,15 +779,22 @@ t_erro() {
 # 1 (= "no"), which every caller treats as a safe give-up.
 t_pergunta() {
     t_tem_gui || return 1
+    local sim="${2:-$(t_msg botao_sim)}" nao="${3:-$(t_msg botao_nao)}"
+    # The modern window first. gui.py answers 0 for yes, 1 for no (a plain close
+    # is a safe "no", as zenity treats it), and 2 when it could not draw at all -
+    # only then do we fall through to zenity. The DEFAULT labels were literal
+    # Portuguese once, so every caller that did not pass its own pair showed
+    # "Sim"/"Nao" to a French or Chinese reader; both backends take the same
+    # translated pair now.
+    if t_gui_moderno; then
+        python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" question "$1" "$sim" "$nao" \
+            >/dev/null 2>&1
+        local rc=$?
+        case "$rc" in 0|1) return "$rc" ;; esac
+    fi
     command -v zenity >/dev/null 2>&1 || return 1
-    # The DEFAULT labels were literal Portuguese, so every caller that did not
-    # pass its own pair showed "Sim" and "Nao" to a French or Chinese reader.
-    # A default value is not a call, an assignment or a printf either: the
-    # counter scored this line as clean while it was the most-clicked pair of
-    # words in the program.
     zenity --question --no-wrap --title="Tandem" --text="$1" \
-           --ok-label="${2:-$(t_msg botao_sim)}" \
-           --cancel-label="${3:-$(t_msg botao_nao)}" 2>/dev/null
+           --ok-label="$sim" --cancel-label="$nao" 2>/dev/null
 }
 
 # Did the reader agree, in a terminal, in their own language?
@@ -810,6 +846,12 @@ t_texto() {
     [ -n "$conteudo" ] || conteudo="$titulo"
     if [ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]; then
         printf '%s\n' "$conteudo"
+        return 0
+    fi
+    # The modern scrollable window first, zenity's --text-info as the fallback.
+    if t_tem_gui && t_gui_moderno &&
+       printf '%s\n' "$conteudo" | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
+            text "$titulo" >/dev/null 2>&1; then
         return 0
     fi
     if t_tem_gui && command -v zenity >/dev/null 2>&1 &&

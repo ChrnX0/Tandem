@@ -3079,6 +3079,9 @@ Sí
 @botao_nao
 No
 
+@botao_ok
+Entendido
+
 @verbo_dotnet48
 .NET Framework 4.8 (tarda unos 30 minutos)
 

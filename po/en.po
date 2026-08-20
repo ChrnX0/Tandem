@@ -5139,6 +5139,10 @@ msgctxt "botao_nao"
 msgid "No"
 msgstr "No"
 
+msgctxt "botao_ok"
+msgid "Got it"
+msgstr "Got it"
+
 msgctxt "verbo_dotnet48"
 msgid ".NET Framework 4.8 (takes about 30 minutes)"
 msgstr ".NET Framework 4.8 (takes about 30 minutes)"
