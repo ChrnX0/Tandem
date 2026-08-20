@@ -306,7 +306,16 @@ def main():
     print("DEPENDE=%s" % limpo(normaliza_dependencias(c.get("Depends", ""))))
     print("PRE_DEPENDE=%s" % limpo(normaliza_dependencias(c.get("Pre-Depends", ""))))
     print("CONFLITA=%s" % limpo(normaliza_dependencias(c.get("Conflicts", ""))))
-    print("TAMANHO=%s" % limpo(uma_linha(c.get("Installed-Size", ""))))
+    # Installed-Size is an INTEGER in KiB by Debian policy. The shell puts this
+    # value inside $(( )) to show "this will use N MB", and bash arithmetic
+    # evaluates its operand recursively - so a value like  a[$(command)]  from a
+    # hostile .deb would EXECUTE that command as the user, before any password.
+    # Emit it only when it is all digits; anything else is malformed or an
+    # attack, and dropping it just omits the size line. The shell guards the
+    # arithmetic too (defence in depth), but the value has no business being
+    # non-numeric in the first place.
+    _tam = limpo(uma_linha(c.get("Installed-Size", "")))
+    print("TAMANHO=%s" % (_tam if _tam.isdigit() else ""))
     print("DESCRICAO=%s" % limpo(uma_linha(c.get("Description-curta", ""))[:200]))
     print("MANTENEDOR=%s" % limpo(uma_linha(c.get("Maintainer", ""))))
     print("ESSENCIAL=%d" % (1 if c.get("Essential", "no").lower() == "yes" else 0))

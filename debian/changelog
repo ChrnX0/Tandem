@@ -1,3 +1,16 @@
+tandem (4.41) unstable; urgency=high
+
+  * Security: a malicious .deb could run arbitrary code as the user when opened,
+    before any password was asked. Its Installed-Size control field was placed
+    inside a shell $(( )) to show "this will use N MB", and bash evaluates an
+    arithmetic operand RECURSIVELY - so an Installed-Size of  a[$(command)]  ran
+    that command. Two guards close it: debinfo.py emits Installed-Size only when
+    it is all digits (Debian policy makes it an integer), and tandem-deb refuses
+    to feed a non-numeric value to the arithmetic. A regression test builds a
+    hostile .deb and proves that reading it executes nothing.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 02:05:00 +0000
+
 tandem (4.40) unstable; urgency=medium
 
   * Stop a successful installer from being branded a failure. Found by field-

@@ -167,9 +167,18 @@ JUNTO="$(printf '%s\n' "$SIMULACAO" |
 # ---------------------------------------------------------- 5. Ask, install
 PERGUNTA="$(t_msg deb_instalar_pergunta "$NOME $VERSAO${DESCRICAO:+
 $DESCRICAO}")"
-[ -n "$TAMANHO" ] && PERGUNTA="$PERGUNTA
+# TAMANHO comes from the .deb's own Installed-Size field. It goes inside $(( )),
+# and bash arithmetic evaluates its operand RECURSIVELY - so a hostile value
+# like  a[$(command)]  would EXECUTE that command as the user, before the
+# password is even asked. Debian policy makes Installed-Size an integer; anything
+# else is malformed or an attack. Refuse to hand a non-numeric value to the
+# arithmetic (the reader already drops it, this is defence in depth).
+case "$TAMANHO" in
+    ''|*[!0-9]*) : ;;
+    *) PERGUNTA="$PERGUNTA
 
-$(t_msg deb_vai_ocupar "$(t_tamanho_amigavel $((TAMANHO * 1024)))")"
+$(t_msg deb_vai_ocupar "$(t_tamanho_amigavel $((TAMANHO * 1024)))")" ;;
+esac
 [ -n "$JUNTO" ] && PERGUNTA="$PERGUNTA
 
 $(t_msg deb_junto_vem "$(printf '%s' " $JUNTO" | cut -c1-300)")"
