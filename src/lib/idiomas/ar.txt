@@ -1619,6 +1619,9 @@ ProductId الخاص بـWindows
 @doc_familia
 عائلة الحزم: {1}
 
+@prep_familia_resto
+تم إعداد Wine و winetricks. هذه الأجزاء الأخرى ليست مما يثبّته Tandem على نظامك — ثبّتها بمدير الحزم الخاص بك إن احتجتها: {1}. لتطبيقات أندرويد، راجع waydroid.org.
+
 @prep_pergunta
 يستطيع Tandem تثبيت ما ينقص:
 {1}

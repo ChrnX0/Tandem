@@ -1,3 +1,31 @@
+tandem (4.49) unstable; urgency=medium
+
+  * `tandem preparar` now INSTALLS the core on a non-Debian family, instead of
+    only printing the command. 4.47 taught it to name the right command for
+    Fedora, Arch and openSUSE; 4.49 runs it. When Wine or winetricks is missing
+    on a dnf/pacman/zypper machine, preparar asks - exactly as it does on apt -
+    and then installs them itself through the family's own package manager, so a
+    shop owner who never opens a terminal gets the flagship .exe path set up for
+    him on any distribution, not just Debian's.
+  * It promises only what it can stand behind. `t_pacote_familia` maps a piece
+    to a package only for the core Wine + winetricks, which every target family
+    carries under exactly that name and which was verified to install on real
+    Fedora and Arch; Android (Waydroid), Java and the rest differ too much per
+    distribution - a different name, a third-party repo, a disabled repo - so
+    Tandem names them for the owner rather than guessing a package, the same
+    "explain rather than guess" rule the .rpm handler follows. After a
+    successful install it says which pieces it left for the owner, so nobody is
+    left thinking Android was set up too.
+  * The install script for a family is `t_script_instalacao_familia` (dnf
+    install -y / pacman -S --noconfirm --needed / zypper install -y), the
+    sibling of the apt `t_script_instalacao`; the apt path is unchanged.
+    The whole flow was exercised on real Fedora 41 and Arch containers: the
+    generic bundle installs, the family is read correctly, and preparar installs
+    winetricks through dnf and pacman for real. One new message, translated in
+    all seven languages.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 20:30:00 +0000
+
 tandem (4.48) unstable; urgency=medium
 
   * The second step toward running on more than the Debian family: a way to

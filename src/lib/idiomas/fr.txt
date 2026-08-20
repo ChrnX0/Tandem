@@ -1606,6 +1606,9 @@ L'installation automatique de Tandem n'installe ce qui manque que sur la famille
 @doc_familia
 famille de paquets : {1}
 
+@prep_familia_resto
+Wine et winetricks sont prêts. Ces autres éléments ne sont pas quelque chose que Tandem installe sur votre système — installez-les avec votre propre gestionnaire de paquets si vous en avez besoin : {1}. Pour les applis Android, voyez waydroid.org.
+
 @prep_pergunta
 Tandem peut installer ce qui manque :
 {1}

@@ -2813,6 +2813,13 @@ msgctxt "doc_familia"
 msgid "package family: {1}"
 msgstr "famille de paquets : {1}"
 
+msgctxt "prep_familia_resto"
+msgid ""
+"Wine and winetricks are set up. These other pieces are not ones Tandem\n"
+"installs on your system - install them with your own package manager if you\n"
+"need them: {1}. For Android apps, see waydroid.org."
+msgstr "Wine et winetricks sont prêts. Ces autres éléments ne sont pas quelque chose que Tandem installe sur votre système — installez-les avec votre propre gestionnaire de paquets si vous en avez besoin : {1}. Pour les applis Android, voyez waydroid.org."
+
 msgctxt "prep_pergunta"
 msgid ""
 "Tandem can install what is missing:\n"

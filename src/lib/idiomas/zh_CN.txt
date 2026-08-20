@@ -1473,6 +1473,9 @@ Tandem 的自动安装只在 Debian 和 Ubuntu 家族（apt）上安装缺少的
 @doc_familia
 软件包家族：{1}
 
+@prep_familia_resto
+Wine 和 winetricks 已就绪。这些其他部分不是 Tandem 在您系统上安装的——如果需要，请用您自己的包管理器安装它们：{1}。Android 应用请见 waydroid.org。
+
 @prep_pergunta
 Tandem 可以把缺的东西装上：
 {1}

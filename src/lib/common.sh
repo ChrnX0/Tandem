@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.48"
+TANDEM_VERSAO="4.49"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4427,6 +4427,45 @@ t_familia_comando_wine() {
         pacman) printf 'sudo pacman -S wine winetricks\n' ;;
         zypper) printf 'sudo zypper install wine winetricks\n' ;;
         *)      printf '' ;;
+    esac
+}
+
+# The package name a non-apt family uses for one of Tandem's pieces, or empty
+# when this family is not one Tandem installs that piece on. Since 4.49 preparar
+# can install through dnf/pacman/zypper, not only apt - but ONLY the core it can
+# stand behind: wine and winetricks, which every target family (Fedora, Arch,
+# openSUSE) carries under exactly that name, and which this project has verified
+# install on real Fedora and Arch. Java, Android (waydroid) and the rest differ
+# enough per distribution - a different package name, a third-party repository,
+# a disabled repo - that naming a wrong one is worse than telling the owner to
+# install it himself, so they return empty and preparar lists them instead. This
+# is the "explain rather than guess" rule the .rpm handler already follows.
+t_pacote_familia() {
+    case "$1/$2" in
+        dnf/wine|pacman/wine|zypper/wine)                   printf 'wine\n' ;;
+        dnf/winetricks|pacman/winetricks|zypper/winetricks) printf 'winetricks\n' ;;
+        *)                                                  printf '' ;;
+    esac
+}
+
+# The one privileged command that installs the requested pieces on a non-apt
+# family, in that family's own package manager. Only the pieces with a known
+# package (t_pacote_familia) reach the command; the rest are dropped here and
+# named by the caller. Empty output when none of the pieces are installable, so
+# the caller can fall back. The apt equivalent is t_script_instalacao; this is
+# its sibling for dnf/pacman/zypper.
+t_script_instalacao_familia() {
+    local fam="$1"; shift
+    local pkgs=() p pkg
+    for p in "$@"; do
+        pkg="$(t_pacote_familia "$fam" "$p")"
+        [ -n "$pkg" ] && pkgs+=("$pkg")
+    done
+    [ ${#pkgs[@]} -gt 0 ] || return 0
+    case "$fam" in
+        dnf)    printf 'set -e\ndnf install -y %s\n' "${pkgs[*]}" ;;
+        pacman) printf 'set -e\npacman -S --noconfirm --needed %s\n' "${pkgs[*]}" ;;
+        zypper) printf 'set -e\nzypper install -y %s\n' "${pkgs[*]}" ;;
     esac
 }
 

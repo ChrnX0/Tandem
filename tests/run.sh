@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1516672830 5570" "$soma_esperados"
+      "340766002 5591" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "2180550437 2671" "$soma_padroes"
+      "2140280950 2682" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1911,6 +1911,49 @@ for lang in en pt_BR es fr zh_CN hi ar; do
         doc_familia|"") fail "the family line exists in $lang" \
                              "a translated sentence" "${linha:-nothing}" ;;
         *) pass "the family line exists in $lang" ;;
+    esac
+done
+
+# ---- v4.49: preparar INSTALLS the core on a non-apt family, not just names it ----
+# The core it stands behind (verified on real Fedora and Arch) is wine +
+# winetricks; everything else on a non-apt family returns no package and is named
+# for the owner rather than guessed.
+equal "the core maps to a package on dnf" "wine" "$(t_pacote_familia dnf wine)"
+equal "winetricks maps on pacman" "winetricks" "$(t_pacote_familia pacman winetricks)"
+equal "java is NOT auto-installed on a non-apt family" "" "$(t_pacote_familia dnf java)"
+equal "waydroid is NOT auto-installed on a non-apt family" "" "$(t_pacote_familia pacman waydroid)"
+# The install command is the family's own, and only the installable pieces reach
+# it - java is dropped, not turned into a bad package name.
+contem "dnf install command names dnf" \
+       "dnf install -y wine winetricks" "$(t_script_instalacao_familia dnf wine winetricks java)"
+contem "pacman install command names pacman" \
+       "pacman -S --noconfirm --needed wine winetricks" \
+       "$(t_script_instalacao_familia pacman wine winetricks)"
+contem "zypper install command names zypper" \
+       "zypper install -y wine" "$(t_script_instalacao_familia zypper wine)"
+equal "a family script never carries an apt-get line" "0" \
+      "$(t_script_instalacao_familia dnf wine | grep -c 'apt-get')"
+equal "no installable piece yields an empty script (caller falls back)" "" \
+      "$(t_script_instalacao_familia dnf java waydroid)"
+# The wiring is really in preparar: it splits pieces, builds the family script,
+# and names the rest.
+contem "preparar asks the family for each piece's package" \
+       "t_pacote_familia" "$PREP_CORPO"
+contem "preparar builds the family install script" \
+       "t_script_instalacao_familia" "$PREP_CORPO"
+contem "preparar names the pieces it could not install" \
+       "prep_familia_resto" "$PREP_CORPO"
+# The apt plan builder is untouched - still the one the apt path uses.
+contem "the apt install plan still exists for the apt path" \
+       "t_script_instalacao " "$PREP_CORPO"
+# The new message resolves in every language.
+for lang in en pt_BR es fr zh_CN hi ar; do
+    linha="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$lang" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_msg prep_familia_resto "Java, Android"' 2>/dev/null)"
+    case "$linha" in
+        prep_familia_resto|"") fail "the 'rest' note exists in $lang" \
+                                    "a translated sentence" "${linha:-nothing}" ;;
+        *) pass "the 'rest' note exists in $lang" ;;
     esac
 done
 
