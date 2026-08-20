@@ -2151,6 +2151,26 @@ portas` printer + lp detection on a real node, `portas fixar` both halves, a CUP
 virtual printer, Wine enumerating the CUPS printers) and the two other findings
 (Wine 9.0 ships msvcp140 builtin; a blank `service:` line on a non-systemd host).
 
+**v4.41 IS PUBLISHED** — 2026-08-20, tag `v4.41` at `41352e2`, `.deb`
+(530554 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`2c7291fa…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. It is a SECURITY release, urgency=high, and it is the class this project
+is most exposed to: a malicious `.deb` could run arbitrary code AS THE USER the
+moment it was opened, before any password. Its `Installed-Size` control field is
+shown as "this will use N MB", computed with a shell `$(( TAMANHO * 1024 ))` —
+and bash evaluates an arithmetic operand RECURSIVELY, so an `Installed-Size` of
+`a[$(command)]` EXECUTED that command on a plain double-click. PoC-confirmed end
+to end. Two guards, defence in depth: `debinfo.py` emits `Installed-Size` only
+when it is all digits (Debian policy makes it an integer in KiB), dropping the
+size line otherwise; `tandem-deb` refuses to feed a non-numeric value to the
+arithmetic (a `case` guard). A regression test builds a hostile `.deb`
+(`Installed-Size a[$(touch SENTINEL)]`), reads it, and asserts `TAMANHO` comes
+back empty and the sentinel was never created, while a legitimate integer still
+comes through. Found by an audit sweep for the arithmetic-on-external-data class
+— the same shape to look for anywhere a value that arrived from a file reaches
+`$(( ))`. Suite 1598 passed / 0 / 1 skipped; both literal counters read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
