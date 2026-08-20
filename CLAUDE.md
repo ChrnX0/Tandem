@@ -2378,6 +2378,41 @@ past the feature squash-merge. No new product message. Suite 1677 passed / 0 / 1
 skipped; both literal counters read 0. **Next rung: a thin PKGBUILD (Arch/AUR)
 over this bundle, then `dnf`/`pacman` inside `preparar`.**
 
+**v4.49 IS PUBLISHED** — 2026-08-20, tag `v4.49` at `1b660ec`, both artifacts
+verified byte-for-byte five ways: the `.deb` (548196 bytes, sha256 `a1f4f5d6…`)
+and the generic bundle (548560 bytes, sha256 `957ef3e0…`) each agree across the
+release body, the release checksum file, the asset digest, the downloaded bytes,
+and a fresh reproducible build at the commit. It closes the `dnf`/`pacman` rung
+the 4.48 record named: `tandem preparar` now INSTALLS the core (Wine +
+winetricks) on a non-Debian family, not just prints the command. On a
+dnf/pacman/zypper machine with the core missing it asks — exactly as on apt — and
+then runs the family's own manager (`t_script_instalacao_familia`: `dnf install
+-y` / `pacman -S --noconfirm --needed` / `zypper install -y`), so a shop owner
+who never opens a terminal gets the `.exe` path set up on any distribution.
+`t_pacote_familia` promises only the core (wine, winetricks — the two the `.exe`
+path needs, verified to install on real Fedora and Arch); Android, Java and the
+rest are NAMED for the owner (`prep_familia_resto`) rather than guessed, and
+`wine32` is dropped on non-apt (only Debian splits 32-bit Wine into its own
+package). The apt path is byte-for-byte unchanged.
+
+**THE BIG UNLOCK of this session, worth more than the feature: distro work is now
+testable HERE, with no second machine.** The owner said *"eu nao tenho como
+testar essas cosias aí"* — and the answer was Docker: this container's Docker
+daemon starts (`sudo dockerd &`) and pulls `fedora:41` and `archlinux:latest`
+through the agent proxy. So 4.47/4.48/4.49 were verified E4 on the ACTUAL target
+distros: the generic bundle installs on real Fedora and Arch, `tandem doctor`
+reads `package family: dnf`/`pacman`, and `tandem preparar` — driven through a
+`script(1)` pty answering yes — installs winetricks FOR REAL via `dnf` and
+`pacman`. To let `dnf`/`pacman` reach their mirrors through the proxy, trust the
+CA: on Fedora `cp /root/.ccr/ca-bundle.crt` (mounted) into
+`/etc/pki/ca-trust/source/anchors/` then `update-ca-trust`; on Arch append it to
+`/etc/ssl/certs/ca-certificates.crt`. **A near-miss this caught, the reason the
+container test earns its keep:** the well-known "Arch's `wine` is in `multilib`"
+fact is OUTDATED — a real `pacman -Sy` shows `wine` in `extra` now, so the
+guidance needs no multilib step; testing on the real distro stopped a wrong
+"fix" built on stale knowledge. Suite 1697 passed / 0 / 1 skipped; both literal
+counters read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
