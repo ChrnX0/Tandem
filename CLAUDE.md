@@ -170,7 +170,13 @@ someone's machine.
 ## Map
 
 ```
-build.py                  packager (hand-written ar + tar.gz)
+build.py                  packager (hand-written ar + tar.gz); ALSO emits the
+                          distro-agnostic tandem_<ver>_generic.tar.gz from the
+                          same LAYOUT (payload/ + generated MANIFEST + the two
+                          packaging/ scripts), for the families apt does not serve
+packaging/install.sh      generic installer: reads MANIFEST, copies each file with
+                          its mode (honours DESTDIR), then does the postinst work
+packaging/uninstall.sh    removes exactly what MANIFEST lists, prunes empty dirs
 debian/control            the package version lives here
 debian/changelog          a new entry per version; lintian demands a fresh date
 debian/copyright          DEP-5; lintian demands it

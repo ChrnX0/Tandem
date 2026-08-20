@@ -1,3 +1,29 @@
+tandem (4.48) unstable; urgency=medium
+
+  * The second step toward running on more than the Debian family: a way to
+    install Tandem where there is no apt. Tandem is itself a `.deb`, so a
+    Fedora, Arch or openSUSE user could not install it at all - 4.47 taught it
+    to speak to them, but they still had no way to get it. build.py now also
+    emits a distribution-agnostic bundle, `tandem_<version>_generic.tar.gz`:
+    extract it and run `sudo ./install.sh`, and Tandem lands on any Linux.
+  * The bundle carries the exact same files as the `.deb`, from build.py's one
+    LAYOUT - so the two can never drift - plus a generated MANIFEST and two
+    static scripts, packaging/install.sh and packaging/uninstall.sh. install.sh
+    copies each file to its place with its own mode (honouring DESTDIR so it is
+    testable and packageable), then does what the .deb's
+    postinst does: refreshes the desktop, MIME and icon caches, runs the
+    per-user first-run setup as the invoking user, and prints the install notice
+    read from the catalogue in the machine's language. uninstall.sh removes
+    exactly what the MANIFEST lists and prunes the empty directories.
+  * The .deb build is byte-for-byte unchanged - the tarball is an addition, not
+    a change - and the whole install/uninstall cycle is exercised in the suite
+    against a DESTDIR, asserting every file lands with the right mode and that
+    uninstall leaves nothing behind. packaging/*.sh join the bash -n and
+    shellcheck gates. No new product message; no translation step. This is the
+    universal foundation the PKGBUILD and .rpm rungs build on next.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 18:40:00 +0000
+
 tandem (4.47) unstable; urgency=medium
 
   * The first step toward running on more than the Debian family. Tandem's

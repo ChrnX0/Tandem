@@ -1,4 +1,5 @@
 *.deb
+tandem_*_generic.tar.gz
 *.pyc
 __pycache__/
 build/

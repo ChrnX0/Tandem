@@ -2,8 +2,8 @@
   "$comment": "ProofGate for Tandem. Without this it cannot see the suite: Tandem is a shell project with its own runner, and automatic detection only knows ecosystems that have a manifest (package.json, Cargo.toml, go.mod...). Without this line the gate went green without running a single test - exactly the kind of empty approval the skill exists to prevent.",
 
   "commands": {
-    "typecheck": "bash -c 'for f in src/bin/* src/lib/*.sh tests/*.sh debian/postinst debian/postrm; do bash -n \"$f\" || exit 1; done; python3 -m py_compile src/lib/*.py tools/*.py build.py'",
-    "lint": "shellcheck --shell=bash --exclude=SC1091,SC2123 --severity=warning src/bin/* src/lib/*.sh tests/*.sh debian/postinst debian/postrm",
+    "typecheck": "bash -c 'for f in src/bin/* src/lib/*.sh tests/*.sh packaging/*.sh debian/postinst debian/postrm; do bash -n \"$f\" || exit 1; done; python3 -m py_compile src/lib/*.py tools/*.py build.py'",
+    "lint": "shellcheck --shell=bash --exclude=SC1091,SC2123 --severity=warning src/bin/* src/lib/*.sh tests/*.sh packaging/*.sh debian/postinst debian/postrm",
     "test": "bash tests/run.sh",
     "build": "python3 build.py --check"
   },

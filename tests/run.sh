@@ -105,14 +105,14 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1001516514 5553" "$soma_esperados"
+      "1516672830 5570" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "2180550437 2671" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
 # syntax error is a harness that passes by never running.
-for f in src/bin/* src/lib/*.sh tests/*.sh debian/postinst debian/postrm; do
+for f in src/bin/* src/lib/*.sh tests/*.sh packaging/*.sh debian/postinst debian/postrm; do
     if bash -n "$f" 2>/dev/null; then pass "bash -n $f"
     else fail "bash -n $f" "valid syntax" "syntax error"; fi
 done
@@ -120,7 +120,7 @@ done
 if command -v shellcheck >/dev/null 2>&1; then
     output="$(LC_ALL=C.UTF-8 shellcheck --shell=bash --exclude=SC1091,SC2123 \
              --severity=warning --format=gcc \
-             src/bin/* src/lib/*.sh tests/*.sh debian/postinst debian/postrm 2>&1)"
+             src/bin/* src/lib/*.sh tests/*.sh packaging/*.sh debian/postinst debian/postrm 2>&1)"
     if [ -z "$output" ]; then pass "shellcheck with no warnings"
     else fail "shellcheck with no warnings" "(nothing)" "$output"; fi
 else
@@ -3021,6 +3021,59 @@ if true; then
                   "did not recognise the type" "$(inst "$deb_bom")"
     else
         skip "a real .deb still routes" "no package could be built here"
+    fi
+fi
+
+section "packaging: the generic bundle installs where apt is not"
+
+# 4.48: Tandem is a .deb, so a Fedora/Arch/openSUSE user could not install it at
+# all. build.py now also emits tandem_<ver>_generic.tar.gz - the same files as
+# the .deb, from the same LAYOUT - with install.sh/uninstall.sh driven by a
+# generated MANIFEST. The whole cycle is exercised against a staging root: every
+# file must land with its own mode, and uninstall must leave nothing behind.
+GEN="$(ls -1 "$ROOT"/tandem_*_generic.tar.gz 2>/dev/null | head -1)"
+if [ -z "$GEN" ]; then
+    python3 "$ROOT/build.py" >/dev/null 2>&1
+    GEN="$(ls -1 "$ROOT"/tandem_*_generic.tar.gz 2>/dev/null | head -1)"
+fi
+if [ -z "$GEN" ]; then
+    skip "the generic bundle installs into a staging root" "no bundle could be built here"
+else
+    GT="$TMPROOT/gen"; rm -rf "$GT"; mkdir -p "$GT/x" "$GT/root"
+    tar xzf "$GEN" -C "$GT/x"
+    B="$(ls -d "$GT"/x/tandem-* 2>/dev/null | head -1)"
+    for parte in MANIFEST install.sh uninstall.sh payload; do
+        if [ -e "$B/$parte" ]; then pass "the bundle carries $parte"
+        else fail "the bundle carries $parte" "$parte" "missing"; fi
+    done
+    DESTDIR="$GT/root" bash "$B/install.sh" >/dev/null 2>&1
+    total="$(grep -c . "$B/MANIFEST")"
+    landed=0
+    while IFS=$'\t' read -r modo rel; do
+        [ -n "$rel" ] || continue
+        [ -f "$GT/root/$rel" ] || continue
+        [ "$(stat -c '%a' "$GT/root/$rel")" = "$modo" ] && landed=$((landed + 1))
+    done < "$B/MANIFEST"
+    equal "every file in the bundle installs, each with its own mode" \
+          "$total" "$landed"
+    equal "the launcher lands executable" \
+          "755" "$(stat -c '%a' "$GT/root/usr/bin/tandem")"
+    equal "a catalogue lands read-only" \
+          "644" "$(stat -c '%a' "$GT/root/usr/lib/tandem/idiomas/en.txt")"
+    DESTDIR="$GT/root" bash "$B/uninstall.sh" >/dev/null 2>&1
+    sobra=0
+    while read -r rel; do
+        [ -n "$rel" ] || continue
+        [ -e "$GT/root/$rel" ] && sobra=$((sobra + 1))
+    done < <(cut -f2 "$B/MANIFEST")
+    equal "uninstall removes every file it installed" "0" "$sobra"
+    # The directory that was only ours is pruned; a shared one is spared by
+    # rmdir refusing a non-empty directory (untestable in an isolated root that
+    # holds nothing else, so the private tree is the invariant asserted here).
+    if [ -e "$GT/root/usr/lib/tandem" ]; then
+        fail "the private directory is pruned" "gone" "still there"
+    else
+        pass "the private directory is pruned"
     fi
 fi
 
