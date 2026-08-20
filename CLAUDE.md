@@ -2304,6 +2304,41 @@ languages. **The progress bar and the main panel stay on zenity for now — the
 next increment.** Suite 1647 passed / 0 / 1 skipped; both literal counters read
 0.
 
+**v4.47 IS PUBLISHED** — 2026-08-20, tag `v4.47` at `4619d8a`, `.deb`
+(545430 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`770d384b…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. It is the FIRST step toward Tandem running on more than the Debian
+family — the owner asked "não seria bom fazer o tandem rodar em todas [as
+distros mais usadas]? a ideia do aplicativo eh ajudar a galera" — and it is the
+project's own rule turned on itself: `tandem preparar` installs Wine/winetricks
+through apt, so on a Fedora, Arch or openSUSE machine it used to run `apt-get`
+and fail with a raw English apt error mid-screen — the exact silent/jargon
+failure this project exists to abolish, in another distribution's clothes. Now
+`t_familia_pacote` reads the family (apt / dnf / pacman / zypper) from
+`/etc/os-release` `ID`/`ID_LIKE` (Manjaro→pacman, Rocky/Alma→dnf), with a
+manager-binary fallback and a `TANDEM_FAMILIA` override so the four branches are
+testable on one machine; it answers `desconhecido` rather than guessing. On a
+non-apt family `tandem preparar` no longer reaches for apt: it names the family
+and the one command that installs the core (`sudo dnf install wine winetricks`,
+`sudo pacman -S …`, `sudo zypper install …`), in the owner's own language, and
+points at waydroid.org for Android — the check sits AFTER "nothing is missing",
+so a Fedora box that already has Wine is told all is fine, exactly like an apt
+one. `tandem doctor` gains a "package family" line. The decision is pure
+(`t_familia_pacote`, `t_familia_comando_wine`) and pinned by tests with the
+family stubbed — the guidance names the exact command and NEVER emits an apt
+line — plus static checks that `preparar`/`doctor` wire the helpers in; the apt
+plan (`t_script_instalacao`) is byte-for-byte unchanged. **The remaining
+distro-breadth work is a real fork that needs the owner's steer** (recorded so
+the next session doesn't guess): the deep blocker is that Tandem *is* a `.deb`,
+so a Fedora/Arch user cannot install it at all. The cheap, low-risk packaging
+paths are a **PKGBUILD (Arch/AUR)** and a **generic install script**, both
+buildable here; a real `.rpm` is hard without `rpmbuild` (which would break
+rule 5, the packager-depends-on-nothing rule). Recommended ladder: 4.47 (done)
+→ PKGBUILD + install.sh → `dnf`/`pacman` inside `preparar` and the `.deb`/`.rpm`
+handlers. Three new messages, translated in all seven languages. Suite 1666
+passed / 0 / 1 skipped; both literal counters read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
