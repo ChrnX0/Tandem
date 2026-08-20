@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "236893069 5283" "$soma_esperados"
+      "2489766332 5293" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "446507627 2591" "$soma_padroes"
 
@@ -4957,6 +4957,26 @@ python3 "$ROOT/tests/mkdeb.py" "$DEBS/arm.deb" Package=so-arm Architecture=arm64
 python3 "$ROOT/tests/mkdeb.py" "$DEBS/xz.deb" Package=com-xz --compressao=xz >/dev/null
 python3 "$ROOT/tests/mkdeb.py" "$DEBS/alternativas.deb" Package=alt \
         Depends='curl | wget, python3:any | python3.12, foo [amd64] <!nocheck>' >/dev/null
+
+# A .deb's Installed-Size is shown as "this will use N MB", and the shell put it
+# inside $(( )) to do the arithmetic. Bash evaluates an arithmetic operand
+# RECURSIVELY, so a hostile value like  a[$(command)]  EXECUTES that command as
+# the user - before any password. This was live and PoC-confirmed. Two guards
+# close it and both are pinned here: the reader emits the field only when it is
+# all digits, and the handler refuses to feed a non-numeric value to $(( )).
+rm -f "$TMPROOT/RCE_SENTINEL"
+python3 "$ROOT/tests/mkdeb.py" "$DEBS/malicioso.deb" Package=mau \
+        "Installed-Size=a[\$(touch $TMPROOT/RCE_SENTINEL)]" >/dev/null
+info_mau="$(t_deb_info "$DEBS/malicioso.deb")"
+equal "the reader drops a non-numeric Installed-Size" \
+      "" "$(t_campo "$info_mau" TAMANHO)"
+equal "and reading a hostile .deb executes nothing" \
+      "0" "$([ -e "$TMPROOT/RCE_SENTINEL" ] && echo 1 || echo 0)"
+python3 "$ROOT/tests/mkdeb.py" "$DEBS/tamanho.deb" Package=tam Installed-Size=5000 >/dev/null
+equal "a real integer Installed-Size is kept" \
+      "5000" "$(t_campo "$(t_deb_info "$DEBS/tamanho.deb")" TAMANHO)"
+equal "the handler guards the size arithmetic with a numeric case" \
+      "1" "$(grep -cF '*[!0-9]*)' "$ROOT/src/bin/tandem-deb" | awk '{print ($1>=1)?1:0}')"
 
 info_deb="$(t_deb_info "$DEBS/simples.deb")"
 equal "reads the package name" "teste" "$(t_campo "$info_deb" PACOTE)"
