@@ -2272,6 +2272,38 @@ built. No new message (already translated in all seven languages); no
 translation step. Confirmed in the INSTALLED package in English and Portuguese.
 Suite 1642 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.46 IS PUBLISHED** — 2026-08-20, tag `v4.46` at `fd478dd`, `.deb`
+(541992 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`85f974f1…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. It is a look, not a behaviour: the owner's call that the interface
+"looked like a program from the 1990s". The three windows a shop owner actually
+sees — the error, the yes/no "did it work?" question, and the long-text viewer
+(`doctor`/`saude`) — are drawn in **GTK4 + libadwaita** now, the visual language
+of today's GNOME/Zorin, instead of the plain zenity boxes. It is safe to swap
+the most sensitive part of the project because the modern face is **optional by
+construction**: a new helper, `src/lib/gui.py`, renders the windows; the shell
+tries it and falls back to zenity when it is not there — an old machine without
+libadwaita, a `python3` without gobject, or a headless run (the suite included)
+loses the shine and keeps every word, so the first rule (no error ends in
+silence) rides on that fallback. The whole interface passes through `t_erro`,
+`t_pergunta` and `t_texto`, so this is a change of ENGINE in one place, not a
+rewrite of the hundreds of messages, which stay identical in all seven
+languages; `t_gui_moderno` decides per run whether a gi-capable `python3` is
+present (`gui.py --check`), caches it, and `TANDEM_GUI=zenity` forces the old
+backend. `gui.py` answers exit codes the shell reads like zenity's — 0 shown,
+0/1 for the two question buttons (a plain close is a safe "no"), 2 when it could
+not draw so the caller falls back — and can NEVER reach the owner as a Python
+traceback: any failure becomes exit 2. Its text is Unicode from Python's own
+strings, so the locale/charmap trap that erases zenity's accented windows cannot
+happen in it. Verified by rendering under Xvfb (the error, question and text
+windows, and the full handler → `t_erro` → `gui.py` chain, teal accent and the
+translated `botao_ok` button on screen) and by the fallback path staying green
+with no gi. One new word, `botao_ok` ("Entendi"), translated in all seven
+languages. **The progress bar and the main panel stay on zenity for now — the
+next increment.** Suite 1647 passed / 0 / 1 skipped; both literal counters read
+0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
