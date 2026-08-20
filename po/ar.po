@@ -4551,6 +4551,18 @@ msgctxt "doc_servico"
 msgid "service: {1}"
 msgstr "الخدمة: {1}"
 
+msgctxt "estado_rodando"
+msgid "running"
+msgstr "قيد التشغيل"
+
+msgctxt "estado_parado"
+msgid "stopped"
+msgstr "متوقف"
+
+msgctxt "estado_desconhecido"
+msgid "unknown"
+msgstr "غير معروف"
+
 msgctxt "doc_sessao_ativa"
 msgid "session: running"
 msgstr "الجلسة: تعمل"

@@ -131,7 +131,7 @@ acao_doctor() {
     out+="\n$(t_msg doc_apps_android)\n"
     if command -v waydroid >/dev/null 2>&1; then
         out+="  $(t_msg doc_waydroid_sim)\n"
-        out+="  $(t_msg doc_servico "$(systemctl is-active waydroid-container 2>/dev/null)")\n"
+        out+="  $(t_msg doc_servico "$(t_estado_servico_amigavel "$(systemctl is-active waydroid-container 2>/dev/null)")")\n"
         t_wd_sessao_ok && out+="  $(t_msg doc_sessao_ativa)\n" ||
             out+="  $(t_msg doc_sessao_parada)\n"
         if t_wd_pronto; then
@@ -165,8 +165,11 @@ acao_doctor() {
         # the environment - common on machines somebody has configured - Java
         # prints a paragraph of proxy settings first, and "head -1" put the
         # whole paragraph in the middle of the diagnosis.
-        out+="  $(t_msg doc_java "$(t_java_versao 2>/dev/null || echo '?')" \
-              "$(java -version 2>&1 | grep -m1 'version "' | sed 's/^ *//')")\n"
+        # A broken java (or a wrapper) can print no version line at all; that
+        # left the second slot BLANK ("Java 21, "). Fall back to "?" like the
+        # first slot, so the line never trails off empty.
+        local jver; jver="$(java -version 2>&1 | grep -m1 'version "' | sed 's/^ *//')"
+        out+="  $(t_msg doc_java "$(t_java_versao 2>/dev/null || echo '?')" "${jver:-?}")\n"
     else
         out+="  $(t_msg doc_java_nao)\n"
     fi

@@ -2652,6 +2652,15 @@ waydroid: NO INSTALADO
 @doc_servico
 servicio: {1}
 
+@estado_rodando
+en ejecución
+
+@estado_parado
+detenido
+
+@estado_desconhecido
+desconocido
+
 @doc_sessao_ativa
 sesión: activa
 

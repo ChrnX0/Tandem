@@ -1,3 +1,22 @@
+tandem (4.44) unstable; urgency=medium
+
+  * The doctor stops speaking systemctl's English in every language. On a
+    machine with systemd, `tandem doctor` showed the Android service state
+    straight from `systemctl is-active` - "service: active" - and that raw word
+    reached the screen untranslated in Chinese, Arabic and the rest, jargon in
+    the middle of the diagnosis (a rule-2 violation the field test caught on a
+    real systemd host). It is mapped to a plain word now
+    (`t_estado_servico_amigavel`: running / stopped / unknown), and an EMPTY
+    answer - no systemd to ask - becomes "unknown", which also fixes the blank
+    "service: " line a non-systemd host used to show. Three new words,
+    translated in all seven languages.
+  * The doctor's Java line no longer trails off blank. A broken java, or a
+    wrapper, can print no version line at all, and the second slot went empty
+    ("java: 21, "); it falls back to "?" now, like the first slot already did,
+    so the line always reads "java: N (...)". No new message.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 04:45:00 +0000
+
 tandem (4.43) unstable; urgency=medium
 
   * The doctor and health check now read the kernel's own record of whether this

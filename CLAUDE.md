@@ -2198,6 +2198,30 @@ program that merely needed it — the same "measure THE RUN, not everything befo
 it" that `INICIO` already documents. Suite 1609 passed / 0 / 1 skipped; both
 literal counters read 0.
 
+**v4.43 IS PUBLISHED** — 2026-08-20, tag `v4.43` at `dcbd001`, `.deb`
+(535430 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`15feb393…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. The Kairos-inspired kernel item the owner steered toward ("questões de
+kernel"): the doctor and health check now read the kernel's own record of
+whether this machine can go to sleep. A counter PC that will not STAY asleep
+runs hot overnight, drains a UPS, wakes wrong — a real, silent shop-floor pain —
+and `/sys/power/suspend_stats` (mode 444, no privilege) keeps a success and a
+fail counter and the NAME of the device that last refused to suspend. `tandem
+doctor` shows one line when the machine has actually failed to sleep, naming the
+device the kernel blamed, and stays silent when it sleeps fine or the kernel
+keeps no record (a clean sleeper needs no line, the same as the clock). `tandem
+saude` ranks it (never-slept = act-now, sometimes-fails = worth-knowing). Tandem
+does not try to FIX sleep (BIOS/driver/hardware — not its job); it explains and
+names the device, the same rule the clock, lp and dialout warnings follow. The
+decision is a pure `t_sono_veredito` (ok / as-vezes / nunca / desconhecido —
+never "healthy" on a reading it could not take) with a proof-by-injection test;
+the live read (`t_sono_bruto`/`t_sono_le`) is machine-only, overridable with
+TANDEM_POWER so the four verdicts and the device-naming sentence are pinned on
+fixtures here. 4 new messages, translated in all seven languages (0
+untranslated, 0 fuzzy). Suite 1626 passed / 0 / 1 skipped; both literal counters
+read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

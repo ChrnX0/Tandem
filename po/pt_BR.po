@@ -4532,6 +4532,18 @@ msgctxt "doc_servico"
 msgid "service: {1}"
 msgstr "serviço: {1}"
 
+msgctxt "estado_rodando"
+msgid "running"
+msgstr "rodando"
+
+msgctxt "estado_parado"
+msgid "stopped"
+msgstr "parado"
+
+msgctxt "estado_desconhecido"
+msgid "unknown"
+msgstr "desconhecido"
+
 msgctxt "doc_sessao_ativa"
 msgid "session: running"
 msgstr "sessão: ativa"

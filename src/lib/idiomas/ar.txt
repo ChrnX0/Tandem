@@ -2739,6 +2739,15 @@ waydroid: غير مثبَّت
 @doc_servico
 الخدمة: {1}
 
+@estado_rodando
+قيد التشغيل
+
+@estado_parado
+متوقف
+
+@estado_desconhecido
+غير معروف
+
 @doc_sessao_ativa
 الجلسة: تعمل
 

@@ -2629,6 +2629,15 @@ waydroid: स्थापित नहीं
 @doc_servico
 सेवा: {1}
 
+@estado_rodando
+चल रहा है
+
+@estado_parado
+रुका हुआ
+
+@estado_desconhecido
+अज्ञात
+
 @doc_sessao_ativa
 सत्र: चल रहा है
 

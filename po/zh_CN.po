@@ -4378,6 +4378,18 @@ msgctxt "doc_servico"
 msgid "service: {1}"
 msgstr "服务：{1}"
 
+msgctxt "estado_rodando"
+msgid "running"
+msgstr "运行中"
+
+msgctxt "estado_parado"
+msgid "stopped"
+msgstr "已停止"
+
+msgctxt "estado_desconhecido"
+msgid "unknown"
+msgstr "未知"
+
 msgctxt "doc_sessao_ativa"
 msgid "session: running"
 msgstr "会话：运行中"
