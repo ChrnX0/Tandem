@@ -2171,6 +2171,33 @@ comes through. Found by an audit sweep for the arithmetic-on-external-data class
 — the same shape to look for anywhere a value that arrived from a file reaches
 `$(( ))`. Suite 1598 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.42 IS PUBLISHED** — 2026-08-20, tag `v4.42` at `b14b62f`, `.deb`
+(532484 bytes) and `.sha256` attached, verified byte-for-byte five ways: sha256
+`2904873b…` from the release body, the release's own checksum file, the `.deb`
+asset digest, the downloaded bytes, and a fresh reproducible local build at that
+commit. Two false verdicts on a double-click, both from the field-test/audit
+sweep, both the class this project exists to abolish — the software saying
+something untrue about what just happened. (1) An AppImage whose download
+stopped BEFORE its payload began read `COMPLETO=?` not `0`, so the handler's
+`[ "$COMPLETO" = 0 ]` guard missed it and it fell through to `chmod +x` and
+exec'd the half-file — whose kernel ENOEXEC surfaced bash's own "cannot execute
+binary file" (Tandem's script path and line number) to the owner as if the
+program said it. `appimageinfo.py` now returns "truncated" for that case
+(one-sided: a complete AppImage always ends its payload at or before EOF); a
+regression test proves the handler refuses and never makes the file executable.
+(2) A silent installer — a runtime, a driver, a `setup.exe /S` — registers no
+Start Menu shortcut and is not a `.msi`, so 4.40 still branded it flash-and-
+vanish and, in a window, the owner clicks No, writing `CONFIRMADO=nao` and
+poisoning the memory/recipe/list for a program that installed fine. A third
+signal closes it: a new Add/Remove-Programs entry, read from the prefix registry
+files with no Wine, factored into a pure `t_run_foi_instalador` pinned in every
+direction — including that a real flash-and-vanish program (none of the three
+signals) is still caught. Captured per-attempt next to `INICIO`, so a winetricks
+dependency installed on a failed attempt cannot inflate the count and exempt a
+program that merely needed it — the same "measure THE RUN, not everything before
+it" that `INICIO` already documents. Suite 1609 passed / 0 / 1 skipped; both
+literal counters read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

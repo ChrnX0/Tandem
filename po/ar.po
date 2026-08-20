@@ -5770,6 +5770,22 @@ msgctxt "doctor_relogio_errado"
 msgid "clock: {1} - WRONG, run: tandem relogio"
 msgstr "الساعة: {1} - خاطئة، شغّل: tandem relogio"
 
+msgctxt "sono_as_vezes"
+msgid "This computer sometimes will not go to sleep when told to."
+msgstr "لا يدخل هذا الحاسوب في وضع السكون أحيانًا عند طلب ذلك."
+
+msgctxt "sono_as_vezes_dev"
+msgid "This computer sometimes will not go to sleep; last time, the device {1} blocked it."
+msgstr "لا يدخل هذا الحاسوب في وضع السكون أحيانًا؛ في المرة الأخيرة منعه الجهاز {1}."
+
+msgctxt "sono_nunca"
+msgid "This computer has never once managed to go to sleep."
+msgstr "لم يتمكن هذا الحاسوب من الدخول في وضع السكون قط."
+
+msgctxt "sono_nunca_dev"
+msgid "This computer has never once managed to go to sleep; the device {1} is blocking it."
+msgstr "لم يتمكن هذا الحاسوب من الدخول في وضع السكون قط؛ الجهاز {1} يمنعه."
+
 msgctxt "saude_titulo"
 msgid "Tandem - health"
 msgstr "Tandem - الصحّة"

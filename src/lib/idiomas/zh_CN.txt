@@ -3301,6 +3301,18 @@ Tandem - 时钟
 @doctor_relogio_errado
 时钟：{1} - 错误，请运行：tandem relogio
 
+@sono_as_vezes
+这台电脑有时无法进入睡眠。
+
+@sono_as_vezes_dev
+这台电脑有时无法进入睡眠；上次是设备 {1} 阻止了它。
+
+@sono_nunca
+这台电脑从未成功进入过睡眠。
+
+@sono_nunca_dev
+这台电脑从未成功进入过睡眠；设备 {1} 正在阻止它。
+
 @saude_titulo
 Tandem - 健康
 

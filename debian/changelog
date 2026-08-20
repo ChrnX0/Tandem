@@ -1,3 +1,27 @@
+tandem (4.43) unstable; urgency=medium
+
+  * The doctor and health check now read the kernel's own record of whether this
+    computer can go to sleep. A counter PC that will not STAY asleep - runs hot
+    overnight, drains a UPS, wakes wrong - is a real, silent shop-floor pain,
+    and the kernel already knows: it keeps `/sys/power/suspend_stats` (mode 444,
+    no privilege), including the NAME of the device that last refused to
+    suspend. Nothing in a shop ever read it. `tandem doctor` shows one line
+    when this machine has actually failed to sleep - naming the device the
+    kernel blamed, because the name is the whole value - and stays silent when
+    it sleeps fine or the kernel keeps no such record (a clean sleeper needs no
+    line, the same as the clock never crying wolf on a correct clock). `tandem
+    saude` ranks it: never-once-slept is act-now, sometimes-fails is
+    worth-knowing.
+  * Tandem does not try to FIX sleep (BIOS, a driver, or hardware - not its
+    job): it explains and names the device, the same rule the clock, lp and
+    dialout warnings follow. The decision is a pure `t_sono_veredito` (ok /
+    as-vezes / nunca / desconhecido - never "healthy" on a reading it could not
+    take) with a proof-by-injection test; the live read is machine-only,
+    overridable with TANDEM_POWER so the four verdicts and the device-naming
+    sentence are pinned on fixtures here.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 03:40:00 +0000
+
 tandem (4.42) unstable; urgency=medium
 
   * Two false verdicts on a double-click, both found by the field-test and audit

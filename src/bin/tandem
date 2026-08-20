@@ -105,6 +105,11 @@ acao_doctor() {
     # ask; a firm-wrong reading points at tandem relogio.
     local linha_relogio; linha_relogio="$(t_doctor_relogio)"
     [ -n "$linha_relogio" ] && out+="  $linha_relogio\n"
+    # Sleep: the kernel records whether this machine can suspend and names the
+    # device that blocked it. Shown only when it has actually failed - a clean
+    # sleeper needs no line, same as the clock.
+    local linha_sono; linha_sono="$(t_doctor_sono)"
+    [ -n "$linha_sono" ] && out+="  $linha_sono\n"
     out+="\n"
 
     out+="$(t_msg doc_prog_windows)\n"
@@ -1525,7 +1530,7 @@ acao_relogio() {
 # nothing to report it says so plainly instead of an empty window.
 acao_saude() {
     local achados="" tab nl nova livre_kb linha epoch arq nome wine_agora antes_wine v
-    local svc_porta svc_escuta svc_responde
+    local svc_porta svc_escuta svc_responde sono_v sono_d
     # The two severities, as the leading number of each finding: 1 = act now,
     # 2 = worth knowing. t_saude_ordena sorts on it so the urgent thing is first.
     local prob=1 aviso=2
@@ -1539,6 +1544,18 @@ acao_saude() {
         atrasado|adiantado)   achados="$achados$prob$tab$(t_msg saude_relogio)$nl" ;;
         sem_hora_automatica)  achados="$achados$aviso$tab$(t_msg saude_relogio_auto)$nl" ;;
     esac
+
+    # Sleep: the kernel's own record of whether this machine can suspend, and the
+    # device that blocked it. Never-once-slept is act-now (it runs hot and drains
+    # a UPS overnight); sometimes-fails is worth-knowing. A clean sleeper or a
+    # kernel that keeps no record says nothing. Same read the doctor line uses.
+    if linha="$(t_sono_le 2>/dev/null)" && [ -n "$linha" ]; then
+        sono_v="${linha%%"$tab"*}"; sono_d="${linha#*"$tab"}"
+        case "$sono_v" in
+            nunca)    achados="$achados$prob$tab$(t_sono_frase nunca "$sono_d")$nl" ;;
+            as-vezes) achados="$achados$aviso$tab$(t_sono_frase as-vezes "$sono_d")$nl" ;;
+        esac
+    fi
 
     # Free disk: a full one cannot save a sale or finish an install, and an
     # append even SUCCEEDS on it, so it fails where nobody is looking.

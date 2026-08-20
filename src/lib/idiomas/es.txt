@@ -3472,6 +3472,18 @@ reloj: {1}
 @doctor_relogio_errado
 reloj: {1} - MAL, ejecuta: tandem relogio
 
+@sono_as_vezes
+Este equipo a veces no entra en suspensión cuando se le indica.
+
+@sono_as_vezes_dev
+Este equipo a veces no entra en suspensión; la última vez, el dispositivo {1} lo impidió.
+
+@sono_nunca
+Este equipo nunca ha logrado entrar en suspensión.
+
+@sono_nunca_dev
+Este equipo nunca ha logrado entrar en suspensión; el dispositivo {1} lo está impidiendo.
+
 @saude_titulo
 Tandem - salud
 
