@@ -112,8 +112,20 @@ def carga(f, off, tamanho):
     file is broken because of a format we do not recognise would be worse than
     saying nothing.
     """
-    if off is None or off + 96 > tamanho:
+    if off is None:
         return "?", None
+    if off + 96 > tamanho:
+        # The file is shorter than its own declared payload offset: the download
+        # stopped before the squashfs even began. That is a truncation, not an
+        # "unknown" - the type-1 (ISO) path already treats the same shape as
+        # incomplete at carga_iso. Returning False routes it to the handler's
+        # COMPLETO=0 branch ("the download of this file did not finish") instead
+        # of chmod+x and exec'ing a half-downloaded binary, whose kernel ENOEXEC
+        # leaks bash's own "line N: ...: cannot execute binary file" - Tandem's
+        # script path and line number - to the owner as if the program said it.
+        # One-sided on purpose: a COMPLETE AppImage always has its payload end
+        # at or before EOF, so off + 96 > tamanho can never fire on a good file.
+        return "?", False
     f.seek(off)
     sb = f.read(96)
     if len(sb) >= 48 and sb[:4] == b"hsqs":

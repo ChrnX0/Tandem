@@ -502,6 +502,15 @@ while :; do
     # inside recipes. tandem-appimage, tandem-jar and tandem-script all reset
     # theirs in the right place; this was the one that did not.
     INICIO=$SECONDS
+    # How many programs the prefix lists in Add/Remove Programs BEFORE this
+    # attempt - so the installer test below measures what THIS run added, not
+    # what a dependency install added between attempts. Captured here for the
+    # same reason INICIO is, and not before the loop: a winetricks verb
+    # installed on a failed attempt registers its own uninstall entry, and
+    # counting that would exempt a real flash-and-vanish program that merely
+    # needed a dependency. Read from the registry files, no Wine; awk END
+    # counts correctly on an empty list.
+    UNINST_ANTES="$(t_uninstall_dump "$WINEPREFIX" 2>/dev/null | awk 'END{print NR+0}')"
     executar
     CODIGO=$?
     if [ "$CODIGO" -eq 0 ]; then
@@ -530,16 +539,20 @@ while :; do
         t_memoria_grava "$PROG" VERSAO_WINE "$(t_stack_wine)"
         # If it was an installer, shortcuts showed up: say where the program
         # ended up. If it was just a program running, nothing shows up and
-        # nothing is said. The return also tells us it WAS an installer, which
-        # the silent-success check below needs: an installer that lays its files
-        # down and exits in a second is doing its job, not flashing and
-        # vanishing. A .msi is an installer by definition (a .msi exiting 0
-        # installed something), even when it registers no Start Menu shortcut -
-        # a real WinDirStat .msi did exactly that and got branded "opened and
-        # closed on its own", which reads as failure for a successful install.
+        # nothing is said. That announcement is a side effect the owner needs -
+        # kept here - while the verdict "was this an installer?" is decided by
+        # t_run_foi_instalador, which the silent-success check below needs: an
+        # installer that lays its files down and exits in a second is doing its
+        # job, not flashing and vanishing. Three signals feed it: a .msi/.msp,
+        # a new Start Menu shortcut, or a new Add/Remove-Programs entry - the
+        # last is what a silent runtime installer leaves behind and 4.40 missed,
+        # branding a successful install "opened and closed on its own".
+        NOVOS_ATALHOS=0
+        t_anuncia_atalhos "$ATALHOS_ANTES" && NOVOS_ATALHOS=1
+        UNINST_DEPOIS="$(t_uninstall_dump "$WINEPREFIX" 2>/dev/null | awk 'END{print NR+0}')"
         INSTALADOR=0
-        case "${PROG,,}" in *.msi|*.msp) INSTALADOR=1 ;; esac
-        t_anuncia_atalhos "$ATALHOS_ANTES" && INSTALADOR=1
+        t_run_foi_instalador "$PROG" "$NOVOS_ATALHOS" "$UNINST_DEPOIS" "$UNINST_ANTES" \
+            && INSTALADOR=1
 
         # ------------------------------------------------ silent success
         #
