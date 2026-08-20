@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-1667-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-1677-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -149,6 +149,13 @@ Download the `.deb` from **[Releases](../../releases/latest)** and double-click 
 ```bash
 curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.8_all.deb
 sudo apt install ./tandem_3.8_all.deb
+```
+
+**Not on Debian or Ubuntu?** Fedora, Arch, openSUSE and the rest have no `apt` to take a `.deb`. Download the generic bundle — `tandem_<version>_generic.tar.gz` — from the same **[Releases](../../releases/latest)** page and run its installer; it lays down the exact same files:
+
+```bash
+tar xzf tandem_*_generic.tar.gz && cd tandem-*
+sudo ./install.sh          # sudo ./uninstall.sh removes it again
 ```
 
 <details>

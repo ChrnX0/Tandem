@@ -229,6 +229,55 @@ def build_data(tar):
         add_bytes(tar, "./" + dst, gzip_bytes(data) if gz else data, mode)
 
 
+# The generic bundle, for the families apt does not serve. It carries the exact
+# same files as the .deb - the SAME LAYOUT, so the two cannot drift - under a
+# payload/ tree, plus a MANIFEST that lists each file with its mode, and the two
+# static scripts from packaging/. install.sh reads the MANIFEST to place every
+# file; uninstall.sh reads it to take them away. Reproducible for the same reason
+# the .deb is: every entry carries the fixed mtime through _info.
+def build_generico_tar(tar):
+    prefixo = "tandem-%s" % version()
+    manifesto = []
+    itens = [(dst, os.path.join(SRC, src), mode, False)
+             for dst, src, mode in LAYOUT]
+    itens += [(dst, path, 0o644, gz) for dst, path, gz in DOCS]
+    for dst, path, mode, gz in itens:
+        if not os.path.exists(path):
+            # Same single exception as the .deb: the list's public signing key
+            # may legitimately be absent until the owner hands over the public
+            # half. Skipped from the bundle AND the MANIFEST, so the two agree.
+            if path.endswith("lista-publica.pem"):
+                print("note: %s absent - generic bundle without list signature "
+                      "verification" % path)
+                continue
+            raise SystemExit("missing source file: %s" % path)
+        data = read(path)
+        add_bytes(tar, "%s/payload/%s" % (prefixo, dst),
+                  gzip_bytes(data) if gz else data, mode)
+        manifesto.append("%o\t%s" % (mode, dst))
+    add_bytes(tar, "%s/MANIFEST" % prefixo,
+              ("\n".join(manifesto) + "\n").encode("utf-8"), 0o644)
+    for script in ("install.sh", "uninstall.sh"):
+        add_bytes(tar, "%s/%s" % (prefixo, script),
+                  read(os.path.join(ROOT, "packaging", script)), 0o755)
+
+
+def check_generico(path):
+    prefixo = "tandem-%s" % version()
+    with tarfile.open(path, "r:gz") as t:
+        nomes = t.getnames()
+        manifesto = t.extractfile("%s/MANIFEST" % prefixo).read().decode()
+    for obrigatorio in ("MANIFEST", "install.sh", "uninstall.sh"):
+        assert "%s/%s" % (prefixo, obrigatorio) in nomes, obrigatorio
+    linhas = [l for l in manifesto.splitlines() if l.strip()]
+    assert linhas, "empty MANIFEST"
+    for linha in linhas:
+        _mode, rel = linha.split("\t", 1)
+        alvo = "%s/payload/%s" % (prefixo, rel)
+        assert alvo in nomes, "MANIFEST names %s, not in payload" % rel
+    print("OK: generic bundle is well formed (%d files)" % len(linhas))
+
+
 def ar_entry(name, data):
     header = "{:<16}{:<12}{:<6}{:<6}{:<8}{:<10}`\n".format(
         name, MTIME, 0, 0, "100644", len(data)).encode("ascii")
@@ -270,8 +319,17 @@ def main():
     with open(out, "wb") as f:
         f.write(blob)
     print("built %s (%d bytes)" % (out, len(blob)))
+
+    # The generic bundle, for every Linux that is not Debian. An addition beside
+    # the .deb, never a change to it.
+    gen = os.path.join(ROOT, "tandem_%s_generic.tar.gz" % version())
+    with open(gen, "wb") as f:
+        f.write(make_targz(build_generico_tar))
+    print("built %s (%d bytes)" % (gen, os.path.getsize(gen)))
+
     if "--check" in sys.argv:
         check(out)
+        check_generico(gen)
 
 
 if __name__ == "__main__":

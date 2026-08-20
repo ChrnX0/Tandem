@@ -7,7 +7,7 @@
 **Nove formatos. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![testes](https://img.shields.io/badge/testes-1667-brightgreen)](tests/run.sh)
+[![testes](https://img.shields.io/badge/testes-1677-brightgreen)](tests/run.sh)
 [![programas reais](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
 [![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
@@ -149,6 +149,13 @@ Baixe o `.deb` em **[Releases](../../releases/latest)** e clique duas vezes. Ou,
 ```bash
 curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.8_all.deb
 sudo apt install ./tandem_3.8_all.deb
+```
+
+**Não usa Debian nem Ubuntu?** Fedora, Arch, openSUSE e as demais não têm `apt` para receber um `.deb`. Baixe o pacote genérico — `tandem_<versão>_generic.tar.gz` — na mesma página de **[Releases](../../releases/latest)** e rode o instalador; ele coloca exatamente os mesmos arquivos:
+
+```bash
+tar xzf tandem_*_generic.tar.gz && cd tandem-*
+sudo ./install.sh          # sudo ./uninstall.sh remove de novo
 ```
 
 <details>
