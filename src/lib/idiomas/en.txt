@@ -1585,6 +1585,11 @@ takes it from there.
 @doc_familia
 package family: {1}
 
+@prep_familia_resto
+Wine and winetricks are set up. These other pieces are not ones Tandem
+installs on your system - install them with your own package manager if you
+need them: {1}. For Android apps, see waydroid.org.
+
 @prep_pergunta
 Tandem can install what is missing:
 {1}

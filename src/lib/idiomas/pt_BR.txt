@@ -1568,6 +1568,9 @@ A instalação automática do Tandem só baixa o que falta na família Debian e 
 @doc_familia
 família de pacotes: {1}
 
+@prep_familia_resto
+O Wine e o winetricks estão prontos. Estas outras partes não são algo que o Tandem instala no seu sistema — instale-as com o seu próprio gerenciador de pacotes se precisar: {1}. Para apps de Android, veja waydroid.org.
+
 @prep_pergunta
 O Tandem pode instalar o que está faltando:
 {1}

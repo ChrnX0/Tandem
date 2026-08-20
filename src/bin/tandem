@@ -518,7 +518,9 @@ acao_protect() {
 # command afterwards settles everything at once. And clicking a .exe with no
 # Wine offers it too.
 acao_preparar() {
-    local faltas linha codigos=() descricoes=() plano="" script c
+    local faltas linha codigos=() plano="" script c r fam
+    local -A desc_de
+    local auto=() resto=()
 
     faltas="$(t_pecas_faltando)"
     if [ -z "$faltas" ]; then
@@ -526,29 +528,51 @@ acao_preparar() {
         return 0
     fi
 
-    # Something is missing, and the automatic setup only speaks apt. On any other
-    # family, reaching for apt-get here means a raw English error on the screen;
-    # instead, name the family and the one command that installs the core. The
-    # check sits AFTER "nothing missing", so a Fedora machine that already has
-    # Wine is told everything is fine, exactly like an apt one.
-    local fam cmd_fam
     fam="$(t_familia_pacote)"
-    if [ "$fam" != apt ]; then
-        cmd_fam="$(t_familia_comando_wine "$fam")"
-        if [ -n "$cmd_fam" ]; then
-            t_erro "$(t_msg prep_outra_familia "$fam" "$cmd_fam")"
-        else
-            t_erro "$(t_msg prep_familia_desconhecida)"
-        fi
-        return 1
-    fi
 
     while IFS='|' read -r c linha; do
         [ -n "$c" ] || continue
-        codigos+=("$c"); descricoes+=("$linha")
-        plano="$plano
-• $linha"
+        codigos+=("$c"); desc_de["$c"]="$linha"
     done <<< "$faltas"
+
+    # A family Tandem cannot even name a package manager for: the honest 4.47
+    # fallback, unchanged - it cannot install and will not pretend to.
+    if [ "$fam" = desconhecido ]; then
+        t_erro "$(t_msg prep_familia_desconhecida)"
+        return 1
+    fi
+
+    # A non-apt family (Fedora, Arch, openSUSE). Split the missing pieces into
+    # what this family installs for the owner - the verified core, wine and
+    # winetricks, the two the flagship .exe path needs - and what it does not
+    # (Android, Java, and the rest, whose package names differ enough per distro
+    # that naming a wrong one is worse than telling the owner to install it; see
+    # t_pacote_familia). Install the first set, name the second. Since 4.49 this
+    # is a real install through dnf/pacman/zypper, not just a printed command -
+    # tested end to end on real Fedora and Arch.
+    if [ "$fam" != apt ]; then
+        for c in "${codigos[@]}"; do
+            # wine32 is a Debian-ism: only apt splits 32-bit Wine into its own
+            # package (wine32:i386). On dnf/pacman/zypper the 32-bit support
+            # ships WITH the wine package, so it is neither installed separately
+            # nor named as still-missing - it comes for free with wine.
+            [ "$c" = wine32 ] && continue
+            if [ -n "$(t_pacote_familia "$fam" "$c")" ]; then auto+=("$c")
+            else resto+=("${desc_de[$c]}"); fi
+        done
+        # Nothing here is auto-installable on this family: keep the 4.47
+        # command-naming fallback rather than asking to install nothing.
+        if [ ${#auto[@]} -eq 0 ]; then
+            t_erro "$(t_msg prep_outra_familia "$fam" "$(t_familia_comando_wine "$fam")")"
+            return 1
+        fi
+        codigos=("${auto[@]}")
+    fi
+
+    for c in "${codigos[@]}"; do
+        plano="$plano
+• ${desc_de[$c]}"
+    done
 
     if ! t_pergunta "$(t_msg prep_pergunta "$plano")" "$(t_msg botao_instalar_tudo)" "$(t_msg botao_agora_nao)"; then
         if [ -t 0 ]; then
@@ -574,8 +598,12 @@ acao_preparar() {
         fi
     fi
 
-    script="$(t_script_instalacao "${codigos[@]}")"
-    t_diz "preparar: instalando ${codigos[*]}"
+    if [ "$fam" = apt ]; then
+        script="$(t_script_instalacao "${codigos[@]}")"
+    else
+        script="$(t_script_instalacao_familia "$fam" "${codigos[@]}")"
+    fi
+    t_diz "preparar: instalando ${codigos[*]} (${fam})"
     t_progresso_abre "$(t_msg prep_instalando)"
     t_como_root "$script" >>"$LOG" 2>&1
     c=$?
@@ -588,6 +616,15 @@ acao_preparar() {
     if [ "$c" -ne 0 ]; then
         t_erro "$(t_msg prep_nao_terminou)"
         return 1
+    fi
+
+    # A non-apt family installed the core; name the pieces it could not, so the
+    # owner is not left thinking Android or Java were set up too. Only after a
+    # real success, and only when there is something left to name.
+    if [ "$fam" != apt ] && [ ${#resto[@]} -gt 0 ]; then
+        local lista_resto
+        lista_resto="$(printf '%s, ' "${resto[@]}")"; lista_resto="${lista_resto%, }"
+        t_ok "$(t_msg prep_familia_resto "$lista_resto")"
     fi
     # The install-time question, asked at the only moment where a dialog is
     # possible. It cannot be asked from the postinst: dpkg holds a lock while
