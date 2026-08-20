@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2352045408 5366" "$soma_esperados"
+      "3223233250 5414" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "760217299 2622" "$soma_padroes"
 
@@ -2561,6 +2561,49 @@ sau_sono="$(env -i HOME="$TMPROOT/sono-saude-home" PATH="/usr/bin:/bin" \
     bash "$ROOT/src/bin/tandem" saude 2>/dev/null)"
 contem "saude surfaces the machine that never sleeps" \
        "0000:00:1f.3" "$sau_sono"
+
+section "the doctor speaks the owner's language, not systemctl's"
+
+# `systemctl is-active` answers active/inactive/failed - English jargon that used
+# to reach the screen verbatim as "service: active" in every language, jargon in
+# the middle of a Chinese or Arabic diagnosis (a rule-2 violation). It is mapped
+# to a plain word now, and an EMPTY answer (no systemd to ask) becomes "unknown",
+# never a blank line and never a false "stopped".
+equal "an active service reads as a plain word, not the raw 'active'" \
+      "running" "$(TANDEM_IDIOMA_FORCADO=en t_estado_servico_amigavel active)"
+equal "activating counts as running too" \
+      "running" "$(TANDEM_IDIOMA_FORCADO=en t_estado_servico_amigavel activating)"
+equal "an inactive service reads as stopped" \
+      "stopped" "$(TANDEM_IDIOMA_FORCADO=en t_estado_servico_amigavel inactive)"
+equal "a failed service reads as stopped, not the raw word" \
+      "stopped" "$(TANDEM_IDIOMA_FORCADO=en t_estado_servico_amigavel failed)"
+equal "no systemd to ask reads as unknown, never a blank service line" \
+      "unknown" "$(TANDEM_IDIOMA_FORCADO=en t_estado_servico_amigavel '')"
+equal "an unrecognized state is unknown, not passed through as jargon" \
+      "unknown" "$(TANDEM_IDIOMA_FORCADO=en t_estado_servico_amigavel wat)"
+# End to end: doctor's service line shows the mapped word, not systemctl's.
+SVC_STUB="$TMPROOT/svc-stub"; mkdir -p "$SVC_STUB"
+printf '#!/bin/sh\necho active\n' > "$SVC_STUB/systemctl"; chmod +x "$SVC_STUB/systemctl"
+printf '#!/bin/sh\nexit 0\n' > "$SVC_STUB/waydroid"; chmod +x "$SVC_STUB/waydroid"
+doc_svc="$(env -i HOME="$TMPROOT/svc-home" PATH="$SVC_STUB:/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem" doctor 2>/dev/null)"
+contem "doctor's service line reads 'service: running', not 'service: active'" \
+       "service: running" "$doc_svc"
+naocontem "and systemctl's own jargon never reaches the screen" \
+          "service: active" "$doc_svc"
+
+# doc_java's second slot went BLANK when java printed no version line (a wrapper,
+# a broken install): "java: 21, " trailing off. It falls back to "?" now, like
+# the first slot, so the line never ends empty.
+JAVA_STUB="$TMPROOT/java-stub"; mkdir -p "$JAVA_STUB"
+printf '#!/bin/sh\necho "banner, no version marker" >&2\nexit 0\n' > "$JAVA_STUB/java"
+chmod +x "$JAVA_STUB/java"
+doc_java_line="$(env -i HOME="$TMPROOT/java-home" PATH="$JAVA_STUB:/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem" doctor 2>/dev/null | grep -i 'java:')"
+contem "the java version slot falls back to ? instead of trailing off blank" \
+       "(?)" "$doc_java_line"
 
 section "post-install breakage: worked yesterday, broke after a Wine upgrade"
 

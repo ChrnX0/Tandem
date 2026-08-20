@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.43"
+TANDEM_VERSAO="4.44"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4984,6 +4984,21 @@ EOF
     case "$veredito" in
         as-vezes|nunca) t_sono_frase "$veredito" "$dev" ;;
         *) : ;;
+    esac
+}
+
+# `systemctl is-active` answers English jargon - active, inactive, failed,
+# activating - and doctor showed it verbatim: "service: active" appeared on the
+# screen in ALL SEVEN languages, jargon in the middle of a Chinese or Arabic
+# diagnosis, which is a rule-2 violation. Map it to a plain word in the owner's
+# language. An EMPTY value means there was no systemd to ask (systemctl absent,
+# or no --user bus) - that is "cannot tell", never "stopped", and it also fixes
+# the blank "service: " line a non-systemd host used to show.
+t_estado_servico_amigavel() {
+    case "$1" in
+        active|activating|reloading)       t_msg estado_rodando ;;
+        inactive|deactivating|failed|dead) t_msg estado_parado ;;
+        *)                                 t_msg estado_desconhecido ;;
     esac
 }
 

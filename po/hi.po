@@ -4509,6 +4509,18 @@ msgctxt "doc_servico"
 msgid "service: {1}"
 msgstr "सेवा: {1}"
 
+msgctxt "estado_rodando"
+msgid "running"
+msgstr "चल रहा है"
+
+msgctxt "estado_parado"
+msgid "stopped"
+msgstr "रुका हुआ"
+
+msgctxt "estado_desconhecido"
+msgid "unknown"
+msgstr "अज्ञात"
+
 msgctxt "doc_sessao_ativa"
 msgid "session: running"
 msgstr "सत्र: चल रहा है"

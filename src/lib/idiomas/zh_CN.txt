@@ -2500,6 +2500,15 @@ waydroid：未安装
 @doc_servico
 服务：{1}
 
+@estado_rodando
+运行中
+
+@estado_parado
+已停止
+
+@estado_desconhecido
+未知
+
 @doc_sessao_ativa
 会话：运行中
 

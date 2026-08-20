@@ -2651,6 +2651,15 @@ waydroid: NOT INSTALLED
 @doc_servico
 service: {1}
 
+@estado_rodando
+running
+
+@estado_parado
+stopped
+
+@estado_desconhecido
+unknown
+
 @doc_sessao_ativa
 session: running
 
