@@ -59,6 +59,7 @@ LAYOUT = [
     ("usr/lib/tandem/jarinfo.py",  "lib/jarinfo.py",  0o755),
     ("usr/lib/tandem/debinfo.py",  "lib/debinfo.py",  0o755),
     ("usr/lib/tandem/rpminfo.py",  "lib/rpminfo.py",  0o755),
+    ("usr/lib/tandem/gui.py",      "lib/gui.py",      0o755),
     ("usr/lib/tandem/verbos.tsv",  "lib/verbos.tsv",  0o644),
     ("usr/lib/tandem/alternativas.tsv", "lib/alternativas.tsv", 0o644),
     ("usr/lib/tandem/limites.tsv", "lib/limites.tsv", 0o644),

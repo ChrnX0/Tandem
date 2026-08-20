@@ -180,7 +180,13 @@ src/mime/tandem.xml       registers .xapk/.apks/.apkm as a zip subclass
 src/lib/common.sh         log, messages, locale, progress, prefixes, PE, waydroid,
                           memory, recipes, alternatives, data, list, pre-flight,
                           native formats (arch, java, fuse, menu entries),
-                          t_erro_do_leitor (reader token -> sentence)
+                          t_erro_do_leitor (reader token -> sentence),
+                          t_gui_moderno (is a gi-capable python3 present?)
+src/lib/gui.py            OPTIONAL modern face: GTK4/libadwaita error, yes/no and
+                          long-text windows. Exit codes the shell reads like
+                          zenity's (0 shown, 0/1 buttons, 2 cannot-draw); any
+                          failure becomes exit 2, never a traceback. Falls back
+                          to zenity when absent
 src/lib/winedeps.sh       DLL -> winetricks verb; DLLs with no translation
 src/lib/apkinfo.py        binary AndroidManifest reader, pure Python
 src/lib/peinfo.py         PE import-table reader, without executing anything

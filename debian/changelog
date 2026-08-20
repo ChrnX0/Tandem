@@ -1,3 +1,36 @@
+tandem (4.46) unstable; urgency=medium
+
+  * A modern face. The windows a shop owner sees - the error, the yes/no
+    question ("did it work?"), and the long-text viewer (doctor/health) - are
+    drawn in GTK4 + libadwaita now, the visual language of today's GNOME/Zorin,
+    instead of the plain zenity boxes that looked like a program from the 1990s.
+    A new optional helper, `gui.py`, renders them; the shell tries it first and
+    falls back to zenity when it is not there. NOTHING depends on the new look:
+    an old machine without libadwaita, a python3 without gobject, or a headless
+    run loses the shine and keeps every word - the project's first rule (no
+    error ends in silence) rides on that fallback, which is why the modern
+    backend is allowed to be optional at all.
+  * The whole interface passes through a handful of functions (`t_erro`,
+    `t_pergunta`, `t_texto`), so the switch is a change of engine in ONE place,
+    not a rewrite: the hundreds of messages, in all seven languages, are
+    unchanged. `t_gui_moderno` decides per run whether a gi-capable python3 is
+    present (it asks `gui.py --check`), caches the answer, and
+    `TANDEM_GUI=zenity` forces the old backend. The modern path is reached only
+    behind t_tem_gui, so
+    a machine with no display - the test suite included - never touches it and
+    behaves exactly as before.
+  * gui.py answers an exit code the shell reads like zenity's - 0 shown, 0/1 for
+    the two question buttons (a plain close is a safe "no"), 2 when it could not
+    draw so the caller falls back - and it can never reach the owner as a Python
+    traceback: any failure becomes exit 2 and the zenity window instead. The
+    text is Unicode from Python's own strings, so the locale/charmap trap that
+    erases zenity's accented windows cannot happen in it. One new word,
+    `botao_ok` ("Entendi"), for the error dialog's dismiss button, translated in
+    all seven languages. The progress bar and the main panel stay on zenity for
+    now; they are the next increment.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 16:00:00 +0000
+
 tandem (4.45) unstable; urgency=medium
 
   * A truncated or not-a-Windows-program `.exe` is now caught BEFORE Wine, not

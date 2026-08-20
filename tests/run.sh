@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "547712279 5438" "$soma_esperados"
+      "3625955242 5444" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "760217299 2622" "$soma_padroes"
 
@@ -1618,6 +1618,31 @@ equal "a question without a graphical interface answers no" "1" "$?"
 
 equal "long text falls back to standard output without a graphical interface" \
       "linha um" "$(printf 'linha um\n' | t_texto 'titulo')"
+
+# The modern GTK4/libadwaita face is OPTIONAL, and that is the whole safety
+# story: everything above still works when it is not there. gui.py answers an
+# exit code the shell reads like zenity's, and can NEVER reach the owner as a
+# Python traceback - any failure becomes a code, and the caller falls back.
+python3 "$ROOT/src/lib/gui.py" >/dev/null 2>&1
+equal "gui.py with no argument answers 'cannot draw' (2), not a crash" "2" "$?"
+python3 "$ROOT/src/lib/gui.py" um-tipo-que-nao-existe >/dev/null 2>&1
+equal "gui.py with an unknown kind answers 'cannot draw' (2)" "2" "$?"
+equal "gui.py never speaks a Python traceback to the owner" "0" \
+      "$({ python3 "$ROOT/src/lib/gui.py" --check; python3 "$ROOT/src/lib/gui.py" xyz; \
+           python3 "$ROOT/src/lib/gui.py"; } 2>&1 | grep -c Traceback)"
+rc_check=0; python3 "$ROOT/src/lib/gui.py" --check >/dev/null 2>&1 || rc_check=$?
+if [ "$rc_check" = 0 ] || [ "$rc_check" = 1 ]; then
+    pass "gui.py --check answers a clean yes(0)/no(1), never a crash"
+else
+    fail "gui.py --check answers a clean yes(0)/no(1), never a crash" "0 or 1" "$rc_check"
+fi
+# The force switch keeps the old backend where the new one might misbehave - and
+# in this suite, which has no display to draw a modern window on anyway.
+if ( TANDEM_GUI=zenity; unset TANDEM_GUI_MODERNO; t_gui_moderno ); then
+    fail "TANDEM_GUI=zenity forces the tested zenity backend" "forced off" "modern chosen"
+else
+    pass "TANDEM_GUI=zenity forces the tested zenity backend"
+fi
 
 # With a graphical interface, pipes and files still receive the text: whoever
 # writes "tandem doctor > relatorio.txt" wants the report, not a window.

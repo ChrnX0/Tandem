@@ -3138,6 +3138,9 @@ Oui
 @botao_nao
 Non
 
+@botao_ok
+Compris
+
 @verbo_dotnet48
 .NET Framework 4.8 (prend environ 30 minutes)
 

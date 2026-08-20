@@ -3051,6 +3051,9 @@ https://github.com/ChrnX0/Tandem/issues
 @botao_nao
 नहीं
 
+@botao_ok
+ठीक है
+
 @verbo_dotnet48
 .NET Framework 4.8 (लगभग 30 मिनट लगते हैं)
 
