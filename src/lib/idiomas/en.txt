@@ -1567,6 +1567,24 @@ NOTE: this machine has {1} network cards. Many programs use a card's number
 @prep_nada_falta
 Nothing is missing: this machine already has everything Tandem uses.
 
+@prep_outra_familia
+Tandem's automatic setup installs the missing pieces only on the Debian and
+Ubuntu family (apt). Your system uses {1}. The programs run the same once
+Wine is present - install the core with:
+
+    {2}
+
+For Android apps see waydroid.org, and your system's own guide for the rest.
+
+@prep_familia_desconhecida
+Tandem's automatic setup installs the missing pieces only on the Debian and
+Ubuntu family (apt), and I could not tell which package manager your system
+uses. Install Wine and winetricks with your own package manager and Tandem
+takes it from there.
+
+@doc_familia
+package family: {1}
+
 @prep_pergunta
 Tandem can install what is missing:
 {1}

@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3625955242 5444" "$soma_esperados"
+      "1001516514 5553" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "760217299 2622" "$soma_padroes"
+      "2180550437 2671" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1865,6 +1865,54 @@ case "$script" in
     *"waydroid init"*) pass "the plan initializes Android after installing" ;;
     *) fail "the plan initializes Android after installing" "waydroid init" "(missing)" ;;
 esac
+
+# ---- v4.47: the package family, and preparar's honest non-apt message ----
+# The automatic setup speaks apt. On a machine that is not apt, "tandem preparar"
+# must name the family and the one command instead of running apt-get and
+# failing with a raw English error - the silent/jargon failure this project
+# exists to abolish, wearing another distribution's clothes.
+equal "the package family is read from TANDEM_FAMILIA when set" \
+      "dnf" "$(TANDEM_FAMILIA=dnf t_familia_pacote)"
+equal "on this Debian-family machine the family detects as apt" \
+      "apt" "$(t_familia_pacote)"
+equal "the core install command for dnf" \
+      "sudo dnf install wine winetricks" "$(t_familia_comando_wine dnf)"
+equal "the core install command for pacman" \
+      "sudo pacman -S wine winetricks" "$(t_familia_comando_wine pacman)"
+equal "the core install command for zypper" \
+      "sudo zypper install wine winetricks" "$(t_familia_comando_wine zypper)"
+equal "apt has no non-apt command - it uses the normal plan" \
+      "" "$(t_familia_comando_wine apt)"
+# The decision preparar makes, exercised in the same order it makes it: a non-apt
+# family with something missing yields the command and never an apt line.
+guia="$(TANDEM_IDIOMA_FORCADO=en TANDEM_FAMILIA=dnf bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    fam="$(t_familia_pacote)"
+    [ "$fam" != apt ] && t_msg prep_outra_familia "$fam" "$(t_familia_comando_wine "$fam")"')"
+contem "on a non-apt family, preparar names the exact command" \
+       "sudo dnf install wine winetricks" "$guia"
+case "$guia" in
+    *apt-get*|*"apt install"*)
+        fail "the non-apt message never reaches for apt" "no apt line" "$guia" ;;
+    *) pass "the non-apt message never reaches for apt" ;;
+esac
+# And the wiring is really in the command, not only in the helpers.
+PREP_CORPO="$(sed -n '/^acao_preparar()/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "preparar checks the package family" "t_familia_pacote" "$PREP_CORPO"
+contem "preparar offers the family's own command" "t_familia_comando_wine" "$PREP_CORPO"
+contem "preparar has the non-apt message" "prep_outra_familia" "$PREP_CORPO"
+# doctor states the family, and the line resolves in every language.
+DOC_CORPO="$(sed -n '/^acao_doctor()/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "doctor reports the package family" "doc_familia" "$DOC_CORPO"
+for lang in en pt_BR es fr zh_CN hi ar; do
+    linha="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$lang" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_msg doc_familia apt' 2>/dev/null)"
+    case "$linha" in
+        doc_familia|"") fail "the family line exists in $lang" \
+                             "a translated sentence" "${linha:-nothing}" ;;
+        *) pass "the family line exists in $lang" ;;
+    esac
+done
 
 # t_como_root: are we root in the tests? then run it directly.
 if [ "$(id -u)" = 0 ]; then

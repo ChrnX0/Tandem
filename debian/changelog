@@ -1,3 +1,29 @@
+tandem (4.47) unstable; urgency=medium
+
+  * The first step toward running on more than the Debian family. Tandem's
+    automatic setup (`tandem preparar`) installs Wine, winetricks and the rest
+    through apt, so on a Fedora, Arch or openSUSE machine it used to run
+    `apt-get` and fail with a raw, English apt error in the middle of the
+    screen - the exact silent/jargon failure this project exists to abolish,
+    just wearing another distribution's clothes.
+  * Tandem now recognises the package family it runs on (`t_familia_pacote` ->
+    apt / dnf / pacman / zypper, read from /etc/os-release with a manager-
+    binary fallback, overridable with TANDEM_FAMILIA). On a non-apt family
+    `tandem preparar` no longer reaches for apt: it says, in the owner's own
+    language, which manager the system uses and the one command that installs
+    the core - `sudo dnf install wine winetricks`, `sudo pacman -S ...`,
+    `sudo zypper install ...` - and points at waydroid.org for Android. When it
+    cannot tell the manager it says so honestly instead of guessing. The
+    programs themselves already run the same once Wine is present; this is the
+    setup step catching up.
+  * `tandem doctor` gains a "package family" line in its system section, so the
+    diagnosis states which family it detected. The whole decision is pure
+    (`t_familia_pacote`, `t_familia_comando_wine`) and pinned by tests with the
+    family stubbed; the apt path is byte-for-byte unchanged. Three new messages,
+    translated in all seven languages.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 17:40:00 +0000
+
 tandem (4.46) unstable; urgency=medium
 
   * A modern face. The windows a shop owner sees - the error, the yes/no

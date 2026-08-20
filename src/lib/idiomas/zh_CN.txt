@@ -1460,6 +1460,19 @@ Windows 的 ProductId
 @prep_nada_falta
 什么都不缺：这台机器已经有 Tandem 需要的一切。
 
+@prep_outra_familia
+Tandem 的自动安装只在 Debian 和 Ubuntu 家族（apt）上安装缺少的部分。您的系统使用 {1}。只要有 Wine，程序运行方式相同——用以下命令安装核心：
+
+    {2}
+
+Android 应用请见 waydroid.org，其余部分请参考您系统自己的指南。
+
+@prep_familia_desconhecida
+Tandem 的自动安装只在 Debian 和 Ubuntu 家族（apt）上安装缺少的部分，而且我无法判断您的系统使用哪个包管理器。请用您自己的包管理器安装 Wine 和 winetricks，其余的交给 Tandem。
+
+@doc_familia
+软件包家族：{1}
+
 @prep_pergunta
 Tandem 可以把缺的东西装上：
 {1}

@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.46"
+TANDEM_VERSAO="4.47"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4376,6 +4376,58 @@ t_como_root() {
     else
         return 127
     fi
+}
+
+# Which package family is this machine? apt / dnf / pacman / zypper, or
+# "desconhecido" when it cannot be told. This is the first step toward Tandem
+# running outside the Debian family: the automatic setup below installs through
+# apt, and on a Fedora or Arch machine running apt is not a graceful failure,
+# it is a raw English error in the middle of the screen. Knowing the family lets
+# "tandem preparar" say something true instead.
+#
+# The identity comes from /etc/os-release (ID and ID_LIKE), because the family is
+# a property of the distribution, not of which binaries happen to be installed -
+# a Debian box can have dnf sitting in a container image without being Fedora.
+# The manager-binary check is only the fallback for a system whose os-release is
+# missing or says nothing recognisable. TANDEM_FAMILIA overrides both, so the
+# four branches and the messages that hang off them are testable on one machine.
+t_familia_pacote() {
+    if [ -n "${TANDEM_FAMILIA:-}" ]; then
+        printf '%s\n' "$TANDEM_FAMILIA"; return 0
+    fi
+    local id="" like=""
+    if [ -r /etc/os-release ]; then
+        id="$(  . /etc/os-release 2>/dev/null; printf '%s' "${ID:-}" )"
+        like="$( . /etc/os-release 2>/dev/null; printf '%s' "${ID_LIKE:-}" )"
+    fi
+    # Manjaro declares ID_LIKE=arch, Rocky/Alma declare "rhel centos fedora", so
+    # matching on the whole ID+ID_LIKE string catches the derivatives too.
+    case " ${id} ${like} " in
+        *debian*|*ubuntu*)          printf 'apt\n';    return 0 ;;
+        *fedora*|*rhel*|*centos*)   printf 'dnf\n';    return 0 ;;
+        *arch*)                     printf 'pacman\n'; return 0 ;;
+        *suse*)                     printf 'zypper\n'; return 0 ;;
+    esac
+    if   command -v apt-get >/dev/null 2>&1; then printf 'apt\n'
+    elif command -v dnf     >/dev/null 2>&1; then printf 'dnf\n'
+    elif command -v pacman  >/dev/null 2>&1; then printf 'pacman\n'
+    elif command -v zypper  >/dev/null 2>&1; then printf 'zypper\n'
+    else printf 'desconhecido\n'; fi
+}
+
+# The one command that installs the core (Wine + winetricks) for a non-apt
+# family, or empty when there is no known command to give. Kept to Wine and
+# winetricks because those are the package names on Fedora, Arch and openSUSE
+# alike - the flagship .exe path needs exactly them - while Android (waydroid)
+# and Java differ enough per distribution that promising a command here would
+# risk being wrong, and a wrong command is worse than pointing at the docs.
+t_familia_comando_wine() {
+    case "$1" in
+        dnf)    printf 'sudo dnf install wine winetricks\n' ;;
+        pacman) printf 'sudo pacman -S wine winetricks\n' ;;
+        zypper) printf 'sudo zypper install wine winetricks\n' ;;
+        *)      printf '' ;;
+    esac
 }
 
 # What is missing on this machine, one piece per line. Each line is
