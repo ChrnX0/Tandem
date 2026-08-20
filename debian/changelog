@@ -1,3 +1,34 @@
+tandem (4.42) unstable; urgency=medium
+
+  * Two false verdicts on a double-click, both found by the field-test and audit
+    sweep, both of the class this project exists to abolish - the software
+    saying something untrue about what just happened.
+  * An AppImage whose download stopped BEFORE its payload even began is now
+    recognized as truncated instead of run. The reader lumped "cannot work out
+    the payload offset" together with "the file is shorter than that offset", so
+    a download cut early read COMPLETO=? rather than 0; the handler's guard is
+    `[ "$COMPLETO" = 0 ]`, so it fell through to chmod +x and handed a half-
+    downloaded binary to the kernel, whose ENOEXEC surfaced bash's own "cannot
+    execute binary file" - Tandem's script path and line number - to the owner
+    as if the program had said it. appimageinfo.py now returns "truncated" for
+    that case; it is one-sided (a complete AppImage always ends its payload at
+    or before EOF), and a regression test proves the handler refuses and never
+    makes the half-file executable.
+  * A silent installer is no longer branded a flash-and-vanish failure. 4.40
+    exempted installers that are a `.msi`/`.msp` or that laid a new Start Menu
+    shortcut, but a runtime, a driver or a `setup.exe /S` registers neither and
+    still exits in a second - so it was branded "opened and closed on its own",
+    and in a window the owner clicks No, writing CONFIRMADO=nao and poisoning
+    the memory, the recipe and the list for a program that installed fine. A
+    third signal closes it: a new Add/Remove-Programs entry, read from the
+    prefix's registry files with no Wine. The decision is now a pure
+    `t_run_foi_instalador` (`.msi`/`.msp`, or a new shortcut, or a new uninstall
+    entry) pinned in every direction - including that a real flash-and-vanish
+    program, which adds none of the three, is still caught.
+  * No new user-facing message; no translation step.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 03:00:00 +0000
+
 tandem (4.41) unstable; urgency=high
 
   * Security: a malicious .deb could run arbitrary code as the user when opened,

@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2489766332 5293" "$soma_esperados"
+      "3715655505 5302" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "446507627 2591" "$soma_padroes"
+      "760217299 2622" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -4637,6 +4637,49 @@ equal "recognizes the payload as squashfs" "squashfs" "$(t_campo "$info_cortado"
 equal "an interrupted download is recognized as interrupted" \
       "0" "$(t_campo "$info_cortado" COMPLETO)"
 
+# The download cut BEFORE the payload even began - the section table lands past
+# the end of the file. The cortado case above cut AFTER the offset (a squashfs
+# that starts and stops short); this one is the earlier, commoner cut, and it
+# used to read COMPLETO=? rather than 0. That single missing verdict let the
+# handler fall through to chmod+x and hand a half-downloaded binary to the
+# kernel, whose ENOEXEC surfaced bash's own "cannot execute binary file" -
+# Tandem's script path and line number - to the owner as if the program said it.
+AI_CEDO="$TMPROOT/cedo.AppImage"
+python3 - "$AI_CEDO" <<'PYFIM'
+import struct, sys
+cab = bytearray(64)
+cab[0:4] = b'\x7fELF'; cab[4] = 2; cab[5] = 1; cab[6] = 1
+cab[8:10] = b'AI'; cab[10] = 2
+struct.pack_into('<H', cab, 16, 3)          # e_type
+struct.pack_into('<H', cab, 18, 0x3E)       # e_machine = x86_64
+struct.pack_into('<Q', cab, 0x28, 100000)   # e_shoff far past the truncated end
+struct.pack_into('<H', cab, 0x3A, 64)       # e_shentsize
+struct.pack_into('<H', cab, 0x3C, 10)       # e_shnum -> payload offset 100640
+open(sys.argv[1], 'wb').write(bytes(cab) + b'\x00' * (300 - 64))   # only 300 bytes
+PYFIM
+info_cedo="$(t_appimage_info "$AI_CEDO")"
+equal "the payload offset is read from the header even when the file is far shorter" \
+      "100640" "$(t_campo "$info_cedo" DESLOCAMENTO)"
+equal "a download cut before the payload offset is recognized as truncated, not unknown" \
+      "0" "$(t_campo "$info_cedo" COMPLETO)"
+# End to end: the handler must refuse AND never make the half-file executable.
+# The chmod +x sits after the COMPLETO=0 guard, so an unchanged permission bit
+# is proof the file was never handed to the kernel.
+chmod 644 "$AI_CEDO"
+saida_cedo="$(env -i HOME="$TMPROOT/casa-ai" PATH="/usr/bin:/bin" \
+    TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+    TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem-appimage" "$AI_CEDO" 2>&1)"
+case "$saida_cedo" in
+    *"did not finish"*) pass "the handler tells the owner the download did not finish" ;;
+    *) fail "the handler tells the owner the download did not finish" \
+            "the download did not finish" "$saida_cedo" ;;
+esac
+if [ -x "$AI_CEDO" ]; then
+    fail "a truncated AppImage is never made executable" "not executable" "executable"
+else
+    pass "a truncated AppImage is never made executable"
+fi
+
 # Architecture: an x86_64 machine runs a 32-bit AppImage, and never the reverse.
 t_arch_compativel x86_64 x86_64 && pass "x86_64 runs on x86_64" \
     || fail "x86_64 runs on x86_64" "compatible" "refused"
@@ -6210,6 +6253,38 @@ t_memoria_esquece "$PROG_S" 2>/dev/null
 equal "a real program that flashes and vanishes is still caught" \
       "fechou sozinho" "$(t_memoria_le "$PROG_S" RESULTADO 2>/dev/null)"
 t_memoria_esquece "$PROG_S" 2>/dev/null
+
+# t_run_foi_instalador: the decision that feeds the arg above, pinned in every
+# direction so a refactor cannot turn a successful silent install back into a
+# flash-and-vanish failure. Args: <prog> <new-shortcut?> <uninst-after> <uninst-before>.
+t_run_foi_instalador "setup.msi" 0 0 0 \
+    && pass "a .msi is an installer" \
+    || fail "a .msi is an installer" "installer" "not an installer"
+t_run_foi_instalador "SETUP.MSI" 0 0 0 \
+    && pass "a .MSI in capitals is still an installer" \
+    || fail "a .MSI in capitals is still an installer" "installer" "not an installer"
+t_run_foi_instalador "patch.msp" 0 0 0 \
+    && pass "a .msp is an installer" \
+    || fail "a .msp is an installer" "installer" "not an installer"
+t_run_foi_instalador "app.exe" 1 0 0 \
+    && pass "a run that laid a new Start Menu shortcut is an installer" \
+    || fail "a run that laid a new Start Menu shortcut is an installer" "installer" "not an installer"
+# The 4.40 gap: a silent installer (a runtime, a driver, setup.exe /S) registers
+# no shortcut and is not a .msi, but it does add an Add/Remove-Programs entry.
+# One more entry after than before is the third signal - without it this exact
+# run was branded flash-and-vanish and poisoned the memory with CONFIRMADO=nao.
+t_run_foi_instalador "vcredist.exe" 0 3 2 \
+    && pass "a silent installer that adds an uninstall entry is an installer" \
+    || fail "a silent installer that adds an uninstall entry is an installer" "installer" "not an installer"
+# The guard must NOT over-fire: a real program that flashes and vanishes leaves
+# no shortcut, is no .msi and adds no uninstall entry - it stays a failure.
+t_run_foi_instalador "jogo.exe" 0 2 2 \
+    && fail "a real flash-and-vanish program is not mistaken for an installer" "not an installer" "installer" \
+    || pass "a real flash-and-vanish program is not mistaken for an installer"
+# A DROP in the count (an uninstaller ran) is not an install either.
+t_run_foi_instalador "unins.exe" 0 1 2 \
+    && fail "a run that removes an uninstall entry is not an installer" "not an installer" "installer" \
+    || pass "a run that removes an uninstall entry is not an installer"
 
 # ------------------------------------------------------------------
 # The delivery proof reaching the LESSON (4.11).

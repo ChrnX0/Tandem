@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.41"
+TANDEM_VERSAO="4.42"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1416,6 +1416,33 @@ t_anuncia_atalhos() {
     t_diz "atalhos novos: $(printf '%s' "$novos" | tr '\n' ' ')"
     t_ok "$(t_msg pronto_procure_no_menu "$nomes")"
     return 0
+}
+
+# Was a run that exited 0 an installer doing its job? The silent-success guard
+# needs this: an installer that lays its files down and exits in a second is
+# finishing, not flashing and vanishing, and branding it a failure poisons the
+# memory and the recipe with CONFIRMADO=nao for a program that installed fine.
+#
+# Three independent signals, any ONE is enough - kept as a pure decision,
+# separate from t_anuncia_atalhos's user-facing announcement, so both the
+# installer and the real-flash-and-vanish directions can be pinned by a test:
+#   1. the file is a .msi/.msp  - a .msi that exits 0 installed something;
+#   2. new Start Menu shortcuts appeared (arg2 = 1, from t_anuncia_atalhos);
+#   3. a new Add/Remove-Programs entry appeared (arg3 count > arg4 count).
+#
+# Signal 3 is what 4.40 missed: a silent installer - a runtime, a driver,
+# setup.exe /S, a self-extractor - registers NO Start Menu shortcut and is not
+# a .msi, yet it does register itself in the Uninstall list. Reading that list
+# needs no Wine (t_uninstall_dump reads system.reg/user.reg directly). It is
+# the safe direction to be wrong in: under-counting (a SystemComponent runtime
+# t_uninstall_dump leaves out) only means we miss an exemption and ask once,
+# while over-counting would wrongly exempt a real flash-and-vanish program.
+t_run_foi_instalador() {
+    local prog="$1" atalhos_novos="$2" uninst_depois="$3" uninst_antes="$4"
+    case "${prog,,}" in *.msi|*.msp) return 0 ;; esac
+    [ "$atalhos_novos" = 1 ] && return 0
+    [ "${uninst_depois:-0}" -gt "${uninst_antes:-0}" ] 2>/dev/null && return 0
+    return 1
 }
 
 # --------------------------------------------- installed Windows programs
