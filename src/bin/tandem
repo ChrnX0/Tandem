@@ -110,6 +110,12 @@ acao_doctor() {
     # sleeper needs no line, same as the clock.
     local linha_sono; linha_sono="$(t_doctor_sono)"
     [ -n "$linha_sono" ] && out+="  $linha_sono\n"
+    # The package family: which manager the automatic setup would use. Shown
+    # always, since doctor is the full dump; an unrecognised family reads as "?"
+    # rather than leaking the on-disk "desconhecido" token into the report.
+    local fam_doc; fam_doc="$(t_familia_pacote)"
+    [ "$fam_doc" = desconhecido ] && fam_doc="?"
+    out+="  $(t_msg doc_familia "$fam_doc")\n"
     out+="\n"
 
     out+="$(t_msg doc_prog_windows)\n"
@@ -518,6 +524,23 @@ acao_preparar() {
     if [ -z "$faltas" ]; then
         t_ok "$(t_msg prep_nada_falta)"
         return 0
+    fi
+
+    # Something is missing, and the automatic setup only speaks apt. On any other
+    # family, reaching for apt-get here means a raw English error on the screen;
+    # instead, name the family and the one command that installs the core. The
+    # check sits AFTER "nothing missing", so a Fedora machine that already has
+    # Wine is told everything is fine, exactly like an apt one.
+    local fam cmd_fam
+    fam="$(t_familia_pacote)"
+    if [ "$fam" != apt ]; then
+        cmd_fam="$(t_familia_comando_wine "$fam")"
+        if [ -n "$cmd_fam" ]; then
+            t_erro "$(t_msg prep_outra_familia "$fam" "$cmd_fam")"
+        else
+            t_erro "$(t_msg prep_familia_desconhecida)"
+        fi
+        return 1
     fi
 
     while IFS='|' read -r c linha; do

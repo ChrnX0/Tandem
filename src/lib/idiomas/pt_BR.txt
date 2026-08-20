@@ -1555,6 +1555,19 @@ ATENÇÃO: esta máquina tem {1} placas de rede. Muitos programas usam o
 @prep_nada_falta
 Nada falta: esta máquina já tem tudo que o Tandem usa.
 
+@prep_outra_familia
+A instalação automática do Tandem só baixa o que falta na família Debian e Ubuntu (apt). O seu sistema usa {1}. Os programas funcionam igual quando o Wine está presente — instale o essencial com:
+
+    {2}
+
+Para apps de Android veja waydroid.org, e o guia do próprio sistema para o resto.
+
+@prep_familia_desconhecida
+A instalação automática do Tandem só baixa o que falta na família Debian e Ubuntu (apt), e não consegui identificar qual gerenciador de pacotes o seu sistema usa. Instale o Wine e o winetricks com o seu próprio gerenciador de pacotes e o Tandem cuida do resto.
+
+@doc_familia
+família de pacotes: {1}
+
 @prep_pergunta
 O Tandem pode instalar o que está faltando:
 {1}
