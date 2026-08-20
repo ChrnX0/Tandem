@@ -2345,6 +2345,39 @@ rule 5, the packager-depends-on-nothing rule). Recommended ladder: 4.47 (done)
 handlers. Three new messages, translated in all seven languages. Suite 1666
 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.48 IS PUBLISHED** — 2026-08-20, tag `v4.48` at `2c7c383`, and it ships TWO
+artifacts, each verified byte-for-byte five ways: the `.deb` (546048 bytes,
+sha256 `2ae03391…`) AND the new generic bundle `tandem_4.48_generic.tar.gz`
+(546317 bytes, sha256 `9b553d38…`) — for each, the release body, the release's
+own checksum file, the asset digest, the downloaded bytes, and a fresh
+reproducible local build at that commit all agree. It is the SECOND step of the
+distro ladder: 4.47 taught Tandem to SPEAK to a non-apt machine, but Tandem is
+itself a `.deb`, so a Fedora/Arch/openSUSE user still had no way to GET it.
+`build.py` now also emits a distribution-agnostic bundle from the SAME LAYOUT (so
+it cannot drift from the `.deb`): a `payload/` tree, a generated MANIFEST (each
+file with its mode), and two static scripts. `packaging/install.sh` copies each
+file with its mode (honours DESTDIR, so it stages/packages), then does the
+postinst work (desktop/MIME/icon caches, per-user first-run as the invoking
+user, the install notice READ from the catalogue in the machine's language);
+`packaging/uninstall.sh` removes exactly what MANIFEST lists and prunes the dirs
+it emptied (`rmdir` refuses a non-empty one, so `/usr/bin` is spared while
+`/usr/lib/tandem` is taken). The `.deb` build is byte-for-byte unchanged and the
+tarball is itself reproducible; `build.py --check` validates the bundle too. The
+whole install/uninstall cycle runs in the suite against a staging DESTDIR (every
+file lands with the right mode; uninstall leaves nothing behind); `packaging/*.sh`
+joined the bash -n and shellcheck gates (suite + proofgate). **The release itself
+carried a lesson worth keeping:** the first dispatch would have shipped the
+`.deb` ONLY — `release.yml` uploaded just the `.deb`+`.sha256`, while README/LEIAME
+(shipped in 4.48) point users to the tarball on the Releases page, so the promised
+download would have 404'd. Caught by reading the workflow before trusting it; the
+run was CANCELLED before it created the tag, `release.yml` was fixed to build the
+tarball's checksum, name it in the notes, and upload both (PR #65), and only then
+was v4.48 re-dispatched — so the published release carries all four assets. The
+tag points at the release.yml-fix commit, which is why 4.48's tag is one commit
+past the feature squash-merge. No new product message. Suite 1677 passed / 0 / 1
+skipped; both literal counters read 0. **Next rung: a thin PKGBUILD (Arch/AUR)
+over this bundle, then `dnf`/`pacman` inside `preparar`.**
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
