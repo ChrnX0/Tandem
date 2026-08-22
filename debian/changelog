@@ -1,3 +1,32 @@
+tandem (4.53) unstable; urgency=medium
+
+  * The A3 fiscal certificate: name the missing service, not a four-step recipe.
+    A Brazilian counter cannot legally emit an invoice without its A3
+    certificate token (a smartcard) working, and when a Windows program imports
+    winscard.dll Tandem recognised the case and printed a fixed four-line
+    procedure - install pcscd, pcsc-tools, libccid, run pcsc-scan. But it never
+    looked at the machine first, and docs/IDEAS.md had already measured that the
+    single most common cause is the simplest one: the smartcard service is not
+    installed at all. So a shop whose only problem was a missing pcscd read a
+    wall of steps instead of the one that mattered. Now, exactly as it already
+    does for the Sentinel and CodeMeter hardware keys, Tandem checks the machine
+    before it speaks: if the pcsc software is absent it says so - "the smartcard
+    service is not installed; that is almost always the whole problem" - and if
+    it is installed but the daemon is not running it says that instead. Both
+    facts are read without privilege and before any download. The static verdict
+    still carries the honest ceiling (a reader Linux can see is not yet a
+    certificate that will sign), so nothing is over-promised.
+    - The decision reuses the key-status shape (`t_chave_estado pcsc` reports
+      INSTALADO and SERVICO; `t_texto_chave pcsc` turns them into the sentence),
+      so the smartcard path sits beside sentinel/codemeter rather than being a
+      special case, and is proven by injection: a machine without pcscd gets the
+      "not installed" line, one with the daemon down gets "not running", and one
+      with it up gets nothing extra.
+    - Two new messages, `pcsc_falta` and `pcsc_parado`, translated in all seven
+      languages.
+
+ -- Tandem <rockx0@gmail.com>  Sat, 22 Aug 2026 22:45:00 +0000
+
 tandem (4.52) unstable; urgency=medium
 
   * An honesty line for the fiscal counter's most common protection. When a

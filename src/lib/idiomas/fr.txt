@@ -3033,6 +3033,19 @@ Et j'ai trouvé la raison probable : le service de la clé {1} NE tourne PAS
   C'est un technicien qui l'installe, une seule fois, et c'est gratuit :
   cherchez « {2} » sur le site du fabricant.
 
+@pcsc_falta
+Et j'ai trouvé la cause probable : le service de carte à puce n'est PAS
+  installé sur cette machine. C'est presque toujours tout le problème - sans
+  lui Linux ne voit pas du tout le jeton du certificat. Installez pcscd,
+  pcsc-tools et libccid (sur Debian/Ubuntu : sudo apt install pcscd
+  pcsc-tools libccid), puis lancez pcsc-scan pour vérifier que le jeton
+  apparaît.
+
+@pcsc_parado
+Une chose à vérifier : le logiciel de carte à puce est installé, mais son
+  service (pcscd) ne semble pas tourner. Le démarrer suffit d'habitude -
+  lancez pcsc-scan et voyez si le jeton apparaît.
+
 @portas_usb_rotulo
 {1}   (appareil USB)  {2}
 

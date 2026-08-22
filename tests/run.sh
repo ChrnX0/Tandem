@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2157926843 5698" "$soma_esperados"
+      "2414882405 5701" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -556,6 +556,7 @@ for _par in "hasp4_windows.dll|dongle" \
             "rockey4nd.dll|dongle-hid" \
             "ndis.sys|driver" \
             "qualquer.sys|driver" \
+            "winscard.dll|pcsc" \
             "clisitef32i.dll|tef"; do
     _dll="${_par%%|*}"; _esperado="${_par##*|}"
     _obtido="$(limite_classe "$_dll")"; _obtido="${_obtido%%|*}"
@@ -4814,6 +4815,56 @@ CM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
     t_texto_chave codemeter' 2>/dev/null)"
 contem "CodeMeter is sent to CodeMeter's runtime" "CodeMeter Runtime" "$CM"
 naocontem "and never to Sentinel's" "Sentinel LDK" "$CM"
+
+# The smartcard (PC/SC) path is a third family and it answers a different
+# question. A Brazilian counter's A3 fiscal certificate is a smartcard token, so
+# a program that imports winscard.dll is looking for a reader Linux is supposed
+# to hand over - and the single most common cause, measured in docs/IDEAS.md, is
+# that the pcsc software is not installed at all. Unlike the licence daemons this
+# is not a TCP port; the two checkable facts are "is it installed" and "is the
+# daemon running", both unprivileged. The state must name both.
+PCSC_EST="$(t_chave_estado pcsc)"
+contem "the pcsc state names whether the software is installed" "INSTALADO=" "$PCSC_EST"
+contem "and whether the daemon is running" "SERVICO=" "$PCSC_EST"
+equal "the pcsc family is a known one, not refused" \
+      "0" "$(t_chave_estado pcsc >/dev/null 2>&1; echo $?)"
+
+# Absent software is the common case, and it must be named as the probable cause
+# rather than buried in a four-step recipe the shop reads as a wall.
+PCSC_FALTA="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_chave_estado() { printf "INSTALADO=nao\nSERVICO=nao\n"; }
+    t_texto_chave pcsc' 2>/dev/null)"
+contem "a missing smartcard service is named as the probable cause" \
+       "NOT installed" "$PCSC_FALTA"
+
+# Installed but stopped is a different sentence: starting it is usually enough.
+PCSC_PARADO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_chave_estado() { printf "INSTALADO=sim\nSERVICO=nao\n"; }
+    t_texto_chave pcsc' 2>/dev/null)"
+contem "an installed-but-stopped smartcard daemon gets its own line" \
+       "does not appear to be running" "$PCSC_PARADO"
+
+# When the daemon is up the static verdict already carries the honest ceiling,
+# so the daemon check adds nothing - it must not repeat "it is running" as if
+# that were news. Empty here means "I have nothing to add", which is correct.
+PCSC_RODA="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_chave_estado() { printf "INSTALADO=sim\nSERVICO=sim\n"; }
+    t_texto_chave pcsc' 2>/dev/null)"
+equal "a running smartcard daemon adds nothing (the verdict already says it)" \
+      "" "$PCSC_RODA"
+
+# The wiring: tandem-exe must route the pcsc limit class to the smartcard check,
+# exactly as it routes dongle-sentinel and dongle-codemeter. Without this line
+# the winscard.dll case would fall through to the bare verdict with no machine
+# check - the silent gap this version closes.
+if grep -q 't_texto_chave pcsc' "$ROOT/src/bin/tandem-exe"; then
+    pass "tandem-exe wires the smartcard (pcsc) path"
+else
+    fail "tandem-exe wires the smartcard (pcsc) path" "present" "missing"
+fi
 
 section "the road that starts where Wine ends"
 

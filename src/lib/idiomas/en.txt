@@ -2995,6 +2995,18 @@ And I found the likely reason: the {1} key service is NOT running on this
   A technician installs it, once, and it is free: look for
   "{2}" on the manufacturer's site.
 
+@pcsc_falta
+And I found the likely reason: the smartcard service is NOT installed on this
+  machine. That is almost always the whole problem - without it Linux cannot
+  see the certificate token at all. Install pcscd, pcsc-tools and libccid (on
+  Debian/Ubuntu: sudo apt install pcscd pcsc-tools libccid), then run pcsc-scan
+  to check the token turns up.
+
+@pcsc_parado
+One thing to check: the smartcard software is installed but its service
+  (pcscd) does not appear to be running. Starting it is usually enough - run
+  pcsc-scan and see whether the token turns up.
+
 @portas_usb_rotulo
 {1}   (USB device)  {2}
 
