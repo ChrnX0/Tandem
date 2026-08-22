@@ -289,6 +289,9 @@ Este programa não abriu, e o motivo tem caminho:
 
 Isso não é defeito da sua máquina nem do Tandem.
 
+@sentinel_wine_antigo
+Mais uma coisa que vale saber: o fabricante validou esse caminho no Wine 10.0, e esta máquina tem o Wine {1}. Se a chave ainda não for encontrada, um Wine mais antigo do que o que o fabricante testou pode ser o motivo — vale comentar com quem preparou a máquina.
+
 @fechou_com_erro
 O programa fechou com erro (código {1}).
 

@@ -291,6 +291,9 @@ Ce programme ne s'est pas ouvert, et la raison a une issue :
 
 Ce n'est pas un défaut de votre machine ni de Tandem.
 
+@sentinel_wine_antigo
+Une chose de plus à savoir : le fabricant a validé cette voie sur Wine 10.0, et cette machine a Wine {1}. Si la clé n'est toujours pas trouvée, un Wine plus ancien que celui testé par le fabricant peut en être la cause — à signaler à la personne qui a préparé la machine.
+
 @fechou_com_erro
 Le programme s'est fermé sur une erreur (code {1}).
 

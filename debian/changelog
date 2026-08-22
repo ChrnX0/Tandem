@@ -1,3 +1,28 @@
+tandem (4.52) unstable; urgency=medium
+
+  * An honesty line for the fiscal counter's most common protection. When a
+    program uses a Sentinel (HASP) hardware key, Tandem already names the route
+    the manufacturer publishes - "it works on Wine 10.0 with the Sentinel LDK
+    Run-time Environment". But `tandem preparar` installs whatever the distro
+    ships (Wine 9.0 on the Ubuntu/Zorin base), so a shop can be handed a recipe
+    for a Wine NEWER than the one on its own machine, with nothing saying so - a
+    silent gap in the software a Brazilian counter most depends on. Now, when a
+    Sentinel key is recognised and the installed Wine is older than the 10.0 the
+    maker validated, Tandem adds one line: the maker tested Wine 10.0, this
+    machine has Wine X, and an older Wine may be why the key is missing - worth
+    mentioning to whoever set the machine up. It never tells the owner to change
+    Wine himself; this project does not manage Wine.
+  * The decision is pure (`t_wine_major` reads the installed major, or nothing
+    when it cannot tell, so the warning never rests on a guess) and fires only
+    on the `dongle-sentinel` branch and only below Wine 10. One new message
+    (sentinel_wine_antigo), translated in all seven languages. Also corrects the
+    idea ledger, which listed several driver items as open that were in fact
+    already built (the serial-port hole, the printing node glob, the soft-stub
+    driver installer) - a stale ledger sends the next session to rebuild done
+    work, which this file exists to prevent.
+
+ -- Tandem <rockx0@gmail.com>  Sat, 22 Aug 2026 22:30:00 +0000
+
 tandem (4.51) unstable; urgency=medium
 
   * python3 is now a piece `tandem preparar` ensures, which matters only off
