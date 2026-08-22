@@ -292,6 +292,12 @@ This program did not open, and the reason has a way out:
 
 That is not a fault of your machine or of Tandem.
 
+@sentinel_wine_antigo
+One more thing worth knowing: the maker validated that route on Wine 10.0, and
+this machine has Wine {1}. If the key is still not found, a Wine older than the
+one the maker tested may be the reason - worth mentioning to whoever set the
+machine up.
+
 @fechou_com_erro
 The program closed with an error (code {1}).
 

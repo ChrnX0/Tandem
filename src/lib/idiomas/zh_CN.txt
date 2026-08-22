@@ -263,6 +263,9 @@ sudo apt install wine32
 
 这不是您电脑的毛病，也不是 Tandem 的。
 
+@sentinel_wine_antigo
+还有一点值得知道：厂商是在 Wine 10.0 上验证这条路径的，而这台机器装的是 Wine {1}。如果还是找不到密钥，比厂商测试版本更旧的 Wine 可能就是原因——值得告诉当初配置这台机器的人。
+
 @fechou_com_erro
 程序出错退出了（代码 {1}）。
 

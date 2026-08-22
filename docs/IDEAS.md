@@ -550,6 +550,22 @@ Five of eight have a route. That is the answer to the push-back.
 
 ## 2. What Tandem could actually do, ranked by value to a shopkeeper
 
+**STATUS, checked against the code 2026-08-22 (do not trust the prose below over
+the tree — most of it is now BUILT).** Verified item by item before proposing
+anything, exactly as this repository keeps warning: item **1** (the serial-port
+hole — `t_portas_seriais` now walks Wine's order and stops at the first missing
+index), item **3** (the printing node glob — `common.sh` now reads `/dev/usb/lp*`,
+and 4.33 shipped the lp-group sentence), and item **7** (the soft-stub driver
+installer — `newdev.dll`/`difxapi.dll` are in `limites.tsv` as `instalador-driver`)
+are all **DONE**. Item **5**'s Wine-version half is **DONE — v4.52**: a Sentinel
+key on a Wine older than the 10.0 the maker validated now gets a plain honesty
+line. What is genuinely still open here is niche or needs the reference machine's
+hardware: item **6** (the `WINEDEBUG` unmute) is a prerequisite with no payoff
+until a real device is attached; item **8** (splitting the raw `.sys` `driver`
+class) is real but rests on an uncertain "often works"; item **9** is a small
+message-wording honesty fix. The high-value driver ground is built; further code
+here is into falling returns.
+
 ### 1. Fix the serial-port gap — Tandem currently prints a COM number Wine never created
 
 **Reproduced here, twice.** Wine's `detect_devices()` counts from 0 per family and `break`s at the first missing index. Measured: with `/dev/ttyUSB1` present and `/dev/ttyUSB0` absent, a fresh `wineboot -u` produced **only** `com1 -> /dev/ttyS0`. I restored the node and the identical command produced `com1`, `com2 -> /dev/ttyUSB0`, `com3 -> /dev/ttyUSB1`. Then, with the hole back in place, `t_portas_seriais` printed `/dev/ttyS0` and `/dev/ttyUSB1` — which `t_texto_portas` numbers COM1 and COM2. **Tandem tells the owner his pinpad is on COM2 when Wine has created no COM2 at all.** A hole is routine: unplug and replug an adapter, a two-port converter, a hub that re-enumerates.

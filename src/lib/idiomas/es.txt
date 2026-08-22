@@ -290,6 +290,9 @@ Este programa no abrió, y el motivo tiene salida:
 
 No es un defecto de tu máquina ni de Tandem.
 
+@sentinel_wine_antigo
+Una cosa más que conviene saber: el fabricante validó esa ruta en Wine 10.0, y esta máquina tiene Wine {1}. Si la llave sigue sin encontrarse, un Wine más antiguo que el que probó el fabricante puede ser el motivo: conviene comentarlo con quien preparó la máquina.
+
 @fechou_com_erro
 El programa se cerró con un error (código {1}).
 

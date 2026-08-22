@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2181204074 5691" "$soma_esperados"
+      "2157926843 5698" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "4230782651 2739" "$soma_padroes"
+      "758612250 2750" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -1284,6 +1284,39 @@ equal "a modern Sentinel key is recognized as Sentinel, not as impossible" \
 contem "and the owner is told what to install for it" \
        "Run-time Environment" "$LIM_SENTINEL"
 equal "a Sentinel verdict is NOT a dead end" "nao" "$(semsaida dongle-sentinel)"
+
+# ---- v4.52: the Sentinel honesty line - the maker validated Wine 10, you have 9 ----
+# t_wine_major reads the installed Wine's major, or nothing when it cannot tell.
+wmaj() { TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_stack_wine() { printf "%s" "'"$1"'"; }
+    t_wine_major' 2>/dev/null; }
+equal "the Wine major is read from the version" "9" "$(wmaj 9.0)"
+equal "a two-digit major reads whole" "10" "$(wmaj 10.0)"
+equal "an unreadable Wine version yields nothing" "" "$(wmaj -)"
+# The decision the sentinel branch makes: warn only when the installed Wine is
+# OLDER than the one the maker validated (10). On 9 it warns; on 10 it stays
+# quiet, because 10 is the version the maker tested.
+sentwarn() { TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_stack_wine() { printf "%s" "'"$1"'"; }
+    maj="$(t_wine_major)"
+    [ -n "$maj" ] && [ "$maj" -lt 10 ] && t_msg sentinel_wine_antigo "$(t_stack_wine)"' 2>/dev/null; }
+contem "on Wine 9 the Sentinel owner is told his Wine is older than the maker's" \
+       "this machine has Wine 9.0" "$(sentwarn 9.0)"
+equal "on Wine 10 there is no such warning" "" "$(sentwarn 10.0)"
+# The wiring is really in the handler's Sentinel branch, not only in the helper.
+EXE_CORPO="$(cat "$ROOT/src/bin/tandem-exe")"
+contem "tandem-exe checks the Wine major for a Sentinel key" "t_wine_major" "$EXE_CORPO"
+contem "tandem-exe has the older-Wine honesty line" "sentinel_wine_antigo" "$EXE_CORPO"
+for lang in en pt_BR es fr zh_CN hi ar; do
+    l="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$lang" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_msg sentinel_wine_antigo 9.0' 2>/dev/null)"
+    case "$l" in
+        sentinel_wine_antigo|"") fail "the older-Wine line exists in $lang" "translated" "${l:-none}" ;;
+        *) pass "the older-Wine line exists in $lang" ;;
+    esac
+done
 
 LIM_LEGADO="$(limite "$ARTIFACTS/hasplegado.exe")"
 equal "an old HASP4 key stays impossible, and is told apart" \

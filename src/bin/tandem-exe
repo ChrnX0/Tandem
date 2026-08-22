@@ -782,14 +782,29 @@ $MAQUINA}"
                 # anything: is the key's Linux daemon even running? Without
                 # it the program looks for a licence and finds nothing, which
                 # to the owner is indistinguishable from a broken program.
-                CHAVE=""
+                CHAVE=""; WINE_VELHO=""
                 case "${LIMITE%%|*}" in
-                    dongle-sentinel)  CHAVE="$(t_texto_chave sentinel 2>/dev/null)" ;;
+                    dongle-sentinel)
+                        CHAVE="$(t_texto_chave sentinel 2>/dev/null)"
+                        # The Sentinel route the message describes is the one the
+                        # manufacturer validated on Wine 10.0. If this machine has
+                        # an older Wine than that - and preparar installs whatever
+                        # the distro ships, 9.0 on the Ubuntu/Zorin base - say so,
+                        # honestly, instead of leaving the owner to wonder why the
+                        # published recipe does not find his key. It never tells
+                        # him to change Wine himself (this project does not manage
+                        # Wine); it names the gap for whoever set the machine up.
+                        maj="$(t_wine_major 2>/dev/null)"
+                        [ -n "$maj" ] && [ "$maj" -lt 10 ] &&
+                            WINE_VELHO="$(t_msg sentinel_wine_antigo "$(t_stack_wine)")"
+                        ;;
                     dongle-codemeter) CHAVE="$(t_texto_chave codemeter 2>/dev/null)" ;;
                 esac
                 t_erro "$(t_msg limite_com_caminho "${LIMITE#*|}${CHAVE:+
 
-  $CHAVE}")"
+  $CHAVE}")${WINE_VELHO:+
+
+$WINE_VELHO}"
             fi
         else
             # Before falling back to the bare exit code, ask whether Wine said

@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.51"
+TANDEM_VERSAO="4.52"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -2354,6 +2354,21 @@ t_stack_wine() {
     local v
     v="$(wine --version 2>/dev/null | head -1 | sed 's/^wine-//')" || v=""
     t_versao_limpa "$v"
+}
+
+# The integer major of the Wine installed here (9 out of "9.0"), or empty when
+# there is no Wine to ask or the version cannot be read as a number. It exists
+# for one honest comparison: a Sentinel/HASP key's manufacturer publishes that
+# it works on Wine 10.0, and `tandem preparar` installs whatever the distro
+# ships (9.0 on the Ubuntu/Zorin base measured here) - so a shop can be handed a
+# recipe for a Wine newer than the one on its own machine, with nothing saying
+# so. Returns non-zero (and nothing) when it cannot tell, so a refusal or a
+# warning never rests on a guess.
+t_wine_major() {
+    local v; v="$(t_stack_wine)"
+    v="${v%%.*}"
+    case "$v" in ''|'-'|*[!0-9]*) return 1 ;; esac
+    printf '%s' "$v"
 }
 
 t_stack_winetricks() {
