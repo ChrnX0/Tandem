@@ -1,22 +1,18 @@
 #!/bin/bash
-# Tandem - explains an .rpm, and never pretends to install one.
+# Tandem - an .rpm handler that knows whose format it is.
 #
-# On a Debian-based system an .rpm is a dead end, and today it is a SILENT dead
-# end: nothing owns the type, so the double click does nothing whatsoever. The
-# owner went to the program's website, where the .rpm sat next to the .deb under
-# headings he could not read, downloaded one of them, and now his computer is
-# ignoring him. He has no way of knowing he picked the wrong file.
+# Whether an .rpm is foreign depends on the machine, not on Tandem. On Fedora,
+# RHEL (dnf) and openSUSE (zypper) the .rpm is the system's OWN format, and since
+# 4.50 Tandem installs it, the way tandem-deb installs a .deb on apt: ask, let
+# the native manager pull the dependencies, then confirm against rpm's own
+# database. On the Debian family (apt) and on Arch (pacman) the .rpm really is
+# foreign, and there the old behaviour holds - say one plain sentence and point
+# at the same program in this machine's own repositories.
 #
-# So this command exists to say one sentence and then do something useful with
-# the package's name: look for the same program in the machine's own
-# repositories. That turns "no" into "yes, like this", which is a different
-# conversation entirely.
-#
-# It does not offer to convert with alien, and that is a decision rather than an
-# omission. A converted package carries dependency names that do not exist here,
-# skips the scripts that set the program up, and puts files where this
-# distribution does not keep them. The result looks installed and is not - the
-# exact failure this whole project exists to prevent.
+# It never converts with alien. A converted package carries dependency names
+# that do not exist here, skips the scripts that set the program up, and puts
+# files where this distribution does not keep them - it looks installed and is
+# not, the exact failure this project exists to prevent.
 . "${TANDEM_LIB:-/usr/lib/tandem}/common.sh"
 
 t_log_init rpm "$*"
@@ -26,6 +22,74 @@ BRUTO="${1:-}"
 ARQ="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 [ -n "$ARQ" ] && [ -f "$ARQ" ] || { t_erro "$(t_msg arquivo_sumiu "$BRUTO")"; exit 1; }
 
+# ------------------------------------------------- rpm-native: install it
+#
+# The family check comes FIRST, before the python readers, on purpose:
+# dnf5-based Fedora ships no python3, so the readers cannot run there. rpm can
+# always read the name, so the native path leans on rpm, not on python.
+FAM="$(t_familia_pacote)"
+if [ "$FAM" = dnf ] || [ "$FAM" = zypper ]; then
+    NOME="$(t_rpm_nome_local "$ARQ")"
+    if [ -z "$NOME" ]; then
+        # rpm could not read it: a cut-off download, or a web page saved as .rpm.
+        if t_parece_pagina_web "$ARQ"; then
+            t_erro "$(t_msg baixou_pagina_web "$(basename -- "$ARQ")")"
+        else
+            t_erro "$(t_msg rpm_download_incompleto "$(basename -- "$ARQ")")"
+        fi
+        exit 1
+    fi
+    t_diz "rpm nativo ($FAM): $NOME"
+    if t_rpm_instalado "$NOME"; then
+        t_ok "$(t_msg rpm_ja_instalado "$NOME")"
+        exit 0
+    fi
+    PERGUNTA="$(t_msg rpm_instalar_pergunta "$NOME")
+
+$(t_msg precisa_da_senha)"
+    if ! t_pergunta "$PERGUNTA" "$(t_msg botao_instalar)" "$(t_msg botao_cancelar)"; then
+        if [ -t 0 ]; then
+            printf '%s\n\n%s' "$PERGUNTA" "$(t_msg deb_confirma_terminal)"
+            read -r r
+            if ! t_confirmou "$r"; then printf '%s\n' "$(t_msg cancelado)"; exit 0; fi
+        else
+            t_erro "$(t_msg rpm_sem_confirmacao "$NOME" "$ARQ")"
+            exit 1
+        fi
+    fi
+    SAIDA="$(t_saida_abre rpm)"
+    t_progresso_abre "$(t_msg rpm_instalando "$NOME")"
+    t_como_root "$(t_rpm_script_instalacao "$FAM" "$ARQ")" >>"$SAIDA" 2>&1
+    CODIGO=$?
+    t_saida_fecha "$SAIDA"
+    t_progresso_fecha
+    if [ "$CODIGO" -eq 127 ]; then
+        t_erro "$(t_msg rpm_sem_senha "$ARQ")"
+        exit 1
+    fi
+    # rpm's own database, not the exit code - the acid test tandem-deb uses too.
+    if t_rpm_instalado "$NOME"; then
+        t_memoria_grava "$ARQ" RESULTADO instalado 2>/dev/null
+        t_memoria_grava "$ARQ" VISTO_EM "$(date +%F)" 2>/dev/null
+        t_ok "$(t_msg rpm_instalado "$NOME")"
+        exit 0
+    fi
+    PORQUE="$(t_palavras_do_programa "$SAIDA" 3)"
+    rm -f "$SAIDA"
+    t_memoria_grava "$ARQ" RESULTADO "nao instalou" 2>/dev/null
+    t_erro "$(t_msg rpm_nao_instalou "$NOME")${PORQUE:+
+
+$(t_msg sistema_disse)
+$PORQUE}
+
+$(t_msg registro_completo_em "$LOG")"
+    exit "$CODIGO"
+fi
+
+# ------------------------------------------------- foreign (apt / pacman)
+#
+# Here an .rpm does not install. Read it with the python reader (these families
+# ship python3), say so, and find the same program in this machine's own repos.
 INFO="$(t_rpm_info "$ARQ")"
 t_diz "$INFO"
 ERRO="$(t_campo "$INFO" ERRO)"
@@ -54,7 +118,7 @@ esac
 
 t_diz "rpm $NOME $VERSAO de ${DIST:-origem desconhecida}"
 
-# The name is the useful part. If the same program is packaged for this system,
+# The name is the useful part - if the same program is packaged for this system,
 # the answer stops being a refusal.
 EQUIVALENTE=""
 if [ -n "$NOME" ] && t_apt_candidato "$NOME" >/dev/null 2>&1; then

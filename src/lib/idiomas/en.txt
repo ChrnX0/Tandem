@@ -619,6 +619,40 @@ The download of this file did not finish.
 Worth knowing either way: .rpm files belong to another family of Linux and do
 not install on your system. Look for the .deb file on the same site.
 
+@rpm_instalar_pergunta
+Install this program?
+
+{1}
+
+@rpm_instalando
+Installing {1}. This can take a moment - do not switch the computer off.
+
+@rpm_instalado
+{1} is installed. Look for it in your menu.
+
+@rpm_ja_instalado
+{1} is already installed on this machine.
+
+@rpm_nao_instalou
+I could not install {1}. The package manager stopped before it finished - the
+reason is usually a dependency it could not find in your system's
+repositories.
+
+@rpm_sem_senha
+I could not install it because I did not get the password.
+
+{1}
+
+@rpm_sem_confirmacao
+I installed nothing: I need a confirmation and there is no window and no
+terminal to ask in. The program is {1}, in the file:
+{2}
+
+@deb_estrangeiro
+This is a package for the Debian and Ubuntu family (a .deb). Your system uses
+{1}, which cannot install a .deb. Look for the same program in your own package
+manager, or as a Flatpak on flathub.org - the program, in the form yours reads.
+
 @snap_nao_e_pacote
 This file does not look like a complete snap package.
 

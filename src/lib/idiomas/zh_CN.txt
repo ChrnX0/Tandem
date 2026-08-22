@@ -565,6 +565,35 @@ sudo snap install --dangerous "{1}"
 不过还是要说清楚：.rpm 文件属于另一支 Linux，在您的系统上装不了。
 请到同一个网站上找 .deb 文件。
 
+@rpm_instalar_pergunta
+安装这个程序？
+
+{1}
+
+@rpm_instalando
+正在安装 {1}。可能需要一会儿——请勿关闭电脑。
+
+@rpm_instalado
+{1} 已安装。在您的菜单里找它。
+
+@rpm_ja_instalado
+{1} 已经安装在这台机器上。
+
+@rpm_nao_instalou
+我无法安装 {1}。包管理器没能完成——原因通常是在您系统的仓库里找不到某个依赖。
+
+@rpm_sem_senha
+我无法安装，因为没有拿到密码。
+
+{1}
+
+@rpm_sem_confirmacao
+我没有安装任何东西：我需要一个确认，但没有窗口也没有终端可以询问。程序是 {1}，在文件：
+{2}
+
+@deb_estrangeiro
+这是 Debian 和 Ubuntu 家族的软件包（.deb）。您的系统使用 {1}，无法安装 .deb。请在您自己的包管理器里找同一个程序，或在 flathub.org 上找它的 Flatpak——同一个程序，用您系统能读的形式。
+
 @snap_nao_e_pacote
 这个文件看起来不是完整的 snap 包。
 

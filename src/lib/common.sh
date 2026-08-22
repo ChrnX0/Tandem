@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.49"
+TANDEM_VERSAO="4.50"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4466,6 +4466,40 @@ t_script_instalacao_familia() {
         dnf)    printf 'set -e\ndnf install -y %s\n' "${pkgs[*]}" ;;
         pacman) printf 'set -e\npacman -S --noconfirm --needed %s\n' "${pkgs[*]}" ;;
         zypper) printf 'set -e\nzypper install -y %s\n' "${pkgs[*]}" ;;
+    esac
+}
+
+# Is an .rpm's package already installed? Asked of rpm's own database, which is
+# present on every rpm-native system (dnf and zypper both sit on rpm). This is
+# the .rpm sibling of t_deb_instalado, and like it the acid test after an install
+# is this database, not the manager's exit code.
+t_rpm_instalado() {
+    [ -n "${1:-}" ] || return 1
+    rpm -q "$1" >/dev/null 2>&1
+}
+
+# The package NAME of a local .rpm file, read by rpm itself - no python needed.
+# This matters: dnf5-based Fedora ships no python3, so the python readers cannot
+# run there, but `rpm` is always present on an rpm system. Empty when rpm cannot
+# read the file (a cut-off download, or a web page saved as .rpm).
+t_rpm_nome_local() {
+    command -v rpm >/dev/null 2>&1 || return 1
+    rpm -qp --queryformat '%{NAME}' "$1" 2>/dev/null
+}
+
+# The one privileged command that installs a LOCAL .rpm file on an rpm-native
+# family, letting the manager pull the file's dependencies from the repositories
+# - the .rpm sibling of the apt-get line in tandem-deb. No "--": dnf5 REJECTS the
+# separator (measured on Fedora 41), and the path is always absolute (readlink -f
+# upstream), so it can never be mistaken for an option. Single-quoted for a path
+# with spaces. Empty for a family that is not rpm-native, so a caller that reaches
+# it by mistake installs nothing rather than the wrong thing.
+t_rpm_script_instalacao() {
+    local fam="$1" arq="$2"
+    case "$fam" in
+        dnf)    printf "dnf install -y '%s'\n" "$arq" ;;
+        zypper) printf "zypper --non-interactive install '%s'\n" "$arq" ;;
+        *)      printf '' ;;
     esac
 }
 

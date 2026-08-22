@@ -105,9 +105,9 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "340766002 5591" "$soma_esperados"
+      "42130317 5660" "$soma_esperados"
 equal "the case patterns still match the real messages" \
-      "2140280950 2682" "$soma_padroes"
+      "4230782651 2739" "$soma_padroes"
 
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
@@ -5724,6 +5724,52 @@ for d in "$ROOT"/src/applications/tandem-*.desktop; do
     else
         fail "$(basename -- "$d") points at a binary that exists" "src/bin/$base" "missing"
     fi
+done
+
+# ---- v4.50: the .deb/.rpm inversion - each handler knows whose format it is ----
+# On an rpm-native family the .rpm is installed; on apt/pacman it stays foreign.
+# A .deb is foreign anywhere but apt. Verified end to end on real Fedora and Arch;
+# here the pure parts and the wiring.
+equal "the rpm install command on dnf names dnf, no -- (dnf5 rejects it)" \
+      "dnf install -y '/x.rpm'" "$(t_rpm_script_instalacao dnf /x.rpm)"
+equal "the rpm install command on zypper names zypper" \
+      "zypper --non-interactive install '/x.rpm'" "$(t_rpm_script_instalacao zypper /x.rpm)"
+equal "an rpm-foreign family gets no install command" \
+      "" "$(t_rpm_script_instalacao apt /x.rpm)"
+equal "the rpm command never carries a bare -- separator" "0" \
+      "$(t_rpm_script_instalacao dnf /x.rpm | grep -c ' -- ')"
+# tandem-rpm: the native path installs on dnf/zypper; the foreign path is kept.
+RPM_CORPO="$(cat "$ROOT/src/bin/tandem-rpm")"
+contem "tandem-rpm reads the family" "t_familia_pacote" "$RPM_CORPO"
+contem "tandem-rpm installs natively on an rpm family" "t_rpm_script_instalacao" "$RPM_CORPO"
+contem "tandem-rpm reads the name with rpm, not python, on the native path" \
+       "t_rpm_nome_local" "$RPM_CORPO"
+contem "tandem-rpm still explains the foreign case" "t_texto_rpm" "$RPM_CORPO"
+# tandem-deb: the foreign guard is FIRST (before the python read), so it works
+# even where python3 is absent - dnf5-based Fedora ships none.
+DEB_CORPO="$(cat "$ROOT/src/bin/tandem-deb")"
+contem "tandem-deb refuses a .deb on a non-apt family" "deb_estrangeiro" "$DEB_CORPO"
+# The guard must sit ABOVE the python reader, or a python-less Fedora never
+# reaches it. Assert deb_estrangeiro appears before the first t_deb_info call.
+linha_estr="$(printf '%s\n' "$DEB_CORPO" | grep -n 'deb_estrangeiro' | head -1 | cut -d: -f1)"
+linha_read="$(printf '%s\n' "$DEB_CORPO" | grep -n 't_deb_info' | head -1 | cut -d: -f1)"
+if [ -n "$linha_estr" ] && [ -n "$linha_read" ] && [ "$linha_estr" -lt "$linha_read" ]; then
+    pass "the .deb foreign guard runs before the python reader"
+else
+    fail "the .deb foreign guard runs before the python reader" \
+         "deb_estrangeiro before t_deb_info" "estr=$linha_estr read=$linha_read"
+fi
+# The new messages resolve in every language.
+for lang in en pt_BR es fr zh_CN hi ar; do
+    l1="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$lang" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_msg deb_estrangeiro dnf' 2>/dev/null)"
+    l2="$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO="$lang" bash -c '
+        . "'"$ROOT"'/src/lib/common.sh"; t_msg rpm_instalado gimp' 2>/dev/null)"
+    case "$l1$l2" in
+        *deb_estrangeiro*|*rpm_instalado*|"") \
+            fail "the inversion messages exist in $lang" "translated" "${l1:-none}/${l2:-none}" ;;
+        *) pass "the inversion messages exist in $lang" ;;
+    esac
 done
 
 section "native packages: every handler, every path, with nobody to ask"
