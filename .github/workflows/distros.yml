@@ -1,0 +1,80 @@
+name: Distros
+
+# Tandem grew from a Debian-only .deb into something that installs and runs on
+# the families apt does not serve - Fedora (dnf), Arch (pacman), openSUSE
+# (zypper). Five versions of that (4.47-4.51) were each verified by hand on real
+# Fedora and Arch containers; until this file, nothing in the repository guarded
+# it. tests/run.sh runs on Ubuntu, so a refactor could break the family
+# detection, the generic installer or the .deb/.rpm inversion and every test
+# would still pass. This is the instrument for that class: it installs the
+# generic bundle on a real Fedora and a real Arch and checks the distro-specific
+# behaviour there.
+#
+# Separate from CI and non-gating, for exactly the reason real-programs.yml is:
+# it pulls images over the network, and a registry hiccup is not a regression in
+# this repository. The checks it makes are deliberately the network-FREE ones -
+# the bundle installs from its own payload, the family is read from
+# /etc/os-release, a .deb is refused as foreign without reaching for anything -
+# so a green run means the code is right, not that a mirror was up. The actual
+# package installs (dnf/pacman pulling Wine) are proven by hand and left out of
+# the guard so it cannot flake. Weekly and on demand.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  distro:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: fedora:41
+            familia: dnf
+          - image: archlinux:latest
+            familia: pacman
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the .deb and the generic bundle
+        run: python3 build.py
+
+      - name: Install and check on ${{ matrix.image }}
+        env:
+          IMAGE: ${{ matrix.image }}
+          FAMILIA: ${{ matrix.familia }}
+        run: |
+          V="$(grep '^Version:' debian/control | cut -d' ' -f2)"
+          docker run --rm -v "$PWD:/repo:ro" -e FAMILIA -e V="$V" "$IMAGE" \
+            bash -euo pipefail -c '
+              cd /tmp
+              cp "/repo/tandem_${V}_generic.tar.gz" .
+              tar xzf "tandem_${V}_generic.tar.gz"
+              cd "tandem-${V}/"
+
+              # The generic installer places the whole tree from its own payload
+              # - no network - and Tandem runs afterwards.
+              ./install.sh >/dev/null
+              tandem version | head -1 | grep -q "^Tandem "
+
+              # It reads the family this machine actually is, from /etc/os-release.
+              tandem doctor | grep -q "package family: $FAMILIA"
+              . /usr/lib/tandem/common.sh
+              [ "$(t_familia_pacote)" = "$FAMILIA" ]
+
+              # A .deb is foreign here, and it is said plainly - crucially with no
+              # python3 (dnf5-based Fedora and Arch base ship none) and without
+              # reaching for an apt that is not installed.
+              out="$(TANDEM_IDIOMA_FORCADO=en tandem-deb "/repo/tandem_${V}_all.deb" 2>&1 || true)"
+              printf %s "$out" | grep -qi "Debian and Ubuntu family"
+              if printf %s "$out" | grep -qi "apt-get"; then
+                  echo "apt leaked on $FAMILIA"; exit 1
+              fi
+
+              echo "OK: Tandem installs and behaves correctly on $FAMILIA"
+            '

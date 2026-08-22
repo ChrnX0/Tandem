@@ -222,7 +222,11 @@ tools/prosa-fora-do-catalogo.py  THE SECOND INSTRUMENT: runs the program and rea
                           flags any line that comes out byte-identical
 proofgate.json            evidence gate: stack, coupled files
 .github/workflows/ci.yml  suite + lintian + a real install cycle
-.github/workflows/release.yml  tag -> build, verify, publish the .deb
+.github/workflows/release.yml  tag -> build, verify, publish the .deb + tarball
+.github/workflows/distros.yml  weekly + on-demand: installs the generic bundle on
+                          REAL Fedora and Arch containers and checks the distro
+                          behaviour (family read, .deb-is-foreign); non-gating,
+                          network-free asserts so a mirror hiccup is not a red X
 src/bin/tandem            CLI + zenity panel; 20 commands
 src/bin/tandem-exe        the run->detect->install->retry loop
 src/bin/tandem-apk        pre-flight + install; xapk/apks via adb install-multiple
