@@ -2475,6 +2475,33 @@ those families natively — a PKGBUILD (Arch/AUR), now testable with real `makep
 in the Arch container — but it is genuinely incremental over the tarball, so it
 is the owner's call whether it is worth more than a fresh idea sweep elsewhere.**
 
+**v4.52 IS PUBLISHED** — 2026-08-22, tag `v4.52` at `a01a468`, both artifacts
+verified (the `.deb` sha256 `6e568ece…` and the generic bundle `4017a161…` each
+agree across the release's checksum sidecar, the downloaded bytes, and a fresh
+reproducible build at the commit). It is the product of a REAL extrapolation
+sweep of the driver investigation in `docs/IDEAS.md` — and the sweep's first
+finding was that most of that ledger is already BUILT (the serial-port hole §1,
+the printing node glob §3, the soft-stub driver installer §7), stale exactly as
+this file keeps warning; verifying against the code before building is what
+stopped a rebuild of done work, and `docs/IDEAS.md §2` now carries a status note
+saying so. The one genuine gap left, in the software a Brazilian counter most
+depends on — a Sentinel (HASP) fiscal key: Tandem already names the maker's route
+("works on Wine 10.0 with the Sentinel LDK Run-time Environment"), but `preparar`
+installs whatever the distro ships (Wine 9.0 on the Ubuntu/Zorin base), so a shop
+could get a recipe for a Wine newer than its own machine's with nothing saying
+so. Now, when a Sentinel key is recognised AND the installed Wine is older than
+10.0, Tandem adds one honest line naming the gap — never telling the owner to
+change Wine himself (it does not manage Wine). The decision is pure
+(`t_wine_major` reads the installed major, or nothing when it cannot tell, so the
+warning never rests on a guess) and fires only on `dongle-sentinel` below Wine
+10, both directions asserted. One new message (`sentinel_wine_antigo`), all seven
+languages. Suite 1731 passed / 0 / 1 skipped; both literal counters read 0.
+**The honest read after this sweep: the driver/shop code ground the ledger
+pre-analysed is largely built, and further code here is into falling returns.
+The frontier that remains is NOT code — it is field evidence on the owner's own
+counter (a real POS / fiscal-printer install), which no amount of container or CI
+work can substitute for.**
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
