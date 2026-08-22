@@ -2502,6 +2502,40 @@ The frontier that remains is NOT code — it is field evidence on the owner's ow
 counter (a real POS / fiscal-printer install), which no amount of container or CI
 work can substitute for.**
 
+**v4.53 IS PUBLISHED** — 2026-08-22, tag `v4.53` at `190273e`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (558098 bytes, sha256 `279b3ea9…`)
+and the generic bundle (558146 bytes, sha256 `b9e3ff78…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible build at the commit. It closes the PC/SC row of
+the driver ledger's "rows that describe a route without checking it" defect
+(`docs/IDEAS.md §710`, item 4) — the highest-value one, because the file it
+targets is the A3 fiscal certificate a Brazilian counter legally needs to emit an
+invoice. When a Windows program imports `winscard.dll` Tandem recognised the case
+and printed a fixed four-step recipe (install pcscd, pcsc-tools, libccid; run
+pcsc-scan) but never looked at the machine first — while the ledger had already
+measured that the single most common cause is the simplest: the pcsc software is
+not installed at all. Now, exactly as it already does for the Sentinel and
+CodeMeter hardware keys, Tandem checks before it speaks: `t_chave_estado pcsc`
+reports INSTALADO (is the pcsc software present) and SERVICO (is pcscd running),
+both read unprivileged and before any download, and `t_texto_chave pcsc` appends
+one line to the verdict — "the smartcard service is NOT installed; that is almost
+always the whole problem" when absent, "does not appear to be running" when
+installed-but-stopped, and nothing extra when it is up (the static verdict keeps
+the honest ceiling: a reader Linux can see is not yet a certificate that will
+sign). `tandem-exe` routes the `pcsc` limit class to it, beside
+`dongle-sentinel`/`dongle-codemeter`. Exercised E3 here (this container has no
+pcscd, so the common "not installed" path is live): the real verdict rendered in
+English and pt_BR; the stopped and running paths are proven by injection in the
+suite, plus the `winscard.dll → pcsc` mapping and the `tandem-exe` wiring. Two
+new messages, `pcsc_falta` and `pcsc_parado`, translated in all seven languages.
+Suite 1739 passed / 0 / 1 skipped; both literal counters read 0. **This closes
+two-thirds of the §710 defect (Sentinel in 4.52, PC/SC now); what stays open
+there is `hid.dll`/`rockey*` — both "almost always a read-permission problem",
+checkable against the device node's mode the same way `t_no_grupo` reads the
+lp/dialout groups — and the CUPS half of item 4's daemon-probe table. The honest
+read is unchanged: on the driver/shop lines, remaining code is into falling
+returns; the frontier is field evidence on the owner's real counter.**
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
