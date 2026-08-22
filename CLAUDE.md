@@ -2413,6 +2413,39 @@ guidance needs no multilib step; testing on the real distro stopped a wrong
 "fix" built on stale knowledge. Suite 1697 passed / 0 / 1 skipped; both literal
 counters read 0.
 
+**v4.50 IS PUBLISHED** — 2026-08-22, tag `v4.50` at `ba832a3`, both artifacts
+verified: the `.deb` (sha256 `9f49e425…`) and the generic bundle (`e95e3277…`)
+each agree across the release's checksum sidecar, the downloaded bytes, and a
+fresh reproducible build at the commit (the release body sha and the asset digest
+match those by construction). It is the `.deb`/`.rpm` INVERSION: each handler now
+knows whose format the file is, which depends on the machine, not on Tandem. On
+Fedora/RHEL (dnf) and openSUSE (zypper) an `.rpm` is the system's OWN format, so
+`tandem-rpm` INSTALLS it — ask, let the native manager pull the dependencies,
+confirm against rpm's own database — the mirror of how `tandem-deb` installs a
+`.deb` on apt; on the Debian family and on Arch an `.rpm` stays foreign, old
+behaviour kept. And a `.deb` is foreign anywhere there is no apt: `tandem-deb`
+used to reach for apt regardless and fail with "apt-get: command not found";
+now, on a non-apt family, it says so plainly first. **Both fixes are robust where
+it counts, and the robustness is the lesson:** dnf5-based Fedora ships NO
+python3, so the python readers cannot run there — the `.deb` foreign guard is
+placed ABOVE the reader (a `.deb` is foreign whatever its contents, so there is
+nothing to read to know it), and the `.rpm` native path reads the name with
+`rpm` itself (`t_rpm_nome_local`), not python. Two facts the real-distro test
+caught: **dnf5 REJECTS the `--` separator** (so the install command drops it; the
+path is absolute and cannot be an option), and **Arch's `wine` is in `extra`, not
+multilib** (so 4.49's guidance was already right — a wrong fix avoided). Verified
+E4 on real Fedora 41 and Arch: `tandem-rpm` installs a real `.rpm` (`tree`)
+through `dnf` with no python3 present, `tandem-deb` explains a `.deb` as foreign
+on both, and on Arch both formats are correctly foreign. Eight new messages, all
+seven languages. **NEXT RUNG, recorded from what the test surfaced:** the six
+python readers (peinfo/apkinfo/appimageinfo/jarinfo/debinfo/rpminfo) and the
+`.rpm` FOREIGN path still need python3, which minimal Fedora/Arch images lack —
+so on a bare non-apt box the file-diagnosis layer is dark. That is a broader,
+higher-value gap than any one handler, and the natural next distro step (ensure
+python3 on non-apt via `preparar`/the generic install, or reduce the readers'
+python dependence). Suite 1714 passed / 0 / 1 skipped; both literal counters read
+0. Docker (Fedora/Arch) remains the way to verify all of it here.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
