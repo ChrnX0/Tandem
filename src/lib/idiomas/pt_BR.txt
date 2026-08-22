@@ -617,6 +617,35 @@ O download deste arquivo não terminou.
 Mas vale saber de qualquer jeito: arquivos .rpm são de outra família de Linux e
 não instalam no seu sistema. Procure o arquivo .deb no mesmo site.
 
+@rpm_instalar_pergunta
+Instalar este programa?
+
+{1}
+
+@rpm_instalando
+Instalando {1}. Pode levar um instante — não desligue o computador.
+
+@rpm_instalado
+{1} foi instalado. Procure ele no seu menu.
+
+@rpm_ja_instalado
+{1} já está instalado nesta máquina.
+
+@rpm_nao_instalou
+Não consegui instalar {1}. O gerenciador de pacotes parou antes de terminar — o motivo costuma ser uma dependência que ele não achou nos repositórios do seu sistema.
+
+@rpm_sem_senha
+Não consegui instalar porque não recebi a senha.
+
+{1}
+
+@rpm_sem_confirmacao
+Não instalei nada: preciso de uma confirmação e não há janela nem terminal para perguntar. O programa é {1}, no arquivo:
+{2}
+
+@deb_estrangeiro
+Este é um pacote da família Debian e Ubuntu (um .deb). O seu sistema usa {1}, que não instala um .deb. Procure o mesmo programa no seu próprio gerenciador de pacotes, ou como Flatpak no flathub.org — o programa, na forma que o seu lê.
+
 @snap_nao_e_pacote
 Este arquivo não parece ser um pacote snap completo.
 

@@ -1,3 +1,31 @@
+tandem (4.50) unstable; urgency=medium
+
+  * The .deb/.rpm inversion: each handler now knows WHOSE format the file is,
+    which depends on the machine, not on Tandem. On Fedora/RHEL (dnf) and
+    openSUSE (zypper) an .rpm is the system's OWN format, so `tandem-rpm` now
+    INSTALLS it - ask, let the native manager pull the dependencies, confirm
+    against rpm's own database - the mirror of how `tandem-deb` installs a .deb
+    on apt. On the Debian family and on Arch an .rpm stays foreign, with the old
+    explain-and-point-to-the-equivalent behaviour unchanged.
+  * A .deb is foreign anywhere there is no apt. `tandem-deb` used to reach for
+    apt regardless and fail later with "apt-get: command not found"; now, on a
+    non-apt family, it says so plainly first - it is a Debian/Ubuntu package,
+    your system uses dnf/pacman/zypper, look for the same program in your own
+    manager or as a Flatpak.
+  * Both fixes are robust where it counts: dnf5-based Fedora ships NO python3,
+    so the python readers cannot run there. The .deb foreign guard is placed
+    ABOVE the reader (a .deb is foreign whatever its contents), and the .rpm
+    native path reads the package name with `rpm` itself (`t_rpm_nome_local`,
+    no python). Two facts the real-distro test caught: dnf5 REJECTS the `--`
+    separator (so the install command drops it; the path is absolute and safe),
+    and Arch's `wine` is in `extra`, not multilib (so 4.49's guidance was right
+    and needed no "fix"). Eight new messages, translated in all seven languages.
+    Exercised end to end on real Fedora 41 and Arch containers: `tandem-rpm`
+    installs a real .rpm through dnf with no python3, and `tandem-deb` explains
+    a .deb as foreign on both.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 20 Aug 2026 22:00:00 +0000
+
 tandem (4.49) unstable; urgency=medium
 
   * `tandem preparar` now INSTALLS the core on a non-Debian family, instead of

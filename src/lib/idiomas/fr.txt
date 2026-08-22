@@ -622,6 +622,35 @@ Le téléchargement de ce fichier ne s'est pas terminé.
 de Linux et ne s'installent pas sur votre système. Cherchez le fichier .deb
 sur le même site.
 
+@rpm_instalar_pergunta
+Installer ce programme ?
+
+{1}
+
+@rpm_instalando
+Installation de {1}. Cela peut prendre un instant — n'éteignez pas l'ordinateur.
+
+@rpm_instalado
+{1} est installé. Cherchez-le dans votre menu.
+
+@rpm_ja_instalado
+{1} est déjà installé sur cette machine.
+
+@rpm_nao_instalou
+Je n'ai pas pu installer {1}. Le gestionnaire de paquets s'est arrêté avant la fin — la cause est souvent une dépendance introuvable dans les dépôts de votre système.
+
+@rpm_sem_senha
+Je n'ai pas pu installer car je n'ai pas reçu le mot de passe.
+
+{1}
+
+@rpm_sem_confirmacao
+Je n'ai rien installé : il me faut une confirmation et il n'y a ni fenêtre ni terminal pour la demander. Le programme est {1}, dans le fichier :
+{2}
+
+@deb_estrangeiro
+Ceci est un paquet de la famille Debian et Ubuntu (un .deb). Votre système utilise {1}, qui n'installe pas de .deb. Cherchez le même programme dans votre propre gestionnaire de paquets, ou comme Flatpak sur flathub.org — le programme, sous la forme que le vôtre lit.
+
 @snap_nao_e_pacote
 Ce fichier ne ressemble pas à un paquet snap complet.
 

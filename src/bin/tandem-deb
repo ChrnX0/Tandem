@@ -27,6 +27,23 @@ BRUTO="${1:-}"
 PACOTE_ARQ="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 [ -n "$PACOTE_ARQ" ] && [ -f "$PACOTE_ARQ" ] || { t_erro "$(t_msg arquivo_sumiu "$BRUTO")"; exit 1; }
 
+# THE INVERSION (4.50), and it is FIRST on purpose - before the lock and before
+# the python reader. A .deb is a Debian-family package; on dnf/pacman/zypper
+# there is no apt to install it, and everything below reaches for apt. So on a
+# non-apt family, stop here and say so plainly, instead of failing later with
+# "apt-get: command not found". It is placed above the read because dnf5-based
+# Fedora ships no python3 - the reader cannot run there - and a .deb is foreign
+# whatever its contents, so there is nothing to read to know it. The mirror of
+# what tandem-rpm does for an .rpm on apt: name the foreignness, point at the
+# native way. (tandem-rpm INSTALLS a .deb's opposite number on Fedora; a .deb has
+# no such luck off Debian, because apt is the only thing that reads it.)
+if [ "$(t_familia_pacote)" != apt ]; then
+    t_memoria_grava "$PACOTE_ARQ" LIMITE "outra-familia|deb nao instala aqui" 2>/dev/null
+    t_memoria_grava "$PACOTE_ARQ" RESULTADO "outra familia de linux" 2>/dev/null
+    t_erro "$(t_msg deb_estrangeiro "$(t_familia_pacote)")"
+    exit 1
+fi
+
 # See the long comment in tandem-exe about the braces around exec.
 CHAVE="$(printf '%s' "$PACOTE_ARQ" | cksum | tr -d ' ')"
 if { exec 7> "$TANDEM_TRAVAS/deb-$CHAVE.lock"; } 2>/dev/null; then
