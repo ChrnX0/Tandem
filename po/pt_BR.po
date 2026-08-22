@@ -5311,6 +5311,10 @@ msgctxt "peca_wine"
 msgid "Wine (runs Windows programs)"
 msgstr "Wine (roda os programas do Windows)"
 
+msgctxt "peca_python3"
+msgid "Python 3 (the engine that reads installer files)"
+msgstr "Python 3 (o motor que lê os arquivos de instalação)"
+
 msgctxt "peca_wine32"
 msgid "Support for older 32-bit programs"
 msgstr "Suporte a programas antigos de 32 bits"

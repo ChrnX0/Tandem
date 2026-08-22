@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.50"
+TANDEM_VERSAO="4.51"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4444,6 +4444,12 @@ t_pacote_familia() {
     case "$1/$2" in
         dnf/wine|pacman/wine|zypper/wine)                   printf 'wine\n' ;;
         dnf/winetricks|pacman/winetricks|zypper/winetricks) printf 'winetricks\n' ;;
+        # python3 is the readers' engine, so it IS core here - Tandem cannot read
+        # a file without it. Arch calls the package `python` (it still provides
+        # /usr/bin/python3, verified on a real Arch); dnf and zypper call it
+        # python3. All three were confirmed to install and give python3.
+        dnf/python3|zypper/python3)                         printf 'python3\n' ;;
+        pacman/python3)                                     printf 'python\n' ;;
         *)                                                  printf '' ;;
     esac
 }
@@ -4511,6 +4517,14 @@ t_rpm_script_instalacao() {
 # user in every language, and invisible to the counter for the same reason as
 # t_verbo_amigavel: a helper whose name is not a prose-body pattern.
 t_pecas_faltando() {
+    # python3 first. On apt it is a hard dependency of the .deb, so it is always
+    # present and this line never fires. On a non-apt family the generic bundle
+    # does no dependency resolution, and dnf5-based Fedora and Arch base ship no
+    # python3 at all - so without it the six file readers (peinfo, apkinfo,
+    # debinfo...) cannot run and the whole diagnosis layer goes dark. preparar
+    # installs it there (t_pacote_familia maps it), which is the point.
+    command -v python3 >/dev/null 2>&1 ||
+        echo "python3|$(t_msg peca_python3)"
     command -v wine >/dev/null 2>&1 ||
         echo "wine|$(t_msg peca_wine)"
     if command -v wine >/dev/null 2>&1 && ! t_tem_wine32; then
@@ -4555,6 +4569,9 @@ t_script_instalacao() {
             wine)       printf 'apt-get update -q\napt-get install -y wine winetricks\n' ;;
             wine32)     printf 'dpkg --add-architecture i386\napt-get update -q\napt-get install -y wine32:i386\n' ;;
             winetricks) printf 'apt-get install -y winetricks\n' ;;
+            # A .deb depends on python3, so it is normally already here; this is
+            # the belt-and-braces for a machine where it somehow went missing.
+            python3)    printf 'apt-get install -y python3\n' ;;
             adb)        printf 'apt-get install -y adb\n' ;;
             java)       printf 'apt-get update -q\napt-get install -y default-jre\n' ;;
             # On demand only, and deliberately NOT in t_pecas_faltando. Java and

@@ -5279,6 +5279,10 @@ msgctxt "peca_wine"
 msgid "Wine (runs Windows programs)"
 msgstr "Wine (Windows प्रोग्राम चलाता है)"
 
+msgctxt "peca_python3"
+msgid "Python 3 (the engine that reads installer files)"
+msgstr "Python 3 (इंस्टॉलर फ़ाइलें पढ़ने वाला इंजन)"
+
 msgctxt "peca_wine32"
 msgid "Support for older 32-bit programs"
 msgstr "पुराने 32-बिट प्रोग्राम के लिए सहायता"

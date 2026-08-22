@@ -2986,6 +2986,9 @@ Windows 安全
 @peca_wine
 Wine（运行 Windows 程序）
 
+@peca_python3
+Python 3（读取安装文件的引擎）
+
 @peca_wine32
 对旧的 32 位程序的支持
 

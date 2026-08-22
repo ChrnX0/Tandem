@@ -3129,6 +3129,9 @@ Text shaping (Uniscribe)
 @peca_wine
 Wine (runs Windows programs)
 
+@peca_python3
+Python 3 (the engine that reads installer files)
+
 @peca_wine32
 Support for older 32-bit programs
 

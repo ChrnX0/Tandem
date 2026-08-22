@@ -3152,6 +3152,9 @@ Desenho de texto (Uniscribe)
 @peca_wine
 Wine (roda os programas do Windows)
 
+@peca_python3
+Python 3 (o motor que lê os arquivos de instalação)
+
 @peca_wine32
 Suporte a programas antigos de 32 bits
 
