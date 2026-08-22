@@ -3216,6 +3216,9 @@ Rendu du texte (Uniscribe)
 @peca_wine
 Wine (fait tourner les programmes Windows)
 
+@peca_python3
+Python 3 (le moteur qui lit les fichiers d'installation)
+
 @peca_wine32
 Prise en charge des anciens programmes 32 bits
 

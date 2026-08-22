@@ -4088,6 +4088,10 @@ msgctxt "peca_wine"
 msgid "Wine (runs Windows programs)"
 msgstr ""
 
+msgctxt "peca_python3"
+msgid "Python 3 (the engine that reads installer files)"
+msgstr ""
+
 msgctxt "peca_wine32"
 msgid "Support for older 32-bit programs"
 msgstr ""

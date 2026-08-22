@@ -1,3 +1,25 @@
+tandem (4.51) unstable; urgency=medium
+
+  * python3 is now a piece `tandem preparar` ensures, which matters only off
+    Debian. The six file readers (peinfo, apkinfo, appimageinfo, jarinfo,
+    debinfo, rpminfo) are Python, so without python3 Tandem cannot read an
+    .exe, .apk, .AppImage, .jar or foreign .rpm at all - the whole diagnosis
+    layer goes dark. On apt that never bites: python3 is a hard dependency of
+    the .deb. But the generic bundle does no dependency resolution, and
+    dnf5-based Fedora and Arch base ship NO python3 - so a shop owner who
+    installed Tandem there had a reader layer that could not run. preparar now
+    installs it: `t_pecas_faltando` lists python3 when it is missing, and
+    `t_pacote_familia` maps it to the family's package (python3 on dnf/zypper,
+    `python` on Arch - which still provides /usr/bin/python3, verified on a real
+    Arch). Confirmed on real Fedora 41 and Arch: preparar installs python3, and
+    a reader that could not run before runs afterwards.
+  * The apt install plan gains a python3 case too, as belt-and-braces for a
+    Debian machine where it somehow went missing; on apt it is normally already
+    there. One new piece message (peca_python3), translated in all seven
+    languages. No behaviour change on apt.
+
+ -- Tandem <rockx0@gmail.com>  Sat, 22 Aug 2026 20:00:00 +0000
+
 tandem (4.50) unstable; urgency=medium
 
   * The .deb/.rpm inversion: each handler now knows WHOSE format the file is,

@@ -3247,6 +3247,9 @@ DirectShow (الفيديو)
 @peca_wine
 Wine (يشغّل برامج Windows)
 
+@peca_python3
+Python 3 (المحرّك الذي يقرأ ملفات التثبيت)
+
 @peca_wine32
 دعم البرامج القديمة ذات 32 بت
 

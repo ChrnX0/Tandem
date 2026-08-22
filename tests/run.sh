@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "42130317 5660" "$soma_esperados"
+      "2181204074 5691" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "4230782651 2739" "$soma_padroes"
 
@@ -1837,11 +1837,11 @@ section "preparar: Tandem installs what is missing"
 # suite.
 faltas="$(PATH=/nao/existe t_pecas_faltando | cut -d'|' -f1 | tr '\n' ' ' | sed 's/ $//')"
 equal "with nothing installed, lists everything that is missing" \
-      "wine winetricks adb java fuse waydroid" "$faltas"
+      "python3 wine winetricks adb java fuse waydroid" "$faltas"
 # And with everything present, the list comes back empty. FUSE is not a command
 # on the PATH, so it is answered by the stub of the function instead.
 FINGE="$TMPROOT/finge"; mkdir -p "$FINGE"
-for c in wine winetricks adb java waydroid; do printf '#!/bin/sh\n' > "$FINGE/$c"; chmod +x "$FINGE/$c"; done
+for c in python3 wine winetricks adb java waydroid; do printf '#!/bin/sh\n' > "$FINGE/$c"; chmod +x "$FINGE/$c"; done
 t_tem_fuse2() { return 0; }
 equal "with everything installed, there is nothing to prepare" \
       "" "$(PATH="$FINGE" t_pecas_faltando | grep -v '^wine32|' )"
@@ -1920,6 +1920,12 @@ done
 # for the owner rather than guessed.
 equal "the core maps to a package on dnf" "wine" "$(t_pacote_familia dnf wine)"
 equal "winetricks maps on pacman" "winetricks" "$(t_pacote_familia pacman winetricks)"
+# python3 is core too (4.51): the readers need it, and Fedora/Arch base ship
+# none. Arch names the package `python`, dnf and zypper name it python3 - both
+# provide /usr/bin/python3, verified on the real distros.
+equal "python3 maps to python3 on dnf" "python3" "$(t_pacote_familia dnf python3)"
+equal "python3 maps to python on Arch" "python" "$(t_pacote_familia pacman python3)"
+equal "python3 maps to python3 on zypper" "python3" "$(t_pacote_familia zypper python3)"
 equal "java is NOT auto-installed on a non-apt family" "" "$(t_pacote_familia dnf java)"
 equal "waydroid is NOT auto-installed on a non-apt family" "" "$(t_pacote_familia pacman waydroid)"
 # The install command is the family's own, and only the installable pieces reach

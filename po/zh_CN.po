@@ -5135,6 +5135,10 @@ msgctxt "peca_wine"
 msgid "Wine (runs Windows programs)"
 msgstr "Wine（运行 Windows 程序）"
 
+msgctxt "peca_python3"
+msgid "Python 3 (the engine that reads installer files)"
+msgstr "Python 3（读取安装文件的引擎）"
+
 msgctxt "peca_wine32"
 msgid "Support for older 32-bit programs"
 msgstr "对旧的 32 位程序的支持"

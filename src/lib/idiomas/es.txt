@@ -3157,6 +3157,9 @@ Trazado de texto (Uniscribe)
 @peca_wine
 Wine (ejecuta los programas de Windows)
 
+@peca_python3
+Python 3 (el motor que lee los archivos de instalación)
+
 @peca_wine32
 Compatibilidad con programas antiguos de 32 bits
 
