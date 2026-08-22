@@ -799,6 +799,7 @@ $MAQUINA}"
                             WINE_VELHO="$(t_msg sentinel_wine_antigo "$(t_stack_wine)")"
                         ;;
                     dongle-codemeter) CHAVE="$(t_texto_chave codemeter 2>/dev/null)" ;;
+                    pcsc)             CHAVE="$(t_texto_chave pcsc 2>/dev/null)" ;;
                 esac
                 t_erro "$(t_msg limite_com_caminho "${LIMITE#*|}${CHAVE:+
 

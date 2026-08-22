@@ -2975,6 +2975,18 @@ E encontrei o provável motivo: o serviço da chave {1} NÃO está
   Quem instala é um técnico, uma vez só, e é de graça: procure por
   "{2}" no site do fabricante.
 
+@pcsc_falta
+E achei a causa provável: o serviço de cartão inteligente NÃO está
+  instalado nesta máquina. Quase sempre é esse o problema inteiro - sem
+  ele o Linux não enxerga o token do certificado de jeito nenhum. Instale
+  pcscd, pcsc-tools e libccid (no Debian/Ubuntu: sudo apt install pcscd
+  pcsc-tools libccid) e rode pcsc-scan para ver se o token aparece.
+
+@pcsc_parado
+Uma coisa para conferir: o programa de cartão inteligente está instalado,
+  mas o serviço dele (pcscd) parece não estar rodando. Ligá-lo costuma
+  bastar - rode pcsc-scan e veja se o token aparece.
+
 @portas_usb_rotulo
 {1}   (aparelho USB)  {2}
 

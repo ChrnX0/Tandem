@@ -2820,6 +2820,16 @@ Tandem - 卸载程序
   装它的是技术人员，只装一次，而且免费：在厂商网站上找
   "{2}"。
 
+@pcsc_falta
+我找到了可能的原因：这台机器没有安装智能卡服务。这几乎总是问题的全部——
+  没有它，Linux 根本看不到证书令牌。请安装 pcscd、pcsc-tools 和 libccid
+  （在 Debian/Ubuntu 上：sudo apt install pcscd pcsc-tools libccid），
+  然后运行 pcsc-scan 查看令牌是否出现。
+
+@pcsc_parado
+有一点要检查：智能卡软件已安装，但它的服务（pcscd）似乎没有在运行。
+  启动它通常就够了——运行 pcsc-scan 看看令牌是否出现。
+
 @portas_usb_rotulo
 {1}   (USB 设备)  {2}
 

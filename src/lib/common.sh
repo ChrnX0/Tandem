@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.52"
+TANDEM_VERSAO="4.53"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -3656,6 +3656,18 @@ t_chave_estado() {
     case "$1" in
         sentinel)  servicos="aksusbd hasplmd"; porta=1947 ;;
         codemeter) servicos="CodeMeter CodeMeterLin"; porta=22350 ;;
+        pcsc)
+            # A smartcard reader (the A3 fiscal-certificate token a Brazilian
+            # counter needs to sign an invoice) is not a licence daemon on a TCP
+            # port: pcscd talks over a unix socket, and the whole answer is
+            # usually simpler than "is it running" - on a stock machine the pcsc
+            # software is not installed at all. So the two checkable facts here
+            # are: is the software present, and is the daemon running. Both are
+            # unprivileged, both are readable before any download.
+            if command -v pcscd >/dev/null 2>&1 || command -v pcsc_scan >/dev/null 2>&1
+            then printf 'INSTALADO=sim\n'; else printf 'INSTALADO=nao\n'; fi
+            t_servico_vivo pcscd && printf 'SERVICO=sim\n' || printf 'SERVICO=nao\n'
+            return 0 ;;
         *) return 1 ;;
     esac
     r=nao
@@ -3676,6 +3688,26 @@ t_texto_chave() {
     estado="$(t_chave_estado "$familia")" || return 1
     servico="$(t_campo "$estado" SERVICO)"
     porta="$(t_campo "$estado" PORTA)"
+    # The smartcard path answers before the two licence families, because its
+    # facts are different: the whole question is usually "is the pcsc software
+    # even installed", which §598 of docs/IDEAS.md measured is the common cause.
+    if [ "$familia" = pcsc ]; then
+        local instalado; instalado="$(t_campo "$estado" INSTALADO)"
+        if [ "$servico" = sim ]; then
+            # pcscd is running; the reader should appear. The static verdict
+            # already carries the honest ceiling ("it appearing does not mean the
+            # certificate will sign"), so there is nothing to add here.
+            return 0
+        fi
+        if [ "$instalado" = nao ]; then
+            printf '%s' "$(t_msg pcsc_falta)"
+            return 0
+        fi
+        # Installed but not running.
+        printf '%s' "$(t_msg pcsc_parado)"
+        return 0
+    fi
+
     case "$familia" in
         sentinel)  nome="Sentinel/HASP"
                    pacote="Sentinel LDK Run-time Environment for Linux" ;;
