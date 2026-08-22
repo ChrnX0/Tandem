@@ -2446,6 +2446,31 @@ python3 on non-apt via `preparar`/the generic install, or reduce the readers'
 python dependence). Suite 1714 passed / 0 / 1 skipped; both literal counters read
 0. Docker (Fedora/Arch) remains the way to verify all of it here.
 
+**v4.51 IS PUBLISHED** — 2026-08-22, tag `v4.51` at `d57d933`, both artifacts
+verified (the `.deb` sha256 `d465247f…` and the generic bundle `1977691a…` each
+agree across the release's checksum sidecar, the downloaded bytes, and a fresh
+reproducible build at the commit). It closes the python3 gap the 4.50 record
+named as the next rung. The six file readers are Python, so without python3
+Tandem cannot read an `.exe`/`.apk`/`.AppImage`/`.jar`/foreign `.rpm` at all — on
+apt that never bites (python3 is a hard `.deb` dependency), but the generic
+bundle does no dependency resolution and dnf5-based Fedora and Arch base ship NO
+python3, so a shop owner there had a reader layer that could not run. `tandem
+preparar` now installs it: `t_pecas_faltando` lists python3 when missing, and
+`t_pacote_familia` maps it to the family's package — python3 on dnf/zypper,
+**`python` on Arch** (which still provides `/usr/bin/python3`, verified on a real
+Arch: Python 3.14 lands at `/usr/bin/python3`). The apt plan gains a python3 case
+too, belt-and-braces. Verified E4 on real Fedora 41: before, no python3 and the
+readers dark; `preparar` installed it via dnf; afterwards `rpminfo.py` reads a
+real `.rpm` header (`PACOTE=tree`) — the reader that could not run before runs
+now. One new piece message (`peca_python3`), all seven languages; no behaviour
+change on apt. Suite 1717 passed / 0 / 1 skipped; both literal counters read 0.
+**The distro line is now deep: install anywhere (4.48), speak the manager (4.47),
+install the core incl. python3 (4.49/4.51), and each native package format is
+handled by its own family (4.50). The next distro rung is packaging Tandem for
+those families natively — a PKGBUILD (Arch/AUR), now testable with real `makepkg`
+in the Arch container — but it is genuinely incremental over the tarball, so it
+is the owner's call whether it is worth more than a fresh idea sweep elsewhere.**
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
