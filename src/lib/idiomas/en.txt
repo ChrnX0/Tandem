@@ -3117,6 +3117,9 @@ No
 @botao_ok
 Got it
 
+@botao_corrigir
+Fix
+
 @verbo_dotnet48
 .NET Framework 4.8 (takes about 30 minutes)
 

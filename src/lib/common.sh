@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.54"
+TANDEM_VERSAO="4.55"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -873,37 +873,45 @@ t_texto() {
 # never diverge. $2 is the one-line summary (the "all is well" line when there
 # are no findings, the "here is what needs attention" line otherwise).
 t_painel() {
-    local titulo="${1:-Tandem}" resumo="${2:-}" cru ordenado texto tab
+    local titulo="${1:-Tandem}" resumo="${2:-}" acaofile="${3:-}" cru ordenado texto tab
     tab="$(printf '\t')"
     if [ -t 0 ]; then cru=""; else cru="$(cat)"; fi
     # Worst-first, severity KEPT (same numeric key as t_saude_ordena, which
-    # strips it). An empty gather stays empty -> the all-clear path below.
+    # strips it). The ACTION field (3rd) travels with each line for the panel's
+    # fix buttons; it is stripped for the text form. An empty gather stays empty
+    # -> the all-clear path below.
     ordenado="$(printf '%s' "$cru" | grep . | sort -t "$tab" -k1,1n -s)"
 
     # The text form, identical to saude's: the summary, then one "  - sentence"
-    # per finding (nothing but the summary when all is well).
+    # per finding (nothing but the summary when all is well). Read THREE fields
+    # so the action token never leaks into the sentence; only the sentence prints.
     if [ -n "$ordenado" ]; then
         # ANSI-C quoting for the blank line, NOT $(printf '\n\n'): a command
         # substitution strips trailing newlines, so the separator would vanish
         # and the summary would run into the first finding. The exact trap the
         # saude gathering documents, caught here by running it.
-        texto="$resumo"$'\n\n'"$(printf '%s\n' "$ordenado" | while IFS="$tab" read -r _sev _rest; do
-            [ -n "$_rest" ] && printf '  - %s\n' "$_rest"
+        texto="$resumo"$'\n\n'"$(printf '%s\n' "$ordenado" | while IFS="$tab" read -r _sev _text _action; do
+            [ -n "$_text" ] && printf '  - %s\n' "$_text"
         done)"
     else
         texto="$resumo"
     fi
 
     # A terminal / pipe / file on stdout wants the text, the same rule as t_texto.
+    # There are no buttons to click on text, so no action channel is used here.
     if [ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]; then
         printf '%s\n' "$texto"
         return 0
     fi
 
-    # The modern card panel first; the severity column travels with each line.
+    # The modern card panel first; the severity and action columns travel with
+    # each line. When acaofile is given, a finding that carries an action token
+    # gets a "Fix" button (labelled from the catalogue) that writes its token to
+    # that file - the caller reads it and runs the fix. gui.py's stdout is
+    # discarded; the choice comes back through the file, never stdout.
     if t_tem_gui && t_gui_moderno &&
        printf '%s\n' "$ordenado" | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
-            panel "$titulo" "$resumo" >/dev/null 2>&1; then
+            panel "$titulo" "$resumo" "$acaofile" "$(t_msg botao_corrigir)" >/dev/null 2>&1; then
         return 0
     fi
 
@@ -5836,9 +5844,11 @@ t_saude_wine_citar() {
 }
 
 # The whole health triage, gathered in ONE place. It prints each finding as a
-# "SEV<TAB>SENTENCE" line - SEV 1 = act now, 2 = worth knowing - UNSORTED and
-# unrendered, so the caller decides how to show them (t_saude_ordena to sort,
-# then either the text list or the modern card panel). This exists so `tandem
+# "SEV<TAB>SENTENCE<TAB>ACTION" line - SEV 1 = act now, 2 = worth knowing; ACTION
+# is the token of a one-click fix (relogio, versao, preparar, servico, backup)
+# or absent when there is no single command to offer - UNSORTED and unrendered,
+# so the caller decides how to show them (t_saude_ordena to sort, then either
+# the text list or the modern card panel). This exists so `tandem
 # saude` (text) and the Tandem Central (cards) read from a SINGLE source: a
 # finding added here appears in both, which is the divergence trap this project
 # keeps warning about, closed by construction. Every verdict below is one the
@@ -5852,8 +5862,8 @@ t_saude_achados() {
 
     # The clock: a wrong one breaks fiscal software, TLS and licences in silence.
     case "$(t_relogio_agora_veredito 2>/dev/null)" in
-        atrasado|adiantado)   achados="$achados$prob$tab$(t_msg saude_relogio)$nl" ;;
-        sem_hora_automatica)  achados="$achados$aviso$tab$(t_msg saude_relogio_auto)$nl" ;;
+        atrasado|adiantado)   achados="$achados$prob$tab$(t_msg saude_relogio)${tab}relogio$nl" ;;
+        sem_hora_automatica)  achados="$achados$aviso$tab$(t_msg saude_relogio_auto)${tab}relogio$nl" ;;
     esac
 
     # Sleep: the kernel's own record of whether this machine can suspend.
@@ -5874,12 +5884,12 @@ t_saude_achados() {
 
     # A newer Tandem, if the passive check already learnt of one (no network here).
     if nova="$(t_versao_nova_conhecida 2>/dev/null)" && [ -n "$nova" ]; then
-        achados="$achados$aviso$tab$(t_msg saude_versao "$nova" "$TANDEM_VERSAO")$nl"
+        achados="$achados$aviso$tab$(t_msg saude_versao "$nova" "$TANDEM_VERSAO")${tab}versao$nl"
     fi
 
     # Wine taken out from under a set-up environment - a distro upgrade can do it.
     if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] && ! command -v wine >/dev/null 2>&1; then
-        achados="$achados$prob$tab$(t_msg saude_wine)$nl"
+        achados="$achados$prob$tab$(t_msg saude_wine)${tab}preparar$nl"
     fi
 
     # Wine changed under a program that worked - name it BEFORE the next failure.
@@ -5918,7 +5928,7 @@ t_saude_achados() {
                     "$(t_servico_estado_unidade "$nome" 2>/dev/null)" \
                     "$svc_escuta" "$svc_responde")" in
             falhou|parado|escuta-mudo)
-                achados="$achados$prob$tab$(t_msg saude_servico "$nome")$nl" ;;
+                achados="$achados$prob$tab$(t_msg saude_servico "$nome")${tab}servico$nl" ;;
         esac
     done <<FIMSVC
 $(t_servico_lista_nomes 2>/dev/null)
@@ -5928,11 +5938,11 @@ FIMSVC
     if linha="$(t_saude_backup_recente 2>/dev/null)" && [ -n "$linha" ]; then
         epoch="${linha%%"$tab"*}"; arq="${linha#*"$tab"}"
         case "$(t_saude_backup_veredito "$epoch" "$(date +%s)" "$(t_restauravel "$arq")")" in
-            corrompido) achados="$achados$prob$tab$(t_msg saude_backup_corrompido)$nl" ;;
-            velho)      achados="$achados$aviso$tab$(t_msg saude_backup_velho "$(date -d "@$epoch" +%F 2>/dev/null)")$nl" ;;
+            corrompido) achados="$achados$prob$tab$(t_msg saude_backup_corrompido)${tab}backup$nl" ;;
+            velho)      achados="$achados$aviso$tab$(t_msg saude_backup_velho "$(date -d "@$epoch" +%F 2>/dev/null)")${tab}backup$nl" ;;
         esac
     else
-        achados="$achados$prob$tab$(t_msg saude_sem_backup)$nl"
+        achados="$achados$prob$tab$(t_msg saude_sem_backup)${tab}backup$nl"
     fi
 
     printf '%s' "$achados"

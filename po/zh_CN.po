@@ -5125,6 +5125,10 @@ msgctxt "botao_ok"
 msgid "Got it"
 msgstr "知道了"
 
+msgctxt "botao_corrigir"
+msgid "Fix"
+msgstr "修复"
+
 msgctxt "verbo_dotnet48"
 msgid ".NET Framework 4.8 (takes about 30 minutes)"
 msgstr ".NET Framework 4.8（大约需要 30 分钟）"

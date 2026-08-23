@@ -3202,6 +3202,9 @@ Non
 @botao_ok
 Compris
 
+@botao_corrigir
+Corriger
+
 @verbo_dotnet48
 .NET Framework 4.8 (prend environ 30 minutes)
 

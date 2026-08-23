@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "255479729 5749" "$soma_esperados"
+      "3879986197 5769" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -1224,6 +1224,62 @@ if grep -q 't_saude_achados' "$ROOT/src/bin/tandem" &&
 else
     fail "acao_saude renders through the shared gather + t_painel" "both present" "missing"
 fi
+
+# 4.55: one-click fixes. A finding now carries a THIRD field, an action token,
+# and the panel draws a Fix button for it. The token must NEVER leak into the
+# text form - a line "sev<TAB>text<TAB>action" prints only the sentence.
+PAINEL_ACT="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    printf "1\tThe clock is wrong.\trelogio\n2\tDisk tight.\n" | t_painel "T" "Precisa:"')"
+equal "the panel text form strips the action token, showing only the sentence" \
+      "Precisa:
+
+  - The clock is wrong.
+  - Disk tight." "$PAINEL_ACT"
+
+# The button's whole contract with the shell is _write_action: it records the
+# clicked token in a file the caller reads. Extracted to module level so it can
+# be proven without a display - the click path headless CI can never exercise.
+WA_F="$TMPROOT/acao-escrita"; rm -f "$WA_F"
+WA_OUT="$(python3 -c "import sys; sys.path.insert(0,'$ROOT/src/lib'); import gui; print(gui._write_action('$WA_F','backup'))" 2>&1)"
+equal "_write_action reports it wrote the token" "True" "$WA_OUT"
+equal "_write_action put the exact token in the file the shell reads" "backup" "$(cat "$WA_F" 2>/dev/null)"
+# An empty path is a no-op (no action channel), never an error.
+WA_NONE="$(python3 -c "import sys; sys.path.insert(0,'$ROOT/src/lib'); import gui; print(gui._write_action('',  'backup'))" 2>&1)"
+equal "_write_action on no file is a quiet no-op" "False" "$WA_NONE"
+
+# The panel must actually wire a Fix button to that write, and read the 3rd
+# field. A refactor dropping either takes the Central back to read-only with
+# nothing failing.
+if grep -q 'on_fix' "$ROOT/src/lib/gui.py" &&
+   grep -q '_write_action' "$ROOT/src/lib/gui.py" &&
+   grep -q 'parts\[2\]' "$ROOT/src/lib/gui.py"; then
+    pass "gui.py wires a Fix button to _write_action and reads the action field"
+else
+    fail "gui.py wires a Fix button to _write_action and reads the action field" "wired" "missing"
+fi
+
+# acao_saude must dispatch each token to its remedy. All five are existing
+# commands, callable with no args, none destructive without their own consent.
+SAUDE_BODY="$(sed -n '/^acao_saude()/,/^}/p' "$ROOT/src/bin/tandem")"
+missing_acao=""
+for pair in "relogio:acao_relogio" "versao:acao_versao" "preparar:acao_preparar" \
+            "servico:acao_servico" "backup:acao_backup"; do
+    tok="${pair%%:*}"; fn="${pair##*:}"
+    printf '%s' "$SAUDE_BODY" | grep -qE "^\s*$tok\)\s*$fn" || missing_acao="$missing_acao $tok"
+done
+equal "acao_saude dispatches every one-click token to its command" "" "$missing_acao"
+
+# And the actionable findings carry their token in the gather. Static, because
+# t_saude_achados reads the live machine: each sentence line pairs with its fix.
+ACHADOS_SRC="$(sed -n '/^t_saude_achados()/,/^}/p' "$ROOT/src/lib/common.sh")"
+missing_tok=""
+for pair in "saude_sem_backup:backup" "saude_wine:preparar" "saude_servico:servico" \
+            "saude_relogio:relogio" "saude_versao:versao"; do
+    key="${pair%%:*}"; tok="${pair##*:}"
+    printf '%s' "$ACHADOS_SRC" | grep -q "$key.*\${tab}$tok" || missing_tok="$missing_tok $key"
+done
+equal "the gather tags each actionable finding with its fix token" "" "$missing_tok"
 
 # 4.37: the two false-'healthy' misses the audit found in this flagship command,
 # each fixed and pinned end to end.

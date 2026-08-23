@@ -2969,6 +2969,9 @@ Windows 组件。下载它不会把您的任何东西送到任何地方。
 @botao_ok
 知道了
 
+@botao_corrigir
+修复
+
 @verbo_dotnet48
 .NET Framework 4.8（大约需要 30 分钟）
 

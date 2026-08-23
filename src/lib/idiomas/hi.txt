@@ -3114,6 +3114,9 @@ https://github.com/ChrnX0/Tandem/issues
 @botao_ok
 ठीक है
 
+@botao_corrigir
+ठीक करें
+
 @verbo_dotnet48
 .NET Framework 4.8 (लगभग 30 मिनट लगते हैं)
 

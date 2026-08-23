@@ -5310,6 +5310,10 @@ msgctxt "botao_ok"
 msgid "Got it"
 msgstr "حسنًا"
 
+msgctxt "botao_corrigir"
+msgid "Fix"
+msgstr "إصلاح"
+
 msgctxt "verbo_dotnet48"
 msgid ".NET Framework 4.8 (takes about 30 minutes)"
 msgstr ".NET Framework 4.8 (يستغرق نحو 30 دقيقة)"
