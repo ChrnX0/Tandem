@@ -2579,6 +2579,38 @@ crash-to-cause at runtime, a visual timeline, a client-side web checker, native
 packaging, an opt-in success ledger, and (owner-decision) the long-tail AI
 fallback.**
 
+**v4.55 IS PUBLISHED** — 2026-08-23, tag `v4.55` at `8ded358`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (561998 bytes, sha256 `36ec386d…`)
+and the generic bundle (562107 bytes, sha256 `15e01706…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible build at the commit. It is idea ①b of the arc:
+**the Tandem Central grows one-click fixes.** A card that has a single remedy
+now carries a "Fix" button that RUNS it — the shop owner reads "the clock is
+wrong" and presses one button instead of learning a command. Five findings get
+a button (wrong clock → the clock check; missing/damaged backup → make one;
+newer Tandem → the version screen; Wine gone → `preparar`; a web service down →
+the service screen); a full disk and a Wine that changed under a program have no
+single command, so they keep their card and simply have no button — the honest
+thing rather than a button that does nothing. Every remedy is an EXISTING
+command, callable with no arguments and never destructive without its own
+consent (`backup` makes a file, `preparar` asks first, the rest only read), so
+the button is a shortcut to something already safe. **The choice travels through
+a file, never stdout:** a finding carries a third field (its action token), the
+panel writes the clicked token into a temp file, and `acao_saude` reads it and
+dispatches; the token is stripped from the text form, so a machine with no
+graphical session shows the same sentences and dispatches nothing.
+`gui.py`'s `_write_action` is the whole button-to-shell contract, lifted to
+module level so a test proves the write with no display. One new word,
+`botao_corrigir` ("Fix"), all seven languages; rendered under real GTK4. Suite
+1753 passed / 0 / 1 skipped; both literal counters read 0. **A field lesson
+worth keeping:** the local suite hung mid-run and it was NOT the code — the disk
+allowance had filled from ~1500 leaked `/tmp/tmp.*` wineprefixes across many
+suite runs this session, and Wine hangs on writes when the disk is full. The
+suite does not clean its own tmp prefixes, so on this container run `find /tmp
+-maxdepth 1 -name 'tmp.*' -type d -exec rm -rf {} +` before/after a suite run or
+Wine-touching work; do not mistake that hang for a code defect (it presents as
+`tandem-exe` stuck on a prefix, `df` near 100%).
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

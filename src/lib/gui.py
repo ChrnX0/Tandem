@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""The modern face of Tandem: GTK4 + libadwaita dialogs.
+"""The modern face of Tandem: GTK4 + libadwaita dialogs, in a One UI-inspired
+visual language.
 
 This is the OPTIONAL modern backend for the handful of windows a shop owner
-sees - the error, the yes/no question, and the long-text viewer. The shell
-(common.sh) tries this first and falls back to zenity when it is not here, so
-nothing depends on it: an old machine without libadwaita, or a headless run,
-loses the new look and keeps every word. That fallback is the whole reason this
-can exist without breaking the project's first rule - no error ends in silence.
+sees - the error, the yes/no question, the long-text viewer and the health
+panel. The shell (common.sh) tries this first and falls back to zenity when it
+is not here, so nothing depends on it: an old machine without libadwaita, or a
+headless run, loses the new look and keeps every word. That fallback is the
+whole reason this can exist without breaking the project's first rule - no error
+ends in silence.
+
+The look is an ORIGINAL theme inspired by the One UI design language (rounded
+"squircle" cards, generous space, bottom-weighted actions, a vivid accent,
+depth) - none of Samsung's own fonts or icons are used or shipped. It adapts to
+the system light/dark preference.
 
 Contract, so the shell can read exit codes the same way it reads zenity's:
 
@@ -73,86 +80,156 @@ def _has_display():
     return bool(os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY"))
 
 
-# A small, calm stylesheet: Tandem's teal accent over libadwaita's own modern
-# shapes. Everything else (rounding, spacing, dark/light) comes from libadwaita,
-# so this stays tiny and cannot fight the system theme.
-_CSS = b"""
-@define-color accent_color #0C7A6E;
-@define-color accent_bg_color #0E7A6E;
-@define-color accent_fg_color #ffffff;
-.tandem-icon { min-width: 44px; min-height: 44px; border-radius: 12px; }
-.tandem-icon-ok    { background: rgba(46,158,91,.16);  color: #2E9E5B; }
-.tandem-icon-warn  { background: rgba(179,117,24,.16); color: #B37518; }
-.tandem-icon-error { background: rgba(194,70,52,.16);  color: #C24634; }
-.tandem-body { padding: 22px 24px 20px 24px; }
-.tandem-mono textview, .tandem-mono text { font-family: monospace; }
-.tandem-card { padding: 14px 16px; }
-.tandem-summary { margin-bottom: 4px; }
+# The One UI-inspired palette, one for light and one for dark. Built by token
+# replacement (not %/format) so the literal % in the gradients needs no
+# escaping. The accent gradient is the same in both - it glows on dark and pops
+# on light. Kept here as data so a colour change is one line, never a hunt.
+_LIGHT = {
+    "@BG@": "linear-gradient(180deg,#eef1f6 0%,#e6eaf2 100%)",
+    "@TITLE@": "#10131a", "@SUB@": "#5b6472",
+    "@CARD@": "#ffffff", "@CTEXT@": "#1a1f29",
+    "@BE0@": "rgba(233,72,72,.14)", "@BE1@": "#E94848",
+    "@BW0@": "rgba(233,160,40,.16)", "@BW1@": "#E0850F",
+    "@BO0@": "rgba(38,190,120,.16)", "@BO1@": "#16A65B",
+    "@GHOSTBG@": "rgba(20,30,60,.06)", "@GHOSTFG@": "#2a3040",
+    "@SHADOW@": "0 10px 30px rgba(20,30,60,.10)",
+}
+_DARK = {
+    "@BG@": "linear-gradient(180deg,#0d0f14 0%,#141824 100%)",
+    "@TITLE@": "#f2f5fa", "@SUB@": "#98a2b4",
+    "@CARD@": "#1b2130", "@CTEXT@": "#e7ecf5",
+    "@BE0@": "rgba(233,72,72,.22)", "@BE1@": "#ff6b6b",
+    "@BW0@": "rgba(233,160,40,.22)", "@BW1@": "#ffc04d",
+    "@BO0@": "rgba(38,190,120,.22)", "@BO1@": "#4fd894",
+    "@GHOSTBG@": "rgba(255,255,255,.08)", "@GHOSTFG@": "#d6dcea",
+    "@SHADOW@": "0 12px 34px rgba(0,0,0,.48)",
+}
+
+_CSS_TEMPLATE = """
+window, .oneui-root { background: @BG@; }
+headerbar { background: transparent; box-shadow: none; }
+.oneui-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: @TITLE@; }
+.oneui-sub { font-size: 15px; color: @SUB@; }
+.oneui-card { background: @CARD@; border-radius: 28px; box-shadow: @SHADOW@; }
+.oneui-card-pad { padding: 18px 20px; }
+.oneui-card-msg { padding: 26px; }
+.oneui-cardtext { font-size: 15px; color: @CTEXT@; }
+.oneui-msg { font-size: 16px; color: @CTEXT@; }
+.oneui-badge { min-width: 48px; min-height: 48px; border-radius: 18px; }
+.oneui-badge-error { background: @BE0@; color: @BE1@; }
+.oneui-badge-warn  { background: @BW0@; color: @BW1@; }
+.oneui-badge-ok    { background: @BO0@; color: @BO1@; }
+.oneui-pill { border-radius: 22px; padding: 12px 26px; font-weight: 700; font-size: 15px; }
+.oneui-primary { background: linear-gradient(135deg,#2f6bff 0%,#12b6c8 100%); color: #ffffff; box-shadow: 0 8px 18px rgba(47,107,255,.35); }
+.oneui-primary:hover { filter: brightness(1.05); }
+.oneui-ghost { background: @GHOSTBG@; color: @GHOSTFG@; }
+.oneui-mono textview, .oneui-mono text { font-family: monospace; font-size: 13px; color: @CTEXT@; }
 """
 
 
-def _build(app, title):
+def _css_for(dark):
+    pal = _DARK if dark else _LIGHT
+    css = _CSS_TEMPLATE
+    for k, v in pal.items():
+        css = css.replace(k, v)
+    return css.encode()
+
+
+def _is_dark():
+    """Whether the system asks for dark. Defaults to light if it cannot tell,
+    so a wrong guess never makes light text on a light window."""
+    try:
+        from gi.repository import Adw
+        return bool(Adw.StyleManager.get_default().get_dark())
+    except Exception:
+        return False
+
+
+def _build(app, title, resizable=False):
     from gi.repository import Gtk, Adw, Gdk
     prov = Gtk.CssProvider()
-    prov.load_from_data(_CSS)
+    prov.load_from_data(_css_for(_is_dark()))
     Gtk.StyleContext.add_provider_for_display(
         Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
     win = Adw.ApplicationWindow(application=app)
     win.set_title(title)
-    win.set_resizable(False)
+    win.set_resizable(resizable)
+    win.add_css_class("oneui-root")
     return win
 
 
+def _flat_header():
+    from gi.repository import Gtk, Adw
+    hb = Adw.HeaderBar(show_end_title_buttons=True)
+    hb.add_css_class("flat")
+    hb.set_title_widget(Gtk.Label(label=""))
+    return hb
+
+
+def _badge(kind, size=26):
+    """A rounded squircle status badge. kind: 'error'/'warn'/'ok' (or a
+    severity '1'/'2'/other)."""
+    from gi.repository import Gtk
+    name = {"error": "dialog-error-symbolic", "1": "dialog-error-symbolic",
+            "warn": "dialog-warning-symbolic", "2": "dialog-warning-symbolic",
+            "question": "dialog-question-symbolic"}.get(kind, "emblem-ok-symbolic")
+    cls = {"error": "oneui-badge-error", "1": "oneui-badge-error",
+           "warn": "oneui-badge-warn", "2": "oneui-badge-warn",
+           "question": "oneui-badge-ok"}.get(kind, "oneui-badge-ok")
+    ic = Gtk.Image.new_from_icon_name(name)
+    ic.set_pixel_size(size)
+    ic.add_css_class("oneui-badge")
+    ic.add_css_class(cls)
+    return ic
+
+
 def _message_window(app, kind, text, buttons, result, default_code):
-    """A calm libadwaita window: icon, message, one or two pill buttons.
+    """A One UI-styled message window: the message in a big rounded card up top,
+    the actions as pill buttons anchored at the BOTTOM (the reachable half).
 
     buttons is a list of (label, exit_code, is_default). Clicking any closes the
-    window and sets result['code'] to that button's code. If the owner closes
-    the window ANOTHER way - the X, Escape - result stays at default_code, which
-    is set the moment the window is shown: for an error that is 0 (it WAS shown),
-    for a question that is the "no" code (closing a question is a safe refusal,
-    exactly as zenity treats it). result stays at CANT_DRAW only if drawing threw
+    window and sets result['code']. If the owner closes the window ANOTHER way -
+    the X, Escape - result stays at default_code, set the moment the window is
+    shown: 0 for an error (it WAS shown), the "no" code for a question (a plain
+    close is a safe refusal). result stays at CANT_DRAW only if drawing threw
     before present(), so the shell falls back to zenity only on a real failure.
     """
-    from gi.repository import Gtk, Adw
+    from gi.repository import Gtk
 
     win = _build(app, "Tandem")
-    win.set_size_request(400, -1)
-    win.set_default_size(430, -1)
+    win.set_size_request(460, -1)
+    win.set_default_size(480, 380)
 
     root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    root.append(Adw.HeaderBar(show_end_title_buttons=True,
-                              title_widget=Adw.WindowTitle(title="Tandem")))
+    root.append(_flat_header())
 
-    body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
-    body.add_css_class("tandem-body")
+    body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
+    body.set_margin_top(20)
+    body.set_margin_bottom(24)
+    body.set_margin_start(24)
+    body.set_margin_end(24)
 
-    icon_name = {"error": "dialog-error-symbolic",
-                 "warn": "dialog-warning-symbolic",
-                 "question": "dialog-question-symbolic"}.get(kind, "dialog-information-symbolic")
-    icon_cls = {"error": "tandem-icon-error",
-                "question": "tandem-icon-ok"}.get(kind, "tandem-icon-warn")
-    row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
-    ic = Gtk.Image.new_from_icon_name(icon_name)
-    ic.set_pixel_size(22)
-    ic.add_css_class("tandem-icon")
-    ic.add_css_class(icon_cls)
-    ic.set_valign(Gtk.Align.START)
-    row.append(ic)
+    card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+    card.add_css_class("oneui-card")
+    card.add_css_class("oneui-card-msg")
+    badge = _badge(kind, size=30)
+    badge.set_halign(Gtk.Align.START)
+    card.append(badge)
     msg = Gtk.Label(label=text, wrap=True, xalign=0.0, yalign=0.0)
-    msg.set_max_width_chars(46)
-    msg.set_hexpand(True)
-    row.append(msg)
-    body.append(row)
+    msg.add_css_class("oneui-msg")
+    msg.set_max_width_chars(48)
+    card.append(msg)
+    body.append(card)
 
-    btnbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10,
-                     halign=Gtk.Align.END, homogeneous=False)
-    btnbox.set_margin_top(6)
+    # The spacer pushes the actions to the bottom - the One UI reachable half.
+    body.append(Gtk.Box(vexpand=True))
+
+    btnbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12,
+                     halign=Gtk.Align.END)
     for label, code, is_default in buttons:
         b = Gtk.Button(label=label)
-        b.add_css_class("pill")
-        if is_default:
-            b.add_css_class("suggested-action")
+        b.add_css_class("oneui-pill")
+        b.add_css_class("oneui-primary" if is_default else "oneui-ghost")
 
         def _mk(c):
             def _cb(_btn):
@@ -172,36 +249,26 @@ def _message_window(app, kind, text, buttons, result, default_code):
 
 
 def _panel_card(sev, text, action="", fix_label="Fix", on_fix=None):
-    """One finding as a calm card: a colour-coded status icon, the sentence, and
+    """One finding as a rounded card: a squircle status badge, the sentence, and
     (when the finding carries an action token and we have somewhere to record it)
-    a "Fix" button on the right that runs the one-click remedy.
-
-    sev is '1' (act now -> red), '2' (worth knowing -> amber), anything else is
-    treated as all-clear/info (green). The colours reuse the same .tandem-icon-*
-    classes the message windows use, so the whole face is one visual language.
+    a gradient "Fix" pill on the right that runs the one-click remedy.
     """
     from gi.repository import Gtk
-    icon_name = {"1": "dialog-error-symbolic",
-                 "2": "dialog-warning-symbolic"}.get(sev, "emblem-ok-symbolic")
-    icon_cls = {"1": "tandem-icon-error",
-                "2": "tandem-icon-warn"}.get(sev, "tandem-icon-ok")
-    card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
-    card.add_css_class("card")
-    card.add_css_class("tandem-card")
-    ic = Gtk.Image.new_from_icon_name(icon_name)
-    ic.set_pixel_size(20)
-    ic.add_css_class("tandem-icon")
-    ic.add_css_class(icon_cls)
-    ic.set_valign(Gtk.Align.START)
-    card.append(ic)
+    card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
+    card.add_css_class("oneui-card")
+    card.add_css_class("oneui-card-pad")
+    b = _badge(sev, size=22)
+    b.set_valign(Gtk.Align.CENTER)
+    card.append(b)
     lbl = Gtk.Label(label=text, wrap=True, xalign=0.0, yalign=0.0)
+    lbl.add_css_class("oneui-cardtext")
     lbl.set_hexpand(True)
     lbl.set_valign(Gtk.Align.CENTER)
     card.append(lbl)
     if action and on_fix is not None:
         btn = Gtk.Button(label=fix_label)
-        btn.add_css_class("pill")
-        btn.add_css_class("suggested-action")
+        btn.add_css_class("oneui-pill")
+        btn.add_css_class("oneui-primary")
         btn.set_valign(Gtk.Align.CENTER)
         btn.connect("clicked", lambda _b, tok=action: on_fix(tok))
         card.append(btn)
@@ -209,41 +276,51 @@ def _panel_card(sev, text, action="", fix_label="Fix", on_fix=None):
 
 
 def _panel_window(app, title, summary, findings, action_file, fix_label, result):
-    """The Tandem Central: the machine's health triage as coloured cards.
+    """The Tandem Central: the machine's health triage as One UI cards.
 
     findings is a list of (sev, text, action). Empty findings means "all is
-    well" - a single green card carrying the summary. Otherwise the summary is a
-    heading over one card per finding (already sorted worst-first by the shell).
-    A finding with an action token, when action_file is set, gets a Fix button;
-    clicking it writes the token to action_file and closes the window, so the
-    shell can run the remedy. The choice travels through the file, never stdout.
+    well" - a single green card carrying the summary. Otherwise a big title with
+    the summary as a subtitle sits above one card per finding (already sorted
+    worst-first by the shell). A finding with an action token, when action_file
+    is set, gets a Fix pill; clicking it writes the token to action_file and
+    closes the window, so the shell can run the remedy. The choice travels
+    through the file, never stdout.
     """
-    from gi.repository import Gtk, Adw
+    from gi.repository import Gtk
 
-    win = _build(app, title)
-    win.set_resizable(True)
-    win.set_default_size(600, 520)
+    win = _build(app, title, resizable=True)
+    win.set_default_size(620, 560)
 
     def on_fix(tok):
         _write_action(action_file, tok)
         win.close()
 
     root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    root.append(Adw.HeaderBar(title_widget=Adw.WindowTitle(title=title)))
+    root.append(_flat_header())
 
     scr = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
-    body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-    body.add_css_class("tandem-body")
+    body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+    body.set_margin_top(6)
+    body.set_margin_bottom(26)
+    body.set_margin_start(26)
+    body.set_margin_end(26)
+
+    # The header: a big title, and the summary as a quiet subtitle. When all is
+    # well there are no cards, so the summary rides the green card instead.
+    head = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+    head.set_margin_bottom(6)
+    t = Gtk.Label(label=title, xalign=0.0, wrap=True)
+    t.add_css_class("oneui-title")
+    head.append(t)
+    if findings and summary:
+        s = Gtk.Label(label=summary, xalign=0.0, wrap=True)
+        s.add_css_class("oneui-sub")
+        head.append(s)
+    body.append(head)
 
     if not findings:
-        # All clear: one green card, no separate heading (the card says it).
         body.append(_panel_card("0", summary))
     else:
-        if summary:
-            head = Gtk.Label(label=summary, wrap=True, xalign=0.0)
-            head.add_css_class("title-4")
-            head.add_css_class("tandem-summary")
-            body.append(head)
         for sev, text, action in findings:
             body.append(_panel_card(sev, text, action, fix_label, on_fix))
 
@@ -255,23 +332,38 @@ def _panel_window(app, title, summary, findings, action_file, fix_label, result)
 
 
 def _text_window(app, title, content, result):
-    from gi.repository import Gtk, Adw
+    from gi.repository import Gtk
 
-    win = _build(app, title)
-    win.set_resizable(True)
-    win.set_default_size(720, 560)
+    win = _build(app, title, resizable=True)
+    win.set_default_size(720, 580)
 
     root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    root.append(Adw.HeaderBar(title_widget=Adw.WindowTitle(title=title)))
+    root.append(_flat_header())
 
+    body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+    body.set_margin_top(4)
+    body.set_margin_bottom(24)
+    body.set_margin_start(24)
+    body.set_margin_end(24)
+
+    t = Gtk.Label(label=title, xalign=0.0, wrap=True)
+    t.add_css_class("oneui-title")
+    body.append(t)
+
+    # The report itself sits in a rounded card, monospace, scrollable.
+    card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    card.add_css_class("oneui-card")
     scr = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
     tv = Gtk.TextView(editable=False, cursor_visible=False, monospace=True,
-                      left_margin=16, right_margin=16, top_margin=14, bottom_margin=14,
+                      left_margin=20, right_margin=20, top_margin=18, bottom_margin=18,
                       wrap_mode=Gtk.WrapMode.WORD_CHAR)
     tv.get_buffer().set_text(content)
-    tv.add_css_class("tandem-mono")
+    tv.add_css_class("oneui-mono")
     scr.set_child(tv)
-    root.append(scr)
+    card.append(scr)
+    body.append(card)
+
+    root.append(body)
     win.set_content(root)
     win.present()
     result["code"] = 0
