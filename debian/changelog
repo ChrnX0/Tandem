@@ -1,3 +1,32 @@
+tandem (4.56) unstable; urgency=medium
+
+  * A One UI-inspired face for every window. The owner's call was that the
+    windows still looked like default Linux apps and asked for something
+    futuristic, taking Samsung's One UI 9 as the reference. So the modern
+    backend (`gui.py`) is restyled end to end into an ORIGINAL theme inspired by
+    that design language - rounded "squircle" cards, generous space, a vivid
+    blue-teal accent, soft depth, and actions weighted to the bottom (the
+    reachable half) - across all four windows a shop owner sees: the error, the
+    yes/no question, the long-text viewer and the Central panel. It adapts to
+    the system light/dark preference. No Samsung font or icon is used or
+    shipped; the look is the reference, the assets are the project's own.
+    - Nothing about the CONTRACT changed, which is why it is safe to restyle the
+      most sensitive part of the project: `gui.py` answers the same exit codes
+      (0 shown, 0/1 for the two question buttons, 2 cannot-draw), the shell
+      falls back to zenity and then the terminal as before, a drawing failure
+      still becomes exit 2 rather than a traceback, and every message is
+      unchanged in all seven languages. An old machine without libadwaita loses
+      the shine and keeps every word.
+    - The palette is data (`_LIGHT`/`_DARK` + one template), so a colour change
+      is one line; `_css_for(dark)` builds the stylesheet and `_is_dark()`
+      defaults to light when it cannot tell, so a wrong guess never puts light
+      text on a light window. Verified by RENDERING all four windows under real
+      GTK4 (python3.12 + Xvfb) in light and dark and looking at them.
+    - No message or behaviour change: this is a change of LOOK in one file, so
+      there is no translation step and no new string.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 23 Aug 2026 03:35:00 +0000
+
 tandem (4.55) unstable; urgency=medium
 
   * The Tandem Central grows one-click fixes. 4.54 drew the machine's health as

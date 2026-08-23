@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3879986197 5769" "$soma_esperados"
+      "465820881 5796" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -1280,6 +1280,43 @@ for pair in "saude_sem_backup:backup" "saude_wine:preparar" "saude_servico:servi
     printf '%s' "$ACHADOS_SRC" | grep -q "$key.*\${tab}$tok" || missing_tok="$missing_tok $key"
 done
 equal "the gather tags each actionable finding with its fix token" "" "$missing_tok"
+
+# 4.56: the One UI-inspired theme. It is a change of LOOK only, so what a test
+# can pin without a display is the theme machinery and, above all, that the
+# CONTRACT did not move - the whole reason it is safe to restyle the most
+# sensitive part of the project. _css_for / _is_dark carry no GTK import, so
+# they run here on the suite's plain python3.
+GUIPY="import sys; sys.path.insert(0,'$ROOT/src/lib'); import gui; "
+equal "the theme is aware of light vs dark (the two stylesheets differ)" "True" \
+      "$(python3 -c "${GUIPY}print(gui._css_for(True) != gui._css_for(False))")"
+equal "both palettes carry the One UI accent gradient" "True" \
+      "$(python3 -c "${GUIPY}g=gui._css_for(False)+gui._css_for(True); print(b'linear-gradient(135deg,#2f6bff' in g)")"
+equal "both palettes carry the rounded-card and pill classes" "True" \
+      "$(python3 -c "${GUIPY}
+ok=all(c in gui._css_for(d) for d in (False,True) for c in (b'.oneui-card', b'.oneui-pill', b'.oneui-badge'))
+print(ok)")"
+# Every token must be substituted: a leftover @NAME@ would render as broken CSS.
+equal "no palette token is left unreplaced in either stylesheet" "True" \
+      "$(python3 -c "${GUIPY}print(b'@' not in gui._css_for(False) and b'@' not in gui._css_for(True))")"
+# _is_dark must never raise, and must default to light (False) when it cannot
+# tell - a wrong guess is light text on a light window, the one unreadable case.
+equal "_is_dark answers a bool and never raises" "True" \
+      "$(python3 -c "${GUIPY}print(isinstance(gui._is_dark(), bool))")"
+# The contract is unchanged: with no display every window still asks the shell
+# to fall back (exit 2) rather than crash. error, question, text and panel.
+for _k in error question text panel; do
+    _rc="$(printf '1\tx\t\n' | env -i PATH=/usr/bin:/bin python3 "$ROOT/src/lib/gui.py" "$_k" T S >/dev/null 2>&1; echo $?)"
+    equal "gui.py $_k still falls back with no display (exit 2)" "2" "$_rc"
+done
+# The One UI builders must stay wired (a refactor that drops the theme silently
+# reverts the look). The real GTK4 render is verified by screenshot out of band.
+if grep -q '_css_for' "$ROOT/src/lib/gui.py" &&
+   grep -q 'oneui-card' "$ROOT/src/lib/gui.py" &&
+   grep -q 'oneui-primary' "$ROOT/src/lib/gui.py"; then
+    pass "gui.py keeps the One UI theme (css builder + card + primary pill)"
+else
+    fail "gui.py keeps the One UI theme (css builder + card + primary pill)" "themed" "missing"
+fi
 
 # 4.37: the two false-'healthy' misses the audit found in this flagship command,
 # each fixed and pinned end to end.
