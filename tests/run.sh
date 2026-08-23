@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2414882405 5701" "$soma_esperados"
+      "255479729 5749" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -1161,6 +1161,69 @@ printf 'PROGRAMA=b\nVERSAO_WINE=10.0\n' > "$SAUH/.local/share/tandem/memoria/bbb
 contem "an unterminated record cannot glue a fabricated version and alarm" \
        "healthy" "$(sau_em)"
 rm -f "$SAUH/.local/share/tandem/memoria/bbbb2222.txt"
+
+# 4.54: the Tandem Central. `tandem central` (and `dashboard`) is the SAME
+# reading as `tandem saude`, rendered as a modern card panel when there is a
+# graphical session and as text otherwise. Under the suite (piped stdout, no
+# display) both come out as the identical text - which is exactly the property
+# that matters: the cards and the text read from one shared source
+# (t_saude_achados), so they can never diverge.
+sau_cmd() {
+    env -i HOME="$SAUH" PATH="$SAUH/stub:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_BIN="$ROOT/src/bin" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+        TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem" "$1" 2>&1
+}
+equal "tandem central shows the identical reading as tandem saude" \
+      "$(sau_cmd saude)" "$(sau_cmd central)"
+equal "the dashboard alias reaches the same reading" \
+      "$(sau_cmd saude)" "$(sau_cmd dashboard)"
+
+# t_painel is the renderer both share. Its text form (a terminal/pipe/file on
+# stdout) must reproduce saude's wording exactly: the summary, a blank line,
+# then one "  - sentence" per finding, worst-first (severity 1 above 2),
+# whatever order they were gathered in.
+PAINEL_TXT="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    printf "2\taviso B\n1\tproblema A\n2\taviso C\n" | t_painel "T" "Precisa:"')"
+equal "the panel text form is summary, blank line, then worst-first bullets" \
+      "Precisa:
+
+  - problema A
+  - aviso B
+  - aviso C" "$PAINEL_TXT"
+# Nothing wrong -> just the summary, no empty bullet list, no empty window.
+PAINEL_OK="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    printf "" | t_painel "T" "Tudo certo."')"
+equal "an all-clear panel is just the summary line" "Tudo certo." "$PAINEL_OK"
+
+# The fallback that makes it safe: gui.py panel with NO display must answer
+# CANT_DRAW (2), so the shell drops to the text window instead of a traceback -
+# the same contract error/question/text already keep. Deterministic without gi:
+# the no-display check returns before any import.
+PANEL_RC="$(printf '1\tx\n' | env -i PATH=/usr/bin:/bin python3 "$ROOT/src/lib/gui.py" panel T S >/dev/null 2>&1; echo $?)"
+equal "gui.py panel with no display asks the shell to fall back (exit 2)" \
+      "2" "$PANEL_RC"
+
+# The panel handler and its two builders must stay wired: a refactor that drops
+# the `panel` case or a card builder would silently take the Central back to the
+# plain text window with nothing failing. (The real GTK4 render is verified by
+# screenshot out of band - headless CI has no libadwaita, so a live render test
+# would only ever skip here.)
+if grep -q 'kind == "panel"' "$ROOT/src/lib/gui.py" &&
+   grep -q '_panel_window' "$ROOT/src/lib/gui.py" &&
+   grep -q '_panel_card' "$ROOT/src/lib/gui.py"; then
+    pass "gui.py keeps the panel handler and its card builders"
+else
+    fail "gui.py keeps the panel handler and its card builders" "panel + builders" "missing"
+fi
+# The Central reads from the ONE shared gather, so text and cards cannot diverge.
+if grep -q 't_saude_achados' "$ROOT/src/bin/tandem" &&
+   grep -q 't_painel' "$ROOT/src/bin/tandem"; then
+    pass "acao_saude renders through the shared gather + t_painel"
+else
+    fail "acao_saude renders through the shared gather + t_painel" "both present" "missing"
+fi
 
 # 4.37: the two false-'healthy' misses the audit found in this flagship command,
 # each fixed and pinned end to end.

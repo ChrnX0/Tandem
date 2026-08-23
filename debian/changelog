@@ -1,3 +1,33 @@
+tandem (4.54) unstable; urgency=medium
+
+  * The Tandem Central: the machine's health as a modern panel, not a wall of
+    text. Tandem already computes a dozen honest verdicts about the counter -
+    is the clock right, is the disk filling, is Wine still there, did Wine
+    change under a program that worked, is a web service serving, can it sleep,
+    is there a backup to fall back on - and `tandem saude` gathered them into
+    one triage. But it showed them as plain lines in a scrollable box that read
+    like a program from the 1990s. Now, when there is a graphical session, the
+    same triage is drawn in GTK4 + libadwaita - one calm card per finding,
+    coloured by urgency (red = act now, amber = worth knowing), worst first, and
+    a single green card when all is well. It is the visual face the shop owner
+    actually sees, and it reuses the exact same verdicts, so the panel and the
+    text can never disagree.
+    - New front-door aliases `tandem central` (English `dashboard`, Portuguese
+      `painel`) all reach the same reading - a discoverable name for "show me
+      the state of my machine", instead of a diagnostic command nobody knew to
+      type.
+    - Safe by construction, the same way the 4.46 windows are: `gui.py panel`
+      draws the cards, and the shell falls back to the scrollable text (and then
+      to the terminal) on any machine without libadwaita, without a display, or
+      with `TANDEM_GUI=zenity`. Every word survives the fallback; only the shine
+      is optional. A drawing failure becomes exit 2, never a Python traceback.
+    - The findings gathering moved into one shared `t_saude_achados`, so `saude`
+      (text) and the Central (cards) read from a single source - a finding added
+      to one appears in the other, the divergence trap this project keeps
+      warning about closed by construction.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 23 Aug 2026 01:05:00 +0000
+
 tandem (4.53) unstable; urgency=medium
 
   * The A3 fiscal certificate: name the missing service, not a four-step recipe.

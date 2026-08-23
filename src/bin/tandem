@@ -1584,147 +1584,22 @@ acao_relogio() {
 
 # ------------------------------------------------------------------ saude
 #
-# One reading of the whole machine, worst-first. It calls the SAME verdicts the
+# One reading of the whole machine, worst-first. It gathers the SAME verdicts the
 # other commands do - the clock, the version check, disk, Wine, the web service,
-# a backup to fall back on - but keeps only what needs acting on and names the
-# fix. Triage, not the doctor's dump. Each finding is one line "rank<TAB>text";
-# t_saude_ordena sorts them so the urgent one is first however the probes ran, a
-# check that cannot run adds nothing (unknown is never a green light), and with
-# nothing to report it says so plainly instead of an empty window.
+# a backup to fall back on - through the one shared t_saude_achados, keeps only
+# what needs acting on, and names the fix. Triage, not the doctor's dump. The
+# rendering is t_painel: a terminal gets the worst-first text, a graphical
+# session gets the modern card panel (the Tandem Central), and nothing to report
+# says so plainly instead of an empty window.
 acao_saude() {
-    local achados="" tab nl nova livre_kb linha epoch arq nome wine_agora antes_wine v
-    local svc_porta svc_escuta svc_responde sono_v sono_d
-    # The two severities, as the leading number of each finding: 1 = act now,
-    # 2 = worth knowing. t_saude_ordena sorts on it so the urgent thing is first.
-    local prob=1 aviso=2
-    # ANSI-C quoting, NOT $(printf ...): a command substitution strips trailing
-    # newlines, so nl would come out empty and every finding would run into the
-    # next with the rank marker showing through. Found by running it.
-    tab=$'\t'; nl=$'\n'
-
-    # The clock: a wrong one breaks fiscal software, TLS and licences in silence.
-    case "$(t_relogio_agora_veredito 2>/dev/null)" in
-        atrasado|adiantado)   achados="$achados$prob$tab$(t_msg saude_relogio)$nl" ;;
-        sem_hora_automatica)  achados="$achados$aviso$tab$(t_msg saude_relogio_auto)$nl" ;;
-    esac
-
-    # Sleep: the kernel's own record of whether this machine can suspend, and the
-    # device that blocked it. Never-once-slept is act-now (it runs hot and drains
-    # a UPS overnight); sometimes-fails is worth-knowing. A clean sleeper or a
-    # kernel that keeps no record says nothing. Same read the doctor line uses.
-    if linha="$(t_sono_le 2>/dev/null)" && [ -n "$linha" ]; then
-        sono_v="${linha%%"$tab"*}"; sono_d="${linha#*"$tab"}"
-        case "$sono_v" in
-            nunca)    achados="$achados$prob$tab$(t_sono_frase nunca "$sono_d")$nl" ;;
-            as-vezes) achados="$achados$aviso$tab$(t_sono_frase as-vezes "$sono_d")$nl" ;;
-        esac
-    fi
-
-    # Free disk: a full one cannot save a sale or finish an install, and an
-    # append even SUCCEEDS on it, so it fails where nobody is looking.
-    livre_kb="$(df -Pk "$HOME" 2>/dev/null | awk 'NR==2 { print $4 }')"
-    case "$(t_saude_disco_veredito "$livre_kb")" in
-        cheio)    achados="$achados$prob$tab$(t_msg saude_disco_cheio "$(t_tamanho_amigavel "$(( ${livre_kb:-0} * 1024 ))")")$nl" ;;
-        apertado) achados="$achados$aviso$tab$(t_msg saude_disco_apertado "$(t_tamanho_amigavel "$(( ${livre_kb:-0} * 1024 ))")")$nl" ;;
-    esac
-
-    # A newer Tandem, if the passive check already learnt of one (no network here).
-    if nova="$(t_versao_nova_conhecida 2>/dev/null)" && [ -n "$nova" ]; then
-        achados="$achados$aviso$tab$(t_msg saude_versao "$nova" "$TANDEM_VERSAO")$nl"
-    fi
-
-    # Wine taken out from under a set-up environment - a distro upgrade can do it.
-    if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] && ! command -v wine >/dev/null 2>&1; then
-        achados="$achados$prob$tab$(t_msg saude_wine)$nl"
-    fi
-
-    # Wine changed under a program that worked. 4.28 records the Wine each
-    # program last opened cleanly under and names the change at the next FAILURE;
-    # here we say it BEFORE, while the shop is closed. Only when Wine is present
-    # (the block above owns Wine gone entirely). t_saude_wine_citar reuses the
-    # 4.28 guard, so it is silent unless a remembered working Wine really differs
-    # from the one installed now.
-    if command -v wine >/dev/null 2>&1; then
-        wine_agora="$(t_stack_wine 2>/dev/null)"
-        antes_wine="$(
-            for arq in "$TANDEM_MEMORIA"/*.txt; do
-                [ -f "$arq" ] || continue
-                # Normalise before comparing: a memory file edited or moved
-                # between machines can carry a CR, or leave its last line
-                # unterminated so the next file's value glues onto it. Strip all
-                # whitespace (a version has none inside it) and re-emit exactly
-                # one clean line, so the check cannot cry wolf on a mangled file.
-                v="$(sed -n 's/^VERSAO_WINE=//p' "$arq" | tail -1)"
-                v="$(printf '%s' "$v" | tr -d '[:space:]')"
-                [ -n "$v" ] && printf '%s\n' "$v"
-            done | t_saude_wine_citar "$wine_agora"
-        )"
-        [ -n "$antes_wine" ] && \
-            achados="$achados$aviso$tab$(t_msg saude_wine_mudou "$antes_wine" "$wine_agora")$nl"
-    fi
-
-    # Web services the owner set up that are no longer serving. No services
-    # registered -> the loop body never runs; a probe with no systemd -> the
-    # verdict is 'sem-systemd', which is not a "down" and is skipped.
-    #
-    # t_servico_escuta / t_servico_responde take the PORT and answer through their
-    # EXIT CODE, not stdout - the way acao_servico calls them. Passing the NAME
-    # and capturing (empty) stdout made every active service read as 'subindo',
-    # so 'escuta-mudo' was dead code and a service up-but-serving-nothing came out
-    # healthy. Read the port, turn the exit codes into sim/nao; a responder we
-    # cannot reach (no curl -> return 2) stays "" -> 'rodando', never a false alarm.
-    while IFS= read -r nome; do
-        [ -n "$nome" ] || continue
-        svc_porta="$(t_servico_le "$nome" PORTA 2>/dev/null)"
-        svc_escuta=""; svc_responde=""
-        if [ -n "$svc_porta" ]; then
-            if t_servico_escuta "$svc_porta" 2>/dev/null; then
-                svc_escuta=sim
-                if t_servico_responde "$svc_porta" 2>/dev/null; then
-                    svc_responde=sim
-                else
-                    [ $? -eq 1 ] && svc_responde=nao
-                fi
-            else
-                svc_escuta=nao
-            fi
-        fi
-        case "$(t_servico_veredito \
-                    "$(t_servico_estado_unidade "$nome" 2>/dev/null)" \
-                    "$svc_escuta" "$svc_responde")" in
-            falhou|parado|escuta-mudo)
-                achados="$achados$prob$tab$(t_msg saude_servico "$nome")$nl" ;;
-        esac
-    done <<FIMSVC
-$(t_servico_lista_nomes 2>/dev/null)
-FIMSVC
-
-    # Recovery readiness - the question 4.30 made answerable: if the disk died
-    # now, is there a backup to come back from, recent, and does it verify?
-    if linha="$(t_saude_backup_recente 2>/dev/null)" && [ -n "$linha" ]; then
-        epoch="${linha%%"$tab"*}"; arq="${linha#*"$tab"}"
-        # Ask t_restauravel, not t_backup_verifica: the checksum alone waves a
-        # 0-byte or truncated archive through (no sidecar -> "cannot check" ->
-        # ok), and a backup that will not open is not a recovery net. t_restauravel
-        # is the same pre-flight a real restore runs - structure THEN checksum.
-        case "$(t_saude_backup_veredito "$epoch" "$(date +%s)" "$(t_restauravel "$arq")")" in
-            corrompido) achados="$achados$prob$tab$(t_msg saude_backup_corrompido)$nl" ;;
-            velho)      achados="$achados$aviso$tab$(t_msg saude_backup_velho "$(date -d "@$epoch" +%F 2>/dev/null)")$nl" ;;
-        esac
-    else
-        achados="$achados$prob$tab$(t_msg saude_sem_backup)$nl"
-    fi
-
+    local achados resumo
+    achados="$(t_saude_achados)"
     if [ "$(printf '%s' "$achados" | grep -c .)" -eq 0 ]; then
-        printf '%s\n' "$(t_msg saude_tudo_bem)" | t_texto "$(t_msg saude_titulo)"
-        return 0
+        resumo="$(t_msg saude_tudo_bem)"
+    else
+        resumo="$(t_msg saude_precisa)"
     fi
-    {
-        printf '%s\n\n' "$(t_msg saude_precisa)"
-        printf '%s' "$achados" | grep . | t_saude_ordena | while IFS= read -r linha; do
-            printf '  - %s\n' "$linha"
-        done
-    } | t_texto "$(t_msg saude_titulo)"
+    printf '%s' "$achados" | t_painel "$(t_msg saude_titulo)" "$resumo"
     return 0
 }
 
@@ -2231,6 +2106,7 @@ case "${1:-}" in
     android)              exec "$TANDEM_BIN"/tandem-android ;;
     doctor|diagnostico)   acao_doctor ;;
     saude|health|saúde)   acao_saude ;;
+    central|dashboard)    acao_saude ;;
     autoteste|autotest)   acao_autoteste ;;
     repair|consertar)     exec "$TANDEM_BIN"/tandem-repair ;;
     dados|meus-dados)     shift; acao_dados "$@" ;;
