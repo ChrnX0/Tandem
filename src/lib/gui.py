@@ -19,6 +19,10 @@ Contract, so the shell can read exit codes the same way it reads zenity's:
                                       2 = could not draw (caller falls back)
     gui.py text <title>            -> long text on STDIN in a scrollable window;
                                       0 when shown, 2 when it could not draw
+    gui.py panel <title> <summary> -> the health triage as coloured cards; one
+                                      "sev<TAB>text" finding per line on STDIN
+                                      (sev 1=red, 2=amber), empty STDIN = one
+                                      green all-clear card. 0 shown, 2 cannot draw
 
 Every drawing path is wrapped so a failure NEVER reaches the owner as a Python
 traceback - it becomes exit 2, and the shell shows the zenity window instead.
@@ -56,6 +60,8 @@ _CSS = b"""
 .tandem-icon-error { background: rgba(194,70,52,.16);  color: #C24634; }
 .tandem-body { padding: 22px 24px 20px 24px; }
 .tandem-mono textview, .tandem-mono text { font-family: monospace; }
+.tandem-card { padding: 14px 16px; }
+.tandem-summary { margin-bottom: 4px; }
 """
 
 
@@ -139,6 +145,72 @@ def _message_window(app, kind, text, buttons, result, default_code):
     result["code"] = default_code   # shown: from here a plain close is not a failure
 
 
+def _panel_card(sev, text):
+    """One finding as a calm card: a colour-coded status icon and the sentence.
+
+    sev is '1' (act now -> red), '2' (worth knowing -> amber), anything else is
+    treated as all-clear/info (green). The colours reuse the same .tandem-icon-*
+    classes the message windows use, so the whole face is one visual language.
+    """
+    from gi.repository import Gtk
+    icon_name = {"1": "dialog-error-symbolic",
+                 "2": "dialog-warning-symbolic"}.get(sev, "emblem-ok-symbolic")
+    icon_cls = {"1": "tandem-icon-error",
+                "2": "tandem-icon-warn"}.get(sev, "tandem-icon-ok")
+    card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+    card.add_css_class("card")
+    card.add_css_class("tandem-card")
+    ic = Gtk.Image.new_from_icon_name(icon_name)
+    ic.set_pixel_size(20)
+    ic.add_css_class("tandem-icon")
+    ic.add_css_class(icon_cls)
+    ic.set_valign(Gtk.Align.START)
+    card.append(ic)
+    lbl = Gtk.Label(label=text, wrap=True, xalign=0.0, yalign=0.0)
+    lbl.set_hexpand(True)
+    card.append(lbl)
+    return card
+
+
+def _panel_window(app, title, summary, findings, result):
+    """The Tandem Central: the machine's health triage as coloured cards.
+
+    findings is a list of (sev, text). Empty findings means "all is well" - a
+    single green card carrying the summary. Otherwise the summary is a heading
+    over one card per finding (already sorted worst-first by the shell).
+    """
+    from gi.repository import Gtk, Adw
+
+    win = _build(app, title)
+    win.set_resizable(True)
+    win.set_default_size(560, 520)
+
+    root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    root.append(Adw.HeaderBar(title_widget=Adw.WindowTitle(title=title)))
+
+    scr = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
+    body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+    body.add_css_class("tandem-body")
+
+    if not findings:
+        # All clear: one green card, no separate heading (the card says it).
+        body.append(_panel_card("0", summary))
+    else:
+        if summary:
+            head = Gtk.Label(label=summary, wrap=True, xalign=0.0)
+            head.add_css_class("title-4")
+            head.add_css_class("tandem-summary")
+            body.append(head)
+        for sev, text in findings:
+            body.append(_panel_card(sev, text))
+
+    scr.set_child(body)
+    root.append(scr)
+    win.set_content(root)
+    win.present()
+    result["code"] = 0
+
+
 def _text_window(app, title, content, result):
     from gi.repository import Gtk, Adw
 
@@ -215,6 +287,20 @@ def main():
             title = argv[1] if len(argv) > 1 else "Tandem"
             content = sys.stdin.read()
             return _run(lambda a, r: _text_window(a, title, content, r))
+
+        if kind == "panel":
+            title = argv[1] if len(argv) > 1 else "Tandem"
+            summary = argv[2] if len(argv) > 2 else ""
+            findings = []
+            for line in sys.stdin.read().splitlines():
+                if not line.strip():
+                    continue
+                if "\t" in line:
+                    sev, text = line.split("\t", 1)
+                else:
+                    sev, text = "2", line
+                findings.append((sev, text))
+            return _run(lambda a, r: _panel_window(a, title, summary, findings, r))
     except Exception:
         return CANT_DRAW
     return CANT_DRAW

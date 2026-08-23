@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.53"
+TANDEM_VERSAO="4.54"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -860,6 +860,56 @@ t_texto() {
         return 0
     fi
     printf '%s\n' "$conteudo"
+}
+
+# The Tandem Central: the health triage as a modern card panel when a graphical
+# session is here, falling back - to the scrollable text window, then to the
+# terminal - on any machine without it. It MIRRORS t_texto's ladder, so the same
+# guarantee holds (no path ends in silence), but its input is STRUCTURED: each
+# stdin line is "SEV<TAB>SENTENCE", UNSORTED, as t_saude_achados emits them.
+# t_painel does the worst-first sort itself, KEEPING the severity for the panel
+# to colour on and STRIPPING it for the text form - which reproduces `tandem
+# saude`'s wording exactly, so the cards and the text of the same verdicts can
+# never diverge. $2 is the one-line summary (the "all is well" line when there
+# are no findings, the "here is what needs attention" line otherwise).
+t_painel() {
+    local titulo="${1:-Tandem}" resumo="${2:-}" cru ordenado texto tab
+    tab="$(printf '\t')"
+    if [ -t 0 ]; then cru=""; else cru="$(cat)"; fi
+    # Worst-first, severity KEPT (same numeric key as t_saude_ordena, which
+    # strips it). An empty gather stays empty -> the all-clear path below.
+    ordenado="$(printf '%s' "$cru" | grep . | sort -t "$tab" -k1,1n -s)"
+
+    # The text form, identical to saude's: the summary, then one "  - sentence"
+    # per finding (nothing but the summary when all is well).
+    if [ -n "$ordenado" ]; then
+        # ANSI-C quoting for the blank line, NOT $(printf '\n\n'): a command
+        # substitution strips trailing newlines, so the separator would vanish
+        # and the summary would run into the first finding. The exact trap the
+        # saude gathering documents, caught here by running it.
+        texto="$resumo"$'\n\n'"$(printf '%s\n' "$ordenado" | while IFS="$tab" read -r _sev _rest; do
+            [ -n "$_rest" ] && printf '  - %s\n' "$_rest"
+        done)"
+    else
+        texto="$resumo"
+    fi
+
+    # A terminal / pipe / file on stdout wants the text, the same rule as t_texto.
+    if [ -t 1 ] || [ -p /dev/fd/1 ] || [ -f /dev/fd/1 ]; then
+        printf '%s\n' "$texto"
+        return 0
+    fi
+
+    # The modern card panel first; the severity column travels with each line.
+    if t_tem_gui && t_gui_moderno &&
+       printf '%s\n' "$ordenado" | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
+            panel "$titulo" "$resumo" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    # Fallback: the scrollable text window (which itself falls back to zenity and
+    # then the terminal). One path, and it is never silent.
+    printf '%s\n' "$texto" | t_texto "$titulo"
 }
 
 # Indeterminate progress bar. Usage:
@@ -5783,6 +5833,109 @@ t_saude_wine_citar() {
         fi
     done
     return 1
+}
+
+# The whole health triage, gathered in ONE place. It prints each finding as a
+# "SEV<TAB>SENTENCE" line - SEV 1 = act now, 2 = worth knowing - UNSORTED and
+# unrendered, so the caller decides how to show them (t_saude_ordena to sort,
+# then either the text list or the modern card panel). This exists so `tandem
+# saude` (text) and the Tandem Central (cards) read from a SINGLE source: a
+# finding added here appears in both, which is the divergence trap this project
+# keeps warning about, closed by construction. Every verdict below is one the
+# project already computes; nothing is invented, and a check that cannot run
+# adds no line (unknown is never a green light).
+t_saude_achados() {
+    local achados="" tab nl nova livre_kb linha epoch arq nome wine_agora antes_wine v
+    local svc_porta svc_escuta svc_responde sono_v sono_d
+    local prob=1 aviso=2
+    tab=$'\t'; nl=$'\n'
+
+    # The clock: a wrong one breaks fiscal software, TLS and licences in silence.
+    case "$(t_relogio_agora_veredito 2>/dev/null)" in
+        atrasado|adiantado)   achados="$achados$prob$tab$(t_msg saude_relogio)$nl" ;;
+        sem_hora_automatica)  achados="$achados$aviso$tab$(t_msg saude_relogio_auto)$nl" ;;
+    esac
+
+    # Sleep: the kernel's own record of whether this machine can suspend.
+    if linha="$(t_sono_le 2>/dev/null)" && [ -n "$linha" ]; then
+        sono_v="${linha%%"$tab"*}"; sono_d="${linha#*"$tab"}"
+        case "$sono_v" in
+            nunca)    achados="$achados$prob$tab$(t_sono_frase nunca "$sono_d")$nl" ;;
+            as-vezes) achados="$achados$aviso$tab$(t_sono_frase as-vezes "$sono_d")$nl" ;;
+        esac
+    fi
+
+    # Free disk: a full one cannot save a sale or finish an install.
+    livre_kb="$(df -Pk "$HOME" 2>/dev/null | awk 'NR==2 { print $4 }')"
+    case "$(t_saude_disco_veredito "$livre_kb")" in
+        cheio)    achados="$achados$prob$tab$(t_msg saude_disco_cheio "$(t_tamanho_amigavel "$(( ${livre_kb:-0} * 1024 ))")")$nl" ;;
+        apertado) achados="$achados$aviso$tab$(t_msg saude_disco_apertado "$(t_tamanho_amigavel "$(( ${livre_kb:-0} * 1024 ))")")$nl" ;;
+    esac
+
+    # A newer Tandem, if the passive check already learnt of one (no network here).
+    if nova="$(t_versao_nova_conhecida 2>/dev/null)" && [ -n "$nova" ]; then
+        achados="$achados$aviso$tab$(t_msg saude_versao "$nova" "$TANDEM_VERSAO")$nl"
+    fi
+
+    # Wine taken out from under a set-up environment - a distro upgrade can do it.
+    if [ -f "$TANDEM_PREFIXO_PADRAO/system.reg" ] && ! command -v wine >/dev/null 2>&1; then
+        achados="$achados$prob$tab$(t_msg saude_wine)$nl"
+    fi
+
+    # Wine changed under a program that worked - name it BEFORE the next failure.
+    if command -v wine >/dev/null 2>&1; then
+        wine_agora="$(t_stack_wine 2>/dev/null)"
+        antes_wine="$(
+            for arq in "$TANDEM_MEMORIA"/*.txt; do
+                [ -f "$arq" ] || continue
+                v="$(sed -n 's/^VERSAO_WINE=//p' "$arq" | tail -1)"
+                v="$(printf '%s' "$v" | tr -d '[:space:]')"
+                [ -n "$v" ] && printf '%s\n' "$v"
+            done | t_saude_wine_citar "$wine_agora"
+        )"
+        [ -n "$antes_wine" ] && \
+            achados="$achados$aviso$tab$(t_msg saude_wine_mudou "$antes_wine" "$wine_agora")$nl"
+    fi
+
+    # Web services the owner set up that are no longer serving.
+    while IFS= read -r nome; do
+        [ -n "$nome" ] || continue
+        svc_porta="$(t_servico_le "$nome" PORTA 2>/dev/null)"
+        svc_escuta=""; svc_responde=""
+        if [ -n "$svc_porta" ]; then
+            if t_servico_escuta "$svc_porta" 2>/dev/null; then
+                svc_escuta=sim
+                if t_servico_responde "$svc_porta" 2>/dev/null; then
+                    svc_responde=sim
+                else
+                    [ $? -eq 1 ] && svc_responde=nao
+                fi
+            else
+                svc_escuta=nao
+            fi
+        fi
+        case "$(t_servico_veredito \
+                    "$(t_servico_estado_unidade "$nome" 2>/dev/null)" \
+                    "$svc_escuta" "$svc_responde")" in
+            falhou|parado|escuta-mudo)
+                achados="$achados$prob$tab$(t_msg saude_servico "$nome")$nl" ;;
+        esac
+    done <<FIMSVC
+$(t_servico_lista_nomes 2>/dev/null)
+FIMSVC
+
+    # Recovery readiness - if the disk died now, is there a backup that verifies?
+    if linha="$(t_saude_backup_recente 2>/dev/null)" && [ -n "$linha" ]; then
+        epoch="${linha%%"$tab"*}"; arq="${linha#*"$tab"}"
+        case "$(t_saude_backup_veredito "$epoch" "$(date +%s)" "$(t_restauravel "$arq")")" in
+            corrompido) achados="$achados$prob$tab$(t_msg saude_backup_corrompido)$nl" ;;
+            velho)      achados="$achados$aviso$tab$(t_msg saude_backup_velho "$(date -d "@$epoch" +%F 2>/dev/null)")$nl" ;;
+        esac
+    else
+        achados="$achados$prob$tab$(t_msg saude_sem_backup)$nl"
+    fi
+
+    printf '%s' "$achados"
 }
 
 # --------------------------------------------------- messages, in Portuguese

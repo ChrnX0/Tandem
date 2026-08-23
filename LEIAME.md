@@ -7,7 +7,7 @@
 **Nove formatos. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![testes](https://img.shields.io/badge/testes-1732-brightgreen)](tests/run.sh)
+[![testes](https://img.shields.io/badge/testes-1746-brightgreen)](tests/run.sh)
 [![programas reais](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
 [![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
@@ -324,6 +324,7 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem android` | abre a tela do Android |
 | `tandem doctor` | diagnóstico do ambiente — o que **existe** |
 | `tandem saude` | uma leitura da saúde da máquina, pior primeiro — o que **fazer** |
+| `tandem central` | a mesma leitura como painel moderno (ou `dashboard`) |
 | `tandem autoteste` | exercita aqui — o que **funciona** |
 | `tandem repair` | reaplica as associações de arquivo |
 | `tandem dados` | mostra os **seus** arquivos dentro do Windows |
