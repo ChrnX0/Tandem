@@ -2536,6 +2536,49 @@ lp/dialout groups — and the CUPS half of item 4's daemon-probe table. The hone
 read is unchanged: on the driver/shop lines, remaining code is into falling
 returns; the frontier is field evidence on the owner's real counter.**
 
+**v4.54 IS PUBLISHED** — 2026-08-23, tag `v4.54` at `974ef06`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (559846 bytes, sha256 `3475b684…`)
+and the generic bundle (559961 bytes, sha256 `8415f899…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible build at the commit. It is the FIRST of an
+owner-requested arc — *"vamos elevar o tandem ao estado de arte e excelência…
+quero q implemente absolute tudo"*, eleven brainstorm ideas to be shipped one
+well-tested version at a time — and this one is idea ① made real: **the Tandem
+Central**, the machine's health as a modern panel instead of a wall of text.
+`tandem saude` already gathered a dozen honest verdicts (clock, disk, Wine gone,
+Wine changed under a working program, a web service not serving, can it sleep, a
+backup to fall back on) into one worst-first triage; it showed them as plain
+lines in a scrollable box that "looked like a program from the 1990s" (the
+owner's own words about the old look). Now, when there is a graphical session,
+the same triage is drawn in **GTK4 + libadwaita** — one calm card per finding,
+coloured by urgency (red = act now, amber = worth knowing), worst first, a
+single green card when all is well. New front-door aliases `tandem central` /
+`dashboard` reach it, and `saude` renders the same way. **Safe by construction**,
+the same way the 4.46 windows are: `gui.py` grew a `panel` subcommand that draws
+the cards, and the shell helper `t_painel` falls back to the scrollable text
+window — then the terminal — on any machine without libadwaita, without a
+display, or with `TANDEM_GUI=zenity`; every word survives the fallback, and a
+drawing failure becomes exit 2, never a traceback. The findings gathering moved
+into ONE shared `t_saude_achados`, so the text (`saude`) and the cards (the
+Central) read from a single source and cannot diverge — the divergence trap this
+file keeps warning about, closed by construction. **Verified by RENDERING it**,
+not by reading: the panel was drawn under real GTK4 (python3.12 + Xvfb, since the
+container's default python3 is 3.11 whose `_gi` is built for 3.12) and
+screenshotted in both the problem-cards and all-clear-card states; the text
+fallback reproduces `saude`'s wording exactly, and `gui.py panel` with no display
+returns exit 2 so the shell falls back. Suite 1746 passed / 0 / 1 skipped; both
+literal counters read 0; no new catalogue messages (reuses `saude_titulo` /
+`saude_precisa` / `saude_tudo_bem`). **A field lesson worth keeping:** shellcheck
+0.9.0 on this container takes ~140s on the full file set (it re-analyses
+`common.sh` ~15× via the `# shellcheck source=` directives), which reads as a
+hang but is not — measured committed-vs-mine at 134s vs 141s, both `rc=0` clean.
+Do not mistake that slowness for a broken suite. **Next on the arc: 4.55 the
+Central with one-click fixes, then the first-run wizard, the Wine "undo"
+(prefix snapshots), an Authenticode safety verdict, a try-before-trust sandbox,
+crash-to-cause at runtime, a visual timeline, a client-side web checker, native
+packaging, an opt-in success ledger, and (owner-decision) the long-tail AI
+fallback.**
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
