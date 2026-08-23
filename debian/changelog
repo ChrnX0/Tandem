@@ -1,3 +1,30 @@
+tandem (4.55) unstable; urgency=medium
+
+  * The Tandem Central grows one-click fixes. 4.54 drew the machine's health as
+    coloured cards; now a card that has a single remedy carries a "Fix" button
+    that runs it - the shop owner reads "the clock is wrong" and presses one
+    button instead of learning a command. Five findings get a button: a wrong
+    clock (opens the clock check), a missing or damaged backup (makes a fresh
+    one), a newer Tandem out (the version screen), Wine gone from under a
+    working setup (runs `preparar`), and a web service that stopped serving
+    (the service screen). Findings with no single command - a full disk, a Wine
+    that changed under a program - keep their card and simply have no button,
+    which is the honest thing rather than a button that does nothing.
+    - Every remedy is an EXISTING command, callable with no arguments and never
+      destructive without its own consent: `backup` makes a file, `preparar`
+      asks before it installs, the rest only read and report. So the button is
+      a shortcut to something already safe, not a new power.
+    - The choice travels through a file, never stdout: a finding now carries a
+      third field (its action token), the panel writes the clicked token into a
+      temp file, and `acao_saude` reads it and runs the remedy. The token is
+      stripped from the text form, so a machine with no graphical session shows
+      the same sentences as before and dispatches nothing (there is nothing to
+      click). `gui.py`'s `_write_action` is the whole button-to-shell contract,
+      lifted to module level so a test proves the write with no display.
+    - One new word, `botao_corrigir` ("Fix"), translated in all seven languages.
+
+ -- Tandem <rockx0@gmail.com>  Sun, 23 Aug 2026 02:50:00 +0000
+
 tandem (4.54) unstable; urgency=medium
 
   * The Tandem Central: the machine's health as a modern panel, not a wall of

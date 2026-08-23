@@ -3142,6 +3142,9 @@ No
 @botao_ok
 Entendido
 
+@botao_corrigir
+Corregir
+
 @verbo_dotnet48
 .NET Framework 4.8 (tarda unos 30 minutos)
 

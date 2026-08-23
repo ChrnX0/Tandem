@@ -5271,6 +5271,10 @@ msgctxt "botao_ok"
 msgid "Got it"
 msgstr "ठीक है"
 
+msgctxt "botao_corrigir"
+msgid "Fix"
+msgstr "ठीक करें"
+
 msgctxt "verbo_dotnet48"
 msgid ".NET Framework 4.8 (takes about 30 minutes)"
 msgstr ".NET Framework 4.8 (लगभग 30 मिनट लगते हैं)"

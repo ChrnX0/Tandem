@@ -1592,14 +1592,36 @@ acao_relogio() {
 # session gets the modern card panel (the Tandem Central), and nothing to report
 # says so plainly instead of an empty window.
 acao_saude() {
-    local achados resumo
+    local achados resumo acaofile acao
     achados="$(t_saude_achados)"
     if [ "$(printf '%s' "$achados" | grep -c .)" -eq 0 ]; then
         resumo="$(t_msg saude_tudo_bem)"
     else
         resumo="$(t_msg saude_precisa)"
     fi
-    printf '%s' "$achados" | t_painel "$(t_msg saude_titulo)" "$resumo"
+    # One-click fixes: only the card panel has buttons, so the action channel -
+    # a temp file the panel writes the clicked token into - is opened only when
+    # a panel can actually be drawn. On the text/terminal path there is nothing
+    # to click, acaofile stays empty, and nothing is dispatched.
+    acaofile=""
+    if t_tem_gui && t_gui_moderno; then
+        acaofile="$(mktemp 2>/dev/null || true)"
+    fi
+    printf '%s' "$achados" | t_painel "$(t_msg saude_titulo)" "$resumo" "$acaofile"
+    if [ -n "$acaofile" ]; then
+        acao="$(cat "$acaofile" 2>/dev/null)"
+        rm -f "$acaofile"
+        # Each remedy is an existing command, callable with no arguments and
+        # never destructive without its own confirmation (backup makes a file,
+        # preparar asks before installing, the rest only read/report).
+        case "$acao" in
+            relogio)  acao_relogio ;;
+            versao)   acao_versao ;;
+            preparar) acao_preparar ;;
+            servico)  acao_servico ;;
+            backup)   acao_backup ;;
+        esac
+    fi
     return 0
 }
 

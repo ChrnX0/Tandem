@@ -3230,6 +3230,9 @@ https://github.com/ChrnX0/Tandem/issues
 @botao_ok
 حسنًا
 
+@botao_corrigir
+إصلاح
+
 @verbo_dotnet48
 .NET Framework 4.8 (يستغرق نحو 30 دقيقة)
 

@@ -19,10 +19,17 @@ Contract, so the shell can read exit codes the same way it reads zenity's:
                                       2 = could not draw (caller falls back)
     gui.py text <title>            -> long text on STDIN in a scrollable window;
                                       0 when shown, 2 when it could not draw
-    gui.py panel <title> <summary> -> the health triage as coloured cards; one
-                                      "sev<TAB>text" finding per line on STDIN
-                                      (sev 1=red, 2=amber), empty STDIN = one
-                                      green all-clear card. 0 shown, 2 cannot draw
+    gui.py panel <title> <summary> [action_file] [fix_label]
+                                   -> the health triage as coloured cards; one
+                                      "sev<TAB>text<TAB>action" finding per line
+                                      on STDIN (sev 1=red, 2=amber; action is a
+                                      one-click-fix token or empty), empty STDIN =
+                                      one green all-clear card. When action_file
+                                      is given, a finding with an action token
+                                      gets a fix_label button that WRITES that
+                                      token to action_file and closes; the shell
+                                      reads the file and runs the remedy. 0 shown,
+                                      2 cannot draw
 
 Every drawing path is wrapped so a failure NEVER reaches the owner as a Python
 traceback - it becomes exit 2, and the shell shows the zenity window instead.
@@ -33,6 +40,25 @@ import os
 import sys
 
 CANT_DRAW = 2   # the shell reads this as "fall back to zenity"
+
+
+def _write_action(path, token):
+    """Record a clicked one-click-fix token where the shell will read it.
+
+    This is the whole contract between a panel Fix button and t_painel: the
+    choice comes back through a file, never stdout, so gui.py's stdout stays
+    free. Extracted to module level (no GTK import) so a test can prove the
+    write without a display. A failure to write is swallowed - a fix that could
+    not be recorded is simply not run, never a traceback on the owner's screen.
+    """
+    if not path:
+        return False
+    try:
+        with open(path, "w") as f:
+            f.write(token)
+        return True
+    except Exception:
+        return False
 
 
 def _imports_ok():
@@ -145,8 +171,10 @@ def _message_window(app, kind, text, buttons, result, default_code):
     result["code"] = default_code   # shown: from here a plain close is not a failure
 
 
-def _panel_card(sev, text):
-    """One finding as a calm card: a colour-coded status icon and the sentence.
+def _panel_card(sev, text, action="", fix_label="Fix", on_fix=None):
+    """One finding as a calm card: a colour-coded status icon, the sentence, and
+    (when the finding carries an action token and we have somewhere to record it)
+    a "Fix" button on the right that runs the one-click remedy.
 
     sev is '1' (act now -> red), '2' (worth knowing -> amber), anything else is
     treated as all-clear/info (green). The colours reuse the same .tandem-icon-*
@@ -168,22 +196,37 @@ def _panel_card(sev, text):
     card.append(ic)
     lbl = Gtk.Label(label=text, wrap=True, xalign=0.0, yalign=0.0)
     lbl.set_hexpand(True)
+    lbl.set_valign(Gtk.Align.CENTER)
     card.append(lbl)
+    if action and on_fix is not None:
+        btn = Gtk.Button(label=fix_label)
+        btn.add_css_class("pill")
+        btn.add_css_class("suggested-action")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b, tok=action: on_fix(tok))
+        card.append(btn)
     return card
 
 
-def _panel_window(app, title, summary, findings, result):
+def _panel_window(app, title, summary, findings, action_file, fix_label, result):
     """The Tandem Central: the machine's health triage as coloured cards.
 
-    findings is a list of (sev, text). Empty findings means "all is well" - a
-    single green card carrying the summary. Otherwise the summary is a heading
-    over one card per finding (already sorted worst-first by the shell).
+    findings is a list of (sev, text, action). Empty findings means "all is
+    well" - a single green card carrying the summary. Otherwise the summary is a
+    heading over one card per finding (already sorted worst-first by the shell).
+    A finding with an action token, when action_file is set, gets a Fix button;
+    clicking it writes the token to action_file and closes the window, so the
+    shell can run the remedy. The choice travels through the file, never stdout.
     """
     from gi.repository import Gtk, Adw
 
     win = _build(app, title)
     win.set_resizable(True)
-    win.set_default_size(560, 520)
+    win.set_default_size(600, 520)
+
+    def on_fix(tok):
+        _write_action(action_file, tok)
+        win.close()
 
     root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
     root.append(Adw.HeaderBar(title_widget=Adw.WindowTitle(title=title)))
@@ -201,8 +244,8 @@ def _panel_window(app, title, summary, findings, result):
             head.add_css_class("title-4")
             head.add_css_class("tandem-summary")
             body.append(head)
-        for sev, text in findings:
-            body.append(_panel_card(sev, text))
+        for sev, text, action in findings:
+            body.append(_panel_card(sev, text, action, fix_label, on_fix))
 
     scr.set_child(body)
     root.append(scr)
@@ -291,16 +334,19 @@ def main():
         if kind == "panel":
             title = argv[1] if len(argv) > 1 else "Tandem"
             summary = argv[2] if len(argv) > 2 else ""
+            action_file = argv[3] if len(argv) > 3 and argv[3] else None
+            fix_label = argv[4] if len(argv) > 4 and argv[4] else "Fix"
             findings = []
             for line in sys.stdin.read().splitlines():
                 if not line.strip():
                     continue
-                if "\t" in line:
-                    sev, text = line.split("\t", 1)
-                else:
-                    sev, text = "2", line
-                findings.append((sev, text))
-            return _run(lambda a, r: _panel_window(a, title, summary, findings, r))
+                parts = line.split("\t")
+                sev = parts[0] if parts[0] else "2"
+                text = parts[1] if len(parts) > 1 else ""
+                action = parts[2] if len(parts) > 2 else ""
+                findings.append((sev, text, action))
+            return _run(lambda a, r: _panel_window(
+                a, title, summary, findings, action_file, fix_label, r))
     except Exception:
         return CANT_DRAW
     return CANT_DRAW
