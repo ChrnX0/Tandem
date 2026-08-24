@@ -3120,6 +3120,15 @@ Got it
 @botao_corrigir
 Fix
 
+@config_titulo
+Prepare this machine
+
+@config_pronto
+This machine is ready — everything needed to open your files is installed.
+
+@config_faltam
+A few things are still missing to run everything. Press Install, or run: tandem preparar
+
 @verbo_dotnet48
 .NET Framework 4.8 (takes about 30 minutes)
 

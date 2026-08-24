@@ -1,3 +1,31 @@
+tandem (4.57) unstable; urgency=medium
+
+  * The first-run wizard: "prepare my machine" as a panel, not a command to
+    discover. Tandem already knows what a machine is missing to run everything
+    (`t_pecas_faltando`: Wine, winetricks, python3, Java, FUSE, Waydroid…) and
+    `tandem preparar` installs it - but a shop owner had to KNOW to type that.
+    Now `tandem configurar` (aliases `assistente`, `setup`) shows the machine's
+    readiness as the same modern card panel the Central uses: one amber card per
+    missing piece, each with an "Install" button, and a single green card when
+    the machine is already ready. Pressing Install runs the existing, tested
+    `preparar` flow - which names the exact plan, asks once, and installs with a
+    progress bar - so the button is a friendly front door to something already
+    safe, not a new install path.
+    - It reuses the Central's whole one-click machinery: `t_prontidao_achados`
+      emits the missing pieces as `sev<TAB>text<TAB>preparar` findings (reusing
+      the `peca_*` descriptions that already exist and are translated), the
+      panel writes the clicked token to a temp file, and `acao_configurar` reads
+      it and dispatches to `acao_preparar`. On a machine with no graphical
+      session the same readiness reads as text and names `tandem preparar` as
+      the next step - no button to press, nothing done silently.
+    - `t_painel` gained an optional fix-label argument so this panel says
+      "Install" while the health Central still says "Fix"; the default is
+      unchanged, so nothing else moves.
+    - Four new messages (`config_titulo`, `config_pronto`, `config_faltam`,
+      `botao_instalar`), translated in all seven languages.
+
+ -- Tandem <rockx0@gmail.com>  Mon, 24 Aug 2026 20:40:00 +0000
+
 tandem (4.56) unstable; urgency=medium
 
   * A One UI-inspired face for every window. The owner's call was that the

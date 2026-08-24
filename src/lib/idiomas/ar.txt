@@ -3233,6 +3233,15 @@ https://github.com/ChrnX0/Tandem/issues
 @botao_corrigir
 إصلاح
 
+@config_titulo
+تجهيز هذا الجهاز
+
+@config_pronto
+هذا الجهاز جاهز — كل ما يلزم لفتح ملفاتك مثبّت.
+
+@config_faltam
+لا تزال بعض الأشياء ناقصة لتشغيل كل شيء. اضغط على تثبيت، أو شغّل: tandem preparar
+
 @verbo_dotnet48
 .NET Framework 4.8 (يستغرق نحو 30 دقيقة)
 

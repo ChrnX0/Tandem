@@ -5307,6 +5307,18 @@ msgctxt "botao_corrigir"
 msgid "Fix"
 msgstr "Corrigir"
 
+msgctxt "config_titulo"
+msgid "Prepare this machine"
+msgstr "Preparar esta máquina"
+
+msgctxt "config_pronto"
+msgid "This machine is ready — everything needed to open your files is installed."
+msgstr "Esta máquina está pronta — tudo o que é preciso para abrir seus arquivos está instalado."
+
+msgctxt "config_faltam"
+msgid "A few things are still missing to run everything. Press Install, or run: tandem preparar"
+msgstr "Ainda faltam algumas coisas para rodar tudo. Toque em Instalar, ou rode: tandem preparar"
+
 msgctxt "verbo_dotnet48"
 msgid ".NET Framework 4.8 (takes about 30 minutes)"
 msgstr ".NET Framework 4.8 (demora uns 30 minutos)"

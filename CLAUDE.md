@@ -2611,6 +2611,36 @@ suite does not clean its own tmp prefixes, so on this container run `find /tmp
 Wine-touching work; do not mistake that hang for a code defect (it presents as
 `tandem-exe` stuck on a prefix, `df` near 100%).
 
+**v4.56 IS PUBLISHED** — 2026-08-23, tag `v4.56` at `d77fb19`, both artifacts
+verified byte-for-byte: the `.deb` (sha256 `1fa47817…`) and the generic bundle
+(`d55e78c1…`) each agree across the downloaded bytes, the release's checksum
+sidecar, and a fresh reproducible build at the commit (the release body sha and
+the asset digest match those by construction). It is idea ② of the arc, the one
+the owner asked for after seeing the prototypes ("parece programa dos anos 90…
+algo futurista, tipo o One UI 9"): a **One UI-inspired face for every window**.
+`gui.py` is restyled end to end into an ORIGINAL theme inspired by that design
+language — rounded "squircle" cards, generous space, a vivid blue-teal accent,
+soft depth, and actions weighted to the BOTTOM (the reachable half) — across all
+four windows a shop owner sees: the error, the yes/no question, the long-text
+viewer and the Central panel. It adapts to the system light/dark preference; no
+Samsung font or icon is used or shipped. **Nothing about the CONTRACT changed**,
+which is the whole reason it is safe to restyle the most sensitive part of the
+project: same exit codes (0 shown, 0/1 buttons, 2 cannot-draw), same zenity →
+terminal fallback, a drawing failure still becomes exit 2 not a traceback, and
+every message is unchanged in all seven languages — an old machine without
+libadwaita loses the shine and keeps every word. The palette is DATA
+(`_LIGHT`/`_DARK` + one template), so a colour is one line; `_css_for(dark)`
+builds the stylesheet and `_is_dark()` defaults to light when it cannot tell, so
+a wrong guess never puts light text on a light window. Verified by RENDERING all
+four windows under real GTK4 (python3.12 + Xvfb) in light and dark and looking
+at them. No `po/` change — a change of LOOK in one file, no translation step, no
+new string. Suite 1763 passed / 0 / 1 skipped; both literal counters read 0.
+**Three container lessons, all now in this file: (1) the suite leaks ~1500
+`/tmp/tmp.*` wineprefixes a session and Wine hangs on a full disk — clean them
+around suite runs; (2) shellcheck 0.9.0 is ~140s on the full set, slow not hung;
+(3) the container's default `python3` is 3.11 whose `_gi` is built for 3.12, so
+use `python3.12` for any GTK render here.**
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

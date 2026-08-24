@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.56"
+TANDEM_VERSAO="4.57"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -873,8 +873,13 @@ t_texto() {
 # never diverge. $2 is the one-line summary (the "all is well" line when there
 # are no findings, the "here is what needs attention" line otherwise).
 t_painel() {
-    local titulo="${1:-Tandem}" resumo="${2:-}" acaofile="${3:-}" cru ordenado texto tab
+    local titulo="${1:-Tandem}" resumo="${2:-}" acaofile="${3:-}" rotulo="${4:-}"
+    local cru ordenado texto tab
     tab="$(printf '\t')"
+    # The button label defaults to "Fix" (the health Central); a caller like the
+    # setup wizard passes its own ("Install"). Kept a parameter so one renderer
+    # serves both without a second copy.
+    [ -n "$rotulo" ] || rotulo="$(t_msg botao_corrigir)"
     if [ -t 0 ]; then cru=""; else cru="$(cat)"; fi
     # Worst-first, severity KEPT (same numeric key as t_saude_ordena, which
     # strips it). The ACTION field (3rd) travels with each line for the panel's
@@ -911,7 +916,7 @@ t_painel() {
     # discarded; the choice comes back through the file, never stdout.
     if t_tem_gui && t_gui_moderno &&
        printf '%s\n' "$ordenado" | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
-            panel "$titulo" "$resumo" "$acaofile" "$(t_msg botao_corrigir)" >/dev/null 2>&1; then
+            panel "$titulo" "$resumo" "$acaofile" "$rotulo" >/dev/null 2>&1; then
         return 0
     fi
 
@@ -4649,6 +4654,21 @@ t_pecas_faltando() {
     command -v waydroid >/dev/null 2>&1 ||
         echo "waydroid|$(t_msg peca_waydroid)"
     return 0
+}
+
+# The setup wizard's findings, in the SAME shape the health Central uses
+# (SEV<TAB>TEXT<TAB>ACTION), so `tandem configurar` renders through the very same
+# t_painel. Each missing piece becomes one amber card carrying the `preparar`
+# action, reusing the peca_* descriptions t_pecas_faltando already produces (and
+# which are already translated). Nothing when the machine is ready -> the panel
+# shows its single green all-clear card. The action is `preparar`, so pressing
+# Install runs the existing, tested install flow rather than a new path.
+t_prontidao_achados() {
+    local tab code desc; tab="$(printf '\t')"
+    t_pecas_faltando | while IFS='|' read -r code desc; do
+        [ -n "$code" ] || continue
+        printf '2%s%s%spreparar\n' "$tab" "$desc" "$tab"
+    done
 }
 
 # Is libfuse2 there? Asked of the loader, not of dpkg: the package is called
