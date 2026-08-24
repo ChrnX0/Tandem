@@ -213,6 +213,12 @@ sudo apt install wine32
 @procedencia_novo
 这个在这里是新的——这很正常；Tandem 是第一次见到它。
 
+@assinatura_ok
+它有数字签名——这是它来自真实厂商的一个小迹象。
+
+@assinatura_falta
+它没有数字签名——只有当你信任它的来源时才打开。
+
 @ja_instalei_e_nao_abre
 这个程序要的东西我已经装了：{1}
 

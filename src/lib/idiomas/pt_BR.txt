@@ -235,6 +235,12 @@ A comunidade conhece este programa ({1} relatos).
 @procedencia_novo
 Este é novo por aqui — é normal; o Tandem está vendo ele pela primeira vez.
 
+@assinatura_ok
+Ele é assinado digitalmente — um pequeno sinal de que vem de um fabricante de verdade.
+
+@assinatura_falta
+Ele não é assinado digitalmente — só abra se você confia na origem.
+
 @ja_instalei_e_nao_abre
 Já instalei o que este programa pedia:{1}
 

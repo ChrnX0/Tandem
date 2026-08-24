@@ -2667,6 +2667,32 @@ fixed pre-merge: `setup` was already `preparar`'s alias, so the wizard's third
 alias became `wizard` — a reminder to check the dispatch for an alias collision
 before adding one.)
 
+**v4.58 IS PUBLISHED** — 2026-08-24, tag `v4.58` at `a2b99e8`, both artifacts
+verified byte-for-byte: the `.deb` (sha256 `5ee2d15a…`) and the generic bundle
+(`6353c033…`) each agree across the downloaded bytes, the release's checksum
+sidecar, and a fresh reproducible build at the commit. It is idea ⑥ of the arc:
+**Wine "undo".** A winetricks component can leave a prefix worse than it found
+it, and until now the only way back was to throw the whole environment away. Now
+`tandem instantaneo` (alias `snapshot`) saves a copy of the Tandem Wine
+environment and `tandem desfazer` (alias `undo`) puts it back exactly as it was.
+**RULE №1 is enforced inside the functions**, not just at the command:
+`t_instantaneo_tira` and `t_instantaneo_restaura` both refuse any prefix that is
+not ours (no `.tandem-prefixo` mark, or on the protected list), proven by
+injection — so neither can ever write over the shop's production POS prefix. The
+restore is careful because it overwrites a prefix: it renames the current
+environment aside, copies the snapshot into place, and only when the copy really
+landed (a `system.reg` is there) drops the aside; on ANY failure it puts the
+original back untouched, so the environment is never left destroyed, and the
+snapshot is kept so undo can run again. The copy uses `--reflink=auto` — instant
+and free on a copy-on-write filesystem, a full copy elsewhere (the owner is told
+before it starts, decided by a real reflink probe, not a filesystem name). Ten
+new messages (the two commands' outcomes plus `Continue`/`Undo` buttons), all
+seven languages. Suite 1779 passed / 0 / 1 skipped; both literal counters read
+0. **A test lesson worth keeping:** `common.sh` hard-sets `TANDEM_PROTEGIDOS`
+from `$HOME` (not `${TANDEM_PROTEGIDOS:-…}`), so a test exercising the protected
+list must write it to `$HOME/.config/tandem/protegidos.txt`, not an env var —
+the injected-env approach silently does nothing.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

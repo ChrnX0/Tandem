@@ -30,6 +30,7 @@ import sys
 
 # Entries of the PE data directory table that matter to us.
 DIR_IMPORT = 1
+DIR_SECURITY = 4   # the Authenticode signature (a WIN_CERTIFICATE blob)
 DIR_DELAY = 13
 DIR_CLR = 14        # if filled in, the program is .NET
 
@@ -211,7 +212,19 @@ def inspecionar(caminho):
     if dotnet and "mscoree.dll" not in dlls:
         dlls.append("mscoree.dll")
 
-    return arq, dotnet, sorted(set(dlls)), sorted(set(atrasadas))
+    # Is the program digitally signed (Authenticode)? The Security directory is
+    # the one entry whose FIRST field is a plain FILE OFFSET, not an RVA - it
+    # points straight at a WIN_CERTIFICATE blob appended after the last section.
+    # We do NOT verify the signature (that needs a cert chain and a clock); we
+    # only report that one is present and lands inside the file. "Signed" is a
+    # mild trust signal, "unsigned" a mild caution - never a verdict on its own.
+    assinado = 0
+    if DIR_SECURITY < len(dirs):
+        cert_off, cert_size = dirs[DIR_SECURITY]
+        if cert_size > 0 and cert_off > 0 and cert_off + cert_size <= len(dados):
+            assinado = 1
+
+    return arq, dotnet, sorted(set(dlls)), sorted(set(atrasadas)), assinado
 
 
 # The KEY=VALUE contract, defended HERE rather than assumed.
@@ -246,7 +259,7 @@ def main():
         print("ERRO=sem_arquivo")
         return 2
     try:
-        arq, dotnet, dlls, atrasadas = inspecionar(caminho)
+        arq, dotnet, dlls, atrasadas, assinado = inspecionar(caminho)
     except NaoEhPE as e:
         print("ERRO=%s" % limpo(e))
         return 1
@@ -258,6 +271,7 @@ def main():
     print("DOTNET=%d" % dotnet)
     print("DLLS=%s" % limpo(",".join(dlls)))
     print("ATRASADAS=%s" % limpo(",".join(atrasadas)))
+    print("ASSINADO=%d" % assinado)
     return 0
 
 

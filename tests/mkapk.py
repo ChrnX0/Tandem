@@ -259,6 +259,31 @@ def pe_truncado(caminho, maquina=0x8664):
     return caminho
 
 
+def pe_assinado(caminho, maquina=0x8664):
+    """A digitally SIGNED PE: a WIN_CERTIFICATE blob is appended after the
+    sections, and the Security data directory (index 4) points at it - an offset
+    into the file and a size that lands inside it. peinfo reports ASSINADO=1
+    without verifying the signature. Built on pe_com_imports so it is otherwise a
+    perfectly ordinary program (an unsigned build of the same is imports64.exe).
+    """
+    tmp = caminho + ".tmp"
+    pe_com_imports(tmp, maquina, ("KERNEL32.dll",))
+    with open(tmp, "rb") as f:
+        dados = bytearray(f.read())
+    os.remove(tmp)
+    e64 = maquina == 0x8664
+    opc = 0x80 + 24
+    base_dir = opc + (112 if e64 else 96)
+    sec_entry = base_dir + 4 * 8          # data directory index 4 = Security
+    cert = b"\x0c\x00\x00\x00\x00\x02\x02\x00sig!"   # a tiny stand-in blob
+    off, size = len(dados), len(cert)
+    dados += cert
+    struct.pack_into("<II", dados, sec_entry, off, size)
+    with open(caminho, "wb") as f:
+        f.write(bytes(dados))
+    return caminho
+
+
 def main():
     destino = sys.argv[1] if len(sys.argv) > 1 else "."
     os.makedirs(destino, exist_ok=True)
@@ -285,6 +310,7 @@ def main():
     with open(j("naoexe.exe"), "wb") as f:
         f.write(b"this is not a PE\n")
     pe_truncado(j("cortado.exe"), 0x8664)
+    pe_assinado(j("assinado.exe"), 0x8664)
 
     pe_com_imports(j("imports64.exe"), 0x8664,
                    ("KERNEL32.dll", "MSVCP140.dll", "VCRUNTIME140.dll"))
