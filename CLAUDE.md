@@ -2641,6 +2641,32 @@ around suite runs; (2) shellcheck 0.9.0 is ~140s on the full set, slow not hung;
 (3) the container's default `python3` is 3.11 whose `_gi` is built for 3.12, so
 use `python3.12` for any GTK render here.**
 
+**v4.57 IS PUBLISHED** — 2026-08-24, tag `v4.57` at `c1a3ca8`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (565780 bytes, sha256 `c378005b…`)
+and the generic bundle (566044 bytes, sha256 `4041d25a…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible build at the commit. It is idea ② of the
+owner-requested arc: **the first-run wizard.** Tandem already knows what a
+machine is missing to run everything (`t_pecas_faltando`) and `tandem preparar`
+installs it — but a shop owner had to KNOW to type that. Now `tandem configurar`
+(aliases `assistente`, `wizard`) shows the machine's readiness as the same modern
+card panel the Central uses: one amber card per missing piece, each with an
+Install button, a green card when ready. Pressing Install runs the existing,
+tested `preparar` flow, so it is a front door, not a second install path. It
+reuses the Central's one-click machinery — `t_prontidao_achados` emits the
+missing pieces as `sev<TAB>text<TAB>preparar` findings (reusing the `peca_*`
+descriptions), the panel writes the clicked token to a temp file, and
+`acao_configurar` dispatches to `acao_preparar`; on a machine with no graphical
+session the same readiness reads as text and names `tandem preparar` — no button,
+nothing silent. `t_painel` gained an optional fix-label argument so this panel
+says "Install" while the health Central says "Fix" (default unchanged). Rendered
+under real GTK4. Four new messages (`config_titulo`, `config_pronto`,
+`config_faltam`, `botao_instalar`), all seven languages. Suite 1768 passed / 0 /
+1 skipped; both literal counters read 0. (One shellcheck SC2222 was caught and
+fixed pre-merge: `setup` was already `preparar`'s alias, so the wizard's third
+alias became `wizard` — a reminder to check the dispatch for an alias collision
+before adding one.)
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

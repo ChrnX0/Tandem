@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.57"
+TANDEM_VERSAO="4.58"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5744,6 +5744,88 @@ t_restauravel() {
     t_backup_verifica "$arq"
     [ $? -eq 1 ] && { printf 'corrompido'; return; }
     printf 'ok'
+}
+
+# ---------------------------------------------------------- Wine "undo"
+#
+# A snapshot of a Tandem prefix, so a winetricks install that breaks it can be
+# undone. RULE NUMBER 1 APPLIES WITH FULL FORCE: both taking and restoring a
+# snapshot write over a prefix, so both refuse any prefix that is not ours - no
+# `.tandem-prefixo` mark, or on the protected list. The snapshot lives beside the
+# prefix as "<prefix>.instantaneo"; only ONE is kept, the last good state, with
+# its date in a "<prefix>.instantaneo.data" sidecar.
+
+# Is copy-on-write cheap on the filesystem holding <dir>? A reflink copy is
+# instant and free on btrfs/xfs; elsewhere a snapshot is a full copy that costs
+# time and disk, and the owner is told so. The only honest test is a real reflink
+# of a probe file - a filesystem name is not enough (xfs may or may not have it).
+t_reflink_ok() {
+    local dir="$1" a b rc
+    [ -d "$dir" ] || return 1
+    a="$(mktemp "$dir/.tandem-rl.XXXXXX" 2>/dev/null)" || return 1
+    b="$a.clone"
+    cp --reflink=always -- "$a" "$b" >/dev/null 2>&1; rc=$?
+    rm -f -- "$a" "$b" 2>/dev/null
+    return "$rc"
+}
+
+t_instantaneo_caminho() {
+    printf '%s.instantaneo' "${1:-$TANDEM_PREFIXO_PADRAO}"
+}
+
+# Is there a VALID snapshot to restore for <prefix>? (the dir exists and holds a
+# system.reg, so it is a real prefix copy, not a half-written one).
+t_instantaneo_existe() {
+    local snap; snap="$(t_instantaneo_caminho "${1:-$TANDEM_PREFIXO_PADRAO}")"
+    [ -f "$snap/system.reg" ]
+}
+
+# The date the snapshot was taken, or empty.
+t_instantaneo_data() {
+    cat "$(t_instantaneo_caminho "${1:-$TANDEM_PREFIXO_PADRAO}").data" 2>/dev/null
+}
+
+# Take a snapshot of <prefix>. Refuses a prefix that is not ours (rule 1). Copies
+# with --reflink=auto (instant on CoW, a full copy elsewhere) to a temp sibling,
+# then renames it into place so a snapshot is never left half-written. Returns:
+# 0 done, 1 copy failed, 2 refused (not ours / protected), 3 not a real prefix.
+t_instantaneo_tira() {
+    local prefixo="${1:-$TANDEM_PREFIXO_PADRAO}" snap tmp
+    [ -f "$prefixo/.tandem-prefixo" ] || return 2
+    t_prefixo_protegido "$prefixo" && return 2
+    [ -f "$prefixo/system.reg" ] || return 3
+    snap="$(t_instantaneo_caminho "$prefixo")"
+    tmp="$snap.novo.$$"
+    rm -rf -- "$tmp" 2>/dev/null
+    cp -a --reflink=auto -- "$prefixo" "$tmp" 2>/dev/null || { rm -rf -- "$tmp" 2>/dev/null; return 1; }
+    rm -rf -- "$snap" 2>/dev/null
+    mv -- "$tmp" "$snap" 2>/dev/null || { rm -rf -- "$tmp" 2>/dev/null; return 1; }
+    { date '+%Y-%m-%d %H:%M' > "$snap.data"; } 2>/dev/null
+    return 0
+}
+
+# Restore <prefix> from its snapshot, carefully: rename the current prefix aside,
+# copy the snapshot into place, and only when the copy really landed (a
+# system.reg is there) remove the aside; on any failure the original is put back,
+# so the prefix is NEVER left destroyed. The snapshot is KEPT (copied, not moved)
+# so the owner can undo again. Same refusals as taking one.
+t_instantaneo_restaura() {
+    local prefixo="${1:-$TANDEM_PREFIXO_PADRAO}" snap aside
+    [ -f "$prefixo/.tandem-prefixo" ] || return 2
+    t_prefixo_protegido "$prefixo" && return 2
+    snap="$(t_instantaneo_caminho "$prefixo")"
+    [ -f "$snap/system.reg" ] || return 3
+    aside="$prefixo.desfazendo.$$"
+    rm -rf -- "$aside" 2>/dev/null
+    mv -- "$prefixo" "$aside" 2>/dev/null || return 1
+    if cp -a --reflink=auto -- "$snap" "$prefixo" 2>/dev/null && [ -f "$prefixo/system.reg" ]; then
+        rm -rf -- "$aside" 2>/dev/null
+        return 0
+    fi
+    # The copy did not land: put the original back exactly as it was.
+    rm -rf -- "$prefixo" 2>/dev/null
+    mv -- "$aside" "$prefixo" 2>/dev/null
+    return 1
 }
 
 # ================================================ machine health, at a glance

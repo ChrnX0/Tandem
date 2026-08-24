@@ -588,6 +588,46 @@ msgctxt "botao_instalar"
 msgid "Install"
 msgstr "Installer"
 
+msgctxt "botao_continuar"
+msgid "Continue"
+msgstr "Continuer"
+
+msgctxt "botao_desfazer"
+msgid "Undo"
+msgstr "Annuler"
+
+msgctxt "instantaneo_sem_prefixo"
+msgid "There is no Tandem Wine environment to snapshot yet. Open a Windows program first, or run: tandem preparar"
+msgstr "Il n'y a pas encore d'environnement Wine de Tandem à sauvegarder. Ouvrez d'abord un programme Windows, ou lancez : tandem preparar"
+
+msgctxt "instantaneo_copia_cheia"
+msgid "This makes a full copy of the Wine environment — it takes a moment and as much disk space as the environment. Go ahead?"
+msgstr "Ceci fait une copie complète de l'environnement Wine — cela prend un moment et autant d'espace disque que l'environnement. Continuer ?"
+
+msgctxt "instantaneo_feito"
+msgid "Saved a snapshot of the Wine environment ({1}). If a later install breaks something, run: tandem desfazer"
+msgstr "J'ai sauvegardé une copie de l'environnement Wine ({1}). Si une installation ultérieure casse quelque chose, lancez : tandem desfazer"
+
+msgctxt "instantaneo_falhou"
+msgid "I could not save the snapshot. Nothing was changed."
+msgstr "Je n'ai pas pu sauvegarder la copie. Rien n'a été modifié."
+
+msgctxt "desfazer_sem"
+msgid "There is no snapshot to go back to. Take one before a risky install with: tandem instantaneo"
+msgstr "Il n'y a pas de copie où revenir. Sauvegardez-en une avant une installation risquée avec : tandem instantaneo"
+
+msgctxt "desfazer_pergunta"
+msgid "Put the Wine environment back to the snapshot from {1}? Anything installed since then will be undone."
+msgstr "Remettre l'environnement Wine à la copie du {1} ? Tout ce qui a été installé depuis sera annulé."
+
+msgctxt "desfazer_feito"
+msgid "Done — the Wine environment is back to the snapshot. Your programs are as they were then."
+msgstr "Terminé — l'environnement Wine est revenu à la copie. Vos programmes sont comme ils étaient alors."
+
+msgctxt "desfazer_falhou"
+msgid "I could not restore the snapshot, so I put your current environment back untouched. Nothing was lost."
+msgstr "Je n'ai pas pu restaurer la copie, alors j'ai remis votre environnement actuel intact. Rien n'a été perdu."
+
 msgctxt "botao_agora_nao"
 msgid "Not now"
 msgstr "Pas maintenant"

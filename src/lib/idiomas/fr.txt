@@ -337,6 +337,36 @@ Je n'ai pas pu installer :
 @botao_instalar
 Installer
 
+@botao_continuar
+Continuer
+
+@botao_desfazer
+Annuler
+
+@instantaneo_sem_prefixo
+Il n'y a pas encore d'environnement Wine de Tandem à sauvegarder. Ouvrez d'abord un programme Windows, ou lancez : tandem preparar
+
+@instantaneo_copia_cheia
+Ceci fait une copie complète de l'environnement Wine — cela prend un moment et autant d'espace disque que l'environnement. Continuer ?
+
+@instantaneo_feito
+J'ai sauvegardé une copie de l'environnement Wine ({1}). Si une installation ultérieure casse quelque chose, lancez : tandem desfazer
+
+@instantaneo_falhou
+Je n'ai pas pu sauvegarder la copie. Rien n'a été modifié.
+
+@desfazer_sem
+Il n'y a pas de copie où revenir. Sauvegardez-en une avant une installation risquée avec : tandem instantaneo
+
+@desfazer_pergunta
+Remettre l'environnement Wine à la copie du {1} ? Tout ce qui a été installé depuis sera annulé.
+
+@desfazer_feito
+Terminé — l'environnement Wine est revenu à la copie. Vos programmes sont comme ils étaient alors.
+
+@desfazer_falhou
+Je n'ai pas pu restaurer la copie, alors j'ai remis votre environnement actuel intact. Rien n'a été perdu.
+
 @botao_agora_nao
 Pas maintenant
 

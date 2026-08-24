@@ -380,6 +380,36 @@ sudo apt install winetricks
 @botao_instalar
 ثبّت
 
+@botao_continuar
+متابعة
+
+@botao_desfazer
+تراجع
+
+@instantaneo_sem_prefixo
+لا يوجد بعد بيئة Wine الخاصة بـ Tandem لأخذ لقطة لها. افتح برنامج ويندوز أولًا، أو شغّل: tandem preparar
+
+@instantaneo_copia_cheia
+هذا يُنشئ نسخة كاملة من بيئة Wine — يستغرق لحظة ويشغل مساحة قرص بحجم البيئة. هل تريد المتابعة؟
+
+@instantaneo_feito
+حفظت لقطة من بيئة Wine ({1}). إذا أفسد تثبيت لاحق شيئًا ما، شغّل: tandem desfazer
+
+@instantaneo_falhou
+لم أتمكن من حفظ اللقطة. لم يتغيّر شيء.
+
+@desfazer_sem
+لا توجد لقطة للعودة إليها. خُذ واحدة قبل أي تثبيت محفوف بالمخاطر باستخدام: tandem instantaneo
+
+@desfazer_pergunta
+هل تريد إعادة بيئة Wine إلى لقطة {1}؟ سيُلغى كل ما ثُبّت بعد ذلك.
+
+@desfazer_feito
+تم — عادت بيئة Wine إلى اللقطة. برامجك كما كانت في ذلك الوقت.
+
+@desfazer_falhou
+لم أتمكن من استعادة اللقطة، لذا أعدت بيئتك الحالية كما هي دون مساس. لم يُفقد شيء.
+
 @botao_agora_nao
 ليس الآن
 

@@ -429,6 +429,46 @@ msgctxt "botao_instalar"
 msgid "Install"
 msgstr ""
 
+msgctxt "botao_continuar"
+msgid "Continue"
+msgstr ""
+
+msgctxt "botao_desfazer"
+msgid "Undo"
+msgstr ""
+
+msgctxt "instantaneo_sem_prefixo"
+msgid "There is no Tandem Wine environment to snapshot yet. Open a Windows program first, or run: tandem preparar"
+msgstr ""
+
+msgctxt "instantaneo_copia_cheia"
+msgid "This makes a full copy of the Wine environment — it takes a moment and as much disk space as the environment. Go ahead?"
+msgstr ""
+
+msgctxt "instantaneo_feito"
+msgid "Saved a snapshot of the Wine environment ({1}). If a later install breaks something, run: tandem desfazer"
+msgstr ""
+
+msgctxt "instantaneo_falhou"
+msgid "I could not save the snapshot. Nothing was changed."
+msgstr ""
+
+msgctxt "desfazer_sem"
+msgid "There is no snapshot to go back to. Take one before a risky install with: tandem instantaneo"
+msgstr ""
+
+msgctxt "desfazer_pergunta"
+msgid "Put the Wine environment back to the snapshot from {1}? Anything installed since then will be undone."
+msgstr ""
+
+msgctxt "desfazer_feito"
+msgid "Done — the Wine environment is back to the snapshot. Your programs are as they were then."
+msgstr ""
+
+msgctxt "desfazer_falhou"
+msgid "I could not restore the snapshot, so I put your current environment back untouched. Nothing was lost."
+msgstr ""
+
 msgctxt "botao_agora_nao"
 msgid "Not now"
 msgstr ""
