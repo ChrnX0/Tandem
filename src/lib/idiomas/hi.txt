@@ -3117,6 +3117,15 @@ https://github.com/ChrnX0/Tandem/issues
 @botao_corrigir
 ठीक करें
 
+@config_titulo
+यह मशीन तैयार करें
+
+@config_pronto
+यह मशीन तैयार है — आपकी फ़ाइलें खोलने के लिए ज़रूरी सब कुछ इंस्टॉल है।
+
+@config_faltam
+सब कुछ चलाने के लिए अभी कुछ चीज़ें बाकी हैं। इंस्टॉल दबाएँ, या चलाएँ: tandem preparar
+
 @verbo_dotnet48
 .NET Framework 4.8 (लगभग 30 मिनट लगते हैं)
 

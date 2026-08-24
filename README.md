@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-1763-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-1768-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -341,6 +341,7 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem` | the panel |
 | `tandem install <file>` | install or run anything |
 | `tandem preparar` | install what is missing (Wine, Java, Android, …) |
+| `tandem configurar` | the same setup as a guided panel (aka `assistente`) |
 | `tandem programas` | list and open installed programs, Windows and AppImage |
 | `tandem desinstalar` | remove an installed Windows program |
 | `tandem android` | open the Android screen |

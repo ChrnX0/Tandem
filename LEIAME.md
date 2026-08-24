@@ -7,7 +7,7 @@
 **Nove formatos. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — sem terminal, sem tutorial, sem você precisar aprender o que é um "verbo do winetricks".**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![testes](https://img.shields.io/badge/testes-1763-brightgreen)](tests/run.sh)
+[![testes](https://img.shields.io/badge/testes-1768-brightgreen)](tests/run.sh)
 [![programas reais](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-limpo-brightgreen)](https://lintian.debian.org/)
 [![reproduzível](https://img.shields.io/badge/build-reproduz%C3%ADvel-brightgreen)](build.py)
@@ -319,6 +319,7 @@ Você quase não vai precisar disto — o normal é clicar duas vezes. Quando qu
 | `tandem` | o painel |
 | `tandem install <arquivo>` | instala ou executa qualquer coisa |
 | `tandem preparar` | instala o que falta (Wine, Java, Android, …) |
+| `tandem configurar` | a mesma preparação como painel guiado (ou `assistente`) |
 | `tandem programas` | lista e abre os programas instalados, Windows e AppImage |
 | `tandem desinstalar` | remove um programa Windows instalado |
 | `tandem android` | abre a tela do Android |

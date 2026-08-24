@@ -3205,6 +3205,15 @@ Compris
 @botao_corrigir
 Corriger
 
+@config_titulo
+Préparer cette machine
+
+@config_pronto
+Cette machine est prête — tout ce qu'il faut pour ouvrir vos fichiers est installé.
+
+@config_faltam
+Il manque encore quelques éléments pour tout faire fonctionner. Appuyez sur Installer, ou lancez : tandem preparar
+
 @verbo_dotnet48
 .NET Framework 4.8 (prend environ 30 minutes)
 

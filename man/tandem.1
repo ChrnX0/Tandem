@@ -143,6 +143,17 @@ runs, and an
 .BR apt-get (8)
 in there would wait forever.
 .TP
+.B "tandem configurar"
+The same setup as a guided panel: shows what the machine is still missing to run
+everything, as one card per piece with an Install button, and a green card when
+it is already ready. Pressing Install runs
+.B "tandem preparar"
+\(em so it is a front door, not a second install path. On a machine with no
+graphical session it reads as text and names
+.B "tandem preparar"
+as the next step. Aliases:
+.BR assistente ", " wizard .
+.TP
 .BI "tandem programas " [name]
 Lists the installed Windows programs and opens the chosen one, without
 depending on the system menu. Under Wayland, GNOME only re-reads the

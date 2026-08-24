@@ -2972,6 +2972,15 @@ Windows 组件。下载它不会把您的任何东西送到任何地方。
 @botao_corrigir
 修复
 
+@config_titulo
+准备这台机器
+
+@config_pronto
+这台机器已就绪——打开文件所需的一切都已安装。
+
+@config_faltam
+要运行全部功能还缺少几样东西。请点击“安装”，或运行：tandem preparar
+
 @verbo_dotnet48
 .NET Framework 4.8（大约需要 30 分钟）
 

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "465820881 5796" "$soma_esperados"
+      "2859555588 5806" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -1316,6 +1316,52 @@ if grep -q '_css_for' "$ROOT/src/lib/gui.py" &&
     pass "gui.py keeps the One UI theme (css builder + card + primary pill)"
 else
     fail "gui.py keeps the One UI theme (css builder + card + primary pill)" "themed" "missing"
+fi
+
+# 4.57: the first-run wizard. `tandem configurar` renders the machine's
+# readiness through the SAME panel the Central uses, so most of it is already
+# pinned above; what is new is the gather and the dispatch. t_prontidao_achados
+# turns each missing piece into a "2<TAB>desc<TAB>preparar" finding, reusing the
+# peca_* descriptions - proven by stubbing t_pecas_faltando so the test does not
+# turn on what this container happens to have installed.
+PRONT="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_pecas_faltando() { printf "wine|Wine here\njava|Java here\n"; }
+    t_prontidao_achados' 2>/dev/null)"
+equal "the wizard tags each missing piece as an amber card with the preparar action" \
+      "2	Wine here	preparar
+2	Java here	preparar" "$PRONT"
+# Nothing missing -> no findings, so the panel shows its single green all-clear.
+PRONT_OK="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    t_pecas_faltando() { :; }
+    t_prontidao_achados' 2>/dev/null)"
+equal "a ready machine yields no wizard findings (the all-clear card)" "" "$PRONT_OK"
+
+# tandem configurar reaches acao_configurar, and on a ready machine (stubbed via
+# a home whose PATH has everything the readers need) it says so in text. Here it
+# is enough that the command runs and produces the ready OR the missing summary,
+# never nothing - the silent-output failure this project abolishes.
+CFG_OUT="$(env -i HOME="$TMPROOT/cfg-home" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+    TANDEM_BIN="$ROOT/src/bin" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem" configurar 2>&1)"
+if [ -n "$CFG_OUT" ]; then pass "tandem configurar produces a readiness reading, never silence"
+else fail "tandem configurar produces a readiness reading, never silence" "some text" "(empty)"; fi
+# The aliases reach the same action.
+CFG_A="$(env -i HOME="$TMPROOT/cfg-home" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+    TANDEM_BIN="$ROOT/src/bin" TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" \
+    TANDEM_IDIOMA_FORCADO=en bash "$ROOT/src/bin/tandem" assistente 2>&1)"
+equal "the assistente alias reaches the same reading as configurar" "$CFG_OUT" "$CFG_A"
+
+# The dispatch closes the loop: pressing Install (token preparar) runs the
+# existing, tested install flow, and the wizard passes its own button label.
+CFG_BODY="$(sed -n '/^acao_configurar()/,/^}/p' "$ROOT/src/bin/tandem")"
+if printf '%s' "$CFG_BODY" | grep -q 't_prontidao_achados' &&
+   printf '%s' "$CFG_BODY" | grep -q 'botao_instalar' &&
+   printf '%s' "$CFG_BODY" | grep -q 'acao_preparar'; then
+    pass "acao_configurar gathers readiness, labels Install, and dispatches to preparar"
+else
+    fail "acao_configurar gathers readiness, labels Install, and dispatches to preparar" "wired" "missing"
 fi
 
 # 4.37: the two false-'healthy' misses the audit found in this flagship command,

@@ -3140,6 +3140,15 @@ Entendi
 @botao_corrigir
 Corrigir
 
+@config_titulo
+Preparar esta máquina
+
+@config_pronto
+Esta máquina está pronta — tudo o que é preciso para abrir seus arquivos está instalado.
+
+@config_faltam
+Ainda faltam algumas coisas para rodar tudo. Toque em Instalar, ou rode: tandem preparar
+
 @verbo_dotnet48
 .NET Framework 4.8 (demora uns 30 minutos)
 
