@@ -2693,6 +2693,28 @@ from `$HOME` (not `${TANDEM_PROTEGIDOS:-…}`), so a test exercising the protect
 list must write it to `$HOME/.config/tandem/protegidos.txt`, not an env var —
 the injected-env approach silently does nothing.
 
+**v4.59 IS PUBLISHED** — 2026-08-24, tag `v4.59` at `b89e7cd`, both artifacts
+verified byte-for-byte: the `.deb` (sha256 `892a605a…`) and the generic bundle
+(`6bbb1b0d…`) each agree across the downloaded bytes, the release's checksum
+sidecar, and a fresh reproducible build at the commit. It is idea ⑦ of the arc:
+**a signature safety signal.** A `.exe` arrives off a pen drive or a chat
+message, and until now Tandem said nothing about whether it carried a maker's
+signature. Now, the first time it opens an UNKNOWN program, it adds one calm
+line — "this program is digitally signed" (a small reassurance) or "this program
+is not digitally signed — open it only if you trust where it came from" (a mild
+caution). It is NOT an antivirus and NOT a verdict: `peinfo.py` reads only that
+an Authenticode signature is PRESENT and lands inside the file (the Security data
+directory, the one entry whose first field is a file offset, not an RVA) — it
+does not verify the signature, which would need a certificate chain and a trusted
+clock. It rides the 4.29 provenance note (shown only on the "new here" moment, so
+a POS is never nagged) and is silent when the file cannot be read as a PE
+(`t_pe_assinado` returns empty), so a note never rests on a guess. `peinfo.py`
+gains an `ASSINADO=` line; pinned by fixtures (a signed PE reads signed, an
+unsigned one unsigned, a Security directory past the end is already caught by the
+truncation check as an incomplete download — a forged size lands there, not on a
+false "signed"). Two new messages (`assinatura_ok`, `assinatura_falta`), all
+seven languages. Suite 1783 passed / 0 / 1 skipped; both literal counters read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

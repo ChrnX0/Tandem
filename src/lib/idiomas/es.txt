@@ -302,6 +302,13 @@ Una cosa más que conviene saber: el fabricante validó esa ruta en Wine 10.0, y
 @fechou_com_erro
 El programa se cerró con un error (código {1}).
 
+@programa_travou
+El programa se bloqueó mientras se ejecutaba — es un fallo del propio programa,
+no de tu máquina ni de Tandem. Intentarlo de nuevo puede funcionar; si sigue
+bloqueándose, quien puede arreglarlo es el fabricante del propio programa.
+
+  (Código técnico, para quien ayude: {1})
+
 @faltam_componentes_protegido
 A este programa le faltan componentes de Windows:
 

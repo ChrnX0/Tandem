@@ -275,6 +275,12 @@ sudo apt install wine32
 @fechou_com_erro
 程序出错退出了（代码 {1}）。
 
+@programa_travou
+程序在运行时崩溃了——这是程序本身的问题，不是你的机器，也不是 Tandem。
+再试一次可能就好；如果一直崩溃，能修复的是程序的开发商。
+
+  （技术代码，供帮助者参考：{1}）
+
 @faltam_componentes_protegido
 这个程序缺少一些 Windows 组件：
 

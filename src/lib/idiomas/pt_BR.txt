@@ -301,6 +301,13 @@ Mais uma coisa que vale saber: o fabricante validou esse caminho no Wine 10.0, e
 @fechou_com_erro
 O programa fechou com erro (código {1}).
 
+@programa_travou
+O programa travou enquanto rodava — isso é falha do próprio programa, não
+da sua máquina e não do Tandem. Tentar de novo pode funcionar; se continuar
+travando, quem pode resolver é o fabricante do próprio programa.
+
+  (Código técnico, para quem for ajudar: {1})
+
 @faltam_componentes_protegido
 Faltam componentes do Windows para este programa:
 
