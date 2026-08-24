@@ -303,6 +303,13 @@ Une chose de plus à savoir : le fabricant a validé cette voie sur Wine 10.0, e
 @fechou_com_erro
 Le programme s'est fermé sur une erreur (code {1}).
 
+@programa_travou
+Le programme a planté pendant son exécution — c'est une faute du programme
+lui-même, pas de votre machine ni de Tandem. Réessayer peut marcher ; s'il
+continue de planter, c'est l'éditeur du programme qui peut le corriger.
+
+  (Code technique, pour qui vous aide : {1})
+
 @faltam_componentes_protegido
 Il manque des composants Windows à ce programme :
 

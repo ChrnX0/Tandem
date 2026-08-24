@@ -236,6 +236,36 @@ t_falta_no_wine() {
         tr '\n' ' ' | sed 's/ $//' | grep . || return 1
 }
 
+# A program that CRASHED while running, as opposed to one that could not start
+# for a missing component. Wine writes "Unhandled exception 0x{code}" when the
+# program itself faulted - an access violation, a stack overflow, illegal
+# instruction - which is a bug in the PROGRAM, not in the machine or in Tandem.
+# Returns the exception code (lower case, no 0x) on a genuine crash, empty
+# otherwise, so the caller can say whose fault it is and, for a technician, name
+# the code.
+#
+# It EXCLUDES the two codes that mean "a component is missing" - c0000135 (DLL
+# not found) and c000007b (bad image / wrong bitness) - because those have their
+# own paths and must never be mislabelled a program crash. A missing dependency
+# is Tandem's to help with; a crash is the program's own bug, and telling the
+# owner the wrong one of those is exactly the wrong-blame this project abolishes.
+t_crash_do_programa() {
+    local log="${1:-}" code
+    [ -f "$log" ] || return 1
+    # Match the code that immediately follows "unhandled exception" - an optional
+    # "0x", then eight hex digits - and take the trailing eight of THAT match, so
+    # a memory address later on the same line (also eight hex) is never mistaken
+    # for the code. Both "exception 0xc0000005" and "exception c0000005" are read.
+    code="$(grep -oaiE 'unhandled exception:? *(0x)?[0-9a-f]{8}' "$log" 2>/dev/null |
+            head -1 | grep -oiE '[0-9a-f]{8}$')"
+    [ -n "$code" ] || return 1
+    code="$(printf '%s' "$code" | tr 'A-F' 'a-f')"
+    case "$code" in
+        c0000135|c000007b) return 1 ;;
+    esac
+    printf '%s' "$code"
+}
+
 # Turns this run's suspicions into the sentence the owner reads. The message
 # takes the blame instead of sending him hunting for a defect in the machine
 # - which is what "I installed the dependencies and it still does not open"

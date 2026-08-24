@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1414204581 5846" "$soma_esperados"
+      "760269756 5876" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -8735,6 +8735,47 @@ contem "the owner is told no component will fix it" \
        "nothing I can install" \
        "$(TANDEM_LIB="$ROOT/src/lib" TANDEM_IDIOMA_FORCADO=en bash -c \
           '. "'"$ROOT"'/src/lib/common.sh"; t_msg falta_no_wine "KERNEL32.dll.X" "wine-9.0"')"
+
+# 4.60: a program that RAN and then crashed is the program's own bug, not the
+# machine's. Wine logs "unhandled exception 0x{code}"; t_crash_do_programa reads
+# the code so tandem-exe can say whose fault it is instead of a bare exit code.
+crash_de() {
+    TANDEM_LIB="$ROOT/src/lib" bash -c \
+        '. "'"$ROOT"'/src/lib/common.sh"; . "'"$ROOT"'/src/lib/winedeps.sh"
+         t_crash_do_programa "$1"' _ "$1" 2>/dev/null
+}
+cat > "$TMPROOT/travou.log" <<'FIMC'
+0024:fixme:whatever
+wine: Unhandled exception 0xc0000005 in thread 24 at address 00401000.
+FIMC
+equal "an access-violation crash is read as the program's own fault, by code" \
+      "c0000005" "$(crash_de "$TMPROOT/travou.log")"
+# A memory ADDRESS later on the line is also eight hex digits; it must never be
+# mistaken for the exception code.
+equal "a memory address on the same line is not mistaken for the crash code" \
+      "c0000005" "$(crash_de "$TMPROOT/travou.log")"
+# Some Wine versions print the code with no 0x; both shapes read.
+printf 'wine: Unhandled exception c0000409 in thread 5\n' > "$TMPROOT/travou2.log"
+equal "a crash code printed without 0x is still read" \
+      "c0000409" "$(crash_de "$TMPROOT/travou2.log")"
+# THE EXCLUSION THAT MATTERS: a missing-component code is NOT a crash, because it
+# has its own path and mislabelling it would send the wrong blame - the exact
+# thing this feature exists to get right.
+printf 'wine: Unhandled exception 0xc0000135 (control..) in thread\n' > "$TMPROOT/faltadll.log"
+equal "a missing-DLL exception is NOT read as a crash (it has its own path)" \
+      "" "$(crash_de "$TMPROOT/faltadll.log")"
+printf 'wine: Unhandled exception 0xc000007b in thread\n' > "$TMPROOT/badimg.log"
+equal "a bad-image (wrong bitness) exception is NOT read as a crash" \
+      "" "$(crash_de "$TMPROOT/badimg.log")"
+# An ordinary run says nothing, so the note never fires on a program that is fine.
+equal "an ordinary log carries no crash" "" "$(crash_de "$TMPROOT/porque.log")"
+# The handler is wired to it, and only as a branch tried before the bare code.
+if grep -q 't_crash_do_programa' "$ROOT/src/bin/tandem-exe" &&
+   grep -q 'programa_travou' "$ROOT/src/bin/tandem-exe"; then
+    pass "tandem-exe names a crash before falling back to the bare exit code"
+else
+    fail "tandem-exe names a crash before falling back to the bare exit code" "wired" "missing"
+fi
 
 section "when the loader contradicts a receipt, it is written down"
 

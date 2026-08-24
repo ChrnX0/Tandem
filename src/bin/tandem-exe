@@ -838,6 +838,16 @@ $WINE_VELHO}"
                 t_erro "$(t_msg fechou_com_erro "$CODIGO")
 
 $(t_causa_por_token "$AMBIENTE_FALHOU")"
+            elif CRASH="$(t_crash_do_programa "$PARCIAL" 2>/dev/null)" && [ -n "$CRASH" ]; then
+                # The program ran and then faulted on its own - Wine logged an
+                # unhandled exception that is not a missing component. That is a
+                # bug in the PROGRAM, not in the machine, and saying so stops the
+                # owner from hunting for a defect that is not there. Tandem takes
+                # the blame when the blame is its and names whose it is when it is
+                # not; a crash is the one case where the honest answer is "not
+                # you, and not me".
+                t_memoria_grava "$PROG" RESULTADO "programa travou" 2>/dev/null
+                t_erro "$(t_msg programa_travou "$CRASH")"
             else
                 # THE BARE EXIT CODE, which is the one outcome this project
                 # exists to abolish. Reaching it can mean Tandem looked and
