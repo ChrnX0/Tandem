@@ -398,6 +398,14 @@ msgctxt "procedencia_novo"
 msgid "This one is new here — that is normal; Tandem is seeing it for the first time."
 msgstr "Este es nuevo por aquí — es normal; Tandem lo ve por primera vez."
 
+msgctxt "assinatura_ok"
+msgid "It is digitally signed — a small sign it comes from a real maker."
+msgstr "Está firmado digitalmente — una pequeña señal de que viene de un fabricante real."
+
+msgctxt "assinatura_falta"
+msgid "It is not digitally signed — open it only if you trust where it came from."
+msgstr "No está firmado digitalmente — ábrelo solo si confías en su procedencia."
+
 msgctxt "ja_instalei_e_nao_abre"
 msgid ""
 "I already installed what this program was asking for:{1}\n"

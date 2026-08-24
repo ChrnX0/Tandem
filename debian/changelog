@@ -1,3 +1,32 @@
+tandem (4.59) unstable; urgency=medium
+
+  * A safety signal for a program Tandem has never seen: is it digitally signed?
+    A `.exe` arrives off a pen drive or a chat message, and until now Tandem
+    said nothing about whether it carried a maker's signature. Now, the first
+    time it opens an unknown program, it adds one calm line - "this program is
+    digitally signed" (a small reassurance) or "this program is not digitally
+    signed - open it only if you trust where it came from" (a mild caution). It
+    is NOT an antivirus and NOT a verdict: `peinfo.py` reads only that an
+    Authenticode signature is PRESENT and lands inside the file (the Security
+    data directory, the one entry whose first field is a file offset, not an
+    RVA) - it does not verify the signature, which would need a certificate
+    chain and a trusted clock. So a signed program is a little more trustworthy
+    and an unsigned one a little less, and neither settles anything on its own.
+    - It rides the 4.29 provenance note, shown only on the "new here" moment,
+      so a POS opened dozens of times a day is never nagged; it is silent when
+      the file cannot be read as a PE (`t_pe_assinado` returns empty, so a note
+      never rests on a guess - the rule the whole reader layer follows).
+    - `peinfo.py` gains an `ASSINADO=` line; `t_pe_assinado` turns it into
+      sim/nao/empty. Pinned by fixtures - a PE with a Security directory that
+      points inside the file reads signed, one with no signature reads unsigned;
+      a directory that points PAST the end is already caught by the truncation
+      check as an incomplete download, so a forged size lands there, not on a
+      false "signed".
+    - Two new messages (`assinatura_ok`, `assinatura_falta`), translated in all
+      seven languages.
+
+ -- Tandem <rockx0@gmail.com>  Mon, 24 Aug 2026 22:00:00 +0000
+
 tandem (4.58) unstable; urgency=medium
 
   * Wine "undo": a snapshot of the environment, so a bad install can be taken

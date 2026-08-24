@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.58"
+TANDEM_VERSAO="4.59"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -2159,6 +2159,19 @@ t_pe_erro() {
     command -v python3 >/dev/null 2>&1 || return 1
     python3 "${TANDEM_LIB:-/usr/lib/tandem}/peinfo.py" "$1" 2>/dev/null |
         sed -n 's/^ERRO=//p' | head -1
+}
+
+# Is the .exe digitally signed (Authenticode)? "sim" / "nao", or empty (return 1)
+# when the file could not be read as a PE. peinfo does NOT verify the signature -
+# it reports only that one is present and lands inside the file - so this is a
+# mild trust signal, never a verdict: a signed program is a little more
+# trustworthy, an unsigned one a little less, and neither settles anything.
+t_pe_assinado() {
+    command -v python3 >/dev/null 2>&1 || return 1
+    local v
+    v="$(python3 "${TANDEM_LIB:-/usr/lib/tandem}/peinfo.py" "$1" 2>/dev/null |
+         sed -n 's/^ASSINADO=//p' | head -1)"
+    case "$v" in 1) printf 'sim' ;; 0) printf 'nao' ;; *) return 1 ;; esac
 }
 
 # Classes with no way out. Everything NOT listed here has a fourth column in

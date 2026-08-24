@@ -237,6 +237,12 @@ La communauté connaît ce programme ({1} signalements).
 @procedencia_novo
 Celui-ci est nouveau ici — c'est normal ; Tandem le voit pour la première fois.
 
+@assinatura_ok
+Il est signé numériquement — un petit signe qu'il vient d'un vrai éditeur.
+
+@assinatura_falta
+Il n'est pas signé numériquement — ne l'ouvrez que si vous avez confiance en sa provenance.
+
 @ja_instalei_e_nao_abre
 J'ai déjà installé ce que ce programme demandait :{1}
 

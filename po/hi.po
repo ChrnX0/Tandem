@@ -396,6 +396,14 @@ msgctxt "procedencia_novo"
 msgid "This one is new here — that is normal; Tandem is seeing it for the first time."
 msgstr "यह यहाँ नया है — यह सामान्य है; Tandem इसे पहली बार देख रहा है।"
 
+msgctxt "assinatura_ok"
+msgid "It is digitally signed — a small sign it comes from a real maker."
+msgstr "यह डिजिटल रूप से हस्ताक्षरित है — यह एक छोटा संकेत है कि यह किसी असली निर्माता से आया है।"
+
+msgctxt "assinatura_falta"
+msgid "It is not digitally signed — open it only if you trust where it came from."
+msgstr "यह डिजिटल रूप से हस्ताक्षरित नहीं है — इसे तभी खोलें जब आपको इसके स्रोत पर भरोसा हो।"
+
 msgctxt "ja_instalei_e_nao_abre"
 msgid ""
 "I already installed what this program was asking for:{1}\n"

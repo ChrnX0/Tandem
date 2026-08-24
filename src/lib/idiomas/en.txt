@@ -237,6 +237,12 @@ The community knows this program ({1} reports).
 @procedencia_novo
 This one is new here — that is normal; Tandem is seeing it for the first time.
 
+@assinatura_ok
+It is digitally signed — a small sign it comes from a real maker.
+
+@assinatura_falta
+It is not digitally signed — open it only if you trust where it came from.
+
 @ja_instalei_e_nao_abre
 I already installed what this program was asking for:{1}
 

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "217421435 5837" "$soma_esperados"
+      "1414204581 5846" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -1496,6 +1496,28 @@ equal "a file that is not a PE is read as not-a-Windows-program" \
       "nao_e_mz" "$(pe_erro "$ARTIFACTS/naoexe.exe")"
 equal "a complete PE has no reader error, so it is never refused" \
       "" "$(pe_erro "$ARTIFACTS/imports64.exe")"
+
+# 4.59: the Authenticode signature signal. peinfo reads whether an Authenticode
+# blob is present (the Security data directory pointing inside the file) - it
+# does NOT verify it, so this is a mild trust hint, never a verdict. A signed
+# fixture reads yes, an otherwise-identical unsigned build reads no, and a
+# truncated download answers empty (the reader could not read it as a PE), so a
+# note never rests on a guess.
+pe_assin() { TANDEM_LIB="$ROOT/src/lib" bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_pe_assinado "'"$1"'"'; }
+equal "a digitally signed .exe is read as signed" \
+      "sim" "$(pe_assin "$ARTIFACTS/assinado.exe")"
+equal "an unsigned .exe is read as not signed" \
+      "nao" "$(pe_assin "$ARTIFACTS/imports64.exe")"
+equal "a file that cannot be read as a PE gives no signature answer, not a guess" \
+      "" "$(pe_assin "$ARTIFACTS/cortado.exe")"
+# The handler surfaces the signal only on a NEW program, riding the provenance
+# note - never nagging a program it has seen before.
+if grep -q 't_pe_assinado' "$ROOT/src/bin/tandem-exe" &&
+   grep -q 'assinatura_ok\|assinatura_falta' "$ROOT/src/bin/tandem-exe"; then
+    pass "tandem-exe adds the signature note to a program it has never seen"
+else
+    fail "tandem-exe adds the signature note to a program it has never seen" "wired" "missing"
+fi
 
 # End to end. The refusal comes BEFORE the Wine check, so no prefix is ever built
 # for a truncated file. A stub Wine (instant exit 1) stands in only so the .msi

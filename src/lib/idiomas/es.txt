@@ -236,6 +236,12 @@ La comunidad conoce este programa ({1} informes).
 @procedencia_novo
 Este es nuevo por aquí — es normal; Tandem lo ve por primera vez.
 
+@assinatura_ok
+Está firmado digitalmente — una pequeña señal de que viene de un fabricante real.
+
+@assinatura_falta
+No está firmado digitalmente — ábrelo solo si confías en su procedencia.
+
 @ja_instalei_e_nao_abre
 Ya instalé lo que este programa pedía:{1}
 

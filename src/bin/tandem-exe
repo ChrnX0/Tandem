@@ -320,6 +320,21 @@ if [ "$PROC_TOKEN" != "$PROC_ANTES" ]; then
         aberto-aqui)        PROC_EXTRA="$PROC_VISTO" ;;
     esac
     PROC_FRASE="$(t_procedencia_frase "$PROC_TOKEN" "$PROC_EXTRA" 2>/dev/null)"
+    # For a program Tandem has NEVER seen, add one mild trust signal: is it
+    # digitally signed? This is not a verdict and not an antivirus - peinfo only
+    # reads that a signature is present, it does not verify it - so a signed
+    # unknown program is a little more trustworthy and an unsigned one a little
+    # less, and neither settles anything. Shown only on the "new here" moment, so
+    # a POS opened dozens of times a day is never nagged; silent when the file
+    # cannot be read as a PE (t_pe_assinado returns empty).
+    if [ "$PROC_TOKEN" = novo ]; then
+        case "$(t_pe_assinado "$PROG" 2>/dev/null || true)" in
+            sim) PROC_FRASE="${PROC_FRASE:+$PROC_FRASE
+}$(t_msg assinatura_ok)" ;;
+            nao) PROC_FRASE="${PROC_FRASE:+$PROC_FRASE
+}$(t_msg assinatura_falta)" ;;
+        esac
+    fi
     [ -n "$PROC_FRASE" ] && t_aviso "$PROC_FRASE"
     t_memoria_grava "$PROG" PROCEDENCIA "$PROC_TOKEN" 2>/dev/null
 fi
