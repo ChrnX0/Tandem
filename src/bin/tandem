@@ -1275,6 +1275,28 @@ acao_memoria() {
     printf '%s' "$saida" | t_texto "$(t_msg mem_titulo)"
 }
 
+
+# ------------------------------------------------------------------ historico
+#
+# The same memory `tandem memoria` reads, shown as a modern history: a card per
+# program Tandem has handled, newest first, coloured by whether it works, is
+# broken, or was only opened. Read-only - it builds from the memory files and
+# writes nothing - and falls back to the scrollable text on a machine with no
+# graphical session, so no path ends in silence.
+acao_historico() {
+    local achados ordenado tab; tab="$(printf '\t')"
+    achados="$(t_historico_achados)"
+    if [ "$(printf '%s' "$achados" | grep -c .)" -eq 0 ]; then
+        t_erro "$(t_msg hist_vazio)"
+        return 1
+    fi
+    # Newest first: sort by the leading date descending, then drop it so the
+    # panel receives SEV<TAB>SENTENCE and keeps this order (semordem=1).
+    ordenado="$(printf '%s' "$achados" | sort -t "$tab" -k1,1 -r | cut -f2-)"
+    printf '%s' "$ordenado" | t_painel "$(t_msg hist_titulo)" "$(t_msg hist_resumo)" "" "" 1
+    return 0
+}
+
 acao_esquecer() {
     local filtro="${1:-}" arq prog n=0
     [ -n "$filtro" ] || { t_erro "$(t_msg esq_diga_o_nome)"; return 1; }
@@ -2224,6 +2246,7 @@ case "${1:-}" in
     alternativas|alternativa) shift; acao_alternativas "$@" ;;
     receita|receitas)     shift; acao_receita "$@" ;;
     memoria|memória)      shift; acao_memoria "$@" ;;
+    historico|history|histórico)  acao_historico ;;
     esquecer|esqueca)     shift; acao_esquecer "$@" ;;
     lista)                shift; acao_lista "$@" ;;
     versao|versão)        shift; acao_versao "$@" ;;

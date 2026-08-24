@@ -1425,6 +1425,56 @@ else
     fail "acao_configurar gathers readiness, labels Install, and dispatches to preparar" "wired" "missing"
 fi
 
+# 4.61: the visual history. Built entirely from the memory files, newest first.
+HISTH="$TMPROOT/hist-home"; rm -rf "$HISTH"; mkdir -p "$HISTH/.local/share/tandem/memoria"
+HM="$HISTH/.local/share/tandem/memoria"
+printf 'PROGRAMA=pos.exe\nVISTO_EM=2026-08-24\nCONFIRMADO=sim\n'  > "$HM/a.txt"
+printf 'PROGRAMA=jogo.exe\nVISTO_EM=2026-08-20\nCONFIRMADO=nao\n' > "$HM/b.txt"
+printf 'PROGRAMA=novo.exe\nVISTO_EM=2026-08-22\n'                > "$HM/c.txt"
+hist_cmd() {
+    env HOME="$HISTH" TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+        TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" TANDEM_IDIOMA_FORCADO=en \
+        bash "$ROOT/src/bin/tandem" historico 2>&1
+}
+HIST_OUT="$(hist_cmd)"
+# Newest first: pos (24th) before novo (22nd) before jogo (20th) - the order the
+# panel must keep, so it is proven in the text the same order comes out in.
+equal "the history is newest-first with the right status per program" \
+      "The programs Tandem has helped with, newest first.
+
+  - pos.exe — 2026-08-24 — works
+  - novo.exe — 2026-08-22 — opened
+  - jogo.exe — 2026-08-20 — you said it does not work" "$HIST_OUT"
+# An empty memory says so, it does not open a blank window.
+HISTE="$TMPROOT/hist-empty"; rm -rf "$HISTE"; mkdir -p "$HISTE/.local/share/tandem/memoria"
+HE_OUT="$(env HOME="$HISTE" TANDEM_LIB="$ROOT/src/lib" TANDEM_BIN="$ROOT/src/bin" \
+    TANDEM_IDIOMAS_DIR="$ROOT/src/lib/idiomas" TANDEM_IDIOMA_FORCADO=en \
+    bash "$ROOT/src/bin/tandem" historico 2>&1)"
+contem "an empty history says so instead of a blank window" "Nothing here yet" "$HE_OUT"
+
+# t_painel's semordem option keeps the caller's order instead of sorting by
+# severity - the whole reason the history can be newest-first. Without it a green
+# (sev 3) line would sink below an amber (2) one; with it the input order stands.
+PAINEL_ORDEM="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    printf "3\tfirst green\n2\tsecond amber\n1\tthird red\n" | t_painel "T" "S" "" "" 1')"
+equal "with semordem the panel keeps the caller order, not worst-first" \
+      "S
+
+  - first green
+  - second amber
+  - third red" "$PAINEL_ORDEM"
+# And without semordem the default worst-first sort still applies (unchanged).
+PAINEL_PADRAO="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    printf "3\tgreen\n1\tred\n2\tamber\n" | t_painel "T" "S"')"
+equal "without semordem the default is still worst-first" \
+      "S
+
+  - red
+  - amber
+  - green" "$PAINEL_PADRAO"
+
 # 4.37: the two false-'healthy' misses the audit found in this flagship command,
 # each fixed and pinned end to end.
 # (a) A broken (0-byte/truncated) newest backup is a problem, not a healthy

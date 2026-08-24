@@ -2117,6 +2117,27 @@ Tandem 还什么都没学到。
 @mem_titulo
 Tandem - 我学到的东西
 
+@hist_titulo
+Tandem 处理过的程序
+
+@hist_resumo
+Tandem 帮助过的程序，最新的在前。
+
+@hist_vazio
+这里还没有内容——Tandem 会在为你打开程序后把它们显示在这里。
+
+@hist_linha
+{1} — {2} — {3}
+
+@hist_funciona
+正常
+
+@hist_quebrado
+你说无法使用
+
+@hist_aberto
+已打开
+
 @esq_diga_o_nome
 请说出要忘掉的程序名。
 
