@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-1768-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-1781-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -353,6 +353,7 @@ You mostly will not need these — you double-click files. When you do want the 
 | `tandem dados` | show **your** files inside Windows |
 | `tandem backup` · `tandem restore` | save and restore the whole environment (a checksum is written beside the backup) |
 | `tandem backup verificar <file>` | prove a backup is intact against its checksum |
+| `tandem instantaneo` · `tandem desfazer` | snapshot the Wine environment, and undo a bad install |
 | `tandem restore --testar <file>` | rehearse recovery — prove a backup would restore, touching nothing |
 | `tandem protect <path>` | mark a Wine prefix untouchable |
 | `tandem tema [which]` | appearance of Tandem's own windows — `sistema` (default) or `escuro` |

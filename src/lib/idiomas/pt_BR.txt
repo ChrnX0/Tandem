@@ -335,6 +335,36 @@ Não consegui instalar:
 @botao_instalar
 Instalar
 
+@botao_continuar
+Continuar
+
+@botao_desfazer
+Desfazer
+
+@instantaneo_sem_prefixo
+Ainda não há um ambiente Wine do Tandem para guardar. Abra um programa do Windows primeiro, ou rode: tandem preparar
+
+@instantaneo_copia_cheia
+Isto faz uma cópia completa do ambiente Wine — leva um instante e ocupa tanto disco quanto o ambiente. Pode continuar?
+
+@instantaneo_feito
+Guardei uma cópia do ambiente Wine ({1}). Se uma instalação depois quebrar algo, rode: tandem desfazer
+
+@instantaneo_falhou
+Não consegui guardar a cópia. Nada foi alterado.
+
+@desfazer_sem
+Não há cópia para voltar. Guarde uma antes de uma instalação arriscada com: tandem instantaneo
+
+@desfazer_pergunta
+Voltar o ambiente Wine para a cópia de {1}? Tudo o que foi instalado depois será desfeito.
+
+@desfazer_feito
+Pronto — o ambiente Wine voltou para a cópia. Seus programas estão como estavam naquele momento.
+
+@desfazer_falhou
+Não consegui restaurar a cópia, então devolvi seu ambiente atual intacto. Nada foi perdido.
+
 @botao_agora_nao
 Agora não
 

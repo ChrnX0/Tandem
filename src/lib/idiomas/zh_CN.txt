@@ -309,6 +309,36 @@ sudo apt install winetricks
 @botao_instalar
 安装
 
+@botao_continuar
+继续
+
+@botao_desfazer
+撤销
+
+@instantaneo_sem_prefixo
+目前还没有可保存快照的 Tandem Wine 环境。请先打开一个 Windows 程序，或运行：tandem preparar
+
+@instantaneo_copia_cheia
+这会完整复制 Wine 环境——需要一点时间，并占用与该环境相同的磁盘空间。要继续吗？
+
+@instantaneo_feito
+已保存 Wine 环境的快照（{1}）。如果之后的安装弄坏了什么，请运行：tandem desfazer
+
+@instantaneo_falhou
+我无法保存快照。没有做任何更改。
+
+@desfazer_sem
+没有可回退的快照。在有风险的安装前用以下命令保存一个：tandem instantaneo
+
+@desfazer_pergunta
+将 Wine 环境恢复到 {1} 的快照吗？此后安装的所有内容都会被撤销。
+
+@desfazer_feito
+完成——Wine 环境已恢复到快照。你的程序和当时一样。
+
+@desfazer_falhou
+我无法恢复快照，因此把你当前的环境原样放回。没有丢失任何东西。
+
 @botao_agora_nao
 暂时不用
 

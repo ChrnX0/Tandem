@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2859555588 5806" "$soma_esperados"
+      "217421435 5837" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -1025,6 +1025,67 @@ if grep -q 'if \[ -f "$TANDEM_PREFIXO_PADRAO/system.reg" \]; then' "$RBIN" &&
 else
     fail "a real restore verifies the environment landed before calling it done" \
          "the post-restore system.reg check + rst_restaurado_incompleto" "missing"
+fi
+
+section "Wine undo: snapshot a prefix, and put it back"
+
+# The whole feature in one round-trip: snapshot a real (marked) prefix, break it,
+# restore, and prove the prefix is back to what it was. Run in a throwaway home
+# with an EMPTY protected list, so the fixture prefix is ours.
+SNAPD="$TMPROOT/snap-home"; rm -rf "$SNAPD"; mkdir -p "$SNAPD"
+snap_env() {
+    env HOME="$SNAPD" TANDEM_PROTEGIDOS="$SNAPD/protegidos" TANDEM_LIB="$ROOT/src/lib" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1"
+}
+SNAP_PFX="$SNAPD/wine"
+mkdir -p "$SNAP_PFX"; : > "$SNAP_PFX/.tandem-prefixo"
+printf 'WINE REGISTRY\n' > "$SNAP_PFX/system.reg"; printf 'original\n' > "$SNAP_PFX/marker.txt"
+snap_env "t_instantaneo_tira '$SNAP_PFX'"
+equal "a snapshot of our own prefix is taken" "0" "$?"
+equal "and it is then reported as a snapshot that exists" "0" \
+      "$(snap_env "t_instantaneo_existe '$SNAP_PFX'"; echo $?)"
+# Break the prefix (a bad install), then undo.
+printf 'BROKEN\n' > "$SNAP_PFX/marker.txt"; printf 'junk\n' > "$SNAP_PFX/badfile"
+snap_env "t_instantaneo_restaura '$SNAP_PFX'"
+equal "restoring the snapshot succeeds" "0" "$?"
+equal "the file the bad install changed is back to what it was" "original" \
+      "$(cat "$SNAP_PFX/marker.txt")"
+equal "the file the bad install ADDED is gone" "nao" \
+      "$([ -f "$SNAP_PFX/badfile" ] && echo sim || echo nao)"
+equal "and our marker is preserved, so the prefix is still ours" "sim" \
+      "$([ -f "$SNAP_PFX/.tandem-prefixo" ] && echo sim || echo nao)"
+
+# RULE №1, enforced inside the functions, not just at the command: a prefix
+# without our marker is refused for BOTH snapshot and restore (code 2). This is
+# the whole safety of the feature - it can never write over the shop's prefix.
+NOTOURS="$SNAPD/notours"; mkdir -p "$NOTOURS"; printf 'x\n' > "$NOTOURS/system.reg"
+equal "snapshotting a prefix that is not ours is refused" "2" \
+      "$(snap_env "t_instantaneo_tira '$NOTOURS'"; echo $?)"
+equal "restoring over a prefix that is not ours is refused" "2" \
+      "$(snap_env "t_instantaneo_restaura '$NOTOURS'"; echo $?)"
+# A protected prefix (ours by marker, but on the protected list) is also
+# refused. The list lives where common.sh reads it - $HOME/.config/tandem - so
+# the fixture writes it there, not to an env var common.sh overrides on source.
+mkdir -p "$SNAPD/prot"; : > "$SNAPD/prot/.tandem-prefixo"; printf 'x\n' > "$SNAPD/prot/system.reg"
+mkdir -p "$SNAPD/.config/tandem"
+printf '%s\n' "$SNAPD/prot" > "$SNAPD/.config/tandem/protegidos.txt"
+equal "a prefix on the protected list is refused even with our marker" "2" \
+      "$(snap_env "t_instantaneo_tira '$SNAPD/prot'"; echo $?)"
+rm -f "$SNAPD/.config/tandem/protegidos.txt"
+
+# No snapshot to go back to is a distinct answer (3), never a silent success.
+FRESH="$SNAPD/fresh"; mkdir -p "$FRESH"; : > "$FRESH/.tandem-prefixo"; printf 'x\n' > "$FRESH/system.reg"
+equal "restoring with no snapshot answers 'nothing to restore', not success" "3" \
+      "$(snap_env "t_instantaneo_restaura '$FRESH'"; echo $?)"
+
+# The commands exist and are wired, and both go through the guarded functions.
+INST_BODY="$(sed -n '/^acao_instantaneo()/,/^}/p' "$ROOT/src/bin/tandem")"
+UNDO_BODY="$(sed -n '/^acao_desfazer()/,/^}/p' "$ROOT/src/bin/tandem")"
+if printf '%s' "$INST_BODY" | grep -q 't_instantaneo_tira' &&
+   printf '%s' "$UNDO_BODY" | grep -q 't_instantaneo_restaura'; then
+    pass "the instantaneo/desfazer commands go through the guarded snapshot functions"
+else
+    fail "the instantaneo/desfazer commands go through the guarded snapshot functions" "wired" "missing"
 fi
 
 section "machine health: one reading, worst-first"

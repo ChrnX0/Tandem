@@ -503,6 +503,51 @@ $(t_msg rst_mesmo_assim)" "$(t_msg botao_restaurar_assim_mesmo)" "$(t_msg botao_
     return 1
 }
 
+
+# -------------------------------------------------------- instantaneo / desfazer
+#
+# Wine "undo": take a snapshot of the Tandem prefix before a risky install, and
+# put it back if the install breaks it. Both paths refuse any prefix that is not
+# ours - rule number 1, checked in t_instantaneo_tira / _restaura themselves.
+acao_instantaneo() {
+    local prefixo="$TANDEM_PREFIXO_PADRAO" rc
+    if [ ! -f "$prefixo/.tandem-prefixo" ] || [ ! -f "$prefixo/system.reg" ]; then
+        t_erro "$(t_msg instantaneo_sem_prefixo)"
+        return 1
+    fi
+    # Warn honestly when the copy will not be instant (no copy-on-write here): it
+    # takes time and as much disk as the prefix. The owner decides.
+    if ! t_reflink_ok "$(dirname -- "$prefixo")"; then
+        t_pergunta "$(t_msg instantaneo_copia_cheia)" \
+                   "$(t_msg botao_continuar)" "$(t_msg botao_agora_nao)" || return 0
+    fi
+    t_instantaneo_tira "$prefixo"; rc=$?
+    if [ "$rc" -eq 0 ]; then
+        t_ok "$(t_msg instantaneo_feito "$(t_instantaneo_data "$prefixo")")"
+    else
+        t_erro "$(t_msg instantaneo_falhou)"
+        return 1
+    fi
+    return 0
+}
+
+acao_desfazer() {
+    local prefixo="$TANDEM_PREFIXO_PADRAO"
+    if ! t_instantaneo_existe "$prefixo"; then
+        t_erro "$(t_msg desfazer_sem)"
+        return 1
+    fi
+    t_pergunta "$(t_msg desfazer_pergunta "$(t_instantaneo_data "$prefixo")")" \
+               "$(t_msg botao_desfazer)" "$(t_msg botao_agora_nao)" || return 0
+    if t_instantaneo_restaura "$prefixo"; then
+        t_ok "$(t_msg desfazer_feito)"
+    else
+        t_erro "$(t_msg desfazer_falhou)"
+        return 1
+    fi
+    return 0
+}
+
 acao_protect() {
     local p; p="$(readlink -f -- "${1:-}" 2>/dev/null)"
     [ -n "$p" ] && [ -d "$p" ] || { t_erro "$(t_msg prot_caminho_invalido)"; return 1; }
@@ -2168,6 +2213,8 @@ case "${1:-}" in
     tema|aparencia|theme) shift; acao_tema "${1:-}" ;;
     backup)               shift; acao_backup "$@" ;;
     restore|restaurar)    shift; acao_restore "$@" ;;
+    instantaneo|snapshot) acao_instantaneo ;;
+    desfazer|undo)        acao_desfazer ;;
     protect|proteger)     shift; acao_protect "$@" ;;
     identidade|fingerprint) acao_identidade ;;
     portas|ports)         shift; acao_portas "$@" ;;

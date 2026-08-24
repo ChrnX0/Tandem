@@ -1,3 +1,33 @@
+tandem (4.58) unstable; urgency=medium
+
+  * Wine "undo": a snapshot of the environment, so a bad install can be taken
+    back. A winetricks component can leave a prefix worse than it found it - a
+    settings verb moves the Windows version, a half-finished install corrupts
+    something - and until now the only way back was to throw the whole
+    environment away. Now `tandem instantaneo` (alias `snapshot`) saves a copy
+    of the Tandem Wine environment, and `tandem desfazer` (alias `undo`) puts it
+    back exactly as it was. Take one before a risky install; if it breaks
+    something, one command undoes it.
+    - RULE №1 applies with full force, and it is enforced where it cannot be
+      skipped - inside the snapshot and restore functions, not just at the
+      command: both refuse any prefix that is not ours (no `.tandem-prefixo`
+      mark, or on the protected list), so neither can ever write over the shop's
+      production POS prefix. Proven by injection: an unmarked prefix is refused.
+    - The restore is careful to the point of paranoia, because it overwrites a
+      prefix: it renames the current environment aside, copies the snapshot into
+      place, and only when the copy really landed (a `system.reg` is there) does
+      it drop the aside; on ANY failure it puts the original back untouched, so
+      the environment is never left destroyed. The snapshot is kept, so undo can
+      be run again.
+    - The copy uses `--reflink=auto`: instant and free on a copy-on-write
+      filesystem (btrfs/xfs), a full copy elsewhere. When it will be a full copy
+      the owner is told it takes time and disk before it starts, and decides -
+      the honest test is a real reflink probe, not a filesystem name.
+    - Ten new messages (the two commands' outcomes plus `Continue`/`Undo`
+      buttons), translated in all seven languages.
+
+ -- Tandem <rockx0@gmail.com>  Mon, 24 Aug 2026 21:25:00 +0000
+
 tandem (4.57) unstable; urgency=medium
 
   * The first-run wizard: "prepare my machine" as a panel, not a command to

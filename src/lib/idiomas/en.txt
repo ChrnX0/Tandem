@@ -341,6 +341,36 @@ I could not install:
 @botao_instalar
 Install
 
+@botao_continuar
+Continue
+
+@botao_desfazer
+Undo
+
+@instantaneo_sem_prefixo
+There is no Tandem Wine environment to snapshot yet. Open a Windows program first, or run: tandem preparar
+
+@instantaneo_copia_cheia
+This makes a full copy of the Wine environment — it takes a moment and as much disk space as the environment. Go ahead?
+
+@instantaneo_feito
+Saved a snapshot of the Wine environment ({1}). If a later install breaks something, run: tandem desfazer
+
+@instantaneo_falhou
+I could not save the snapshot. Nothing was changed.
+
+@desfazer_sem
+There is no snapshot to go back to. Take one before a risky install with: tandem instantaneo
+
+@desfazer_pergunta
+Put the Wine environment back to the snapshot from {1}? Anything installed since then will be undone.
+
+@desfazer_feito
+Done — the Wine environment is back to the snapshot. Your programs are as they were then.
+
+@desfazer_falhou
+I could not restore the snapshot, so I put your current environment back untouched. Nothing was lost.
+
 @botao_agora_nao
 Not now
 

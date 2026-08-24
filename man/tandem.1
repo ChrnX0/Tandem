@@ -298,6 +298,17 @@ pre-flight \(em checksum, structure, complete environment \(em and touches
 nothing, so you can prove a backup would come back on a replacement PC the day
 you make it, not the day the disk dies.
 .TP
+.B "tandem instantaneo"
+Saves a snapshot of the Tandem Wine environment (alias \fBsnapshot\fR) \(em take
+one before a risky install. On a copy-on-write filesystem it is instant; else it
+is a full copy and you are told so first. It refuses any environment Tandem did
+not create.
+.TP
+.B "tandem desfazer"
+Puts the Wine environment back to the last snapshot (alias \fBundo\fR), so a
+component that broke it is undone. The current environment is renamed aside and
+put back untouched if the restore fails, so nothing is ever lost.
+.TP
 .BI "tandem tema " [which]
 Appearance of Tandem's own windows: \fBsistema\fR follows the computer and is
 the default, \fBescuro\fR is Tandem's own dark look. Nothing else on the

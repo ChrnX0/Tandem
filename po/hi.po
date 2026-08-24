@@ -584,6 +584,46 @@ msgctxt "botao_instalar"
 msgid "Install"
 msgstr "इंस्टॉल करें"
 
+msgctxt "botao_continuar"
+msgid "Continue"
+msgstr "जारी रखें"
+
+msgctxt "botao_desfazer"
+msgid "Undo"
+msgstr "पूर्ववत करें"
+
+msgctxt "instantaneo_sem_prefixo"
+msgid "There is no Tandem Wine environment to snapshot yet. Open a Windows program first, or run: tandem preparar"
+msgstr "अभी सहेजने के लिए कोई Tandem Wine वातावरण नहीं है। पहले कोई Windows प्रोग्राम खोलें, या चलाएँ: tandem preparar"
+
+msgctxt "instantaneo_copia_cheia"
+msgid "This makes a full copy of the Wine environment — it takes a moment and as much disk space as the environment. Go ahead?"
+msgstr "यह Wine वातावरण की पूरी कॉपी बनाता है — इसमें थोड़ा समय लगता है और वातावरण जितनी डिस्क जगह लगती है। जारी रखें?"
+
+msgctxt "instantaneo_feito"
+msgid "Saved a snapshot of the Wine environment ({1}). If a later install breaks something, run: tandem desfazer"
+msgstr "मैंने Wine वातावरण की एक कॉपी सहेज ली ({1})। यदि बाद में कोई इंस्टॉल कुछ बिगाड़ दे, तो चलाएँ: tandem desfazer"
+
+msgctxt "instantaneo_falhou"
+msgid "I could not save the snapshot. Nothing was changed."
+msgstr "मैं कॉपी सहेज नहीं सका। कुछ भी नहीं बदला गया।"
+
+msgctxt "desfazer_sem"
+msgid "There is no snapshot to go back to. Take one before a risky install with: tandem instantaneo"
+msgstr "वापस जाने के लिए कोई कॉपी नहीं है। किसी जोखिम भरी इंस्टॉल से पहले इससे एक बनाएँ: tandem instantaneo"
+
+msgctxt "desfazer_pergunta"
+msgid "Put the Wine environment back to the snapshot from {1}? Anything installed since then will be undone."
+msgstr "Wine वातावरण को {1} की कॉपी पर वापस लाएँ? उसके बाद इंस्टॉल किया गया सब कुछ पूर्ववत हो जाएगा।"
+
+msgctxt "desfazer_feito"
+msgid "Done — the Wine environment is back to the snapshot. Your programs are as they were then."
+msgstr "हो गया — Wine वातावरण कॉपी पर वापस आ गया। आपके प्रोग्राम वैसे ही हैं जैसे तब थे।"
+
+msgctxt "desfazer_falhou"
+msgid "I could not restore the snapshot, so I put your current environment back untouched. Nothing was lost."
+msgstr "मैं कॉपी पुनर्स्थापित नहीं कर सका, इसलिए मैंने आपका मौजूदा वातावरण ज्यों का त्यों वापस रख दिया। कुछ भी नहीं खोया।"
+
 msgctxt "botao_agora_nao"
 msgid "Not now"
 msgstr "अभी नहीं"
