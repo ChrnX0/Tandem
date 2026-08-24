@@ -2737,6 +2737,45 @@ excluded, a clean log says nothing, and a memory ADDRESS later on the same line
 (`programa_travou`), all seven languages. Suite 1790 passed / 0 / 1 skipped; both
 literal counters read 0.
 
+**v4.61 IS PUBLISHED** — 2026-08-24, tag `v4.61` at `ada6903`, both artifacts
+verified byte-for-byte: the `.deb` (sha256 `ca352d6e…`) and the generic bundle
+(`b92d7e97…`) each agree across the downloaded bytes, the release's checksum
+sidecar, and a fresh reproducible build at the commit. It is idea ③ of the arc:
+**a visual history of what Tandem has handled.** `tandem memoria` already showed
+what Tandem learnt about each program, but as a wall of text; now `tandem
+historico` (alias `history`) shows the same memory as the modern card panel the
+Central uses — one card per program, NEWEST FIRST, coloured by whether it works
+(green), you said it does not (red), or it was only opened (amber). It is built
+entirely from the memory files Tandem already keeps (PROGRAMA, VISTO_EM,
+CONFIRMADO), so it invents nothing and writes nothing, and falls back to the
+scrollable text with no graphical session. `t_painel` gained a `semordem` option
+so a caller that has already ordered its lines keeps that order (the history
+sorts by the date, the panel colours by severity WITHOUT reordering); the
+default — the health Central and the wizard — is unchanged and still worst-first
+(both directions pinned). Seven new messages, all seven languages; rendered under
+real GTK4. Suite 1794 passed / 0 / 1 skipped; both literal counters read 0.
+
+**THE "ESTADO DE ARTE" ARC — 8 OF 11 SHIPPED, THEN A HELD CHECKPOINT
+(2026-08-24).** The owner asked to "elevar o tandem ao estado de arte e
+excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
+version at a time. Shipped and verified: ① Central (4.54) + one-click fixes
+(4.55), the One UI 9 redesign (4.56, a separate owner request), ② first-run
+wizard (4.57), ⑥ Wine "undo"/prefix snapshots (4.58), ⑦ Authenticode signature
+signal (4.59), ⑨ crash-to-cause (4.60), ③ visual history (4.61). **The remaining
+5 were NOT built, and the reason is written down so the next session does not
+grind them unsupervised:** four need a decision only the owner can make — ⑤
+native packaging (PKGBUILD needs his AUR account to publish), ④ the client-side
+web checker (deploys on merge to his Vercel), ⑪ the opt-in success ledger (a
+privacy-stance decision — it changes the "we keep nothing" posture), and ⑩ the
+long-tail AI fallback (a real money/endpoint decision). The fifth, ⑧
+try-before-trust sandbox, is pure code but the HIGHEST-RISK item left (it creates
+and mutates a throwaway Wine prefix and is Wine-dependent to test), so it was
+deliberately left for a confirmed go rather than built at the tail of a long
+marathon against the project's quality-over-throughput rule. The honest read: the
+autonomous, low-risk half of the arc is delivered; the rest is genuinely gated on
+the owner's steer or field evidence on his real counter — the frontier this file
+has always named.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine
