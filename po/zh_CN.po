@@ -3816,6 +3816,34 @@ msgctxt "mem_titulo"
 msgid "Tandem - What I have learnt"
 msgstr "Tandem - 我学到的东西"
 
+msgctxt "hist_titulo"
+msgid "What Tandem has handled"
+msgstr "Tandem 处理过的程序"
+
+msgctxt "hist_resumo"
+msgid "The programs Tandem has helped with, newest first."
+msgstr "Tandem 帮助过的程序，最新的在前。"
+
+msgctxt "hist_vazio"
+msgid "Nothing here yet — Tandem shows programs here after it has opened them for you."
+msgstr "这里还没有内容——Tandem 会在为你打开程序后把它们显示在这里。"
+
+msgctxt "hist_linha"
+msgid "{1} — {2} — {3}"
+msgstr "{1} — {2} — {3}"
+
+msgctxt "hist_funciona"
+msgid "works"
+msgstr "正常"
+
+msgctxt "hist_quebrado"
+msgid "you said it does not work"
+msgstr "你说无法使用"
+
+msgctxt "hist_aberto"
+msgid "opened"
+msgstr "已打开"
+
 msgctxt "esq_diga_o_nome"
 msgid "Say the name of the program to forget."
 msgstr "请说出要忘掉的程序名。"

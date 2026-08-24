@@ -1,3 +1,28 @@
+tandem (4.61) unstable; urgency=medium
+
+  * A visual history of what Tandem has handled. `tandem memoria` already shows
+    what Tandem learnt about each program, but as a wall of text. Now `tandem
+    historico` (alias `history`) shows the same memory as the modern card panel
+    the Central uses: one card per program, NEWEST FIRST, coloured by whether it
+    works (green), you said it does not (red), or it was only opened (amber) - a
+    legible history instead of a log. It is built ENTIRELY from the memory files
+    Tandem already keeps (PROGRAMA, VISTO_EM, CONFIRMADO), so it invents nothing
+    and writes nothing, and it falls back to the scrollable text on a machine
+    with no graphical session, so no path ends in silence.
+    - `t_painel` gained a `semordem` option so a caller that has already ordered
+      its lines keeps that order: the history sorts by the VISTO_EM date
+      (newest first) and the panel colours each card by severity WITHOUT
+      reordering. The default - the health Central and the wizard - is unchanged
+      and still sorts worst-first.
+    - `t_historico_achados` reads each memory file into a
+      "date<TAB>sev<TAB>line" finding; `acao_historico` sorts by the date, drops
+      it, and hands sev<TAB>line to the panel. Empty memory says so plainly
+      rather than opening a blank window.
+    - Seven new messages (the title, the summary, the empty note, the line
+      template and the three status words), translated in all seven languages.
+
+ -- Tandem <rockx0@gmail.com>  Mon, 24 Aug 2026 23:00:00 +0000
+
 tandem (4.60) unstable; urgency=medium
 
   * When a program crashes, say it is the PROGRAM's fault, not the machine's. A

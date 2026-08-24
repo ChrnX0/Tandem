@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.60"
+TANDEM_VERSAO="4.61"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -874,7 +874,7 @@ t_texto() {
 # are no findings, the "here is what needs attention" line otherwise).
 t_painel() {
     local titulo="${1:-Tandem}" resumo="${2:-}" acaofile="${3:-}" rotulo="${4:-}"
-    local cru ordenado texto tab
+    local semordem="${5:-}" cru ordenado texto tab
     tab="$(printf '\t')"
     # The button label defaults to "Fix" (the health Central); a caller like the
     # setup wizard passes its own ("Install"). Kept a parameter so one renderer
@@ -884,8 +884,14 @@ t_painel() {
     # Worst-first, severity KEPT (same numeric key as t_saude_ordena, which
     # strips it). The ACTION field (3rd) travels with each line for the panel's
     # fix buttons; it is stripped for the text form. An empty gather stays empty
-    # -> the all-clear path below.
-    ordenado="$(printf '%s' "$cru" | grep . | sort -t "$tab" -k1,1n -s)"
+    # -> the all-clear path below. A caller that already ordered its lines (the
+    # history, sorted most-recent-first) passes semordem=1 so its own order
+    # survives - the severity still colours each card, it just does not reorder.
+    if [ -n "$semordem" ]; then
+        ordenado="$(printf '%s' "$cru" | grep .)"
+    else
+        ordenado="$(printf '%s' "$cru" | grep . | sort -t "$tab" -k1,1n -s)"
+    fi
 
     # The text form, identical to saude's: the summary, then one "  - sentence"
     # per finding (nothing but the summary when all is well). Read THREE fields
@@ -6061,6 +6067,35 @@ FIMSVC
     fi
 
     printf '%s' "$achados"
+}
+
+# The visual history: what Tandem has already handled, newest first, for the
+# `tandem historico` panel. Built ENTIRELY from the memory files it already
+# keeps (one per program, keyed by the file) - PROGRAMA, VISTO_EM (a %F date,
+# so it sorts lexically), CONFIRMADO - so it invents nothing and writes nothing.
+# Each line is "DATE<TAB>SEV<TAB>SENTENCE": the date orders it, the severity
+# colours the card (confirmed working = green, the owner said broken = red,
+# opened-but-unconfirmed = amber), and the sentence is what he reads. The caller
+# sorts by the date and drops it before handing SEV<TAB>SENTENCE to t_painel
+# with semordem=1, so the panel keeps the newest-first order.
+t_historico_achados() {
+    local arq prog visto conf sev est tab
+    tab="$(printf '\t')"
+    [ -d "$TANDEM_MEMORIA" ] || return 0
+    for arq in "$TANDEM_MEMORIA"/*.txt; do
+        [ -f "$arq" ] || continue
+        prog="$(sed -n 's/^PROGRAMA=//p' "$arq" | head -1)"
+        [ -n "$prog" ] || continue
+        visto="$(sed -n 's/^VISTO_EM=//p' "$arq" | tail -1)"
+        conf="$(sed -n 's/^CONFIRMADO=//p' "$arq" | tail -1)"
+        case "$conf" in
+            sim) sev=3; est="$(t_msg hist_funciona)" ;;
+            nao) sev=1; est="$(t_msg hist_quebrado)" ;;
+            *)   sev=2; est="$(t_msg hist_aberto)" ;;
+        esac
+        printf '%s\t%s\t%s\n' "${visto:-0000-00-00}" "$sev" \
+               "$(t_msg hist_linha "$prog" "${visto:-?}" "$est")"
+    done
 }
 
 # --------------------------------------------------- messages, in Portuguese

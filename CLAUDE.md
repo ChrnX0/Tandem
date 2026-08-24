@@ -2715,6 +2715,28 @@ truncation check as an incomplete download — a forged size lands there, not on
 false "signed"). Two new messages (`assinatura_ok`, `assinatura_falta`), all
 seven languages. Suite 1783 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.60 IS PUBLISHED** — 2026-08-24, tag `v4.60` at `8bd6582`, both artifacts
+verified byte-for-byte: the `.deb` (sha256 `20659ffb…`) and the generic bundle
+(`229d686c…`) each agree across the downloaded bytes, the release's checksum
+sidecar, and a fresh reproducible build at the commit. It is idea ⑨ of the arc:
+**when a program crashes, say it is the PROGRAM's fault, not the machine's.** A
+Windows program can run for a while and then fault on its own — an access
+violation, a stack overflow — and Wine logs it as an unhandled exception; until
+now that reached the owner as the bare "closed with an error (code N)", which
+reads like a defect in his machine. Now `t_crash_do_programa` reads the run's own
+log for "unhandled exception 0x{code}" and returns the code, EXCLUDING the two
+codes that mean a component is missing (c0000135 = DLL not found, c000007b = bad
+image) so a missing dependency is never mislabelled a crash — the wrong-blame
+this project exists to abolish. It is an ADDITIVE branch in `tandem-exe`, tried
+only after every existing explanation (a missing DLL, a Wine gap, an install
+cause) has come up empty and just before the bare exit code, so it names a crash
+without changing any path that already worked. Pinned by fixtures: a real crash
+code is read (with and without the `0x`), a missing-DLL and a bad-image code are
+excluded, a clean log says nothing, and a memory ADDRESS later on the same line
+(also eight hex) is never mistaken for the code. One new message
+(`programa_travou`), all seven languages. Suite 1790 passed / 0 / 1 skipped; both
+literal counters read 0.
+
 **ROUND TWO IS COMPLETE, and the extrapolation drive is at a deliberate pause,
 2026-08-19.** All the round-two work that a CI can verify is shipped: 4.30
 verifiable backups, 4.31 machine health, 4.32 restore rehearsal, 4.34 Wine

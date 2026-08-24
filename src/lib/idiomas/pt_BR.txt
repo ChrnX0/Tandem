@@ -2250,6 +2250,27 @@ Não achei nada aprendido sobre "{1}".
 @mem_titulo
 Tandem - O que eu aprendi
 
+@hist_titulo
+O que o Tandem já cuidou
+
+@hist_resumo
+Os programas que o Tandem ajudou, do mais recente para o mais antigo.
+
+@hist_vazio
+Ainda não há nada aqui — o Tandem mostra os programas aqui depois de abri-los para você.
+
+@hist_linha
+{1} — {2} — {3}
+
+@hist_funciona
+funciona
+
+@hist_quebrado
+você disse que não funciona
+
+@hist_aberto
+aberto
+
 @esq_diga_o_nome
 Diga o nome do programa a esquecer.
 

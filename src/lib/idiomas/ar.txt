@@ -2322,6 +2322,27 @@ Tandem - بدائل لـ{1}
 @mem_titulo
 Tandem - ما تعلّمته
 
+@hist_titulo
+ما تولّاه Tandem
+
+@hist_resumo
+البرامج التي ساعد فيها Tandem، الأحدث أولًا.
+
+@hist_vazio
+لا شيء هنا بعد — يعرض Tandem البرامج هنا بعد أن يفتحها لك.
+
+@hist_linha
+{1} — {2} — {3}
+
+@hist_funciona
+يعمل
+
+@hist_quebrado
+قلت إنه لا يعمل
+
+@hist_aberto
+فُتح
+
 @esq_diga_o_nome
 اذكر اسم البرنامج الذي تريد نسيانه.
 

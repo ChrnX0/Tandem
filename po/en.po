@@ -3987,6 +3987,34 @@ msgctxt "mem_titulo"
 msgid "Tandem - What I have learnt"
 msgstr "Tandem - What I have learnt"
 
+msgctxt "hist_titulo"
+msgid "What Tandem has handled"
+msgstr "What Tandem has handled"
+
+msgctxt "hist_resumo"
+msgid "The programs Tandem has helped with, newest first."
+msgstr "The programs Tandem has helped with, newest first."
+
+msgctxt "hist_vazio"
+msgid "Nothing here yet — Tandem shows programs here after it has opened them for you."
+msgstr "Nothing here yet — Tandem shows programs here after it has opened them for you."
+
+msgctxt "hist_linha"
+msgid "{1} — {2} — {3}"
+msgstr "{1} — {2} — {3}"
+
+msgctxt "hist_funciona"
+msgid "works"
+msgstr "works"
+
+msgctxt "hist_quebrado"
+msgid "you said it does not work"
+msgstr "you said it does not work"
+
+msgctxt "hist_aberto"
+msgid "opened"
+msgstr "opened"
+
 msgctxt "esq_diga_o_nome"
 msgid "Say the name of the program to forget."
 msgstr "Say the name of the program to forget."

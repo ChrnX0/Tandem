@@ -2274,6 +2274,27 @@ I found nothing learnt about "{1}".
 @mem_titulo
 Tandem - What I have learnt
 
+@hist_titulo
+What Tandem has handled
+
+@hist_resumo
+The programs Tandem has helped with, newest first.
+
+@hist_vazio
+Nothing here yet — Tandem shows programs here after it has opened them for you.
+
+@hist_linha
+{1} — {2} — {3}
+
+@hist_funciona
+works
+
+@hist_quebrado
+you said it does not work
+
+@hist_aberto
+opened
+
 @esq_diga_o_nome
 Say the name of the program to forget.
 

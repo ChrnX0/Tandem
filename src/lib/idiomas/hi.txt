@@ -2236,6 +2236,27 @@ Tandem ने अभी कुछ नहीं सीखा।
 @mem_titulo
 Tandem - मैंने क्या सीखा
 
+@hist_titulo
+Tandem ने जो संभाला
+
+@hist_resumo
+वे प्रोग्राम जिनमें Tandem ने मदद की, सबसे नया पहले।
+
+@hist_vazio
+अभी यहाँ कुछ नहीं है — Tandem आपके लिए प्रोग्राम खोलने के बाद उन्हें यहाँ दिखाता है।
+
+@hist_linha
+{1} — {2} — {3}
+
+@hist_funciona
+चलता है
+
+@hist_quebrado
+आपने कहा यह नहीं चलता
+
+@hist_aberto
+खोला गया
+
 @esq_diga_o_nome
 जिस प्रोग्राम को भुलाना है उसका नाम बताइए।
 

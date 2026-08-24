@@ -3940,6 +3940,34 @@ msgctxt "mem_titulo"
 msgid "Tandem - What I have learnt"
 msgstr "Tandem - मैंने क्या सीखा"
 
+msgctxt "hist_titulo"
+msgid "What Tandem has handled"
+msgstr "Tandem ने जो संभाला"
+
+msgctxt "hist_resumo"
+msgid "The programs Tandem has helped with, newest first."
+msgstr "वे प्रोग्राम जिनमें Tandem ने मदद की, सबसे नया पहले।"
+
+msgctxt "hist_vazio"
+msgid "Nothing here yet — Tandem shows programs here after it has opened them for you."
+msgstr "अभी यहाँ कुछ नहीं है — Tandem आपके लिए प्रोग्राम खोलने के बाद उन्हें यहाँ दिखाता है।"
+
+msgctxt "hist_linha"
+msgid "{1} — {2} — {3}"
+msgstr "{1} — {2} — {3}"
+
+msgctxt "hist_funciona"
+msgid "works"
+msgstr "चलता है"
+
+msgctxt "hist_quebrado"
+msgid "you said it does not work"
+msgstr "आपने कहा यह नहीं चलता"
+
+msgctxt "hist_aberto"
+msgid "opened"
+msgstr "खोला गया"
+
 msgctxt "esq_diga_o_nome"
 msgid "Say the name of the program to forget."
 msgstr "जिस प्रोग्राम को भुलाना है उसका नाम बताइए।"
