@@ -2973,21 +2973,46 @@ network-dependent ProofGate step read as pending; it had in fact completed in
 gate's real state from `list_workflow_jobs` step timestamps, not the check-run
 `status`, before mistaking API lag for a hang.
 
-**THE PROFESSIONAL-DEBUG ARC status: v4.65 (reader hardening), v4.66
-(concurrency), v4.67 (loop correctness) are SHIPPED. v4.68 (list integrity +
-cleanup) is the last queued batch** — `tools/monta-lista.py` re-validating the
-machines and month fields against the intake (the read side trusting the write
-side is the class this file names), the `%`-doubling in `t_memoria_le`/
-`acao_memoria` (a stored `50%` reads back `50%%` — reproduced), the SEMENTE/SERIAL
-overwrite in `t_identidade_fixa` (a restored backup rewrites the seed of record
-with the new machine's while keeping the old GUID), and dead-code removal
-(`t_idioma_rtl`, `t_texto_pedir_envio`). The one owner-facing thread in v4.68:
-the dead `t_texto_pedir_envio` carries a work-machine send-consent caution
-(`pedir_envio_maquina_de_trabalho` — "this machine holds a protected prefix, so
-the person clicking may not be the one who decides what leaves it") that the LIVE
-consent path `t_envio_oferece` lacks. The rule-1-aligned move is to MOVE that
-caution into the live path rather than delete it with the dead function — a
-strict improvement over both dropping it and leaving it dead.
+**v4.68 IS PUBLISHED** — 2026-08-25, tag `v4.68` at `ca8b38f`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (585340 bytes, sha256 `d9cedb50…`)
+and the generic bundle (585565 bytes, sha256 `9abef596…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible local build at the tag. It is the LAST batch of
+the professional debug — list integrity, memory/identity correctness, cleanup;
+each fix reproduced before the fix. (1) `tools/monta-lista.py` now re-validates
+the machines and month fields exactly as `api/lista.js` does on the way IN
+(machines must be `1`; the month cannot be future or predate `2026-01`) — the
+read side must be at least as strict as the write side, because the store is
+plain text that gets edited and this rebuild reaches every Tandem at once.
+(2) `t_memoria_le`/`acao_memoria` doubled every `%` before `printf '%b'` (`%` is
+literal in an ARGUMENT to `%b`; doubling only collapses in a FORMAT string), so a
+stored `50%` read back `50%%` on the memoria screen, in `tandem socorro`'s report
+and in an exported recipe — reproduced, then dropped. (3) `t_identidade_fixa`
+rewrote `SEMENTE`/`SERIAL` from the current machine every call; a backup restored
+onto a replacement PC keeps the source till's `MachineGuid`, so rewriting the
+seed left it describing a machine that never produced that GUID (which
+`t_primeira_vez` reads back to explain an identity change) — written once now, at
+the first stamp, preserved thereafter. (4) Removed two dead helpers: `t_idioma_
+rtl` (obsolete — no report pads a translated label any more, verified against the
+two padding sites which pad a path and a language code, both LTR) and
+`t_texto_pedir_envio`. **The owner-thread resolved itself the rule-1 way:** the
+dead `t_texto_pedir_envio` carried a work-machine send-consent caution the live
+`t_envio_oferece` had lost, so instead of deleting it the caution was MOVED into
+the live path (shown when `$TANDEM_PROTEGIDOS` is non-empty) — a strict
+improvement over both dropping it and leaving it dead, and message-shaping is the
+agent's call per the standing directive. Its now-orphaned `pedir_envio` catalogue
+key was removed through the po workflow (873 keys now, 0 untranslated, 0 fuzzy).
+Suite 1838 passed / 0 / 1 skipped; both literal counters read 0.
+
+**THE PROFESSIONAL-DEBUG ARC IS COMPLETE.** All four batches shipped and
+5-way-verified: v4.65 (reader input-safety hardening), v4.66 (the fd-7 lock
+collision), v4.67 (loop correctness), v4.68 (list integrity + cleanup). The
+5-agent debug produced 13 findings; the refactor agent's headline verdict was
+that the codebase is already well-factored, and that held — the fixes were
+correctness and safety, not churn, and the tempting-but-risky restructurings were
+left alone. The honest read after the arc: the frontier is unchanged and is not
+code — it is field evidence on the owner's real counter (a POS / fiscal-printer
+install), which no container or CI work substitutes for.
 
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
