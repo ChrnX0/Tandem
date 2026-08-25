@@ -7,4 +7,14 @@ t_progresso_abre "$(t_msg abrindo_android)"
 t_wd_garantir || exit 1
 t_progresso_fecha
 
-exec waydroid show-full-ui
+# NOT exec: `waydroid show-full-ui` only TRIGGERS the session UI and returns
+# promptly (it does not block for the session's lifetime), so checking its exit
+# is safe - it cannot cry wolf when the owner later closes Android. exec would
+# replace Tandem before the trigger ran, so a failure here - after t_wd_garantir
+# already confirmed the session is up - had nothing left to report; and the
+# panel launches this handler with stderr on /dev/null, so waydroid's own error
+# vanished too. Keep waydroid's raw output in the log (jargon belongs there, not
+# on screen) and give the owner a sentence when the screen will not open.
+if ! waydroid show-full-ui 2>> "${LOG:-/dev/null}"; then
+    t_erro "$(t_msg waydroid_nao_ligou)"
+fi

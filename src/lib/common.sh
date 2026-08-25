@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.62"
+TANDEM_VERSAO="4.63"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -4494,14 +4494,23 @@ t_inibidor() {
     printf '%s' "systemd-inhibit --what=idle:sleep:shutdown --who=Tandem --why=Instalando_componentes_do_Windows --mode=block"
 }
 
+# Runs a privileged script. Any value that came from the file the owner
+# double-clicked - a filename, or a control/manifest field - must be passed as a
+# POSITIONAL ARGUMENT after the script and referenced inside it as "$1", "$2"...,
+# NEVER interpolated into the script string. A `.deb` named  a'$(cmd)'.deb  or a
+# `.flatpakref` whose RuntimeRepo carries a quote would otherwise break out of
+# the single quotes it was wrapped in and run `cmd` as ROOT under sudo/pkexec -
+# the same untrusted-data-in-a-shell class as the Installed-Size fix, one sink
+# further on. Passed positionally, sh treats the value as data and it can contain
+# anything. The "tandem" label becomes $0 so the file value lines up as $1.
 t_como_root() {
-    local script="$1"
+    local script="$1"; shift
     if [ "$(id -u)" = 0 ]; then
-        sh -c "$script"
+        sh -c "$script" tandem "$@"
     elif [ -t 0 ] && command -v sudo >/dev/null 2>&1; then
-        sudo sh -c "$script"
+        sudo sh -c "$script" tandem "$@"
     elif t_tem_gui && command -v pkexec >/dev/null 2>&1; then
-        pkexec sh -c "$script"
+        pkexec sh -c "$script" tandem "$@"
     else
         return 127
     fi
@@ -4626,14 +4635,16 @@ t_rpm_nome_local() {
 # family, letting the manager pull the file's dependencies from the repositories
 # - the .rpm sibling of the apt-get line in tandem-deb. No "--": dnf5 REJECTS the
 # separator (measured on Fedora 41), and the path is always absolute (readlink -f
-# upstream), so it can never be mistaken for an option. Single-quoted for a path
-# with spaces. Empty for a family that is not rpm-native, so a caller that reaches
-# it by mistake installs nothing rather than the wrong thing.
+# upstream), so it can never be mistaken for an option. The path is NOT embedded
+# here: it is referenced as "$1" and passed positionally through t_como_root, so
+# a filename carrying a quote cannot break out and run as root (the same fix the
+# sh -c sites got). Empty for a family that is not rpm-native, so a caller that
+# reaches it by mistake installs nothing rather than the wrong thing.
 t_rpm_script_instalacao() {
-    local fam="$1" arq="$2"
+    local fam="$1"
     case "$fam" in
-        dnf)    printf "dnf install -y '%s'\n" "$arq" ;;
-        zypper) printf "zypper --non-interactive install '%s'\n" "$arq" ;;
+        dnf)    printf 'dnf install -y "$1"\n' ;;
+        zypper) printf 'zypper --non-interactive install "$1"\n' ;;
         *)      printf '' ;;
     esac
 }
@@ -5206,9 +5217,19 @@ t_relogio_ntp() {
 t_relogio_veredito() {
     local agora="${1:-}" epoch="${2:-}" ntp="${3:-}"
     local trinta_anos=$((30 * 365 * 24 * 3600))
+    # A day of grace on the "behind" side. The release date is a precise UTC
+    # instant in the changelog, and a correct clock can honestly read a little
+    # before it: a machine installing within hours of the release, or a changelog
+    # dated a few hours ahead of the build. Flagging that as "your clock is wrong"
+    # is exactly the cry-wolf this check must never do - and it was doing it
+    # (found by saude reporting a wrong clock on a machine whose only fault was
+    # being a couple of hours behind the release timestamp). The case this check
+    # exists for - a dead CMOS battery - resets the clock by YEARS, not hours, so
+    # a day of grace never hides it while it stops the false alarm on release day.
+    local folga=$((24 * 3600))
     if [ -n "$agora" ] && [ -n "$epoch" ] &&
        [ "$agora" -eq "$agora" ] 2>/dev/null && [ "$epoch" -eq "$epoch" ] 2>/dev/null; then
-        if [ "$agora" -lt "$epoch" ]; then printf 'atrasado\n'; return; fi
+        if [ "$agora" -lt "$((epoch - folga))" ]; then printf 'atrasado\n'; return; fi
         if [ "$agora" -gt "$((epoch + trinta_anos))" ]; then printf 'adiantado\n'; return; fi
     fi
     case "$ntp" in

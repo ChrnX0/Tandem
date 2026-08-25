@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "760269756 5876" "$soma_esperados"
+      "4076658349 5839" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -2962,6 +2962,14 @@ equal "a plausible date with automatic time on is fine" \
       "ok"        "$(t_relogio_veredito "$(date -u -d 2026-09-01 +%s)" "$REL_EPOCH" yes)"
 equal "a plausible date with automatic time off is only an advisory" \
       "sem_hora_automatica" "$(t_relogio_veredito "$(date -u -d 2026-09-01 +%s)" "$REL_EPOCH" no)"
+# A clock a few HOURS before the release instant is a correct clock on release
+# day (or a changelog dated a little ahead), not a wrong one. The day of grace
+# stops the false "your clock is wrong" - the cry-wolf this check must never do,
+# and the exact one saude was raising before this fix.
+equal "a clock hours before release, time on, is not condemned" \
+      "ok"        "$(t_relogio_veredito "$(date -u -d '2026-08-17 21:00' +%s)" "$REL_EPOCH" yes)"
+equal "but a clock more than a day before release is still wrong" \
+      "atrasado"  "$(t_relogio_veredito "$(date -u -d '2026-08-16 12:00' +%s)" "$REL_EPOCH" yes)"
 # The guard that matters: a machine legitimately running old software years later
 # must NOT be told its clock is wrong.
 equal "five years after release, with time on, is not flagged" \
@@ -5820,6 +5828,49 @@ equal "a real integer Installed-Size is kept" \
 equal "the handler guards the size arithmetic with a numeric case" \
       "1" "$(grep -cF '*[!0-9]*)' "$ROOT/src/bin/tandem-deb" | awk '{print ($1>=1)?1:0}')"
 
+# 4.63: two more sinks of the SAME class the Installed-Size fix above opened -
+# untrusted file data reaching a shell-interpreting context - at two places that
+# fix did not cover. Both were PoC-confirmed live (a sentinel file created on a
+# plain double-click, and on a confirmed install as root). Each guard is pinned,
+# and each is proven to catch the exact attack.
+#
+# (1) The .deb's Package NAME was spliced into a sed program - s/\b$NOME\b// -
+# and GNU sed's `e` command RAN it: a name like  x//;e touch FILE ;  created
+# FILE as the user, before any password. The reader now drops a name that breaks
+# Debian policy (so the handler refuses it as "not a package" before the sed is
+# ever reached), and the name is taken out of the list with a shell loop, not a
+# sed program.
+rm -f "$TMPROOT/SED_SENTINEL"
+python3 "$ROOT/tests/mkdeb.py" "$DEBS/nome-mau.deb" \
+        "Package=x//;e touch $TMPROOT/SED_SENTINEL ;" Architecture=all >/dev/null
+equal "the reader drops a package name that breaks Debian policy" \
+      "" "$(t_campo "$(t_deb_info "$DEBS/nome-mau.deb")" PACOTE)"
+equal "reading a .deb with a hostile package name executes nothing" \
+      "0" "$([ -e "$TMPROOT/SED_SENTINEL" ] && echo 1 || echo 0)"
+equal "a legitimate package name is still read" \
+      "hello" "$(python3 "$ROOT/tests/mkdeb.py" "$DEBS/bom-nome.deb" Package=hello \
+                 Architecture=all >/dev/null; t_campo "$(t_deb_info "$DEBS/bom-nome.deb")" PACOTE)"
+equal "the handler no longer embeds the package name in a sed program" \
+      "0" "$(grep -vE '^[[:space:]]*#' "$ROOT/src/bin/tandem-deb" | grep -cF 's/\b$NOME')"
+
+# (2) A filename or a .flatpakref field carrying a single quote broke out of the
+# quotes it was wrapped in inside a privileged  sh -c  string and ran as ROOT.
+# t_como_root takes the untrusted value POSITIONALLY now, so sh treats it as
+# data. Proven directly at the sink - and robust whether or not this test runs
+# as root: with no way to escalate, t_como_root just returns 127, still running
+# nothing.
+rm -f "$TMPROOT/ROOT_SENTINEL"
+t_como_root 'true "$1"' "x'\$(touch $TMPROOT/ROOT_SENTINEL)'.deb" >/dev/null 2>&1 || :
+equal "t_como_root treats an injected value as data, never as a command" \
+      "0" "$([ -e "$TMPROOT/ROOT_SENTINEL" ] && echo 1 || echo 0)"
+# ...and no handler wraps a file value in single quotes inside a t_como_root
+# script any more - the exact shape that was the vulnerability.
+mau_cr=0
+for _pat in "'\$ARQ'" "'\$PACOTE_ARQ'" "'\$REPO_RUNTIME'"; do
+    grep -rqF "$_pat" "$ROOT"/src/bin/ "$ROOT"/src/lib/ && mau_cr=$((mau_cr + 1))
+done
+equal "no handler single-quotes a file value into a t_como_root script" "0" "$mau_cr"
+
 info_deb="$(t_deb_info "$DEBS/simples.deb")"
 equal "reads the package name" "teste" "$(t_campo "$info_deb" PACOTE)"
 equal "reads the version" "1.0" "$(t_campo "$info_deb" VERSAO)"
@@ -6205,14 +6256,23 @@ done
 # On an rpm-native family the .rpm is installed; on apt/pacman it stays foreign.
 # A .deb is foreign anywhere but apt. Verified end to end on real Fedora and Arch;
 # here the pure parts and the wiring.
-equal "the rpm install command on dnf names dnf, no -- (dnf5 rejects it)" \
-      "dnf install -y '/x.rpm'" "$(t_rpm_script_instalacao dnf /x.rpm)"
-equal "the rpm install command on zypper names zypper" \
-      "zypper --non-interactive install '/x.rpm'" "$(t_rpm_script_instalacao zypper /x.rpm)"
+# The path is passed positionally (as "$1") through t_como_root, never embedded
+# in the script - so a filename carrying a quote cannot run as root. The command
+# therefore references $1, and carries no /x.rpm literal to break out of.
+contem "the rpm install command on dnf names dnf, path as a positional arg" \
+      'dnf install -y "$1"' "$(t_rpm_script_instalacao dnf)"
+contem "the rpm install command on zypper names zypper, path as a positional arg" \
+      'zypper --non-interactive install "$1"' "$(t_rpm_script_instalacao zypper)"
 equal "an rpm-foreign family gets no install command" \
-      "" "$(t_rpm_script_instalacao apt /x.rpm)"
-equal "the rpm command never carries a bare -- separator" "0" \
-      "$(t_rpm_script_instalacao dnf /x.rpm | grep -c ' -- ')"
+      "" "$(t_rpm_script_instalacao apt)"
+equal "the rpm command never carries a bare -- separator (dnf5 rejects it)" "0" \
+      "$(t_rpm_script_instalacao dnf | grep -c ' -- ')"
+if t_rpm_script_instalacao dnf | grep -q '"[$]1"'; then
+    pass "the rpm command references a positional arg, no path to break out of"
+else
+    fail "the rpm command references a positional arg, no path to break out of" \
+         '"$1"' "$(t_rpm_script_instalacao dnf)"
+fi
 # tandem-rpm: the native path installs on dnf/zypper; the foreign path is kept.
 RPM_CORPO="$(cat "$ROOT/src/bin/tandem-rpm")"
 contem "tandem-rpm reads the family" "t_familia_pacote" "$RPM_CORPO"
@@ -6246,6 +6306,20 @@ for lang in en pt_BR es fr zh_CN hi ar; do
         *) pass "the inversion messages exist in $lang" ;;
     esac
 done
+
+# 4.63: tandem-android used to end in  exec waydroid show-full-ui  - and the
+# panel launches that handler with its output on /dev/null, so a failure of the
+# UI launch AFTER t_wd_garantir already confirmed the session was up left
+# NOTHING to report anywhere: a click that did nothing, in silence. It checks
+# the launch now (show-full-ui is a prompt trigger that returns quickly, so the
+# check cannot cry wolf when the owner later closes Android) and speaks up.
+equal "tandem-android does not exec-and-forget the Android UI" \
+      "0" "$(grep -c 'exec waydroid' "$ROOT/src/bin/tandem-android")"
+AND_CORPO="$(cat "$ROOT/src/bin/tandem-android")"
+contem "tandem-android launches the Android UI and checks the result" \
+       'waydroid show-full-ui' "$AND_CORPO"
+contem "tandem-android speaks up when the Android screen will not open" \
+       't_erro' "$AND_CORPO"
 
 section "native packages: every handler, every path, with nobody to ask"
 

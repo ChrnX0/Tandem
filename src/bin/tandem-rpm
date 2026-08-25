@@ -59,7 +59,7 @@ $(t_msg precisa_da_senha)"
     fi
     SAIDA="$(t_saida_abre rpm)"
     t_progresso_abre "$(t_msg rpm_instalando "$NOME")"
-    t_como_root "$(t_rpm_script_instalacao "$FAM" "$ARQ")" >>"$SAIDA" 2>&1
+    t_como_root "$(t_rpm_script_instalacao "$FAM")" "$ARQ" >>"$SAIDA" 2>&1
     CODIGO=$?
     t_saida_fecha "$SAIDA"
     t_progresso_fecha

@@ -281,6 +281,25 @@ def limpo(valor):
     return "".join(" " if c in "\r\n" or ord(c) < 32 else c for c in texto)
 
 
+# Debian policy: a package name is at least two characters, starts with an
+# alphanumeric, and holds only lowercase letters, digits, plus, minus and dot.
+_NOME_PACOTE = re.compile(r"^[a-z0-9][a-z0-9+.-]+$")
+
+
+def nome_de_pacote(valor):
+    """The Package name if it matches Debian policy, else empty.
+
+    Defence in depth for the shell downstream: a name outside this set is not
+    something dpkg would ever install, and spliced into a sed program or a
+    privileged sh -c it was a code-execution vector (the same untrusted-data
+    class as Installed-Size). A non-conforming name is dropped here, so
+    tandem-deb refuses it as "not a package" rather than trusting it. The two
+    real sinks are fixed independently; this stops the value at the source.
+    """
+    v = limpo(uma_linha(valor)).strip()
+    return v if _NOME_PACOTE.match(v) else ""
+
+
 def main():
     if len(sys.argv) < 2:
         print("ERRO=uso")
@@ -300,7 +319,7 @@ def main():
         print("ERRO=cru|%s" % str(e).replace("\n", " ")[:200])
         return 1
 
-    print("PACOTE=%s" % limpo(uma_linha(c.get("Package", ""))))
+    print("PACOTE=%s" % nome_de_pacote(c.get("Package", "")))
     print("VERSAO=%s" % limpo(uma_linha(c.get("Version", ""))))
     print("ARQUITETURA=%s" % limpo(uma_linha(c.get("Architecture", ""))))
     print("DEPENDE=%s" % limpo(normaliza_dependencias(c.get("Depends", ""))))
