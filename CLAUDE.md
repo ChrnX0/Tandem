@@ -2912,6 +2912,33 @@ VISTO_EM history gap, receipt-on-wrong-bitness), v4.68 list integrity + cleanup
 dead-code removal) — with ONE owner decision to surface, not decide: a dead
 function carried a work-machine send-consent caution the live path lacks.
 
+**v4.66 IS PUBLISHED** — 2026-08-25, tag `v4.66` at `91ef3a0`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (584658 bytes, sha256 `8f266559…`)
+and the generic bundle (584895 bytes, sha256 `7b15b9ef…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible local build at the tag. It is the concurrency
+batch of the debug, and its one fix is a whole class: **the double-click lock
+was defeated by the first memory write.** Every run-handler takes its per-file
+"this program is already opening" lock on fd 7 (`tandem-exe`, `-appimage`,
+`-jar`, `-deb`) — but `t_memoria_grava` used fd 7 too, for the memory lock, and
+closed it; so the FIRST early memory write (the `ARQUITETURA` line near the top
+of the run, long before the program opens) reopened fd 7 onto its own lock and
+RELEASED the double-click lock, and a second click then found it free and ran a
+CONCURRENT instance in the same Wine prefix — two installers writing one
+registry, the exact corruption that lock exists to prevent, with the "already
+opening" message silently defeated at the same moment. Reproduced end to end
+(the reproduction first mis-fired because the target file did not exist, so
+`t_memoria_grava` bailed at the file-hash step — a real 4096-byte file was
+needed to reach the lock). The fix is the class, not the instance: the three
+library-helper locks now live on DEDICATED high descriptors no handler ever
+holds — `t_memoria_grava` on 201, `t_config_grava` on 200, `t_envio_envia` on
+202 (it was fd 6, and it CALLS `t_config_grava` mid-critical-section, so sharing
+a number let the inner config write drop the outer send lock too). A helper may
+never touch a caller-owned fd; that is now true by build, pinned by a test that
+takes the fd-7 lock, does a memory write, and asserts a second process is still
+BLOCKED (it fails on the old code). Suite 1826 passed / 0 / 1 skipped; both
+literal counters read 0.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested

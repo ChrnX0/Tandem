@@ -482,6 +482,15 @@ FIMAVISO
                         # loop below reaches the same conclusion from the same
                         # function, which is where the owner's sentence about
                         # it comes from.
+                        #
+                        # The receipt IS written here, exactly as the main loop
+                        # does on this outcome: the verb delivered its DLL, only
+                        # in a width this program cannot load. Reinstalling would
+                        # deliver the same wrong width, so under rule 4 the
+                        # receipt holds - without it the PENDENTES check (which
+                        # reads .tandem-verbos) reinstalled a 32-bit-only verb on
+                        # every open of a 64-bit program.
+                        printf '%s\n' "$v" >> "$WINEPREFIX/.tandem-verbos"
                         t_diz "!!! $v (from memory) delivered $ALVO in the wrong bitness for a $ARCH-bit program"
                     else
                         t_diz "!!! $v (from memory) exited 0 and did not deliver $ALVO"

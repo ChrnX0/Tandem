@@ -1,3 +1,29 @@
+tandem (4.67) unstable; urgency=medium
+
+  * Three loop-correctness fixes from the professional debug, each reproduced.
+    - The "did it work?" question was gated on zenity ALONE - but `t_pergunta`
+      has drawn through the modern GTK4 face (`gui.py`) since 4.46 and only
+      falls back to zenity. So on a Fedora/Arch generic-tarball install, where
+      the desktop supplies GTK4/libadwaita but zenity is not pulled in, a
+      program that opened cleanly was NEVER asked whether it worked:
+      `CONFIRMADO` never recorded, the strongest lesson (a human's word) never
+      captured - the silent success this check exists to kill, on the very path
+      the distro line invested in. The gate now mirrors `t_pergunta`: ask when
+      the modern face OR zenity is present.
+    - `tandem-snap` and `tandem-flatpak` were the only two install handlers that
+      did not write `VISTO_EM` on success (the other seven do), so a snap or
+      flatpak installed today showed up in `tandem historico` undated and sorted
+      to the very bottom as the oldest thing Tandem had ever seen. Both write it
+      now, and a class guard asserts EVERY handler that records a success also
+      dates it - so the next format cannot repeat the omission.
+    - The memory/list shortcut skipped the `.tandem-verbos` receipt on a
+      wrong-bitness delivery (the verb delivered its DLL, only in a width the
+      program cannot load), while the main loop writes it. Without the receipt
+      the shortcut reinstalled a 32-bit-only verb on every open of a 64-bit
+      program - the exact waste rule №4 forbids. The receipt is written now.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 25 Aug 2026 21:30:00 +0000
+
 tandem (4.66) unstable; urgency=medium
 
   * The double-click lock is no longer defeated by the first memory write. Found
