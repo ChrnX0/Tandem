@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.67"
+TANDEM_VERSAO="4.68"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -386,14 +386,6 @@ t_idioma_nome() {
         ar)    printf 'العربية (Arabic)' ;;
         *)     printf '%s' "$1" ;;
     esac
-}
-
-# Arabic is written right to left. Every aligned report in this program pads a
-# label to a fixed column, and padding runs the wrong way in a right-to-left
-# script: the value ends up inside the label. So the reports ask before they
-# align, and print a plain "label: value" instead.
-t_idioma_rtl() {
-    case "${TANDEM_IDIOMA:-}" in ar|fa|he|ur) return 0 ;; *) return 1 ;; esac
 }
 
 # Reads one catalog into the array named by $2. Pure "read": no eval anywhere
@@ -1327,6 +1319,7 @@ t_prefixo_arquitetura() {
 # here just because the write is small.
 t_identidade_fixa() {
     local prefixo="$1" serial guid marca vista escreveu="" faltou="" vistas ja
+    local semente_grava serial_grava
     [ -d "$prefixo/drive_c" ] || return 1
     # Rule number 1, spelled out here as well as in the caller. The write is
     # small, which is exactly why it would be the one to slip through.
@@ -1414,9 +1407,22 @@ t_identidade_fixa() {
     # is written even when the GUID did not land, because the seed and the
     # serial are worth recording on their own - the GUID line is simply left
     # empty, which is what tells the next run to try again.
+    #
+    # The seed and serial are written ONCE, at the first stamp, and never
+    # overwritten: they are the record of what the stamped MACHINEGUID was
+    # DERIVED from. Rewriting them from the current machine on a later run - the
+    # exact case a restored backup creates, where the GUID is deliberately kept
+    # (ja non-empty) but this replacement PC's seed differs - would leave SEMENTE
+    # describing a machine that never produced the recorded GUID, and t_primeira_
+    # vez reads SEMENTE back to explain an identity change. So preserve whatever
+    # is already on file; only fill it on a fresh mark.
+    semente_grava="$(sed -n 's/^SEMENTE=//p' "$marca" 2>/dev/null | head -1)"
+    [ -n "$semente_grava" ] || semente_grava="$(t_maquina_semente)"
+    serial_grava="$(sed -n 's/^SERIAL=//p' "$marca" 2>/dev/null | head -1)"
+    [ -n "$serial_grava" ] || serial_grava="$serial"
     {
-        printf 'SEMENTE=%s\n' "$(t_maquina_semente)"
-        printf 'SERIAL=%s\n' "$serial"
+        printf 'SEMENTE=%s\n' "$semente_grava"
+        printf 'SERIAL=%s\n' "$serial_grava"
         printf 'MACHINEGUID=%s\n' "$guid"
     } > "$marca" 2>/dev/null
     [ -n "$faltou" ] && return 1
@@ -1811,7 +1817,12 @@ t_memoria_le() {
     valor="$(sed -n "s/^$2=//p" "$arq" | tail -1)"
     [ -n "$valor" ] || return 1
     # Undo the escaping t_memoria_grava applies to keep one value per line.
-    printf '%b' "${valor//%/%%}"
+    # The value is the ARGUMENT to %b, never the format, so a % in it is
+    # already literal - doubling it (the old `${valor//%/%%}`) turned a stored
+    # "50% off" into "50%% off" on the memoria screen, in tandem socorro's
+    # report, and in an exported recipe. printf %% only collapses in a FORMAT
+    # string, which this is not.
+    printf '%b' "$valor"
     printf '\n'
 }
 
@@ -6634,24 +6645,6 @@ t_envio_define() {
     t_diz "automatic sending set to: $1"
 }
 
-# The consent text. It shows the line, because a permission dialog that
-# describes a payload instead of displaying it is asking to be trusted rather
-# than asking a question.
-t_texto_pedir_envio() {
-    local reg="$1"
-    t_msg pedir_envio "$reg"
-    # If the machine has somebody else's Wine profile on it, it is plausibly a
-    # work machine, and the person clicking may not be the person who decides
-    # what leaves it. Saying so is not a veto - it is the information he needs.
-    if [ -s "$TANDEM_PROTEGIDOS" ]; then
-        printf '
-
-'; t_msg pedir_envio_maquina_de_trabalho
-    fi
-    printf '
-'
-}
-
 # Queues one record. Never sends from here: a double click is not the place to
 # wait for a network.
 t_envio_enfileira() {
@@ -6887,7 +6880,7 @@ t_envio_posta() {
 # concrete then ("this line, about the program you just used") instead of
 # abstract at install time, when the owner has nothing to look at.
 t_envio_oferece() {
-    local prog="$1" reg
+    local prog="$1" reg aviso_trab=""
     reg="$(t_lista_registro "$prog" 2>/dev/null)" || return 1
     [ -n "$reg" ] || return 1
     # Sending is on by default, so this is a NOTICE and not a question - but it
@@ -6895,13 +6888,23 @@ t_envio_oferece() {
     # rather than a description of one. A notice that describes a payload is
     # asking to be trusted; a notice that displays it is telling the truth.
     #
+    # If this machine holds a protected Wine prefix it is plausibly a work
+    # machine, and the person who just used a program may not be the person who
+    # decides what leaves it. Saying so is not a veto - it is the information he
+    # needs to make the call. (This caution used to live in a t_texto_pedir_envio
+    # that nothing called; the live path had lost it. Wired in here where the
+    # decision actually happens, which is the whole point of showing it.)
+    #
     # It is offered once. If there is nobody to show it to, the line still goes
     # (the default is on and dpkg already printed the notice at install), and
     # the fact that nobody was told is written to the log.
     if ! t_envio_decidido && [ "$(t_config_le ENVIAR_AVISADO 2>/dev/null)" != sim ]; then
         if t_tem_gui || [ -t 0 ]; then
             t_config_grava ENVIAR_AVISADO sim
-            if ! t_pergunta "$(t_msg envio_aviso_ligado)
+            [ -s "$TANDEM_PROTEGIDOS" ] && aviso_trab="
+
+$(t_msg pedir_envio_maquina_de_trabalho)"
+            if ! t_pergunta "$(t_msg envio_aviso_ligado)${aviso_trab}
 
 $(t_msg envio_esta_linha)
 

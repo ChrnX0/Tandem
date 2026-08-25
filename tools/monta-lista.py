@@ -19,6 +19,7 @@ import re
 import sys
 import urllib.request
 from collections import defaultdict
+from datetime import datetime, timezone
 
 CABECALHO = [
     "# TANDEM-LISTA 1",
@@ -52,10 +53,22 @@ EXCLUIDAS = {
 # the format is append-only, so an old row is short, not malformed.
 FORMA = re.compile(
     r"^[0-9a-f]{32}\t(32|64|arm64|-)\t\S+\t\S+\t"
-    r"(confirmado|entregue|so-abriu|reprovado)\t\d+\t\d{4}-\d{2}\t\S+"
+    r"(confirmado|entregue|so-abriu|reprovado)\t1\t\d{4}-(0[1-9]|1[0-2])\t\S+"
     r"(\t[A-Za-z0-9._-]{1,24}\t[A-Za-z0-9._-]{1,24}\t(-|[0-9a-f]{16})"
     r"(\t(proprio|aplicado))?)?$"
 )
+
+# The oldest month the format can have seen and, computed at rebuild time, the
+# newest. Both mirror api/lista.js exactly: the machines field must be "1" (the
+# count is the list's to compute by counting rows, never asserted by a sender -
+# that is now in FORMA above), and the month cannot predate the format or lie in
+# the future - a row dated 2999-12 would sort above every honest one for ever.
+# The intake enforces all three ON THE WAY IN; this re-checks because the store
+# is a plain-text thing that gets edited, and this rebuild is the gate that
+# reaches every Tandem at once. A reader that trusts the file because the writer
+# checked is a reader with no check - the same lesson the future-date guard on
+# the client's own DOWN path records.
+MES_MINIMO = "2026-01"
 
 # A verb name is a NAME, never a command line. This mirrors t_verbo_valido in
 # common.sh: begins with a letter or digit, then only letters/digits/_/-,
@@ -119,6 +132,11 @@ def monta(texto):
     grupos = defaultdict(lambda: {"n": 0, "visto": ""})
     recusadas = []
     vistos_dedup = set()
+    # Computed once, in UTC, the same way api/lista.js computes it. FORMA has
+    # already guaranteed a valid month 01-12; this catches a future YEAR, which
+    # a regex cannot express, by the same string comparison the intake uses.
+    ahora = datetime.now(timezone.utc)
+    mes_agora = "%04d-%02d" % (ahora.year, ahora.month)
     for linha in texto.splitlines():
         linha = linha.rstrip("\n")
         if not linha or linha.startswith("#"):
@@ -129,6 +147,13 @@ def monta(texto):
         campos = linha.split("\t")
         if campos[0] in EXCLUIDAS:
             recusadas.append(("excluded: " + EXCLUIDAS[campos[0]], linha))
+            continue
+        # The month cannot lie in the future or predate the format - mirrors
+        # api/lista.js. A future-dated row would win every "most recently seen"
+        # tie-break for ever, and it needs no attacker, only a shop with a wrong
+        # clock or a hand-edited store.
+        if campos[6] > mes_agora or campos[6] < MES_MINIMO:
+            recusadas.append(("date not a month this list can have seen", linha))
             continue
         # The verbs and the failed-verbs field both name winetricks verbs, and
         # both reach a client that may act on them. A settings verb or a

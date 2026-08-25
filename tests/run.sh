@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2149458253 5868" "$soma_esperados"
+      "1048049466 5933" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -427,6 +427,15 @@ equal "the list accumulates without repeating" \
 
 equal "the file keeps the program name, so the owner recognizes it" \
       "imports64.exe" "$(t_memoria_le "$MEM_A" PROGRAMA)"
+
+# A stored value carrying a percent reads back with the percent INTACT, not
+# doubled. It reaches the memoria screen, tandem socorro's report and an
+# exported recipe verbatim - the old `${valor//%/%%}` printed "50%" as "50%%",
+# because % is literal in an ARGUMENT to printf %b and doubling only collapses
+# in a FORMAT string, which this value is not.
+t_memoria_grava "$MEM_A" NOTA "50% off, 100% sure"
+equal "a stored percent reads back once, not doubled" \
+      "50% off, 100% sure" "$(t_memoria_le "$MEM_A" NOTA)"
 if grep -q '^#' "$(t_memoria_arquivo "$MEM_A")"; then
     pass "the file explains itself in readable text"
 else
@@ -2615,6 +2624,22 @@ t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
 equal "a serial that already exists is never overwritten" \
       "DEADBEEF" "$(cat "$PREF_FIX/drive_c/.windows-serial" 2>/dev/null)"
 
+# The SEED of record is written once and never rewritten. A backup restored onto
+# a replacement PC keeps the source till's MACHINEGUID (so licensed software
+# still sees one machine); the mark then carries a seed from another machine,
+# and a later run on THIS machine must not overwrite it - t_primeira_vez reads
+# SEMENTE back to explain an identity change, and a seed that describes the wrong
+# machine makes that explanation a lie. The old code rewrote it every call.
+printf 'SEMENTE=seed-de-outra-maquina\nSERIAL=serial-de-outra\nMACHINEGUID=guid-mantido\n' \
+    > "$PREF_FIX/.tandem-identidade"
+t_identidade_fixa "$PREF_FIX" >/dev/null 2>&1
+equal "the recorded seed is preserved, never rewritten from this machine" \
+      "seed-de-outra-maquina" \
+      "$(sed -n 's/^SEMENTE=//p' "$PREF_FIX/.tandem-identidade" | head -1)"
+equal "and the recorded serial is preserved with it" \
+      "serial-de-outra" \
+      "$(sed -n 's/^SERIAL=//p' "$PREF_FIX/.tandem-identidade" | head -1)"
+
 section "serial ports: 32 sockets this machine does not have"
 
 # From a photograph of a real counter. "tandem portas" listed COM1 through
@@ -4308,6 +4333,40 @@ FIM
     equal "and everything left out is reported, not dropped in silence" \
           "excluded: test record from the intake bring-up|malformed|unsafe verb: verb 'sandbox' changes a setting, not a dependency" \
           "$fora_lista"
+    # 4.68: the rebuild re-validates the machines and month fields exactly as
+    # api/lista.js does on the way IN. The store is plain text that gets edited,
+    # and this rebuild is the gate that reaches every Tandem at once - a reader
+    # that trusts the file because the writer checked has no check. A row
+    # asserting more than one machine (the count is the list's to compute), or
+    # dated in the future (it would win every "most recently seen" tie-break for
+    # ever) or before the format, is refused here.
+    saida_val="$(cd "$ROOT" && python3 - <<'FIM'
+import importlib.util, datetime
+spec = importlib.util.spec_from_file_location("m", "tools/monta-lista.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+A = "a" * 32
+now = datetime.datetime.now(datetime.timezone.utc)
+cur = "%04d-%02d" % (now.year, now.month)
+rows = "\n".join([
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t{cur}\t-",    # valid -> published
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t5\t{cur}\t-",    # machines != 1
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2999-12\t-",  # future year
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2026-13\t-",  # impossible month
+    f"{A}\t64\tvcrun2022\t-\tconfirmado\t1\t2025-12\t-",  # predates the format
+])
+linhas, recusadas = m.monta(rows)
+motivos = sorted(r[0] for r in recusadas)
+print(len(linhas))
+print("sim" if "malformed" in motivos else "nao")
+print(sum(1 for x in motivos if x.startswith("date not")))
+FIM
+)"
+    equal "the rebuild publishes only the one valid row" \
+          "1" "$(printf '%s\n' "$saida_val" | sed -n 1p)"
+    equal "a machines-not-1 or an impossible-month row is refused as malformed" \
+          "sim" "$(printf '%s\n' "$saida_val" | sed -n 2p)"
+    equal "a future-dated and a pre-format row are each refused by the date gate" \
+          "2" "$(printf '%s\n' "$saida_val" | sed -n 3p)"
 else
     skip "what gets published" "tools/monta-lista.py is missing"
 fi
@@ -4622,6 +4681,25 @@ equal "the refusal is written to the config, not held in memory" "nao" \
       "$(env_le 't_config_le ENVIAR')"
 env_le 't_envio_define sim' >/dev/null
 equal "and yes works the same way" "0" "$(env_le 't_envio_ligado; echo $?')"
+
+# 4.68: the work-machine caution moved from a t_texto_pedir_envio that nothing
+# called into the LIVE consent path, where the decision actually happens. When
+# the machine holds a protected Wine prefix - plausibly a work machine - the
+# notice says the person who just used a program may not be the one who decides
+# what leaves it.
+ENV_OFERECE="$(sed -n '/^t_envio_oferece() {/,/^}/p' "$ROOT/src/lib/common.sh")"
+contem "the work-machine caution is shown in the live consent path" \
+       'pedir_envio_maquina_de_trabalho' "$ENV_OFERECE"
+contem "  and only when the machine carries a protected prefix" \
+       'TANDEM_PROTEGIDOS' "$ENV_OFERECE"
+# The dead helpers the caution used to hide in are gone. They were never called;
+# a function that looks like it does something and is wired to nothing is a trap.
+if grep -qE '^t_texto_pedir_envio\(\)|^t_idioma_rtl\(\)' "$ROOT/src/lib/common.sh"; then
+    fail "dead helpers t_texto_pedir_envio / t_idioma_rtl are removed" \
+         "no definition" "still defined"
+else
+    pass "dead helpers t_texto_pedir_envio / t_idioma_rtl are removed"
+fi
 
 # THE NOTICE. dpkg prints it at install; postinst reads it out of the installed
 # catalogue in the machine's language, and never sources that file - it runs as

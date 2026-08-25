@@ -1,3 +1,39 @@
+tandem (4.68) unstable; urgency=medium
+
+  * List integrity, memory/identity correctness, and cleanup - the last batch of
+    the professional debug. Each fix reproduced before it was made.
+    - The community-list rebuild (tools/monta-lista.py) now re-validates the
+      machines and month fields exactly as the intake (api/lista.js) does on the
+      way IN: the machines column must be "1" (the count is the list's to work
+      out by counting rows, never a number a sender asserts), and the month
+      cannot lie in the future or predate the format. The store is a plain-text
+      thing that gets edited, and this rebuild is the gate that reaches every
+      Tandem at once - a reader that trusts the file because the writer checked
+      has no check, the lesson the client's own future-date guard already keeps.
+    - t_memoria_le and acao_memoria doubled every "%" in a stored value before
+      printing it, so a memory or limit value carrying a percent read back with
+      the percent doubled ("50%" -> "50%%") on the memoria screen, in tandem
+      socorro's report and in an exported recipe. The "%" is literal in an
+      ARGUMENT to printf %b; doubling only collapses in a FORMAT string, which
+      this is not. Dropped the doubling.
+    - t_identidade_fixa rewrote the recorded SEMENTE and SERIAL from the current
+      machine on every call. A backup restored onto a replacement PC keeps the
+      source till's MachineGuid (so licensed software still sees one machine);
+      rewriting the seed left it describing a machine that never produced that
+      GUID, while t_primeira_vez reads the seed back to explain an identity
+      change. The seed and serial are written once now, at the first stamp, and
+      preserved thereafter.
+    - Removed two dead helpers. t_idioma_rtl was obsolete (no report pads a
+      translated label any more, so its right-to-left concern no longer applies)
+      and unused. t_texto_pedir_envio was never called - but it carried a
+      work-machine send-consent caution the LIVE consent path had lost, so
+      rather than delete the caution it was MOVED into t_envio_oferece: when the
+      machine holds a protected prefix, the send notice now says the person who
+      just used a program may not be the one who decides what leaves it. Its
+      now-orphaned pedir_envio catalogue key was removed via the po workflow.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 25 Aug 2026 22:00:00 +0000
+
 tandem (4.67) unstable; urgency=medium
 
   * Three loop-correctness fixes from the professional debug, each reproduced.

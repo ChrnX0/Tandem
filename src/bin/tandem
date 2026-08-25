@@ -1262,7 +1262,9 @@ acao_memoria() {
         # one field.
         lim="$(sed -n 's/^LIMITE=//p' "$arq" | tail -1)"
         if [ -n "$lim" ]; then
-            lim="$(printf '%b' "${lim//%/%%}")"
+            # Same as t_memoria_le: the value is %b's argument, not its format,
+            # so doubling the % ("${lim//%/%%}") only served to print it doubled.
+            lim="$(printf '%b' "$lim")"
             # t_limite_amigavel, not "${lim#*|}": stripping the class printed
             # the rest verbatim, which is raw Portuguese for four handlers.
             lim="$(t_limite_amigavel "$lim")"

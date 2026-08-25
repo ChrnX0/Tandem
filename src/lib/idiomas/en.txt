@@ -1487,25 +1487,6 @@ This program is {1}-bit, and the component it asks for only exists in {2}-bit:
 
 It is not a fault of your machine, nor a missing install: whoever distributes that component never published a {1}-bit version. If a {2}-bit version of this same program exists, it should work here.
 
-@pedir_envio
-May I send this line to the community list?
-
-{1}
-
-That is it, the whole thing. Nothing else goes.
-
-What it is for: when somebody else opens this same program, their Tandem
-already knows what it needs and does not make them wait to find out. The more
-people send, the less each one has to work out alone.
-
-What does NOT leave here: a file name, a folder, your user name, the
-computer's name, a network address, or a single line of log. The first column
-is a fingerprint of the program's file - not of you, not of your machine - and
-there is no way back from it to anything.
-
-You decide now and can change it whenever you like:
-  tandem enviar sim     or     tandem enviar nao
-
 @pedir_envio_maquina_de_trabalho
 Note: this computer has another system's environment installed on it. If it
 is a work machine, check with whoever looks after it before turning this on.
