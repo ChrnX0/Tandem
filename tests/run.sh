@@ -184,6 +184,41 @@ else
     pass "an assignment sharing a name is not a second definition"
 fi
 
+# 4.64: the diagnostic log is written in ENGLISH. It is read by humans -
+# `tandem logs` prints it, `tandem socorro` sends it to whoever is helping - and
+# it sits beside Wine's own English output in the same file, so it belongs in the
+# repository's default language like the comments do. It had been left Portuguese
+# by an oversight the owner caught ("inglês é padrão"); ~100 t_diz lines were
+# translated. This guard keeps them English: no t_diz string may carry a
+# Portuguese-only whole word. Variable names are stripped first (a Portuguese
+# variable name is code, not prose); the word list holds only Portuguese words
+# with no English meaning, so a false positive is near-impossible.
+diz_pt() {
+    local re='nao|não|prefixo|arquivo|maquina|consegui|seguindo|recusad|recusou'
+    re="$re|conferindo|tentando|entregou|falhou|atualizac|instalac|removi"
+    re="$re|assinatura|esperando|guardad|enviad|abriu|fechou|instalou"
+    local linha texto n=0
+    while IFS= read -r linha; do
+        texto="$(printf '%s' "$linha" | sed -E 's/\$\{[^}]*\}//g; s/\$[A-Za-z_][A-Za-z0-9_]*//g')"
+        printf '%s' "$texto" | grep -qiwE "$re" && n=$((n + 1))
+    done < <(grep -rhoE 't_diz "[^"]*"' "$@")
+    printf '%s\n' "$n"
+}
+if [ "$(diz_pt src/bin src/lib)" = 0 ]; then
+    pass "the diagnostic log is written in English, not Portuguese"
+else
+    fail "the diagnostic log is written in English, not Portuguese" \
+         "0 Portuguese t_diz strings" "$(diz_pt src/bin src/lib) found"
+fi
+# Not vacuous: a Portuguese log line is caught.
+DIZP="$TMPROOT/dizpt"; mkdir -p "$DIZP"
+printf 't_diz "nao consegui abrir o arquivo"\n' > "$DIZP/x.sh"
+if [ "$(diz_pt "$DIZP/x.sh")" -ge 1 ]; then
+    pass "the English-log guard catches a Portuguese log line"
+else
+    fail "the English-log guard catches a Portuguese log line" "caught" "missed"
+fi
+
 # ------------------------------------------------------- DLL detection
 
 section "Wine dependency detection"
@@ -1753,7 +1788,7 @@ equal "tandem protect also applies to the default prefix" "0" "$?"
 # was about the same directory.
 #
 # Measured end to end on the installed package before the fix: Tandem
-# registered the production prefix as protected, wrote "protegido:
+# registered the production prefix as protected, wrote "protected:
 # .../.wine-pdv" into its own log, and then ran a winetricks verb INTO IT and
 # left its receipt and its .tandem-assoc there. Rule 1 is the one rule this
 # project calls inviolable, and pointing a new tool at the Wine setup you
@@ -1977,8 +2012,8 @@ equal "a success without a graphical interface goes to the terminal" \
       "Tandem: pronto" \
       "$(t_ok "pronto" 2>&1 1>/dev/null)"
 
-t_erro "mensagem que precisa ficar registrada" >/dev/null 2>&1
-if grep -q "ERRO: mensagem que precisa ficar registrada" "$LOG" 2>/dev/null; then
+t_erro "a message that must be recorded" >/dev/null 2>&1
+if grep -q "ERROR: a message that must be recorded" "$LOG" 2>/dev/null; then
     pass "the error is recorded in the log for the post-mortem"
 else
     fail "the error is recorded in the log for the post-mortem" "line in the log" "missing"
@@ -2088,7 +2123,7 @@ FIM
 saida_prog="$(bash "$TMPROOT/prog.sh" 2>/dev/null)"; rc_prog=$?
 equal "the script survives the progress window being closed" "0" "$rc_prog"
 equal "  and reaches the end" "VIVO" "$saida_prog"
-if grep -q 'janela de progresso fechada' "$TANDEM_ESTADO/progteste.log" 2>/dev/null; then
+if grep -q 'progress window closed' "$TANDEM_ESTADO/progteste.log" 2>/dev/null; then
     pass "  and records in the log that the window vanished"
 else
     fail "  and records in the log that the window vanished" "line in the log" "missing"
@@ -8091,11 +8126,11 @@ FIMWT
     roda_exe "$ATALHO" mfc71.dll
     LOG_A="$(cat "$ATALHO/.local/state/tandem/exe.log" 2>/dev/null)"
     contem "the shortcut path is reached at all" \
-           "da memoria" "$LOG_A"
+           "from memory" "$LOG_A"
     contem "wrong width from a remembered lesson says WRONG WIDTH" \
-           "bitola errada" "$LOG_A"
+           "wrong bitness" "$LOG_A"
     naocontem "and does not report it as a file that never arrived" \
-              "nao entregou mfc71.dll" "$LOG_A"
+              "did not deliver mfc71.dll" "$LOG_A"
     # awk, not `grep -c ... || printf 0`: grep -c prints 0 AND exits 1 when the
     # file has no match, so the fallback fires too and the answer is "00". That
     # trap is written down in CLAUDE.md, having once reached the owner as a
@@ -8139,9 +8174,9 @@ FIMWTD
     D="$E2E/discocheio"; mkdir -p "$D"; roda_exe "$D" ""
     LOG_D="$(cat "$D/.local/state/tandem/exe.log" 2>/dev/null)"
     contem "exit 0 with a full disk names the disk as the cause" \
-           "causa: disco_cheio" "$LOG_D"
+           "cause: disco_cheio" "$LOG_D"
     naocontem "and does not report it as a mapping that failed to deliver" \
-              "saiu 0 mas nao entregou" "$LOG_D"
+              "exited 0 but did not deliver" "$LOG_D"
     # cat piped into awk, not awk reading the file: when the file is ABSENT -
     # which is the outcome this asserts - awk cannot open it, prints nothing
     # and exits non-zero, so the assertion compared "0" against an empty

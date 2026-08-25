@@ -1,3 +1,26 @@
+tandem (4.64) unstable; urgency=medium
+
+  * The diagnostic log is written in English now. Around 100 `t_diz` log lines -
+    the ones `tandem logs` prints and `tandem socorro` sends to whoever is
+    helping - had been left in Portuguese. The repository's rule is that
+    everything internal is English (English is the default), a log line IS read
+    by a human, and it sits beside Wine's own English output in the same file,
+    so Portuguese there was an inconsistency the owner rightly called out. Every
+    `t_diz` string was translated to natural English, with every shell variable,
+    `${VAR:-default}` (Portuguese inside the defaults included), marker (`>>>`,
+    `!!!`, `---`) and on-disk token (`.recusados`, `MODO=extrair`) preserved
+    exactly. Only the log strings changed - no code, no behaviour, no message
+    catalogue: the seven product languages are untouched, and the on-disk
+    state-file VALUES (which travel in memory files and recipes) stay as they
+    were.
+  * A guard keeps it English. No `t_diz` string may carry a Portuguese-only
+    whole word; the check strips `$variables` first (a variable name is code,
+    not prose) and its word list holds only Portuguese words with no English
+    meaning, so a false positive is near-impossible. Not vacuous - it catches an
+    injected Portuguese log line.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 25 Aug 2026 20:00:00 +0000
+
 tandem (4.63) unstable; urgency=high
 
   * SECURITY. Two more code-execution holes of the exact class 4.41 closed -

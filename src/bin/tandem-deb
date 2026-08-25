@@ -49,7 +49,7 @@ CHAVE="$(printf '%s' "$PACOTE_ARQ" | cksum | tr -d ' ')"
 if { exec 7> "$TANDEM_TRAVAS/deb-$CHAVE.lock"; } 2>/dev/null; then
     flock -n 7 || { t_aviso "$(t_msg deb_ja_instalando)"; exit 0; }
 else
-    t_diz "nao consegui criar a trava; seguindo sem ela"
+    t_diz "could not create the lock; carrying on without it"
 fi
 
 # ------------------------------------------------- 1. Read it without root
@@ -83,7 +83,7 @@ esac
 [ -n "$NOME" ] || { t_erro "$(t_msg deb_nao_e_pacote)"; exit 1; }
 
 MAQUINA="$(t_arch_sistema)"
-t_diz "pacote $NOME $VERSAO ($ARCH), maquina $MAQUINA"
+t_diz "package $NOME $VERSAO ($ARCH), machine $MAQUINA"
 t_memoria_grava "$PACOTE_ARQ" ARQUITETURA "$ARCH" 2>/dev/null
 
 # ------------------------------------------------------- 2. Wrong processor
@@ -109,13 +109,13 @@ if JA="$(t_deb_instalado "$NOME")"; then
             # A refusal with a window means the owner said no, and silence is
             # right. A refusal with NO window means nobody was asked, and
             # exiting quietly there is a double click that did nothing.
-            t_diz "downgrade recusado (ou nao houve como perguntar): $JA -> $VERSAO"
+            t_diz "downgrade refused (or there was no way to ask): $JA -> $VERSAO"
             t_tem_gui || t_erro "$(t_msg deb_downgrade_sem_janela "$NOME" "$JA" "$VERSAO" "$PACOTE_ARQ")"
             exit 0
         fi
         VOLTANDO=1
     else
-        t_diz "atualizacao: $JA -> $VERSAO"
+        t_diz "update: $JA -> $VERSAO"
     fi
 fi
 
@@ -128,10 +128,10 @@ if command -v apt-get >/dev/null 2>&1; then
     t_progresso_abre "$(t_msg deb_conferindo)"
     SIMULACAO="$(t_apt_simula "$PACOTE_ARQ")"
     t_progresso_fecha
-    t_diz "--- simulacao do apt ---"
+    t_diz "--- apt simulation ---"
     t_diz "$SIMULACAO"
 else
-    t_diz "sem apt-get: nao da para conferir as dependencias antes"
+    t_diz "no apt-get: cannot check the dependencies beforehand"
 fi
 
 FALTANDO="$(t_deb_naoinstalaveis "$SIMULACAO")"
@@ -170,7 +170,7 @@ if [ -n "$REMOVIDOS" ]; then
     if ! t_pergunta "$(t_msg deb_remove_pergunta \
             "$(printf '%s\n' "$REMOVIDOS" | tr ' ' '\n' | grep -v '^$' | sed 's/^/  - /' | head -20)")" \
             "$(t_msg botao_continuar_assim_mesmo)" "$(t_msg botao_cancelar)"; then
-        t_diz "instalacao recusada (ou nao houve como perguntar): removeria $REMOVIDOS"
+        t_diz "install refused (or there was no way to ask): would remove $REMOVIDOS"
         t_tem_gui || t_erro "$(t_msg deb_remove_sem_janela "$NOME")"
         exit 0
     fi

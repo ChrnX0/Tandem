@@ -1557,9 +1557,17 @@ surrounds it. What keeps that usable is two things, neither of them a guess
 about shape: `EXCECOES`, an auditable list of exact strings somebody had to add
 on purpose, and a rule about where an argument **goes** — a value handed to
 `t_memoria_grava` lands in a state file, an argument to `t_como_root` is
-executed, a `grep`/`sed` argument is a program for another tool. Same footing as
-the `t_diz` exemption: not "this looks like code" but "nothing human is at the
-other end of this argument".
+executed, a `grep`/`sed` argument is a program for another tool. The `t_diz`
+exemption is different, and its stated reason was WRONG until 4.64: a log line IS
+read by a human — `tandem logs` prints it and `tandem socorro` sends it to
+whoever is helping — so "nothing human is at the other end" never held. The owner
+caught it: *"o mundo fala inglês… é primordial q tudo seja exatamente escrito no
+idioma de escolha, mas inglês é padrão."* `t_diz` stays exempt from the
+translation counter, but for the right reason now — it is ENGLISH diagnostic
+text, the repository's default language, sitting beside Wine's own English output
+in the same log, not a per-language product message. 4.64 made that true: ~100
+`t_diz` lines had been left Portuguese by an oversight nobody had flagged, and
+they were all translated to English.
 
 **And the sixteenth widening will not help, which is the note to read before
 attempting one.** Fifteen revisions of this tool all answered the same question -
@@ -2794,6 +2802,47 @@ Suite 1804 passed / 0 / 1 skipped; both literal counters read 0. **NEXT rung on
 the distro line: publishing the PKGBUILD to the AUR (owner's account), then
 `dnf`/`pacman` remain covered — the frontier stays field evidence on his counter,
 not more code.**
+
+**v4.63 IS PUBLISHED** — 2026-08-25, tag `v4.63` at `6e9b484`, urgency=high, a
+SECURITY release, verified byte-for-byte FIVE ways: the `.deb` (581250 bytes,
+sha256 `0fcbb031…`) and the generic bundle (581342 bytes, sha256 `4ce98793…`)
+each agree across the release body, the release's checksum sidecar, the asset
+digest, the downloaded bytes, and a fresh reproducible local build at the tag.
+It is the harvest of the owner-requested testing campaign — *"faça uma série de
+testes nele de todos os tipos q vc pode imaginar e corrija se houver problema"* —
+run by installing the package and exercising it in conditions the CI never
+tests, plus three read-only audits in parallel (silence, code-exec, translation).
+**Two PoC-confirmed code-execution holes, the exact class the 4.41 Installed-Size
+fix opened, at two sinks it did not cover** (a sentinel file was created end to
+end before each fix, and nothing after): (1) a malicious `.deb`'s Package NAME
+was spliced UNQUOTED into a GNU `sed` program (`s/\b$NOME\b//`); sed's `e`
+command runs shell, so a name like `x//;e <cmd>` ran `<cmd>` as the user, on the
+double click, BEFORE any password — fixed three ways (`debinfo.py` drops a name
+that breaks Debian policy so the handler refuses it before the sed; the name is
+removed with a shell loop under `set -f`, not a sed program; both pinned). (2) a
+filename or a `.flatpakref`'s `RuntimeRepo` field carrying a single quote broke
+out of the quotes inside a privileged `sh -c` string and ran as ROOT under
+sudo/pkexec after a confirmed install — `t_como_root` takes the untrusted value
+POSITIONALLY now (`"$1"`); the six file-derived sites (`.deb`, `.rpm`, `.snap`,
+three `.flatpak`) were converted. **Plus two "never cry wolf" fixes from the same
+campaign:** `tandem-android` ended in `exec waydroid show-full-ui`, so via the
+panel (output on `/dev/null`) a launch failure after the session was confirmed up
+was silent — it checks the launch now and says "I could not start Android" (an
+existing message); and `t_relogio_veredito` flagged the clock the instant "now"
+was before the release date, so `tandem saude` falsely reported "the clock is
+wrong" on a machine a few hours behind the release timestamp on release day — a
+day of grace stops the false alarm (a dead CMOS battery is off by years, so it is
+still caught). The code-exec audit is the pattern to repeat: it found these by
+sweeping for "untrusted file data reaching a shell-interpreting sink" beyond the
+one `$(( ))` sink 4.41 knew. **Three things were ruled out as NON-bugs, honestly:**
+`tandem memoria` showing a duplicate `seconds:` line was stale hand-made fixture
+data (`t_memoria_grava` strips-then-writes, so it self-heals on the next write);
+the Portuguese in `tandem logs` was a real inconsistency but NOT the class I first
+called it — see 4.64; and the install-time "Error connecting" line comes from the
+system's dpkg trigger tools, not Tandem's postinst (which silences its own cache
+calls). The translation audit came back clean (874 keys in all 7 languages).
+Suite 1816 passed / 0 / 1 skipped; build.py --check clean; both literal counters
+read 0. PoCs re-confirmed dead on the installed 4.63 package.
 
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e

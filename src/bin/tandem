@@ -648,7 +648,7 @@ acao_preparar() {
     else
         script="$(t_script_instalacao_familia "$fam" "${codigos[@]}")"
     fi
-    t_diz "preparar: instalando ${codigos[*]} (${fam})"
+    t_diz "preparar: installing ${codigos[*]} (${fam})"
     t_progresso_abre "$(t_msg prep_instalando)"
     t_como_root "$script" >>"$LOG" 2>&1
     c=$?
@@ -687,7 +687,7 @@ acao_preparar() {
         t_config_grava ENVIAR_AVISADO sim
         if t_pergunta "$(t_msg envio_aviso_ligado)" \
                        "$(t_msg botao_deixar_ligado)" "$(t_msg botao_desligar_envio)"; then
-            t_diz "envio deixado ligado no preparar"
+            t_diz "sending left enabled in preparar"
         else
             t_envio_define nao
             t_ok "$(t_msg envio_desligado_agora)"
@@ -864,7 +864,7 @@ $(t_msg desinst_remover_mesmo_assim)" "$(t_msg botao_remover_assim)" "$(t_msg bo
     fi
 
     local orfaos; orfaos="$(t_limpa_atalhos_orfaos)"
-    t_diz "desinstalar $nome: codigo $c, $orfaos atalho(s) orfao(s) removido(s)"
+    t_diz "desinstalar $nome: code $c, $orfaos orphan shortcut(s) removed"
 
     # The acid test is the registry: did the key disappear?
     if t_uninstall_dump "$pref" | grep -qF -- "$achou|||"; then
@@ -1372,7 +1372,7 @@ acao_portas() {
                 # failed registry write does not fail the command.
                 WINEPREFIX="$p" WINEDEBUG=-all wine reg add 'HKLM\Software\Wine\Ports' \
                     /v "$porta" /t REG_SZ /d "$caminho" /f >>"$LOG" 2>&1 ||
-                    t_diz "porta: symlink feito, registro de enumeracao falhou (nao critico)"
+                    t_diz "port: symlink made, enumeration registry write failed (not critical)"
                 t_ok "$(t_msg portas_fixada "$caminho" "$porta")"
             else
                 t_erro "$(t_msg portas_nao_fixou)"
@@ -1504,7 +1504,7 @@ acao_servico_instalar() {
     # next boot in silence.
     if ! loginctl show-user "$(id -un)" 2>/dev/null | grep -q '^Linger=yes'; then
         if ! loginctl enable-linger "$(id -un)" >>"${LOG:-/dev/null}" 2>&1; then
-            t_diz "servico: linger nao ativado automaticamente"
+            t_diz "servico: linger not enabled automatically"
             t_aviso "$(t_msg servico_reboot_manual "$(id -un)")"
         fi
     fi

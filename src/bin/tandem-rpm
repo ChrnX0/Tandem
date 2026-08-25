@@ -39,7 +39,7 @@ if [ "$FAM" = dnf ] || [ "$FAM" = zypper ]; then
         fi
         exit 1
     fi
-    t_diz "rpm nativo ($FAM): $NOME"
+    t_diz "native rpm ($FAM): $NOME"
     if t_rpm_instalado "$NOME"; then
         t_ok "$(t_msg rpm_ja_instalado "$NOME")"
         exit 0
@@ -116,14 +116,14 @@ case "$ERRO" in
         exit 1 ;;
 esac
 
-t_diz "rpm $NOME $VERSAO de ${DIST:-origem desconhecida}"
+t_diz "rpm $NOME $VERSAO from ${DIST:-unknown origin}"
 
 # The name is the useful part - if the same program is packaged for this system,
 # the answer stops being a refusal.
 EQUIVALENTE=""
 if [ -n "$NOME" ] && t_apt_candidato "$NOME" >/dev/null 2>&1; then
     EQUIVALENTE="$NOME"
-    t_diz "existe equivalente no apt: $NOME"
+    t_diz "apt equivalent exists: $NOME"
 fi
 
 t_memoria_grava "$ARQ" LIMITE "outra-familia|rpm nao instala aqui" 2>/dev/null

@@ -23,7 +23,7 @@ ARQ="$(readlink -f -- "$BRUTO" 2>/dev/null)"
 NOME="$(basename -- "${ARQ%.snap}")"
 # The name a snap file carries is name_revision; the revision is not part of it.
 NOME="${NOME%%_*}"
-t_diz "snap local: $ARQ (nome provavel: $NOME)"
+t_diz "local snap: $ARQ (probable name: $NOME)"
 
 # A snap is a squashfs, so the same truncation check the AppImage reader does
 # applies - and here it is the whole verdict, because a short snap is the most

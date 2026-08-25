@@ -26,7 +26,7 @@ trap limpar EXIT INT TERM
 if { exec 9> "$TANDEM_TRAVAS/apk.lock"; } 2>/dev/null; then
     flock -w 900 9 || { t_erro "$(t_msg ja_instalando)"; exit 1; }
 else
-    t_diz "nao consegui criar a trava de instalacao; seguindo sem ela"
+    t_diz "could not create the install lock; continuing without it"
 fi
 
 # ------------------------------------------------- 1. Prior inspection
@@ -95,7 +95,7 @@ if [ -n "$ABIS" ] && ! printf '%s' "$ABIS" | grep -q 'x86'; then
         t_erro "$(t_msg apk_arm_com_tradutor)"
         exit 1
     fi
-    t_diz "app ARM-only, tradutor presente"
+    t_diz "ARM-only app, translator present"
 fi
 
 # ------------------------------------------------------- 3. Install

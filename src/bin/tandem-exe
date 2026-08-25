@@ -84,7 +84,7 @@ TRAVA="$TANDEM_TRAVAS/exe-$CHAVE.lock"
 if { exec 7> "$TRAVA"; } 2>/dev/null; then
     flock -n 7 || { t_aviso "$(t_msg ja_abrindo)"; exit 0; }
 else
-    t_diz "nao consegui criar a trava em $TRAVA; seguindo sem ela"
+    t_diz "could not create the lock at $TRAVA; carrying on without it"
 fi
 
 # ------------------------------------------------- 1. Which prefix to use
@@ -94,7 +94,7 @@ fi
 if PREF="$(t_prefixo_do_arquivo "$PROG")"; then
     export WINEPREFIX="$PREF"
     NOSSO=0
-    t_diz "prefixo detectado pelo caminho do arquivo: $PREF"
+    t_diz "prefix detected from the file path: $PREF"
 else
     export WINEPREFIX="$TANDEM_PREFIXO_PADRAO"
     NOSSO=1
@@ -138,7 +138,7 @@ if [ "$NOSSO" = 1 ] && [ ! -f "$WINEPREFIX/system.reg" ]; then
                t_erro "$(t_texto_resgate_falhou)"
                exit 1 ;;
         esac
-        t_diz "prefixo incompleto, refazendo"
+        t_diz "incomplete prefix, remaking it"
         rm -rf -- "$WINEPREFIX"
     fi
     mkdir -p "$(dirname -- "$WINEPREFIX")"
@@ -194,7 +194,7 @@ fi
 
 # ------------------------------------------------------- 3. 32-bit check
 ARCH="$(t_pe_arch "$PROG" 2>/dev/null || true)"
-t_diz "arquitetura do PE: ${ARCH:-nao identificada}"
+t_diz "PE architecture: ${ARCH:-not identified}"
 if [ "$ARCH" = 32 ] && ! t_tem_wine32; then
     if t_pergunta "$(t_msg bits32_pergunta)" "$(t_msg botao_instalar)" "$(t_msg botao_agora_nao)"; then
         t_progresso_abre "$(t_msg bits32_instalando)"
@@ -226,9 +226,9 @@ fi
 if [ "$ARCH" = 64 ]; then
     ARQ_PREFIXO="$(t_prefixo_arquitetura "$WINEPREFIX" 2>/dev/null)"; C_ARQ=$?
     case $C_ARQ in
-        0) t_diz "arquitetura do prefixo: $ARQ_PREFIXO (declarada em system.reg)" ;;
-        2) t_diz "arquitetura do prefixo: $ARQ_PREFIXO (deduzida das pastas)" ;;
-        *) t_diz "arquitetura do prefixo: nao identificada" ;;
+        0) t_diz "prefix architecture: $ARQ_PREFIXO (declared in system.reg)" ;;
+        2) t_diz "prefix architecture: $ARQ_PREFIXO (deduced from the folders)" ;;
+        *) t_diz "prefix architecture: not identified" ;;
     esac
     if [ "$ARQ_PREFIXO" = win32 ] && [ "$C_ARQ" = 0 ]; then
         t_erro "$(t_msg ambiente_32_bits "$(basename -- "$PROG")" "$WINEPREFIX")"
@@ -240,7 +240,7 @@ fi
 # anything. It does not block and does not install - it keeps the explanation
 # around in case things fail.
 LIMITE="$(t_limite_do_programa "$PROG" 2>/dev/null)"
-[ -n "$LIMITE" ] && t_diz "pre-voo: limite reconhecido -> $LIMITE"
+[ -n "$LIMITE" ] && t_diz "pre-flight: recognised limit -> $LIMITE"
 
 # ------------------------------------------------- memory of this program
 # What Tandem has already learned about THIS file, here or on another machine.
@@ -273,7 +273,7 @@ if [ -z "$SABIDOS" ]; then
         # knows. Keeping that in a file and not telling the owner would be
         # throwing away the best reason he has to trust the suggestion.
         DE_QUANTAS="$(t_lista_maquinas "$(t_memoria_id "$PROG" 2>/dev/null)" 2>/dev/null)"
-        t_diz "lista da comunidade conhece este programa ->$DA_LISTA (${DE_QUANTAS:-?} maquinas)"
+        t_diz "community list knows this program ->$DA_LISTA (${DE_QUANTAS:-?} machines)"
     fi
 fi
 LIMITE_LEMBRADO="$(t_memoria_le "$PROG" LIMITE 2>/dev/null)"
@@ -369,12 +369,12 @@ if [ -n "$SABIDOS" ] && [ "$PROTEGIDO" = 0 ] && command -v winetricks >/dev/null
         # dependency is refused outright, whatever it is called. Checked at the
         # point of use rather than only at import, because this list also holds
         # what a recipe wrote into the local memory on some earlier day.
-        t_verbo_de_fora_ok "$v" || { t_diz "verbo recusado (nao instala dependencia, ou nome suspeito): $v"; continue; }
+        t_verbo_de_fora_ok "$v" || { t_diz "verb refused (does not install a dependency, or suspicious name): $v"; continue; }
         v="$(t_verbo_para_arquitetura "$v" "$ARCH")"
         grep -qxF -- "$v" "$WINEPREFIX/.tandem-verbos" 2>/dev/null || PENDENTES="$PENDENTES $v"
     done
     if [ -n "$PENDENTES" ]; then
-        t_diz "memoria: ja resolveram este programa ->$PENDENTES"
+        t_diz "memory: this program was already resolved ->$PENDENTES"
         # Does the list already know one of these was tried and did not help?
         #
         # Field 4 of the record - the components installed that did NOT fix it
@@ -401,7 +401,7 @@ $(t_msg_n lista_ja_nao_ajudou "$n_mau" "$(t_verbo_amigavel "$v_mau")" "$n_mau")"
             done <<FIMAVISO
 $(t_lista_inuteis "$ID_LISTA" 2>/dev/null)
 FIMAVISO
-            [ -n "$AVISO_INUTEIS" ] && t_diz "lista: ja tentaram sem sucesso ->$AVISO_INUTEIS"
+            [ -n "$AVISO_INUTEIS" ] && t_diz "list: already tried without success ->$AVISO_INUTEIS"
         fi
         ORIGEM_LICAO="$(t_msg licao_origem_local)"
         if [ -n "${DE_QUANTAS:-}" ] && [ "${DE_QUANTAS:-0}" -gt 1 ] 2>/dev/null; then
@@ -421,7 +421,7 @@ FIMAVISO
             t_progresso_abre "$(t_msg licao_instalando)"
             for v in $PENDENTES; do
                 t_progresso_texto "$(t_msg instalando_componente "$(t_verbo_amigavel "$v")")"
-                t_diz ">>> winetricks -q $v (da memoria)"
+                t_diz ">>> winetricks -q $v (from memory)"
                 # Through t_progresso_longo, so the bar SAYS SOMETHING while
                 # this runs. dotnet48 is half an hour, and behind a counter
                 # "downloading slowly" and "stuck on a dead mirror" were the
@@ -482,9 +482,9 @@ FIMAVISO
                         # loop below reaches the same conclusion from the same
                         # function, which is where the owner's sentence about
                         # it comes from.
-                        t_diz "!!! $v (da memoria) entregou $ALVO na bitola errada para um programa de $ARCH bits"
+                        t_diz "!!! $v (from memory) delivered $ALVO in the wrong bitness for a $ARCH-bit program"
                     else
-                        t_diz "!!! $v (da memoria) saiu 0 e nao entregou $ALVO"
+                        t_diz "!!! $v (from memory) exited 0 and did not deliver $ALVO"
                         t_anota_suspeita "$ALVO" "$v"
                     fi
                 fi
@@ -627,7 +627,7 @@ while :; do
     PROVADO="$(t_limite_do_log "$PARCIAL" 2>/dev/null)"
     if [ -n "$PROVADO" ]; then
         LIMITE="$PROVADO"
-        t_diz "limite provado pelo log -> $LIMITE"
+        t_diz "limit proven by the log -> $LIMITE"
         t_memoria_grava "$PROG" LIMITE "$LIMITE" 2>/dev/null
     fi
     rm -f "$PARCIAL"
@@ -1036,7 +1036,7 @@ $(t_causa_por_token "$AMBIENTE_FALHOU")"
                        # receipt holds: reinstalling is pointless. The next
                        # round recognizes the case by reading the disk and
                        # explains it to the owner.
-                       t_diz "!!! $v entregou $dll na bitola errada para um programa de ${ARCH:-?} bits"
+                       t_diz "!!! $v delivered $dll in the wrong bitness for a ${ARCH:-?}-bit program"
                        PROVA_VISTAS="$PROVA_VISTAS bitola-errada" ;;
                     *) FALTOU="$FALTOU $dll"
                        PROVA_VISTAS="$PROVA_VISTAS nao-chegou" ;;
@@ -1058,7 +1058,7 @@ $(t_causa_por_token "$AMBIENTE_FALHOU")"
                 CAUSA_V="$(t_causa_token "$FATIA_V")"
                 rm -f "$FATIA_V"
                 if t_causa_e_do_ambiente "$CAUSA_V"; then
-                    t_diz "!!! $v saiu 0 e nao entregou:$FALTOU - causa: $CAUSA_V (nao e a tabela)"
+                    t_diz "!!! $v exited 0 and did not deliver:$FALTOU - cause: $CAUSA_V (not the table)"
                     AMBIENTE_FALHOU="$CAUSA_V"
                     # Once per verb, not once per ROUND. The retry loop runs
                     # three times and this list survives all three by design,
@@ -1074,7 +1074,7 @@ $(t_causa_por_token "$AMBIENTE_FALHOU")"
                         *) AMBIENTE_VERBOS="$AMBIENTE_VERBOS $v" ;;
                     esac
                 else
-                    t_diz "!!! $v saiu 0 mas nao entregou:$FALTOU"
+                    t_diz "!!! $v exited 0 but did not deliver:$FALTOU"
                     for dll in $FALTOU; do
                         SUSPEITAS="${SUSPEITAS:+$SUSPEITAS
 }$dll$(printf '\t')$v"
@@ -1089,7 +1089,7 @@ $(t_causa_por_token "$AMBIENTE_FALHOU")"
             # lesson deserves to be kept.
             INSTALADOS_AGORA="$INSTALADOS_AGORA $v"
         else
-            t_diz "!!! winetricks falhou em $v"
+            t_diz "!!! winetricks failed on $v"
             FALHARAM="$FALHARAM $v"
             # Taken HERE, while the mark still belongs to this verb.
             t_log_desde "$MARCA_WT" >> "$RESTO" 2>/dev/null || :

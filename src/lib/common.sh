@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.63"
+TANDEM_VERSAO="4.64"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -514,7 +514,7 @@ t_msg() {
     local texto="${T_MSG[$chave]:-}"
     [ -n "$texto" ] || texto="${T_MSG_BASE[$chave]:-}"
     if [ -z "$texto" ]; then
-        t_diz "FALTA a mensagem '$chave' no catalogo"
+        t_diz "MISSING message '$chave' in the catalog"
         printf '%s' "$chave"
         return 1
     fi
@@ -690,7 +690,7 @@ t_tem_terminal() {
 }
 
 t_aviso() {
-    t_diz "aviso: $1"
+    t_diz "warning: $1"
     if ! t_tem_terminal && t_tem_gui && command -v notify-send >/dev/null 2>&1 &&
        notify-send -i "${2:-dialog-information}" -a Tandem "Tandem" "$1" 2>/dev/null; then
         return 0
@@ -735,7 +735,7 @@ t_ok() {
 # post-mortem.
 t_erro() {
     local mostrou=0 extra=""
-    t_diz "ERRO: $1"
+    t_diz "ERROR: $1"
     # The pointer to the log file used to carry a hard-coded "Detalhes
     # tecnicos:" - Portuguese, in the one window every failure ends in, in all
     # seven languages. It was assembled inside a ${LOG:+...} expansion, which is
@@ -958,7 +958,7 @@ t_progresso_texto() {
     # Is the window still alive? If the user closed it, we record that and
     # stop writing - the work goes on, it just loses the progress bar.
     if [ -n "${TANDEM_PROG_PID:-}" ] && ! kill -0 "$TANDEM_PROG_PID" 2>/dev/null; then
-        t_diz "janela de progresso fechada pelo usuario; seguindo sem ela"
+        t_diz "progress window closed by the user; carrying on without it"
         { exec 8>&-; } 2>/dev/null
         rm -f "$TANDEM_FIFO" 2>/dev/null
         TANDEM_FIFO=""
@@ -1134,7 +1134,7 @@ t_prefixo_protegido() {
         # release's own subject - does not turn Tandem out of its own prefix.
         if [ "$real" != "$p" ] && [ -f "$real/system.reg" ] &&
            [ ! -f "$real/.tandem-prefixo" ]; then
-            t_diz "prefixo padrao aponta para $real, que nao e nosso: tratando como protegido"
+            t_diz "default prefix points at $real, which is not ours: treating it as protected"
             return 0
         fi
         return 1
@@ -1151,7 +1151,7 @@ t_protege() {
     mkdir -p "$dir" 2>/dev/null || return 1
     grep -qxF -- "$p" "$TANDEM_PROTEGIDOS" 2>/dev/null && return 0
     printf '%s\n' "$p" >> "$TANDEM_PROTEGIDOS" 2>/dev/null || return 1
-    t_diz "protegido: $p"
+    t_diz "protected: $p"
     return 0
 }
 
@@ -1228,7 +1228,7 @@ t_maquina_semente() {
         # Falling back to something is better than giving up, but it is worth
         # a log line, because a hostname change would then move the identity.
         s="$(hostname 2>/dev/null)-$(id -u 2>/dev/null)"
-        t_diz "sem machine-id; identidade derivada do nome da maquina"
+        t_diz "no machine-id; identity derived from the machine name"
     fi
     printf '%s' "$s"
 }
@@ -1336,7 +1336,7 @@ t_identidade_fixa() {
     serial="$(t_identidade_serial)"
     if [ ! -f "$prefixo/drive_c/.windows-serial" ] && [ -n "$serial" ]; then
         printf '%s\n' "$serial" > "$prefixo/drive_c/.windows-serial" 2>/dev/null &&
-            t_diz "serial do volume C: fixado em $serial"
+            t_diz "volume C: serial pinned to $serial"
     fi
 
     # This half NEVER ONCE RAN, and it took real Wine to find out. The guard
@@ -1399,10 +1399,10 @@ t_identidade_fixa() {
             # harmless - it is the same value from the same seed - and
             # "tandem identidade" shows the two views side by side, so a prefix
             # stuck like this is diagnosable rather than silently split.
-            t_diz "MachineGuid nao entrou na(s) vista(s):$faltou; nao vou marcar, para tentar de novo"
+            t_diz "MachineGuid did not land in view(s):$faltou; not marking, so it retries"
             guid=""
         else
-            t_diz "MachineGuid fixado em $guid (vistas: $escreveu)"
+            t_diz "MachineGuid pinned to $guid (views: $escreveu)"
         fi
     else
         guid="$ja"
@@ -1458,13 +1458,13 @@ t_primeira_vez() {
     [ "$visto" = "$TANDEM_VERSAO" ] && return 0
     mkdir -p "$dir" 2>/dev/null || return 0
     if [ -f "$marca" ]; then
-        t_diz "atualizacao de ${visto:-uma versao anterior} para $TANDEM_VERSAO: conferindo tipos novos"
+        t_diz "upgrade from ${visto:-an earlier version} to $TANDEM_VERSAO: checking new types"
         if [ -x "$TANDEM_BIN/tandem-repair" ]; then
             TANDEM_SILENCIOSO=1 "$TANDEM_BIN"/tandem-repair --somente-novos \
                 >>"${LOG:-/dev/null}" 2>&1
         fi
     else
-        t_diz "primeira execucao deste usuario: procurando prefixos e aplicando associacoes"
+        t_diz "first run for this user: looking for prefixes and applying associations"
         t_procura_prefixos
         if [ -x "$TANDEM_BIN/tandem-repair" ]; then
             TANDEM_SILENCIOSO=1 "$TANDEM_BIN"/tandem-repair >>"${LOG:-/dev/null}" 2>&1
@@ -1524,7 +1524,7 @@ t_anuncia_atalhos() {
     command -v update-desktop-database >/dev/null 2>&1 &&
         update-desktop-database "$HOME/.local/share/applications" 2>/dev/null
     nomes="$(printf '%s\n' "$novos" | sed 's|.*/||; s|\.desktop$||' | sed 's/^/• /')"
-    t_diz "atalhos novos: $(printf '%s' "$novos" | tr '\n' ' ')"
+    t_diz "new shortcuts: $(printf '%s' "$novos" | tr '\n' ' ')"
     t_ok "$(t_msg pronto_procure_no_menu "$nomes")"
     return 0
 }
@@ -1657,7 +1657,7 @@ t_limpa_atalhos_orfaos() {
             "$TANDEM_PREFIXO_PADRAO"/drive_c/users/*/"Start Menu/Programs/$rel.lnk"; do
             [ -f "$lnk" ] && continue 2
         done
-        rm -f -- "$d" && n=$((n+1)) && t_diz "atalho orfao removido: $d"
+        rm -f -- "$d" && n=$((n+1)) && t_diz "orphan shortcut removed: $d"
     done <<< "$(t_atalhos_wine)"
     if [ "$n" -gt 0 ]; then
         command -v update-desktop-database >/dev/null 2>&1 &&
@@ -2003,7 +2003,7 @@ t_receita_importa() {
         case "$chave" in
             RESOLVERAM|NAO_RESOLVERAM)
                 for v in $valor; do
-                    t_verbo_de_fora_ok "$v" || { t_diz "receita recusada: verbo suspeito ou que nao instala dependencia: '$v'"; return 4; }
+                    t_verbo_de_fora_ok "$v" || { t_diz "recipe rejected: suspicious verb, or one that does not install a dependency: '$v'"; return 4; }
                 done
                 verbos="$verbos$chave=$valor"$'\n' ;;
             # These four were copied VERBATIM, and the verb check above made
@@ -2021,13 +2021,13 @@ t_receita_importa() {
             ARQUITETURA)
                 case "$valor" in
                     32|64|arm64|-) ;;
-                    *) t_diz "receita recusada: arquitetura invalida: '$valor'"; return 5 ;;
+                    *) t_diz "recipe rejected: invalid architecture: '$valor'"; return 5 ;;
                 esac
                 verbos="$verbos$chave=$valor"$'\n' ;;
             LIMITE|RESULTADO|PROGRAMA)
                 case "$valor" in
                     *"$(printf '\t')"*)
-                        t_diz "receita recusada: $chave contem tabulacao"; return 5 ;;
+                        t_diz "recipe rejected: $chave contains a tab"; return 5 ;;
                 esac
                 verbos="$verbos$chave=$valor"$'\n' ;;
         esac
@@ -2586,7 +2586,7 @@ t_lista_registro() {
     # A date with a DAY identifies; year and month do not. And the slash of a
     # path that slipped in by mistake takes the whole record down instead of
     # leaking.
-    t_lista_vaza "$reg" && { t_diz "registro recusado: continha dado da maquina"; return 1; }
+    t_lista_vaza "$reg" && { t_diz "record rejected: it contained machine data"; return 1; }
     printf '%s\n' "$reg"
 }
 
@@ -2921,9 +2921,9 @@ t_lista_maquinas() {
 t_lista_assinatura_ok() {
     local arq="$1" chave sig tmpsig
     chave="${TANDEM_LISTA_CHAVE:-${TANDEM_LIB:-/usr/lib/tandem}/lista-publica.pem}"
-    [ -f "$chave" ] || { t_diz "lista: sem chave publica instalada; nao confiro"; return 0; }
+    [ -f "$chave" ] || { t_diz "list: no public key installed; not verifying"; return 0; }
     command -v openssl >/dev/null 2>&1 || {
-        t_diz "lista: sem openssl nesta maquina; nao confiro a assinatura"; return 0; }
+        t_diz "list: no openssl on this machine; not verifying the signature"; return 0; }
     tmpsig="$(mktemp)" || return 0
     if command -v curl >/dev/null 2>&1; then
         curl -fsSL --max-time 30 -o "$tmpsig" "$TANDEM_LISTA_URL.sig" 2>/dev/null
@@ -2932,7 +2932,7 @@ t_lista_assinatura_ok() {
     fi
     if [ ! -s "$tmpsig" ]; then
         rm -f "$tmpsig"
-        t_diz "lista: nenhuma assinatura publicada ainda"
+        t_diz "list: no signature published yet"
         return 0
     fi
     # base64 on the wire so the file survives being served as text.
@@ -2940,7 +2940,7 @@ t_lista_assinatura_ok() {
     base64 -d < "$tmpsig" > "$sig" 2>/dev/null || cp "$tmpsig" "$sig"
     if openssl pkeyutl -verify -pubin -inkey "$chave" -rawin -in "$arq" \
             -sigfile "$sig" >/dev/null 2>&1; then
-        t_diz "lista: assinatura confere"
+        t_diz "list: signature matches"
         rm -f "$tmpsig" "$sig"; return 0
     fi
     rm -f "$tmpsig" "$sig"
@@ -3050,7 +3050,7 @@ t_versao_busca() {
     nova="$(t_versao_limpa "$nova")"
     [ "$nova" = "-" ] && return 1
     t_config_grava VERSAO_DISPONIVEL "$nova"
-    t_diz "versao publicada mais recente: $nova (esta: $TANDEM_VERSAO)"
+    t_diz "latest published version: $nova (this one: $TANDEM_VERSAO)"
     return 0
 }
 
@@ -3085,7 +3085,7 @@ t_versao_nova_conhecida() {
 
 t_lista_talvez_atualiza() {
     local hoje
-    t_lista_receber_ligado || { t_diz "lista: receber esta desligado"; return 1; }
+    t_lista_receber_ligado || { t_diz "list: receiving is off"; return 1; }
     [ -n "$TANDEM_ESTADO" ] || return 1
     command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || return 1
     hoje="$(date +%F)"
@@ -3095,7 +3095,7 @@ t_lista_talvez_atualiza() {
     # the send path learned when a cap that only counted successes turned out
     # not to be a cap at all.
     t_config_grava LISTA_DIA "$hoje"
-    t_diz "lista: buscando a lista da comunidade em segundo plano"
+    t_diz "list: fetching the community list in the background"
     ( t_lista_atualiza >/dev/null 2>&1 & ) 2>/dev/null
     return 0
 }
@@ -3120,7 +3120,7 @@ t_lista_atualiza() {
     fi
     if [ $rc -ne 0 ] || [ ! -s "$tmp" ]; then rm -f "$tmp"; return 1; fi
     if ! head -1 "$tmp" | grep -q "^# TANDEM-LISTA $TANDEM_LISTA_VERSAO\$"; then
-        t_diz "lista baixada nao declara o formato esperado; descartada"
+        t_diz "downloaded list does not declare the expected format; discarded"
         rm -f "$tmp"; return 3
     fi
     # The signature, when there is one.
@@ -3139,11 +3139,11 @@ t_lista_atualiza() {
     # lists have been published for a while, this becomes mandatory - the note
     # in docs/LIST-FORMAT.md carries the date to flip it.
     if ! t_lista_assinatura_ok "$tmp"; then
-        t_diz "lista baixada tem assinatura invalida; descartada"
+        t_diz "downloaded list has an invalid signature; discarded"
         rm -f "$tmp"; return 5
     fi
     mv -f "$tmp" "$TANDEM_LISTA" || { rm -f "$tmp"; return 2; }
-    t_diz "lista atualizada: $(grep -vc '^#' "$TANDEM_LISTA") programas"
+    t_diz "list updated: $(grep -vc '^#' "$TANDEM_LISTA") programs"
     return 0
 }
 
@@ -3203,7 +3203,7 @@ t_confirma_funcionou() {
     if t_pergunta "$(t_msg funcionou_como_esperava)" \
            "$(t_msg botao_sim_funcionou)" "$(t_msg botao_nao_deu_errado)"; then
         t_memoria_grava "$prog" CONFIRMADO sim
-        t_diz "o dono confirmou que funcionou"
+        t_diz "the owner confirmed it worked"
         # The only moment in the whole program where a lesson is worth anything
         # to anybody else: it worked, and a person said so. Asking about sending
         # here means asking about a line that exists, on a program he just used,
@@ -3211,7 +3211,7 @@ t_confirma_funcionou() {
         t_envio_oferece "$prog" >/dev/null 2>&1
     else
         t_memoria_grava "$prog" CONFIRMADO nao
-        t_diz "o dono disse que NAO funcionou direito"
+        t_diz "the owner said it did NOT work right"
         t_aviso "$(t_msg anotado_nao_exporto)"
     fi
     return 0
@@ -3425,7 +3425,7 @@ t_dados_lista() {
         printf 'arquivo\t%s\t%s\n' "${f#"$c"/}" "$(stat -c%s "$f" 2>/dev/null || echo 0)"
     done < "$achados"
     rm -f "$achados"
-    [ "$rc" -eq 124 ] && { t_diz "a busca por dados em $c estourou o tempo"; return 3; }
+    [ "$rc" -eq 124 ] && { t_diz "the data search in $c timed out"; return 3; }
     return 0
 }
 
@@ -3475,13 +3475,13 @@ t_dados_resgate() {
     destino="$HOME/tandem-dados-$motivo-$(date +%F-%H%M%S).tar.gz"
     t_dados_salva "$pref" "$destino"; c=$?
     if [ "$c" -eq 0 ]; then
-        t_diz "copia de resgate dos dados em $destino"
+        t_diz "rescue copy of the data at $destino"
         printf '%s\n' "$destino"
         return 0
     fi
     rm -f "$destino" 2>/dev/null
-    [ "$c" -eq 2 ] && { t_diz "nada do dono para resgatar em $pref"; return 2; }
-    t_diz "FALHOU a copia de resgate de $pref"
+    [ "$c" -eq 2 ] && { t_diz "nothing of the owner's to rescue in $pref"; return 2; }
+    t_diz "rescue copy of $pref FAILED"
     return 1
 }
 
@@ -4488,7 +4488,7 @@ t_inibidor() {
     command -v systemd-inhibit >/dev/null 2>&1 || return 0
     systemd-inhibit --what=idle --who=Tandem --why=teste \
         true >/dev/null 2>&1 || {
-        t_diz "systemd-inhibit existe mas nao funciona aqui; seguindo sem ele"
+        t_diz "systemd-inhibit exists but does not work here; carrying on without it"
         return 0
     }
     printf '%s' "systemd-inhibit --what=idle:sleep:shutdown --who=Tandem --why=Instalando_componentes_do_Windows --mode=block"
@@ -4955,7 +4955,7 @@ t_erro_do_leitor() {
     # The whole field always goes to the log: the token, and the technical
     # detail if there is one. "We could not read it" on the screen and nothing
     # anywhere else would be a diagnosis nobody can follow up.
-    t_diz "leitor: $bruto"
+    t_diz "reader: $bruto"
     ficha="${bruto%%|*}"
     dado="${bruto#*|}"
     [ "$dado" = "$bruto" ] && dado=""
@@ -4975,7 +4975,7 @@ t_erro_do_leitor() {
             if [ -n "${T_MSG[leitor_$ficha]:-}${T_MSG_BASE[leitor_$ficha]:-}" ]; then
                 t_msg "leitor_$ficha" "$dado"
             else
-                t_diz "leitor: nao existe a mensagem 'leitor_$ficha'"
+                t_diz "reader: message 'leitor_$ficha' does not exist"
                 t_msg leitor_desconhecido
             fi ;;
     esac
@@ -5028,7 +5028,7 @@ t_trava_do_prefixo() {
 t_trava_prefixo_pega() {
     local arq; arq="$(t_trava_do_prefixo "${1:-$WINEPREFIX}")"
     { exec 9> "$arq"; } 2>/dev/null || {
-        t_diz "prefixo: nao consegui criar a trava $arq; seguindo sem ela"
+        t_diz "prefix: could not create the lock $arq; carrying on without it"
         return 0
     }
     flock -n 9 2>/dev/null && return 0
@@ -5037,7 +5037,7 @@ t_trava_prefixo_pega() {
     # this project is named after.
     t_aviso "$(t_msg esperando_outra_instalacao)"
     flock -w 2400 9 2>/dev/null ||
-        t_diz "prefixo: a trava nao veio em 40 min; seguindo mesmo assim"
+        t_diz "prefix: the lock did not come in 40 min; carrying on anyway"
     return 0
 }
 
@@ -5446,10 +5446,10 @@ t_appimage_extrai() {
        [ "$carga" = squashfs ] && [ -n "$off" ]; then
         if timeout 120 unsquashfs -o "$off" -d "$destino/lido" -n -q \
                "$prog" "$padrao" >/dev/null 2>&1; then
-            t_diz "appimage lido sem executar (unsquashfs em $off): $padrao"
+            t_diz "appimage read without executing (unsquashfs at $off): $padrao"
             return 0
         fi
-        t_diz "unsquashfs falhou em $padrao; caindo para o runtime do proprio arquivo"
+        t_diz "unsquashfs failed on $padrao; falling back to the file's own runtime"
     fi
     [ -x "$prog" ] || return 1
     (
@@ -5518,7 +5518,7 @@ t_integra_appimage() {
     rm -rf -- "$tmp"
     command -v update-desktop-database >/dev/null 2>&1 &&
         update-desktop-database "$TANDEM_ATALHOS_NATIVOS" 2>/dev/null
-    t_diz "atalho de AppImage criado: $destino -> $nome"
+    t_diz "AppImage shortcut created: $destino -> $nome"
     printf '%s' "$nome"
     return 0
 }
@@ -5539,7 +5539,7 @@ t_atalhos_appimage() {
         prog="$(sed -n 's/^X-Tandem-AppImage=//p' "$d" | head -1)"
         if [ -z "$prog" ] || [ ! -f "$prog" ]; then
             rm -f -- "$d" 2>/dev/null
-            t_diz "atalho de AppImage removido (arquivo sumiu): $d"
+            t_diz "AppImage shortcut removed (file gone): $d"
             continue
         fi
         printf '%s\n' "$d"
@@ -6614,7 +6614,7 @@ t_envio_define() {
     t_config_grava ENVIAR "$1"
     t_config_grava ENVIAR_DESDE "$(date +%F)"
     t_config_grava ENVIAR_VERSAO "$TANDEM_VERSAO"
-    t_diz "envio automatico definido para: $1"
+    t_diz "automatic sending set to: $1"
 }
 
 # The consent text. It shows the line, because a permission dialog that
@@ -6640,12 +6640,12 @@ t_texto_pedir_envio() {
 t_envio_enfileira() {
     local reg="$1"
     [ -n "$reg" ] || return 1
-    t_lista_vaza "$reg" && { t_diz "fila: registro recusado pelo filtro"; return 1; }
+    t_lista_vaza "$reg" && { t_diz "queue: record rejected by the filter"; return 1; }
     mkdir -p "$(dirname -- "$TANDEM_FILA")" 2>/dev/null || return 1
     # The same lesson twice is one lesson.
     grep -qxF -- "$reg" "$TANDEM_FILA" 2>/dev/null && return 0
     printf '%s\n' "$reg" >> "$TANDEM_FILA" 2>/dev/null || return 1
-    t_diz "fila: registro guardado para envio"
+    t_diz "queue: record stored for sending"
     return 0
 }
 
@@ -6704,9 +6704,9 @@ t_envio_envia() {
     # impossible lock and a busy lock are different cases.
     trava="$TANDEM_TRAVAS/envio.lock"
     if { exec 6> "$trava"; } 2>/dev/null; then
-        flock -n 6 || { t_diz "envio: outro envio ja esta em andamento"; return 5; }
+        flock -n 6 || { t_diz "send: another send is already in progress"; return 5; }
     else
-        t_diz "nao consegui criar a trava em $trava; seguindo sem ela"
+        t_diz "could not create the lock at $trava; carrying on without it"
     fi
 
     # A pass that failed does not get to try again on the next double click.
@@ -6714,7 +6714,7 @@ t_envio_envia() {
     espera="$(t_config_le ENVIO_ESPERA_ATE 2>/dev/null)"
     case "$espera" in ''|*[!0-9]*) espera=0 ;; esac
     if [ "$agora" -lt "$espera" ] && [ "$forcado" != forcado ]; then
-        t_diz "envio: a tentativa anterior falhou; esperando (faltam $((espera - agora))s)"
+        t_diz "send: the previous attempt failed; waiting ($((espera - agora))s left)"
         { exec 6>&-; } 2>/dev/null
         return 4
     fi
@@ -6736,7 +6736,7 @@ t_envio_envia() {
             # line LEAVING the machine, which is a different thing from being
             # allowed to erase it.
             printf '%s\n' "$reg" >> "$resto"
-            t_diz "envio: linha retida pelo filtro (guardada, nao enviada)"
+            t_diz "send: line held by the filter (kept, not sent)"
             continue
         fi
         if [ "$contador" -ge "$TANDEM_ENVIO_POR_DIA" ] ||
@@ -6770,7 +6770,7 @@ t_envio_envia() {
             # different power from being allowed to destroy it, and a lesson
             # nobody can read afterwards is a lesson lost either way.
             printf '%s\n' "$reg" >> "$TANDEM_FILA.recusados" 2>/dev/null
-            t_diz "envio: linha movida para $TANDEM_FILA.recusados"
+            t_diz "send: line moved to $TANDEM_FILA.recusados"
         else
             falhas=$((falhas+1))
             printf '%s\n' "$reg" >> "$resto"
@@ -6781,11 +6781,11 @@ t_envio_envia() {
     t_config_grava ENVIO_HOJE "$contador"
     if [ "$falhas" -ge "$TANDEM_ENVIO_FALHAS" ]; then
         t_config_grava ENVIO_ESPERA_ATE "$((agora + TANDEM_ENVIO_ESPERA))"
-        t_diz "envio: $falhas recusas seguidas; a fila espera ${TANDEM_ENVIO_ESPERA}s"
+        t_diz "send: $falhas refusals in a row; the queue waits ${TANDEM_ENVIO_ESPERA}s"
     elif [ "$enviados" -gt 0 ]; then
         # The route works. Whatever it was waiting for is over.
         t_config_grava ENVIO_ESPERA_ATE 0
-        t_diz "envio: $enviados linha(s) enviada(s)"
+        t_diz "send: $enviados line(s) sent"
     fi
     { exec 6>&-; } 2>/dev/null
     printf '%s' "$enviados"
@@ -6820,7 +6820,7 @@ t_envio_posta() {
              --data-binary "$reg" \
              -o /dev/null -w '%{http_code}' \
              "$TANDEM_LISTA_ENVIO" 2>>"${LOG:-/dev/null}")" || {
-            t_diz "envio: nao consegui falar com o servidor"
+            t_diz "send: could not reach the server"
             return 1
         }
     elif command -v wget >/dev/null 2>&1; then
@@ -6834,7 +6834,7 @@ t_envio_posta() {
              --post-data="$reg" "$TANDEM_LISTA_ENVIO" 2>>"${LOG:-/dev/null}"; then
             return 0
         fi
-        t_diz "envio: o servidor nao aceitou a linha (wget)"
+        t_diz "send: the server did not accept the line (wget)"
         return 1
     else
         return 1
@@ -6850,12 +6850,12 @@ t_envio_posta() {
     # the moment, not about the line.
     case "$codigo" in
         2??)      return 0 ;;
-        429|408)  t_diz "envio: o servidor pediu para esperar ($codigo)" ;;
-        4??)      t_diz "envio: o servidor recusou a linha ($codigo); nao adianta repetir"
+        429|408)  t_diz "send: the server asked to wait ($codigo)" ;;
+        4??)      t_diz "send: the server refused the line ($codigo); no point retrying"
                   return 2 ;;
-        3??)      t_diz "envio: o servidor respondeu $codigo, um redirecionamento; a linha fica na fila" ;;
-        '')       t_diz "envio: o servidor nao respondeu nada" ;;
-        *)        t_diz "envio: o servidor respondeu $codigo; a linha fica na fila" ;;
+        3??)      t_diz "send: the server answered $codigo, a redirect; the line stays in the queue" ;;
+        '')       t_diz "send: the server answered nothing" ;;
+        *)        t_diz "send: the server answered $codigo; the line stays in the queue" ;;
     esac
     return 1
 }
@@ -6889,7 +6889,7 @@ $reg" "$(t_msg botao_deixar_ligado)" "$(t_msg botao_desligar_envio)"; then
                 return 1
             fi
         else
-            t_diz "envio ligado por padrao e ninguem para avisar; o aviso saiu no postinst"
+            t_diz "sending on by default and nobody to notify; the notice went out in the postinst"
         fi
     fi
     t_envio_ligado || return 1
