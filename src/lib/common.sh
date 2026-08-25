@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.65"
+TANDEM_VERSAO="4.66"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -1844,8 +1844,15 @@ t_memoria_grava() {
     # a lesson.
     tmp="$arq.novo.$$"
     local trava="${TANDEM_TRAVAS:-$TANDEM_MEMORIA}/memoria.lock"
-    if { exec 7> "$trava"; } 2>/dev/null; then
-        flock -w 10 7 2>/dev/null || :
+    # A DEDICATED high fd, never one a handler holds. The run-handlers take their
+    # per-file "already opening" lock on fd 7 (tandem-exe/-appimage/-jar/-deb) -
+    # and this helper used fd 7 too, so the FIRST early memory write (e.g. the
+    # ARQUITETURA write near the top of tandem-exe) reopened fd 7 onto this lock
+    # and RELEASED the double-click lock: a second click then ran a concurrent
+    # instance in the same prefix, the exact corruption that lock exists to stop.
+    # A library helper must never touch a caller-owned fd; 201 is ours alone.
+    if { exec 201> "$trava"; } 2>/dev/null; then
+        flock -w 10 201 2>/dev/null || :
     fi
     # The file format is one KEY=VALUE per line, so the value must be one line.
     # A multi-line value used to be written raw, and the rewrite filter
@@ -1865,7 +1872,7 @@ t_memoria_grava() {
     } > "$tmp" 2>/dev/null && mv -f "$tmp" "$arq" 2>/dev/null
     local c=$?
     rm -f "$tmp" 2>/dev/null
-    { exec 7>&-; } 2>/dev/null
+    { exec 201>&-; } 2>/dev/null
     return $c
 }
 
@@ -6567,8 +6574,12 @@ t_config_grava() {
         printf '# %s\n' "$(t_msg arq_config_cab)" > "$TANDEM_CONFIG"; }
     tmp="$TANDEM_CONFIG.novo.$$"
     trava="${TANDEM_TRAVAS:-$(dirname -- "$TANDEM_CONFIG")}/config.lock"
-    if { exec 6> "$trava"; } 2>/dev/null; then
-        flock -w 10 6 2>/dev/null || :
+    # A dedicated fd (see t_memoria_grava): 200 is this helper's alone, so it can
+    # never clobber a caller's fd - and, crucially, t_envio_envia holds its own
+    # lock (fd 202) across a critical section while calling this, so the two must
+    # not share a number or the inner exec would drop the outer lock.
+    if { exec 200> "$trava"; } 2>/dev/null; then
+        flock -w 10 200 2>/dev/null || :
     fi
     {
         grep -E '^(#|[A-Z_]+=)' "$TANDEM_CONFIG" 2>/dev/null | grep -v "^$chave="
@@ -6576,7 +6587,7 @@ t_config_grava() {
     } > "$tmp" 2>/dev/null && mv -f "$tmp" "$TANDEM_CONFIG"
     local c=$?
     rm -f "$tmp" 2>/dev/null
-    { exec 6>&-; } 2>/dev/null
+    { exec 200>&-; } 2>/dev/null
     return $c
 }
 
@@ -6703,8 +6714,13 @@ t_envio_envia() {
     # carrying on unlocked when the file cannot be created at all: an
     # impossible lock and a busy lock are different cases.
     trava="$TANDEM_TRAVAS/envio.lock"
-    if { exec 6> "$trava"; } 2>/dev/null; then
-        flock -n 6 || { t_diz "send: another send is already in progress"; return 5; }
+    # A dedicated fd (202), held across the whole read->post->rewrite section.
+    # This function CALLS t_config_grava (fd 200) inside that section; sharing a
+    # number would let the inner config write drop this outer lock and let a
+    # second send truncate the queue mid-pass - the very corruption this lock
+    # exists to prevent.
+    if { exec 202> "$trava"; } 2>/dev/null; then
+        flock -n 202 || { t_diz "send: another send is already in progress"; return 5; }
     else
         t_diz "could not create the lock at $trava; carrying on without it"
     fi
@@ -6715,7 +6731,7 @@ t_envio_envia() {
     case "$espera" in ''|*[!0-9]*) espera=0 ;; esac
     if [ "$agora" -lt "$espera" ] && [ "$forcado" != forcado ]; then
         t_diz "send: the previous attempt failed; waiting ($((espera - agora))s left)"
-        { exec 6>&-; } 2>/dev/null
+        { exec 202>&-; } 2>/dev/null
         return 4
     fi
 
@@ -6787,7 +6803,7 @@ t_envio_envia() {
         t_config_grava ENVIO_ESPERA_ATE 0
         t_diz "send: $enviados line(s) sent"
     fi
-    { exec 6>&-; } 2>/dev/null
+    { exec 202>&-; } 2>/dev/null
     printf '%s' "$enviados"
     # "It refused" is only true if it was actually offered something. A pass
     # that sent nothing because the daily ceiling was already spent is not a

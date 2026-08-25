@@ -2871,6 +2871,47 @@ actual build time, which forces every later entry the same day even higher; the
 4.63 clock-grace fix is what stops `saude` crying wolf over it, but the right
 habit is to date a changelog at the real build time, not a round future hour.
 
+**THE PROFESSIONAL-DEBUG ARC (2026-08-25).** After the extensive-testing campaign
+(4.63 security, 4.64 log-English), the owner asked for *"um debug profissional e
+refatoração do código se trouxer melhoras."* Five read-only analysis agents swept
+the highest-value subsystems (the `.exe` run loop; concurrency/locks/leaks; the
+six Python readers + build.py; state/memory/list; refactor/consistency) and
+returned **13 real findings, most reproduced end to end**, plus honest "this is
+already well-factored / leave it alone" verdicts on the mature parts. The refactor
+agent's headline was that the codebase is well-factored: few worthwhile changes,
+and it named the ones that were (the `VISTO_EM` gap, two dead functions, a
+`limpo()` drift guard) while rejecting the tempting-but-risky churn. The findings
+ship as versions, highest-severity first, one well-tested version at a time, each
+finding REPRODUCED before the fix and pinned by a non-vacuous regression test.
+
+**v4.65 IS PUBLISHED** — 2026-08-25, tag `v4.65` at `43f433f`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (583596 bytes, sha256 `bfef5754…`)
+and the generic bundle (583729 bytes, sha256 `bdda2ff7…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag. It is the FIRST batch of the debug: a
+malicious file can no longer OOM or crash the reader that inspects it — three
+reader input-safety bugs, each reproduced against a crafted fixture. (1) `debinfo`
+decompressed `control.tar.gz`/`.xz` with NO cap while `.zst` capped at 64 MiB; a
+~300 KB `.deb` drove the reader to 612 MiB RSS and a few-GB bomb would OOM a
+low-RAM counter PC on a double click — gz/xz stream through the same ceiling now,
+a bomb is refused as `deb_tamanho_absurdo`. (2) `rpminfo`: a scalar tag
+(NAME/ARCH/...) a hostile `.rpm` declared as an ARRAY made `uma_linha` `.split()`
+a list — an `AttributeError` raised OUTSIDE `main()`'s try, so the owner got a raw
+Python traceback and NO `ERRO` token, bypassing the whole reader contract; every
+scalar is coerced now (`valor_texto`). (3) `jarinfo`/`apkinfo` decompressed whole
+zip entries with `zipfile.read()` (deflate-bomb `.class`/`AndroidManifest.xml` →
+OOM, and jarinfo read entire `.class` files for the 8 version bytes) — the 8-byte
+reads are `z.open().read(8)` and whole-entry reads are bounded by the declared
+size. Plus a guard that `limpo()` (byte-identical in all six readers on purpose)
+has not drifted across the copies. Suite 1824 passed / 0 / 1 skipped; both literal
+counters read 0. **Still queued from the debug:** v4.66 concurrency (the fd-7
+double-click-lock collision + the orphaned-winetricks trap + temp-leak-on-signal),
+v4.67 loop correctness (GTK4-without-zenity silent-success gate, the snap/flatpak
+VISTO_EM history gap, receipt-on-wrong-bitness), v4.68 list integrity + cleanup
+(monta-lista count/month re-validation, the `%`-doubling, the SEMENTE overwrite,
+dead-code removal) — with ONE owner decision to surface, not decide: a dead
+function carried a work-machine send-consent caution the live path lacks.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested

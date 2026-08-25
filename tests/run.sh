@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2143695176 5858" "$soma_esperados"
+      "631002334 5866" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -703,6 +703,27 @@ done
 equal "four writers on one memory file leave one line per key" "0" "$MEM_DUP"
 naocontem "the memory temp file is not a name two processes share" \
           'tmp="$arq.novo"' "$(sed 's/#.*//' "$ROOT/src/lib/common.sh")"
+
+# 4.66: the per-file "already opening" lock the run-handlers take on fd 7 must
+# SURVIVE the first early memory write. t_memoria_grava used fd 7 too for its own
+# lock and closed it, so the first write RELEASED the double-click lock and a
+# second click ran a concurrent instance in the same prefix. Helper locks live
+# on dedicated high fds now (200/201/202), never a caller-owned one. This
+# reproduces the scenario end to end - it fails on the old code (the lock is
+# freed -> "liberou").
+DCL="$TMPROOT/dc.lock"; DCPROG="$TMPROOT/dcprog.exe"; head -c 4000 /dev/urandom > "$DCPROG"
+sobreviveu="$(TANDEM_LIB="$ROOT/src/lib" bash -c '
+    . "'"$ROOT"'/src/lib/common.sh"
+    export TANDEM_MEMORIA="'"$TMPROOT"'/dcmem" TANDEM_TRAVAS="'"$TMPROOT"'/dctrv"
+    mkdir -p "$TANDEM_MEMORIA" "$TANDEM_TRAVAS"
+    exec 7> "'"$DCL"'"; flock -n 7 || { echo nolock; exit; }
+    t_memoria_grava "'"$DCPROG"'" ARQUITETURA 64 2>/dev/null
+    if ( exec 9> "'"$DCL"'"; flock -n 9 ) 2>/dev/null; then echo liberou; else echo mantido; fi
+')"
+equal "the double-click lock survives the memory write (helper uses its own fd)" \
+      "mantido" "$sobreviveu"
+contem "the memory helper's lock is on a dedicated fd, not the handler's fd 7" \
+       'exec 201>' "$(sed -n '/^t_memoria_grava/,/^}/p' "$ROOT/src/lib/common.sh")"
 
 # THE LIMITE MEMORY FIELD IS TRANSLATED ON THE WAY TO THE SCREEN, not printed
 # verbatim. It is stored "class|rest"; four handlers wrote hard-coded Portuguese
