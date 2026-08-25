@@ -1,3 +1,32 @@
+tandem (4.65) unstable; urgency=medium
+
+  * Reader hardening: a malicious file can no longer OOM or crash the reader
+    that inspects it. Found by an adversarial debug of the six Python readers
+    (the owner asked for "um debug profissional"); each fix is proven against a
+    crafted fixture, and each bug was reproduced before it was fixed.
+    - debinfo: `control.tar.gz` and `control.tar.xz` were decompressed with NO
+      size cap, while the `.zst` path capped at 64 MiB. A ~300 KB `.deb` drove
+      the reader to 612 MiB RSS; a few-GB bomb would OOM or freeze a low-RAM
+      counter PC on a plain double-click. gz and xz now stream through the same
+      ceiling and a bomb is refused as `deb_tamanho_absurdo`.
+    - rpminfo: a scalar tag (NAME/ARCH/DISTRIBUTION/SUMMARY) that a hostile
+      `.rpm` declared as an ARRAY made `uma_linha` call `.split()` on a list -
+      an `AttributeError` raised OUTSIDE `main()`'s try, so the owner got a raw
+      Python traceback and NO `ERRO` token, bypassing the whole reader contract.
+      Every scalar tag is coerced to a string now (`valor_texto`).
+    - jarinfo/apkinfo: whole zip entries were decompressed with `zipfile.read()`
+      - a deflate-bombed `.class` or `AndroidManifest.xml` OOM'd the reader, and
+      jarinfo read entire `.class` files just for the 8 version bytes. The
+      8-byte reads are `z.open().read(8)` now, and whole-entry reads are bounded
+      by the declared size before decompressing.
+  * A guard that the anti-line-forgery sanitiser `limpo()` - byte-identical in
+    all six readers on purpose (they run standalone, so a shared module is a net
+    loss) - has not drifted apart across the six copies. It buys the only real
+    downside of the duplication (silent drift of a security function) without
+    the coupling a shared module would add.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 25 Aug 2026 20:30:00 +0000
+
 tandem (4.64) unstable; urgency=medium
 
   * The diagnostic log is written in English now. Around 100 `t_diz` log lines -
