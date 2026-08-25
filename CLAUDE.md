@@ -2844,6 +2844,33 @@ calls). The translation audit came back clean (874 keys in all 7 languages).
 Suite 1816 passed / 0 / 1 skipped; build.py --check clean; both literal counters
 read 0. PoCs re-confirmed dead on the installed 4.63 package.
 
+**v4.64 IS PUBLISHED** — 2026-08-25, tag `v4.64` at `7937584`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (581326 bytes, sha256 `d8df3770…`)
+and the generic bundle (581425 bytes, sha256 `40442395…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible local build at the tag. It is the owner's
+correction turned into a fix: **the diagnostic log is written in English now.**
+~100 `t_diz` log lines — the ones `tandem logs` prints and `tandem socorro`
+sends to whoever is helping — had been left in Portuguese; the owner rejected
+the "deliberate convention" defence outright (*"o mundo fala inglês… é primordial
+q tudo seja exatamente escrito no idioma de escolha, mas inglês é padrão"*).
+Every `t_diz` string was translated to natural English (3 subagents over disjoint
+files, then a hard verification pass), preserving every shell variable,
+`${VAR:-default}` (Portuguese inside the defaults included), marker and on-disk
+token exactly — only the log strings changed, no behaviour, no message
+catalogue, and the on-disk state VALUES stay as they were. A guard keeps it
+English (no `t_diz` may carry a Portuguese-only whole word; proven non-vacuous),
+and the CLAUDE.md `t_diz`-exemption reasoning was corrected: "nothing human is at
+the other end" was wrong — a log IS read; it stays exempt from the translation
+counter because it is ENGLISH diagnostic text (the repo default), not a
+per-language product message. Seven suite assertions that greped the log for the
+old Portuguese were updated. Suite 1818 passed / 0 / 1 skipped; both literal
+counters read 0. **A dating lesson worth keeping:** 4.62–4.64's changelogs were
+dated at escalating future times of day (12:30 → 18:00 → 20:00) rather than the
+actual build time, which forces every later entry the same day even higher; the
+4.63 clock-grace fix is what stops `saude` crying wolf over it, but the right
+habit is to date a changelog at the real build time, not a round future hour.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested

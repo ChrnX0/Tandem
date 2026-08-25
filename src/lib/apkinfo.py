@@ -30,6 +30,23 @@ START_TAG   = 0x0102
 ATTR_MINSDK_RES = 0x0101020C  # android:minSdkVersion
 
 
+# zipfile.read() decompresses the WHOLE entry, so a deflate-bombed entry (tiny
+# compressed, gigabytes decompressed) would OOM the reader on a double click.
+# Entries are read bounded instead: a manifest is KB, a base apk tens of MB.
+TETO_MANIFESTO = 16 * 1024 * 1024
+TETO_APK = 512 * 1024 * 1024
+
+
+def _entrada(z, nome, teto):
+    """A whole zip entry, bounded by teto. None if it declares or delivers more
+    than the ceiling (a decompression bomb). Propagates KeyError if missing."""
+    if z.getinfo(nome).file_size > teto:
+        return None
+    with z.open(nome) as fh:
+        dados = fh.read(teto + 1)
+    return None if len(dados) > teto else dados
+
+
 def _ler_pool(buf, off):
     """Reads a string pool chunk. Returns (list_of_strings, chunk_size)."""
     tipo, hsize, csize = struct.unpack_from("<HHI", buf, off)
@@ -132,7 +149,9 @@ def inspecionar_apk_bytes(dados_apk, nome_exibicao=""):
     with zipfile.ZipFile(io.BytesIO(dados_apk)) as z:
         pacote, minsdk = "", None
         try:
-            pacote, minsdk = ler_manifesto(z.read("AndroidManifest.xml"))
+            dados = _entrada(z, "AndroidManifest.xml", TETO_MANIFESTO)
+            if dados is not None:
+                pacote, minsdk = ler_manifesto(dados)
         except Exception:
             pass
         return pacote, minsdk, abis_de(z)
@@ -216,7 +235,9 @@ def main():
                               if "config." not in n.lower() and "split_" not in n.lower()]
                 base = candidatas[0] if candidatas else max(
                     internos, key=lambda n: z.getinfo(n).file_size)
-                pacote, minsdk, abis = inspecionar_apk_bytes(z.read(base))
+                base_bytes = _entrada(z, base, TETO_APK)
+                if base_bytes is not None:
+                    pacote, minsdk, abis = inspecionar_apk_bytes(base_bytes)
                 if not abis:
                     for n in internos:
                         for a in ("arm64-v8a", "armeabi-v7a", "x86_64", "x86"):
@@ -228,7 +249,9 @@ def main():
                 formato = "apk"
                 splits = 1
                 try:
-                    pacote, minsdk = ler_manifesto(z.read("AndroidManifest.xml"))
+                    dados = _entrada(z, "AndroidManifest.xml", TETO_MANIFESTO)
+                    if dados is not None:
+                        pacote, minsdk = ler_manifesto(dados)
                 except Exception:
                     pass
                 abis = abis_de(z)

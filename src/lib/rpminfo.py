@@ -117,6 +117,18 @@ def valor(entradas, loja, alvo):
     return None
 
 
+def valor_texto(entradas, loja, alvo):
+    """A scalar tag as one string, even if the file mis-declared it as an array.
+
+    valor() answers a list for an array tag; a scalar caller must never receive
+    one (see inspecionar). Missing -> "".
+    """
+    v = valor(entradas, loja, alvo)
+    if isinstance(v, list):
+        return " ".join(v)
+    return v or ""
+
+
 def inspecionar(caminho):
     with open(caminho, "rb") as f:
         dados = f.read()
@@ -130,12 +142,21 @@ def inspecionar(caminho):
     resto = depois_assinatura + ((8 - (depois_assinatura % 8)) % 8)
     entradas, loja, _ = cabecalho(dados, resto)
 
-    nome = valor(entradas, loja, TAG_NOME) or ""
-    versao = valor(entradas, loja, TAG_VERSAO) or ""
-    lancamento = valor(entradas, loja, TAG_LANCAMENTO) or ""
-    arq = valor(entradas, loja, TAG_ARQUITETURA) or "?"
-    dist = valor(entradas, loja, TAG_DISTRIBUICAO) or valor(entradas, loja, TAG_FORNECEDOR) or ""
-    resumo = valor(entradas, loja, TAG_RESUMO) or ""
+    # valor() returns a LIST for a tag declared as an array, a str otherwise.
+    # A hostile .rpm can declare a scalar tag (NAME/ARCH/...) as an array; those
+    # values are only returned, never concatenated, so without coercion a list
+    # reaches uma_linha() -> .split() on a list -> an AttributeError raised
+    # OUTSIDE main()'s try, which prints a raw Python traceback and NO ERRO
+    # token, bypassing the whole reader contract. valor_texto pins every scalar
+    # to a string. (versao/lancamento were caught only by luck, via a TypeError
+    # in the `+` below; this makes it deliberate for all of them.)
+    nome = valor_texto(entradas, loja, TAG_NOME)
+    versao = valor_texto(entradas, loja, TAG_VERSAO)
+    lancamento = valor_texto(entradas, loja, TAG_LANCAMENTO)
+    arq = valor_texto(entradas, loja, TAG_ARQUITETURA) or "?"
+    dist = valor_texto(entradas, loja, TAG_DISTRIBUICAO) \
+        or valor_texto(entradas, loja, TAG_FORNECEDOR)
+    resumo = valor_texto(entradas, loja, TAG_RESUMO)
     requer = valor(entradas, loja, TAG_REQUER) or []
     if isinstance(requer, str):
         requer = [requer]

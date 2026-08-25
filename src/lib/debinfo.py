@@ -150,12 +150,33 @@ def membros_ar(dados):
     return saida
 
 
+def _le_ate_teto(fh):
+    """Read a decompressing stream up to TETO, refusing anything larger.
+
+    GzipFile/LZMAFile.read(n) yield at most n bytes and decompress lazily, so
+    reading TETO+1 bounds the memory to the ceiling instead of materialising the
+    whole output. A control tarball is kilobytes; a gz/xz that expands past 64
+    MiB is a decompression bomb, and swallowing it whole would OOM a low-RAM
+    counter PC on a double-click - the same harm the zstd path already caps.
+    """
+    dados = fh.read(TETO + 1)
+    if len(dados) > TETO:
+        raise DebRuim("deb_tamanho_absurdo|>%d" % TETO)
+    return dados
+
+
 def descomprime(nome, bruto):
-    """The control tarball, decompressed, whatever it was compressed with."""
+    """The control tarball, decompressed, whatever it was compressed with.
+
+    Every path is bounded by TETO: gz and xz stream through _le_ate_teto, zstd
+    caps on the frame size, and a plain .tar is already whole in memory.
+    """
     if nome.endswith(".gz"):
-        return gzip.decompress(bruto)
+        with gzip.GzipFile(fileobj=io.BytesIO(bruto)) as fh:
+            return _le_ate_teto(fh)
     if nome.endswith(".xz"):
-        return lzma.decompress(bruto)
+        with lzma.LZMAFile(io.BytesIO(bruto)) as fh:
+            return _le_ate_teto(fh)
     if nome.endswith(".zst"):
         return _descomprime_zstd(bruto)
     return bruto

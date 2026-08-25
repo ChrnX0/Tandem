@@ -58,6 +58,32 @@ class JarRuim(Exception):
     pass
 
 
+# A .class needs only bytes 6-7 for its version; a manifest is KB and a scanned
+# class a few MB. zipfile.read() decompresses the WHOLE entry, so a deflate-
+# bombed entry (tiny compressed, gigabytes decompressed) would OOM the reader on
+# a double click. Entries are read bounded instead: 8 bytes for the version, and
+# a ceiling for the manifest and the constant-pool scan.
+TETO_ENTRADA = 16 * 1024 * 1024
+
+
+def _oito(z, nome):
+    """The first 8 bytes of a zip entry, decompressed lazily - never the whole
+    entry, so a bombed .class cannot OOM the reader for an 8-byte read."""
+    with z.open(nome) as fh:
+        return fh.read(8)
+
+
+def _entrada(z, nome):
+    """A whole zip entry, bounded by TETO_ENTRADA. None if it declares or
+    delivers more than the ceiling (a decompression bomb). Propagates KeyError
+    for a missing entry, so callers keep their existing not-found handling."""
+    if z.getinfo(nome).file_size > TETO_ENTRADA:
+        return None
+    with z.open(nome) as fh:
+        dados = fh.read(TETO_ENTRADA + 1)
+    return None if len(dados) > TETO_ENTRADA else dados
+
+
 def manifesto(z):
     """The manifest as a dict, with continuation lines already joined.
 
@@ -67,8 +93,10 @@ def manifesto(z):
     joining produces a path that does not exist.
     """
     try:
-        bruto = z.read(MANIFESTO)
+        bruto = _entrada(z, MANIFESTO)
     except KeyError:
+        return {}
+    if bruto is None:      # absurdly large manifest: not a usable one
         return {}
     texto = bruto.decode("utf-8", "replace").replace("\r\n", "\n").replace("\r", "\n")
     linhas = []
@@ -100,7 +128,7 @@ def versao(z, principal):
         for tentativa in (caminho, "BOOT-INF/classes/" + caminho,
                           "WEB-INF/classes/" + caminho):
             try:
-                return maior_de(z.read(tentativa)[:8])
+                return maior_de(_oito(z, tentativa))
             except KeyError:
                 continue
     # No main class, or it is somewhere only its own loader knows about: the
@@ -112,7 +140,7 @@ def versao(z, principal):
         if not nome.endswith(".class") or nome.startswith("META-INF/versions/"):
             continue
         try:
-            maior = max(maior, maior_de(z.read(nome)[:8]))
+            maior = max(maior, maior_de(_oito(z, nome)))
         except (KeyError, zipfile.BadZipFile, OSError):
             continue
         vistos += 1
@@ -138,8 +166,10 @@ def usa_javafx(z, campos, principal):
         caminho = principal.replace(".", "/") + ".class"
         try:
             # The constant pool holds the name of every class referenced, as
-            # plain text: javafx/application/Application shows up whole.
-            if b"javafx/" in z.read(caminho):
+            # plain text: javafx/application/Application shows up whole. Bounded,
+            # so a bombed main class cannot OOM the scan (None -> just skip it).
+            dados = _entrada(z, caminho)
+            if dados is not None and b"javafx/" in dados:
                 return True
         except (KeyError, zipfile.BadZipFile, OSError):
             pass

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "4076658349 5839" "$soma_esperados"
+      "2143695176 5858" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -6510,6 +6510,87 @@ print(m.limpo("kernel32.dll,msvcp140.dll") == "kernel32.dll,msvcp140.dll")
 FIMINTACTO
 )"
 equal "and an ordinary value is not touched" "True" "$intacto"
+
+# 4.65: limpo() is the anti-line-forgery sanitiser, byte-identical in all six
+# readers on purpose (they ship and run standalone, so a shared module is a net
+# loss - see the readers' own comments). What a shared module would prevent is
+# SILENT DRIFT of a security function across six copies; this guard buys that
+# without the coupling. If one copy is edited and the others are not, it fails.
+copias_limpo="$(cd "$ROOT" && python3 - <<'FIMDRIFT'
+import importlib.util, inspect
+corpos = set()
+for r in ("peinfo", "debinfo", "rpminfo", "jarinfo", "appimageinfo", "apkinfo"):
+    spec = importlib.util.spec_from_file_location("r", "src/lib/%s.py" % r)
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    corpos.add(inspect.getsource(m.limpo))
+print(len(corpos))
+FIMDRIFT
+)"
+equal "the six readers' limpo() sanitiser has not drifted apart" "1" "$copias_limpo"
+
+section "readers: a malicious file cannot OOM or crash the reader (4.65)"
+
+# The file being read was double-clicked - it is attacker-controlled. Three
+# hardenings, each proven against a crafted fixture built right here.
+
+# (1) debinfo: control.tar.gz/.xz were decompressed with NO cap, so a ~300 KB
+# .deb expanded to gigabytes and OOM'd a low-RAM counter PC. Both are bounded
+# now, like the .zst path already was; a bomb is refused as deb_tamanho_absurdo.
+python3 - "$TMPROOT/bomba-gz.deb" "$TMPROOT/bomba-xz.deb" <<'FIMBOMBADEB'
+import gzip, lzma, sys
+def ar(name, body):
+    h = ("%-16s%-12d%-6d%-6d%-8s%-10d`\n" % (name, 0, 0, 0, "100644", len(body))).encode()
+    return h + body + (b"\n" if len(body) % 2 else b"")
+def deb(comp, payload):
+    return (b"!<arch>\n" + ar("debian-binary", b"2.0\n")
+            + ar(comp, payload) + ar("data.tar", b"x" * 16))
+open(sys.argv[1], "wb").write(deb("control.tar.gz", gzip.compress(b"\0" * (80 * 1024 * 1024))))
+open(sys.argv[2], "wb").write(deb("control.tar.xz", lzma.compress(b"\0" * (80 * 1024 * 1024))))
+FIMBOMBADEB
+E_GZ="$(t_campo "$(t_deb_info "$TMPROOT/bomba-gz.deb")" ERRO)"
+if [ "${E_GZ#deb_tamanho_absurdo}" != "$E_GZ" ]; then
+    pass "a gzip-bomb .deb is refused, not decompressed whole"
+else
+    fail "a gzip-bomb .deb is refused, not decompressed whole" "deb_tamanho_absurdo" "$E_GZ"
+fi
+E_XZ="$(t_campo "$(t_deb_info "$TMPROOT/bomba-xz.deb")" ERRO)"
+if [ "${E_XZ#deb_tamanho_absurdo}" != "$E_XZ" ]; then
+    pass "an xz-bomb .deb is refused too"
+else
+    fail "an xz-bomb .deb is refused too" "deb_tamanho_absurdo" "$E_XZ"
+fi
+
+# (2) rpminfo: a scalar tag (NAME/ARCH/...) declared as an ARRAY made uma_linha
+# call .split() on a list -> a raw Python traceback and NO ERRO token, raised
+# OUTSIDE main()'s try, bypassing the whole reader contract. Coerced now.
+python3 - "$TMPROOT/nome-array.rpm" <<'FIMRPMARR'
+import struct, sys
+lead = b"\xed\xab\xee\xdb" + b"\x00" * 92
+sig  = b"\x8e\xad\xe8" + b"\x00" + b"\x00" * 4 + struct.pack(">II", 0, 0)
+store = b"evil\x00"
+idx  = struct.pack(">iiii", 1000, 8, 0, 1)      # NAME(1000), type ARRAY(8)
+main = b"\x8e\xad\xe8" + b"\x00" + b"\x00" * 4 + struct.pack(">II", 1, len(store)) + idx + store
+open(sys.argv[1], "wb").write(lead + sig + main)
+FIMRPMARR
+RPM_OUT="$(python3 "$ROOT/src/lib/rpminfo.py" "$TMPROOT/nome-array.rpm" 2>"$TMPROOT/rpm-err.txt")"
+equal "an .rpm with a scalar tag declared as an array reads the name cleanly" \
+      "PACOTE=evil" "$(printf '%s\n' "$RPM_OUT" | grep '^PACOTE=')"
+equal "and it raises no Python traceback" "0" \
+      "$(grep -c Traceback "$TMPROOT/rpm-err.txt")"
+
+# (3) jarinfo: reading a whole .class for its 8-byte version let a deflate-bomb
+# class OOM the reader. The 8-byte read is bounded now (z.open().read(8)).
+python3 - "$TMPROOT/bomba.jar" <<'FIMJARBOMB'
+import zipfile, sys
+z = zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED)
+z.writestr("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n")
+z.writestr("Big.class", b"\xca\xfe\xba\xbe\x00\x00\x00\x41" + b"\0" * (80 * 1024 * 1024))
+z.close()
+FIMJARBOMB
+JAR_MAIOR="$(timeout 25 python3 "$ROOT/src/lib/jarinfo.py" "$TMPROOT/bomba.jar" 2>/dev/null |
+             grep '^MAIOR=' | cut -d= -f2)"
+equal "a jar with a deflate-bomb class reads its version bounded, not whole" \
+      "65" "$JAR_MAIOR"
 
 section "community list (modelled on filter lists)"
 
