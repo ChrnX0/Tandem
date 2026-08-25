@@ -1468,25 +1468,6 @@ Este programa é de {1} bits, e o componente que ele pede só existe em {2} bits
 
 Não é defeito da sua máquina nem falta de instalação: quem distribui esse componente nunca publicou a versão de {1} bits. Se existir uma versão de {2} bits deste mesmo programa, ela deve funcionar aqui.
 
-@pedir_envio
-Posso mandar esta linha para a lista da comunidade?
-
-{1}
-
-É isso, inteira. Não vai mais nada.
-
-Para que serve: quando outra pessoa abrir este mesmo programa, o Tandem dela
-já sabe o que ele precisa e não faz ela esperar para descobrir. Quanto mais
-gente manda, menos cada um precisa descobrir sozinho.
-
-NÃO vai daqui: nome de arquivo, pasta, seu nome de usuário, o nome do
-computador, endereço de rede, nem uma linha de registro. A primeira coluna é
-uma impressão digital do arquivo do programa, não sua nem da sua máquina, e
-não dá para voltar dela para nada.
-
-Você decide agora e pode mudar quando quiser:
-  tandem enviar sim     ou     tandem enviar nao
-
 @pedir_envio_maquina_de_trabalho
 Atenção: este computador tem o ambiente de outro sistema instalado. Se ele
 for máquina de trabalho, confirme com quem cuida dela antes de ligar isto.
