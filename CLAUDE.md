@@ -2755,16 +2755,57 @@ default — the health Central and the wizard — is unchanged and still worst-f
 (both directions pinned). Seven new messages, all seven languages; rendered under
 real GTK4. Suite 1794 passed / 0 / 1 skipped; both literal counters read 0.
 
-**THE "ESTADO DE ARTE" ARC — 8 OF 11 SHIPPED, THEN A HELD CHECKPOINT
-(2026-08-24).** The owner asked to "elevar o tandem ao estado de arte e
+**v4.62 IS PUBLISHED** — 2026-08-25, tag `v4.62` at `a7aa33f`, and it ships two
+build artifacts plus the AUR recipe, verified byte-for-byte FIVE ways: the `.deb`
+(578332 bytes, sha256 `113a7e95…`) and the generic bundle (578222 bytes, sha256
+`18bd3933…`) each agree across the release body, the release's checksum sidecar,
+the asset digest, the downloaded bytes, and a fresh reproducible local build at
+the tag; the two new AUR assets — `PKGBUILD` (`c21280e8…`) and `tandem.install`
+(`cd88e662…`) — agree across asset digest, downloaded bytes and local build. It
+is the CODE HALF of arc idea ⑤, native packaging: an Arch user could not install
+Tandem natively — it is a `.deb`, and the generic tarball (4.48) meant unpacking
+`install.sh` by hand, with no `pacman`/AUR path. `build.py` now emits a PKGBUILD
+beside the `.deb` and the tarball, from the SAME LAYOUT and version so the three
+cannot drift: `pkgver` from `debian/control`, `sha256sums` the checksum of the
+tarball the same run built (reproducible, so local == published), and `package()`
+reuses the bundle's own `install.sh` with `DESTDIR="$pkgdir"` — one copy path, no
+third place to drift. `packaging/aur/tandem.install` is the pacman scriptlet
+(caches + the same language-aware install notice the `.deb` postinst shows, READ
+from the catalogue, never sourced); `packaging/aur/README.md` documents the
+publish flow. Verified END TO END on a real Arch container (Docker,
+`--network host`, the proxy CA appended to the trust bundle): `makepkg` builds
+`tandem-4.62-1-any.pkg.tar.zst`, `makepkg --printsrcinfo` accepts it, all nine
+`depends` names resolve in the official repos, `pacman -U` installs it (running
+the scriptlet), `tandem doctor` reads `package family: pacman`, and `pacman -R`
+removes it cleanly. The suite guards the generated recipe (structure + checksum),
+proven non-vacuous (fires on a wrong `arch` and on a drifted sha). **The one
+manual step that stays the owner's is the AUR publish itself** — it needs his AUR
+account (an SSH key registered to it): the single credential in the chain, which
+never touches this repository, the same shape as the Vercel Blob store for the
+list. So arc idea ⑤ is now "code done; the publish is the owner's one step," not
+"not built." It came out of the owner's delegation — "faz conforme vc entender
+ser o melhor" — where the honest pick among the five held items was this one:
+genuinely valuable (Arch had no native install at all), fully testable HERE
+(Docker/makepkg), and crossing no owner-reserved line (⑩ money, ⑪ privacy
+posture, ④ his Vercel deploy were declined; ⑧ sandbox was reassessed as a
+false-security trap — a Wine prefix maps `dosdevices/z: -> /`, so it is not a
+security boundary, and the rerun-then-undo value it would add is already in 4.58).
+Suite 1804 passed / 0 / 1 skipped; both literal counters read 0. **NEXT rung on
+the distro line: publishing the PKGBUILD to the AUR (owner's account), then
+`dnf`/`pacman` remain covered — the frontier stays field evidence on his counter,
+not more code.**
+
+**THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
+2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
 version at a time. Shipped and verified: ① Central (4.54) + one-click fixes
 (4.55), the One UI 9 redesign (4.56, a separate owner request), ② first-run
 wizard (4.57), ⑥ Wine "undo"/prefix snapshots (4.58), ⑦ Authenticode signature
-signal (4.59), ⑨ crash-to-cause (4.60), ③ visual history (4.61). **The remaining
-5 were NOT built, and the reason is written down so the next session does not
-grind them unsupervised:** four need a decision only the owner can make — ⑤
-native packaging (PKGBUILD needs his AUR account to publish), ④ the client-side
+signal (4.59), ⑨ crash-to-cause (4.60), ③ visual history (4.61). **Of the remaining
+5, ⑤ native packaging is now CODE-DONE (v4.62, 2026-08-25) — the PKGBUILD is
+built, tested end to end on a real Arch container, and released; only the AUR
+PUBLISH stays the owner's one manual step (his AUR account). The other four are
+still gated, three on a decision only the owner can make** — ④ the client-side
 web checker (deploys on merge to his Vercel), ⑪ the opt-in success ledger (a
 privacy-stance decision — it changes the "we keep nothing" posture), and ⑩ the
 long-tail AI fallback (a real money/endpoint decision). The fifth, ⑧
