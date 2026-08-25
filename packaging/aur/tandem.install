@@ -1,0 +1,54 @@
+# shellcheck shell=bash
+# Tandem - pacman install scriptlet.
+#
+# pacman refreshes most caches through its own hooks (desktop-file-utils,
+# shared-mime-info and hicolor-icon-theme each ship one, and they are in
+# depends), so this is belt-and-braces for a machine missing a hook - each
+# command is optional and stays silent. What the hooks do NOT do is show the
+# install notice the .deb's postinst shows, so that is reproduced here: it is
+# the moment the owner is told that community-list sending is ON by default and
+# the one command that turns it off. The per-user first run is not done here -
+# pacman runs as root and cannot know whose HOME to set up; the program itself
+# does it on the first `tandem` invocation, exactly as under the .deb.
+#
+# The catalogue is READ (never sourced): a file that will one day arrive from a
+# translator must not be able to execute as root. awk pulls one @key and
+# nothing else happens. Falls back to English, the program's default language.
+
+_tandem_diz() {
+    local chave="$1" lang arq base
+    base=/usr/lib/tandem/idiomas
+    lang="${LANG:-}"; lang="${lang%%.*}"; lang="${lang%%@*}"
+    for arq in "$base/$lang.txt" "$base/${lang%%_*}.txt" "$base/en.txt"; do
+        [ -r "$arq" ] || continue
+        T_CHAVE="@$chave" awk '
+            BEGIN { alvo = ENVIRON["T_CHAVE"] }
+            $0 == alvo { dentro = 1; next }
+            substr($0, 1, 1) == "@" { dentro = 0 }
+            dentro { print }' "$arq"
+        return 0
+    done
+}
+
+_tandem_caches() {
+    update-desktop-database /usr/share/applications 2>/dev/null || true
+    update-mime-database /usr/share/mime 2>/dev/null || true
+    gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+}
+
+post_install() {
+    _tandem_caches
+    printf '\n'
+    _tandem_diz instalado_resumo
+    printf '\n'
+    _tandem_diz envio_aviso_ligado
+    printf '\n'
+}
+
+post_upgrade() {
+    _tandem_caches
+}
+
+post_remove() {
+    _tandem_caches
+}

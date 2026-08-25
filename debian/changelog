@@ -1,3 +1,36 @@
+tandem (4.62) unstable; urgency=medium
+
+  * A native Arch package, so `.deb`-less distributions get an idiomatic way in.
+    The distro line already lets Tandem SPEAK to a non-apt machine (4.47) and
+    INSTALL onto it from a generic tarball (4.48), but Tandem is itself a
+    `.deb`, so an Arch user had to fetch a tarball and run `install.sh` by
+    hand - there was no `pacman`/AUR path. Now `build.py` emits a PKGBUILD
+    beside the `.deb` and the generic tarball, generated from the SAME LAYOUT
+    and the SAME version so it cannot drift: `pkgver` comes from
+    `debian/control`, `sha256sums` is the checksum of the generic tarball the
+    same run just built (reproducible, so the local sum equals the published
+    one), and `source` points at that tarball's release URL.
+    - The PKGBUILD's `package()` reuses the bundle's own `install.sh` with
+      `DESTDIR="$pkgdir"`, so the files it stages are byte-for-byte the ones the
+      `.deb` and the tarball install - one copy path, no third place to drift.
+    - `packaging/aur/tandem.install` is the pacman scriptlet: it refreshes the
+      desktop/MIME/icon caches and prints the same language-aware install notice
+      the `.deb`'s postinst does (READ from the catalogue, never sourced), so an
+      Arch user gets the same "sending is on, here is how to turn it off"
+      disclosure a Debian user gets. The per-user first run stays where it
+      always was - the first `tandem` invocation - because pacman runs as root.
+    - `depends`/`optdepends` mirror the `.deb`'s Depends/Recommends/Suggests,
+      mapped to Arch names (python, zenity, wine, winetricks, android-tools for
+      adb, jre-openjdk, fuse2, and the gtk4/libadwaita/python-gobject face).
+    - Verified END TO END on a real Arch container: `makepkg` builds the
+      package, `makepkg --printsrcinfo` accepts the PKGBUILD, `pacman -U`
+      installs it, and `tandem doctor` reads `package family: pacman` and runs.
+    - `packaging/aur/README.md` documents the one manual step that stays the
+      owner's: publishing to the AUR needs his AUR account (`.SRCINFO` +
+      `git push`), the same shape as the Vercel Blob store for the list.
+
+ -- Tandem <rockx0@gmail.com>  Tue, 25 Aug 2026 12:00:00 +0000
+
 tandem (4.61) unstable; urgency=medium
 
   * A visual history of what Tandem has handled. `tandem memoria` already shows

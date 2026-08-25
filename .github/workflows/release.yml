@@ -134,6 +134,10 @@ jobs:
             echo "sudo ./install.sh          # sudo ./uninstall.sh removes it"
             echo '```'
             echo
+            echo "**On Arch?** A \`PKGBUILD\` is attached (with \`tandem.install\`):"
+            echo "\`makepkg -si\` from a directory holding both, or install \`tandem\`"
+            echo "with your AUR helper once it is published there."
+            echo
             echo ".deb    SHA-256: \`$(cut -d' ' -f1 "tandem_${VERSION}_all.deb.sha256")\`"
             echo "generic SHA-256: \`$(cut -d' ' -f1 "tandem_${VERSION}_generic.tar.gz.sha256")\`"
           } >> notes.md
@@ -154,3 +158,5 @@ jobs:
             tandem_${{ env.VERSION }}_all.deb.sha256
             tandem_${{ env.VERSION }}_generic.tar.gz
             tandem_${{ env.VERSION }}_generic.tar.gz.sha256
+            packaging/aur/PKGBUILD
+            packaging/aur/tandem.install

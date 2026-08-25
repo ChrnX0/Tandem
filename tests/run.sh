@@ -112,7 +112,8 @@ equal "the case patterns still match the real messages" \
 section "script syntax"
 # The same set the evidence gate lints, tests/ included: a harness with a
 # syntax error is a harness that passes by never running.
-for f in src/bin/* src/lib/*.sh tests/*.sh packaging/*.sh debian/postinst debian/postrm; do
+for f in src/bin/* src/lib/*.sh tests/*.sh packaging/*.sh packaging/aur/tandem.install \
+         debian/postinst debian/postrm; do
     if bash -n "$f" 2>/dev/null; then pass "bash -n $f"
     else fail "bash -n $f" "valid syntax" "syntax error"; fi
 done
@@ -120,7 +121,8 @@ done
 if command -v shellcheck >/dev/null 2>&1; then
     output="$(LC_ALL=C.UTF-8 shellcheck --shell=bash --exclude=SC1091,SC2123 \
              --severity=warning --format=gcc \
-             src/bin/* src/lib/*.sh tests/*.sh packaging/*.sh debian/postinst debian/postrm 2>&1)"
+             src/bin/* src/lib/*.sh tests/*.sh packaging/*.sh \
+             packaging/aur/tandem.install debian/postinst debian/postrm 2>&1)"
     if [ -z "$output" ]; then pass "shellcheck with no warnings"
     else fail "shellcheck with no warnings" "(nothing)" "$output"; fi
 else
@@ -3492,6 +3494,54 @@ else
         fail "the private directory is pruned" "gone" "still there"
     else
         pass "the private directory is pruned"
+    fi
+fi
+
+section "packaging: the native Arch recipe (PKGBUILD)"
+
+# 4.62: an Arch user could install only by unpacking the generic tarball by hand.
+# build.py now emits a PKGBUILD from the SAME layout and the SAME version, and
+# its package() reuses the bundle's own install.sh - so the three package shapes
+# (.deb, tarball, PKGBUILD) cannot drift. This inspects the generated recipe;
+# the end-to-end makepkg build runs on a real Arch container, not in this suite.
+PKG="$ROOT/packaging/aur/PKGBUILD"
+INST="$ROOT/packaging/aur/tandem.install"
+[ -f "$PKG" ] || python3 "$ROOT/build.py" >/dev/null 2>&1
+VERC="$(awk -F': *' '/^Version:/{print $2; exit}' "$ROOT/debian/control")"
+GENP="$ROOT/tandem_${VERC}_generic.tar.gz"
+if [ ! -f "$PKG" ] || [ ! -f "$GENP" ]; then
+    skip "the PKGBUILD is generated and consistent" "no build here"
+else
+    PKGTXT="$(cat "$PKG")"
+    contem "the PKGBUILD pins the package version" "pkgver=$VERC" "$PKGTXT"
+    contem "the PKGBUILD is architecture-independent" "arch=('any')" "$PKGTXT"
+    contem "the PKGBUILD names the install scriptlet" "install=tandem.install" "$PKGTXT"
+    contem "package() reuses the bundle install.sh" \
+           'DESTDIR="$pkgdir" bash install.sh' "$PKGTXT"
+    contem "the source is the release generic tarball" \
+           'tandem_${pkgver}_generic.tar.gz' "$PKGTXT"
+    # The checksum must be the ACTUAL tarball's - a stale PKGBUILD is caught here
+    # and refused by makepkg on a user's machine. Same generate-and-guard the
+    # catalogues and verbos.tsv already have.
+    REAL="$(sha256sum "$GENP" | cut -d' ' -f1)"
+    contem "the PKGBUILD checksum matches the built tarball" \
+           "sha256sums=('$REAL')" "$PKGTXT"
+    # The scriptlet it names ships beside it.
+    if [ -f "$INST" ]; then
+        pass "the install scriptlet ships beside the PKGBUILD"
+        INSTTXT="$(cat "$INST")"
+        contem "the scriptlet has a post_install hook" "post_install()" "$INSTTXT"
+        # Rule 1 off the prefix: a translator's catalogue must never be SOURCED
+        # as root. The scriptlet pulls the notice with awk, exactly as the .deb
+        # postinst does - so no `. file`/`source file` on the idiomas tree.
+        if grep -Eq '(^|[^[:alnum:]_])(\.|source)[[:space:]]+[^;&|]*idiomas' "$INST"; then
+            fail "the scriptlet reads the catalogue, never sources it" \
+                 "awk read" "sourced"
+        else
+            pass "the scriptlet reads the catalogue, never sources it"
+        fi
+    else
+        fail "the install scriptlet ships beside the PKGBUILD" "present" "missing"
     fi
 fi
 

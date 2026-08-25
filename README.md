@@ -7,7 +7,7 @@
 **Nine formats. `.exe` `.msi` · `.apk` `.xapk` · `.AppImage` `.jar` · `.deb` `.rpm` `.flatpakref` `.snap` — without a terminal, without a tutorial, without you learning what a `winetricks` verb is.**
 
 [![CI](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-1794-brightgreen)](tests/run.sh)
+[![tests](https://img.shields.io/badge/tests-1804-brightgreen)](tests/run.sh)
 [![real programs](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml/badge.svg)](https://github.com/ChrnX0/Tandem/actions/workflows/real-programs.yml)
 [![lintian](https://img.shields.io/badge/lintian-clean-brightgreen)](https://lintian.debian.org/)
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
@@ -157,6 +157,14 @@ sudo apt install ./tandem_3.8_all.deb
 tar xzf tandem_*_generic.tar.gz && cd tandem-*
 sudo ./install.sh          # sudo ./uninstall.sh removes it again
 ```
+
+**On Arch?** A `PKGBUILD` is attached to every release (alongside `tandem.install`), generated from the same layout and version as the `.deb`, so `pacman` tracks Tandem like any native package:
+
+```bash
+makepkg -si          # from a directory holding PKGBUILD and tandem.install
+```
+
+Once it is on the AUR, `yay -S tandem` (or your AUR helper) is all it takes.
 
 <details>
 <summary>Building it yourself instead, and checking what you downloaded</summary>
