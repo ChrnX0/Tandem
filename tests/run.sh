@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "631002334 5866" "$soma_esperados"
+      "2149458253 5868" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -6376,6 +6376,34 @@ contem "tandem-android launches the Android UI and checks the result" \
        'waydroid show-full-ui' "$AND_CORPO"
 contem "tandem-android speaks up when the Android screen will not open" \
        't_erro' "$AND_CORPO"
+
+# 4.67: three loop-correctness fixes from the professional debug.
+# (1) The "did it work?" question was gated on zenity ALONE, but t_pergunta has
+# drawn through the modern GTK4 face (gui.py) since 4.46. On a Fedora/Arch
+# generic-tarball install (GTK4 present, zenity not a dep there) a program that
+# opened was NEVER asked -> silent success, the very thing this check exists to
+# stop. The gate mirrors what t_pergunta can actually do now (modern OR zenity).
+CONF_FN="$(sed -n '/^t_confirma_funcionou/,/^}/p' "$ROOT/src/lib/common.sh")"
+contem "the confirm gate asks via the modern face too, not zenity alone" \
+       't_gui_moderno || command -v zenity' "$CONF_FN"
+# (2) VISTO_EM class guard: every handler that records an install/open SUCCESS
+# must date it, or tandem historico sorts that program to the bottom as the
+# oldest thing ever seen. snap and flatpak were the only two that did not - this
+# guards the whole class so the next format cannot repeat it.
+vem_falta=0
+for _h in tandem-deb tandem-rpm tandem-snap tandem-flatpak tandem-apk \
+          tandem-appimage tandem-jar tandem-script tandem-exe; do
+    if grep -qE 'RESULTADO (instalado|abriu|executou)' "$ROOT/src/bin/$_h"; then
+        grep -q 'VISTO_EM' "$ROOT/src/bin/$_h" || vem_falta=$((vem_falta + 1))
+    fi
+done
+equal "every handler that records a success also dates it with VISTO_EM" "0" "$vem_falta"
+# (3) The memory shortcut's wrong-bitness (outcome 2) branch writes the
+# .tandem-verbos receipt now, like the main loop - without it a 32-bit-only verb
+# was reinstalled on every open of a 64-bit program (rule 4).
+SC2="$(sed -n '/elif \[ "\$C_ENTREGA" = 2 \]/,/^                    else/p' "$ROOT/src/bin/tandem-exe")"
+contem "the memory shortcut writes the receipt on a wrong-bitness delivery" \
+       'tandem-verbos' "$SC2"
 
 section "native packages: every handler, every path, with nobody to ask"
 

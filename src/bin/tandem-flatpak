@@ -181,6 +181,7 @@ fi
 
 if [ "$INSTALOU" = 1 ]; then
     t_memoria_grava "$ARQ" RESULTADO instalado 2>/dev/null
+    t_memoria_grava "$ARQ" VISTO_EM "$(date +%F)" 2>/dev/null
     ONDE="$(t_anuncia_atalhos_do_sistema "$ANTES_ATALHOS")"
     t_ok "$(t_msg flatpak_instalado "$AMIGAVEL")${ONDE:+
 

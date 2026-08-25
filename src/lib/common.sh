@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.66"
+TANDEM_VERSAO="4.67"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -3191,18 +3191,24 @@ t_confirma_funcionou() {
         t_aviso "$(t_msg_n abriu_e_fechou_sozinho "$durou" "$durou")"
     fi
 
-    # Nobody to ask - no window, or no zenity to draw one. That used to be the
-    # end of the lesson: with no answer there was no confidence, and with no
-    # confidence there was nothing worth passing on. Since 4.11 there is a level
-    # underneath his word: Tandem checked, on this machine, that what was
-    # missing actually arrived. A lesson carrying that is worth offering even
-    # though nobody clicked - and it goes out labelled "entregue", which says
-    # exactly that nobody confirmed it, and the resolver weighs it at half a
-    # report on the other side.
+    # Nobody to ask - no window, or no way to draw a question. That used to be
+    # gated on zenity ALONE, but t_pergunta has drawn through the modern GTK4
+    # face (gui.py) since 4.46 and only falls back to zenity, so "no zenity" is
+    # no longer "nobody to ask": on a Fedora/Arch generic-tarball install the
+    # desktop supplies GTK4/libadwaita while zenity is not pulled in, and a
+    # program that opened fine was NEVER asked "did it work?" - the silent
+    # success this whole check exists to prevent, on exactly the install path
+    # the distro line invested in. The condition now mirrors what t_pergunta can
+    # actually do: it can ask if the modern face is present OR zenity is.
     #
-    # It is offered HERE and not before the branch below, because the "yes"
-    # branch offers too and calling both would queue the same lesson twice.
-    if ! t_tem_gui || ! command -v zenity >/dev/null 2>&1; then
+    # With no answer there is still a level underneath the owner's word: since
+    # 4.11 Tandem checked, on this machine, that what was missing arrived. A
+    # lesson carrying that is worth offering even though nobody clicked - it goes
+    # out labelled "entregue", which says exactly that nobody confirmed it, and
+    # the resolver weighs it at half a report. Offered HERE and not before the
+    # branch below, because the "yes" branch offers too and calling both would
+    # queue the same lesson twice.
+    if ! t_tem_gui || ! { t_gui_moderno || command -v zenity >/dev/null 2>&1; }; then
         [ "$(t_confianca_da_licao "$prog")" = entregue ] &&
             t_envio_oferece "$prog" >/dev/null 2>&1
         return 0
