@@ -82,7 +82,7 @@ ANTES_APK="$(t_dono_do_tipo application/vnd.android.package-archive 2>/dev/null)
 ANTES_APPIMAGE="$(t_dono_do_tipo application/vnd.appimage 2>/dev/null)"
 ANTES_JAR="$(t_dono_do_tipo application/java-archive 2>/dev/null)"
 ANTES_DEB="$(t_dono_do_tipo application/vnd.debian.binary-package 2>/dev/null)"
-t_diz "antes: exe=$ANTES_EXE apk=$ANTES_APK appimage=$ANTES_APPIMAGE jar=$ANTES_JAR deb=$ANTES_DEB"
+t_diz "before: exe=$ANTES_EXE apk=$ANTES_APK appimage=$ANTES_APPIMAGE jar=$ANTES_JAR deb=$ANTES_DEB"
 
 # Which types this run is responsible for.
 TODOS="$TIPOS_APK $TIPOS_EXE $TIPOS_APPIMAGE $TIPOS_JAR $TIPOS_DEB $TIPOS_RPM
@@ -96,10 +96,10 @@ for t in $TODOS; do
     TIPOS="$TIPOS $t"
 done
 if [ -z "$TIPOS" ]; then
-    t_diz "nada novo para associar; a lista de tipos ja esta aplicada"
+    t_diz "nothing new to associate; the type list is already applied"
     exit 0
 fi
-t_diz "associando:$TIPOS"
+t_diz "associating:$TIPOS"
 
 for f in "$CFG"/*-mimeapps.list; do
     [ -f "$f" ] || continue
@@ -107,7 +107,7 @@ for f in "$CFG"/*-mimeapps.list; do
     for t in $TIPOS; do
         sed -i "\|^${t}=|d" "$f" 2>/dev/null || true
     done
-    t_diz "limpou conflitos em $f"
+    t_diz "cleared conflicts in $f"
 done
 
 [ -f "$ALVO" ] || printf '[Default Applications]\n' > "$ALVO"
@@ -148,7 +148,7 @@ for t in $TIPOS; do
     # An unresolved handler would be written as "type=" - an association that
     # points at nothing, which reads to the system as "no default" and to a
     # person as "Tandem did apply it". Refuse instead, and say so.
-    app="$(dono_de "$t")" || { t_diz "!!! sem handler para $t; nao associei"; continue; }
+    app="$(dono_de "$t")" || { t_diz "!!! no handler for $t; did not associate"; continue; }
     aplicar "$t" "$app"
     grep -qxF -- "$t" "$JA_FEITOS" 2>/dev/null ||
         printf '%s\n' "$t" >> "$JA_FEITOS" 2>/dev/null

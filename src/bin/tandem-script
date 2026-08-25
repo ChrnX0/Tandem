@@ -50,11 +50,11 @@ if t_script_instalador "$SCRIPT"; then
     # ------------------------------------------------ a vendor installer
     QUAL="$(t_msg script_qual_instalador)"
     ACAO="$(t_msg botao_instalar)"
-    t_diz "reconhecido como instalador"
+    t_diz "recognised as an installer"
 else
     QUAL="$(t_msg script_qual_script)"
     ACAO="$(t_msg botao_executar)"
-    t_diz "reconhecido como script comum"
+    t_diz "recognised as an ordinary script"
     # For a plain script the first offer is to READ it. Whoever wanted to run it
     # says so on the second question, which is one click further away on purpose.
     if t_pergunta "$(t_texto_script_perigo "$SCRIPT")
@@ -91,7 +91,7 @@ fi
 
 if [ ! -x "$SCRIPT" ]; then
     chmod +x -- "$SCRIPT" 2>>"$LOG" ||
-        t_diz "nao consegui marcar como executavel; tentando pelo interpretador"
+        t_diz "could not mark as executable; trying via the interpreter"
 fi
 
 INICIO=$SECONDS

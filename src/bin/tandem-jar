@@ -28,7 +28,7 @@ CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
 if { exec 7> "$TANDEM_TRAVAS/jar-$CHAVE.lock"; } 2>/dev/null; then
     flock -n 7 || { t_aviso "$(t_msg ja_abrindo)"; exit 0; }
 else
-    t_diz "nao consegui criar a trava; seguindo sem ela"
+    t_diz "could not create the lock; continuing without it"
 fi
 
 # ------------------------------------------------- 1. Read it without running
@@ -74,7 +74,7 @@ if [ -z "$PRINCIPAL" ]; then
     fi
     exit 1
 fi
-t_diz "classe principal: $PRINCIPAL, pede java ${PEDE:-?}"
+t_diz "main class: $PRINCIPAL, needs java ${PEDE:-?}"
 
 # --------------------------------------------------------------- 3. The Java
 if ! command -v java >/dev/null 2>&1; then
@@ -88,7 +88,7 @@ if ! command -v java >/dev/null 2>&1; then
     t_ok "$(t_msg jar_java_instalado)"
 fi
 TEM="$(t_java_versao)"
-t_diz "java instalado: ${TEM:-nao identificado}"
+t_diz "java installed: ${TEM:-not identified}"
 
 # Checked BEFORE running, because Java's own answer for this case names a
 # number that means nothing to the owner. If the installed Java is not
@@ -122,7 +122,7 @@ if [ -n "$DEPS" ]; then
     for d in ${DEPS//,/ }; do
         [ -e "$PASTA/$d" ] || SEM_DEPS="$SEM_DEPS $d"
     done
-    [ -n "$SEM_DEPS" ] && t_diz "dependencias declaradas e ausentes:$SEM_DEPS"
+    [ -n "$SEM_DEPS" ] && t_diz "declared and missing dependencies:$SEM_DEPS"
 fi
 
 INICIO=$SECONDS

@@ -32,7 +32,7 @@ TITULO="$(t_flatpak_campo "$ARQ" Title)"
 URL="$(t_flatpak_campo "$ARQ" Url)"
 RAMO="$(t_flatpak_campo "$ARQ" Branch)"
 REPO_RUNTIME="$(t_flatpak_campo "$ARQ" RuntimeRepo)"
-t_diz "flatpak ref: nome=$NOME titulo=$TITULO url=$URL ramo=$RAMO repo=$EH_REPO"
+t_diz "flatpak ref: name=$NOME title=$TITULO url=$URL branch=$RAMO repo=$EH_REPO"
 
 if [ -z "$NOME" ] && [ -z "$URL" ]; then
     # Before the reader's own complaint, which is true and useless when the
@@ -117,7 +117,7 @@ fi
 # The runtime repository named inside the file has to exist first, or the install
 # fails complaining about a runtime the owner has never heard of.
 if [ -n "$REPO_RUNTIME" ]; then
-    t_diz "garantindo o repositorio de runtime: $REPO_RUNTIME"
+    t_diz "ensuring the runtime repository: $REPO_RUNTIME"
     flatpak remote-add --if-not-exists --user flathub "$REPO_RUNTIME" >>"$LOG" 2>&1 ||
         t_como_root 'flatpak remote-add --if-not-exists flathub "$1"' "$REPO_RUNTIME" >>"$LOG" 2>&1
 fi
@@ -144,7 +144,7 @@ CODIGO=$?
 t_progresso_fecha
 
 if [ "$CODIGO" -ne 0 ] && [ -n "$NOME" ]; then
-    t_diz "instalacao por usuario falhou ($CODIGO); tentando para o sistema"
+    t_diz "per-user install failed ($CODIGO); trying for the system"
     t_progresso_abre "$(t_msg flatpak_tentando_todos)"
     t_como_root 'flatpak install --noninteractive --assumeyes --from "$1"' "$ARQ" >>"$SAIDA" 2>&1
     CODIGO=$?

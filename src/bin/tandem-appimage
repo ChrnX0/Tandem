@@ -29,7 +29,7 @@ CHAVE="$(printf '%s' "$PROG" | cksum | tr -d ' ')"
 if { exec 7> "$TANDEM_TRAVAS/appimage-$CHAVE.lock"; } 2>/dev/null; then
     flock -n 7 || { t_aviso "$(t_msg ja_abrindo)"; exit 0; }
 else
-    t_diz "nao consegui criar a trava; seguindo sem ela"
+    t_diz "could not create the lock; carrying on without it"
 fi
 
 # ------------------------------------------------- 1. Read it without running
@@ -68,7 +68,7 @@ if [ "$COMPLETO" = 0 ]; then
 fi
 
 MAQUINA="$(t_maquina_arch)"
-t_diz "appimage tipo $TIPO, arquitetura $ARCH, maquina $MAQUINA"
+t_diz "appimage type $TIPO, architecture $ARCH, machine $MAQUINA"
 if ! t_arch_compativel "$ARCH" "$MAQUINA"; then
     t_memoria_grava "$PROG" RESULTADO "arquitetura errada" 2>/dev/null
     t_memoria_grava "$PROG" LIMITE "arquitetura|$(t_texto_appimage_arch "$ARCH" "$MAQUINA")" 2>/dev/null
@@ -84,7 +84,7 @@ t_memoria_grava "$PROG" ARQUITETURA "$ARCH" 2>/dev/null
 # permission to do the one thing that lets that happen would be theatre.
 if [ ! -x "$PROG" ]; then
     if chmod +x -- "$PROG" 2>>"$LOG"; then
-        t_diz "permissao de execucao aplicada em $PROG"
+        t_diz "execute permission applied to $PROG"
     else
         t_erro "$(t_msg appimage_sem_permissao "$PROG")"
         exit 1
@@ -98,7 +98,7 @@ fi
 # back to the basename exactly like this.
 NOME_BONITO="$(t_appimage_nome "$PROG" 2>/dev/null)"
 [ -n "$NOME_BONITO" ] || NOME_BONITO="$(basename -- "${PROG%.*}")"
-t_diz "nome do programa: $NOME_BONITO"
+t_diz "program name: $NOME_BONITO"
 
 # --------------------------------------------- 3. What memory already knows
 # The only lesson worth keeping about an AppImage: whether this machine had to
@@ -106,7 +106,7 @@ t_diz "nome do programa: $NOME_BONITO"
 # the owner from watching an error window that Tandem already knows how to
 # avoid.
 MODO="$(t_memoria_le "$PROG" MODO 2>/dev/null)"
-[ "$MODO" = extrair ] && t_diz "memoria: esta maquina precisa do modo extrair"
+[ "$MODO" = extrair ] && t_diz "memory: this machine needs extract mode"
 INICIO=$SECONDS
 
 executar() {
@@ -129,7 +129,7 @@ EXTRA=""
 if [ "$MODO" = extrair ] && ! t_tem_fuse2; then
     EXTRA="--appimage-extract-and-run"
 elif [ "$MODO" = extrair ]; then
-    t_diz "memoria diz extrair, mas o FUSE existe agora: tentando o caminho rapido"
+    t_diz "memory says extract mode, but FUSE exists now: trying the fast path"
 fi
 CONTORNOU=0
 while :; do
@@ -185,7 +185,7 @@ while :; do
     # common AppImage failure on a current Zorin, and it needs nothing
     # installed: the runtime knows how to unpack itself instead of mounting.
     if [ -z "$EXTRA" ] && t_falha_fuse "$PARCIAL"; then
-        t_diz "falha de FUSE reconhecida; tentando de novo com --appimage-extract-and-run"
+        t_diz "FUSE failure recognised; retrying with --appimage-extract-and-run"
         rm -f "$PARCIAL"
         EXTRA="--appimage-extract-and-run"
         CONTORNOU=1
