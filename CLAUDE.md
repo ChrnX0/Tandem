@@ -2939,6 +2939,56 @@ takes the fd-7 lock, does a memory write, and asserts a second process is still
 BLOCKED (it fails on the old code). Suite 1826 passed / 0 / 1 skipped; both
 literal counters read 0.
 
+**v4.67 IS PUBLISHED** — 2026-08-25, tag `v4.67` at `a79a22a`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (585514 bytes, sha256 `e562c09f…`)
+and the generic bundle (585797 bytes, sha256 `35693f42…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible local build at the tag. It is the loop-correctness
+batch of the debug — three fixes, each reproduced before the fix. (1) **The "did
+it work?" question was gated on zenity ALONE**, but `t_pergunta` has drawn
+through the modern GTK4 face (`gui.py`) since 4.46 and only falls back to zenity.
+So on a Fedora/Arch generic-tarball install — GTK4/libadwaita present, zenity not
+a dependency there — a program that opened cleanly was NEVER asked whether it
+worked: `CONFIRMADO` never recorded, the strongest lesson (a human's word) never
+captured — the silent success this check exists to abolish, on exactly the
+install path the distro line invested in. The gate now mirrors what `t_pergunta`
+can actually do (modern face OR zenity). (2) **`tandem-snap` and `tandem-flatpak`
+were the only two install handlers not writing `VISTO_EM` on success** (the other
+seven do), so a snap or flatpak installed today showed up in `tandem historico`
+undated and sorted to the very bottom as the oldest thing Tandem had ever seen;
+both write it now, and a class guard asserts EVERY handler that records a success
+also dates it. (3) **The memory/list shortcut skipped the `.tandem-verbos`
+receipt on a wrong-bitness delivery** while the main loop writes it — so a
+32-bit-only verb was reinstalled on every open of a 64-bit program, the exact
+waste rule №4 forbids; the receipt is written now, exactly as the main loop does
+on that outcome (the shortcut checks a single `$ALVO`, so an unconditional write
+on outcome 2 mirrors the main loop, where a lone outcome-2 DLL leaves `FALTOU`
+empty and the receipt is written). Suite 1829 passed / 0 / 1 skipped; both
+literal counters read 0. **A release-infra note worth keeping:** the GitHub
+check-runs API showed both CI gate jobs "in_progress" for ~20 min after the job
+had actually finished — every substantive step (suite, lintian, reproducible
+build, real install/purge, translations, package) had passed and only the
+network-dependent ProofGate step read as pending; it had in fact completed in
+~5 min. The lag is in the API's check-run projection, not the runner. Confirm a
+gate's real state from `list_workflow_jobs` step timestamps, not the check-run
+`status`, before mistaking API lag for a hang.
+
+**THE PROFESSIONAL-DEBUG ARC status: v4.65 (reader hardening), v4.66
+(concurrency), v4.67 (loop correctness) are SHIPPED. v4.68 (list integrity +
+cleanup) is the last queued batch** — `tools/monta-lista.py` re-validating the
+machines and month fields against the intake (the read side trusting the write
+side is the class this file names), the `%`-doubling in `t_memoria_le`/
+`acao_memoria` (a stored `50%` reads back `50%%` — reproduced), the SEMENTE/SERIAL
+overwrite in `t_identidade_fixa` (a restored backup rewrites the seed of record
+with the new machine's while keeping the old GUID), and dead-code removal
+(`t_idioma_rtl`, `t_texto_pedir_envio`). The one owner-facing thread in v4.68:
+the dead `t_texto_pedir_envio` carries a work-machine send-consent caution
+(`pedir_envio_maquina_de_trabalho` — "this machine holds a protected prefix, so
+the person clicking may not be the one who decides what leaves it") that the LIVE
+consent path `t_envio_oferece` lacks. The rule-1-aligned move is to MOVE that
+caution into the live path rather than delete it with the dead function — a
+strict improvement over both dropping it and leaving it dead.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
