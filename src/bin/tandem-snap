@@ -74,7 +74,7 @@ ANTES_ATALHOS="$(t_atalhos_do_sistema)"
 # silent-success guard was defeated at the same time. See t_saida_abre.
 SAIDA="$(t_saida_abre snap)"
 t_progresso_abre "$(t_msg snap_instalando "$NOME")"
-t_como_root "snap install --dangerous -- '$ARQ'" >>"$SAIDA" 2>&1
+t_como_root 'snap install --dangerous -- "$1"' "$ARQ" >>"$SAIDA" 2>&1
 CODIGO=$?
 t_saida_fecha "$SAIDA"
 t_progresso_fecha

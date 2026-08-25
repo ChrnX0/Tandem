@@ -1,3 +1,55 @@
+tandem (4.63) unstable; urgency=high
+
+  * SECURITY. Two more code-execution holes of the exact class 4.41 closed -
+    untrusted data from the file the owner double-clicked reaching a
+    shell-interpreting context - at two sinks 4.41 did not cover. Both were
+    found by an audit sweep for the class and PoC-confirmed end to end on the
+    installed package, before the fix.
+    - A malicious `.deb`'s Package NAME was spliced UNQUOTED into a GNU `sed`
+      program (`s/\b$NOME\b//`, to drop the package's own name from the "comes
+      with it" list). GNU sed's `e` command executes shell, so a name like
+      `x//;e <command>` RAN `<command>` as the user, on the double click,
+      BEFORE any password. Fixed three ways: `debinfo.py` drops a Package name
+      that breaks Debian policy (`^[a-z0-9][a-z0-9+.-]+$`), so the handler
+      refuses it as "not a package" before the sed is ever reached; the name is
+      taken out of the list with a shell word loop, not a sed program; and the
+      loop runs under `set -f` so a stray glob cannot expand. PoC confirmed: a
+      `.deb` whose name carried `e touch FILE` created FILE on a plain
+      double-click before the fix, and nothing after it.
+    - A filename (or a `.flatpakref`'s `RuntimeRepo=` field) carrying a single
+      quote broke out of the quotes it was wrapped in inside a privileged
+      `sh -c` string and ran as ROOT under sudo/pkexec, after the owner
+      confirmed an install. `t_como_root` now takes the untrusted value as a
+      POSITIONAL ARGUMENT (`"$1"`), so `sh` treats it as data; the six
+      file-derived call sites (`.deb`, `.rpm`, `.snap`, and three `.flatpak`)
+      were converted. PoC confirmed: `a'$(touch FILE)'.deb` ran the command as
+      root before the fix, and nothing after it.
+    - Regression tests build the exact hostile packages and assert no command
+      runs, and that a legitimate name still reads - proven to catch the attack,
+      not vacuous.
+
+  * A silent path closed in `tandem-android`. It ended in `exec waydroid
+    show-full-ui`, and the panel launches that handler with its output on
+    `/dev/null` - so a failure of the UI launch AFTER the session was already
+    confirmed up left NOTHING to report: a click that did nothing, in silence.
+    It checks the launch now (`show-full-ui` is a prompt trigger that returns
+    quickly, so the check cannot cry wolf when the owner later closes Android)
+    and says "I could not start Android" - an existing message, already in all
+    seven languages - keeping waydroid's own output in the log.
+
+  * The clock check no longer cries wolf on release day. `t_relogio_veredito`
+    flagged the clock as wrong the instant "now" was BEFORE the software's
+    release date (read from the changelog) - but a correct clock can honestly
+    read a little before that precise UTC instant: a machine installing within
+    hours of the release, or a changelog dated a few hours ahead of the build.
+    Found by `tandem saude` reporting "the clock is wrong" on a machine whose
+    only fault was being a couple of hours behind the release timestamp. A day
+    of grace on the "behind" side stops the false alarm; the case the check
+    exists for - a dead CMOS battery - resets the clock by YEARS, so the grace
+    never hides it (pinned both ways).
+
+ -- Tandem <rockx0@gmail.com>  Tue, 25 Aug 2026 18:00:00 +0000
+
 tandem (4.62) unstable; urgency=medium
 
   * A native Arch package, so `.deb`-less distributions get an idiomatic way in.

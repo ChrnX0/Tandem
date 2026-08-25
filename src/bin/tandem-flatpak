@@ -82,7 +82,7 @@ $URL}")" "$(t_msg botao_adicionar_loja)" "$(t_msg botao_cancelar)"; then
         fi
     fi
     t_progresso_abre "$(t_msg flatpak_adicionando_loja)"
-    t_como_root "flatpak remote-add --if-not-exists --from '$ARQ'" >>"$LOG" 2>&1
+    t_como_root 'flatpak remote-add --if-not-exists --from "$1"' "$ARQ" >>"$LOG" 2>&1
     C=$?
     t_progresso_fecha
     if [ "$C" -eq 0 ]; then
@@ -119,7 +119,7 @@ fi
 if [ -n "$REPO_RUNTIME" ]; then
     t_diz "garantindo o repositorio de runtime: $REPO_RUNTIME"
     flatpak remote-add --if-not-exists --user flathub "$REPO_RUNTIME" >>"$LOG" 2>&1 ||
-        t_como_root "flatpak remote-add --if-not-exists flathub '$REPO_RUNTIME'" >>"$LOG" 2>&1
+        t_como_root 'flatpak remote-add --if-not-exists flathub "$1"' "$REPO_RUNTIME" >>"$LOG" 2>&1
 fi
 
 # Taken BEFORE the install, so the announcement below can name what appeared.
@@ -146,7 +146,7 @@ t_progresso_fecha
 if [ "$CODIGO" -ne 0 ] && [ -n "$NOME" ]; then
     t_diz "instalacao por usuario falhou ($CODIGO); tentando para o sistema"
     t_progresso_abre "$(t_msg flatpak_tentando_todos)"
-    t_como_root "flatpak install --noninteractive --assumeyes --from '$ARQ'" >>"$SAIDA" 2>&1
+    t_como_root 'flatpak install --noninteractive --assumeyes --from "$1"' "$ARQ" >>"$SAIDA" 2>&1
     CODIGO=$?
     t_progresso_fecha
 fi

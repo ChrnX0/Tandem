@@ -176,10 +176,25 @@ if [ -n "$REMOVIDOS" ]; then
     fi
 fi
 
-JUNTO="$(printf '%s\n' "$SIMULACAO" |
+# The list of packages apt would pull in ALONGSIDE this one, with the package's
+# own name taken out. $NOME comes from the .deb's Package field and used to be
+# spliced into a sed program (s/\b$NOME\b//) - and a hostile name like
+#   x//;e <command>
+# turned GNU sed's `e` command into code execution as the user, on the double
+# click, before the password was even asked (the Installed-Size class, one sink
+# on). The name is removed with a shell word loop now: a literal string compare,
+# never a program. `set -f` stops a name that slipped a glob character through
+# from expanding against the directory.
+LISTA_JUNTO="$(printf '%s\n' "$SIMULACAO" |
          sed -n '/The following NEW packages will be installed/,/^[0-9]* upgraded/p' |
-         grep '^  ' | tr -s ' \n' ' ' | sed "s/^ //;s/ $//;s/\b$NOME\b//" |
-         tr -s ' ')"
+         grep '^  ' | tr -s ' \n' ' ')"
+JUNTO=""
+set -f
+for _p in $LISTA_JUNTO; do
+    [ "$_p" = "$NOME" ] && continue
+    JUNTO="${JUNTO:+$JUNTO }$_p"
+done
+set +f
 
 # ---------------------------------------------------------- 5. Ask, install
 PERGUNTA="$(t_msg deb_instalar_pergunta "$NOME $VERSAO${DESCRICAO:+
@@ -230,7 +245,7 @@ t_progresso_abre "$(t_msg deb_instalando "$NOME")"
 # repositories, and dpkg does not. With dpkg the commonest outcome is a package
 # left half-installed, which is a worse state than not installed at all.
 t_como_root "export DEBIAN_FRONTEND=noninteractive
-apt-get install -y ${VOLTANDO:+--allow-downgrades }-- '$PACOTE_ARQ'" >>"$SAIDA" 2>&1
+apt-get install -y ${VOLTANDO:+--allow-downgrades }-- \"\$1\"" "$PACOTE_ARQ" >>"$SAIDA" 2>&1
 CODIGO=$?
 t_saida_fecha "$SAIDA"
 t_progresso_fecha
