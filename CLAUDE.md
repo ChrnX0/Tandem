@@ -3121,6 +3121,39 @@ marks (Windows four-pane window in blue, the Android robot head in green, the
 Linux Tux penguin), rendered through librsvg, replacing the emoji in the mockup.
 Suite 1854 passed / 0 / 1 skipped; both literal counters read 0.
 
+**v4.72 IS PUBLISHED** — 2026-08-26, tag `v4.72` at `b732845`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (594038 bytes, sha256 `1a8fac11…`)
+and the generic bundle (594404 bytes, sha256 `52f40959…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag. Coherence pass, part 3 — **the flagship:
+the main screen IS the library now.** The old zenity menu of commands — the one
+screen a shop owner who never opens a terminal saw, and the one the owner
+detested — is replaced by a One UI GTK4 window showing every installed program:
+the system's own mark on each row (the Windows four-pane window, the Android
+robot, the Linux Tux penguin, drawn fresh — no trademark art), a search,
+per-system filter chips, an Open button per program, and a bar to install a new
+file. It reads the 4.71 `t_biblioteca` engine, so no new source of truth. **The
+click contract is the health panel's, reused:** a click writes ONE token to a
+temp file — `abrir<TAB>fonte<TAB>lancador`, `instalar`, or `ferramentas` — and
+`acao_biblioteca` reads it; `gui.py` never launches or installs anything.
+`t_bib_lancador` decides how each opens (gio launch / flatpak run / snap run /
+waydroid app launch — pure, pinned by a test) and `t_bib_abrir` runs it detached
+with the target as ONE quoted argument, never concatenated into a command.
+**Nothing is lost:** a "Ferramentas" button opens the old menu (doctor, backup,
+ports one tap away), and with no GTK4 the whole screen falls back to that menu →
+the help text, the same fallback the error/question/text/progress windows share.
+The chip system names live in `gui.py` (a category label, same in every
+language); only the 6 translating labels go through the catalogue, translated in
+all seven. **Rendered under Xvfb against the approved mockup** (the window, the
+three marks through librsvg, chips, search, the Open/Install/Ferramentas
+actions); `gui.py home` with no display refuses fast (rc 2, never hangs). Suite
+1865 passed / 0 / 1 skipped; both literal counters read 0; 879 messages in all
+seven languages, 0 untranslated, 0 fuzzy. **The main-menu → library replacement
+the coherence arc set out to do is DONE.** What remains is enhancement, not
+coherence: the per-program update DOT and the Atualizar button (green/amber/gray
+from apt/flatpak/snap update detection) — the enrichment step, a natural v4.73,
+now that the screen and the enumeration both exist.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
