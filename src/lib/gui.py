@@ -68,6 +68,60 @@ def _write_action(path, token):
         return False
 
 
+# Each system's own mark, drawn fresh (no trademark art copied): the Windows
+# four-pane window, the Android robot head, and the Linux Tux penguin. Kept as
+# small SVG strings and rendered through the same librsvg loader the desktop uses
+# for icons, so a program's row shows what it is at a glance. The owner rejected
+# emoji here ("o android parece um emoji... o linux deveria ser um pinguim").
+_GLYPHS = {
+    "windows": (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#3f6ef0">'
+        '<rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.4"/>'
+        '<rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.4"/>'
+        '<rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.4"/>'
+        '<rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.4"/></g></svg>'),
+    "android": (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+        '<g stroke="#1ec46a" stroke-width="1.6" stroke-linecap="round">'
+        '<line x1="8" y1="6.8" x2="6.4" y2="4.3"/><line x1="16" y1="6.8" x2="17.6" y2="4.3"/></g>'
+        '<path fill="#1ec46a" d="M5 13.6a7 7 0 0 1 14 0z"/>'
+        '<circle cx="9.7" cy="10.7" r="1" fill="#fff"/><circle cx="14.3" cy="10.7" r="1" fill="#fff"/></svg>'),
+    "linux": (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+        '<path fill="#2f2f33" stroke="#7c8698" stroke-width=".4" d="M12 2.4c2.5 0 4.2 1.9 4.2 4.7 0 1-.2 1.6-.2 2.5 0 1.9 2.3 3.6 2.9 6 .4 1.8-.3 2.8-1.5 2.9l.6 1.8c.1.4-.2.8-.6.8h-3c-.3 0-.5-.1-.6-.4-.3.3-.8.4-1.7.4s-1.4-.1-1.7-.4c-.1.3-.3.4-.6.4h-3c-.4 0-.7-.4-.6-.8l.6-1.8c-1.2-.1-1.9-1.1-1.5-2.9.6-2.4 2.9-4.1 2.9-6 0-.9-.2-1.5-.2-2.5C7.8 4.3 9.5 2.4 12 2.4z"/>'
+        '<path fill="#fff" d="M12 9.2c1.8 0 3 1.9 3 4.6 0 2.4-1 4.4-3 4.4s-3-2-3-4.4c0-2.7 1.2-4.6 3-4.6z"/>'
+        '<circle cx="10.6" cy="6.6" r=".95" fill="#fff"/><circle cx="13.4" cy="6.6" r=".95" fill="#fff"/>'
+        '<circle cx="10.7" cy="6.7" r=".42" fill="#1a1a1a"/><circle cx="13.3" cy="6.7" r=".42" fill="#1a1a1a"/>'
+        '<path fill="#f7a838" d="M10.9 7.7h2.2l-1.1 1.5z"/>'
+        '<path fill="#f7a838" d="M9.8 20.4l1.6-1.1.3 1.6zM14.2 20.4l-1.6-1.1-.3 1.6z"/></svg>'),
+}
+
+
+# The chip labels for the systems are their names - the same in every language,
+# so they live here (a descriptive category label), not in the message
+# catalogues, and the shell passes only the labels that actually translate.
+_PLATFORM_LABEL = {"windows": "Windows", "android": "Android", "linux": "Linux"}
+
+
+def _platform_image(kind, size=20):
+    """A Gtk.Image of a system's mark at `size` px, or an empty image if the
+    kind is unknown or the loader is unavailable - never a traceback."""
+    from gi.repository import Gtk
+    try:
+        from gi.repository import GdkPixbuf, Gio, GLib
+        svg = _GLYPHS.get(kind)
+        if not svg:
+            return Gtk.Image()
+        from gi.repository import Gdk
+        stream = Gio.MemoryInputStream.new_from_bytes(GLib.Bytes(svg.encode()))
+        pb = GdkPixbuf.Pixbuf.new_from_stream_at_scale(stream, size, size, True)
+        img = Gtk.Image.new_from_paintable(Gdk.Texture.new_for_pixbuf(pb))
+        img.set_pixel_size(size)
+        return img
+    except Exception:
+        return Gtk.Image()
+
+
 def _imports_ok():
     import gi
     gi.require_version("Gtk", "4.0")
@@ -126,6 +180,11 @@ headerbar { background: transparent; box-shadow: none; }
 .oneui-mono textview, .oneui-mono text { font-family: monospace; font-size: 13px; color: @CTEXT@; }
 .oneui-progress > trough { min-height: 14px; border-radius: 999px; background: @GHOSTBG@; }
 .oneui-progress > trough > progress { min-height: 14px; border-radius: 999px; background: linear-gradient(90deg,#2f6bff 0%,#12b6c8 100%); }
+.oneui-search { border-radius: 999px; min-height: 40px; }
+.oneui-chip { border-radius: 999px; padding: 7px 18px; font-weight: 600; background: @GHOSTBG@; color: @GHOSTFG@; box-shadow: none; }
+.oneui-chip:checked { background: linear-gradient(135deg,#2f6bff 0%,#12b6c8 100%); color: #ffffff; }
+.oneui-toolslink { background: none; box-shadow: none; color: @SUB@; font-weight: 600; padding: 6px 14px; border-radius: 999px; }
+.oneui-toolslink:hover { background: @GHOSTBG@; }
 """
 
 
@@ -442,6 +501,163 @@ def _progress_window(app, title, result):
     threading.Thread(target=_reader, daemon=True).start()
 
 
+def _home_window(app, title, records, action_file, result, msgs):
+    """The Tandem main screen: the shop's library of programs, not a menu of
+    commands. records is a list of (tipo, nome, fonte, lancador, atualizavel).
+    Each row shows the system's own mark, the name, where it came from, and an
+    Open button; a search box and per-system chips filter the list; a bottom bar
+    installs a new file. A click writes ONE token to action_file and closes, the
+    same contract the health panel uses - abrir<TAB>fonte<TAB>lancador, instalar,
+    or ferramentas - so the shell reads the file and does the rest. gui.py never
+    launches or installs anything itself.
+    """
+    from gi.repository import Gtk, GLib
+
+    win = _build(app, title, resizable=True)
+    win.set_default_size(680, 620)
+
+    def choose(token):
+        _write_action(action_file, token)
+        win.close()
+
+    root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    root.append(_flat_header())
+
+    outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+    outer.set_margin_top(2)
+    outer.set_margin_start(22)
+    outer.set_margin_end(22)
+
+    # Title + count.
+    head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+    t = Gtk.Label(label=title, xalign=0.0, hexpand=True)
+    t.add_css_class("oneui-title")
+    head.append(t)
+    sub = Gtk.Label(label=(msgs.get("count") or str(len(records))), xalign=1.0)
+    sub.add_css_class("oneui-sub")
+    sub.set_valign(Gtk.Align.END)
+    head.append(sub)
+    outer.append(head)
+
+    # Search.
+    search = Gtk.SearchEntry()
+    search.set_placeholder_text(msgs.get("search", "Search a program"))
+    search.add_css_class("oneui-search")
+    outer.append(search)
+
+    # System filter chips. "todos" plus one per system actually present.
+    chips = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    state = {"tipo": ""}
+    chip_btns = []
+
+    def make_chip(tipo, label):
+        b = Gtk.ToggleButton(label=label)
+        b.add_css_class("oneui-chip")
+        chip_btns.append((b, tipo))
+        chips.append(b)
+        return b
+
+    make_chip("", msgs.get("all", "All")).set_active(True)
+    present = []
+    for r in records:
+        if r[0] not in present:
+            present.append(r[0])
+    for tp in ("windows", "android", "linux"):
+        if tp in present:
+            make_chip(tp, _PLATFORM_LABEL.get(tp, tp))
+    outer.append(chips)
+
+    root.append(outer)
+
+    # The list itself, scrollable.
+    scr = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
+    listbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+    listbox.set_margin_top(6)
+    listbox.set_margin_bottom(20)
+    listbox.set_margin_start(22)
+    listbox.set_margin_end(22)
+
+    rows = []   # (widget, tipo, name_lower)
+    for tipo, nome, fonte, lancador, atualizavel in records:
+        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        card.add_css_class("oneui-card")
+        card.add_css_class("oneui-card-pad")
+
+        card.append(_platform_image(tipo, 30))
+
+        meta = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1, hexpand=True)
+        nm = Gtk.Label(label=nome, xalign=0.0)
+        nm.add_css_class("oneui-cardtext")
+        nm.set_ellipsize(3)  # PANGO_ELLIPSIZE_END
+        meta.append(nm)
+        sb = Gtk.Label(label=fonte, xalign=0.0)
+        sb.add_css_class("oneui-sub")
+        meta.append(sb)
+        card.append(meta)
+
+        btn = Gtk.Button(label=msgs.get("open", "Open"))
+        btn.add_css_class("oneui-pill")
+        btn.add_css_class("oneui-ghost")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b, f=fonte, l=lancador: choose("abrir\t%s\t%s" % (f, l)))
+        card.append(btn)
+
+        listbox.append(card)
+        rows.append((card, tipo, nome.lower()))
+
+    scr.set_child(listbox)
+    root.append(scr)
+
+    # Bottom primary: install or open a file.
+    bar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    bar.set_margin_top(6)
+    bar.set_margin_bottom(16)
+    bar.set_margin_start(22)
+    bar.set_margin_end(22)
+    prim = Gtk.Button(label=msgs.get("install", "Install or open a file"))
+    prim.add_css_class("oneui-pill")
+    prim.add_css_class("oneui-primary")
+    prim.connect("clicked", lambda _b: choose("instalar"))
+    bar.append(prim)
+    # Everything the old menu did that is not a program - doctor, backup, ports,
+    # health - still has a home, one tap away, so the library replaces the menu
+    # without taking anything from the one person who cannot get it from a
+    # terminal. The shell opens the tools list on this token.
+    tools = Gtk.Button(label=msgs.get("tools", "Tools"))
+    tools.add_css_class("oneui-toolslink")
+    tools.set_halign(Gtk.Align.CENTER)
+    tools.set_margin_top(10)
+    tools.connect("clicked", lambda _b: choose("ferramentas"))
+    bar.append(tools)
+    root.append(bar)
+
+    # Filtering: search text AND the active system chip.
+    def apply_filter(*_a):
+        q = search.get_text().strip().lower()
+        tp = state["tipo"]
+        for w, wtipo, wname in rows:
+            w.set_visible((not tp or wtipo == tp) and (not q or q in wname))
+
+    search.connect("search-changed", apply_filter)
+
+    def on_chip(btn, tipo):
+        if not btn.get_active():
+            btn.set_active(True)   # a chip cannot be toggled off; one is always on
+            return
+        state["tipo"] = tipo
+        for b, _tp in chip_btns:
+            if b is not btn:
+                b.set_active(False)
+        apply_filter()
+
+    for b, tp in chip_btns:
+        b.connect("toggled", on_chip, tp)
+
+    win.set_content(root)
+    win.present()
+    result["code"] = 0
+
+
 def _run(build_fn):
     from gi.repository import Adw, Gio
     result = {"code": CANT_DRAW}
@@ -516,6 +732,28 @@ def main():
         if kind == "progress":
             title = argv[1] if len(argv) > 1 else "Tandem"
             return _run(lambda a, r: _progress_window(a, title, r))
+
+        if kind == "home":
+            title = argv[1] if len(argv) > 1 else "Tandem"
+            action_file = argv[2] if len(argv) > 2 and argv[2] else None
+            # Labels come tab-joined in one argument, in a fixed order, so they
+            # arrive translated without a pile of positional arguments.
+            keys = ["all", "open", "install", "search", "count", "tools"]
+            labels = (argv[3] if len(argv) > 3 else "").split("\t")
+            msgs = {}
+            for i, k in enumerate(keys):
+                if i < len(labels) and labels[i]:
+                    msgs[k] = labels[i]
+            records = []
+            for line in sys.stdin.read().splitlines():
+                if not line.strip():
+                    continue
+                parts = line.split("\t")
+                while len(parts) < 5:
+                    parts.append("")
+                records.append(tuple(parts[:5]))
+            return _run(lambda a, r: _home_window(
+                a, title, records, action_file, r, msgs))
     except Exception:
         return CANT_DRAW
     return CANT_DRAW

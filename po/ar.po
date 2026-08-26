@@ -6082,3 +6082,27 @@ msgstr ""
 msgctxt "mem_campo_versao_wine"
 msgid "Wine it opened under: "
 msgstr "‏Wine الذي فُتح به: "
+
+msgctxt "bib_todos"
+msgid "All"
+msgstr "الكل"
+
+msgctxt "bib_abrir"
+msgid "Open"
+msgstr "فتح"
+
+msgctxt "bib_instalar"
+msgid "Install or open a file"
+msgstr "تثبيت ملف أو فتحه"
+
+msgctxt "bib_buscar"
+msgid "Search a program"
+msgstr "ابحث عن برنامج"
+
+msgctxt "bib_ferramentas"
+msgid "Tools"
+msgstr "أدوات"
+
+msgctxt "bib_contagem"
+msgid "Programs: {1}"
+msgstr "البرامج: {1}"

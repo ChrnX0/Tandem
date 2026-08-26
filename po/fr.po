@@ -6147,3 +6147,27 @@ msgstr ""
 msgctxt "mem_campo_versao_wine"
 msgid "Wine it opened under: "
 msgstr "Wine avec lequel il s'est ouvert : "
+
+msgctxt "bib_todos"
+msgid "All"
+msgstr "Tous"
+
+msgctxt "bib_abrir"
+msgid "Open"
+msgstr "Ouvrir"
+
+msgctxt "bib_instalar"
+msgid "Install or open a file"
+msgstr "Installer ou ouvrir un fichier"
+
+msgctxt "bib_buscar"
+msgid "Search a program"
+msgstr "Rechercher un programme"
+
+msgctxt "bib_ferramentas"
+msgid "Tools"
+msgstr "Outils"
+
+msgctxt "bib_contagem"
+msgid "Programs: {1}"
+msgstr "Programmes : {1}"

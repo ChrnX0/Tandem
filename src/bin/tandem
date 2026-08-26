@@ -2151,6 +2151,48 @@ acao_painel() {
     done
 }
 
+# The main screen: the shop's library of programs, not a menu of commands. It
+# reads t_biblioteca (every installed program, tagged by system) and shows it in
+# the modern GTK4 window - the systems' own marks, a search, per-system chips, an
+# Open button per program, and a bar to install a new file. A click comes back
+# through a temp file (the same contract the health panel uses): "abrir<TAB>fonte
+# <TAB>lancador", "instalar", or "ferramentas". With no modern face it falls back
+# to the old menu, which itself falls back to the help text - nothing is lost.
+acao_biblioteca() {
+    local registros n acaofile acao verbo f l labels tab
+    tab="$(printf '\t')"
+    if ! { t_tem_gui && t_gui_moderno; }; then
+        acao_painel
+        return $?
+    fi
+    registros="$(t_biblioteca 2>/dev/null)"
+    n="$(printf '%s' "$registros" | grep -c .)"
+    acaofile="$(mktemp 2>/dev/null || true)"
+    # Only the labels that translate; the system names live in gui.py.
+    labels="$(printf '%s\t%s\t%s\t%s\t%s\t%s' \
+        "$(t_msg bib_todos)" "$(t_msg bib_abrir)" "$(t_msg bib_instalar)" \
+        "$(t_msg bib_buscar)" "$(t_msg bib_contagem "$n")" \
+        "$(t_msg bib_ferramentas)")"
+    printf '%s\n' "$registros" | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
+        home "Tandem" "$acaofile" "$labels" >/dev/null 2>&1
+    acao="$(cat "$acaofile" 2>/dev/null)"; rm -f "$acaofile" 2>/dev/null
+    verbo="${acao%%"$tab"*}"
+    case "$verbo" in
+        abrir)
+            f="$(printf '%s' "$acao" | cut -f2)"
+            l="$(printf '%s' "$acao" | cut -f3-)"
+            t_bib_abrir "$f" "$l" ;;
+        instalar)
+            f="$(zenity --file-selection --title="$(t_msg pan_escolha_arquivo)" \
+                 --file-filter="$(t_msg pan_filtro_programas) | $TANDEM_GLOBS" \
+                 --file-filter="$(t_msg pan_filtro_todos) | *" 2>/dev/null)" || return 0
+            acao_install "$f" ;;
+        ferramentas)
+            acao_painel ;;
+    esac
+    return 0
+}
+
 # ------------------------------------------------------------------- tema
 #
 # The look is the owner's choice, with the system as the default. A shop
@@ -2221,7 +2263,8 @@ if [ -n "$VERSAO_NOVA" ] &&
 fi
 
 case "${1:-}" in
-    ""|painel|panel)      acao_painel ;;
+    ""|inicio|biblioteca|home|library) acao_biblioteca ;;
+    painel|panel)         acao_painel ;;
     install|instalar|abrir) shift; acao_install "$@" ;;
     preparar|setup)       acao_preparar ;;
     programas|apps)       shift; acao_programas "$@" ;;

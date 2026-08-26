@@ -3669,3 +3669,21 @@ decisão é sua. Para desfazer depois:  sudo apt-mark unhold wine
 
 @mem_campo_versao_wine
 Wine com que abriu: 
+
+@bib_todos
+Todos
+
+@bib_abrir
+Abrir
+
+@bib_instalar
+Instalar ou abrir um arquivo
+
+@bib_buscar
+Buscar um programa
+
+@bib_ferramentas
+Ferramentas
+
+@bib_contagem
+Programas: {1}

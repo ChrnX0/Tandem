@@ -6042,3 +6042,27 @@ msgstr ""
 msgctxt "mem_campo_versao_wine"
 msgid "Wine it opened under: "
 msgstr "जिस Wine पर खुला: "
+
+msgctxt "bib_todos"
+msgid "All"
+msgstr "सभी"
+
+msgctxt "bib_abrir"
+msgid "Open"
+msgstr "खोलें"
+
+msgctxt "bib_instalar"
+msgid "Install or open a file"
+msgstr "फ़ाइल इंस्टॉल करें या खोलें"
+
+msgctxt "bib_buscar"
+msgid "Search a program"
+msgstr "प्रोग्राम खोजें"
+
+msgctxt "bib_ferramentas"
+msgid "Tools"
+msgstr "उपकरण"
+
+msgctxt "bib_contagem"
+msgid "Programs: {1}"
+msgstr "प्रोग्राम: {1}"

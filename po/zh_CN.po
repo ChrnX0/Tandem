@@ -5895,3 +5895,27 @@ msgstr ""
 msgctxt "mem_campo_versao_wine"
 msgid "Wine it opened under: "
 msgstr "打开时的 Wine："
+
+msgctxt "bib_todos"
+msgid "All"
+msgstr "全部"
+
+msgctxt "bib_abrir"
+msgid "Open"
+msgstr "打开"
+
+msgctxt "bib_instalar"
+msgid "Install or open a file"
+msgstr "安装或打开文件"
+
+msgctxt "bib_buscar"
+msgid "Search a program"
+msgstr "搜索程序"
+
+msgctxt "bib_ferramentas"
+msgid "Tools"
+msgstr "工具"
+
+msgctxt "bib_contagem"
+msgid "Programs: {1}"
+msgstr "程序：{1}"

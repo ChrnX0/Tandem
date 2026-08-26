@@ -3649,3 +3649,21 @@ it later:  sudo apt-mark unhold wine
 
 @mem_campo_versao_wine
 Wine it opened under: 
+
+@bib_todos
+All
+
+@bib_abrir
+Open
+
+@bib_instalar
+Install or open a file
+
+@bib_buscar
+Search a program
+
+@bib_ferramentas
+Tools
+
+@bib_contagem
+Programs: {1}
