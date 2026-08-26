@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.70"
+TANDEM_VERSAO="4.71"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5579,6 +5579,121 @@ t_atalhos_appimage() {
         printf '%s\n' "$d"
     done
     return 0
+}
+
+# ---- The program library -------------------------------------------------
+# Every installed program Tandem can see, tagged by which system it belongs to,
+# so the main screen can show them all in one place instead of a menu of
+# commands. Each line is ONE program, TAB-separated:
+#
+#   tipo <TAB> nome <TAB> fonte <TAB> lancador <TAB> atualizavel
+#
+# tipo         windows | android | linux   (which system's icon it gets)
+# nome         the display name
+# fonte        Wine | AppImage | Waydroid | Flatpak | snap | sistema
+# lancador     what OPENS it: a .desktop path (gio launch), a flatpak/snap id,
+#              or an Android package name
+# atualizavel  sim  - Tandem can update this one on its own (flatpak, snap)
+#              nao  - it updates itself, or the system does (Wine, AppImage,
+#                     Android, distro packages)
+#
+# The values are on-disk/interchange format, English and lowercase, like the
+# memory-file tokens - never translated. Every external tool and directory is
+# overridable so the whole engine is testable with stubs and fixtures, the same
+# way tandem-deb tests apt.
+
+# A field carries no tab and no newline - they are the record separators.
+t_bib_limpa() { printf '%s' "$1" | tr '\t\n' '  '; }
+
+t_bib_windows() {
+    local d n
+    while IFS= read -r d; do
+        [ -n "$d" ] || continue
+        n="$(t_nome_do_atalho "$d")"
+        printf 'windows\t%s\tWine\t%s\tnao\n' "$(t_bib_limpa "$n")" "$d"
+    done <<< "$(t_atalhos_nossos)"
+}
+
+t_bib_appimage() {
+    local d n
+    while IFS= read -r d; do
+        [ -n "$d" ] || continue
+        n="$(t_nome_do_atalho "$d")"
+        printf 'linux\t%s\tAppImage\t%s\tnao\n' "$(t_bib_limpa "$n")" "$d"
+    done <<< "$(t_atalhos_appimage)"
+}
+
+t_bib_flatpak() {
+    command -v flatpak >/dev/null 2>&1 || return 0
+    # application id and human name, one per line; a name can be empty on very
+    # old flatpak, and then the id stands in for it.
+    flatpak list --app --columns=application,name 2>/dev/null |
+        while IFS="$(printf '\t')" read -r id nome; do
+            [ -n "$id" ] || continue
+            [ -n "$nome" ] || nome="$id"
+            printf 'linux\t%s\tFlatpak\t%s\tsim\n' "$(t_bib_limpa "$nome")" "$id"
+        done
+}
+
+t_bib_snap() {
+    command -v snap >/dev/null 2>&1 || return 0
+    # first line is a header; the first column is the snap name.
+    snap list 2>/dev/null | awk 'NR > 1 { print $1 }' |
+        while IFS= read -r nome; do
+            [ -n "$nome" ] || continue
+            printf 'linux\t%s\tsnap\t%s\tsim\n' "$(t_bib_limpa "$nome")" "$nome"
+        done
+}
+
+t_bib_android() {
+    command -v waydroid >/dev/null 2>&1 || return 0
+    # third-party packages only (-3): the shop's apps, not Android's own. Needs a
+    # running session; with none, pm prints nothing and this yields nothing.
+    waydroid shell -- pm list packages -3 2>/dev/null | sed 's/^package://' |
+        while IFS= read -r pkg; do
+            [ -n "$pkg" ] || continue
+            printf 'android\t%s\tWaydroid\t%s\tnao\n' "$(t_bib_limpa "$pkg")" "$pkg"
+        done
+}
+
+t_bib_sistema() {
+    # The distro's own GUI apps - the ones with a .desktop a launcher would show.
+    # NOT every dpkg package: a program the owner recognizes, not a library. What
+    # is left out, and why: ours and Wine (listed already, and by their own
+    # rules); flatpak and snap exports (their own tools list them, so counting
+    # the .desktop too would double them); anything NoDisplay/Hidden or without a
+    # Name (a helper, not a program); and non-Application entries.
+    local dirs f base n
+    dirs="${TANDEM_APPS_SISTEMA:-/usr/share/applications}"
+    for d in $dirs; do
+        [ -d "$d" ] || continue
+        for f in "$d"/*.desktop; do
+            [ -f "$f" ] || continue
+            base="$(basename -- "$f")"
+            case "$base" in tandem*|wine*) continue ;; esac
+            grep -qE '^Type=Application' "$f" 2>/dev/null || continue
+            grep -qiE '^(NoDisplay|Hidden)=true' "$f" 2>/dev/null && continue
+            grep -qE '^X-Flatpak=|^X-SnapInstanceName=' "$f" 2>/dev/null && continue
+            n="$(t_nome_do_atalho "$f")"
+            [ "$n" = "$base" ] && continue   # no Name= line at all -> not a program to show
+            [ -n "$n" ] || continue
+            printf 'linux\t%s\tsistema\t%s\tnao\n' "$(t_bib_limpa "$n")" "$f"
+        done
+    done
+}
+
+# The whole library, sorted by name so the screen reads alphabetically. Each
+# source guards on its own tool being present, so a machine with no flatpak, no
+# snap or no waydroid simply contributes nothing from that source.
+t_biblioteca() {
+    {
+        t_bib_windows
+        t_bib_appimage
+        t_bib_flatpak
+        t_bib_snap
+        t_bib_android
+        t_bib_sistema
+    } | awk 'NF' | LC_ALL=C sort -f -t"$(printf '\t')" -k2,2
 }
 
 # The last lines the PROGRAM printed, with Tandem's own lines taken out.

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2631021585 5935" "$soma_esperados"
+      "4071210236 6069" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -444,6 +444,41 @@ fi
 
 # One program's memory must not leak into another's.
 equal "each program has its own memory" "" "$(t_memoria_le "$MEM_B" RESOLVERAM 2>/dev/null)"
+
+section "the program library: everything installed, one place, tagged by system"
+
+# 4.71: t_biblioteca lists every installed program with the system it belongs to,
+# how to open it, and whether Tandem can update it - the data the new main screen
+# is built from. Every source guards on its own tool, and the tools and dirs are
+# overridable, so the whole engine is testable with stubs and fixtures.
+BIB="$TMPROOT/bib"; mkdir -p "$BIB/bin" "$BIB/sys" "$BIB/home"
+printf '#!/bin/sh\nprintf "org.moz.ff\\tFirefox\\n"\n'            > "$BIB/bin/flatpak"
+printf '#!/bin/sh\nprintf "Name Ver Rev Tr Pub Notes\\nvlc 3 1 latest v -\\n"\n' > "$BIB/bin/snap"
+printf '#!/bin/sh\nprintf "package:com.x.y\\n"\n'                 > "$BIB/bin/waydroid"
+chmod +x "$BIB/bin"/*
+printf '[Desktop Entry]\nType=Application\nName=LibreOffice Calc\nExec=lo\n'      > "$BIB/sys/lo.desktop"
+printf '[Desktop Entry]\nType=Application\nName=Escondido\nNoDisplay=true\n'      > "$BIB/sys/h.desktop"
+printf '[Desktop Entry]\nType=Application\nName=FF\nX-Flatpak=org.moz.ff\n'       > "$BIB/sys/ff.desktop"
+bib_run() {
+    env HOME="$BIB/home" PATH="$BIB/bin:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_APPS_SISTEMA="$BIB/sys" bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1"'' 2>/dev/null
+}
+pipe5() { awk -F'\t' 'NR==1{print $1"|"$2"|"$3"|"$4"|"$5}'; }
+equal "a flatpak app is linux, keyed by its id, and Tandem can update it" \
+      "linux|Firefox|Flatpak|org.moz.ff|sim" "$(bib_run 't_bib_flatpak' | pipe5)"
+equal "a snap app skips the header line and is updatable" \
+      "linux|vlc|snap|vlc|sim" "$(bib_run 't_bib_snap' | pipe5)"
+equal "an android app comes from waydroid and Tandem does not update it" \
+      "android|com.x.y|Waydroid|com.x.y|nao" "$(bib_run 't_bib_android' | pipe5)"
+equal "the system scan lists exactly the one visible program" \
+      "1" "$(bib_run 't_bib_sistema' | grep -c .)"
+equal "  and it is the real app, not the NoDisplay or the flatpak-exported one" \
+      "linux|LibreOffice Calc|sistema" \
+      "$(bib_run 't_bib_sistema' | awk -F'\t' 'NR==1{print $1"|"$2"|"$3}')"
+equal "the whole library counts every source exactly once" \
+      "4" "$(bib_run 't_biblioteca' | grep -c .)"
+equal "a flatpak app appears once, never doubled by its own .desktop export" \
+      "1" "$(bib_run 't_biblioteca' | grep -c 'Firefox')"
 
 section "evidence gate (proofgate)"
 
