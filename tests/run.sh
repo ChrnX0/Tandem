@@ -2027,6 +2027,39 @@ else
          "$(grep -E 'java-archive|appimage' "$CASA_REP/.config/mimeapps.list" 2>/dev/null | tr '\n' ' ')"
 fi
 
+# 4.69 coherence: the repair report reads like the rest of the interface. It used
+# to call zenity --info directly - the one screen still drawn in the old box while
+# every other window had moved to the One UI face. Now it goes through t_texto,
+# the shared path (modern window -> zenity text view -> plain output), so it can
+# never vanish silently AND it looks like everything else.
+REP_SRC="$(cat "$ROOT/src/bin/tandem-repair")"
+contem "the repair report goes through t_texto, the shared viewer" \
+       '| t_texto' "$REP_SRC"
+if grep -vE '^[[:space:]]*#' "$ROOT/src/bin/tandem-repair" | grep -q 'zenity --info'; then
+    fail "the repair report no longer calls zenity --info directly" \
+         "no direct zenity --info" "still present"
+else
+    pass "the repair report no longer calls zenity --info directly"
+fi
+
+# 4.69: the app icon is the chevron mark on the app's own One UI accent, so the
+# icon and the interface read as one product (the old bicycle predated the
+# redesign and used colours the interface no longer has). Guard that it stays a
+# well-formed SVG on the accent palette, so a future edit cannot silently ship a
+# broken or off-brand icon.
+if command -v xmllint >/dev/null 2>&1; then
+    if xmllint --noout "$ROOT/src/icons/tandem.svg" 2>/dev/null; then
+        pass "the app icon is a well-formed SVG"
+    else
+        fail "the app icon is a well-formed SVG" "valid XML" "malformed"
+    fi
+else
+    skip "the app icon is a well-formed SVG" "xmllint not installed"
+fi
+ICON_SRC="$(cat "$ROOT/src/icons/tandem.svg")"
+contem "the icon carries the interface's blue accent"  '#2f6bff' "$ICON_SRC"
+contem "the icon carries the interface's teal accent"  '#12b6c8' "$ICON_SRC"
+
 section "no message gets lost"
 
 t_tem_gui; equal "without DISPLAY there is no graphical interface" "1" "$?"

@@ -1,3 +1,23 @@
+tandem (4.69) unstable; urgency=medium
+
+  * Coherence pass, part 1: the new face reaches the last small places, and the
+    app gets its own icon.
+    - A new app icon: two chevrons moving forward together - "in tandem",
+      without the literal bicycle - on the app's own One UI accent (the same
+      blue->teal the interface uses for its primary action). The old icon was
+      two bicycle wheels in blue and green, drawn before the redesign, so it
+      clashed with the face the rest of the app now wears. Icon and interface
+      are one product now.
+    - The `tandem repair` report went through a bare `zenity --info` box - the
+      one screen still drawn in the old style while every other window had moved
+      to the modern One UI face. It goes through t_texto now, the shared path
+      the rest of the interface already uses (the modern window first, then
+      zenity's text view, then plain output), so the report reads like the rest
+      and still never vanishes without a word - t_texto prints to a terminal, a
+      pipe or a file before it ever reaches for a window.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 26 Aug 2026 19:26:16 +0000
+
 tandem (4.68) unstable; urgency=medium
 
   * List integrity, memory/identity correctness, and cleanup - the last batch of

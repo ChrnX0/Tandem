@@ -1,20 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Tandem app icon: two chevrons moving forward together - "in tandem" -
+       without the literal bicycle. On the app's own One UI accent (the same
+       blue->teal of gui.py's .oneui-primary), so icon and interface are one. -->
   <defs>
-    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#4f8cff"/>
-      <stop offset="1" stop-color="#2f5fd0"/>
-    </linearGradient>
-    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#5fd88a"/>
-      <stop offset="1" stop-color="#2fa862"/>
+    <linearGradient id="bt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2f6bff"/>
+      <stop offset="1" stop-color="#12b6c8"/>
     </linearGradient>
   </defs>
-  <!-- duas rodas em tandem: os dois sistemas girando juntos -->
-  <circle cx="42" cy="76" r="30" fill="none" stroke="url(#a)" stroke-width="9"/>
-  <circle cx="90" cy="76" r="30" fill="none" stroke="url(#b)" stroke-width="9"/>
-  <path d="M42 76 L66 34 L90 76" fill="none" stroke="#8a94a6" stroke-width="8"
-        stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="66" cy="34" r="8" fill="#8a94a6"/>
-  <circle cx="42" cy="76" r="6" fill="url(#a)"/>
-  <circle cx="90" cy="76" r="6" fill="url(#b)"/>
+  <rect width="128" height="128" rx="30" fill="url(#bt)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M42 40 L66 64 L42 88"/>
+    <path d="M68 40 L92 64 L68 88" stroke="#dbe8ff"/>
+  </g>
 </svg>

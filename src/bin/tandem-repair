@@ -193,14 +193,12 @@ if [ -n "${TANDEM_SILENCIOSO:-}" ]; then
     exit 0
 fi
 
-# Terminal first; otherwise the window; if the window does not open, standard
-# output. Before, with zenity installed and no display, this report vanished
-# without a word.
-if [ -t 1 ]; then
-    printf '%s\n' "$RELATORIO"
-elif ! { t_tem_gui && command -v zenity >/dev/null 2>&1 &&
-         zenity --info --no-wrap --title="Tandem" --text="$RELATORIO
+# The report goes through t_texto - the one path that tries the modern One UI
+# window first, then zenity's text view, then plain output. Before, this opened
+# the old zenity info box directly, so the repair report was the one screen still
+# drawn in the old style while the rest of the interface had moved on; routing it here makes
+# it read like everything else and still never vanish without a word (t_texto
+# prints to a terminal, a pipe or a file, and only then reaches for a window).
+printf '%s\n' "$RELATORIO
 
-$(t_msg rep_saia_e_entre)" 2>/dev/null; }; then
-    printf '%s\n' "$RELATORIO"
-fi
+$(t_msg rep_saia_e_entre)" | t_texto "Tandem"
