@@ -3093,6 +3093,34 @@ flatpak/snap/`.desktop` + a new GTK4 home screen + the zenity/terminal fallback)
 whose look is already owner-approved via the HTML mockup (the program library
 with the green/amber/gray update dot).
 
+**v4.71 IS PUBLISHED** — 2026-08-26, tag `v4.71` at `7360e24`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (589200 bytes, sha256 `5000ddd2…`)
+and the generic bundle (589485 bytes, sha256 `db2e7252…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag. Coherence pass, part 3 (the
+foundation): **the program library's enumeration engine.** The new main screen
+will be the shop's library of programs, not a menu of commands — so this ships
+the pure, testable core it reads from. `t_biblioteca` lists every installed
+program as one TAB-separated record: `tipo` (windows/android/linux), name,
+`fonte` (Wine/AppImage/Waydroid/Flatpak/snap/sistema), how to open it, and
+`atualizavel` (sim for flatpak/snap — Tandem can update it; nao for
+Wine/AppImage/Android/distro packages, which update themselves or with the
+system). **On-disk values, English and lowercase like the memory tokens, never
+translated.** One small function per source, each guarding on its own tool
+(no flatpak/snap/waydroid → nothing from it, no jargon); Wine and AppImage reuse
+the existing shortcut readers. **The dedup that matters:** a flatpak or snap app
+also drops a `.desktop` into an export dir, so the system scan skips anything
+carrying `X-Flatpak`/`X-SnapInstanceName` — counted once, by its own tool; it
+also drops NoDisplay/Hidden and Name-less helpers. Every external tool and dir is
+overridable, so the engine is exercised in the suite with stubbed
+flatpak/snap/waydroid and fixture `.desktop` files (the way tandem-deb tests apt).
+**No screen yet — that is the next increment (a new GTK4 home window reading this
+engine + the zenity/terminal fallback), then the actions (Abrir/Atualizar/
+Instalar).** The platform glyphs are drawn and owner-approved: original vector
+marks (Windows four-pane window in blue, the Android robot head in green, the
+Linux Tux penguin), rendered through librsvg, replacing the emoji in the mockup.
+Suite 1854 passed / 0 / 1 skipped; both literal counters read 0.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
