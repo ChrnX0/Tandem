@@ -3060,6 +3060,39 @@ box — the one screen still in the old style — and now routes through `t_text
 everything else and still never vanishes without a word. Suite 1843 passed / 0 /
 1 skipped; both literal counters read 0; both `soma` guards unchanged.
 
+**v4.70 IS PUBLISHED** — 2026-08-26, tag `v4.70` at `40217e5`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (587074 bytes, sha256 `b2b1c43e…`)
+and the generic bundle (587422 bytes, sha256 `e2557ef4…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag. Coherence pass, part 2: **the progress
+bar wears the One UI face.** The pulsating bar shown while a long install runs —
+the most-seen shared surface, on screen during every winetricks download — was
+the last big piece still drawn as a plain zenity box while every other window had
+moved to the modern face. It is GTK4 + libadwaita now: a rounded card, the
+message, a bar pulsing in the app's blue→teal accent. **What made it safe to
+touch the most delicate code (the SIGPIPE/FIFO progress pipe this file documents
+at length): it is a DROP-IN reader.** `gui.py` gained a `progress` mode that
+reads the exact same `# message` protocol on the exact same FIFO that `zenity
+--progress` reads, and closes when stdin hits EOF (the shell closing its write
+end in `t_progresso_fecha`) — so the descriptor-8 SIGPIPE protection,
+`t_progresso_texto` and `t_progresso_fecha` are all untouched; only which program
+sits on the far end of the pipe changes. `t_progresso_abre` picks the modern
+window when `t_gui_moderno`, falls back to zenity otherwise (same as the
+error/question/text windows), `TANDEM_GUI=zenity` forces the old one, and with
+neither there is no bar (cosmetic). **Verified by RENDERING under Xvfb**
+(`GSK_RENDERER=cairo`; the reader thread uses `iter(sys.stdin.readline,"")`, not
+iteration, so the label does not lag a read-ahead buffer): the window drew, the
+label updated from `# msg` lines, and it closed on EOF with rc 0. Pinned by
+tests: it tries the modern window first, `gui.py` knows the subcommand and paints
+`.oneui-progress`, and `gui.py progress` with no display refuses fast (rc 2, never
+hangs — a hang would wedge an install behind an invisible window); the existing
+SIGPIPE-survival test keeps its zenity path via `TANDEM_GUI=zenity`. Suite 1847
+passed / 0 / 1 skipped; both literal counters read 0. **The coherence arc has one
+big piece left: the main-screen library** (enumeration across Wine/Waydroid/
+flatpak/snap/`.desktop` + a new GTK4 home screen + the zenity/terminal fallback),
+whose look is already owner-approved via the HTML mockup (the program library
+with the green/amber/gray update dot).
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
