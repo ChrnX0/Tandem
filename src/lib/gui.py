@@ -124,6 +124,8 @@ headerbar { background: transparent; box-shadow: none; }
 .oneui-primary:hover { filter: brightness(1.05); }
 .oneui-ghost { background: @GHOSTBG@; color: @GHOSTFG@; }
 .oneui-mono textview, .oneui-mono text { font-family: monospace; font-size: 13px; color: @CTEXT@; }
+.oneui-progress > trough { min-height: 14px; border-radius: 999px; background: @GHOSTBG@; }
+.oneui-progress > trough > progress { min-height: 14px; border-radius: 999px; background: linear-gradient(90deg,#2f6bff 0%,#12b6c8 100%); }
 """
 
 
@@ -369,6 +371,77 @@ def _text_window(app, title, content, result):
     result["code"] = 0
 
 
+def _progress_window(app, title, result):
+    """An indeterminate One UI progress window - the pulsing bar shown while a
+    long install runs. It reads lines from stdin and, for each one that begins
+    with '#', updates the message: the exact protocol zenity --progress speaks,
+    so this is a drop-in reader on the same FIFO. It closes when stdin reaches
+    EOF (the shell closing its write end in t_progresso_fecha). Purely cosmetic:
+    it only ever SHOWS work, never blocks it and never offers to cancel it.
+    """
+    import threading
+    from gi.repository import Gtk, GLib
+
+    win = _build(app, "Tandem", resizable=False)
+    win.set_default_size(460, -1)
+
+    root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    root.append(_flat_header())
+
+    body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
+    body.set_margin_top(4)
+    body.set_margin_bottom(28)
+    body.set_margin_start(26)
+    body.set_margin_end(26)
+
+    card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
+    card.add_css_class("oneui-card")
+    card.add_css_class("oneui-card-msg")
+
+    lbl = Gtk.Label(label=title, wrap=True, xalign=0.0)
+    lbl.add_css_class("oneui-msg")
+    card.append(lbl)
+
+    bar = Gtk.ProgressBar()
+    bar.add_css_class("oneui-progress")
+    card.append(bar)
+
+    body.append(card)
+    root.append(body)
+    win.set_content(root)
+    win.present()
+    result["code"] = 0
+
+    def _close():
+        try:
+            win.close()
+        except Exception:
+            pass
+        return False
+
+    def _tick():
+        bar.pulse()
+        return True
+
+    GLib.timeout_add(110, _tick)
+
+    def _reader():
+        # readline, not iteration: iterating a pipe read-aheads a whole buffer
+        # and the label would lag behind the work by many lines. readline
+        # returns each line as it arrives, and "" at EOF.
+        try:
+            for line in iter(sys.stdin.readline, ""):
+                line = line.rstrip("\n")
+                if line.startswith("#"):
+                    msg = line[1:].strip()
+                    GLib.idle_add(lbl.set_label, msg or title)
+        except Exception:
+            pass
+        GLib.idle_add(_close)
+
+    threading.Thread(target=_reader, daemon=True).start()
+
+
 def _run(build_fn):
     from gi.repository import Adw, Gio
     result = {"code": CANT_DRAW}
@@ -439,6 +512,10 @@ def main():
                 findings.append((sev, text, action))
             return _run(lambda a, r: _panel_window(
                 a, title, summary, findings, action_file, fix_label, r))
+
+        if kind == "progress":
+            title = argv[1] if len(argv) > 1 else "Tandem"
+            return _run(lambda a, r: _progress_window(a, title, r))
     except Exception:
         return CANT_DRAW
     return CANT_DRAW

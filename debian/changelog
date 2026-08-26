@@ -1,3 +1,26 @@
+tandem (4.70) unstable; urgency=medium
+
+  * Coherence pass, part 2: the progress bar wears the One UI face. The
+    pulsating bar shown while a long install runs - the most-seen shared
+    surface, on screen during every winetricks download - was the last big piece
+    still drawn as a plain zenity box while every other window had moved to the
+    modern face. It is drawn in GTK4 + libadwaita now: a rounded card, the
+    message, and a bar that pulses in the app's own blue->teal accent.
+    - It is a DROP-IN reader, which is what makes it safe to swap the most
+      delicate part of the code. gui.py gained a `progress` mode that reads the
+      exact same '# message' protocol on the exact same FIFO that zenity
+      --progress reads, and closes when stdin reaches EOF (the shell closing its
+      write end in t_progresso_fecha). So the descriptor-8 SIGPIPE protection,
+      t_progresso_texto and t_progresso_fecha are all untouched - only which
+      program sits on the far end of the pipe changes.
+    - t_progresso_abre picks the modern window when a gi-capable python3 is
+      there (t_gui_moderno) and falls back to zenity's bar otherwise, the same
+      way the error, question and text windows already choose; TANDEM_GUI=zenity
+      forces the old one. With neither, there is simply no bar - progress is
+      cosmetic, it only ever shows work and never blocks it.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 26 Aug 2026 20:21:12 +0000
+
 tandem (4.69) unstable; urgency=medium
 
   * Coherence pass, part 1: the new face reaches the last small places, and the

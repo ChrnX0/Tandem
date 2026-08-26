@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1048049466 5933" "$soma_esperados"
+      "2631021585 5935" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -2173,6 +2173,7 @@ cat > "$TMPROOT/prog.sh" <<FIM
 export HOME="$HOME"
 export PATH="$FZ:\$PATH"
 export DISPLAY=:0
+export TANDEM_GUI=zenity
 . "$ROOT/src/lib/common.sh"
 t_log_init progteste x
 t_progresso_abre "instalando"
@@ -2191,6 +2192,22 @@ if grep -q 'progress window closed' "$TANDEM_ESTADO/progteste.log" 2>/dev/null; 
 else
     fail "  and records in the log that the window vanished" "line in the log" "missing"
 fi
+
+# 4.70 coherence: the pulsating install bar is drawn in the One UI face now, not
+# just zenity. It is a drop-in reader on the SAME FIFO (the '# msg' protocol
+# zenity speaks), so the SIGPIPE protection and t_progresso_texto/fecha above are
+# untouched - only which program sits on the far end changes.
+COMMON_SRC="$(cat "$ROOT/src/lib/common.sh")"; GUI_SRC="$(cat "$ROOT/src/lib/gui.py")"
+contem "the progress bar tries the modern One UI window first" \
+       'gui.py" progress' "$COMMON_SRC"
+contem "gui.py knows the progress subcommand" 'kind == "progress"' "$GUI_SRC"
+contem "the progress bar is painted with the accent gradient" \
+       'oneui-progress' "$GUI_SRC"
+# It must refuse fast with no display, never hang: t_progresso_abre backgrounds
+# it and a hang there would wedge an install behind an invisible window.
+rc_prog_gui="$(printf '' | env -u DISPLAY -u WAYLAND_DISPLAY \
+    timeout 8 python3 "$ROOT/src/lib/gui.py" progress "x" >/dev/null 2>&1; echo $?)"
+equal "gui.py progress with no display refuses fast, never hangs" "2" "$rc_prog_gui"
 
 section "locks: being unable to create one is not the same as it being taken"
 

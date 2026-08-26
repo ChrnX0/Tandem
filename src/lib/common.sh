@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.69"
+TANDEM_VERSAO="4.70"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -927,12 +927,22 @@ t_painel() {
 #   t_progresso_abre "$(t_msg instalando_generico)" ; ... ; t_progresso_fecha
 t_progresso_abre() {
     t_tem_gui || return 0
-    command -v zenity >/dev/null 2>&1 || return 0
+    { t_gui_moderno || command -v zenity >/dev/null 2>&1; } || return 0
     [ -n "$TANDEM_TRAVAS" ] || return 0
     TANDEM_FIFO="$TANDEM_TRAVAS/prog.$$"
     mkfifo "$TANDEM_FIFO" 2>/dev/null || { TANDEM_FIFO=""; return 0; }
-    ( zenity --progress --pulsate --auto-close --no-cancel \
-             --title="Tandem" --text="$1" --width=420 < "$TANDEM_FIFO" 2>/dev/null ) &
+    # The modern One UI window first - it reads the very same '# msg' protocol on
+    # the same FIFO, so it is a drop-in reader - and zenity's pulsating bar as the
+    # fallback. Whichever ends up on the other end, the FIFO and descriptor 8
+    # below are identical, so the SIGPIPE protection and t_progresso_texto/fecha
+    # do not care which one it is.
+    if t_gui_moderno; then
+        ( python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" progress "$1" \
+              < "$TANDEM_FIFO" >/dev/null 2>&1 ) &
+    else
+        ( zenity --progress --pulsate --auto-close --no-cancel \
+                 --title="Tandem" --text="$1" --width=420 < "$TANDEM_FIFO" 2>/dev/null ) &
+    fi
     TANDEM_PROG_PID=$!
     # Reading AND writing, on purpose. Opening for writing only, the pipe is
     # left with a single reader - zenity. When that reader goes away (the user
