@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.71"
+TANDEM_VERSAO="4.72"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5694,6 +5694,32 @@ t_biblioteca() {
         t_bib_android
         t_bib_sistema
     } | awk 'NF' | LC_ALL=C sort -f -t"$(printf '\t')" -k2,2
+}
+
+# How to OPEN a program, decided by where it came from. Returns the fixed launch
+# words WITHOUT the target - a .desktop is opened with gio, a flatpak with
+# flatpak run, a snap with snap run, an Android app with waydroid. Pure and
+# testable; the words are constants from this case, never user input.
+t_bib_lancador() {
+    case "$1" in
+        Flatpak)  printf 'flatpak run' ;;
+        snap)     printf 'snap run' ;;
+        Waydroid) printf 'waydroid app launch' ;;
+        *)        printf 'gio launch' ;;
+    esac
+}
+
+# Opens a program from the library, detached so closing the library window does
+# not close the program (setsid + &, the same way tandem programas launches a
+# shortcut). The launch words come from the case above - fixed strings - and the
+# target is passed as ONE quoted argument, never concatenated into a command, so
+# a program name with a space or a shell character cannot become code.
+t_bib_abrir() {
+    local fonte="$1" lancador="$2"
+    [ -n "$lancador" ] || return 1
+    # shellcheck disable=SC2046  # the launch words are fixed and MUST word-split
+    ( setsid $(t_bib_lancador "$fonte") "$lancador" >/dev/null 2>&1 & ) 2>/dev/null
+    return 0
 }
 
 # The last lines the PROGRAM printed, with Tandem's own lines taken out.

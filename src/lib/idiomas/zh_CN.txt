@@ -3500,3 +3500,21 @@ Tandem 不会自行改动 Wine；如果你向别人求助，这就是要提到�
 
 @mem_campo_versao_wine
 打开时的 Wine：
+
+@bib_todos
+全部
+
+@bib_abrir
+打开
+
+@bib_instalar
+安装或打开文件
+
+@bib_buscar
+搜索程序
+
+@bib_ferramentas
+工具
+
+@bib_contagem
+程序：{1}

@@ -1,3 +1,35 @@
+tandem (4.72) unstable; urgency=medium
+
+  * Coherence pass, part 3: the main screen IS the library now. The old zenity
+    menu of commands - the one screen a shop owner who never opens a terminal
+    saw, and the one the owner said he detested - is replaced by a One UI window
+    that shows every installed program: the system's own mark on each row (the
+    Windows window, the Android robot, the Linux Tux penguin - drawn fresh, no
+    trademark art copied), a search, per-system filter chips, an Open button per
+    program, and a bar to install a new file. It reads the 4.71 enumeration
+    engine (t_biblioteca), so it needs no new source of truth.
+    - A click comes back through a temp file, the exact contract the health
+      panel already uses: "abrir<TAB>fonte<TAB>lancador", "instalar", or
+      "ferramentas". The shell reads it and does the rest; gui.py never launches
+      or installs anything itself. t_bib_lancador decides how each program opens
+      (gio launch for a .desktop, flatpak run, snap run, waydroid app launch) -
+      pure, so the decision is pinned by a test - and t_bib_abrir runs it
+      detached with the target as ONE quoted argument, never concatenated into a
+      command.
+    - Nothing is lost. A "Ferramentas" button opens the old menu, so doctor,
+      backup, ports and the rest are one tap away; and with no GTK4 the whole
+      screen falls back to that menu, which itself falls back to the help text -
+      the fallback the error/question/text/progress windows all share.
+    - The system names on the chips (Windows/Android/Linux) live in gui.py, a
+      descriptive category label that is the same in every language; only the
+      labels that translate (All, Open, Install, Search, Tools, the count) go
+      through the catalogue - 6 new messages, translated in all seven languages.
+    - Rendered under Xvfb and checked against the approved mockup: the window,
+      the three system marks through librsvg, the chips, the search. gui.py home
+      with no display refuses fast (never hangs behind an invisible window).
+
+ -- Tandem <rockx0@gmail.com>  Wed, 26 Aug 2026 22:59:30 +0000
+
 tandem (4.71) unstable; urgency=medium
 
   * Coherence pass, part 3 (foundation): the program library's enumeration

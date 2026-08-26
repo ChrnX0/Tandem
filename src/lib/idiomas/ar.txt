@@ -3763,3 +3763,21 @@ Tandem - الصحّة
 
 @mem_campo_versao_wine
 ‏Wine الذي فُتح به: 
+
+@bib_todos
+الكل
+
+@bib_abrir
+فتح
+
+@bib_instalar
+تثبيت ملف أو فتحه
+
+@bib_buscar
+ابحث عن برنامج
+
+@bib_ferramentas
+أدوات
+
+@bib_contagem
+البرامج: {1}

@@ -3735,3 +3735,21 @@ votre choix. Pour annuler plus tard :  sudo apt-mark unhold wine
 
 @mem_campo_versao_wine
 Wine avec lequel il s'est ouvert : 
+
+@bib_todos
+Tous
+
+@bib_abrir
+Ouvrir
+
+@bib_instalar
+Installer ou ouvrir un fichier
+
+@bib_buscar
+Rechercher un programme
+
+@bib_ferramentas
+Outils
+
+@bib_contagem
+Programmes : {1}

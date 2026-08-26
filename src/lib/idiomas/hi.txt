@@ -3646,3 +3646,21 @@ Tandem अपने आप Wine नहीं बदलता; किसी स�
 
 @mem_campo_versao_wine
 जिस Wine पर खुला: 
+
+@bib_todos
+सभी
+
+@bib_abrir
+खोलें
+
+@bib_instalar
+फ़ाइल इंस्टॉल करें या खोलें
+
+@bib_buscar
+प्रोग्राम खोजें
+
+@bib_ferramentas
+उपकरण
+
+@bib_contagem
+प्रोग्राम: {1}

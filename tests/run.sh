@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "4071210236 6069" "$soma_esperados"
+      "1296730506 6146" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -479,6 +479,35 @@ equal "the whole library counts every source exactly once" \
       "4" "$(bib_run 't_biblioteca' | grep -c .)"
 equal "a flatpak app appears once, never doubled by its own .desktop export" \
       "1" "$(bib_run 't_biblioteca' | grep -c 'Firefox')"
+
+# 4.72: the main screen IS the library now. t_bib_lancador decides how each
+# program opens (pure, so the decision is pinned); t_bib_abrir runs it detached
+# with the target as one quoted argument; the GTK4 home window renders the
+# records and a click comes back through a file, the health panel's contract.
+equal "a flatpak app opens with flatpak run"        "flatpak run"         "$(t_bib_lancador Flatpak)"
+equal "a snap opens with snap run"                  "snap run"            "$(t_bib_lancador snap)"
+equal "an android app opens with waydroid app launch" "waydroid app launch" "$(t_bib_lancador Waydroid)"
+equal "a .desktop (Wine/AppImage/system) opens with gio launch" "gio launch" "$(t_bib_lancador Wine)"
+# t_bib_abrir passes the launch words from the case, then the target as ONE
+# argument - proven by stubbing setsid and reading exactly what it was handed.
+MKBO="$TMPROOT/bibopen"; rm -f "$MKBO"; BOPEN="$TMPROOT/bopen"; mkdir -p "$BOPEN"
+printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "%s"\n' "$MKBO" > "$BOPEN/setsid"
+chmod +x "$BOPEN/setsid"
+( PATH="$BOPEN:$PATH" bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_bib_abrir Flatpak "org.moz.ff"' ) 2>/dev/null
+for _i in 1 2 3 4 5 6 7 8 9 10; do [ -s "$MKBO" ] && break; sleep 0.2; done
+equal "opening a flatpak runs: flatpak run <id>, the id one argument" \
+      "flatpak run org.moz.ff" "$(cat "$MKBO" 2>/dev/null)"
+# The GTK4 home window and the wiring.
+GUI_SRC2="$(cat "$ROOT/src/lib/gui.py")"; TANDEM_SRC="$(cat "$ROOT/src/bin/tandem")"
+contem "gui.py knows the home (library) subcommand" 'kind == "home"' "$GUI_SRC2"
+rc_home="$(printf '' | env -u DISPLAY -u WAYLAND_DISPLAY \
+    timeout 8 python3 "$ROOT/src/lib/gui.py" home "T" "" "" >/dev/null 2>&1; echo $?)"
+equal "gui.py home with no display refuses fast, never hangs" "2" "$rc_home"
+contem "the no-arg tandem opens the library" 'biblioteca|home|library) acao_biblioteca' "$TANDEM_SRC"
+ACAO_BIB="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "the library reads the enumeration engine"        't_biblioteca' "$ACAO_BIB"
+contem "  falls back to the old menu with no modern face" 'acao_painel'  "$ACAO_BIB"
+contem "  dispatches Open through t_bib_abrir"            't_bib_abrir'  "$ACAO_BIB"
 
 section "evidence gate (proofgate)"
 
