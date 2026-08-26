@@ -1,3 +1,30 @@
+tandem (4.71) unstable; urgency=medium
+
+  * Coherence pass, part 3 (foundation): the program library's enumeration
+    engine. The new main screen will not be a menu of commands - it will be the
+    shop's library of programs, all in one place, tagged by system. This ships
+    the pure, testable core it is built from: t_biblioteca lists every installed
+    program as one TAB-separated record - tipo (windows/android/linux), name,
+    source (Wine/AppImage/Waydroid/Flatpak/snap/sistema), how to open it, and
+    whether Tandem can update it on its own (sim for flatpak and snap; nao for
+    Wine, AppImage, Android and distro packages, which update themselves or with
+    the system). The values are on-disk format, English and lowercase like the
+    memory-file tokens, never translated.
+    - One small function per source, each guarding on its own tool, so a machine
+      with no flatpak, snap or waydroid just contributes nothing from it - no
+      error, no jargon. Wine and AppImage reuse the shortcut readers that exist.
+    - The dedup that matters: a flatpak or snap app also drops a .desktop into
+      an export dir, so the system scan skips anything carrying X-Flatpak or
+      X-SnapInstanceName - a program is counted once, by its own tool. It also
+      leaves out NoDisplay/Hidden entries and helpers with no Name (a library,
+      not a program a shopkeeper opens).
+    - Every external tool and directory is overridable, so the engine is
+      exercised in the suite with stubbed flatpak/snap/waydroid and fixture
+      .desktop files, the way tandem-deb tests apt. No screen yet - that is the
+      next increment; this is the data it will read.
+
+ -- Tandem <rockx0@gmail.com>  Wed, 26 Aug 2026 21:47:18 +0000
+
 tandem (4.70) unstable; urgency=medium
 
   * Coherence pass, part 2: the progress bar wears the One UI face. The
