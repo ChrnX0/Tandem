@@ -3014,6 +3014,52 @@ left alone. The honest read after the arc: the frontier is unchanged and is not
 code — it is field evidence on the owner's real counter (a POS / fiscal-printer
 install), which no container or CI work substitutes for.
 
+**THE COHERENCE-PASS ARC (2026-08-26).** The owner, preparing to publish, asked
+to see the UI and pushed on whether the app is coherent. Rendering the real
+interface here (Ubuntu + Xvfb + GTK4/libadwaita — the GTK4 windows render with
+`GSK_RENDERER=cairo`, captured by window id with `import -window <id>`, killed by
+PID never `pkill -f gui.py` which self-matches the shell) showed the honest
+answer: the 4.56 redesign modernized the WINDOWS you end at (error, question,
+the card panels: Saúde/Central, Histórico, Configurar) but stopped at the SHARED
+surfaces you pass THROUGH — the main menu and the progress bar are still zenity,
+plus the `tandem repair` report and the file chooser. A real flow crosses three
+visual worlds. The owner's verdict on the zenity main menu was "detestei", and
+he redirected the main screen from a menu-of-commands into a **library of all
+installed programs** — Windows/Android/Linux, each tagged by type, with a
+per-program update dot (green=up-to-date, amber=update-available, gray=self-
+managed on Windows/Android) and open/install/update actions, in One UI 9. The
+data sources all already exist (Wine registry for Windows, `pm list` for Android,
+`.desktop`/flatpak/snap for Linux). Design approved via two high-fidelity HTML
+mockups (identity + the library screen). The build is a small arc, one tested
+version at a time: **v4.69 (below) is part 1**; next is the progress bar in One
+UI (`gui.py` has no progress mode yet — it is the most-seen surface during
+installs, and delicate: the SIGPIPE/FIFO lessons apply), then the main-screen
+library itself (enumeration engine + a new GTK4 home screen + the zenity/terminal
+fallback). Logo A (two chevrons on the blue→teal accent) was the owner's
+delegated pick and shipped in 4.69.
+
+**v4.69 IS PUBLISHED** — 2026-08-26, tag `v4.69` at `cafdc1a`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (585872 bytes, sha256 `c783eece…`)
+and the generic bundle (586102 bytes, sha256 `fbfbca5d…`) each agree across the
+release body, the release's checksum sidecar, the asset digest, the downloaded
+bytes, and a fresh reproducible local build at the tag. Coherence pass, part 1.
+(1) **A new app icon** replaces the pre-redesign bicycle: two chevrons moving
+forward together — "in tandem", without the literal bicycle — on the app's own
+One UI accent (`#2f6bff → #12b6c8`, the same `.oneui-primary` gradient the
+interface uses), so icon and interface read as one product. **A rendering trap
+worth keeping:** ImageMagick's SVG delegate renders the gradient BLACK (no
+`-density`, or even with it), which nearly sent a false "the icon is broken"
+signal — but the desktop does not use ImageMagick. Verified through **librsvg**,
+the loader GTK and the icon theme actually use, via
+`GdkPixbuf.Pixbuf.new_from_file_at_size` in python3.12: the gradient renders
+correctly (left pixel `(37,132,237)` blue, right `(27,158,218)` teal), legible
+128→16 px. Test an icon with the loader the desktop uses, never an unrelated
+rasterizer. (2) **`tandem repair`'s report** went through a bare `zenity --info`
+box — the one screen still in the old style — and now routes through `t_texto`
+(the shared modern-window → zenity-text → plain-output path), so it reads like
+everything else and still never vanishes without a word. Suite 1843 passed / 0 /
+1 skipped; both literal counters read 0; both `soma` guards unchanged.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
