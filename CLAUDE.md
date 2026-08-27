@@ -3222,6 +3222,37 @@ counters read 0. The one-click Update button that acts on an amber row is still
 ahead; the next version is the library VIEW CONTROL the owner asked for
 (sort/group by name, by system, by update — like a file manager).
 
+**v4.75 IS PUBLISHED** — 2026-08-27, tag `v4.75` at `c7d8de6`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (600406 bytes, sha256 `a2e8b461…`)
+and the generic bundle (600287 bytes, sha256 `437c80d1…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag (the downloaded bytes are `cmp`
+byte-identical to the local build). It is the VIEW CONTROL the owner asked for
+(*"um meio de escolher como visualizar… como no windows explorer"*): the program
+library gains a file-manager "organize" selector to the right of the system
+filters, with three modes — by name (A-Z, default), by system (grouped with a
+header per system: Windows / Android / Linux — the grouping he liked), and by
+update (what needs acting on first: an update waiting, then not checked, then up
+to date, then the programs Tandem does not manage). The order is a PURE function
+(`_order_items` in gui.py), imported headless and pinned in every direction; the
+list is rebuilt on search, chip and sort together so a grouped view can insert
+its headers. Rendered under real GTK4 in the grouped and by-update views. Three
+new messages (`ordem_nome`/`sistema`/`update`), all seven languages.
+**Deliberately NOT a by-size or by-date sort**, and the reason is the project's
+rule: those are not uniformly available across the six program sources (only
+flatpak exposes an installed size; most expose no install date), and a sort blank
+for half the list is worse than none — the no-false-data rule, told to the owner
+plainly rather than faked. **A test-isolation fix rode along, found by the suite
+HANGING on this container** (not by reading): the `boff_run` helper added in 4.74
+exercises `t_biblioteca` but stubbed only flatpak, so `t_bib_snap` ran the real
+`snap list`, which hangs on snapd on a machine that has snap installed — and it is
+INTERMITTENT: it passed CI and an earlier local run where snap errors fast, then
+hung when snapd was in a bad state (measured: `snap list` rc=124, a 3s timeout).
+It stubs snap now, the way `bib_run` and `bup_run` already do — a helper that
+drives the library must isolate every tool the library calls. Suite 1890 passed /
+0 / 1 skipped; both literal counters read 0. The one-click "Update all" button
+(Play-Store style, the owner's next request) is v4.76.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
