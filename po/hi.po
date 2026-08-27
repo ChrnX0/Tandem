@@ -6106,3 +6106,7 @@ msgstr "आपके प्रोग्राम अपडेट हो रह�
 msgctxt "atualizacao_falhou"
 msgid "Some updates could not be finished. Check your connection and try again."
 msgstr "कुछ अपडेट पूरे नहीं हो सके। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"
+
+msgctxt "fonte_sistema"
+msgid "System"
+msgstr "सिस्टम"

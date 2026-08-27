@@ -6120,3 +6120,7 @@ msgstr "Updating your programs…"
 msgctxt "atualizacao_falhou"
 msgid "Some updates could not be finished. Check your connection and try again."
 msgstr "Some updates could not be finished. Check your connection and try again."
+
+msgctxt "fonte_sistema"
+msgid "System"
+msgstr "System"

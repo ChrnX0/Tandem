@@ -5959,3 +5959,7 @@ msgstr "正在更新你的程序…"
 msgctxt "atualizacao_falhou"
 msgid "Some updates could not be finished. Check your connection and try again."
 msgstr "部分更新未能完成。请检查网络后重试。"
+
+msgctxt "fonte_sistema"
+msgid "System"
+msgstr "系统"

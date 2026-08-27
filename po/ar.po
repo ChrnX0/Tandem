@@ -6146,3 +6146,7 @@ msgstr "جارٍ تحديث برامجك…"
 msgctxt "atualizacao_falhou"
 msgid "Some updates could not be finished. Check your connection and try again."
 msgstr "تعذّر إكمال بعض التحديثات. تحقّق من اتصالك وحاول مجددًا."
+
+msgctxt "fonte_sistema"
+msgid "System"
+msgstr "النظام"

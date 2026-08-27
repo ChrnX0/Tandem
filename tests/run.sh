@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1304645504 6379" "$soma_esperados"
+      "4173579211 6394" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -645,6 +645,21 @@ contem "  and it snapshots the managers into the token" 'atualizar-tudo\t' "$GUI
 TANDEM_UAL_SRC="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
 contem "Update all is dispatched to t_bib_atualiza_tudo" 't_bib_atualiza_tudo' "$TANDEM_UAL_SRC"
 contem "  and a failed update is not silent"             'atualizacao_falhou' "$TANDEM_UAL_SRC"
+
+# 4.77: the "sistema" source reads in the machine's language. Every source is a
+# proper noun that stays as it is (Wine, Flatpak, snap, Waydroid, AppImage);
+# only "sistema" - an on-disk token, a plain word rather than a name - is mapped
+# to a translated label when SHOWN, while the record on disk keeps "sistema".
+gui_fonte() {
+    python3 -c 'import sys; sys.path.insert(0, sys.argv[2]); import gui; print(gui._display_fonte(sys.argv[1], {"fonte_sistema": "System"}))' \
+        "$1" "$ROOT/src/lib" 2>/dev/null
+}
+equal "the system source shows a translated label, not the on-disk token" "System" "$(gui_fonte sistema)"
+equal "a proper-noun source is shown exactly as it is"                    "Flatpak" "$(gui_fonte Flatpak)"
+GUI_FONTE_SRC="$(cat "$ROOT/src/lib/gui.py")"
+contem "gui.py maps the fonte for display"          '_display_fonte(fonte, msgs)' "$GUI_FONTE_SRC"
+contem "  but t_bib_sistema still records the on-disk token, untranslated" \
+       '\tsistema\t' "$(sed -n '/^t_bib_sistema() {/,/^}/p' "$ROOT/src/lib/common.sh")"
 
 section "evidence gate (proofgate)"
 

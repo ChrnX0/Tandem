@@ -4849,3 +4849,7 @@ msgstr ""
 msgctxt "atualizacao_falhou"
 msgid "Some updates could not be finished. Check your connection and try again."
 msgstr ""
+
+msgctxt "fonte_sistema"
+msgid "System"
+msgstr ""

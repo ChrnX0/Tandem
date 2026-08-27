@@ -6211,3 +6211,7 @@ msgstr "Mise à jour de vos programmes…"
 msgctxt "atualizacao_falhou"
 msgid "Some updates could not be finished. Check your connection and try again."
 msgstr "Certaines mises à jour n'ont pas abouti. Vérifiez votre connexion et réessayez."
+
+msgctxt "fonte_sistema"
+msgid "System"
+msgstr "Système"
