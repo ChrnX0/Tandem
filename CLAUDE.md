@@ -3154,6 +3154,37 @@ coherence: the per-program update DOT and the Atualizar button (green/amber/gray
 from apt/flatpak/snap update detection) — the enrichment step, a natural v4.73,
 now that the screen and the enumeration both exist.
 
+**v4.73 IS PUBLISHED** — 2026-08-27, tag `v4.73` at `c52c2b9`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (595718 bytes, sha256 `ad46d824…`)
+and the generic bundle (596033 bytes, sha256 `7ef68691…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag (the downloaded bytes are `cmp`
+byte-identical to the local build). Coherence pass, part 3 (the enrichment): the
+program library learns which of its programs have an update waiting. flatpak and
+snap each know, per app, whether a newer version is out — but asking costs a
+network round trip, and the library is the main screen, opened all the time. So
+the answer is CACHED: the check runs at most once a day, in the background,
+stamped before the attempt (the self-update check's shape,
+`t_bib_talvez_verifica` → `BIB_UPDATES_DIA`), and the worker
+(`t_bib_verifica_updates`) writes the updatable ids to
+`$TANDEM_ESTADO/biblioteca-updates`; the screen reads only that file
+(`t_bib_tem_update`, a `grep -qxF` on the cache), so it opens instantly and never
+blocks on the network. `t_biblioteca` carries the answer as a sixth field,
+`tem_update` (sim/nao) — only an updatable source (flatpak/snap) can hold one, and
+only if the cache lists it, so it never invents an update. The field is a **pure
+read** (the refresh is triggered separately by `acao_biblioteca`), so it stays
+safe to call from a test; the cache values are English and lowercase like the
+memory tokens, never translated. This is the invisible-but-testable ENGINE; the
+visible green/amber dot and the Update button on each row come next (v4.74),
+reading exactly this — and the sixth field is backward-compatible (`gui.py home`
+reads `parts[:5]`, so the current screen and the v4.71/v4.72 tests are untouched).
+Pinned with stubbed flatpak/snap: an app the check found reports an update, one
+the cache does not list reports none, an updatable app with nothing waiting is
+marked `nao` and one with an update `sim`, and the daily throttle fires once then
+the day's stamp skips it. No new message, no behaviour change on the apt path or
+anywhere a program opens. Suite 1870 passed / 0 / 1 skipped; both literal counters
+read 0.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
