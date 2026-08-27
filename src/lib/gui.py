@@ -165,6 +165,17 @@ def _icon_with_dot(tipo, atualizavel, tem_update, msgs, size=30):
         return img
 
 
+def _display_fonte(fonte, msgs):
+    """How a program's source reads on screen. Every source is a proper noun
+    that stays as it is in any language - Wine, AppImage, Flatpak, snap,
+    Waydroid - except "sistema", which is an on-disk token (a plain word, not a
+    name) and gets a translated label when shown; the record on disk keeps
+    "sistema". Pure."""
+    if fonte == "sistema":
+        return msgs.get("fonte_sistema", "System")
+    return fonte
+
+
 def _dot_priority(atualizavel, tem_update):
     """Sort rank for the 'by update' view: what needs attention first. Amber (an
     update waits) before the not-checked ring, before green (current), before the
@@ -699,7 +710,7 @@ def _home_window(app, title, records, action_file, result, msgs):
         # The source line, and on a program with an update waiting an amber note
         # right beside it - so the fact is not hidden in a tooltip nobody hovers.
         subrow = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        sb = Gtk.Label(label=fonte, xalign=0.0)
+        sb = Gtk.Label(label=_display_fonte(fonte, msgs), xalign=0.0)
         sb.add_css_class("oneui-sub")
         subrow.append(sb)
         if atualizavel == "sim" and tem_update == "sim":
@@ -902,7 +913,7 @@ def main():
             keys = ["all", "open", "install", "search", "count", "tools",
                     "dot_atualizar", "dot_atual", "dot_gerido", "dot_checando",
                     "ordem_nome", "ordem_sistema", "ordem_update",
-                    "bib_atualizar_tudo"]
+                    "bib_atualizar_tudo", "fonte_sistema"]
             labels = (argv[3] if len(argv) > 3 else "").split("\t")
             msgs = {}
             for i, k in enumerate(keys):

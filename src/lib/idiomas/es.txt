@@ -3722,3 +3722,6 @@ Actualizando tus programas…
 
 @atualizacao_falhou
 Algunas actualizaciones no se completaron. Revisa tu conexión e inténtalo de nuevo.
+
+@fonte_sistema
+Sistema

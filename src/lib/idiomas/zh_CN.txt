@@ -3548,3 +3548,6 @@ Tandem 不管理它的更新
 
 @atualizacao_falhou
 部分更新未能完成。请检查网络后重试。
+
+@fonte_sistema
+系统

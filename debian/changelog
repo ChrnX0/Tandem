@@ -1,3 +1,20 @@
+tandem (4.77) unstable; urgency=medium
+
+  * The last Portuguese word on the library screen is gone. Each program's row
+    shows where it came from - Wine, AppImage, Flatpak, snap, Waydroid - and
+    those are proper nouns that stay as they are in any language; but a program
+    from the system's own catalogue read "sistema", a plain Portuguese word,
+    to a shop owner running the machine in English or another language. It is
+    shown translated now - System, Sistema, Systeme and so on - while the
+    record on disk keeps the token "sistema" - the same split the memory screen
+    uses, on-disk value untouched, only the shown label mapped. The decision is
+    a pure function (_display_fonte in gui.py: only "sistema" is mapped, every
+    other source is returned as-is), pinned both ways, and t_bib_sistema still
+    records the untranslated token. One new message (fonte_sistema), translated
+    in all seven languages; rendered under real GTK4.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 27 Aug 2026 05:51:01 +0000
+
 tandem (4.76) unstable; urgency=medium
 
   * An "Update all" button on the program library, the way a phone's app store

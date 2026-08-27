@@ -6138,3 +6138,7 @@ msgstr "Atualizando seus programas…"
 msgctxt "atualizacao_falhou"
 msgid "Some updates could not be finished. Check your connection and try again."
 msgstr "Algumas atualizações não deram certo. Verifique sua conexão e tente de novo."
+
+msgctxt "fonte_sistema"
+msgid "System"
+msgstr "Sistema"
