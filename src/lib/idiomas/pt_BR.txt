@@ -3687,3 +3687,12 @@ Ferramentas
 
 @bib_contagem
 Programas: {1}
+
+@dot_atualizar
+Atualização disponível
+
+@dot_atual
+Está em dia
+
+@dot_gerido
+Atualiza com o sistema

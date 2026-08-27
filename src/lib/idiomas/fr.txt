@@ -3753,3 +3753,12 @@ Outils
 
 @bib_contagem
 Programmes : {1}
+
+@dot_atualizar
+Mise à jour disponible
+
+@dot_atual
+À jour
+
+@dot_gerido
+Se met à jour avec le système

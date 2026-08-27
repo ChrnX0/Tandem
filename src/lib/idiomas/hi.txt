@@ -3664,3 +3664,12 @@ Tandem अपने आप Wine नहीं बदलता; किसी स�
 
 @bib_contagem
 प्रोग्राम: {1}
+
+@dot_atualizar
+अपडेट उपलब्ध है
+
+@dot_atual
+अद्यतित है
+
+@dot_gerido
+सिस्टम के साथ अपडेट होता है

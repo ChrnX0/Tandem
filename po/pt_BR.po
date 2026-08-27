@@ -6098,3 +6098,15 @@ msgstr "Ferramentas"
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr "Programas: {1}"
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr "Atualização disponível"
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr "Está em dia"
+
+msgctxt "dot_gerido"
+msgid "Updates with the system"
+msgstr "Atualiza com o sistema"

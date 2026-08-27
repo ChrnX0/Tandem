@@ -3692,3 +3692,12 @@ Herramientas
 
 @bib_contagem
 Programas: {1}
+
+@dot_atualizar
+Actualización disponible
+
+@dot_atual
+Está al día
+
+@dot_gerido
+Se actualiza con el sistema

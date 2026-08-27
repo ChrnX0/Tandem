@@ -1,3 +1,30 @@
+tandem (4.74) unstable; urgency=medium
+
+  * Coherence pass, part 3 (the visible enrichment): the program library now
+    SHOWS which of its programs have an update. 4.73 built the engine (a daily,
+    cached, network-free check writing a sixth field, tem_update); this draws
+    it. Each program's icon carries a small status dot pinned to its corner,
+    three states: amber = an update is waiting, green = up to date, gray =
+    Tandem does not manage this program's updates (a Windows or Android program,
+    an AppImage, a distro package - they update themselves or with the system).
+    A row with an update also gains an amber "Update available" note beside its
+    source, so the fact is not hidden in a tooltip nobody hovers; the dot itself
+    carries a tooltip naming its meaning in the machine's language.
+  * The dot's state is a PURE function (_update_dot in gui.py: is it updatable,
+    does it have an update -> amber/green/gray), imported headless and pinned in
+    every direction - amber only when both are yes, green when updatable and
+    current, gray for anything Tandem does not update, gray even if a stale
+    update flag lingers on a non-updatable row. It reuses the palette the health
+    panel already uses (the amber and green tokens), so it reads as one product.
+    Safe by construction, like every gui.py window: the dot falls back to the
+    bare icon on any error, never a traceback, and the whole screen still falls
+    back to the old menu with no GTK4. Rendered under real GTK4 in all three
+    states. Three new messages (dot_atualizar, dot_atual, dot_gerido),
+    translated in all seven languages. The one-click Update button that acts on
+    an amber row comes next (v4.75).
+
+ -- Tandem <rockx0@gmail.com>  Thu, 27 Aug 2026 02:06:11 +0000
+
 tandem (4.73) unstable; urgency=medium
 
   * Coherence pass, part 3 (the enrichment): the program library learns which

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1724947762 6162" "$soma_esperados"
+      "275542420 6184" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -535,6 +535,26 @@ equal "an updatable app with an update waiting is marked sim" "sim" \
       "$(bup_run 't_bib_verifica_updates; t_biblioteca | grep Firefox | cut -f6')"
 equal "the update check runs once a day, then the stamp throttles it" "0 1" \
       "$(bup_run 't_bib_talvez_verifica; a=$?; t_bib_talvez_verifica; b=$?; echo $a $b')"
+
+# 4.74: the visible update dot. _update_dot maps the two library fields (is it
+# updatable, does it have an update waiting) to one of three colours - amber =
+# an update is waiting, green = up to date, gray = Tandem does not manage this
+# program's updates. Pure, so the state is pinned; imported headless because it
+# touches no gi.
+gui_dot() {
+    python3 -c 'import sys; sys.path.insert(0, sys.argv[3]); import gui; print(gui._update_dot(sys.argv[1], sys.argv[2])[0])' \
+        "$1" "$2" "$ROOT/src/lib" 2>/dev/null
+}
+equal "an updatable app with an update waiting shows the amber dot" "amber" "$(gui_dot sim sim)"
+equal "an updatable app that is current shows the green dot"        "green" "$(gui_dot sim nao)"
+equal "an app Tandem does not manage shows the gray dot"           "gray"  "$(gui_dot nao nao)"
+equal "  gray even if a stale update flag lingers on a non-updatable row" "gray" "$(gui_dot nao sim)"
+GUI_DOT_SRC="$(cat "$ROOT/src/lib/gui.py")"
+contem "the home window reads the update field (the sixth)" 'parts[:6]' "$GUI_DOT_SRC"
+contem "the icon carries the status dot"                    'oneui-dot' "$GUI_DOT_SRC"
+contem "a row with an update shows the amber note, not only a tooltip" 'oneui-updtag' "$GUI_DOT_SRC"
+TANDEM_DOT_SRC="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "acao_biblioteca sends the dot labels to the window" 'dot_atualizar' "$TANDEM_DOT_SRC"
 
 section "evidence gate (proofgate)"
 

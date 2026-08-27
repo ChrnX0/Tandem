@@ -4809,3 +4809,15 @@ msgstr ""
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr ""
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr ""
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr ""
+
+msgctxt "dot_gerido"
+msgid "Updates with the system"
+msgstr ""

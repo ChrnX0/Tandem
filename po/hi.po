@@ -6066,3 +6066,15 @@ msgstr "उपकरण"
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr "प्रोग्राम: {1}"
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr "अपडेट उपलब्ध है"
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr "अद्यतित है"
+
+msgctxt "dot_gerido"
+msgid "Updates with the system"
+msgstr "सिस्टम के साथ अपडेट होता है"

@@ -6171,3 +6171,15 @@ msgstr "Outils"
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr "Programmes : {1}"
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr "Mise à jour disponible"
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr "À jour"
+
+msgctxt "dot_gerido"
+msgid "Updates with the system"
+msgstr "Se met à jour avec le système"

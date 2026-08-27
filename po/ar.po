@@ -6106,3 +6106,15 @@ msgstr "أدوات"
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr "البرامج: {1}"
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr "تحديث متوفر"
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr "مُحدَّث"
+
+msgctxt "dot_gerido"
+msgid "Updates with the system"
+msgstr "يُحدَّث مع النظام"
