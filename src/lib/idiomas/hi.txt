@@ -2602,6 +2602,18 @@ Android {1} चाहिए, और यह {2} है
 @pan_pergunta
 आप क्या करना चाहते हैं?
 
+@pan_grupo_programas
+प्रोग्राम
+
+@pan_grupo_diagnostico
+निदान
+
+@pan_grupo_dados
+आपका डेटा
+
+@pan_grupo_ajuda
+समुदाय और मदद
+
 @pan_col_acao
 काम
 

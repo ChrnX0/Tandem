@@ -4369,6 +4369,26 @@ msgctxt "pan_pergunta"
 msgid "What do you want to do?"
 msgstr "您想做什么？"
 
+msgctxt "pan_grupo_programas"
+msgid "Programs"
+msgstr ""
+"程序"
+
+msgctxt "pan_grupo_diagnostico"
+msgid "Diagnosis"
+msgstr ""
+"诊断"
+
+msgctxt "pan_grupo_dados"
+msgid "Your data"
+msgstr ""
+"您的数据"
+
+msgctxt "pan_grupo_ajuda"
+msgid "Community and help"
+msgstr ""
+"社区与帮助"
+
 msgctxt "pan_col_acao"
 msgid "Action"
 msgstr "操作"

@@ -4499,6 +4499,26 @@ msgctxt "pan_pergunta"
 msgid "What do you want to do?"
 msgstr "आप क्या करना चाहते हैं?"
 
+msgctxt "pan_grupo_programas"
+msgid "Programs"
+msgstr ""
+"प्रोग्राम"
+
+msgctxt "pan_grupo_diagnostico"
+msgid "Diagnosis"
+msgstr ""
+"निदान"
+
+msgctxt "pan_grupo_dados"
+msgid "Your data"
+msgstr ""
+"आपका डेटा"
+
+msgctxt "pan_grupo_ajuda"
+msgid "Community and help"
+msgstr ""
+"समुदाय और मदद"
+
 msgctxt "pan_col_acao"
 msgid "Action"
 msgstr "काम"

@@ -114,6 +114,11 @@ EXCECOES = {
     # directly above - a product name is not prose, and translating it produces
     # a name that finds nothing.
     "Tandem $VERSAO",
+    # The modern (GTK4) Tools menu passes the same product-name-plus-version as
+    # a bare argument to gui.py, so the owner can read which Tandem he is running
+    # from that screen too (4.78). It uses the full variable name the rest of the
+    # code does; exempt for the identical reason - a product name is not prose.
+    "Tandem $TANDEM_VERSAO",
     # THE COMMAND NAMES, which stay Portuguese forever - that is a standing
     # decision, not an oversight: a command copied off a forum has to work on
     # any machine, so these cannot move with the language. In the zenity panel

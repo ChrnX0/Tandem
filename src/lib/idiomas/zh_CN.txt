@@ -2474,6 +2474,18 @@ Tandem 深色
 @pan_pergunta
 您想做什么？
 
+@pan_grupo_programas
+程序
+
+@pan_grupo_diagnostico
+诊断
+
+@pan_grupo_dados
+您的数据
+
+@pan_grupo_ajuda
+社区与帮助
+
 @pan_col_acao
 操作
 

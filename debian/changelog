@@ -1,3 +1,26 @@
+tandem (4.78) unstable; urgency=medium
+
+  * The Tools menu wears the One UI face now, the last shared surface still
+    drawn as a plain 1990s list. The library main screen, the health panel,
+    the wizard, the history, the error, the question and the progress bar all
+    moved to the modern GTK4 look across the redesign; the "Tools" button on
+    the library still opened a zenity list of doctor, backup, ports and the
+    rest - the one screen a coherent product should not have left behind. It
+    is a rounded-card One UI window now, one tap per tool, grouped into
+    sections (Programs, Diagnosis, Your data, Community and help) instead of
+    the two-level "more"/"back" list zenity forced because only eight rows
+    fit its window. Every tool the old menu offered is still there, and no
+    word changed in any of the seven languages.
+  * Safe by construction, the same way every other modern window is: gui.py
+    grew a "menu" mode that draws the cards, and acao_painel_moderno falls back
+    to the zenity two-level list, then to the help text, on any machine
+    without libadwaita, without a display, or with TANDEM_GUI=zenity. Both
+    faces dispatch through one shared acao_painel_executa, so the modern look
+    and the fallback can never drift on what a tool does. A drawing failure
+    becomes exit 2, never a traceback.
+
+ -- Tandem Maintainers <tandem@example.com>  Thu, 27 Aug 2026 11:35:00 +0000
+
 tandem (4.77) unstable; urgency=medium
 
   * The last Portuguese word on the library screen is gone. Each program's row
