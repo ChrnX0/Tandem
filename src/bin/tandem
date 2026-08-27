@@ -789,7 +789,31 @@ acao_uninstall() {
         nome="${linha#*|||}"; nomes+=("${nome%%|||*}")
     done <<< "$lista"
 
-    if [ -z "$filtro" ]; then
+    # Try the hint first (a caller may pass a program name - a library shortcut,
+    # say). If it matches nothing, OR no hint was given, open the chooser: a
+    # shortcut Name and the registry DisplayName are independently sourced and
+    # need not match, so a hint that misses must not dead-end at "not found" when
+    # the program is right there in the list (the library Remove button relies on
+    # this). A name the owner then CHOSE that still matches nothing is a real
+    # "not found".
+    local pediu=""
+    while :; do
+        achou=""
+        if [ -n "$filtro" ]; then
+            while IFS= read -r linha; do
+                [ -n "$linha" ] || continue
+                nome="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $2}')"
+                case "${nome,,}" in
+                    *"${filtro,,}"*)
+                        achou="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $1}')"
+                        silencioso="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $3}')"
+                        normal="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $4}')"
+                        break ;;
+                esac
+            done <<< "$lista"
+        fi
+        [ -n "$achou" ] && break
+        [ -n "$pediu" ] && { t_erro "$(t_msg prog_nao_achei "$filtro")"; return 1; }
         escolha="$(escolher "$(t_msg des_titulo_janela)" \
                             "$(t_msg des_qual_remover)" "${nomes[@]}")"
         if [ -z "$escolha" ]; then
@@ -798,21 +822,8 @@ acao_uninstall() {
             printf '\n%s\n' "$(t_msg desinst_para_remover)"
             return 0
         fi
-        filtro="$escolha"
-    fi
-
-    while IFS= read -r linha; do
-        [ -n "$linha" ] || continue
-        nome="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $2}')"
-        case "${nome,,}" in
-            *"${filtro,,}"*)
-                achou="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $1}')"
-                silencioso="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $3}')"
-                normal="$(printf '%s' "$linha" | awk -F'\\|\\|\\|' '{print $4}')"
-                break ;;
-        esac
-    done <<< "$lista"
-    [ -n "$achou" ] || { t_erro "$(t_msg prog_nao_achei "$filtro")"; return 1; }
+        filtro="$escolha"; pediu=1
+    done
     command -v wine >/dev/null 2>&1 || { t_erro "$(t_msg wine_nao_instalado)"; return 1; }
 
     # Confirmation: a window; failing that, the terminal; with neither, it

@@ -5783,9 +5783,16 @@ t_bib_desinstala() {
             return 0 ;;
         waydroid)
             waydroid app remove "$alvo" >/dev/null 2>&1
-            # waydroid answers 0 even on failure - ask Android's own list instead
-            waydroid shell -- pm list packages -3 2>/dev/null | sed 's/^package://' \
-                | grep -qxF "$alvo" && return 1
+            # waydroid answers 0 even on failure, so confirm against Android's own
+            # package list - but ONLY trust that list if the query itself SUCCEEDED.
+            # If waydroid went down between the screen and here, pm errors and the
+            # list is empty; treating that empty list as "package absent" would
+            # report a removal that never happened - the exact false success this
+            # project abolishes. So a failed query is a failure, not a success.
+            local plist prc
+            plist="$(waydroid shell -- pm list packages -3 2>/dev/null)"; prc=$?
+            [ "$prc" = 0 ] || return 1
+            printf '%s\n' "$plist" | sed 's/^package://' | grep -qxF "$alvo" && return 1
             return 0 ;;
         appimage)
             # $alvo is the menu entry (.desktop). Remove it and the icon it

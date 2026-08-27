@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1378360777 6487" "$soma_esperados"
+      "3560042585 6493" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -536,6 +536,29 @@ equal "  and it removes the icon it had extracted" "gone" \
 # the caller with rc 2 - never a blind removal from this function.
 t_bib_desinstala Wine whatever;    equal "Wine is handed back to the caller (rc 2)" "2" "$?"
 t_bib_desinstala sistema whatever; equal "a system program is handed back (rc 2)"   "2" "$?"
+# Codex P1: a Waydroid removal is only a success if Android's package list could
+# actually be READ. If the query fails (waydroid went down), an empty list must
+# not read as "package gone" - that would be a false success. Stub waydroid: app
+# remove always "succeeds"; the query is controlled by WD_MODE.
+WDBIN="$TMPROOT/wdbin"; mkdir -p "$WDBIN"
+cat > "$WDBIN/waydroid" <<'WD'
+#!/bin/sh
+[ "$1" = app ] && exit 0
+if [ "$1" = shell ]; then
+  case "$WD_MODE" in
+    fail) exit 1 ;;
+    here) echo "package:com.x"; exit 0 ;;
+    *)    echo "package:other.app"; exit 0 ;;
+  esac
+fi
+exit 0
+WD
+chmod +x "$WDBIN/waydroid"
+wd_rc() { PATH="$WDBIN:$PATH" WD_MODE="$1" HOME="$TMPROOT" TANDEM_LIB="$ROOT/src/lib" \
+    bash -c '. "'"$ROOT"'/src/lib/common.sh"; t_bib_desinstala Waydroid com.x; echo $?' 2>/dev/null | tail -1; }
+equal "a failed Waydroid package query is a failure, not a false success" "1" "$(wd_rc fail)"
+equal "a Waydroid app confirmed absent (query succeeded) is a success"     "0" "$(wd_rc gone)"
+equal "a Waydroid app still listed after remove is a failure"              "1" "$(wd_rc here)"
 # The wiring: the caller routes each world, and the GTK row carries the button.
 contem "  Remove routes Wine through its own uninstaller"  'Wine)    acao_uninstall'  "$ACAO_BIB"
 contem "  a system program is explained, not apt-removed"  'desinst_sistema'          "$ACAO_BIB"
