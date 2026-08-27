@@ -3342,11 +3342,19 @@ modern window:** `gui.py` grew a `menu` mode that draws the cards, and
 `acao_painel` falls back to the zenity two-level list, then to the help text, on
 any machine without libadwaita, without a display, or with `TANDEM_GUI=zenity`.
 The refactor is the point: both faces DISPATCH through one shared
-`acao_painel_executa` and READ one shared `acao_painel_itens`, so the modern look
-and the fallback can never drift on what a tool does or offers — the
-divergence-by-construction trap closed the way the 4.54 `t_saude_achados` closed
-it. The click travels back through a temp file (the panel/home contract), never
-stdout; a drawing failure becomes exit 2, never a traceback. **Codex caught a
+`acao_painel_executa`, so they can never drift on what a tool DOES — the
+divergence-by-construction trap closed for the dispatch, the way the 4.54
+`t_saude_achados` closed it. **The item LIST is only half-shared, and this record
+first overstated it (Codex caught the claim on review):** the modern face reads
+`acao_painel_itens`, but the zenity fallback keeps its OWN two-level row list
+(`acao_painel_zenity`, `src/bin/tandem:2192`) — a different structure on purpose,
+because zenity's window fits only eight rows at a time and needs the "more"/"back"
+split the card window does not. So the SET of tools each face OFFERS is the one
+thing kept in step by hand; the two match as shipped, and closing that half too —
+a test that fails when the zenity list and `acao_painel_itens` offer different
+tokens — is the natural follow-up (the "instrument for the class" this file keeps
+asking for). The click travels back through a temp file (the panel/home
+contract), never stdout; a drawing failure becomes exit 2, never a traceback. **Codex caught a
 real P2 and it shipped in the same version:** the zenity panel titled itself
 `Tandem $TANDEM_VERSAO` so the owner could read which Tandem he is running without
 a terminal (the deliberate 4.12 feature), and the retained zenity fallback still
