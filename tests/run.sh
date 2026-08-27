@@ -703,6 +703,12 @@ contem "  and falls back to the zenity list"  'acao_painel_zenity'  "$ACAO_PAN"
 ACAO_PAN_M="$(sed -n '/^acao_painel_moderno() {/,/^}/p' "$ROOT/src/bin/tandem")"
 contem "the modern tools loop reads the shared dispatch" 'acao_painel_executa' "$ACAO_PAN_M"
 contem "  and feeds gui.py the shared item list"         'acao_painel_itens |' "$ACAO_PAN_M"
+# The zenity panel titled itself "Tandem <version>" so the owner could read which
+# Tandem he is running without a terminal; the modern face must not lose that.
+contem "  and still names its own version, as the zenity panel did" \
+       'Tandem $TANDEM_VERSAO' "$ACAO_PAN_M"
+contem "the tools window accepts a version to show beside the title" \
+       'action_file, version, result' "$GUI_MENU_SRC"
 
 section "evidence gate (proofgate)"
 

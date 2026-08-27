@@ -37,14 +37,16 @@ Contract, so the shell can read exit codes the same way it reads zenity's:
                                       token to action_file and closes; the shell
                                       reads the file and runs the remedy. 0 shown,
                                       2 cannot draw
-    gui.py menu <title> <subtitle> [action_file]
+    gui.py menu <title> <subtitle> [action_file] [version]
                                    -> the Tools menu as tappable One UI rows; one
                                       "token<TAB>label<TAB>icon<TAB>group" tool per
                                       line on STDIN, grouped by <group> in order.
                                       A click WRITES the token to action_file and
                                       closes; a plain close leaves it untouched so
-                                      the shell reads "" and stops. 0 shown, 2
-                                      cannot draw
+                                      the shell reads "" and stops. <version> (e.g.
+                                      "Tandem 4.78") is shown beside the title so
+                                      the owner can read it without a terminal.
+                                      0 shown, 2 cannot draw
 
 Every drawing path is wrapped so a failure NEVER reaches the owner as a Python
 traceback - it becomes exit 2, and the shell shows the zenity window instead.
@@ -537,7 +539,7 @@ def _menu_row(label, icon, on_click):
     return btn
 
 
-def _menu_window(app, title, subtitle, items, action_file, result):
+def _menu_window(app, title, subtitle, items, action_file, version, result):
     """The Tools menu ("Ferramentas") as One UI cards: everything the library is
     not - doctor, backup, ports, the community list - one tappable row per tool,
     grouped into sections with quiet headers. items is a list of
@@ -546,6 +548,10 @@ def _menu_window(app, title, subtitle, items, action_file, result):
     click writes the token to action_file and closes; closing the window ANOTHER
     way (X, Escape) leaves the file untouched, so the shell reads "" and stops.
     The choice travels through the file, never stdout - the panel/home contract.
+
+    `version` (e.g. "Tandem 4.78") is shown as a quiet right-aligned label beside
+    the title, the way the zenity panel put it in its window title: the owner has
+    to be able to read which Tandem he is running without opening a terminal.
     """
     from gi.repository import Gtk
 
@@ -565,9 +571,16 @@ def _menu_window(app, title, subtitle, items, action_file, result):
     body.set_margin_end(24)
 
     head = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-    t = Gtk.Label(label=title, xalign=0.0, wrap=True)
+    toprow = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+    t = Gtk.Label(label=title, xalign=0.0, hexpand=True)
     t.add_css_class("oneui-title")
-    head.append(t)
+    toprow.append(t)
+    if version:
+        v = Gtk.Label(label=version, xalign=1.0)
+        v.add_css_class("oneui-sub")
+        v.set_valign(Gtk.Align.END)
+        toprow.append(v)
+    head.append(toprow)
     if subtitle:
         s = Gtk.Label(label=subtitle, xalign=0.0, wrap=True)
         s.add_css_class("oneui-sub")
@@ -1011,6 +1024,7 @@ def main():
             title = argv[1] if len(argv) > 1 else "Tandem"
             subtitle = argv[2] if len(argv) > 2 else ""
             action_file = argv[3] if len(argv) > 3 and argv[3] else None
+            version = argv[4] if len(argv) > 4 else ""
             items = []
             for line in sys.stdin.read().splitlines():
                 if not line.strip():
@@ -1022,7 +1036,7 @@ def main():
                 group = parts[3] if len(parts) > 3 else ""
                 items.append((token, label, icon, group))
             return _run(lambda a, r: _menu_window(
-                a, title, subtitle, items, action_file, r))
+                a, title, subtitle, items, action_file, version, r))
 
         if kind == "progress":
             title = argv[1] if len(argv) > 1 else "Tandem"

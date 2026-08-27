@@ -2137,7 +2137,7 @@ acao_painel_moderno() {
         acaofile="$(mktemp 2>/dev/null || true)"
         acao_painel_itens | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
             menu "$(t_msg bib_ferramentas)" "$(t_msg pan_pergunta)" "$acaofile" \
-            >/dev/null 2>&1
+            "Tandem $TANDEM_VERSAO" >/dev/null 2>&1
         rc=$?
         acao="$(cat "$acaofile" 2>/dev/null)"; rm -f "$acaofile" 2>/dev/null
         # If the modern window could not draw at all on the very first try
