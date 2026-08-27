@@ -3802,3 +3802,12 @@ Tandem - الصحّة
 
 @ordem_update
 حسب التحديث
+
+@bib_atualizar_tudo
+تحديث الكل
+
+@atualizando_tudo
+جارٍ تحديث برامجك…
+
+@atualizacao_falhou
+تعذّر إكمال بعض التحديثات. تحقّق من اتصالك وحاول مجددًا.

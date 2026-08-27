@@ -3539,3 +3539,12 @@ Tandem 不管理它的更新
 
 @ordem_update
 按更新
+
+@bib_atualizar_tudo
+全部更新
+
+@atualizando_tudo
+正在更新你的程序…
+
+@atualizacao_falhou
+部分更新未能完成。请检查网络后重试。

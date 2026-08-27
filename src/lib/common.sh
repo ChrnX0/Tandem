@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.75"
+TANDEM_VERSAO="4.76"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5834,6 +5834,40 @@ t_bib_tem_update() {
     [ -f "$arq" ] || return 1
     tab="$(printf '\t')"
     grep -qxF -- "$fonte$tab$lancador" "$arq" 2>/dev/null
+}
+
+# Does the cache list at least one program with an update, from any source? The
+# "Update all" button appears only when this is true.
+t_bib_ha_updates() {
+    local arq tab
+    arq="$(t_bib_updates_arquivo)" || return 1
+    [ -f "$arq" ] || return 1
+    tab="$(printf '\t')"
+    grep -qE "^(Flatpak|snap)$tab" "$arq" 2>/dev/null
+}
+
+# Update every program that has one, in a single action - the "Update all" the
+# owner asked for. It touches ONLY the managers the cache says have an update, so
+# it never asks for a root password to refresh snaps when only a flatpak needs
+# updating: flatpak updates its own apps (a user install needs no root; a system
+# install prompts through flatpak's own polkit), and snap needs root, so it goes
+# through t_como_root. The cache is refreshed afterwards so the dots reflect the
+# new state. Returns non-zero if any manager reported a problem, so the caller
+# can say so rather than let a failed update pass in silence.
+t_bib_atualiza_tudo() {
+    local arq tab rc=0
+    arq="$(t_bib_updates_arquivo)" || return 1
+    tab="$(printf '\t')"
+    if command -v flatpak >/dev/null 2>&1 && \
+       grep -qE "^Flatpak$tab" "$arq" 2>/dev/null; then
+        flatpak update -y >/dev/null 2>&1 || rc=1
+    fi
+    if command -v snap >/dev/null 2>&1 && \
+       grep -qE "^snap$tab" "$arq" 2>/dev/null; then
+        t_como_root 'snap refresh' >/dev/null 2>&1 || rc=1
+    fi
+    t_bib_verifica_updates >/dev/null 2>&1
+    return "$rc"
 }
 
 # The last lines the PROGRAM printed, with Tandem's own lines taken out.

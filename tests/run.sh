@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2702538516 6367" "$soma_esperados"
+      "4212917113 6381" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -612,6 +612,40 @@ contem "a grouped view draws a section header"        'oneui-grouphdr' "$GUI_ORD
 contem "the list is rebuilt on search, chip and sort" 'def rebuild' "$GUI_ORD_SRC"
 TANDEM_ORD_SRC="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
 contem "acao_biblioteca sends the organize labels"    'ordem_sistema' "$TANDEM_ORD_SRC"
+
+# 4.76: the "Update all" button. t_bib_ha_updates is true only when the cache
+# lists a program with an update; t_bib_atualiza_tudo updates ONLY the managers
+# the cache says have one - so it never asks for a root password to refresh snaps
+# when only a flatpak needs it. Exercised with stubs that log every call; the
+# cache update line ends in the id, the refresh-check ends in "--list", and the
+# real update ends in "update"/"refresh", so the three are told apart.
+UAL="$TMPROOT/upall"; mkdir -p "$UAL/bin" "$UAL/home"
+printf '#!/bin/sh\necho "flatpak $*" >> "%s/calls"\n' "$UAL" > "$UAL/bin/flatpak"
+printf '#!/bin/sh\necho "snap $*" >> "%s/calls"\n' "$UAL" > "$UAL/bin/snap"
+printf '#!/bin/sh\nshift 0\necho "sudo $*" >> "%s/calls"\n"$@" 2>/dev/null || true\n' "$UAL" > "$UAL/bin/sudo"
+chmod +x "$UAL/bin"/*
+ual_run() {   # $1 = cache contents, $2 = shell to run after seeding the cache
+    env HOME="$UAL/home" PATH="$UAL/bin:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"
+                 a="$(t_bib_updates_arquivo)"; mkdir -p "$(dirname "$a")"
+                 printf "%b" "$1" > "$a"; rm -f "'"$UAL"'/calls"; '"$2"'' _ "$1" 2>/dev/null
+}
+equal "a cache with an update means there is something to update" "0" \
+      "$(ual_run 'Flatpak\torg.x\n' 't_bib_ha_updates; echo $?')"
+equal "a cache with only checked-markers has nothing to update" "1" \
+      "$(ual_run '#checado\tFlatpak\n' 't_bib_ha_updates; echo $?')"
+equal "Update all runs the manager that has an update (flatpak)" "sim" \
+      "$(ual_run 'Flatpak\torg.x\n' 't_bib_atualiza_tudo >/dev/null 2>&1; grep -q "^flatpak update" "'"$UAL"'/calls" && echo sim || echo nao')"
+equal "  and does NOT update snap when no snap has one (no needless root prompt)" "0" \
+      "$(ual_run 'Flatpak\torg.x\n' 't_bib_atualiza_tudo >/dev/null 2>&1; grep -cE "snap refresh$" "'"$UAL"'/calls"')"
+equal "Update all updates snap through root when a snap has one" "sim" \
+      "$(ual_run 'snap\tvlc\n' 't_bib_atualiza_tudo >/dev/null 2>&1; grep -qE "snap refresh$" "'"$UAL"'/calls" && echo sim || echo nao')"
+GUI_UAL_SRC="$(cat "$ROOT/src/lib/gui.py")"
+contem "the home window carries an Update all button"  'oneui-updateall' "$GUI_UAL_SRC"
+contem "  shown only when a program actually has an update" 'r[4] == "sim" and r[5] == "sim"' "$GUI_UAL_SRC"
+TANDEM_UAL_SRC="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "Update all is dispatched to t_bib_atualiza_tudo" 't_bib_atualiza_tudo' "$TANDEM_UAL_SRC"
+contem "  and a failed update is not silent"             'atualizacao_falhou' "$TANDEM_UAL_SRC"
 
 section "evidence gate (proofgate)"
 

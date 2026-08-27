@@ -254,6 +254,8 @@ headerbar { background: transparent; box-shadow: none; }
 .oneui-pill { border-radius: 22px; padding: 12px 26px; font-weight: 700; font-size: 15px; }
 .oneui-primary { background: linear-gradient(135deg,#2f6bff 0%,#12b6c8 100%); color: #ffffff; box-shadow: 0 8px 18px rgba(47,107,255,.35); }
 .oneui-primary:hover { filter: brightness(1.05); }
+.oneui-updateall { background: linear-gradient(135deg,#f5a623 0%,#e0850f 100%); color: #ffffff; box-shadow: 0 8px 18px rgba(224,133,15,.35); }
+.oneui-updateall:hover { filter: brightness(1.05); }
 .oneui-ghost { background: @GHOSTBG@; color: @GHOSTFG@; }
 .oneui-mono textview, .oneui-mono text { font-family: monospace; font-size: 13px; color: @CTEXT@; }
 .oneui-progress > trough { min-height: 14px; border-radius: 999px; background: @GHOSTBG@; }
@@ -739,12 +741,19 @@ def _home_window(app, title, records, action_file, result, msgs):
     scr.set_child(listbox)
     root.append(scr)
 
-    # Bottom primary: install or open a file.
-    bar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    # Bottom bar. When at least one program has an update, an "Update all" button
+    # sits above the install action - the Play-Store gesture the owner asked for.
+    bar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
     bar.set_margin_top(6)
     bar.set_margin_bottom(16)
     bar.set_margin_start(22)
     bar.set_margin_end(22)
+    if any(r[4] == "sim" and r[5] == "sim" for r in records):
+        upall = Gtk.Button(label=msgs.get("bib_atualizar_tudo", "Update all"))
+        upall.add_css_class("oneui-pill")
+        upall.add_css_class("oneui-updateall")
+        upall.connect("clicked", lambda _b: choose("atualizar-tudo"))
+        bar.append(upall)
     prim = Gtk.Button(label=msgs.get("install", "Install or open a file"))
     prim.add_css_class("oneui-pill")
     prim.add_css_class("oneui-primary")
@@ -884,7 +893,8 @@ def main():
             # arrive translated without a pile of positional arguments.
             keys = ["all", "open", "install", "search", "count", "tools",
                     "dot_atualizar", "dot_atual", "dot_gerido", "dot_checando",
-                    "ordem_nome", "ordem_sistema", "ordem_update"]
+                    "ordem_nome", "ordem_sistema", "ordem_update",
+                    "bib_atualizar_tudo"]
             labels = (argv[3] if len(argv) > 3 else "").split("\t")
             msgs = {}
             for i, k in enumerate(keys):

@@ -6129,3 +6129,15 @@ msgstr "Por sistema"
 msgctxt "ordem_update"
 msgid "By update"
 msgstr "Por actualización"
+
+msgctxt "bib_atualizar_tudo"
+msgid "Update all"
+msgstr "Actualizar todo"
+
+msgctxt "atualizando_tudo"
+msgid "Updating your programs…"
+msgstr "Actualizando tus programas…"
+
+msgctxt "atualizacao_falhou"
+msgid "Some updates could not be finished. Check your connection and try again."
+msgstr "Algunas actualizaciones no se completaron. Revisa tu conexión e inténtalo de nuevo."

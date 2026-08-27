@@ -6094,3 +6094,15 @@ msgstr "सिस्टम से"
 msgctxt "ordem_update"
 msgid "By update"
 msgstr "अपडेट से"
+
+msgctxt "bib_atualizar_tudo"
+msgid "Update all"
+msgstr "सभी अपडेट करें"
+
+msgctxt "atualizando_tudo"
+msgid "Updating your programs…"
+msgstr "आपके प्रोग्राम अपडेट हो रहे हैं…"
+
+msgctxt "atualizacao_falhou"
+msgid "Some updates could not be finished. Check your connection and try again."
+msgstr "कुछ अपडेट पूरे नहीं हो सके। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"

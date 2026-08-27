@@ -6108,3 +6108,15 @@ msgstr "By system"
 msgctxt "ordem_update"
 msgid "By update"
 msgstr "By update"
+
+msgctxt "bib_atualizar_tudo"
+msgid "Update all"
+msgstr "Update all"
+
+msgctxt "atualizando_tudo"
+msgid "Updating your programs…"
+msgstr "Updating your programs…"
+
+msgctxt "atualizacao_falhou"
+msgid "Some updates could not be finished. Check your connection and try again."
+msgstr "Some updates could not be finished. Check your connection and try again."

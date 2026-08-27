@@ -1,3 +1,24 @@
+tandem (4.76) unstable; urgency=medium
+
+  * An "Update all" button on the program library, the way a phone's app store
+    has one. It sits above the install action and appears ONLY when at least
+    one program actually has an update waiting (t_bib_ha_updates); one press
+    updates them all behind the progress window - flatpak updates its own apps,
+    and snap goes through t_como_root because it needs a password. It touches
+    ONLY the managers the cache says have an update (t_bib_atualiza_tudo), so it
+    never asks for a root password to refresh snaps when only a flatpak needs
+    updating. When it is done it refreshes the update cache and reopens the
+    library, so the amber dots turn green in front of the owner; and a failed
+    update is NOT silent - it says so with a plain sentence, the project's
+    first rule. The decision of which manager to run is pure and pinned with
+    stubs that log every call (flatpak alone does not trigger snap, a snap
+    update goes through root), and the button's visibility is gated on a real
+    update in every direction. Three new messages (bib_atualizar_tudo,
+    atualizando_tudo, atualizacao_falhou), translated in all seven languages.
+    Rendered under real GTK4 - an amber button matching the update dots.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 27 Aug 2026 04:32:47 +0000
+
 tandem (4.75) unstable; urgency=medium
 
   * The program library gets a view control, the way a file manager does. A
