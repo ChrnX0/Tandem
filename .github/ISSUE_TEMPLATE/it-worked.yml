@@ -1,0 +1,52 @@
+name: A program worked
+description: A program you were not sure about ran fine through Tandem — tell others
+title: "[worked] "
+labels: ["worked"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports of what **works** are as valuable as bug reports — they save the
+        next person the doubt. You do not need to know anything technical.
+
+        If you like, Tandem writes an anonymous one-line report for you:
+
+        ```bash
+        tandem contribuir <the program's file>
+        ```
+
+        That line carries a fingerprint of the file and what fixed it — no
+        filename, no path, no username, nothing personal. Paste it below, or just
+        tell us in your own words.
+  - type: input
+    id: program
+    attributes:
+      label: Which program is it?
+      description: Name and version, if you know them. Do not attach the program itself.
+      placeholder: "Acme POS 4.2, 32-bit installer"
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How did it go?
+      description: Did it just open, or did Tandem have to install or fix something first?
+      placeholder: |
+        Double-clicked it, Tandem installed a component it asked about, and the program opened fine.
+    validations:
+      required: true
+  - type: input
+    id: distro
+    attributes:
+      label: Which Linux are you on?
+      placeholder: "Zorin OS 18, or Ubuntu 24.04"
+    validations:
+      required: false
+  - type: textarea
+    id: line
+    attributes:
+      label: The line from "tandem contribuir" (optional)
+      description: If you ran it, paste the one line here.
+      render: text
+    validations:
+      required: false

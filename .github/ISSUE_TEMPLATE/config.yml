@@ -1,5 +1,11 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Ask a question or share (Discussions)
+    url: https://github.com/ChrnX0/Tandem/discussions
+    about: Questions, ideas and general talk — anything that is not a bug report.
+  - name: What Tandem is (the website)
+    url: https://chrnx0.github.io/Tandem/
+    about: A plain-language tour of what it does and how.
   - name: How to contribute
     url: https://github.com/ChrnX0/Tandem/blob/main/CONTRIBUTING.md
     about: What is worth more than code, and the five rules that do not bend.
