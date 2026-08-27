@@ -3376,6 +3376,54 @@ grepped the old single body — the fix was to widen their corpus to span all th
 panel functions, not to weaken the assertion; watching them fail first, then pass,
 is what proved the strings had MOVED, not vanished.
 
+**v4.79 IS PUBLISHED** — 2026-08-27, tag `v4.79` at `62a7207`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (606440 bytes, sha256 `1f53e7be…`)
+and the generic bundle (606546 bytes, sha256 `258031ca…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag (downloaded bytes `cmp`-identical to the
+local build); PKGBUILD + tandem.install attached. It is the guard Codex named as
+the follow-up when it caught the 4.78 record overstating that both tools-menu
+faces read one shared list. Only the DISPATCH is shared (`acao_painel_executa`),
+so what a tool DOES cannot drift; but the modern face reads `acao_painel_itens`
+while the zenity fallback declares its own two-level rows, so the SET of tools
+each offers was kept in step only by hand. A new test extracts the tokens each
+face offers and asserts the two sets are identical — proven non-vacuous by
+removing a zenity row and watching it fire, naming the tool the fallback would
+have lost (`logs`). The stale comment/description were corrected to match; no
+product behaviour change. Suite green; both literal counters 0.
+
+**v4.80 IS PUBLISHED** — 2026-08-27, tag `v4.80` at `5b75af8`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (609116 bytes, sha256 `9e06f487…`)
+and the generic bundle (609329 bytes, sha256 `eca2f695…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag (downloaded bytes `cmp`-identical);
+PKGBUILD + tandem.install attached. It is the owner's catch: the program library
+showed **Open** on every row but no way to **uninstall**. Adds a per-program
+Remove action — a quiet trash button beside Open that reveals red on hover — and
+it is not one button: each of the six worlds a program can come from uninstalls
+its own way. A Flatpak per-user, a snap as root (`t_como_root`), a Waydroid app
+through Android, an AppImage by removing its menu entry (the downloaded file is
+left in place, never deleted), a Windows program through Wine's own uninstaller
+(`acao_uninstall`, rule-1-safe — only ever our prefix). A **system** package (one
+the distribution shipped) is deliberately NOT one-click-removed from a shop
+counter: Tandem names the software manager instead, because apt-removing it by a
+stray click is a blast radius the project refuses. Every real removal is CONFIRMED
+gone before it reports success (`exit 0` is never proof), removing anything is
+confirmed first (`t_pergunta`), and a failure is spoken — never silent. The
+decision `t_bib_desinstala_como` is pure and pinned for all six sources + an
+unknown; the click travels as one `desinstalar<TAB>fonte<TAB>id<TAB>name` token
+through the same temp-file contract as Open. Five new messages, all seven
+languages (899 each, 0 untranslated, 0 fuzzy). **Codex caught two false-success
+paths on review and both shipped fixed in the same version:** (1) the Waydroid
+verify fell through to `return 0` when `pm list packages` itself failed — a failed
+inventory read as "package gone"; it now requires the query's exit status to be 0
+before trusting the empty list (pinned by a stubbed-waydroid test: query-fails →
+rc 1). (2) the Wine uninstall passed the shortcut `Name`, which need not match the
+registry `DisplayName`, so a valid uninstall could dead-end at "not found";
+`acao_uninstall` now tries the hint (direct match unchanged) and falls back to its
+registry chooser on a miss. Suite 1939 passed / 0 failed / 1 skipped; build.py
+--check clean (4.80); both literal counters 0.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
