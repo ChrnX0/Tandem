@@ -3253,6 +3253,46 @@ drives the library must isolate every tool the library calls. Suite 1890 passed 
 0 / 1 skipped; both literal counters read 0. The one-click "Update all" button
 (Play-Store style, the owner's next request) is v4.76.
 
+**v4.76 IS PUBLISHED** — 2026-08-27, tag `v4.76` at `f83632e`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (602464 bytes, sha256 `0d10990d…`)
+and the generic bundle (602492 bytes, sha256 `2ab9b63b…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag (the downloaded bytes are `cmp`
+byte-identical to the local build). It is the **"Update all" button** the owner
+asked for (*"um botão para fazer update de tudo de uma vez, tipo o q tem na
+playstore"*): the program library gains an amber button (matching the update
+dots) above the install action, shown ONLY when at least one program has an
+update; one press updates them all behind the progress window — flatpak directly,
+snap through `t_como_root` (root). When it finishes it refreshes the cache and
+reopens the library so the amber dots turn green in front of the owner; a failed
+update is NOT silent (`atualizacao_falhou`). Three new messages
+(`bib_atualizar_tudo`, `atualizando_tudo`, `atualizacao_falhou`), all seven
+languages; rendered under real GTK4. Suite 1899 / 0 / 1 skipped; both literal
+counters read 0. This completes the owner's three explicit UI requests: the
+update dot (v4.74), the file-manager view control (v4.75), and this.
+**Two things were caught AFTER the first commit, and both are the lesson of the
+version.** (1) A test — "Update all updates snap through root" — passed as root
+(this container) but FAILED on CI, which runs headless and non-root where
+`t_como_root` cannot elevate (no sudo tty, no pkexec GUI, not root), so the real
+`snap refresh` was never called; the product is fine (the button runs in a GUI
+context where pkexec elevates), the TEST leaned on the environment — it stubs
+`t_como_root` now, the same class as the 4.75 `boff_run` snap fix. (2) Codex (the
+repo's reviewer) caught a genuine FALSE-SUCCESS: `t_bib_atualiza_tudo` re-read the
+update cache to decide which managers to run, and the daily background refresh can
+EMPTY that cache between the screen being drawn (with the button) and the button
+being pressed — so a vanished cache would update nothing and still return 0,
+success reported for an update never attempted. The fix is Codex's own primary
+suggestion and the correct design: the button SNAPSHOTS the managers the screen
+drew as having an update into the click token (`atualizar-tudo\t<mgr>…`), and
+`t_bib_atualiza_tudo` updates exactly those, no longer reading the cache — it acts
+on what the owner saw, immune to the race. The now-unused `t_bib_ha_updates` was
+removed. **One honest drift to note:** the shipped `debian/changelog` entry, written
+before the Codex fix, still describes the cache-read version ("touches only the
+managers the cache says have an update"); the code in the same release does the
+screen-snapshot instead — the changelog is published history and was not rewritten,
+but the behaviour is the snapshot, as this record and the release notes' feature
+description both stand corrected here.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
