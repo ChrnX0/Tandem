@@ -3774,3 +3774,12 @@ Par système
 
 @ordem_update
 Par mise à jour
+
+@bib_atualizar_tudo
+Tout mettre à jour
+
+@atualizando_tudo
+Mise à jour de vos programmes…
+
+@atualizacao_falhou
+Certaines mises à jour n'ont pas abouti. Vérifiez votre connexion et réessayez.

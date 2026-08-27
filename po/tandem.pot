@@ -4837,3 +4837,15 @@ msgstr ""
 msgctxt "ordem_update"
 msgid "By update"
 msgstr ""
+
+msgctxt "bib_atualizar_tudo"
+msgid "Update all"
+msgstr ""
+
+msgctxt "atualizando_tudo"
+msgid "Updating your programs…"
+msgstr ""
+
+msgctxt "atualizacao_falhou"
+msgid "Some updates could not be finished. Check your connection and try again."
+msgstr ""

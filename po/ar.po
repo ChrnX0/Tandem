@@ -6134,3 +6134,15 @@ msgstr "حسب النظام"
 msgctxt "ordem_update"
 msgid "By update"
 msgstr "حسب التحديث"
+
+msgctxt "bib_atualizar_tudo"
+msgid "Update all"
+msgstr "تحديث الكل"
+
+msgctxt "atualizando_tudo"
+msgid "Updating your programs…"
+msgstr "جارٍ تحديث برامجك…"
+
+msgctxt "atualizacao_falhou"
+msgid "Some updates could not be finished. Check your connection and try again."
+msgstr "تعذّر إكمال بعض التحديثات. تحقّق من اتصالك وحاول مجددًا."

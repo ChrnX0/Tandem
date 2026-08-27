@@ -5947,3 +5947,15 @@ msgstr "按系统"
 msgctxt "ordem_update"
 msgid "By update"
 msgstr "按更新"
+
+msgctxt "bib_atualizar_tudo"
+msgid "Update all"
+msgstr "全部更新"
+
+msgctxt "atualizando_tudo"
+msgid "Updating your programs…"
+msgstr "正在更新你的程序…"
+
+msgctxt "atualizacao_falhou"
+msgid "Some updates could not be finished. Check your connection and try again."
+msgstr "部分更新未能完成。请检查网络后重试。"

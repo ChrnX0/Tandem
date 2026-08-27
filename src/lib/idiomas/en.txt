@@ -3688,3 +3688,12 @@ By system
 
 @ordem_update
 By update
+
+@bib_atualizar_tudo
+Update all
+
+@atualizando_tudo
+Updating your programs…
+
+@atualizacao_falhou
+Some updates could not be finished. Check your connection and try again.

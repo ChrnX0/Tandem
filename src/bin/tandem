@@ -2172,12 +2172,13 @@ acao_biblioteca() {
     n="$(printf '%s' "$registros" | grep -c .)"
     acaofile="$(mktemp 2>/dev/null || true)"
     # Only the labels that translate; the system names live in gui.py.
-    labels="$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' \
+    labels="$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' \
         "$(t_msg bib_todos)" "$(t_msg bib_abrir)" "$(t_msg bib_instalar)" \
         "$(t_msg bib_buscar)" "$(t_msg bib_contagem "$n")" \
         "$(t_msg bib_ferramentas)" "$(t_msg dot_atualizar)" \
         "$(t_msg dot_atual)" "$(t_msg dot_gerido)" "$(t_msg dot_checando)" \
-        "$(t_msg ordem_nome)" "$(t_msg ordem_sistema)" "$(t_msg ordem_update)")"
+        "$(t_msg ordem_nome)" "$(t_msg ordem_sistema)" "$(t_msg ordem_update)" \
+        "$(t_msg bib_atualizar_tudo)")"
     printf '%s\n' "$registros" | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
         home "Tandem" "$acaofile" "$labels" >/dev/null 2>&1
     acao="$(cat "$acaofile" 2>/dev/null)"; rm -f "$acaofile" 2>/dev/null
@@ -2192,6 +2193,23 @@ acao_biblioteca() {
                  --file-filter="$(t_msg pan_filtro_programas) | $TANDEM_GLOBS" \
                  --file-filter="$(t_msg pan_filtro_todos) | *" 2>/dev/null)" || return 0
             acao_install "$f" ;;
+        atualizar-tudo)
+            # The managers to update travel in the token after the verb (the
+            # screen's snapshot of what had an update), tab-separated. Update
+            # them behind the progress window, then reopen the library so the
+            # dots show the new state. A failed update says so - never a silent
+            # one. Reopening only happens after the owner asked for it, and the
+            # button is gone once nothing is pending, so this does not loop.
+            case "$acao" in
+                *"$tab"*) f="${acao#*"$tab"}" ;;
+                *) f="" ;;
+            esac
+            t_progresso_abre "$(t_msg atualizando_tudo)"
+            # shellcheck disable=SC2086  # the managers are a fixed word list that MUST split
+            t_bib_atualiza_tudo $f; l="$?"
+            t_progresso_fecha
+            [ "$l" = 0 ] || t_erro "$(t_msg atualizacao_falhou)"
+            acao_biblioteca ;;
         ferramentas)
             acao_painel ;;
     esac

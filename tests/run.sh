@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2702538516 6367" "$soma_esperados"
+      "1304645504 6379" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -612,6 +612,39 @@ contem "a grouped view draws a section header"        'oneui-grouphdr' "$GUI_ORD
 contem "the list is rebuilt on search, chip and sort" 'def rebuild' "$GUI_ORD_SRC"
 TANDEM_ORD_SRC="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
 contem "acao_biblioteca sends the organize labels"    'ordem_sistema' "$TANDEM_ORD_SRC"
+
+# 4.76: the "Update all" button. t_bib_atualiza_tudo updates EXACTLY the managers
+# it is handed - the screen snapshots the rows it drew as having an update and
+# passes those in the token, so a background cache refresh that empties the cache
+# between draw and press cannot make the update quietly do nothing and call it
+# success. flatpak updates directly; snap goes through t_como_root (root).
+# Exercised with stubs that log every call - the real update ends in
+# "update"/"refresh", the cache re-check ends in "--list", so they are told apart.
+# t_como_root is stubbed to run the script: how it elevates (sudo / pkexec /
+# already root) depends on the machine and a headless non-root CI has none.
+UAL="$TMPROOT/upall"; mkdir -p "$UAL/bin" "$UAL/home"
+printf '#!/bin/sh\necho "flatpak $*" >> "%s/calls"\n' "$UAL" > "$UAL/bin/flatpak"
+printf '#!/bin/sh\necho "snap $*" >> "%s/calls"\n' "$UAL" > "$UAL/bin/snap"
+chmod +x "$UAL/bin"/*
+ual_run() {   # $1 = shell to run after sourcing, with the stubs on PATH
+    env HOME="$UAL/home" PATH="$UAL/bin:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        bash -c '. "'"$ROOT"'/src/lib/common.sh"; rm -f "'"$UAL"'/calls"; '"$1"'' 2>/dev/null
+}
+equal "Update all runs flatpak update for the Flatpak manager" "sim" \
+      "$(ual_run 't_bib_atualiza_tudo Flatpak >/dev/null 2>&1; grep -q "^flatpak update" "'"$UAL"'/calls" && echo sim || echo nao')"
+equal "  and does not touch snap when snap was not among them" "0" \
+      "$(ual_run 't_bib_atualiza_tudo Flatpak >/dev/null 2>&1; grep -cE "snap refresh$" "'"$UAL"'/calls"')"
+equal "a snap update is routed through root (t_como_root)" "sim" \
+      "$(ual_run 't_como_root() { sh -c "$1" tandem; }; t_bib_atualiza_tudo snap >/dev/null 2>&1; grep -qE "snap refresh$" "'"$UAL"'/calls" && echo sim || echo nao')"
+equal "given no managers it attempts no update (an emptied snapshot is not a false success)" "0" \
+      "$(ual_run 't_bib_atualiza_tudo >/dev/null 2>&1; grep -cE "flatpak update|snap refresh$" "'"$UAL"'/calls"')"
+GUI_UAL_SRC="$(cat "$ROOT/src/lib/gui.py")"
+contem "the home window carries an Update all button"  'oneui-updateall' "$GUI_UAL_SRC"
+contem "  shown only when a program actually has an update" 'r[4] == "sim" and r[5] == "sim"' "$GUI_UAL_SRC"
+contem "  and it snapshots the managers into the token" 'atualizar-tudo\t' "$GUI_UAL_SRC"
+TANDEM_UAL_SRC="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "Update all is dispatched to t_bib_atualiza_tudo" 't_bib_atualiza_tudo' "$TANDEM_UAL_SRC"
+contem "  and a failed update is not silent"             'atualizacao_falhou' "$TANDEM_UAL_SRC"
 
 section "evidence gate (proofgate)"
 

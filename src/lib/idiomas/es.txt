@@ -3713,3 +3713,12 @@ Por sistema
 
 @ordem_update
 Por actualización
+
+@bib_atualizar_tudo
+Actualizar todo
+
+@atualizando_tudo
+Actualizando tus programas…
+
+@atualizacao_falhou
+Algunas actualizaciones no se completaron. Revisa tu conexión e inténtalo de nuevo.
