@@ -6096,3 +6096,15 @@ msgstr "Tandem doesn't manage its updates"
 msgctxt "dot_checando"
 msgid "Checking for updates…"
 msgstr "Checking for updates…"
+
+msgctxt "ordem_nome"
+msgid "By name"
+msgstr "By name"
+
+msgctxt "ordem_sistema"
+msgid "By system"
+msgstr "By system"
+
+msgctxt "ordem_update"
+msgid "By update"
+msgstr "By update"

@@ -6122,3 +6122,15 @@ msgstr "لا يدير Tandem تحديثاته"
 msgctxt "dot_checando"
 msgid "Checking for updates…"
 msgstr "جارٍ التحقق من التحديثات…"
+
+msgctxt "ordem_nome"
+msgid "By name"
+msgstr "حسب الاسم"
+
+msgctxt "ordem_sistema"
+msgid "By system"
+msgstr "حسب النظام"
+
+msgctxt "ordem_update"
+msgid "By update"
+msgstr "حسب التحديث"

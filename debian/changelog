@@ -1,3 +1,32 @@
+tandem (4.75) unstable; urgency=medium
+
+  * The program library gets a view control, the way a file manager does. A
+    small "organize" selector sits to the right of the system filters, with
+    three modes: by name (A-Z, the default), by system (grouped, with a header
+    per system - Windows / Android / Linux, the grouping a file manager shows),
+    and by update (what needs acting on first: an update waiting, then not
+    checked, then up to date, then the programs Tandem does not manage). The
+    order is a PURE function (_order_items in gui.py), imported headless and
+    pinned in every direction - by-name sorts across every system, by-system
+    groups under a header per system with apps by name within, by-update ranks
+    amber first, and an unknown mode falls back to by-name. The list is rebuilt
+    on search, chip and sort together, so a grouped view can insert its headers.
+    Rendered under real GTK4 in the grouped and by-update views. Three new
+    messages (ordem_nome, ordem_sistema, ordem_update), translated in all seven
+    languages. Deliberately NOT a "by size" or "by date" sort: those are not
+    uniformly available across the six program sources (only flatpak exposes an
+    installed size; most expose no install date), and a sort that is blank for
+    half the list would be worse than none - the no-false-data rule.
+  * A test-isolation fix rides along, found by the suite hanging on this
+    machine: the boff_run helper (added in 4.74) exercises t_biblioteca but
+    stubbed only flatpak, so t_bib_snap ran the real `snap list`, which hangs on
+    snapd on a machine that has snap installed (intermittent - it passed CI and
+    an earlier local run, where snap errors fast). It stubs snap now, the way
+    bib_run and bup_run already do; a helper that drives the library must
+    isolate every tool the library calls.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 27 Aug 2026 03:40:06 +0000
+
 tandem (4.74) unstable; urgency=medium
 
   * Coherence pass, part 3 (the visible enrichment): the program library now

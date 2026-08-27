@@ -5935,3 +5935,15 @@ msgstr "Tandem 不管理它的更新"
 msgctxt "dot_checando"
 msgid "Checking for updates…"
 msgstr "正在检查更新…"
+
+msgctxt "ordem_nome"
+msgid "By name"
+msgstr "按名称"
+
+msgctxt "ordem_sistema"
+msgid "By system"
+msgstr "按系统"
+
+msgctxt "ordem_update"
+msgid "By update"
+msgstr "按更新"

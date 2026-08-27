@@ -3704,3 +3704,12 @@ Tandem no gestiona sus actualizaciones
 
 @dot_checando
 Buscando actualizaciones…
+
+@ordem_nome
+Por nombre
+
+@ordem_sistema
+Por sistema
+
+@ordem_update
+Por actualización

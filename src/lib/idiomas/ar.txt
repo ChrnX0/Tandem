@@ -3793,3 +3793,12 @@ Tandem - الصحّة
 
 @dot_checando
 جارٍ التحقق من التحديثات…
+
+@ordem_nome
+حسب الاسم
+
+@ordem_sistema
+حسب النظام
+
+@ordem_update
+حسب التحديث

@@ -3530,3 +3530,12 @@ Tandem 不管理它的更新
 
 @dot_checando
 正在检查更新…
+
+@ordem_nome
+按名称
+
+@ordem_sistema
+按系统
+
+@ordem_update
+按更新

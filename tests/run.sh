@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "2020326152 6198" "$soma_esperados"
+      "2702538516 6367" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -566,6 +566,11 @@ contem "acao_biblioteca sends the dot labels to the window" 'dot_atualizar' "$TA
 # never healthy). The flatpak stub here FAILS remote-ls, as if offline.
 BOFF="$TMPROOT/bibupd_off"; mkdir -p "$BOFF/bin" "$BOFF/home" "$BOFF/sys"
 printf '#!/bin/sh\ncase "$*" in *remote-ls*) exit 1;; *) printf "org.moz.ff\\tFirefox\\n";; esac\n' > "$BOFF/bin/flatpak"
+# snap must be stubbed too: t_biblioteca calls t_bib_snap, and a real `snap list`
+# on a machine with snap installed can hang on snapd. An empty no-op keeps this
+# scenario about the offline flatpak only. (bib_run and bup_run stub snap for the
+# same reason; boff_run must not be the one that forgets.)
+printf '#!/bin/sh\nexit 0\n' > "$BOFF/bin/snap"
 chmod +x "$BOFF/bin"/*
 boff_run() {
     env HOME="$BOFF/home" PATH="$BOFF/bin:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
@@ -577,6 +582,36 @@ equal "an updatable app from an unchecked source reads unknown, never a false gr
       "$(boff_run 't_bib_verifica_updates; t_biblioteca | grep Firefox | cut -f6')"
 equal "a source whose check succeeded IS recorded as checked" "0" \
       "$(bup_run 't_bib_verifica_updates; t_bib_foi_checado Flatpak; echo $?')"
+
+# 4.75: the library view control. _order_items orders the list and, for the
+# 'system' view, groups it with a header before each system - pure, so the
+# ordering is pinned. Imported headless (it touches no gi). A '#' prefix marks a
+# group header in the compact form the test reads.
+gui_order() {
+    python3 -c 'import sys; sys.path.insert(0, sys.argv[2]); import gui
+recs = [("windows","7-Zip","Wine","w","nao","nao"),
+        ("android","WhatsApp","Waydroid","a","nao","nao"),
+        ("linux","Firefox","Flatpak","f","sim","sim"),
+        ("linux","VLC","snap","v","sim","nao"),
+        ("linux","Inkscape","Flatpak","i","sim","?")]
+print("|".join(("#"+val) if kind=="group" else val[1]
+               for kind, val in gui._order_items(recs, sys.argv[1])))' \
+        "$1" "$ROOT/src/lib" 2>/dev/null
+}
+equal "by name sorts A-Z across every system" \
+      "7-Zip|Firefox|Inkscape|VLC|WhatsApp" "$(gui_order nome)"
+equal "by system groups under a header per system, apps by name within" \
+      "#windows|7-Zip|#android|WhatsApp|#linux|Firefox|Inkscape|VLC" "$(gui_order sistema)"
+equal "by update puts what needs acting on first: amber, unchecked, current, unmanaged" \
+      "Firefox|Inkscape|VLC|7-Zip|WhatsApp" "$(gui_order update)"
+equal "an unknown mode falls back to by-name" \
+      "7-Zip|Firefox|Inkscape|VLC|WhatsApp" "$(gui_order lixo)"
+GUI_ORD_SRC="$(cat "$ROOT/src/lib/gui.py")"
+contem "the home window offers the organize selector" 'oneui-ordena' "$GUI_ORD_SRC"
+contem "a grouped view draws a section header"        'oneui-grouphdr' "$GUI_ORD_SRC"
+contem "the list is rebuilt on search, chip and sort" 'def rebuild' "$GUI_ORD_SRC"
+TANDEM_ORD_SRC="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "acao_biblioteca sends the organize labels"    'ordem_sistema' "$TANDEM_ORD_SRC"
 
 section "evidence gate (proofgate)"
 
