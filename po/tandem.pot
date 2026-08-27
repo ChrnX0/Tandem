@@ -4869,3 +4869,23 @@ msgstr ""
 msgctxt "fonte_sistema"
 msgid "System"
 msgstr ""
+
+msgctxt "bib_desinstalar"
+msgid "Uninstall"
+msgstr ""
+
+msgctxt "desinst_confirmar"
+msgid "Remove {1}? This cannot be undone."
+msgstr ""
+
+msgctxt "desinstalando"
+msgid "Removing {1}…"
+msgstr ""
+
+msgctxt "desinst_falhou"
+msgid "I could not remove {1}."
+msgstr ""
+
+msgctxt "desinst_sistema"
+msgid "{1} came with your system. To remove it, use the software manager that came with your system."
+msgstr ""

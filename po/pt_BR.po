@@ -4524,23 +4524,19 @@ msgstr "O que você quer fazer?"
 
 msgctxt "pan_grupo_programas"
 msgid "Programs"
-msgstr ""
-"Programas"
+msgstr "Programas"
 
 msgctxt "pan_grupo_diagnostico"
 msgid "Diagnosis"
-msgstr ""
-"Diagnóstico"
+msgstr "Diagnóstico"
 
 msgctxt "pan_grupo_dados"
 msgid "Your data"
-msgstr ""
-"Seus dados"
+msgstr "Seus dados"
 
 msgctxt "pan_grupo_ajuda"
 msgid "Community and help"
-msgstr ""
-"Comunidade e ajuda"
+msgstr "Comunidade e ajuda"
 
 msgctxt "pan_col_acao"
 msgid "Action"
@@ -6162,3 +6158,28 @@ msgstr "Algumas atualizações não deram certo. Verifique sua conexão e tente 
 msgctxt "fonte_sistema"
 msgid "System"
 msgstr "Sistema"
+
+msgctxt "bib_desinstalar"
+msgid "Uninstall"
+msgstr ""
+"Desinstalar"
+
+msgctxt "desinst_confirmar"
+msgid "Remove {1}? This cannot be undone."
+msgstr ""
+"Remover {1}? Isso não pode ser desfeito."
+
+msgctxt "desinstalando"
+msgid "Removing {1}…"
+msgstr ""
+"Removendo {1}…"
+
+msgctxt "desinst_falhou"
+msgid "I could not remove {1}."
+msgstr ""
+"Não consegui remover {1}."
+
+msgctxt "desinst_sistema"
+msgid "{1} came with your system. To remove it, use the software manager that came with your system."
+msgstr ""
+"{1} veio com o seu sistema. Para removê-lo, use a central de programas do sistema."

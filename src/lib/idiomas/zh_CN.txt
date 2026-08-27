@@ -3563,3 +3563,18 @@ Tandem 不管理它的更新
 
 @fonte_sistema
 系统
+
+@bib_desinstalar
+卸载
+
+@desinst_confirmar
+卸载 {1}？此操作无法撤销。
+
+@desinstalando
+正在卸载 {1}…
+
+@desinst_falhou
+无法卸载 {1}。
+
+@desinst_sistema
+{1} 是系统自带的。要卸载它，请使用系统自带的软件管理器。

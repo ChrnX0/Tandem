@@ -4501,23 +4501,19 @@ msgstr "आप क्या करना चाहते हैं?"
 
 msgctxt "pan_grupo_programas"
 msgid "Programs"
-msgstr ""
-"प्रोग्राम"
+msgstr "प्रोग्राम"
 
 msgctxt "pan_grupo_diagnostico"
 msgid "Diagnosis"
-msgstr ""
-"निदान"
+msgstr "निदान"
 
 msgctxt "pan_grupo_dados"
 msgid "Your data"
-msgstr ""
-"आपका डेटा"
+msgstr "आपका डेटा"
 
 msgctxt "pan_grupo_ajuda"
 msgid "Community and help"
-msgstr ""
-"समुदाय और मदद"
+msgstr "समुदाय और मदद"
 
 msgctxt "pan_col_acao"
 msgid "Action"
@@ -6130,3 +6126,28 @@ msgstr "कुछ अपडेट पूरे नहीं हो सके। 
 msgctxt "fonte_sistema"
 msgid "System"
 msgstr "सिस्टम"
+
+msgctxt "bib_desinstalar"
+msgid "Uninstall"
+msgstr ""
+"अनइंस्टॉल करें"
+
+msgctxt "desinst_confirmar"
+msgid "Remove {1}? This cannot be undone."
+msgstr ""
+"{1} को हटाएँ? इसे पूर्ववत नहीं किया जा सकता।"
+
+msgctxt "desinstalando"
+msgid "Removing {1}…"
+msgstr ""
+"{1} हटाया जा रहा है…"
+
+msgctxt "desinst_falhou"
+msgid "I could not remove {1}."
+msgstr ""
+"मैं {1} को नहीं हटा सका।"
+
+msgctxt "desinst_sistema"
+msgid "{1} came with your system. To remove it, use the software manager that came with your system."
+msgstr ""
+"{1} आपके सिस्टम के साथ आया था। इसे हटाने के लिए, अपने सिस्टम के साथ आए सॉफ़्टवेयर मैनेजर का उपयोग करें।"

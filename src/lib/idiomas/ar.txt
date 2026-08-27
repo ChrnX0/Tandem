@@ -3826,3 +3826,18 @@ Tandem - الصحّة
 
 @fonte_sistema
 النظام
+
+@bib_desinstalar
+إلغاء التثبيت
+
+@desinst_confirmar
+إزالة {1}؟ لا يمكن التراجع عن هذا الإجراء.
+
+@desinstalando
+جارٍ إزالة {1}…
+
+@desinst_falhou
+لم أتمكن من إزالة {1}.
+
+@desinst_sistema
+‏{1} جاء مع نظامك. لإزالته، استخدم مدير البرامج المرفق بنظامك.

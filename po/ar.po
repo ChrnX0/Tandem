@@ -4544,23 +4544,19 @@ msgstr "ماذا تريد أن تفعل؟"
 
 msgctxt "pan_grupo_programas"
 msgid "Programs"
-msgstr ""
-"البرامج"
+msgstr "البرامج"
 
 msgctxt "pan_grupo_diagnostico"
 msgid "Diagnosis"
-msgstr ""
-"التشخيص"
+msgstr "التشخيص"
 
 msgctxt "pan_grupo_dados"
 msgid "Your data"
-msgstr ""
-"بياناتك"
+msgstr "بياناتك"
 
 msgctxt "pan_grupo_ajuda"
 msgid "Community and help"
-msgstr ""
-"المجتمع والمساعدة"
+msgstr "المجتمع والمساعدة"
 
 msgctxt "pan_col_acao"
 msgid "Action"
@@ -6170,3 +6166,28 @@ msgstr "تعذّر إكمال بعض التحديثات. تحقّق من اتص�
 msgctxt "fonte_sistema"
 msgid "System"
 msgstr "النظام"
+
+msgctxt "bib_desinstalar"
+msgid "Uninstall"
+msgstr ""
+"إلغاء التثبيت"
+
+msgctxt "desinst_confirmar"
+msgid "Remove {1}? This cannot be undone."
+msgstr ""
+"إزالة {1}؟ لا يمكن التراجع عن هذا الإجراء."
+
+msgctxt "desinstalando"
+msgid "Removing {1}…"
+msgstr ""
+"جارٍ إزالة {1}…"
+
+msgctxt "desinst_falhou"
+msgid "I could not remove {1}."
+msgstr ""
+"لم أتمكن من إزالة {1}."
+
+msgctxt "desinst_sistema"
+msgid "{1} came with your system. To remove it, use the software manager that came with your system."
+msgstr ""
+"‏{1} جاء مع نظامك. لإزالته، استخدم مدير البرامج المرفق بنظامك."
