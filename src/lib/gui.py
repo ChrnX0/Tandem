@@ -748,11 +748,19 @@ def _home_window(app, title, records, action_file, result, msgs):
     bar.set_margin_bottom(16)
     bar.set_margin_start(22)
     bar.set_margin_end(22)
-    if any(r[4] == "sim" and r[5] == "sim" for r in records):
+    upd_srcs = []
+    for r in records:
+        if r[4] == "sim" and r[5] == "sim" and r[2] not in upd_srcs:
+            upd_srcs.append(r[2])
+    if upd_srcs:
         upall = Gtk.Button(label=msgs.get("bib_atualizar_tudo", "Update all"))
         upall.add_css_class("oneui-pill")
         upall.add_css_class("oneui-updateall")
-        upall.connect("clicked", lambda _b: choose("atualizar-tudo"))
+        # The token carries the managers that had an update WHEN THE SCREEN WAS
+        # DRAWN, so the update acts on that snapshot rather than re-reading a
+        # cache that a background refresh may have emptied in the meantime.
+        upall.connect("clicked",
+                      lambda _b, s="\t".join(upd_srcs): choose("atualizar-tudo\t" + s))
         bar.append(upall)
     prim = Gtk.Button(label=msgs.get("install", "Install or open a file"))
     prim.add_css_class("oneui-pill")

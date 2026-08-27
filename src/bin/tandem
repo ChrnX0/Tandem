@@ -2194,13 +2194,19 @@ acao_biblioteca() {
                  --file-filter="$(t_msg pan_filtro_todos) | *" 2>/dev/null)" || return 0
             acao_install "$f" ;;
         atualizar-tudo)
-            # Update every program that has one, behind the progress window, then
-            # reopen the library so the dots show the new state. A failed update
-            # says so - never a silent one. Reopening only happens after the
-            # owner asked for it, and the button is gone once nothing is pending,
-            # so this does not loop on its own.
+            # The managers to update travel in the token after the verb (the
+            # screen's snapshot of what had an update), tab-separated. Update
+            # them behind the progress window, then reopen the library so the
+            # dots show the new state. A failed update says so - never a silent
+            # one. Reopening only happens after the owner asked for it, and the
+            # button is gone once nothing is pending, so this does not loop.
+            case "$acao" in
+                *"$tab"*) f="${acao#*"$tab"}" ;;
+                *) f="" ;;
+            esac
             t_progresso_abre "$(t_msg atualizando_tudo)"
-            t_bib_atualiza_tudo; l="$?"
+            # shellcheck disable=SC2086  # the managers are a fixed word list that MUST split
+            t_bib_atualiza_tudo $f; l="$?"
             t_progresso_fecha
             [ "$l" = 0 ] || t_erro "$(t_msg atualizacao_falhou)"
             acao_biblioteca ;;
