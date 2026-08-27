@@ -3311,12 +3311,15 @@ memory screen uses (`t_resultado_amigavel`). The decision is a PURE function
 returned unchanged), pinned both directions, and a test confirms `t_bib_sistema`
 still records the untranslated token. One new message (`fonte_sistema`), all
 seven languages; rendered under real GTK4. Suite 1903 / 0 / 1 skipped; both
-literal counters read 0. **This closes the owner's UI arc**: the update dot
-(v4.74), the file-manager view control (v4.75), the Play-Store "Update all"
-button (v4.76), and this label polish (v4.77) — all four of his explicit UI
-requests shipped, tested and 5-way verified. The next direction is his; the
-honest read is that the interface is now coherent across the axes he named, and
-further UI churn without a request would be invention, not the job.
+literal counters read 0. **This closes the owner's UI arc.** His THREE explicit
+UI requests were the update dot (v4.74), the file-manager view control (v4.75),
+and the Play-Store "Update all" button (v4.76) — all shipped, tested and 5-way
+verified. This label polish (v4.77) was NOT one of the three: it was autonomous
+work, the "sistema" inconsistency caught under his standing "hunt for silly
+things that slipped through" directive, not a feature he named. The next
+direction is his; the honest read is that the interface is now coherent across
+the axes he named, and further UI churn without a request would be invention,
+not the job.
 
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
