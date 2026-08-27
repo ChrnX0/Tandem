@@ -13,9 +13,9 @@
 [![reproducible](https://img.shields.io/badge/build-reproducible-brightgreen)](build.py)
 [![licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 
-**[Português](LEIAME.md)** · [Contributing](CONTRIBUTING.md) · [Idea ledger](docs/IDEAS.md) · [List format](docs/LIST-FORMAT.md)
+**[Website](https://chrnx0.github.io/Tandem/)** · **[Português](LEIAME.md)** · [Contributing](CONTRIBUTING.md) · [Idea ledger](docs/IDEAS.md) · [List format](docs/LIST-FORMAT.md)
 
-<img src="docs/imagens/painel.png" alt="The Tandem panel" width="520">
+<img src="docs/imagens/painel.png" alt="The Tandem library — your Windows, Android and Linux programs, together" width="560">
 
 </div>
 
@@ -147,8 +147,8 @@ tandem protect ~/.wine-pos     # mark any prefix untouchable, explicitly
 Download the `.deb` from **[Releases](../../releases/latest)** and double-click it. Or, from a terminal:
 
 ```bash
-curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.8_all.deb
-sudo apt install ./tandem_3.8_all.deb
+# after downloading tandem_<version>_all.deb from the Releases page:
+sudo apt install ./tandem_*_all.deb
 ```
 
 **Not on Debian or Ubuntu?** Fedora, Arch, openSUSE and the rest have no `apt` to take a `.deb`. Download the generic bundle — `tandem_<version>_generic.tar.gz` — from the same **[Releases](../../releases/latest)** page and run its installer; it lays down the exact same files:
@@ -176,7 +176,7 @@ The build is reproducible: the `.deb` attached to the release is byte-for-byte i
 ```bash
 git clone https://github.com/ChrnX0/Tandem && cd Tandem
 python3 build.py --check
-sha256sum tandem_3.8_all.deb          # compare with the .sha256 on the release
+sha256sum tandem_*_all.deb            # compare with the .sha256 on the release
 ```
 
 Every release is built by the workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml), which runs the suite and `lintian`, then really installs, configures and purges the package on Ubuntu 24.04 — and only publishes if all of that passes.

@@ -147,8 +147,8 @@ tandem protect ~/.wine-pdv     # marca qualquer perfil como intocável
 Baixe o `.deb` em **[Releases](../../releases/latest)** e clique duas vezes. Ou, pelo terminal:
 
 ```bash
-curl -LO https://github.com/ChrnX0/Tandem/releases/latest/download/tandem_3.8_all.deb
-sudo apt install ./tandem_3.8_all.deb
+# depois de baixar tandem_<versão>_all.deb da página de Releases:
+sudo apt install ./tandem_*_all.deb
 ```
 
 **Não usa Debian nem Ubuntu?** Fedora, Arch, openSUSE e as demais não têm `apt` para receber um `.deb`. Baixe o pacote genérico — `tandem_<versão>_generic.tar.gz` — na mesma página de **[Releases](../../releases/latest)** e rode o instalador; ele coloca exatamente os mesmos arquivos:
@@ -176,7 +176,7 @@ A construção é reprodutível: o `.deb` anexado ao release é byte a byte idê
 ```bash
 git clone https://github.com/ChrnX0/Tandem && cd Tandem
 python3 build.py --check
-sha256sum tandem_3.8_all.deb          # compare com o .sha256 do release
+sha256sum tandem_*_all.deb            # compare com o .sha256 do release
 ```
 
 Todo release é construído pelo workflow em [`.github/workflows/release.yml`](.github/workflows/release.yml), que roda a suíte e o `lintian`, depois instala, configura e remove o pacote de verdade num Ubuntu 24.04 — e só publica se tudo isso passar.
