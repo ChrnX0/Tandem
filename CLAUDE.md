@@ -3321,6 +3321,53 @@ direction is his; the honest read is that the interface is now coherent across
 the axes he named, and further UI churn without a request would be invention,
 not the job.
 
+**v4.78 IS PUBLISHED** — 2026-08-27, tag `v4.78` at `2dbdd63`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (606178 bytes, sha256 `11aec376…`)
+and the generic bundle (606263 bytes, sha256 `7eef6c6b…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag (the downloaded bytes are `cmp`
+byte-identical to the local build); PKGBUILD (`d79db530…`) and tandem.install
+(`cd88e662…`) attached. It is the owner's call — *"torna coerente com o oneui
+9"* — and it closes the coherence arc: the Tools menu (`Ferramentas`), reached
+from the "Tools" button on the library main screen, was the **last shared
+surface still drawn as a plain zenity list** while every window you END at (error,
+question, the health/Central panel, the wizard, the history, the library itself,
+the progress bar) had moved to the modern face. It is a rounded-card One UI GTK4
+window now: one tap per tool, an accent-tinted icon per tool, grouped into four
+sections (Programs, Diagnosis, Your data, Community and help) — ALL the tools at
+once, replacing the two-level "more"/"back" list zenity forced because only eight
+rows fit its window. Every tool the old menu offered is still there; no word
+changed in any of the seven languages. **Safe by construction, like every other
+modern window:** `gui.py` grew a `menu` mode that draws the cards, and
+`acao_painel` falls back to the zenity two-level list, then to the help text, on
+any machine without libadwaita, without a display, or with `TANDEM_GUI=zenity`.
+The refactor is the point: both faces DISPATCH through one shared
+`acao_painel_executa` and READ one shared `acao_painel_itens`, so the modern look
+and the fallback can never drift on what a tool does or offers — the
+divergence-by-construction trap closed the way the 4.54 `t_saude_achados` closed
+it. The click travels back through a temp file (the panel/home contract), never
+stdout; a drawing failure becomes exit 2, never a traceback. **Codex caught a
+real P2 and it shipped in the same version:** the zenity panel titled itself
+`Tandem $TANDEM_VERSAO` so the owner could read which Tandem he is running without
+a terminal (the deliberate 4.12 feature), and the retained zenity fallback still
+does — but the new `_menu_window` dropped it, a silent regression on the DEFAULT
+path. `gui.py menu` now takes an optional version argument and
+`acao_painel_moderno` passes `Tandem $TANDEM_VERSAO`, shown as a quiet label
+beside the title; the product-name-plus-version string joins the same `EXCECOES`
+entry the zenity title already had (a product name is not prose — the counter
+flagged it precisely because `acao_painel_moderno` is an examined `acao_*`
+prose-body while `t_painel_lista` in common.sh is not). Four new group-header
+messages, translated in all seven languages (894 each, 0 untranslated, 0 fuzzy).
+Suite 1919 passed / 0 failed / 1 skipped; `build.py --check` clean; both literal
+counters read 0. **Exercised, not just tested:** rendered under real GTK4
+(python3.12 + libadwaita + Xvfb, `GSK_RENDERER=cairo`) in light AND dark, and the
+**click → token → close** contract validated end to end (clicking "Instalar"
+wrote `instalar` and closed the window). A test lesson worth keeping: splitting
+`acao_painel` into four functions broke 26 pre-existing panel-string tests that
+grepped the old single body — the fix was to widen their corpus to span all the
+panel functions, not to weaken the assertion; watching them fail first, then pass,
+is what proved the strings had MOVED, not vanished.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
