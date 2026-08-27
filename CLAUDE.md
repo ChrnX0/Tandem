@@ -3175,9 +3175,10 @@ only if the cache lists it, so it never invents an update. The field is a **pure
 read** (the refresh is triggered separately by `acao_biblioteca`), so it stays
 safe to call from a test; the cache values are English and lowercase like the
 memory tokens, never translated. This is the invisible-but-testable ENGINE; the
-visible green/amber dot and the Update button on each row come next (v4.74),
-reading exactly this — and the sixth field is backward-compatible (`gui.py home`
-reads `parts[:5]`, so the current screen and the v4.71/v4.72 tests are untouched).
+visible green/amber dot comes next (it shipped in v4.74), and the Update button
+after it, both reading exactly this — and the sixth field is
+backward-compatible (`gui.py home` reads `parts[:5]`, so the current screen and
+the v4.71/v4.72 tests are untouched).
 Pinned with stubbed flatpak/snap: an app the check found reports an update, one
 the cache does not list reports none, an updatable app with nothing waiting is
 marked `nao` and one with an update `sim`, and the daily throttle fires once then
