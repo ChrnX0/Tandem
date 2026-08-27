@@ -3761,4 +3761,7 @@ Mise à jour disponible
 À jour
 
 @dot_gerido
-Se met à jour avec le système
+Tandem ne gère pas ses mises à jour
+
+@dot_checando
+Recherche de mises à jour…

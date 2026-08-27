@@ -3526,4 +3526,7 @@ Tandem 不会自行改动 Wine；如果你向别人求助，这就是要提到�
 已是最新
 
 @dot_gerido
-随系统更新
+Tandem 不管理它的更新
+
+@dot_checando
+正在检查更新…

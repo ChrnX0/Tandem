@@ -3695,4 +3695,7 @@ Atualização disponível
 Está em dia
 
 @dot_gerido
-Atualiza com o sistema
+O Tandem não cuida das atualizações dele
+
+@dot_checando
+Verificando atualizações…

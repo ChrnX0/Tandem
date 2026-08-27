@@ -6116,5 +6116,9 @@ msgid "Up to date"
 msgstr "مُحدَّث"
 
 msgctxt "dot_gerido"
-msgid "Updates with the system"
-msgstr "يُحدَّث مع النظام"
+msgid "Tandem doesn't manage its updates"
+msgstr "لا يدير Tandem تحديثاته"
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
+msgstr "جارٍ التحقق من التحديثات…"

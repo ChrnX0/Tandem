@@ -6108,5 +6108,9 @@ msgid "Up to date"
 msgstr "Está em dia"
 
 msgctxt "dot_gerido"
-msgid "Updates with the system"
-msgstr "Atualiza com o sistema"
+msgid "Tandem doesn't manage its updates"
+msgstr "O Tandem não cuida das atualizações dele"
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
+msgstr "Verificando atualizações…"

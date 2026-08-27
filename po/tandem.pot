@@ -4819,5 +4819,9 @@ msgid "Up to date"
 msgstr ""
 
 msgctxt "dot_gerido"
-msgid "Updates with the system"
+msgid "Tandem doesn't manage its updates"
+msgstr ""
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
 msgstr ""

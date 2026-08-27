@@ -5702,8 +5702,20 @@ t_biblioteca() {
         t_bib_sistema
     } | awk 'NF' | LC_ALL=C sort -f -t"$tab" -k2,2 |
     while IFS="$tab" read -r tipo nome fonte lanc atu; do
+        # tem_update: sim (an update is waiting), nao (checked and current), or
+        # ? (updatable but this source has not been successfully checked yet -
+        # first launch, or offline). A green "up to date" needs a real check
+        # behind it; without one the screen shows "not checked", never green.
         upd=nao
-        [ "$atu" = sim ] && t_bib_tem_update "$fonte" "$lanc" && upd=sim
+        if [ "$atu" = sim ]; then
+            if t_bib_tem_update "$fonte" "$lanc"; then
+                upd=sim
+            elif t_bib_foi_checado "$fonte"; then
+                upd=nao
+            else
+                upd='?'
+            fi
+        fi
         printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$tipo" "$nome" "$fonte" "$lanc" "$atu" "$upd"
     done
 }
@@ -5751,28 +5763,53 @@ t_bib_updates_arquivo() {
 # "fonte<TAB>id" line per updatable program. Run detached, so it never blocks;
 # the tools are overridable so the whole thing is testable with stubs.
 t_bib_verifica_updates() {
-    local arq id nome
+    local arq out id nome
     arq="$(t_bib_updates_arquivo)" || return 1
     mkdir -p "$(dirname -- "$arq")" 2>/dev/null || return 1
     : > "$arq.tmp" 2>/dev/null || return 1
+    # A "#checado" marker per source is written ONLY when that source's own
+    # command actually SUCCEEDED (exit 0). Offline or on a first launch the
+    # command fails or never ran, no marker is written, and the screen shows the
+    # honest "not checked yet" state instead of a green "up to date" it cannot
+    # back up - the same rule the health check follows (a check it could not run
+    # reports unknown, never healthy). The command is captured into a variable so
+    # its exit status is not swallowed by the pipe.
     if command -v flatpak >/dev/null 2>&1; then
-        flatpak remote-ls --updates --columns=application 2>/dev/null |
-            while IFS= read -r id; do
-                [ -n "$id" ] || continue
-                printf 'Flatpak\t%s\n' "$id" >> "$arq.tmp"
-            done
+        if out="$(flatpak remote-ls --updates --columns=application 2>/dev/null)"; then
+            printf '#checado\tFlatpak\n' >> "$arq.tmp"
+            printf '%s\n' "$out" |
+                while IFS= read -r id; do
+                    [ -n "$id" ] || continue
+                    printf 'Flatpak\t%s\n' "$id" >> "$arq.tmp"
+                done
+        fi
     fi
     if command -v snap >/dev/null 2>&1; then
-        # a header line then one row per updatable snap; "All snaps up to date."
-        # is a single line and NR>1 leaves it out.
-        snap refresh --list 2>/dev/null | awk 'NR > 1 { print $1 }' |
-            while IFS= read -r nome; do
-                [ -n "$nome" ] || continue
-                printf 'snap\t%s\n' "$nome" >> "$arq.tmp"
-            done
+        # exit 0 means snapd answered (updates or not); a table row per updatable
+        # snap follows a header, and "All snaps up to date." is one line, so
+        # NR>1 leaves it out.
+        if out="$(snap refresh --list 2>/dev/null)"; then
+            printf '#checado\tsnap\n' >> "$arq.tmp"
+            printf '%s\n' "$out" | awk 'NR > 1 { print $1 }' |
+                while IFS= read -r nome; do
+                    [ -n "$nome" ] || continue
+                    printf 'snap\t%s\n' "$nome" >> "$arq.tmp"
+                done
+        fi
     fi
     mv -f "$arq.tmp" "$arq" 2>/dev/null
     return 0
+}
+
+# Was this source's update check actually carried out (and did it succeed)? Only
+# then may a program from it show the green "up to date" dot; otherwise the
+# screen says "not checked yet" rather than claim a state nothing proved.
+t_bib_foi_checado() {
+    local arq fonte="$1" tab
+    arq="$(t_bib_updates_arquivo)" || return 1
+    [ -f "$arq" ] || return 1
+    tab="$(printf '\t')"
+    grep -qxF -- "#checado$tab$fonte" "$arq" 2>/dev/null
 }
 
 # Kicks the check, but at most once a day. Stamped BEFORE the attempt, like the

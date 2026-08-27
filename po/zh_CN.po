@@ -5929,5 +5929,9 @@ msgid "Up to date"
 msgstr "已是最新"
 
 msgctxt "dot_gerido"
-msgid "Updates with the system"
-msgstr "随系统更新"
+msgid "Tandem doesn't manage its updates"
+msgstr "Tandem 不管理它的更新"
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
+msgstr "正在检查更新…"

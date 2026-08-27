@@ -124,15 +124,21 @@ def _platform_image(kind, size=20):
 
 def _update_dot(atualizavel, tem_update):
     """The state of the small dot on a program's icon, decided from the two
-    fields the library engine already provides. Pure: amber = an update is
-    waiting, green = up to date, gray = Tandem does not manage this program's
-    updates (a Windows or Android program, an AppImage, a distro package - they
-    update themselves or with the system). Returns (css state, message key)."""
+    fields the library engine provides. Pure. Four states:
+      gray    - Tandem does not manage this program's updates (a Windows or
+                Android program, an AppImage, a distro package)
+      amber   - an update is waiting (tem_update = sim)
+      green   - checked and up to date (tem_update = nao)
+      unknown - updatable, but no successful check has proved its state yet
+                (first launch, or offline): never a false green.
+    Returns (css state, message key)."""
     if atualizavel != "sim":
         return "gray", "dot_gerido"
     if tem_update == "sim":
         return "amber", "dot_atualizar"
-    return "green", "dot_atual"
+    if tem_update == "nao":
+        return "green", "dot_atual"
+    return "unknown", "dot_checando"
 
 
 def _icon_with_dot(tipo, atualizavel, tem_update, msgs, size=30):
@@ -226,6 +232,7 @@ headerbar { background: transparent; box-shadow: none; }
 .oneui-dot-amber { background: @BW1@; }
 .oneui-dot-green { background: @BO1@; }
 .oneui-dot-gray  { background: @SUB@; }
+.oneui-dot-unknown { background: @CARD@; border-color: @SUB@; }
 .oneui-updtag { font-size: 13px; font-weight: 700; color: @BW1@; }
 """
 
@@ -789,7 +796,7 @@ def main():
             # Labels come tab-joined in one argument, in a fixed order, so they
             # arrive translated without a pile of positional arguments.
             keys = ["all", "open", "install", "search", "count", "tools",
-                    "dot_atualizar", "dot_atual", "dot_gerido"]
+                    "dot_atualizar", "dot_atual", "dot_gerido", "dot_checando"]
             labels = (argv[3] if len(argv) > 3 else "").split("\t")
             msgs = {}
             for i, k in enumerate(keys):

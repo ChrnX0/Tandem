@@ -3675,4 +3675,7 @@ Update available
 Up to date
 
 @dot_gerido
-Updates with the system
+Tandem doesn't manage its updates
+
+@dot_checando
+Checking for updates…

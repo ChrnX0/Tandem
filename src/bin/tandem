@@ -2172,11 +2172,11 @@ acao_biblioteca() {
     n="$(printf '%s' "$registros" | grep -c .)"
     acaofile="$(mktemp 2>/dev/null || true)"
     # Only the labels that translate; the system names live in gui.py.
-    labels="$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' \
+    labels="$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' \
         "$(t_msg bib_todos)" "$(t_msg bib_abrir)" "$(t_msg bib_instalar)" \
         "$(t_msg bib_buscar)" "$(t_msg bib_contagem "$n")" \
         "$(t_msg bib_ferramentas)" "$(t_msg dot_atualizar)" \
-        "$(t_msg dot_atual)" "$(t_msg dot_gerido)")"
+        "$(t_msg dot_atual)" "$(t_msg dot_gerido)" "$(t_msg dot_checando)")"
     printf '%s\n' "$registros" | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
         home "Tandem" "$acaofile" "$labels" >/dev/null 2>&1
     acao="$(cat "$acaofile" 2>/dev/null)"; rm -f "$acaofile" 2>/dev/null

@@ -6076,5 +6076,9 @@ msgid "Up to date"
 msgstr "अद्यतित है"
 
 msgctxt "dot_gerido"
-msgid "Updates with the system"
-msgstr "सिस्टम के साथ अपडेट होता है"
+msgid "Tandem doesn't manage its updates"
+msgstr "Tandem इसके अपडेट नहीं संभालता"
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
+msgstr "अपडेट जाँचे जा रहे हैं…"

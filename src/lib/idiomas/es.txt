@@ -3700,4 +3700,7 @@ Actualización disponible
 Está al día
 
 @dot_gerido
-Se actualiza con el sistema
+Tandem no gestiona sus actualizaciones
+
+@dot_checando
+Buscando actualizaciones…
