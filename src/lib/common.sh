@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.79"
+TANDEM_VERSAO="4.80"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5744,6 +5744,60 @@ t_bib_abrir() {
     # shellcheck disable=SC2046  # the launch words are fixed and MUST word-split
     ( setsid $(t_bib_lancador "$fonte") "$lancador" >/dev/null 2>&1 & ) 2>/dev/null
     return 0
+}
+
+# How a program uninstalls, decided by where it came from - a pure lookup a test
+# can pin for every source, the same shape as t_bib_lancador. Returns a method
+# token (on-disk style, never translated); an unknown source returns nothing, so
+# the caller explains rather than guessing.
+t_bib_desinstala_como() {
+    case "$1" in
+        Flatpak)  printf flatpak ;;
+        snap)     printf snap ;;
+        Waydroid) printf waydroid ;;
+        AppImage) printf appimage ;;
+        Wine)     printf wine ;;
+        sistema)  printf sistema ;;
+        *)        printf '' ;;
+    esac
+}
+
+# Removes a program that a distro tool owns - a Flatpak, a snap, a Waydroid app,
+# or an AppImage menu entry. Every removal is CONFIRMED gone before it returns 0:
+# "exit 0" is never proof here (waydroid answers 0 even when it failed). Returns
+# 0 on a confirmed removal, 1 on failure, and 2 for a source this does NOT own -
+# a Windows program (its own Wine uninstaller) and a system package (the software
+# manager, never a blind apt remove from a shop counter), both handled by the
+# caller. The target is passed as ONE argument to every tool, never built into a
+# command string - the same rule the Open path follows.
+t_bib_desinstala() {
+    local fonte="$1" alvo="$2" icone
+    case "$(t_bib_desinstala_como "$fonte")" in
+        flatpak)
+            flatpak uninstall -y --noninteractive "$alvo" >/dev/null 2>&1
+            flatpak info "$alvo" >/dev/null 2>&1 && return 1
+            return 0 ;;
+        snap)
+            t_como_root 'snap remove "$1"' "$alvo" >/dev/null 2>&1
+            snap list "$alvo" >/dev/null 2>&1 && return 1
+            return 0 ;;
+        waydroid)
+            waydroid app remove "$alvo" >/dev/null 2>&1
+            # waydroid answers 0 even on failure - ask Android's own list instead
+            waydroid shell -- pm list packages -3 2>/dev/null | sed 's/^package://' \
+                | grep -qxF "$alvo" && return 1
+            return 0 ;;
+        appimage)
+            # $alvo is the menu entry (.desktop). Remove it and the icon it
+            # extracted; the AppImage file is the owner's own download and stays,
+            # so an "uninstall" here never deletes a file the owner downloaded.
+            icone="$(sed -n 's/^Icon=//p' "$alvo" 2>/dev/null | head -1)"
+            rm -f "$alvo" 2>/dev/null
+            [ -n "$icone" ] && [ -f "$icone" ] && rm -f "$icone" 2>/dev/null
+            [ -e "$alvo" ] && return 1
+            return 0 ;;
+        *)  return 2 ;;
+    esac
 }
 
 # ---- Which programs have an update waiting ------------------------------

@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "612344817 6426" "$soma_esperados"
+      "1378360777 6487" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -508,6 +508,40 @@ ACAO_BIB="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
 contem "the library reads the enumeration engine"        't_biblioteca' "$ACAO_BIB"
 contem "  falls back to the old menu with no modern face" 'acao_painel'  "$ACAO_BIB"
 contem "  dispatches Open through t_bib_abrir"            't_bib_abrir'  "$ACAO_BIB"
+
+# 4.80: a per-program Remove, the one action the main screen was missing.
+# t_bib_desinstala_como is the pure decision - which way each of the six worlds
+# uninstalls - pinned for every source; the doer confirms the removal actually
+# happened before reporting success, because "exit 0" is not proof (waydroid in
+# particular answers 0 even when it failed).
+equal "a flatpak uninstalls the flatpak way"      "flatpak"  "$(t_bib_desinstala_como Flatpak)"
+equal "a snap uninstalls the snap way"            "snap"     "$(t_bib_desinstala_como snap)"
+equal "an android app uninstalls via waydroid"    "waydroid" "$(t_bib_desinstala_como Waydroid)"
+equal "an AppImage uninstalls by its menu entry"  "appimage" "$(t_bib_desinstala_como AppImage)"
+equal "a Windows program uninstalls through Wine" "wine"     "$(t_bib_desinstala_como Wine)"
+equal "a system program is the software manager's" "sistema" "$(t_bib_desinstala_como sistema)"
+equal "an unknown source has no uninstall method" ""         "$(t_bib_desinstala_como bogus)"
+# The doer, on an AppImage: remove the menu entry AND the icon it extracted, then
+# confirm the entry is gone. Non-vacuous - if the removal failed, the entry would
+# remain and it would return 1.
+BIBDEL="$TMPROOT/bibdel"; mkdir -p "$BIBDEL"
+printf '[Desktop Entry]\nName=X\nIcon=%s/x.png\nExec=/x\n' "$BIBDEL" > "$BIBDEL/x.desktop"
+: > "$BIBDEL/x.png"
+t_bib_desinstala AppImage "$BIBDEL/x.desktop"; DELRC="$?"
+equal "removing an AppImage deletes its menu entry, confirmed gone" "0/gone" \
+      "$DELRC/$([ -e "$BIBDEL/x.desktop" ] && echo here || echo gone)"
+equal "  and it removes the icon it had extracted" "gone" \
+      "$([ -e "$BIBDEL/x.png" ] && echo here || echo gone)"
+# A source Tandem does not own here (Wine, a system package) is handed back to
+# the caller with rc 2 - never a blind removal from this function.
+t_bib_desinstala Wine whatever;    equal "Wine is handed back to the caller (rc 2)" "2" "$?"
+t_bib_desinstala sistema whatever; equal "a system program is handed back (rc 2)"   "2" "$?"
+# The wiring: the caller routes each world, and the GTK row carries the button.
+contem "  Remove routes Wine through its own uninstaller"  'Wine)    acao_uninstall'  "$ACAO_BIB"
+contem "  a system program is explained, not apt-removed"  'desinst_sistema'          "$ACAO_BIB"
+contem "  everything else goes through t_bib_desinstala"   't_bib_desinstala'         "$ACAO_BIB"
+contem "the library rows carry a Remove button"            'oneui-remove'             "$GUI_SRC2"
+contem "  whose click is a desinstalar token with the name" 'desinstalar\t%s\t%s\t%s' "$GUI_SRC2"
 
 # 4.73: which programs have an update waiting. flatpak and snap know per-app,
 # but asking costs the network - so the answer is CACHED daily in the

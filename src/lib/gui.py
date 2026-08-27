@@ -282,6 +282,8 @@ headerbar { background: transparent; box-shadow: none; }
 .oneui-updateall { background: linear-gradient(135deg,#f5a623 0%,#e0850f 100%); color: #ffffff; box-shadow: 0 8px 18px rgba(224,133,15,.35); }
 .oneui-updateall:hover { filter: brightness(1.05); }
 .oneui-ghost { background: @GHOSTBG@; color: @GHOSTFG@; }
+.oneui-remove { background: none; box-shadow: none; color: @SUB@; padding: 8px; border-radius: 12px; min-width: 18px; }
+.oneui-remove:hover { background: @BE0@; color: @BE1@; }
 .oneui-mono textview, .oneui-mono text { font-family: monospace; font-size: 13px; color: @CTEXT@; }
 .oneui-progress > trough { min-height: 14px; border-radius: 999px; background: @GHOSTBG@; }
 .oneui-progress > trough > progress { min-height: 14px; border-radius: 999px; background: linear-gradient(90deg,#2f6bff 0%,#12b6c8 100%); }
@@ -846,6 +848,18 @@ def _home_window(app, title, records, action_file, result, msgs):
         btn.connect("clicked",
                     lambda _b, f=fonte, l=lancador: choose("abrir\t%s\t%s" % (f, l)))
         card.append(btn)
+        # A quiet trash button beside Open - the per-program Remove the main
+        # screen was missing. It carries the source, the launcher/id and the name
+        # so the shell can uninstall the right way for that world; the click
+        # travels as one token through the same temp-file contract as Open.
+        rm = Gtk.Button.new_from_icon_name("user-trash-symbolic")
+        rm.add_css_class("oneui-remove")
+        rm.set_valign(Gtk.Align.CENTER)
+        rm.set_tooltip_text(msgs.get("uninstall", "Uninstall"))
+        rm.connect("clicked",
+                   lambda _b, f=fonte, l=lancador, nm=nome: choose(
+                       "desinstalar\t%s\t%s\t%s" % (f, l, nm)))
+        card.append(rm)
         return card
 
     def header_for(group_key):
@@ -1050,7 +1064,7 @@ def main():
             keys = ["all", "open", "install", "search", "count", "tools",
                     "dot_atualizar", "dot_atual", "dot_gerido", "dot_checando",
                     "ordem_nome", "ordem_sistema", "ordem_update",
-                    "bib_atualizar_tudo", "fonte_sistema"]
+                    "bib_atualizar_tudo", "fonte_sistema", "uninstall"]
             labels = (argv[3] if len(argv) > 3 else "").split("\t")
             msgs = {}
             for i, k in enumerate(keys):

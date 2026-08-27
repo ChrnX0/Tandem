@@ -3798,3 +3798,18 @@ Certaines mises à jour n'ont pas abouti. Vérifiez votre connexion et réessaye
 
 @fonte_sistema
 Système
+
+@bib_desinstalar
+Désinstaller
+
+@desinst_confirmar
+Supprimer {1} ? Cette action est irréversible.
+
+@desinstalando
+Suppression de {1}…
+
+@desinst_falhou
+Je n'ai pas pu supprimer {1}.
+
+@desinst_sistema
+{1} est fourni avec votre système. Pour le supprimer, utilisez le gestionnaire de logiciels de votre système.

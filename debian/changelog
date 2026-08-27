@@ -1,3 +1,21 @@
+tandem (4.80) unstable; urgency=medium
+
+  * The program library gains a per-program Remove action - the one thing the
+    main screen was missing: every row showed Open but no way to uninstall.
+    Each of the six worlds a program can come from uninstalls its own way - a
+    Flatpak per-user, a snap as root, a Waydroid app through Android, an
+    AppImage by removing its menu entry, a Windows program through Wine's own
+    uninstaller - and Tandem asks before removing anything and confirms it
+    actually went, never a silent failure. A system program (one that came
+    with the distribution) is not one-click-removed from here: Tandem says so
+    and points at the system's software manager, because apt-removing a system
+    package from a shop counter by a stray click is worse than not automating
+    it. The decision of how each source uninstalls is a pure function with a
+    proof-by-injection test; the click travels back through the same temp-file
+    token contract the Open and Update buttons use.
+
+ -- Tandem Maintainers <tandem@example.com>  Thu, 27 Aug 2026 20:21:59 +0000
+
 tandem (4.79) unstable; urgency=medium
 
   * A guard for the one thing the tools menu could still drift on: which tools

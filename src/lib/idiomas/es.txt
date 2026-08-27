@@ -3737,3 +3737,18 @@ Algunas actualizaciones no se completaron. Revisa tu conexión e inténtalo de n
 
 @fonte_sistema
 Sistema
+
+@bib_desinstalar
+Desinstalar
+
+@desinst_confirmar
+¿Quitar {1}? Esto no se puede deshacer.
+
+@desinstalando
+Quitando {1}…
+
+@desinst_falhou
+No pude quitar {1}.
+
+@desinst_sistema
+{1} vino con tu sistema. Para quitarlo, usa el gestor de software de tu sistema.
