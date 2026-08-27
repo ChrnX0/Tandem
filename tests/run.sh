@@ -638,8 +638,12 @@ equal "Update all runs the manager that has an update (flatpak)" "sim" \
       "$(ual_run 'Flatpak\torg.x\n' 't_bib_atualiza_tudo >/dev/null 2>&1; grep -q "^flatpak update" "'"$UAL"'/calls" && echo sim || echo nao')"
 equal "  and does NOT update snap when no snap has one (no needless root prompt)" "0" \
       "$(ual_run 'Flatpak\torg.x\n' 't_bib_atualiza_tudo >/dev/null 2>&1; grep -cE "snap refresh$" "'"$UAL"'/calls"')"
+# t_como_root is stubbed to run the script directly: how it elevates (sudo /
+# pkexec / already root) depends on the machine, and a headless non-root CI has
+# none of those - what this pins is only that a snap update is ROUTED through
+# t_como_root at all.
 equal "Update all updates snap through root when a snap has one" "sim" \
-      "$(ual_run 'snap\tvlc\n' 't_bib_atualiza_tudo >/dev/null 2>&1; grep -qE "snap refresh$" "'"$UAL"'/calls" && echo sim || echo nao')"
+      "$(ual_run 'snap\tvlc\n' 't_como_root() { sh -c "$1" tandem; }; t_bib_atualiza_tudo >/dev/null 2>&1; grep -qE "snap refresh$" "'"$UAL"'/calls" && echo sim || echo nao')"
 GUI_UAL_SRC="$(cat "$ROOT/src/lib/gui.py")"
 contem "the home window carries an Update all button"  'oneui-updateall' "$GUI_UAL_SRC"
 contem "  shown only when a program actually has an update" 'r[4] == "sim" and r[5] == "sim"' "$GUI_UAL_SRC"
