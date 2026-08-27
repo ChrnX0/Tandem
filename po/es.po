@@ -6101,3 +6101,19 @@ msgstr "Herramientas"
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr "Programas: {1}"
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr "Actualización disponible"
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr "Está al día"
+
+msgctxt "dot_gerido"
+msgid "Tandem doesn't manage its updates"
+msgstr "Tandem no gestiona sus actualizaciones"
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
+msgstr "Buscando actualizaciones…"

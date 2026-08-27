@@ -3692,3 +3692,15 @@ Herramientas
 
 @bib_contagem
 Programas: {1}
+
+@dot_atualizar
+Actualización disponible
+
+@dot_atual
+Está al día
+
+@dot_gerido
+Tandem no gestiona sus actualizaciones
+
+@dot_checando
+Buscando actualizaciones…

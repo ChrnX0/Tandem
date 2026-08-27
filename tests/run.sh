@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1724947762 6162" "$soma_esperados"
+      "2020326152 6198" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -535,6 +535,48 @@ equal "an updatable app with an update waiting is marked sim" "sim" \
       "$(bup_run 't_bib_verifica_updates; t_biblioteca | grep Firefox | cut -f6')"
 equal "the update check runs once a day, then the stamp throttles it" "0 1" \
       "$(bup_run 't_bib_talvez_verifica; a=$?; t_bib_talvez_verifica; b=$?; echo $a $b')"
+
+# 4.74: the visible update dot. _update_dot maps the two library fields (is it
+# updatable, does it have an update waiting) to one of FOUR states - amber = an
+# update is waiting, green = checked and up to date, gray = Tandem does not
+# manage this program's updates, unknown = updatable but no successful check has
+# proved its state (first launch, or offline). Pure, so the state is pinned;
+# imported headless because it touches no gi.
+gui_dot() {
+    python3 -c 'import sys; sys.path.insert(0, sys.argv[3]); import gui; print(gui._update_dot(sys.argv[1], sys.argv[2])[0])' \
+        "$1" "$2" "$ROOT/src/lib" 2>/dev/null
+}
+equal "an updatable app with an update waiting shows the amber dot" "amber" "$(gui_dot sim sim)"
+equal "an updatable app that is checked and current shows the green dot" "green" "$(gui_dot sim nao)"
+equal "an updatable app not yet checked shows the neutral dot, never a false green" \
+      "unknown" "$(gui_dot sim '?')"
+equal "an app Tandem does not manage shows the gray dot"           "gray"  "$(gui_dot nao nao)"
+equal "  gray even if a stale update flag lingers on a non-updatable row" "gray" "$(gui_dot nao sim)"
+GUI_DOT_SRC="$(cat "$ROOT/src/lib/gui.py")"
+contem "the home window reads the update field (the sixth)" 'parts[:6]' "$GUI_DOT_SRC"
+contem "the icon carries the status dot"                    'oneui-dot' "$GUI_DOT_SRC"
+contem "a row with an update shows the amber note, not only a tooltip" 'oneui-updtag' "$GUI_DOT_SRC"
+TANDEM_DOT_SRC="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "acao_biblioteca sends the dot labels to the window" 'dot_atualizar' "$TANDEM_DOT_SRC"
+
+# 4.74 honesty: a green "up to date" needs a real check behind it. The worker
+# marks a source "#checado" only when its own command exits 0, so on a first
+# launch or offline the source is not marked and its apps read unknown (?), not
+# a false green - the health check's rule (a check it could not run is unknown,
+# never healthy). The flatpak stub here FAILS remote-ls, as if offline.
+BOFF="$TMPROOT/bibupd_off"; mkdir -p "$BOFF/bin" "$BOFF/home" "$BOFF/sys"
+printf '#!/bin/sh\ncase "$*" in *remote-ls*) exit 1;; *) printf "org.moz.ff\\tFirefox\\n";; esac\n' > "$BOFF/bin/flatpak"
+chmod +x "$BOFF/bin"/*
+boff_run() {
+    env HOME="$BOFF/home" PATH="$BOFF/bin:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_APPS_SISTEMA="$BOFF/sys" bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1"'' 2>/dev/null
+}
+equal "a source whose check failed is not recorded as checked" "1" \
+      "$(boff_run 't_bib_verifica_updates; t_bib_foi_checado Flatpak; echo $?')"
+equal "an updatable app from an unchecked source reads unknown, never a false green" "?" \
+      "$(boff_run 't_bib_verifica_updates; t_biblioteca | grep Firefox | cut -f6')"
+equal "a source whose check succeeded IS recorded as checked" "0" \
+      "$(bup_run 't_bib_verifica_updates; t_bib_foi_checado Flatpak; echo $?')"
 
 section "evidence gate (proofgate)"
 

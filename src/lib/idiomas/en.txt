@@ -3667,3 +3667,15 @@ Tools
 
 @bib_contagem
 Programs: {1}
+
+@dot_atualizar
+Update available
+
+@dot_atual
+Up to date
+
+@dot_gerido
+Tandem doesn't manage its updates
+
+@dot_checando
+Checking for updates…

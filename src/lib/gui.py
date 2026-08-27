@@ -122,6 +122,49 @@ def _platform_image(kind, size=20):
         return Gtk.Image()
 
 
+def _update_dot(atualizavel, tem_update):
+    """The state of the small dot on a program's icon, decided from the two
+    fields the library engine provides. Pure. Four states:
+      gray    - Tandem does not manage this program's updates (a Windows or
+                Android program, an AppImage, a distro package)
+      amber   - an update is waiting (tem_update = sim)
+      green   - checked and up to date (tem_update = nao)
+      unknown - updatable, but no successful check has proved its state yet
+                (first launch, or offline): never a false green.
+    Returns (css state, message key)."""
+    if atualizavel != "sim":
+        return "gray", "dot_gerido"
+    if tem_update == "sim":
+        return "amber", "dot_atualizar"
+    if tem_update == "nao":
+        return "green", "dot_atual"
+    return "unknown", "dot_checando"
+
+
+def _icon_with_dot(tipo, atualizavel, tem_update, msgs, size=30):
+    """The platform mark with the status dot pinned to its lower-right corner,
+    a tooltip on the dot naming what it means. Falls back to the bare mark if
+    anything goes wrong - never a traceback."""
+    from gi.repository import Gtk
+    img = _platform_image(tipo, size)
+    try:
+        state, key = _update_dot(atualizavel, tem_update)
+        ov = Gtk.Overlay()
+        ov.set_child(img)
+        dot = Gtk.Box()
+        dot.add_css_class("oneui-dot")
+        dot.add_css_class("oneui-dot-%s" % state)
+        dot.set_halign(Gtk.Align.END)
+        dot.set_valign(Gtk.Align.END)
+        tip = msgs.get(key)
+        if tip:
+            dot.set_tooltip_text(tip)
+        ov.add_overlay(dot)
+        return ov
+    except Exception:
+        return img
+
+
 def _imports_ok():
     import gi
     gi.require_version("Gtk", "4.0")
@@ -185,6 +228,12 @@ headerbar { background: transparent; box-shadow: none; }
 .oneui-chip:checked { background: linear-gradient(135deg,#2f6bff 0%,#12b6c8 100%); color: #ffffff; }
 .oneui-toolslink { background: none; box-shadow: none; color: @SUB@; font-weight: 600; padding: 6px 14px; border-radius: 999px; }
 .oneui-toolslink:hover { background: @GHOSTBG@; }
+.oneui-dot { min-width: 12px; min-height: 12px; border-radius: 999px; border: 2px solid @CARD@; margin: 0 1px 1px 0; }
+.oneui-dot-amber { background: @BW1@; }
+.oneui-dot-green { background: @BO1@; }
+.oneui-dot-gray  { background: @SUB@; }
+.oneui-dot-unknown { background: @CARD@; border-color: @SUB@; }
+.oneui-updtag { font-size: 13px; font-weight: 700; color: @BW1@; }
 """
 
 
@@ -578,21 +627,29 @@ def _home_window(app, title, records, action_file, result, msgs):
     listbox.set_margin_end(22)
 
     rows = []   # (widget, tipo, name_lower)
-    for tipo, nome, fonte, lancador, atualizavel in records:
+    for tipo, nome, fonte, lancador, atualizavel, tem_update in records:
         card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
         card.add_css_class("oneui-card")
         card.add_css_class("oneui-card-pad")
 
-        card.append(_platform_image(tipo, 30))
+        card.append(_icon_with_dot(tipo, atualizavel, tem_update, msgs, 30))
 
         meta = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1, hexpand=True)
         nm = Gtk.Label(label=nome, xalign=0.0)
         nm.add_css_class("oneui-cardtext")
         nm.set_ellipsize(3)  # PANGO_ELLIPSIZE_END
         meta.append(nm)
+        # The source line, and on a program with an update waiting an amber note
+        # right beside it - so the fact is not hidden in a tooltip nobody hovers.
+        subrow = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         sb = Gtk.Label(label=fonte, xalign=0.0)
         sb.add_css_class("oneui-sub")
-        meta.append(sb)
+        subrow.append(sb)
+        if atualizavel == "sim" and tem_update == "sim":
+            tag = Gtk.Label(label=msgs.get("dot_atualizar", "Update available"), xalign=0.0)
+            tag.add_css_class("oneui-updtag")
+            subrow.append(tag)
+        meta.append(subrow)
         card.append(meta)
 
         btn = Gtk.Button(label=msgs.get("open", "Open"))
@@ -738,7 +795,8 @@ def main():
             action_file = argv[2] if len(argv) > 2 and argv[2] else None
             # Labels come tab-joined in one argument, in a fixed order, so they
             # arrive translated without a pile of positional arguments.
-            keys = ["all", "open", "install", "search", "count", "tools"]
+            keys = ["all", "open", "install", "search", "count", "tools",
+                    "dot_atualizar", "dot_atual", "dot_gerido", "dot_checando"]
             labels = (argv[3] if len(argv) > 3 else "").split("\t")
             msgs = {}
             for i, k in enumerate(keys):
@@ -749,9 +807,11 @@ def main():
                 if not line.strip():
                     continue
                 parts = line.split("\t")
-                while len(parts) < 5:
-                    parts.append("")
-                records.append(tuple(parts[:5]))
+                # tem_update is the sixth field (4.73); default "nao" so a record
+                # from an older caller still renders, just without an amber dot.
+                while len(parts) < 6:
+                    parts.append("nao" if len(parts) == 5 else "")
+                records.append(tuple(parts[:6]))
             return _run(lambda a, r: _home_window(
                 a, title, records, action_file, r, msgs))
     except Exception:

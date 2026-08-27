@@ -3687,3 +3687,15 @@ Ferramentas
 
 @bib_contagem
 Programas: {1}
+
+@dot_atualizar
+Atualização disponível
+
+@dot_atual
+Está em dia
+
+@dot_gerido
+O Tandem não cuida das atualizações dele
+
+@dot_checando
+Verificando atualizações…

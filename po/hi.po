@@ -6066,3 +6066,19 @@ msgstr "उपकरण"
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr "प्रोग्राम: {1}"
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr "अपडेट उपलब्ध है"
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr "अद्यतित है"
+
+msgctxt "dot_gerido"
+msgid "Tandem doesn't manage its updates"
+msgstr "Tandem इसके अपडेट नहीं संभालता"
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
+msgstr "अपडेट जाँचे जा रहे हैं…"

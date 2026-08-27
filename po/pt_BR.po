@@ -6098,3 +6098,19 @@ msgstr "Ferramentas"
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr "Programas: {1}"
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr "Atualização disponível"
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr "Está em dia"
+
+msgctxt "dot_gerido"
+msgid "Tandem doesn't manage its updates"
+msgstr "O Tandem não cuida das atualizações dele"
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
+msgstr "Verificando atualizações…"

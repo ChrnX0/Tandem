@@ -6080,3 +6080,19 @@ msgstr "Tools"
 msgctxt "bib_contagem"
 msgid "Programs: {1}"
 msgstr "Programs: {1}"
+
+msgctxt "dot_atualizar"
+msgid "Update available"
+msgstr "Update available"
+
+msgctxt "dot_atual"
+msgid "Up to date"
+msgstr "Up to date"
+
+msgctxt "dot_gerido"
+msgid "Tandem doesn't manage its updates"
+msgstr "Tandem doesn't manage its updates"
+
+msgctxt "dot_checando"
+msgid "Checking for updates…"
+msgstr "Checking for updates…"

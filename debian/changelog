@@ -1,3 +1,37 @@
+tandem (4.74) unstable; urgency=medium
+
+  * Coherence pass, part 3 (the visible enrichment): the program library now
+    SHOWS which of its programs have an update. 4.73 built the engine (a daily,
+    cached, network-free check writing a sixth field, tem_update); this draws
+    it. Each program's icon carries a small status dot pinned to its corner,
+    FOUR states: amber = an update is waiting, green = checked and up to date,
+    a hollow ring = updatable but not checked yet, gray = Tandem does not manage
+    this program's updates (a Windows or Android program, an AppImage, a distro
+    package). A row with an update also gains an amber "Update available" note
+    beside its source, so the fact is not hidden in a tooltip nobody hovers; the
+    dot itself carries a tooltip naming its meaning in the machine's language.
+  * A green "up to date" is only ever shown behind a REAL check - the project's
+    own rule that a check it could not run reports unknown, never healthy (the
+    health command's lesson). The update worker marks a source "checked" only
+    when that source's own command exits 0, so on a first launch or offline the
+    source is not marked and its apps read the hollow "not checked yet" dot
+    instead of a green the machine cannot back up. The gray tooltip was reworded
+    from "updates with the system" (which misdescribed Wine/AppImage/Android) to
+    "Tandem doesn't manage its updates".
+  * The dot's state is a PURE function (_update_dot in gui.py), imported
+    headless and pinned in every direction - amber only when an update waits,
+    green only when checked and current, the hollow ring when updatable but
+    unproven, gray for anything Tandem does not update. It reuses the palette
+    the health panel already uses, so it reads as one product. Safe by
+    construction, like every gui.py window: the dot falls back to the bare icon
+    on any error, never a traceback, and the whole screen still falls back to
+    the old menu with no GTK4. Rendered under real GTK4 in all four states. Four
+    new messages (dot_atualizar, dot_atual, dot_gerido, dot_checando),
+    translated in all seven languages. The one-click Update button that acts on
+    an amber row comes next (v4.75).
+
+ -- Tandem <rockx0@gmail.com>  Thu, 27 Aug 2026 02:06:11 +0000
+
 tandem (4.73) unstable; urgency=medium
 
   * Coherence pass, part 3 (the enrichment): the program library learns which

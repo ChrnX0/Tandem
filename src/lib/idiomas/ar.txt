@@ -3781,3 +3781,15 @@ Tandem - الصحّة
 
 @bib_contagem
 البرامج: {1}
+
+@dot_atualizar
+تحديث متوفر
+
+@dot_atual
+مُحدَّث
+
+@dot_gerido
+لا يدير Tandem تحديثاته
+
+@dot_checando
+جارٍ التحقق من التحديثات…

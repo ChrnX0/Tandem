@@ -3753,3 +3753,15 @@ Outils
 
 @bib_contagem
 Programmes : {1}
+
+@dot_atualizar
+Mise à jour disponible
+
+@dot_atual
+À jour
+
+@dot_gerido
+Tandem ne gère pas ses mises à jour
+
+@dot_checando
+Recherche de mises à jour…
