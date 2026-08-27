@@ -3175,15 +3175,52 @@ only if the cache lists it, so it never invents an update. The field is a **pure
 read** (the refresh is triggered separately by `acao_biblioteca`), so it stays
 safe to call from a test; the cache values are English and lowercase like the
 memory tokens, never translated. This is the invisible-but-testable ENGINE; the
-visible green/amber dot and the Update button on each row come next (v4.74),
-reading exactly this — and the sixth field is backward-compatible (`gui.py home`
-reads `parts[:5]`, so the current screen and the v4.71/v4.72 tests are untouched).
+visible green/amber dot comes next (it shipped in v4.74), and the Update button
+after it, both reading exactly this — and the sixth field is
+backward-compatible (`gui.py home` reads `parts[:5]`, so the current screen and
+the v4.71/v4.72 tests are untouched).
 Pinned with stubbed flatpak/snap: an app the check found reports an update, one
 the cache does not list reports none, an updatable app with nothing waiting is
 marked `nao` and one with an update `sim`, and the daily throttle fires once then
 the day's stamp skips it. No new message, no behaviour change on the apt path or
 anywhere a program opens. Suite 1870 passed / 0 / 1 skipped; both literal counters
 read 0.
+
+**v4.74 IS PUBLISHED** — 2026-08-27, tag `v4.74` at `a6905ca`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (598228 bytes, sha256 `2a3fc6fc…`)
+and the generic bundle (598098 bytes, sha256 `380a2ebf…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag (the downloaded bytes are `cmp`
+byte-identical to the local build). Coherence pass, part 3 (the VISIBLE
+enrichment): 4.73 built the update-detection engine; 4.74 draws it. Each
+program's icon in the library carries a small status dot pinned to its corner,
+**four states**: amber = an update is waiting, green = checked and up to date, a
+hollow ring = updatable but not checked yet, gray = Tandem does not manage this
+program's updates. A row with an update also gains an amber "Update available"
+note beside its source, so the fact is not hidden in a tooltip nobody hovers; the
+dot carries a tooltip naming its meaning in the machine's language. The state is
+a PURE function (`_update_dot` in gui.py), imported headless and pinned in every
+direction; it reuses the health panel's palette so it reads as one product, and
+falls back to the bare icon on any error (never a traceback), the whole screen
+still falling back to the old menu with no GTK4. Rendered under real GTK4 in all
+four states.
+**The version shipped with a review fix folded in, and the fix is the lesson.**
+Codex (the repo's automated reviewer) flagged two P2s on the first cut, both the
+project's own "never a false green" rule: (1) the green "up to date" dot was
+shown before any check ran (first launch) and after an offline/failed check,
+because the empty cache made every updatable app read `tem_update=nao`. Now the
+worker marks a source `#checado` ONLY when that source's own command exits 0
+(captured into a variable so the pipe does not swallow the status), `t_biblioteca`
+reads `tem_update` as `sim`/`nao`/`?`, and the icon shows the hollow "not checked
+yet" ring for `?` — a green needs a real check behind it, the health command's
+lesson (`t_bib_foi_checado`, pinned both ways: an offline source reads unknown, a
+succeeded one reads checked). (2) The gray tooltip "Updates with the system"
+misdescribed Wine/AppImage/Android and was reworded to "Tandem doesn't manage its
+updates". Four new messages (dot_atualizar, dot_atual, dot_gerido, dot_checando),
+translated in all seven languages. Suite 1882 passed / 0 / 1 skipped; both literal
+counters read 0. The one-click Update button that acts on an amber row is still
+ahead; the next version is the library VIEW CONTROL the owner asked for
+(sort/group by name, by system, by update — like a file manager).
 
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
