@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "3320852686 6420" "$soma_esperados"
+      "612344817 6426" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -662,11 +662,13 @@ contem "  but t_bib_sistema still records the on-disk token, untranslated" \
        '\tsistema\t' "$(sed -n '/^t_bib_sistema() {/,/^}/p' "$ROOT/src/lib/common.sh")"
 
 # 4.78: the Tools menu ("Ferramentas") wears the One UI face - the last shared
-# surface still drawn as a zenity list. acao_painel_itens is the ONE list both
-# faces read, so the modern window and the zenity fallback offer the same tools;
-# acao_painel_executa is the ONE dispatch, so they cannot drift on what a tool
-# does. Both are pure enough to exercise here; the window itself is proven to
-# refuse fast with no display, like every other one.
+# surface still drawn as a zenity list. acao_painel_executa is the ONE dispatch
+# both faces share, so what a tool DOES can never drift. The OFFERING is only
+# half-shared: the modern face reads acao_painel_itens, the zenity fallback
+# keeps its own two-level rows - so the 4.79 guard below asserts the two faces
+# offer the SAME set of tools, the one thing that was kept in step by hand.
+# Both are pure enough to exercise here; the window itself is proven to refuse
+# fast with no display, like every other one.
 PMENU="$TMPROOT/painel"; mkdir -p "$PMENU"
 painel_run() {
     env HOME="$PMENU" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
@@ -676,7 +678,7 @@ painel_run() {
           eval "$(awk "/^acao_painel_executa\\(\\) \\{/,/^}/" "'"$ROOT"'/src/bin/tandem")"
           '"$1"'' 2>/dev/null
 }
-equal "the tools menu lists all 18 tools in one place both faces read" "18" \
+equal "the modern tools menu lists all 18 tools (acao_painel_itens)" "18" \
       "$(painel_run 'acao_painel_itens | grep -c .')"
 equal "every tools row carries a token, label, icon and group (four fields)" "0" \
       "$(painel_run 'acao_painel_itens | awk -F"\t" "NF!=4{c++} END{print c+0}"')"
@@ -684,6 +686,21 @@ equal "the tools are grouped into four sections" "4" \
       "$(painel_run 'acao_painel_itens | cut -f4 | sort -u | grep -c .')"
 equal "the group headers come from the catalogue, no raw key leaks through" "0" \
       "$(painel_run 'acao_painel_itens | grep -c pan_grupo_')"
+# 4.79: the SET of tools each face offers is the one thing that could still
+# drift - the modern face reads acao_painel_itens, but the zenity fallback
+# declares its own rows by hand (Codex caught the 4.78 record overstating this).
+# Assert both offer the same tokens, so a tool added to one face and not the
+# other fails here instead of vanishing from the fallback. The zenity tokens are
+# the first arg of each "token" "$(t_msg ...)" row, minus its "more"/"back"
+# controls; the modern tokens come from running acao_painel_itens (field 1).
+menu_modern="$(painel_run 'acao_painel_itens | cut -f1 | sort -u | tr "\n" " "')"
+ZEN_BODY="$(sed -n '/^acao_painel_zenity() {/,/^}/p' "$ROOT/src/bin/tandem")"
+menu_zenity="$(printf '%s\n' "$ZEN_BODY" | grep -oE '"[a-z]+" +"\$\(t_msg ' \
+    | grep -oE '^"[a-z]+"' | tr -d '"' | grep -vxE 'mais|voltar' | sort -u | tr '\n' ' ')"
+menu_drift=MATCH
+[ "$menu_modern" = "$menu_zenity" ] || menu_drift="DRIFT modern=[$menu_modern] zenity=[$menu_zenity]"
+equal "the modern and zenity tools menus offer the SAME tool set (4.79 no-drift guard)" \
+      "MATCH" "$menu_drift"
 PMK="$PMENU/disp"; rm -f "$PMK"
 equal "acao_painel_executa dispatches a token to its command (the shared face)" "doctor-ran" \
       "$(painel_run 'acao_doctor() { printf doctor-ran > "'"$PMK"'"; }; acao_painel_executa doctor >/dev/null 2>&1; cat "'"$PMK"'" 2>/dev/null')"

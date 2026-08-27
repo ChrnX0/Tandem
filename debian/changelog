@@ -1,3 +1,20 @@
+tandem (4.79) unstable; urgency=medium
+
+  * A guard for the one thing the tools menu could still drift on: which tools
+    each face offers. The two faces share their dispatch (acao_painel_executa),
+    so what a tool DOES can never diverge - but the modern face reads the
+    shared acao_painel_itens while the zenity fallback keeps its own two-level
+    row list, so the SET of tools each face offers was kept in step only by
+    hand. A new test asserts the modern menu (acao_painel_itens) and the zenity
+    menu (acao_painel_zenity's rows, minus its "more"/"back" controls) offer
+    the same set of tokens; adding a tool to one face and not the other now
+    fails the suite instead of silently leaving the zenity user without it.
+    Found by Codex reviewing the 4.78 record, which had overstated the
+    guarantee as "both faces read one shared list" when only the dispatch is
+    shared.
+
+ -- Tandem Maintainers <tandem@example.com>  Thu, 27 Aug 2026 15:44:10 +0000
+
 tandem (4.78) unstable; urgency=medium
 
   * The Tools menu wears the One UI face now, the last shared surface still
