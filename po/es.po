@@ -6117,3 +6117,15 @@ msgstr "Tandem no gestiona sus actualizaciones"
 msgctxt "dot_checando"
 msgid "Checking for updates…"
 msgstr "Buscando actualizaciones…"
+
+msgctxt "ordem_nome"
+msgid "By name"
+msgstr "Por nombre"
+
+msgctxt "ordem_sistema"
+msgid "By system"
+msgstr "Por sistema"
+
+msgctxt "ordem_update"
+msgid "By update"
+msgstr "Por actualización"

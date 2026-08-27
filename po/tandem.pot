@@ -4825,3 +4825,15 @@ msgstr ""
 msgctxt "dot_checando"
 msgid "Checking for updates…"
 msgstr ""
+
+msgctxt "ordem_nome"
+msgid "By name"
+msgstr ""
+
+msgctxt "ordem_sistema"
+msgid "By system"
+msgstr ""
+
+msgctxt "ordem_update"
+msgid "By update"
+msgstr ""

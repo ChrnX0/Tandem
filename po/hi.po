@@ -6082,3 +6082,15 @@ msgstr "Tandem इसके अपडेट नहीं संभालता"
 msgctxt "dot_checando"
 msgid "Checking for updates…"
 msgstr "अपडेट जाँचे जा रहे हैं…"
+
+msgctxt "ordem_nome"
+msgid "By name"
+msgstr "नाम से"
+
+msgctxt "ordem_sistema"
+msgid "By system"
+msgstr "सिस्टम से"
+
+msgctxt "ordem_update"
+msgid "By update"
+msgstr "अपडेट से"

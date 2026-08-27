@@ -3699,3 +3699,12 @@ O Tandem não cuida das atualizações dele
 
 @dot_checando
 Verificando atualizações…
+
+@ordem_nome
+Por nome
+
+@ordem_sistema
+Por sistema
+
+@ordem_update
+Por atualização

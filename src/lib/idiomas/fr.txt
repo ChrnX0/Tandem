@@ -3765,3 +3765,12 @@ Tandem ne gère pas ses mises à jour
 
 @dot_checando
 Recherche de mises à jour…
+
+@ordem_nome
+Par nom
+
+@ordem_sistema
+Par système
+
+@ordem_update
+Par mise à jour

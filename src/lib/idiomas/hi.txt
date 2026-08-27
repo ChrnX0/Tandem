@@ -3676,3 +3676,12 @@ Tandem इसके अपडेट नहीं संभालता
 
 @dot_checando
 अपडेट जाँचे जा रहे हैं…
+
+@ordem_nome
+नाम से
+
+@ordem_sistema
+सिस्टम से
+
+@ordem_update
+अपडेट से

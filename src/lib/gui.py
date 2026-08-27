@@ -165,6 +165,41 @@ def _icon_with_dot(tipo, atualizavel, tem_update, msgs, size=30):
         return img
 
 
+def _dot_priority(atualizavel, tem_update):
+    """Sort rank for the 'by update' view: what needs attention first. Amber (an
+    update waits) before the not-checked ring, before green (current), before the
+    programs Tandem does not manage. Pure."""
+    state, _ = _update_dot(atualizavel, tem_update)
+    return {"amber": 0, "unknown": 1, "green": 2, "gray": 3}.get(state, 4)
+
+
+def _order_items(records, mode):
+    """Order the library for display, and for the 'system' view group it with a
+    header before each system. Pure - returns a flat list of ('group', tipo) and
+    ('app', record) items, so the caller just walks it. Three modes, like a file
+    manager: by name (A->Z), by system (grouped), by update (what needs acting on
+    first). Anything unexpected falls back to by-name.
+    A record is (tipo, nome, fonte, lancador, atualizavel, tem_update)."""
+    def by_name(rs):
+        return sorted(rs, key=lambda r: r[1].lower())
+    if mode == "sistema":
+        out = []
+        for tp in ("windows", "android", "linux"):
+            grp = by_name([r for r in records if r[0] == tp])
+            if grp:
+                out.append(("group", tp))
+                out.extend(("app", r) for r in grp)
+        rest = by_name([r for r in records
+                        if r[0] not in ("windows", "android", "linux")])
+        out.extend(("app", r) for r in rest)
+        return out
+    if mode == "update":
+        ordered = sorted(records, key=lambda r: (_dot_priority(r[4], r[5]),
+                                                 r[1].lower()))
+        return [("app", r) for r in ordered]
+    return [("app", r) for r in by_name(records)]
+
+
 def _imports_ok():
     import gi
     gi.require_version("Gtk", "4.0")
@@ -234,6 +269,9 @@ headerbar { background: transparent; box-shadow: none; }
 .oneui-dot-gray  { background: @SUB@; }
 .oneui-dot-unknown { background: @CARD@; border-color: @SUB@; }
 .oneui-updtag { font-size: 13px; font-weight: 700; color: @BW1@; }
+.oneui-grouphdr { font-size: 13px; font-weight: 800; color: @SUB@; margin: 10px 6px 2px 6px; letter-spacing: 0.4px; }
+.oneui-ordena { border-radius: 999px; min-height: 36px; }
+.oneui-ordena > button { border-radius: 999px; background: @GHOSTBG@; color: @GHOSTFG@; box-shadow: none; padding: 4px 12px; }
 """
 
 
@@ -594,9 +632,11 @@ def _home_window(app, title, records, action_file, result, msgs):
     search.add_css_class("oneui-search")
     outer.append(search)
 
-    # System filter chips. "todos" plus one per system actually present.
-    chips = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-    state = {"tipo": ""}
+    # Controls row: the system filter chips on the left, the "organize" selector
+    # on the right. state carries the active system filter AND the sort mode.
+    controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    chips = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8, hexpand=True)
+    state = {"tipo": "", "ordem": "nome"}
     chip_btns = []
 
     def make_chip(tipo, label):
@@ -614,11 +654,28 @@ def _home_window(app, title, records, action_file, result, msgs):
     for tp in ("windows", "android", "linux"):
         if tp in present:
             make_chip(tp, _PLATFORM_LABEL.get(tp, tp))
-    outer.append(chips)
+    controls.append(chips)
+
+    # The organize selector: by name (A->Z), by system (grouped), by update
+    # (what needs acting on first) - a file manager's view menu. The order of
+    # these two lists is the contract with _MODES below.
+    modos = [("nome", msgs.get("ordem_nome", "By name")),
+             ("sistema", msgs.get("ordem_sistema", "By system")),
+             ("update", msgs.get("ordem_update", "By update"))]
+    nomes = Gtk.StringList()
+    for _k, lab in modos:
+        nomes.append(lab)
+    ordena = Gtk.DropDown(model=nomes)
+    ordena.add_css_class("oneui-ordena")
+    ordena.set_valign(Gtk.Align.CENTER)
+    controls.append(ordena)
+    outer.append(controls)
 
     root.append(outer)
 
-    # The list itself, scrollable.
+    # The list itself, scrollable. It is rebuilt whenever the search text, the
+    # active chip, or the sort mode changes - grouping inserts header rows and
+    # reorders, so a visibility toggle would not be enough.
     scr = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
     listbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
     listbox.set_margin_top(6)
@@ -626,14 +683,12 @@ def _home_window(app, title, records, action_file, result, msgs):
     listbox.set_margin_start(22)
     listbox.set_margin_end(22)
 
-    rows = []   # (widget, tipo, name_lower)
-    for tipo, nome, fonte, lancador, atualizavel, tem_update in records:
+    def card_for(record):
+        tipo, nome, fonte, lancador, atualizavel, tem_update = record
         card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
         card.add_css_class("oneui-card")
         card.add_css_class("oneui-card-pad")
-
         card.append(_icon_with_dot(tipo, atualizavel, tem_update, msgs, 30))
-
         meta = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1, hexpand=True)
         nm = Gtk.Label(label=nome, xalign=0.0)
         nm.add_css_class("oneui-cardtext")
@@ -646,21 +701,40 @@ def _home_window(app, title, records, action_file, result, msgs):
         sb.add_css_class("oneui-sub")
         subrow.append(sb)
         if atualizavel == "sim" and tem_update == "sim":
-            tag = Gtk.Label(label=msgs.get("dot_atualizar", "Update available"), xalign=0.0)
+            tag = Gtk.Label(label=msgs.get("dot_atualizar", "Update available"),
+                            xalign=0.0)
             tag.add_css_class("oneui-updtag")
             subrow.append(tag)
         meta.append(subrow)
         card.append(meta)
-
         btn = Gtk.Button(label=msgs.get("open", "Open"))
         btn.add_css_class("oneui-pill")
         btn.add_css_class("oneui-ghost")
         btn.set_valign(Gtk.Align.CENTER)
-        btn.connect("clicked", lambda _b, f=fonte, l=lancador: choose("abrir\t%s\t%s" % (f, l)))
+        btn.connect("clicked",
+                    lambda _b, f=fonte, l=lancador: choose("abrir\t%s\t%s" % (f, l)))
         card.append(btn)
+        return card
 
-        listbox.append(card)
-        rows.append((card, tipo, nome.lower()))
+    def header_for(group_key):
+        # A system group header reuses the platform name; nothing else groups.
+        label = _PLATFORM_LABEL.get(group_key, group_key)
+        h = Gtk.Label(label=label, xalign=0.0)
+        h.add_css_class("oneui-grouphdr")
+        return h
+
+    def rebuild(*_a):
+        child = listbox.get_first_child()
+        while child is not None:
+            nxt = child.get_next_sibling()
+            listbox.remove(child)
+            child = nxt
+        q = search.get_text().strip().lower()
+        tp = state["tipo"]
+        kept = [r for r in records
+                if (not tp or r[0] == tp) and (not q or q in r[1].lower())]
+        for kind, val in _order_items(kept, state["ordem"]):
+            listbox.append(header_for(val) if kind == "group" else card_for(val))
 
     scr.set_child(listbox)
     root.append(scr)
@@ -688,14 +762,9 @@ def _home_window(app, title, records, action_file, result, msgs):
     bar.append(tools)
     root.append(bar)
 
-    # Filtering: search text AND the active system chip.
-    def apply_filter(*_a):
-        q = search.get_text().strip().lower()
-        tp = state["tipo"]
-        for w, wtipo, wname in rows:
-            w.set_visible((not tp or wtipo == tp) and (not q or q in wname))
-
-    search.connect("search-changed", apply_filter)
+    # Search text, the active system chip, and the sort mode all just rebuild
+    # the list.
+    search.connect("search-changed", rebuild)
 
     def on_chip(btn, tipo):
         if not btn.get_active():
@@ -705,10 +774,28 @@ def _home_window(app, title, records, action_file, result, msgs):
         for b, _tp in chip_btns:
             if b is not btn:
                 b.set_active(False)
-        apply_filter()
+        rebuild()
 
     for b, tp in chip_btns:
         b.connect("toggled", on_chip, tp)
+
+    def on_ordena(dd, _param):
+        i = dd.get_selected()
+        if 0 <= i < len(modos):
+            state["ordem"] = modos[i][0]
+            rebuild()
+
+    ordena.connect("notify::selected", on_ordena)
+
+    # An initial sort mode can be forced (used to render each view); harmless
+    # when unset.
+    ini = os.environ.get("TANDEM_GUI_ORDEM", "")
+    keys = [m[0] for m in modos]
+    if ini in keys:
+        state["ordem"] = ini
+        ordena.set_selected(keys.index(ini))
+
+    rebuild()   # first paint
 
     win.set_content(root)
     win.present()
@@ -796,7 +883,8 @@ def main():
             # Labels come tab-joined in one argument, in a fixed order, so they
             # arrive translated without a pile of positional arguments.
             keys = ["all", "open", "install", "search", "count", "tools",
-                    "dot_atualizar", "dot_atual", "dot_gerido", "dot_checando"]
+                    "dot_atualizar", "dot_atual", "dot_gerido", "dot_checando",
+                    "ordem_nome", "ordem_sistema", "ordem_update"]
             labels = (argv[3] if len(argv) > 3 else "").split("\t")
             msgs = {}
             for i, k in enumerate(keys):

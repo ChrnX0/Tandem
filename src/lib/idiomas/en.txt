@@ -3679,3 +3679,12 @@ Tandem doesn't manage its updates
 
 @dot_checando
 Checking for updates…
+
+@ordem_nome
+By name
+
+@ordem_sistema
+By system
+
+@ordem_update
+By update
