@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "1296730506 6146" "$soma_esperados"
+      "1724947762 6162" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -508,6 +508,33 @@ ACAO_BIB="$(sed -n '/^acao_biblioteca() {/,/^}/p' "$ROOT/src/bin/tandem")"
 contem "the library reads the enumeration engine"        't_biblioteca' "$ACAO_BIB"
 contem "  falls back to the old menu with no modern face" 'acao_painel'  "$ACAO_BIB"
 contem "  dispatches Open through t_bib_abrir"            't_bib_abrir'  "$ACAO_BIB"
+
+# 4.73: which programs have an update waiting. flatpak and snap know per-app,
+# but asking costs the network - so the answer is CACHED daily in the
+# background and the screen reads only the cache, never blocking. The check
+# fires at most once a day, stamped before the attempt, exactly like the
+# self-update check. t_biblioteca carries the answer as a sixth field.
+BUP="$TMPROOT/bibupd"; mkdir -p "$BUP/bin" "$BUP/home" "$BUP/sys"
+# flatpak: firefox is installed (list) AND has an update (remote-ls --updates);
+# snap: vlc is installed but "All snaps up to date." - so vlc is updatable with
+# nothing waiting, firefox is updatable with an update waiting.
+printf '#!/bin/sh\ncase "$*" in *remote-ls*) printf "org.moz.ff\\n";; *) printf "org.moz.ff\\tFirefox\\n";; esac\n' > "$BUP/bin/flatpak"
+printf '#!/bin/sh\ncase "$*" in *"refresh --list"*) printf "All snaps up to date.\\n";; *) printf "Name Ver Rev Tr Pub Notes\\nvlc 3 1 latest v -\\n";; esac\n' > "$BUP/bin/snap"
+chmod +x "$BUP/bin"/*
+bup_run() {
+    env HOME="$BUP/home" PATH="$BUP/bin:/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_APPS_SISTEMA="$BUP/sys" bash -c '. "'"$ROOT"'/src/lib/common.sh"; '"$1"'' 2>/dev/null
+}
+equal "an app the update check found reports an update waiting" "0" \
+      "$(bup_run 't_bib_verifica_updates; t_bib_tem_update Flatpak org.moz.ff; echo $?')"
+equal "an app not in the cache reports none" "1" \
+      "$(bup_run 't_bib_verifica_updates; t_bib_tem_update Flatpak org.nope; echo $?')"
+equal "an updatable app with nothing waiting is marked nao" "nao" \
+      "$(bup_run 't_bib_verifica_updates; t_biblioteca | grep vlc | cut -f6')"
+equal "an updatable app with an update waiting is marked sim" "sim" \
+      "$(bup_run 't_bib_verifica_updates; t_biblioteca | grep Firefox | cut -f6')"
+equal "the update check runs once a day, then the stamp throttles it" "0 1" \
+      "$(bup_run 't_bib_talvez_verifica; a=$?; t_bib_talvez_verifica; b=$?; echo $a $b')"
 
 section "evidence gate (proofgate)"
 

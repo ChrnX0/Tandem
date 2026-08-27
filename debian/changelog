@@ -1,3 +1,28 @@
+tandem (4.73) unstable; urgency=medium
+
+  * Coherence pass, part 3 (the enrichment): the program library learns which
+    of its programs have an update waiting. flatpak and snap each know, per
+    app, whether a newer version is out - but asking costs a network round
+    trip, and the library is the main screen, opened all the time. So the
+    answer is CACHED: the check runs at most once a day, in the background,
+    stamped before the attempt (the self-update check's shape), and writes the
+    updatable ids to a file; the screen reads only that file, so it opens
+    instantly and never blocks on the network. t_biblioteca carries the answer
+    as a sixth field, tem_update (sim/nao) - only an updatable source can hold
+    one, and only if the cache lists it, so it never invents an update. The
+    field is a pure read (the refresh is triggered separately by the command
+    path), so it stays safe to call from a test. On-disk cache values are
+    English and lowercase like the memory tokens, never translated.
+  * This is the invisible-but-testable engine; the visible green/amber dot and
+    the Update button on each row come next, reading exactly this. Pinned with
+    stubbed flatpak/snap: an app the check found reports an update, one the
+    cache does not list reports none, an updatable app with nothing waiting is
+    marked nao and one with an update is marked sim, and the daily throttle
+    fires once then the day's stamp skips it. No new message, no behaviour
+    change on the apt path or anywhere a program opens.
+
+ -- Tandem <rockx0@gmail.com>  Thu, 27 Aug 2026 00:58:59 +0000
+
 tandem (4.72) unstable; urgency=medium
 
   * Coherence pass, part 3: the main screen IS the library now. The old zenity

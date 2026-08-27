@@ -7,7 +7,7 @@
 # first-run bookkeeping needs it, and that lives in this file: a version that
 # learned to open a new format has to claim that format on a machine that was
 # already running an older one.
-TANDEM_VERSAO="4.72"
+TANDEM_VERSAO="4.73"
 
 TANDEM_LIB="${TANDEM_LIB:-/usr/lib/tandem}"
 # Where the sibling executables live. Overridable for the same reason
@@ -5686,6 +5686,13 @@ t_bib_sistema() {
 # source guards on its own tool being present, so a machine with no flatpak, no
 # snap or no waydroid simply contributes nothing from that source.
 t_biblioteca() {
+    local tab tipo nome fonte lanc atu upd
+    tab="$(printf '\t')"
+    # A sixth field, tem_update (sim/nao), is added from the cached update check:
+    # only an updatable source (flatpak/snap) can carry one, and only if it is in
+    # the cache. Reading the cache is free; the cache is refreshed in the
+    # background by t_bib_talvez_verifica, which the command path calls - so this
+    # stays a pure read, safe to call from a test.
     {
         t_bib_windows
         t_bib_appimage
@@ -5693,7 +5700,12 @@ t_biblioteca() {
         t_bib_snap
         t_bib_android
         t_bib_sistema
-    } | awk 'NF' | LC_ALL=C sort -f -t"$(printf '\t')" -k2,2
+    } | awk 'NF' | LC_ALL=C sort -f -t"$tab" -k2,2 |
+    while IFS="$tab" read -r tipo nome fonte lanc atu; do
+        upd=nao
+        [ "$atu" = sim ] && t_bib_tem_update "$fonte" "$lanc" && upd=sim
+        printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$tipo" "$nome" "$fonte" "$lanc" "$atu" "$upd"
+    done
 }
 
 # How to OPEN a program, decided by where it came from. Returns the fixed launch
@@ -5720,6 +5732,71 @@ t_bib_abrir() {
     # shellcheck disable=SC2046  # the launch words are fixed and MUST word-split
     ( setsid $(t_bib_lancador "$fonte") "$lancador" >/dev/null 2>&1 & ) 2>/dev/null
     return 0
+}
+
+# ---- Which programs have an update waiting ------------------------------
+# flatpak and snap each know, per app, whether a newer version is available -
+# but asking costs a network round trip, and the library is the main screen,
+# opened all the time. So the answer is CACHED: the check runs at most once a
+# day, in the background, and writes the updatable ids to a file; the screen
+# reads that file, never the network, so it opens instantly and never blocks.
+# The same daily-throttle-stamped-before-the-attempt shape as the self-update
+# check (t_versao_talvez_verifica) and the list send.
+t_bib_updates_arquivo() {
+    [ -n "$TANDEM_ESTADO" ] || return 1
+    printf '%s/biblioteca-updates' "$TANDEM_ESTADO"
+}
+
+# The worker: asks flatpak and snap what has an update and writes one
+# "fonte<TAB>id" line per updatable program. Run detached, so it never blocks;
+# the tools are overridable so the whole thing is testable with stubs.
+t_bib_verifica_updates() {
+    local arq id nome
+    arq="$(t_bib_updates_arquivo)" || return 1
+    mkdir -p "$(dirname -- "$arq")" 2>/dev/null || return 1
+    : > "$arq.tmp" 2>/dev/null || return 1
+    if command -v flatpak >/dev/null 2>&1; then
+        flatpak remote-ls --updates --columns=application 2>/dev/null |
+            while IFS= read -r id; do
+                [ -n "$id" ] || continue
+                printf 'Flatpak\t%s\n' "$id" >> "$arq.tmp"
+            done
+    fi
+    if command -v snap >/dev/null 2>&1; then
+        # a header line then one row per updatable snap; "All snaps up to date."
+        # is a single line and NR>1 leaves it out.
+        snap refresh --list 2>/dev/null | awk 'NR > 1 { print $1 }' |
+            while IFS= read -r nome; do
+                [ -n "$nome" ] || continue
+                printf 'snap\t%s\n' "$nome" >> "$arq.tmp"
+            done
+    fi
+    mv -f "$arq.tmp" "$arq" 2>/dev/null
+    return 0
+}
+
+# Kicks the check, but at most once a day. Stamped BEFORE the attempt, like the
+# others: a machine with no route makes one failed check a day, not one per
+# time the library is opened.
+t_bib_talvez_verifica() {
+    local hoje
+    [ -n "$TANDEM_ESTADO" ] || return 1
+    { command -v flatpak >/dev/null 2>&1 || command -v snap >/dev/null 2>&1; } || return 1
+    hoje="$(date +%F)"
+    [ "$(t_config_le BIB_UPDATES_DIA 2>/dev/null)" = "$hoje" ] && return 1
+    t_config_grava BIB_UPDATES_DIA "$hoje"
+    ( t_bib_verifica_updates >/dev/null 2>&1 & ) 2>/dev/null
+    return 0
+}
+
+# Does this program have an update waiting? Reads only what a previous run
+# cached, so it costs no network and cannot delay opening the screen.
+t_bib_tem_update() {
+    local arq fonte="$1" lancador="$2" tab
+    arq="$(t_bib_updates_arquivo)" || return 1
+    [ -f "$arq" ] || return 1
+    tab="$(printf '\t')"
+    grep -qxF -- "$fonte$tab$lancador" "$arq" 2>/dev/null
 }
 
 # The last lines the PROGRAM printed, with Tandem's own lines taken out.

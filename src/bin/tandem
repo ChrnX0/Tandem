@@ -2165,6 +2165,9 @@ acao_biblioteca() {
         acao_painel
         return $?
     fi
+    # Refresh the update cache in the background, at most once a day, so the dots
+    # are current next time without ever delaying the screen this time.
+    t_bib_talvez_verifica
     registros="$(t_biblioteca 2>/dev/null)"
     n="$(printf '%s' "$registros" | grep -c .)"
     acaofile="$(mktemp 2>/dev/null || true)"
