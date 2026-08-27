@@ -3293,6 +3293,34 @@ screen-snapshot instead — the changelog is published history and was not rewri
 but the behaviour is the snapshot, as this record and the release notes' feature
 description both stand corrected here.
 
+**v4.77 IS PUBLISHED** — 2026-08-27, tag `v4.77` at `d08399d`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (602986 bytes, sha256 `58c210f3…`)
+and the generic bundle (603056 bytes, sha256 `78aad861…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and a
+fresh reproducible local build at the tag (the downloaded bytes are `cmp`
+byte-identical to the local build). It is a small polish that closes the
+coherence work: the **last untranslated word on the library screen**. Each row
+shows where a program came from — Wine, AppImage, Flatpak, snap, Waydroid — and
+those are proper nouns that stay as they are in every language; but a program
+from the system's own catalogue read `sistema`, a plain Portuguese word, to a
+shop owner running the machine in English or any other language. It is shown
+translated now (System / Sistema / Système / ...) while the record on disk keeps
+the token `sistema` — the same on-disk-value-stays, shown-label-mapped split the
+memory screen uses (`t_resultado_amigavel`). The decision is a PURE function
+(`_display_fonte` in gui.py: only `sistema` is mapped, every other source is
+returned unchanged), pinned both directions, and a test confirms `t_bib_sistema`
+still records the untranslated token. One new message (`fonte_sistema`), all
+seven languages; rendered under real GTK4. Suite 1903 / 0 / 1 skipped; both
+literal counters read 0. **This closes the owner's UI arc.** His THREE explicit
+UI requests were the update dot (v4.74), the file-manager view control (v4.75),
+and the Play-Store "Update all" button (v4.76) — all shipped, tested and 5-way
+verified. This label polish (v4.77) was NOT one of the three: it was autonomous
+work, the "sistema" inconsistency caught under his standing "hunt for silly
+things that slipped through" directive, not a feature he named. The next
+direction is his; the honest read is that the interface is now coherent across
+the axes he named, and further UI churn without a request would be invention,
+not the job.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
