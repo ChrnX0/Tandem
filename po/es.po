@@ -4527,6 +4527,26 @@ msgctxt "pan_pergunta"
 msgid "What do you want to do?"
 msgstr "¿Qué quiere hacer?"
 
+msgctxt "pan_grupo_programas"
+msgid "Programs"
+msgstr ""
+"Programas"
+
+msgctxt "pan_grupo_diagnostico"
+msgid "Diagnosis"
+msgstr ""
+"Diagnóstico"
+
+msgctxt "pan_grupo_dados"
+msgid "Your data"
+msgstr ""
+"Sus datos"
+
+msgctxt "pan_grupo_ajuda"
+msgid "Community and help"
+msgstr ""
+"Comunidad y ayuda"
+
 msgctxt "pan_col_acao"
 msgid "Action"
 msgstr "Acción"

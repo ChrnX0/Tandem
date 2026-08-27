@@ -37,6 +37,14 @@ Contract, so the shell can read exit codes the same way it reads zenity's:
                                       token to action_file and closes; the shell
                                       reads the file and runs the remedy. 0 shown,
                                       2 cannot draw
+    gui.py menu <title> <subtitle> [action_file]
+                                   -> the Tools menu as tappable One UI rows; one
+                                      "token<TAB>label<TAB>icon<TAB>group" tool per
+                                      line on STDIN, grouped by <group> in order.
+                                      A click WRITES the token to action_file and
+                                      closes; a plain close leaves it untouched so
+                                      the shell reads "" and stops. 0 shown, 2
+                                      cannot draw
 
 Every drawing path is wrapped so a failure NEVER reaches the owner as a Python
 traceback - it becomes exit 2, and the shell shows the zenity window instead.
@@ -236,6 +244,8 @@ _LIGHT = {
     "@BO0@": "rgba(38,190,120,.16)", "@BO1@": "#16A65B",
     "@GHOSTBG@": "rgba(20,30,60,.06)", "@GHOSTFG@": "#2a3040",
     "@SHADOW@": "0 10px 30px rgba(20,30,60,.10)",
+    "@BT0@": "rgba(47,107,255,.12)", "@BT1@": "#2f6bff",
+    "@ROWHOV@": "rgba(47,107,255,.06)",
 }
 _DARK = {
     "@BG@": "linear-gradient(180deg,#0d0f14 0%,#141824 100%)",
@@ -246,6 +256,8 @@ _DARK = {
     "@BO0@": "rgba(38,190,120,.22)", "@BO1@": "#4fd894",
     "@GHOSTBG@": "rgba(255,255,255,.08)", "@GHOSTFG@": "#d6dcea",
     "@SHADOW@": "0 12px 34px rgba(0,0,0,.48)",
+    "@BT0@": "rgba(75,140,255,.20)", "@BT1@": "#6f9bff",
+    "@ROWHOV@": "rgba(120,160,255,.10)",
 }
 
 _CSS_TEMPLATE = """
@@ -285,6 +297,10 @@ headerbar { background: transparent; box-shadow: none; }
 .oneui-grouphdr { font-size: 13px; font-weight: 800; color: @SUB@; margin: 10px 6px 2px 6px; letter-spacing: 0.4px; }
 .oneui-ordena { border-radius: 999px; min-height: 36px; }
 .oneui-ordena > button { border-radius: 999px; background: @GHOSTBG@; color: @GHOSTFG@; box-shadow: none; padding: 4px 12px; }
+.oneui-badge-tool { background: @BT0@; color: @BT1@; }
+.oneui-menucard { background: @CARD@; border-radius: 22px; box-shadow: @SHADOW@; padding: 14px 18px; }
+.oneui-menucard:hover { background: @ROWHOV@; }
+.oneui-chev { color: @SUB@; }
 """
 
 
@@ -486,6 +502,96 @@ def _panel_window(app, title, summary, findings, action_file, fix_label, result)
             body.append(_panel_card(sev, text, action, fix_label, on_fix))
 
     scr.set_child(body)
+    root.append(scr)
+    win.set_content(root)
+    win.present()
+    result["code"] = 0
+
+
+def _menu_row(label, icon, on_click):
+    """One tool as a full-width, tappable One UI row: an accent-tinted squircle
+    icon, the sentence, and a quiet chevron. The whole row is the button - a One
+    UI settings row, not a label with a small button beside it."""
+    from gi.repository import Gtk
+    btn = Gtk.Button()
+    btn.add_css_class("oneui-menucard")
+    btn.set_hexpand(True)
+    row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
+    ic = Gtk.Image.new_from_icon_name(icon or "application-x-executable-symbolic")
+    ic.set_pixel_size(22)
+    ic.add_css_class("oneui-badge")
+    ic.add_css_class("oneui-badge-tool")
+    ic.set_valign(Gtk.Align.CENTER)
+    row.append(ic)
+    lbl = Gtk.Label(label=label, wrap=True, xalign=0.0, yalign=0.5)
+    lbl.add_css_class("oneui-cardtext")
+    lbl.set_hexpand(True)
+    row.append(lbl)
+    chev = Gtk.Image.new_from_icon_name("go-next-symbolic")
+    chev.set_pixel_size(16)
+    chev.add_css_class("oneui-chev")
+    chev.set_valign(Gtk.Align.CENTER)
+    row.append(chev)
+    btn.set_child(row)
+    btn.connect("clicked", lambda _b: on_click())
+    return btn
+
+
+def _menu_window(app, title, subtitle, items, action_file, result):
+    """The Tools menu ("Ferramentas") as One UI cards: everything the library is
+    not - doctor, backup, ports, the community list - one tappable row per tool,
+    grouped into sections with quiet headers. items is a list of
+    (token, label, icon, group); a group header is drawn whenever the group
+    changes from the previous row (the shell emits the rows already in order). A
+    click writes the token to action_file and closes; closing the window ANOTHER
+    way (X, Escape) leaves the file untouched, so the shell reads "" and stops.
+    The choice travels through the file, never stdout - the panel/home contract.
+    """
+    from gi.repository import Gtk
+
+    win = _build(app, title, resizable=True)
+    win.set_default_size(560, 660)
+
+    def choose(token):
+        _write_action(action_file, token)
+        win.close()
+
+    root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    root.append(_flat_header())
+
+    body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+    body.set_margin_top(2)
+    body.set_margin_start(24)
+    body.set_margin_end(24)
+
+    head = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+    t = Gtk.Label(label=title, xalign=0.0, wrap=True)
+    t.add_css_class("oneui-title")
+    head.append(t)
+    if subtitle:
+        s = Gtk.Label(label=subtitle, xalign=0.0, wrap=True)
+        s.add_css_class("oneui-sub")
+        head.append(s)
+    body.append(head)
+    root.append(body)
+
+    scr = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
+    listbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+    listbox.set_margin_top(10)
+    listbox.set_margin_bottom(22)
+    listbox.set_margin_start(24)
+    listbox.set_margin_end(24)
+
+    last_group = None
+    for token, label, icon, group in items:
+        if group and group != last_group:
+            h = Gtk.Label(label=group, xalign=0.0)
+            h.add_css_class("oneui-grouphdr")
+            listbox.append(h)
+            last_group = group
+        listbox.append(_menu_row(label, icon, lambda t=token: choose(t)))
+
+    scr.set_child(listbox)
     root.append(scr)
     win.set_content(root)
     win.present()
@@ -900,6 +1006,23 @@ def main():
                 findings.append((sev, text, action))
             return _run(lambda a, r: _panel_window(
                 a, title, summary, findings, action_file, fix_label, r))
+
+        if kind == "menu":
+            title = argv[1] if len(argv) > 1 else "Tandem"
+            subtitle = argv[2] if len(argv) > 2 else ""
+            action_file = argv[3] if len(argv) > 3 and argv[3] else None
+            items = []
+            for line in sys.stdin.read().splitlines():
+                if not line.strip():
+                    continue
+                parts = line.split("\t")
+                token = parts[0]
+                label = parts[1] if len(parts) > 1 else ""
+                icon = parts[2] if len(parts) > 2 else ""
+                group = parts[3] if len(parts) > 3 else ""
+                items.append((token, label, icon, group))
+            return _run(lambda a, r: _menu_window(
+                a, title, subtitle, items, action_file, r))
 
         if kind == "progress":
             title = argv[1] if len(argv) > 1 else "Tandem"

@@ -2639,6 +2639,18 @@ Appearance changed to: {1}
 @pan_pergunta
 What do you want to do?
 
+@pan_grupo_programas
+Programs
+
+@pan_grupo_diagnostico
+Diagnosis
+
+@pan_grupo_dados
+Your data
+
+@pan_grupo_ajuda
+Community and help
+
 @pan_col_acao
 Action
 

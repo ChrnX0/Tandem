@@ -2713,6 +2713,18 @@ Tandem - يشغّل برامج Windows وتطبيقات Android وحزم لين�
 @pan_pergunta
 ماذا تريد أن تفعل؟
 
+@pan_grupo_programas
+البرامج
+
+@pan_grupo_diagnostico
+التشخيص
+
+@pan_grupo_dados
+بياناتك
+
+@pan_grupo_ajuda
+المجتمع والمساعدة
+
 @pan_col_acao
 الإجراء
 

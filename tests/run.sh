@@ -105,7 +105,7 @@ soma_padroes="$(printf '%s\n' "$juntado" |
                 grep -oE '^[[:space:]]+\*([^)]|\$\([^)]*\))*\)([[:space:]]*(pass|fail)|[[:space:]]*$)' |
                 sed -E 's/[[:space:]]*(pass|fail)?[[:space:]]*$//' | cksum)"
 equal "the expected values are the ones this suite was written with" \
-      "4173579211 6394" "$soma_esperados"
+      "3320852686 6420" "$soma_esperados"
 equal "the case patterns still match the real messages" \
       "758612250 2750" "$soma_padroes"
 
@@ -660,6 +660,49 @@ GUI_FONTE_SRC="$(cat "$ROOT/src/lib/gui.py")"
 contem "gui.py maps the fonte for display"          '_display_fonte(fonte, msgs)' "$GUI_FONTE_SRC"
 contem "  but t_bib_sistema still records the on-disk token, untranslated" \
        '\tsistema\t' "$(sed -n '/^t_bib_sistema() {/,/^}/p' "$ROOT/src/lib/common.sh")"
+
+# 4.78: the Tools menu ("Ferramentas") wears the One UI face - the last shared
+# surface still drawn as a zenity list. acao_painel_itens is the ONE list both
+# faces read, so the modern window and the zenity fallback offer the same tools;
+# acao_painel_executa is the ONE dispatch, so they cannot drift on what a tool
+# does. Both are pure enough to exercise here; the window itself is proven to
+# refuse fast with no display, like every other one.
+PMENU="$TMPROOT/painel"; mkdir -p "$PMENU"
+painel_run() {
+    env HOME="$PMENU" PATH="/usr/bin:/bin" TANDEM_LIB="$ROOT/src/lib" \
+        TANDEM_BIN="$ROOT/src/bin" TANDEM_IDIOMA_FORCADO=en bash -c '
+          . "'"$ROOT"'/src/lib/common.sh"
+          eval "$(awk "/^acao_painel_itens\\(\\) \\{/,/^}/" "'"$ROOT"'/src/bin/tandem")"
+          eval "$(awk "/^acao_painel_executa\\(\\) \\{/,/^}/" "'"$ROOT"'/src/bin/tandem")"
+          '"$1"'' 2>/dev/null
+}
+equal "the tools menu lists all 18 tools in one place both faces read" "18" \
+      "$(painel_run 'acao_painel_itens | grep -c .')"
+equal "every tools row carries a token, label, icon and group (four fields)" "0" \
+      "$(painel_run 'acao_painel_itens | awk -F"\t" "NF!=4{c++} END{print c+0}"')"
+equal "the tools are grouped into four sections" "4" \
+      "$(painel_run 'acao_painel_itens | cut -f4 | sort -u | grep -c .')"
+equal "the group headers come from the catalogue, no raw key leaks through" "0" \
+      "$(painel_run 'acao_painel_itens | grep -c pan_grupo_')"
+PMK="$PMENU/disp"; rm -f "$PMK"
+equal "acao_painel_executa dispatches a token to its command (the shared face)" "doctor-ran" \
+      "$(painel_run 'acao_doctor() { printf doctor-ran > "'"$PMK"'"; }; acao_painel_executa doctor >/dev/null 2>&1; cat "'"$PMK"'" 2>/dev/null')"
+equal "an unknown tools token does nothing and never errors" "ok" \
+      "$(painel_run 'acao_painel_executa nao-existe >/dev/null 2>&1; echo ok')"
+GUI_MENU_SRC="$(cat "$ROOT/src/lib/gui.py")"
+contem "gui.py knows the menu (tools) subcommand" 'kind == "menu"' "$GUI_MENU_SRC"
+contem "  and builds the tools window"            '_menu_window'   "$GUI_MENU_SRC"
+rc_menu="$(printf 'doctor\tSee\tdialog-information-symbolic\tDiagnosis\n' | \
+    env -u DISPLAY -u WAYLAND_DISPLAY timeout 8 python3 "$ROOT/src/lib/gui.py" \
+    menu "Tools" "?" "$PMENU/act" >/dev/null 2>&1; echo $?)"
+equal "gui.py menu with no display refuses fast, never hangs" "2" "$rc_menu"
+equal "  and a refused menu writes no action token" "" "$(cat "$PMENU/act" 2>/dev/null)"
+ACAO_PAN="$(sed -n '/^acao_painel() {/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "acao_painel prefers the modern face"  'acao_painel_moderno' "$ACAO_PAN"
+contem "  and falls back to the zenity list"  'acao_painel_zenity'  "$ACAO_PAN"
+ACAO_PAN_M="$(sed -n '/^acao_painel_moderno() {/,/^}/p' "$ROOT/src/bin/tandem")"
+contem "the modern tools loop reads the shared dispatch" 'acao_painel_executa' "$ACAO_PAN_M"
+contem "  and feeds gui.py the shared item list"         'acao_painel_itens |' "$ACAO_PAN_M"
 
 section "evidence gate (proofgate)"
 
@@ -5145,13 +5188,18 @@ done
 contem "the report still names the product without translating it" \
        'Tandem $VERSAO' "$DOCTOR_CORPO"
 
-# The panel is the only screen a shop owner who never opens a terminal sees, and
-# it was the last thing in the program hard-coded in Portuguese. Every row a
-# person reads has to come from the catalogue in every language, while the action
-# column - which "case $esc in" matches - has to stay Portuguese on every
-# machine, or a command copied off a forum stops working.
-PAINEL_CORPO="$(sed -n '/^acao_painel()/,/^}/p' "$ROOT/src/bin/tandem"
-                 sed -n '/^t_painel_lista()/,/^}/p' "$ROOT/src/lib/common.sh")"
+# The tools menu ("Ferramentas") has two faces now - the modern One UI window
+# (acao_painel_itens feeds the labels, acao_painel_executa dispatches the tokens)
+# and the zenity list (acao_painel_zenity). Every row a person reads has to come
+# from the catalogue in every language, whichever face draws it, while the action
+# token - which "case $esc in" matches - has to stay Portuguese on every machine,
+# or a command copied off a forum stops working. So the corpus spans all the
+# panel functions, not just the dispatcher.
+PAINEL_CORPO="$(sed -n '/^acao_painel()/,/^}/p'          "$ROOT/src/bin/tandem"
+                 sed -n '/^acao_painel_zenity()/,/^}/p'  "$ROOT/src/bin/tandem"
+                 sed -n '/^acao_painel_itens()/,/^}/p'   "$ROOT/src/bin/tandem"
+                 sed -n '/^acao_painel_executa()/,/^}/p' "$ROOT/src/bin/tandem"
+                 sed -n '/^t_painel_lista()/,/^}/p'      "$ROOT/src/lib/common.sh")"
 for chave in pan_pergunta pan_instalar pan_doctor pan_portas pan_logs \
              pan_escolha_arquivo pan_filtro_programas pan_filtro_todos; do
     contem "the panel reads '$chave' from the catalogue" \
@@ -10342,6 +10390,7 @@ rm -rf "$ALARME"
 #    "identidade", "restore", "autoteste" - and showed no version at all, so
 #    finding out which Tandem he had meant opening a terminal.
 PAINEL="$(sed -n '/^acao_painel()/,/^}/p' "$ROOT/src/bin/tandem"
+            sed -n '/^acao_painel_zenity()/,/^}/p' "$ROOT/src/bin/tandem"
             sed -n '/^t_painel_lista()/,/^}/p' "$ROOT/src/lib/common.sh")"
 # TANDEM_VERSAO and not VERSAO: the window is built in common.sh now, where
 # the short name does not exist. The point of the assertion is unchanged - the

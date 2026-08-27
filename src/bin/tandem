@@ -2056,36 +2056,139 @@ acao_socorro() {
     return 1
 }
 
+# The tools-menu rows, one per line: token <TAB> label <TAB> icon <TAB> group.
+# The tokens are the machine-readable half and stay Portuguese forever
+# (acao_painel_executa matches them, and a command copied off a forum has to
+# work on any machine); the labels and the four group headers come from the
+# catalogue. ONE place both faces read, so the modern window and the zenity
+# fallback offer exactly the same tools, in the same order.
+acao_painel_itens() {
+    local g1 g2 g3 g4
+    g1="$(t_msg pan_grupo_programas)"
+    g2="$(t_msg pan_grupo_diagnostico)"
+    g3="$(t_msg pan_grupo_dados)"
+    g4="$(t_msg pan_grupo_ajuda)"
+    # The format cycles over the flat argument list, emitting one line per four
+    # arguments - so each label (which contains spaces) is one quoted argument.
+    printf '%s\t%s\t%s\t%s\n' \
+        instalar   "$(t_msg pan_instalar)"   document-open-symbolic            "$g1" \
+        programas  "$(t_msg pan_programas)"  view-grid-symbolic                "$g1" \
+        android    "$(t_msg pan_android)"    phone-symbolic                    "$g1" \
+        remover    "$(t_msg pan_remover)"    user-trash-symbolic               "$g1" \
+        preparar   "$(t_msg pan_preparar)"   system-software-install-symbolic  "$g1" \
+        doctor     "$(t_msg pan_doctor)"     dialog-information-symbolic        "$g2" \
+        autoteste  "$(t_msg pan_autoteste)"  emblem-ok-symbolic                "$g2" \
+        portas     "$(t_msg pan_portas)"     network-wired-symbolic            "$g2" \
+        repair     "$(t_msg pan_repair)"     applications-engineering-symbolic "$g2" \
+        dados      "$(t_msg pan_dados)"      folder-documents-symbolic         "$g3" \
+        backup     "$(t_msg pan_backup)"     drive-harddisk-symbolic           "$g3" \
+        restore    "$(t_msg pan_restore)"    edit-undo-symbolic                "$g3" \
+        memoria    "$(t_msg pan_memoria)"    document-open-recent-symbolic     "$g3" \
+        identidade "$(t_msg pan_identidade)" dialog-password-symbolic          "$g3" \
+        lista      "$(t_msg pan_lista)"      view-list-symbolic                "$g4" \
+        enviar     "$(t_msg pan_enviar)"     mail-send-symbolic                "$g4" \
+        socorro    "$(t_msg pan_socorro)"    help-browser-symbolic             "$g4" \
+        logs       "$(t_msg pan_logs)"       text-x-generic-symbolic           "$g4"
+}
+
+# Run one tools-menu token. Shared by the modern (GTK4) and the zenity faces, so
+# the two can never drift on what a tool does - the whole reason the dispatch is
+# a function and not two copies of a case.
+acao_painel_executa() {
+    case "$1" in
+        instalar)
+            local f
+            # zenity's --file-filter is "label | globs", so only the half before
+            # the bar is translated. The globs live in a variable at the top of
+            # this file: they are the nine formats, not prose. The library main
+            # screen opens the same chooser for the same reason.
+            f="$(zenity --file-selection --title="$(t_msg pan_escolha_arquivo)" \
+                 --file-filter="$(t_msg pan_filtro_programas) | $TANDEM_GLOBS" \
+                 --file-filter="$(t_msg pan_filtro_todos) | *" 2>/dev/null)" || return 0
+            acao_install "$f" ;;
+        preparar)   acao_preparar ;;
+        programas)  acao_programas ;;
+        remover)    acao_uninstall ;;
+        android)    setsid "$TANDEM_BIN"/tandem-android >/dev/null 2>&1 & ;;
+        doctor)     acao_doctor ;;
+        autoteste)  acao_autoteste ;;
+        dados)      acao_dados ;;
+        portas)     acao_portas ;;
+        identidade) acao_identidade ;;
+        backup)     acao_backup ;;
+        restore)    acao_restore ;;
+        repair)     "$TANDEM_BIN"/tandem-repair ;;
+        memoria)    acao_memoria ;;
+        lista)      acao_lista atualizar ;;
+        enviar)     acao_enviar ;;
+        socorro)    acao_socorro ;;
+        logs)       acao_logs ;;
+    esac
+}
+
+# The modern face of the tools menu: One UI cards, ALL the tools at once (a
+# scrollable window has room, so no two-level "more"/"back" the way zenity's
+# eight-row list forced), grouped into sections. A closed window (empty action
+# file) ends the loop; anything else is dispatched and the menu reopens, so the
+# owner lands back here after each tool - the same loop the zenity face has.
+acao_painel_moderno() {
+    local acaofile acao rc primeira=1
+    while :; do
+        acaofile="$(mktemp 2>/dev/null || true)"
+        acao_painel_itens | python3 "${TANDEM_LIB:-/usr/lib/tandem}/gui.py" \
+            menu "$(t_msg bib_ferramentas)" "$(t_msg pan_pergunta)" "$acaofile" \
+            >/dev/null 2>&1
+        rc=$?
+        acao="$(cat "$acaofile" 2>/dev/null)"; rm -f "$acaofile" 2>/dev/null
+        # If the modern window could not draw at all on the very first try
+        # (exit 2), fall back to the zenity list rather than closing in silence -
+        # rule 1, no screen ends in nothing.
+        if [ "$primeira" = 1 ] && [ -z "$acao" ] && [ "$rc" = 2 ]; then
+            if command -v zenity >/dev/null 2>&1; then acao_painel_zenity; else uso; fi
+            return 0
+        fi
+        primeira=0
+        [ -n "$acao" ] || return 0
+        acao_painel_executa "$acao"
+    done
+}
+
 acao_painel() {
     # With no graphical session the panel has no way to show up: display the
     # help instead of opening and closing an invisible window saying nothing.
-    if ! t_tem_gui || ! command -v zenity >/dev/null 2>&1; then uso; return 0; fi
-    local esc
+    if ! t_tem_gui; then uso; return 0; fi
+    # The modern One UI face when a gi-capable python3 is present; the zenity
+    # list when it is not; the help text when there is no zenity either - the
+    # same fallback ladder the error, question, text and library windows follow.
+    if t_gui_moderno; then acao_painel_moderno; return $?; fi
+    if ! command -v zenity >/dev/null 2>&1; then uso; return 0; fi
+    acao_painel_zenity
+}
+
+# The zenity fallback: the two-level list, kept because it is the only face a
+# machine without libadwaita has. Both levels get the same care; the second is
+# not a basement.
+acao_painel_zenity() {
+    local esc PAINEL_NIVEL=1
     while :; do
         # The action names are the machine-readable half and stay Portuguese
-        # forever - "case $esc in" matches them, and a command copied off a
-        # forum has to work on any machine.
+        # forever - "case $esc in" matches them.
         #
-        # But until 4.12 they were also SHOWN, as the first and leftmost column
-        # of the only screen a shop owner who never opens a terminal ever sees.
+        # Until 4.12 they were also SHOWN, as the first and leftmost column of
+        # the only screen a shop owner who never opens a terminal ever sees.
         # "identidade", "restore", "autoteste" are words he has to decode before
         # he can read the sentence beside them, and decoding them buys him
         # nothing: he is clicking a row, not typing a command. --hide-column
         # keeps the token as the value zenity RETURNS while taking it off the
-        # screen, so "case $esc in" below is untouched and the panel becomes one
-        # column of plain sentences. Verified with xdotool driving a real
-        # zenity: with column 1 hidden it still answers "instalar".
+        # screen. Verified with xdotool: with column 1 hidden it still answers
+        # "instalar".
         #
-        # The VERSION goes in the title, and the reason is the owner's: to find
-        # out which Tandem he is running he had to open a terminal - the exact
-        # thing this program exists to spare him.
         # TWO SCREENS, AND THE SAME EIGHTEEN COMMANDS. Eighteen rows of equally
         # weighted prose is a wall, and only eight of them fitted the window -
-        # with nothing saying the other ten existed. But shortening the list by
+        # with nothing saying the other ten existed. Shortening the list by
         # DROPPING commands would take function away from the one person who
-        # cannot get it back from a terminal, which is the whole audience of
-        # this screen. So: the things a shop does, then one row that opens the
-        # rest. Both screens get the same care; the second is not a basement.
+        # cannot get it back from a terminal. So: the things a shop does, then
+        # one row that opens the rest.
         if [ "${PAINEL_NIVEL:-1}" = 2 ]; then
             esc="$(t_painel_lista "$(t_msg pan_pergunta_mais)" \
                 "autoteste"  "$(t_msg pan_autoteste)"  "emblem-system" \
@@ -2115,38 +2218,9 @@ acao_painel() {
         case "$esc" in
             mais)   PAINEL_NIVEL=2; continue ;;
             voltar) PAINEL_NIVEL=1; continue ;;
-        esac
-        case "$esc" in
-            instalar)
-                local f
-                # zenity's --file-filter is "label | globs", so only the half
-                # before the bar is translated. The globs live in a variable at
-                # the top of this file rather than here: they are the nine
-                # formats, not prose, and a translator opening a catalogue
-                # should never be shown a list of extensions to consider
-                # rewording.
-                f="$(zenity --file-selection --title="$(t_msg pan_escolha_arquivo)" \
-                     --file-filter="$(t_msg pan_filtro_programas) | $TANDEM_GLOBS" \
-                     --file-filter="$(t_msg pan_filtro_todos) | *" 2>/dev/null)" || continue
-                acao_install "$f" ;;
-            preparar)  acao_preparar ;;
-            programas) acao_programas ;;
-            remover)   acao_uninstall ;;
-            android)  setsid "$TANDEM_BIN"/tandem-android >/dev/null 2>&1 & ;;
-            doctor)   acao_doctor ;;
-            autoteste) acao_autoteste ;;
-            dados)    acao_dados ;;
-            portas)   acao_portas ;;
-            identidade) acao_identidade ;;
-            backup)   acao_backup ;;
-            restore)  acao_restore ;;
-            repair)   "$TANDEM_BIN"/tandem-repair ;;
-            memoria)  acao_memoria ;;
-            lista)    acao_lista atualizar ;;
-            enviar)   acao_enviar ;;
-            socorro)  acao_socorro ;;
-            logs)     acao_logs ;;
-            *)        return 0 ;;
+            instalar|preparar|programas|remover|android|doctor|autoteste|dados|portas|identidade|backup|restore|repair|memoria|lista|enviar|socorro|logs)
+                acao_painel_executa "$esc" ;;
+            *)      return 0 ;;
         esac
     done
 }

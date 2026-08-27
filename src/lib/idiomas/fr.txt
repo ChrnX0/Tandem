@@ -2677,6 +2677,18 @@ Apparence changée en : {1}
 @pan_pergunta
 Que voulez-vous faire ?
 
+@pan_grupo_programas
+Programmes
+
+@pan_grupo_diagnostico
+Diagnostic
+
+@pan_grupo_dados
+Vos données
+
+@pan_grupo_ajuda
+Communauté et aide
+
 @pan_col_acao
 Action
 

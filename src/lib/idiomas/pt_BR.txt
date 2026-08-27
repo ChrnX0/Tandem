@@ -2619,6 +2619,18 @@ Aparência trocada para: {1}
 @pan_pergunta
 O que você quer fazer?
 
+@pan_grupo_programas
+Programas
+
+@pan_grupo_diagnostico
+Diagnóstico
+
+@pan_grupo_dados
+Seus dados
+
+@pan_grupo_ajuda
+Comunidade e ajuda
+
 @pan_col_acao
 Ação
 
