@@ -1,0 +1,30 @@
+# Keeps the repository's few external dependencies current without babysitting.
+# Both ecosystems are grouped into a single weekly PR each, so this is a quiet
+# safety net, not a stream of noise. CI runs on every one, so a bad bump shows
+# up red rather than landing silently.
+version: 2
+updates:
+  # The GitHub Actions the workflows pin (actions/checkout, action-gh-release, …).
+  # These move rarely; a bump is usually a security or maintenance fix.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"
+
+  # The one npm dependency, @vercel/blob, that the list-intake function uses.
+  # It is NOT shipped in the .deb — build.py has its own explicit LAYOUT and
+  # never reads package.json — so this only keeps the Vercel function current.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm:
+        patterns: ["*"]
+    commit-message:
+      prefix: "deps"
