@@ -92,9 +92,12 @@ DESTDIR=%{buildroot} bash install.sh
 update-desktop-database %{_datadir}/applications &>/dev/null || :
 update-mime-database %{_datadir}/mime &>/dev/null || :
 gtk-update-icon-cache -f %{_datadir}/icons/hicolor &>/dev/null || :
-lang="${LANG%%.*}"; lang="${lang%%@*}"
+# rpm collapses %% to a single % across the whole scriptlet body, so bash's
+# longest-match ${var%%...} needs %%%% in the source to survive as %% in the
+# generated script. Harmless with real one-separator locales, but correct.
+lang="${LANG%%%%.*}"; lang="${lang%%%%@*}"
 for f in "%{_prefix}/lib/%{name}/idiomas/$lang.txt" \
-         "%{_prefix}/lib/%{name}/idiomas/${lang%%_*}.txt" \
+         "%{_prefix}/lib/%{name}/idiomas/${lang%%%%_*}.txt" \
          "%{_prefix}/lib/%{name}/idiomas/en.txt"; do
     [ -r "$f" ] || continue
     printf '\n'

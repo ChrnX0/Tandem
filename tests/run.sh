@@ -4025,7 +4025,7 @@ fi
 
 section "packaging: the RPM spec (Fedora COPR, openSUSE OBS)"
 
-# 4.80: the rpm families get the same treatment as Arch. The spec installs from
+# 4.81: the rpm families get the same treatment as Arch. The spec installs from
 # the generic tarball via its own install.sh, so what it packages cannot drift
 # from the .deb, and it generates %files from the MANIFEST so the list cannot
 # rot. Unlike the git-ignored PKGBUILD, the spec is COMMITTED (COPR builds it
