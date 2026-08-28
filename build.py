@@ -388,6 +388,34 @@ def check_pkgbuild(gen_path):
     print("OK: PKGBUILD matches version %s and the tarball checksum" % ver)
 
 
+# The RPM spec, for the families Fedora (COPR) and openSUSE (OBS) serve. Unlike
+# the PKGBUILD - which is generated and git-ignored because it is copied out to a
+# separate AUR repo - the spec is COMMITTED, because COPR builds it straight from
+# this repository. So its version is one more place the release bump must reach,
+# and this guard makes forgetting it a red build rather than a broken package:
+# the version lives in debian/control, and the spec must agree. The spec installs
+# from the same generic tarball as everything else, so what it packages cannot
+# drift from the .deb either.
+RPM_SPEC = os.path.join(ROOT, "packaging", "rpm", "tandem.spec")
+
+
+def check_spec():
+    ver = version()
+    with open(RPM_SPEC, encoding="utf-8") as f:
+        txt = f.read()
+    found = None
+    for line in txt.splitlines():
+        if line.startswith("Version:"):
+            found = line.split(None, 1)[1].strip()
+            break
+    assert found == ver, "spec Version is %r, expected %s" % (found, ver)
+    assert "DESTDIR=%{buildroot} bash install.sh" in txt, \
+        "spec does not stage via the generic bundle's install.sh"
+    assert "tandem_%{version}_generic.tar.gz" in txt, \
+        "spec Source0 does not name the generic tarball"
+    print("OK: RPM spec Version matches %s" % ver)
+
+
 def ar_entry(name, data):
     header = "{:<16}{:<12}{:<6}{:<6}{:<8}{:<10}`\n".format(
         name, MTIME, 0, 0, "100644", len(data)).encode("ascii")
@@ -446,6 +474,7 @@ def main():
         check(out)
         check_generico(gen)
         check_pkgbuild(gen)
+        check_spec()
 
 
 if __name__ == "__main__":
