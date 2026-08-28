@@ -1,3 +1,24 @@
+tandem (4.81) unstable; urgency=medium
+
+  * Native RPM packaging for the rpm families - Fedora (COPR) and openSUSE
+    (OBS) - the equivalent of the Arch/AUR recipe (4.62) for the other side of
+    the packaging world. packaging/rpm/tandem.spec installs from the same
+    distribution-agnostic generic tarball as the .deb and the AUR package,
+    running its install.sh with DESTDIR, so what it packages cannot drift from
+    the .deb; its %files list is generated from the tarball's MANIFEST so the
+    list cannot rot as files are added or removed. %post/%postun refresh the
+    shared caches and show the install notice READ from the catalogue in the
+    machine's language, never sourced, exactly as the .deb postinst and the
+    pacman scriptlet do. build.py --check guards the spec's Version against
+    debian/control (the spec is committed, because COPR builds it straight
+    from the repository), and a new suite section asserts the spec's shape and
+    proves that guard fires on a version mismatch. The .xapk/.apks/.apkm
+    handler's unzip dependency is declared and guarded. Built and installed
+    end to end on a real Fedora 41, where tandem doctor reads "package
+    family: dnf". packaging/rpm/README.md documents publishing on COPR and OBS.
+
+ -- Tandem Maintainers <tandem@example.com>  Fri, 28 Aug 2026 01:56:00 +0000
+
 tandem (4.80) unstable; urgency=medium
 
   * The program library gains a per-program Remove action - the one thing the
