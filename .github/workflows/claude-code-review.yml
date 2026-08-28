@@ -1,15 +1,26 @@
 name: Claude Code Review
 
-# Reviews every pull request automatically, the moment it opens or gets new
-# commits — no one has to mention @claude. It authenticates with the same
-# CLAUDE_CODE_OAUTH_TOKEN secret the interactive claude.yml workflow uses, and
-# posts one concise review as a PR comment. It only reads; it never pushes.
+# Reviews every pull request from a branch in this repository automatically,
+# the moment it opens or gets new commits — no one has to mention @claude. It
+# authenticates with the same CLAUDE_CODE_OAUTH_TOKEN secret the interactive
+# claude.yml workflow uses, and posts one concise review as a PR comment (via
+# the Claude GitHub App token the action obtains through OIDC, which is why the
+# read-only permissions below are enough). It only reads; it never pushes.
 on:
   pull_request:
     types: [opened, synchronize]
 
 jobs:
   claude-review:
+    # Pull requests from a fork, and Dependabot's own pull requests, run without
+    # access to Actions secrets — so CLAUDE_CODE_OAUTH_TOKEN would be empty and
+    # the review could not run. Skip cleanly in those cases (a maintainer can
+    # still review them by mentioning @claude) instead of starting a job that
+    # cannot post. `pull_request_target` would hand the secret to untrusted fork
+    # code, so it is deliberately not used.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
