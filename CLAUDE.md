@@ -3424,6 +3424,80 @@ registry `DisplayName`, so a valid uninstall could dead-end at "not found";
 registry chooser on a miss. Suite 1939 passed / 0 failed / 1 skipped; build.py
 --check clean (4.80); both literal counters 0.
 
+**v4.81 IS PUBLISHED** — 2026-08-28, tag `v4.81` at `7e4e36e`, both artifacts
+verified byte-for-byte FIVE ways: the `.deb` (609608 bytes, sha256 `e952e47d…`)
+and the generic bundle (609836 bytes, sha256 `087dc87e…`) each agree across the
+release body, the checksum sidecar, the asset digest, the downloaded bytes, and
+a fresh reproducible local build at the tag; PKGBUILD + tandem.install attached.
+It is the **rpm half of native packaging** — the equivalent of the Arch/AUR
+recipe (4.62) for Fedora (COPR) and openSUSE (OBS). `packaging/rpm/tandem.spec`
+installs from the same distribution-agnostic generic tarball as the `.deb` and
+the AUR package (running its `install.sh` with `DESTDIR`), so what it packages
+cannot drift from the `.deb`, and it generates its `%files` list from the
+tarball's `MANIFEST` so the list cannot rot. Unlike the git-ignored PKGBUILD
+(copied out to a separate AUR repo), the spec is **committed** because COPR
+builds it straight from the repository, so `build.py --check`'s new
+`check_spec()` guards its `Version` against `debian/control` (proven non-vacuous
+in `tests/run.sh`). `%post`/`%postun` read the install notice from the catalogue
+with awk, never sourced. **Built and installed end to end on a real Fedora 41**
+(Docker, `--network host`), where `tandem doctor` reads `package family: dnf` and
+`tandem versao` → `Tandem 4.81`. `packaging/rpm/README.md` documents publishing
+on COPR and OBS. Suite 1947 passed / 0 / 1 skipped; both literal counters 0.
+
+**This is the first release reviewed by the repo's own automated reviewers, and
+the loop earned its keep** — the auto-review (`claude-code-review.yml`, set up
+this session) and Codex together caught FIVE real things on PR #129, all fixed
+before merge: (1) Codex — the spec did not `Require: unzip`, which `tandem-apk`
+shells out to for `.xapk/.apks/.apkm` (a Fedora user opening one would hit
+"unzip: command not found", the exact silent/jargon failure this project
+abolishes); fixed + guarded. (2) auto-review — `check_spec()`'s non-vacuity was
+proven only interactively, not in a persistent suite test; a suite section was
+added that injects a version mismatch and asserts the guard fires. (3)
+auto-review — a real new capability was merging with NO version bump, unlike the
+AUR recipe which shipped as 4.62; opened 4.81 across control/changelog/common.sh
+/spec. (4) auto-review — the `%post` locale-strip used `${LANG%%.*}`, but rpm
+collapses `%%`→`%` across the scriptlet body, so the generated script did
+shortest-match; fixed with `%%%%` and VERIFIED against the generated `%post`
+(`rpm -qp --scripts`) in a real Fedora build — the same `%`-escaping class as
+v4.68's `t_memoria_le`. (5) auto-review — flagged a possible
+`/usr/share/man/pt_BR/man1` leftover on uninstall; VERIFIED in Fedora that
+`filesystem` owns that dir, so there is no leftover and `%files` is correct.
+
+**The GitHub automation was set up this session** and is now repo infrastructure
+the next session should know exists: `@claude` interactive
+(`.github/workflows/claude.yml`, PR #124), automatic per-PR review
+(`.github/workflows/claude-code-review.yml`, PR #128 — same
+`CLAUDE_CODE_OAUTH_TOKEN` from the owner's Max, read-only + posts via the app
+token, guarded with an `if:` to skip fork/Dependabot PRs that lack the secret),
+and Dependabot (`.github/dependabot.yml`, PR #123 — weekly grouped
+github-actions + npm; its first PR, #126, bumps four actions to majors and is
+LEFT FOR THE OWNER, not blind-merged, because it touches release.yml which CI
+does not fully exercise). Branch protection on `main` requires a PR + the `gate`
+status check; "Require approvals" was DROPPED because a solo maintainer cannot
+self-approve, which blocked every PR (including the owner's own and Dependabot's).
+The English landing site is live at `https://chrnx0.github.io/Tandem/` (GitHub
+Pages, `docs/`), with Issue templates + Discussions links.
+
+**The store status, so the next session does not rebuild what is done:** native
+packaging now exists for every family — the `.deb` (apt), the generic tarball
+(any Linux), the AUR PKGBUILD (Arch), and the RPM spec (Fedora/openSUSE). What
+remains is PUBLISHING to each store, each gated on an owner credential, NONE of
+it code. **AUR** — the package + a hand-generated `.SRCINFO` are ready and were
+handed to the owner (the `.SRCINFO` is NOT committed: it belongs in the separate
+`aur.archlinux.org/tandem.git` repo, not this one); the owner pushes it with his
+AUR account. **COPR/OBS** — the spec + README ship in `packaging/rpm/`; the owner
+creates the COPR project (Fedora account, SCM → `packaging/rpm`, spec
+`tandem.spec`) / OBS package (openSUSE account). **apt (Ubuntu/Zorin)** — NOT yet
+built; the agreed plan is a GitHub Pages apt repo under `docs/apt/`, gated on the
+owner's choice of GPG signing (recommended) vs a `[trusted=yes]` unsigned repo.
+**Flatpak was ruled out** (it would need `flatpak-spawn --host` wrapping the
+entire subprocess layer AND Flathub rejects broad-host-access installers, because
+Tandem is a host system tool, not a sandboxable app); **Snap classic confinement**
+is the one sandboxed store that can technically work (full host access) but needs
+Canonical's manual approval + `/snap/...` path rework — offered, not built. On
+2026-08-28 the owner chose "the simplest first, but another day" and went to
+sleep, so the next store step waits on his pick.
+
 **THE "ESTADO DE ARTE" ARC — 9 OF 11 SHIPPED (⑤'s code landed in v4.62,
 2026-08-25; the AUR publish is the owner's one step), THEN A HELD CHECKPOINT.** The owner asked to "elevar o tandem ao estado de arte e
 excelência… implemente absolute tudo" — eleven brainstorm ideas, one well-tested
