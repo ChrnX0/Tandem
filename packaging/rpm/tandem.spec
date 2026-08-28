@@ -7,7 +7,7 @@
 # cannot rot as files are added or removed.
 
 Name:           tandem
-Version:        4.80
+Version:        4.81
 Release:        1%{?dist}
 Summary:        Run Windows, Android and Linux packages by double-clicking
 
@@ -111,5 +111,5 @@ update-mime-database %{_datadir}/mime &>/dev/null || :
 gtk-update-icon-cache -f %{_datadir}/icons/hicolor &>/dev/null || :
 
 %changelog
-* Fri Aug 28 2026 Paulo Eduardo <noreply@users.noreply.github.com> - 4.80-1
+* Fri Aug 28 2026 Tandem Maintainers <tandem@example.com> - 4.81-1
 - Package the generic tarball for the rpm families (Fedora, openSUSE).
