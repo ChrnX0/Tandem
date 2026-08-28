@@ -4023,6 +4023,69 @@ else
     fi
 fi
 
+section "packaging: the RPM spec (Fedora COPR, openSUSE OBS)"
+
+# 4.80: the rpm families get the same treatment as Arch. The spec installs from
+# the generic tarball via its own install.sh, so what it packages cannot drift
+# from the .deb, and it generates %files from the MANIFEST so the list cannot
+# rot. Unlike the git-ignored PKGBUILD, the spec is COMMITTED (COPR builds it
+# straight from this repo), so build.py guards its Version against control. The
+# end-to-end rpmbuild/install runs on a real Fedora container, not this suite.
+SPEC="$ROOT/packaging/rpm/tandem.spec"
+if [ ! -f "$SPEC" ]; then
+    fail "the RPM spec ships in the repository" "present" "missing"
+else
+    SPECTXT="$(cat "$SPEC")"
+    SPECVER="$(awk '/^Version:/{print $2; exit}' "$SPEC")"
+    if [ "$SPECVER" = "$VERC" ]; then
+        pass "the spec Version matches debian/control ($VERC)"
+    else
+        fail "the spec Version matches debian/control" "$VERC" "$SPECVER"
+    fi
+    contem "the spec source is the release generic tarball" \
+           'tandem_%{version}_generic.tar.gz' "$SPECTXT"
+    contem "the spec stages via the bundle install.sh" \
+           'DESTDIR=%{buildroot} bash install.sh' "$SPECTXT"
+    contem "the spec packages a generated file list" \
+           '%files -f %{_builddir}/%{name}-files.list' "$SPECTXT"
+    contem "the spec builds that list from the MANIFEST" \
+           "print \"/\" \$2 }' MANIFEST" "$SPECTXT"
+    # Rule 1 / no-jargon: the %post notice is READ from the catalogue with awk,
+    # never sourced - exactly as the .deb postinst and the pacman scriptlet do.
+    if grep -Eq '(^|[^[:alnum:]_])(\.|source)[[:space:]]+[^;&|]*idiomas' "$SPEC"; then
+        fail "the spec reads the catalogue, never sources it" "awk read" "sourced"
+    else
+        pass "the spec reads the catalogue, never sources it"
+    fi
+    # A tool a handler shells out to must be Required, or it is a bare "command
+    # not found" behind the double click. unzip is what tandem-apk runs for
+    # .xapk/.apks/.apkm, and debian/control and the AUR PKGBUILD both list it.
+    if grep -Eq '^Requires:[[:space:]]+unzip$' "$SPEC"; then
+        pass "the spec requires unzip (for .xapk/.apks/.apkm)"
+    else
+        fail "the spec requires unzip" "Requires: unzip" "absent"
+    fi
+    # Proven non-vacuous: check_spec() must FAIL when the spec's Version and
+    # debian/control disagree - the guard the whole committed-spec design rests
+    # on. "Put the defect back and watch it speak," which the PR review asked
+    # for and the PKGBUILD's own tests never did.
+    if python3 - "$ROOT" <<'PY' 2>/dev/null
+import importlib.util, sys
+s = importlib.util.spec_from_file_location("b", sys.argv[1] + "/build.py")
+b = importlib.util.module_from_spec(s); s.loader.exec_module(b)
+b.version = lambda: "0.0-mismatch"
+try:
+    b.check_spec(); sys.exit(0)
+except AssertionError:
+    sys.exit(1)
+PY
+    then
+        fail "check_spec() fires on a spec/control version mismatch" "fires" "silent"
+    else
+        pass "check_spec() fires on a spec/control version mismatch"
+    fi
+fi
+
 section "language: the data tables translate too, and fall back"
 
 # The catalogues were not the whole of it. alternativas.tsv and limites.tsv

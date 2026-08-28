@@ -21,6 +21,7 @@ Requires:       python3
 Requires:       zenity
 Requires:       desktop-file-utils
 Requires:       xdg-utils
+Requires:       unzip
 Requires:       shared-mime-info
 Requires:       hicolor-icon-theme
 %if 0%{?suse_version}
