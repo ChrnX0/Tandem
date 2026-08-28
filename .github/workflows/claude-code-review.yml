@@ -1,0 +1,55 @@
+name: Claude Code Review
+
+# Reviews every pull request automatically, the moment it opens or gets new
+# commits — no one has to mention @claude. It authenticates with the same
+# CLAUDE_CODE_OAUTH_TOKEN secret the interactive claude.yml workflow uses, and
+# posts one concise review as a PR comment. It only reads; it never pushes.
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Review this pull request for the Tandem project. Read CLAUDE.md
+            first — it is the source of truth for the conventions here — and
+            judge the diff against it. Be concise and constructive: only raise
+            things that matter, and say plainly when the change looks good.
+
+            Focus on:
+            - Correctness bugs and edge cases, especially any path that could
+              fail silently (the project's cardinal rule is that no error path
+              may end in silence).
+            - The inviolable rules in CLAUDE.md — above all, never writing into
+              a Wine prefix Tandem did not create, and `set -e` only in the
+              packager, never in the executables.
+            - User-facing text: no jargon in anything the user reads, in any
+              language; new messages belong in `po/`, never hard-coded, and the
+              literal counters must stay at 0.
+            - Version coupling: a version bump must touch `debian/control`,
+              `debian/changelog` (a fresh, correctly dated entry) and
+              `TANDEM_VERSAO` in `src/lib/common.sh` together.
+            - Whether new behaviour is covered by a test in `tests/run.sh`.
+
+            Post your review as a single PR comment with `gh pr comment`. If
+            the change is clean, say so briefly rather than inventing nits.
+          claude_args: |
+            --allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"
