@@ -39,7 +39,7 @@ jobs:
           - image: archlinux:latest
             familia: pacman
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build the .deb and the generic bundle
         run: python3 build.py

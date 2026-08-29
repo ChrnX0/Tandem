@@ -32,7 +32,7 @@ jobs:
   real:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Tools
         run: |
@@ -48,7 +48,7 @@ jobs:
                                       default-jdk desktop-file-utils
 
       - name: Cache the downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           # Keyed by the file that holds the URLs and checksums: change a
           # program and the cache is rebuilt, leave them alone and the
@@ -65,7 +65,7 @@ jobs:
 
       - name: The screenshots, for a human to look at
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: screenshots
           path: tests/telas/
