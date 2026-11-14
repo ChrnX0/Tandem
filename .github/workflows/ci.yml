@@ -19,7 +19,7 @@ jobs:
     # Same base as Zorin 18, which is the project target.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The gate judges the diff; with no history it has nothing to compare against.
           fetch-depth: 0
